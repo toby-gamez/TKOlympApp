@@ -22,7 +22,7 @@
         <Nullable>enable</Nullable>
 
         <!-- Display name -->
-        <ApplicationTitle>TkOlymp</ApplicationTitle>
+        <ApplicationTitle>TK Olymp</ApplicationTitle>
 
         <!-- App Identifier -->
         <ApplicationId>com.tkolymp.tkolympapp</ApplicationId>
@@ -62,10 +62,10 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)"/>
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0"/>
-        <PackageReference Include="AathifMahir.Maui.MauiIcons.Core" Version="2.0.9" />
-        <PackageReference Include="AathifMahir.Maui.MauiIcons.Material" Version="2.0.9" />
-        <PackageReference Include="AathifMahir.Maui.MauiIcons.FontAwesome" Version="2.0.9" />
-        <PackageReference Include="AathifMahir.Maui.MauiIcons.Fluent" Version="2.0.9" />
+        <PackageReference Include="AathifMahir.Maui.MauiIcons.Core" Version="2.1.0" />
+        <PackageReference Include="AathifMahir.Maui.MauiIcons.Material" Version="2.1.0" />
+        <PackageReference Include="AathifMahir.Maui.MauiIcons.FontAwesome" Version="2.1.0" />
+        <PackageReference Include="AathifMahir.Maui.MauiIcons.Fluent" Version="2.1.0" />
     </ItemGroup>
 
 </Project>

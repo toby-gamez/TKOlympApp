@@ -6,7 +6,6 @@
 
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="12">
-            <Label Text="Kalendář" SemanticProperties.HeadingLevel="Level1" />
             <Label Text="Zde bude zobrazen kalendář." />
         </VerticalStackLayout>
     </ScrollView>

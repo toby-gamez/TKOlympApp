@@ -13,8 +13,9 @@ public partial class AppShell : Shell
         // Workaround for URL-based XAML namespace resolution issues
         _ = new MauiIcon();
 
-        // Register the LoginPage route and navigate conditionally on startup
+        // Register routes and navigate conditionally on startup
         Routing.RegisterRoute(nameof(LoginPage), typeof(LoginPage));
+        Routing.RegisterRoute(nameof(AboutMePage), typeof(AboutMePage));
 
         Dispatcher.Dispatch(async () =>
         {

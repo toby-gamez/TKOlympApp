@@ -5,7 +5,6 @@
              Title="Nástěnka">
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="12">
-            <Label Text="Nástěnka" SemanticProperties.HeadingLevel="Level1" />
             <Label Text="Zde bude obsah nástěnky." />
         </VerticalStackLayout>
     </ScrollView>

@@ -1,0 +1,63 @@
+using Microsoft.Maui.Controls;
+using TkOlympApp.Services;
+
+namespace TkOlympApp.Pages;
+
+public partial class AboutMePage : ContentPage
+{
+    public AboutMePage()
+    {
+        InitializeComponent();
+    }
+
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        LoadingIndicator.IsVisible = true;
+        LoadingIndicator.IsRunning = true;
+        ErrorLabel.IsVisible = false;
+        try
+        {
+            var user = await UserService.GetCurrentUserAsync();
+            if (user == null)
+            {
+                ErrorLabel.IsVisible = true;
+                ErrorLabel.Text = "Nepodařilo se načíst uživatele.";
+                return;
+            }
+
+            NameValue.Text = NonEmpty(user.UJmeno);
+            SurnameValue.Text = NonEmpty(user.UPrijmeni);
+            LoginValue.Text = NonEmpty(user.ULogin);
+            EmailValue.Text = NonEmpty(user.UEmail);
+            IdValue.Text = user.Id.ToString();
+            TenantValue.Text = user.TenantId.ToString();
+            LastLoginValue.Text = NonEmpty(FormatDt(user.LastLogin));
+            LastActiveValue.Text = NonEmpty(FormatDt(user.LastActiveAt));
+            UCreatedAtValue.Text = NonEmpty(FormatDt(user.UCreatedAt));
+            CreatedAtValue.Text = NonEmpty(FormatDt(user.CreatedAt));
+            UpdatedAtValue.Text = NonEmpty(FormatDt(user.UpdatedAt));
+            LastVersionValue.Text = NonEmpty(user.LastVersion);
+        }
+        catch (Exception ex)
+        {
+            ErrorLabel.IsVisible = true;
+            ErrorLabel.Text = ex.Message;
+        }
+        finally
+        {
+            LoadingIndicator.IsRunning = false;
+            LoadingIndicator.IsVisible = false;
+        }
+    }
+
+    private static string FormatDt(DateTime? dt)
+        => dt.HasValue ? dt.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm") : "";
+
+    private static string NonEmpty(string? s) => string.IsNullOrWhiteSpace(s) ? "—" : s;
+}

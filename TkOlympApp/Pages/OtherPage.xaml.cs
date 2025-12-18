@@ -1,5 +1,6 @@
 using Microsoft.Maui.Controls;
 using TkOlympApp.Services;
+using TkOlympApp.Pages;
 
 namespace TkOlympApp.Pages;
 
@@ -23,6 +24,18 @@ public partial class OtherPage : ContentPage
         {
             // As a fallback, try a simple navigation to the login route
             try { await Shell.Current.GoToAsync(nameof(LoginPage)); } catch { /* ignore */ }
+        }
+    }
+
+    private async void OnAboutMeClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            await Shell.Current.GoToAsync(nameof(AboutMePage));
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Chyba", ex.Message, "OK");
         }
     }
 }

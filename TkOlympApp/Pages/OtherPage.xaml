@@ -4,11 +4,12 @@
              x:Class="TkOlympApp.Pages.OtherPage"
              Title="Ostatní">
     <Grid RowDefinitions="Auto,* ,Auto">
-        <Label Grid.Row="0" Margin="20,20,20,8" Text="Ostatní" SemanticProperties.HeadingLevel="Level1" />
 
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="20,0,20,0" Spacing="12">
                 <Label Text="Další nástroje a nastavení." />
+
+                <Button Text="O mně" Clicked="OnAboutMeClicked" />
             </VerticalStackLayout>
         </ScrollView>
 

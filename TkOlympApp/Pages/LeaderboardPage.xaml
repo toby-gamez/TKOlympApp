@@ -5,7 +5,6 @@
              Title="Žebříček">
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="12">
-            <Label Text="Žebříček" SemanticProperties.HeadingLevel="Level1" />
             <Label Text="Zde bude tabulka výsledků." />
         </VerticalStackLayout>
     </ScrollView>
