@@ -3,10 +3,20 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TkOlympApp.Pages.OtherPage"
              Title="Ostatní">
-    <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="12">
-            <Label Text="Ostatní" SemanticProperties.HeadingLevel="Level1" />
-            <Label Text="Další nástroje a nastavení." />
-        </VerticalStackLayout>
-    </ScrollView>
+    <Grid RowDefinitions="Auto,* ,Auto">
+        <Label Grid.Row="0" Margin="20,20,20,8" Text="Ostatní" SemanticProperties.HeadingLevel="Level1" />
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="20,0,20,0" Spacing="12">
+                <Label Text="Další nástroje a nastavení." />
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Button Grid.Row="2"
+                Margin="20"
+                Text="Odhlásit se"
+                BackgroundColor="{DynamicResource Primary}"
+                TextColor="White"
+                Clicked="OnLogoutClicked" />
+    </Grid>
 </ContentPage>
