@@ -1,0 +1,32 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Rider ignored files
+/modules.xml
+/contentModel.xml
+/.idea.TkOlympApp.iml
+/projectSettingsUpdater.xml
+# Ignored default folder with query files
+/queries/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+.idea/*
+.idea/.idea.TkOlympApp/.idea/*
+.bin/
+.obj/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.ncrunchsolution
+*.ncrunchproject
+*.DotSettings.user
+*.resharper
+*.DotSettings
+*.rider/
+TkOlympApp/bin/*
+TkOlympApp/obj/*

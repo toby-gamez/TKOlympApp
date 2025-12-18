@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TkOlympApp.Pages.NoticeboardPage"
+             Title="Nástěnka">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="12">
+            <Label Text="Nástěnka" SemanticProperties.HeadingLevel="Level1" />
+            <Label Text="Zde bude obsah nástěnky." />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
