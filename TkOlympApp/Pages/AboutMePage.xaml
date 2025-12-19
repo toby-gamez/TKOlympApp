@@ -4,17 +4,6 @@
              x:Class="TkOlympApp.Pages.AboutMePage"
              Title="O mně">
 
-    <ContentPage.Resources>
-        <Style x:Key="KeyLabelStyle" TargetType="Label">
-            <Setter Property="FontAttributes" Value="Bold" />
-            <Setter Property="TextColor" Value="{DynamicResource Gray700}" />
-        </Style>
-        <Style x:Key="ValueLabelStyle" TargetType="Label">
-            <Setter Property="TextColor" Value="{DynamicResource Gray900}" />
-            <Setter Property="LineBreakMode" Value="TailTruncation" />
-        </Style>
-    </ContentPage.Resources>
-
     <Grid RowDefinitions="Auto,*">
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="20" Spacing="12">
@@ -22,63 +11,63 @@
                 <Label x:Name="ErrorLabel" TextColor="Red" IsVisible="False" Margin="0,0,0,8" />
                 <!-- Každý řádek: "klíč: hodnota" v jedné řádce -->
                 <HorizontalStackLayout Spacing="6">
-                    <Label Text="Jméno:" Style="{StaticResource KeyLabelStyle}" />
-                    <Label x:Name="NameValue" Style="{StaticResource ValueLabelStyle}" />
+                    <Label Text="Jméno:"/>
+                    <Label x:Name="NameValue"/>
                 </HorizontalStackLayout>
 
                 <HorizontalStackLayout Spacing="6">
-                    <Label Text="Příjmení:" Style="{StaticResource KeyLabelStyle}" />
-                    <Label x:Name="SurnameValue" Style="{StaticResource ValueLabelStyle}" />
+                    <Label Text="Příjmení:" />
+                    <Label x:Name="SurnameValue"/>
                 </HorizontalStackLayout>
 
                 <HorizontalStackLayout Spacing="6">
-                    <Label Text="Login:" Style="{StaticResource KeyLabelStyle}" />
-                    <Label x:Name="LoginValue" Style="{StaticResource ValueLabelStyle}" />
+                    <Label Text="Login:"/>
+                    <Label x:Name="LoginValue"/>
                 </HorizontalStackLayout>
 
                 <HorizontalStackLayout Spacing="6">
-                    <Label Text="Email:" Style="{StaticResource KeyLabelStyle}" />
-                    <Label x:Name="EmailValue" Style="{StaticResource ValueLabelStyle}" />
+                    <Label Text="Email:"/>
+                    <Label x:Name="EmailValue"/>
                 </HorizontalStackLayout>
 
                 <HorizontalStackLayout Spacing="6">
-                    <Label Text="ID:" Style="{StaticResource KeyLabelStyle}" />
-                    <Label x:Name="IdValue" Style="{StaticResource ValueLabelStyle}" />
+                    <Label Text="ID:"/>
+                    <Label x:Name="IdValue"/>
                 </HorizontalStackLayout>
 
                 <HorizontalStackLayout Spacing="6">
-                    <Label Text="Tenant ID:" Style="{StaticResource KeyLabelStyle}" />
-                    <Label x:Name="TenantValue" Style="{StaticResource ValueLabelStyle}" />
+                    <Label Text="Tenant ID:"/>
+                    <Label x:Name="TenantValue"/>
                 </HorizontalStackLayout>
 
                 <HorizontalStackLayout Spacing="6">
-                    <Label Text="Poslední přihlášení:" Style="{StaticResource KeyLabelStyle}" />
-                    <Label x:Name="LastLoginValue" Style="{StaticResource ValueLabelStyle}" />
+                    <Label Text="Poslední přihlášení:"/>
+                    <Label x:Name="LastLoginValue"/>
                 </HorizontalStackLayout>
 
                 <HorizontalStackLayout Spacing="6">
-                    <Label Text="Poslední aktivita:" Style="{StaticResource KeyLabelStyle}" />
-                    <Label x:Name="LastActiveValue" Style="{StaticResource ValueLabelStyle}" />
+                    <Label Text="Poslední aktivita:"/>
+                    <Label x:Name="LastActiveValue"/>
                 </HorizontalStackLayout>
 
                 <HorizontalStackLayout Spacing="6">
-                    <Label Text="Vytvořen (uživatel):" Style="{StaticResource KeyLabelStyle}" />
-                    <Label x:Name="UCreatedAtValue" Style="{StaticResource ValueLabelStyle}" />
+                    <Label Text="Vytvořen (uživatel):"/>
+                    <Label x:Name="UCreatedAtValue"/>
                 </HorizontalStackLayout>
 
                 <HorizontalStackLayout Spacing="6">
-                    <Label Text="Vytvořen (záznam):" Style="{StaticResource KeyLabelStyle}" />
-                    <Label x:Name="CreatedAtValue" Style="{StaticResource ValueLabelStyle}" />
+                    <Label Text="Vytvořen (záznam):"/>
+                    <Label x:Name="CreatedAtValue"/>
                 </HorizontalStackLayout>
 
                 <HorizontalStackLayout Spacing="6">
-                    <Label Text="Aktualizován:" Style="{StaticResource KeyLabelStyle}" />
-                    <Label x:Name="UpdatedAtValue" Style="{StaticResource ValueLabelStyle}" />
+                    <Label Text="Aktualizován:"/>
+                    <Label x:Name="UpdatedAtValue"/>
                 </HorizontalStackLayout>
 
                 <HorizontalStackLayout Spacing="6">
-                    <Label Text="Poslední verze:" Style="{StaticResource KeyLabelStyle}" />
-                    <Label x:Name="LastVersionValue" Style="{StaticResource ValueLabelStyle}" />
+                    <Label Text="Poslední verze:"/>
+                    <Label x:Name="LastVersionValue"/>
                 </HorizontalStackLayout>
             </VerticalStackLayout>
         </ScrollView>

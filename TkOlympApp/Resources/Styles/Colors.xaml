@@ -9,13 +9,13 @@
     <Color x:Key="PrimaryDark">#d41830</Color>
     <Color x:Key="PrimaryDarkText">#242424</Color>
     <Color x:Key="Secondary">#dc3e52</Color>
-    <Color x:Key="SecondaryDarkText">#9880e5</Color>
+    <Color x:Key="SecondaryDarkText">#C8C8C8</Color>
     <Color x:Key="Tertiary">#ba3142</Color>
 
     <Color x:Key="White">White</Color>
     <Color x:Key="Black">Black</Color>
-    <Color x:Key="Magenta">#D600AA</Color>
-    <Color x:Key="MidnightBlue">#190649</Color>
+    <Color x:Key="Magenta">#E0364E</Color>
+    <Color x:Key="MidnightBlue">#730A19</Color>
     <Color x:Key="OffBlack">#1f1f1f</Color>
 
     <Color x:Key="Gray100">#E1E1E1</Color>
