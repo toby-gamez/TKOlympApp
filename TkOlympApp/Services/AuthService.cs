@@ -18,6 +18,11 @@ public static class AuthService
             BaseAddress = new Uri("https://api.rozpisovnik.cz/graphql")
         };
         Client.DefaultRequestHeaders.Add("x-tenant-id", "1");
+        // Ensure no legacy x-tenant header is present
+        if (Client.DefaultRequestHeaders.Contains("x-tenant"))
+        {
+            Client.DefaultRequestHeaders.Remove("x-tenant");
+        }
     }
 
     public static HttpClient Http => Client;

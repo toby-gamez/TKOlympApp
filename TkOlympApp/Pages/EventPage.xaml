@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TkOlympApp.Pages.EventPage"
+             Title="Událost">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Reload" Clicked="OnReloadClicked"/>
+    </ContentPage.ToolbarItems>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="12">
+            <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" HorizontalOptions="Center"/>
+
+            <!-- Header (no frame) -->
+            <VerticalStackLayout Spacing="8" Margin="8,6">
+                <Label x:Name="TitleLabel" FontAttributes="Bold" FontSize="20"/>
+                <Label x:Name="LocationLabel"/>
+                <HorizontalStackLayout Spacing="8">
+                    <Label x:Name="RegistrationOpenLabel" Text="Registrace otevřená" FontSize="12" TextColor="#2e7d32" IsVisible="False" />
+                    <Label x:Name="PublicLabel" Text="Veřejné" FontSize="12" TextColor="#0277bd" IsVisible="False" />
+                    <Label x:Name="VisibleLabel" Text="Viditelné" FontSize="12" TextColor="#6d4c41" IsVisible="False" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+
+            <!-- Description Card -->
+            <Frame x:Name="DescFrame" Padding="12" Margin="8,6" HasShadow="True" CornerRadius="8" BackgroundColor="#f2f2f2" BorderColor="#ddd" IsVisible="False">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Popis" FontAttributes="Bold" />
+                    <Label x:Name="DescLabel" LineBreakMode="WordWrap"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Summary Card -->
+            <Frame x:Name="SummaryFrame" Padding="12" Margin="8,6" HasShadow="True" CornerRadius="8" BackgroundColor="#f2f2f2" BorderColor="#ddd" IsVisible="False">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Shrnutí" FontAttributes="Bold" />
+                    <Label x:Name="SummaryLabel" LineBreakMode="WordWrap" FontAttributes="Italic" TextColor="#444"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Meta Card -->
+            <Frame Padding="12" Margin="8,6" HasShadow="True" CornerRadius="8" BackgroundColor="#f2f2f2" BorderColor="#ddd">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Informace" FontAttributes="Bold" />
+                    <Label x:Name="CreatedAtLabel" FontSize="12" TextColor="#666" />
+                    <HorizontalStackLayout Spacing="12">
+                        <Label x:Name="CapacityLabel"/>
+                        <Label x:Name="RegistrationsLabel"/>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Registrations Card -->
+            <Frame x:Name="RegistrationsFrame" Padding="12" Margin="8,6" HasShadow="True" CornerRadius="8" BackgroundColor="#f2f2f2" BorderColor="#ddd" IsVisible="False">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Seznam přihlášených" FontAttributes="Bold" />
+                    <CollectionView x:Name="RegistrationsCollection" HeightRequest="300">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <HorizontalStackLayout Padding="8" Spacing="8">
+                                    <Label Text="{Binding Text}" />
+                                </HorizontalStackLayout>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Frame>
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
