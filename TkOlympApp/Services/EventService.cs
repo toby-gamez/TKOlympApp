@@ -14,7 +14,8 @@ public static class EventService
     {
         var query = new GraphQlRequest
         {
-            Query = "query MyQuery($id: BigInt!) { event(id: $id) { capacity createdAt description eventRegistrations { totalCount nodes { couple { active status man { name } woman { name } } } } isPublic isRegistrationOpen isVisible __typename name summary locationText eventTrainersList { lessonPrice { amount currency } name } } }",
+            // Align fields with requested event + info query and field order
+            Query = "query MyQuery($id: BigInt!) { event(id: $id) { capacity createdAt description eventRegistrations { totalCount nodes { couple { active status man { name } woman { name } } } } isPublic isRegistrationOpen isVisible __typename name summary locationText eventTrainersList { lessonPrice { amount currency } name } updatedAt since until } }",
             Variables = new Dictionary<string, object> { { "id", id } }
         };
 
@@ -45,6 +46,9 @@ public static class EventService
     public sealed record EventDetails(
         [property: JsonPropertyName("capacity")] int? Capacity,
         [property: JsonPropertyName("createdAt")] DateTime CreatedAt,
+        [property: JsonPropertyName("updatedAt")] DateTime? UpdatedAt,
+        [property: JsonPropertyName("since")] DateTime? Since,
+        [property: JsonPropertyName("until")] DateTime? Until,
         [property: JsonPropertyName("description")] string? Description,
         [property: JsonPropertyName("eventRegistrations")] EventRegistrations? EventRegistrations,
         [property: JsonPropertyName("isPublic")] bool IsPublic,
@@ -85,7 +89,8 @@ public static class EventService
     // Trainers at the event level
     public sealed record EventTrainer(
         [property: JsonPropertyName("name")] string? Name,
-        [property: JsonPropertyName("lessonPrice")] Money? LessonPrice
+        [property: JsonPropertyName("lessonPrice")] Money? LessonPrice,
+        [property: JsonPropertyName("updatedAt")] DateTime? UpdatedAt
     );
     
 
@@ -111,7 +116,7 @@ public static class EventService
 
         var query = new GraphQlRequest
         {
-            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $onlyMine: Boolean, $first: Int, $offset: Int, $onlyType: EventType) { myEventInstancesForRangeList(startRange: $startRange, endRange: $endRange, onlyMine: $onlyMine, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled locationId until updatedAt tenant { couplesList { active man { firstName name lastName } woman { name lastName firstName } } } event { id description name locationText isRegistrationOpen isPublic guestPrice { amount currency } } } }",
+            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $onlyMine: Boolean, $first: Int, $offset: Int, $onlyType: EventType) { myEventInstancesForRangeList(startRange: $startRange, endRange: $endRange, onlyMine: $onlyMine, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled locationId since until updatedAt tenant { couplesList { active man { firstName name lastName } woman { name lastName firstName } } } event { id description name locationText isRegistrationOpen isPublic guestPrice { amount currency } } } }",
             Variables = variables
         };
 
@@ -160,6 +165,7 @@ public static class EventService
         [property: JsonPropertyName("id")] long Id,
         [property: JsonPropertyName("isCancelled")] bool IsCancelled,
         [property: JsonPropertyName("locationId")] long? LocationId,
+        [property: JsonPropertyName("since")] DateTime? Since,
         [property: JsonPropertyName("until")] DateTime? Until,
         [property: JsonPropertyName("updatedAt")] DateTime UpdatedAt,
         [property: JsonPropertyName("tenant")] Tenant? Tenant,

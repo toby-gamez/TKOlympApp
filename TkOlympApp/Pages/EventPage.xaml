@@ -16,6 +16,7 @@
             <VerticalStackLayout Spacing="8" Margin="8,6">
                 <Label x:Name="TitleLabel" FontAttributes="Bold" FontSize="20"/>
                 <Label x:Name="LocationLabel"/>
+                <Label x:Name="DateRangeLabel"/>
                 <HorizontalStackLayout Spacing="8">
                     <Label x:Name="RegistrationOpenLabel" Text="Registrace otevřená" FontSize="12" TextColor="#2e7d32" IsVisible="False" />
                     <Label x:Name="PublicLabel" Text="Veřejné" FontSize="12" TextColor="#0277bd" IsVisible="False" />
@@ -44,6 +45,7 @@
                 <VerticalStackLayout Spacing="6">
                     <Label Text="Informace" FontAttributes="Bold" />
                     <Label x:Name="CreatedAtLabel" FontSize="12" TextColor="#666" />
+                    <Label x:Name="UpdatedAtLabel" FontSize="12" TextColor="#666" />
                     <HorizontalStackLayout Spacing="12">
                         <Label x:Name="CapacityLabel"/>
                         <Label x:Name="RegistrationsLabel"/>

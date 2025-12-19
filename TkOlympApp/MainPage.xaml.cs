@@ -1,4 +1,5 @@
 ﻿using Microsoft.Maui.Controls;
+using System;
 using System.Collections.ObjectModel;
 using TkOlympApp.Services;
 
@@ -62,11 +63,16 @@ public partial class MainPage : ContentPage
     private async void EventsCollection_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         var selected = e.CurrentSelection?.FirstOrDefault() as EventService.EventInstance;
-        if (selected?.Event?.Id is long eventId)
+            if (selected?.Event?.Id is long eventId)
         {
             // Clear selection to avoid repeated triggers
             EventsCollection.SelectedItem = null;
-            await Shell.Current.GoToAsync($"EventPage?id={eventId}");
+            var since = selected.Since.HasValue ? selected.Since.Value.ToString("o") : null;
+            var until = selected.Until.HasValue ? selected.Until.Value.ToString("o") : null;
+            var uri = $"EventPage?id={eventId}" +
+                      (since != null ? $"&since={Uri.EscapeDataString(since)}" : string.Empty) +
+                      (until != null ? $"&until={Uri.EscapeDataString(until)}" : string.Empty);
+            await Shell.Current.GoToAsync(uri);
         }
     }
 
@@ -74,7 +80,17 @@ public partial class MainPage : ContentPage
     {
         if (sender is Frame frame && frame.BindingContext is EventService.EventInstance instance && instance.Event?.Id is long eventId)
         {
-            await Shell.Current.GoToAsync($"EventPage?id={eventId}");
+            var since = instance.Since.HasValue ? instance.Since.Value.ToString("o") : null;
+            var until = instance.Until.HasValue ? instance.Until.Value.ToString("o") : null;
+            var uri = $"EventPage?id={eventId}" +
+                      (since != null ? $"&since={Uri.EscapeDataString(since)}" : string.Empty) +
+                      (until != null ? $"&until={Uri.EscapeDataString(until)}" : string.Empty);
+            await Shell.Current.GoToAsync(uri);
         }
+    }
+
+    private async void OnReloadClicked(object? sender, EventArgs e)
+    {
+        await LoadEventsAsync();
     }
 }

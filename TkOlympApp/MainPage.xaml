@@ -6,13 +6,12 @@
 
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="12">
-            <Label Text="Zde bude zobrazen kalendář." />
             <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" HorizontalOptions="Center"/>
             <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                 <Label Text="Mé" VerticalTextAlignment="Center"/>
                 <Switch x:Name="OnlyMineSwitch" IsToggled="True" Toggled="OnlyMineSwitch_Toggled"/>
+                <Button Text="Reload" Clicked="OnReloadClicked" />
             </HorizontalStackLayout>
-            <Label Text="Moje instance událostí (ID):" FontAttributes="Bold" />
             <CollectionView x:Name="EventsCollection" HeightRequest="400" SelectionMode="Single" SelectionChanged="EventsCollection_SelectionChanged">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
@@ -23,7 +22,17 @@
                             <VerticalStackLayout Spacing="6">
                                 <Label Text="{Binding Event.Name}" FontAttributes="Bold" />
                                 <Label Text="{Binding Event.LocationText}" />
-                                <Label Text="{Binding UpdatedAt, StringFormat='Aktualizováno: {0:dd.MM.yyyy HH:mm}'}" FontSize="12" TextColor="#666" />
+                                <Label FontSize="12" TextColor="#666">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="{Binding Since, StringFormat='{0:dd.MM.yyyy HH:mm}'}" />
+                                            <Span Text=" 			" />
+                                            <Span Text="–" />
+                                            <Span Text=" 			" />
+                                            <Span Text="{Binding Until, StringFormat='{0:dd.MM.yyyy HH:mm}'}" />
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                </Label>
                             </VerticalStackLayout>
                         </Frame>
                     </DataTemplate>
