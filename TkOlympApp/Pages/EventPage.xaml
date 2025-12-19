@@ -51,6 +51,22 @@
                 </VerticalStackLayout>
             </Frame>
 
+            <!-- Trainers Card -->
+            <Frame x:Name="TrainersFrame" Padding="12" Margin="8,6" HasShadow="True" CornerRadius="8" BackgroundColor="#f2f2f2" BorderColor="#ddd" IsVisible="False">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Trenéři" FontAttributes="Bold" />
+                    <CollectionView x:Name="TrainersCollection" HeightRequest="200">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <HorizontalStackLayout Padding="8" Spacing="8">
+                                    <Label Text="{Binding}" />
+                                </HorizontalStackLayout>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Frame>
+
             <!-- Registrations Card -->
             <Frame x:Name="RegistrationsFrame" Padding="12" Margin="8,6" HasShadow="True" CornerRadius="8" BackgroundColor="#f2f2f2" BorderColor="#ddd" IsVisible="False">
                 <VerticalStackLayout Spacing="6">

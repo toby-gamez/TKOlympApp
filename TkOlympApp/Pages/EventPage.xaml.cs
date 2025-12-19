@@ -19,11 +19,13 @@ public partial class EventPage : ContentPage
     }
 
     private readonly ObservableCollection<RegistrationRow> _registrations = new();
+    private readonly ObservableCollection<string> _trainers = new();
 
     public EventPage()
     {
         InitializeComponent();
         RegistrationsCollection.ItemsSource = _registrations;
+        TrainersCollection.ItemsSource = _trainers;
     }
 
     protected override async void OnAppearing()
@@ -46,10 +48,11 @@ public partial class EventPage : ContentPage
                 return;
             }
 
-            TitleLabel.Text = string.IsNullOrWhiteSpace(ev.Name) ? ev.Location?.Name ?? "Událost" : ev.Name;
+            TitleLabel.Text = string.IsNullOrWhiteSpace(ev.Name) ? ev.LocationText ?? "Událost" : ev.Name;
             DescLabel.Text = HtmlToPlainText(ev.Description);
             SummaryLabel.Text = HtmlToPlainText(ev.Summary);
-            LocationLabel.Text = ev.Location?.Name;
+            var locName = ev.LocationText;
+            LocationLabel.Text = string.IsNullOrWhiteSpace(locName) ? null : $"Místo konání: {locName}";
             LocationLabel.IsVisible = !string.IsNullOrWhiteSpace(LocationLabel.Text);
             DescFrame.IsVisible = !string.IsNullOrWhiteSpace(DescLabel.Text);
             SummaryFrame.IsVisible = !string.IsNullOrWhiteSpace(SummaryLabel.Text);
@@ -59,6 +62,24 @@ public partial class EventPage : ContentPage
             VisibleLabel.IsVisible = ev.IsVisible;
             CapacityLabel.Text = ev.Capacity.HasValue ? $"Kapacita: {ev.Capacity}" : "Kapacita: N/A";
             RegistrationsLabel.Text = $"Registrováno: {ev.EventRegistrations?.TotalCount ?? 0}";
+
+            // Trainers (event level)
+            _trainers.Clear();
+            foreach (var t in ev.EventTrainersList ?? new List<TkOlympApp.Services.EventService.EventTrainer>())
+            {
+                if (t == null) continue;
+                var name = t.Name?.Trim();
+                var price = t.LessonPrice;
+                string line = name;
+                if (price != null && price.Amount != 0)
+                {
+                    var cur = price.Currency;
+                    var priceText = $"{price.Amount:0.##} {cur}";
+                    line = string.IsNullOrWhiteSpace(name) ? priceText : $"{name} {priceText}";
+                }
+                if (!string.IsNullOrWhiteSpace(line)) _trainers.Add(line);
+            }
+            TrainersFrame.IsVisible = _trainers.Count > 0;
 
             _registrations.Clear();
             foreach (var n in ev.EventRegistrations?.Nodes ?? new List<EventService.EventRegistrationNode>())
@@ -72,7 +93,38 @@ public partial class EventPage : ContentPage
                     ? $"{man} - {woman}"
                     : (string.IsNullOrWhiteSpace(man) ? woman : man);
 
-                _registrations.Add(new RegistrationRow { Text = text });
+                var parts = new List<string>();
+                var status = n.Couple?.Status;
+                if (!string.IsNullOrWhiteSpace(status)) parts.Add($"Stav: {status}");
+                if (n.Couple?.Active == false) parts.Add("Neaktivní");
+
+                var trainers = n.Couple?.Man?.EventInstanceTrainersList;
+                if (trainers != null && trainers.Count > 0)
+                {
+                    var trainerParts = new List<string>();
+                    foreach (var t in trainers)
+                    {
+                        if (t == null) continue;
+                        var tn = (t.Name ?? string.Empty).Trim();
+                        var price = t.LessonPrice;
+                        if (price != null && price.Amount != 0)
+                        {
+                            var cur = price.Currency;
+                            trainerParts.Add(string.IsNullOrWhiteSpace(tn)
+                                ? $"{price.Amount:0.##} {cur}"
+                                : $"{tn} {price.Amount:0.##} {cur}");
+                        }
+                        else if (!string.IsNullOrWhiteSpace(tn))
+                        {
+                            trainerParts.Add(tn);
+                        }
+                    }
+                    if (trainerParts.Count > 0)
+                        parts.Add($"Trenéři: {string.Join(", ", trainerParts)}");
+                }
+
+                var secondary = parts.Count > 0 ? string.Join(" • ", parts) : null;
+                _registrations.Add(new RegistrationRow { Text = text, Secondary = secondary });
             }
 
             RegistrationsFrame.IsVisible = _registrations.Count > 0;

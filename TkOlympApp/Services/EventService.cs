@@ -14,7 +14,7 @@ public static class EventService
     {
         var query = new GraphQlRequest
         {
-            Query = "query MyQuery($id: BigInt!) { event(id: $id) { capacity createdAt description eventRegistrations { totalCount nodes { couple { active man { name } woman { name } status } } } isPublic isRegistrationOpen isVisible location { name } __typename name summary } }",
+            Query = "query MyQuery($id: BigInt!) { event(id: $id) { capacity createdAt description eventRegistrations { totalCount nodes { couple { active status man { name } woman { name } } } } isPublic isRegistrationOpen isVisible __typename name summary locationText eventTrainersList { lessonPrice { amount currency } name } } }",
             Variables = new Dictionary<string, object> { { "id", id } }
         };
 
@@ -50,9 +50,10 @@ public static class EventService
         [property: JsonPropertyName("isPublic")] bool IsPublic,
         [property: JsonPropertyName("isRegistrationOpen")] bool IsRegistrationOpen,
         [property: JsonPropertyName("isVisible")] bool IsVisible,
-        [property: JsonPropertyName("location")] EventLocation? Location,
         [property: JsonPropertyName("name")] string? Name,
-        [property: JsonPropertyName("summary")] string? Summary
+        [property: JsonPropertyName("summary")] string? Summary,
+        [property: JsonPropertyName("locationText")] string? LocationText,
+        [property: JsonPropertyName("eventTrainersList")] List<EventTrainer>? EventTrainersList
     );
 
     public sealed record EventRegistrations(
@@ -72,11 +73,19 @@ public static class EventService
     );
 
     public sealed record RegistrationPerson(
-        [property: JsonPropertyName("name")] string? Name
+        [property: JsonPropertyName("name")] string? Name,
+        [property: JsonPropertyName("eventInstanceTrainersList")] List<EventInstanceTrainer>? EventInstanceTrainersList
     );
 
-    public sealed record EventLocation(
-        [property: JsonPropertyName("name")] string? Name
+    public sealed record EventInstanceTrainer(
+        [property: JsonPropertyName("name")] string? Name,
+        [property: JsonPropertyName("lessonPrice")] Money? LessonPrice
+    );
+
+    // Trainers at the event level
+    public sealed record EventTrainer(
+        [property: JsonPropertyName("name")] string? Name,
+        [property: JsonPropertyName("lessonPrice")] Money? LessonPrice
     );
     
 
