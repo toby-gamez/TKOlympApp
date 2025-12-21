@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.Globalization;
 using System.Diagnostics;
 using TkOlympApp.Services;
+using TkOlympApp.Helpers;
 
 namespace TkOlympApp.Pages;
 
@@ -178,8 +179,8 @@ public partial class EventPage : ContentPage
                 catch { }
             }
 
-            var sinceText = since.HasValue ? since.Value.ToString("dd.MM.yyyy HH:mm") : null;
-            var untilText = until.HasValue ? until.Value.ToString("dd.MM.yyyy HH:mm") : null;
+            var sinceText = DateHelpers.ToFriendlyDateTimeString(since);
+            var untilText = DateHelpers.ToFriendlyDateTimeString(until);
             string? range = null;
             if (!string.IsNullOrWhiteSpace(sinceText) && !string.IsNullOrWhiteSpace(untilText))
                 range = $"{sinceText} – {untilText}";

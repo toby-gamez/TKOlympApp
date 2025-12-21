@@ -149,6 +149,68 @@ public static class EventService
         return data?.Data?.MyEventInstancesForRangeList ?? new List<EventInstance>();
     }
 
+    public static async Task<List<EventInstance>> GetEventInstancesForRangeListAsync(
+        DateTime startRange,
+        DateTime endRange,
+        int? first = null,
+        int? offset = null,
+        string? onlyType = null,
+        CancellationToken ct = default)
+    {
+        var variables = new Dictionary<string, object>
+        {
+            {"startRange", startRange.ToString("o")},
+            {"endRange", endRange.ToString("o")}
+        };
+
+        if (first.HasValue) variables["first"] = first.Value;
+        if (offset.HasValue) variables["offset"] = offset.Value;
+        if (!string.IsNullOrEmpty(onlyType)) variables["onlyType"] = onlyType;
+
+        var query = new GraphQlRequest
+        {
+            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange) { id event { id name locationText } since until isCancelled } }",
+            Variables = variables
+        };
+
+        var json = JsonSerializer.Serialize(query, Options);
+        using var content = new StringContent(json, Encoding.UTF8, "application/json");
+        using var resp = await AuthService.Http.PostAsync("", content, ct);
+        if (!resp.IsSuccessStatusCode)
+        {
+            var errorBody = await resp.Content.ReadAsStringAsync(ct);
+            throw new InvalidOperationException($"HTTP {(int)resp.StatusCode}: {errorBody}");
+        }
+
+        var body = await resp.Content.ReadAsStringAsync(ct);
+        var data = JsonSerializer.Deserialize<GraphQlResponse<EventInstancesForRangeData>>(body, Options);
+        if (data?.Errors != null && data.Errors.Count > 0)
+        {
+            var msg = data.Errors[0].Message ?? "Neznámá chyba GraphQL.";
+            throw new InvalidOperationException(msg);
+        }
+
+        var list = data?.Data?.EventInstancesForRangeList ?? new List<MinimalEventInstance>();
+        // Map minimal instances to the full EventInstance shape expected by the app
+        var result = new List<EventInstance>(list.Count);
+        foreach (var mi in list)
+        {
+            var updatedAt = mi.UpdatedAt ?? DateTime.MinValue;
+            result.Add(new EventInstance(
+                mi.Id,
+                mi.IsCancelled,
+                mi.LocationId,
+                mi.Since,
+                mi.Until,
+                updatedAt,
+                mi.Tenant,
+                mi.Event
+            ));
+        }
+
+        return result;
+    }
+
     private sealed class GraphQlRequest
     {
         [JsonPropertyName("query")] public string Query { get; set; } = string.Empty;
@@ -169,6 +231,23 @@ public static class EventService
     private sealed class MyEventInstancesData
     {
         [JsonPropertyName("myEventInstancesForRangeList")] public List<EventInstance>? MyEventInstancesForRangeList { get; set; }
+    }
+
+    private sealed class EventInstancesForRangeData
+    {
+        [JsonPropertyName("eventInstancesForRangeList")] public List<MinimalEventInstance>? EventInstancesForRangeList { get; set; }
+    }
+
+    private sealed class MinimalEventInstance
+    {
+        [JsonPropertyName("id")] public long Id { get; set; }
+        [JsonPropertyName("isCancelled")] public bool IsCancelled { get; set; }
+        [JsonPropertyName("locationId")] public long? LocationId { get; set; }
+        [JsonPropertyName("since")] public DateTime? Since { get; set; }
+        [JsonPropertyName("until")] public DateTime? Until { get; set; }
+        [JsonPropertyName("updatedAt")] public DateTime? UpdatedAt { get; set; }
+        [JsonPropertyName("tenant")] public Tenant? Tenant { get; set; }
+        [JsonPropertyName("event")] public EventInfo? Event { get; set; }
     }
 
     public sealed record EventInstance(
@@ -203,6 +282,8 @@ public static class EventService
         [property: JsonPropertyName("description")] string? Description,
         [property: JsonPropertyName("name")] string Name,
         [property: JsonPropertyName("locationText")] string? LocationText,
+        [property: JsonPropertyName("since")] DateTime? Since,
+        [property: JsonPropertyName("until")] DateTime? Until,
         [property: JsonPropertyName("isRegistrationOpen")] bool IsRegistrationOpen,
         [property: JsonPropertyName("isPublic")] bool IsPublic,
         [property: JsonPropertyName("guestPrice")] Money? GuestPrice

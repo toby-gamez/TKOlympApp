@@ -1,5 +1,6 @@
 ﻿using Microsoft.Maui.Controls;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using TkOlympApp.Services;
 
@@ -35,7 +36,16 @@ public partial class MainPage : ContentPage
             var start = today;
             var end = today.AddDays(30);
             var onlyMine = OnlyMineSwitch?.IsToggled ?? true;
-            var events = await EventService.GetMyEventInstancesForRangeAsync(start, end, onlyMine: onlyMine);
+            List<EventService.EventInstance> events;
+            if (onlyMine)
+            {
+                events = await EventService.GetMyEventInstancesForRangeAsync(start, end, onlyMine: true);
+            }
+            else
+            {
+                // Use the global eventInstancesForRangeList query when the switch is off
+                events = await EventService.GetEventInstancesForRangeListAsync(start, end);
+            }
             _events.Clear();
             foreach (var e in events)
             {
@@ -63,16 +73,23 @@ public partial class MainPage : ContentPage
     private async void EventsCollection_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         var selected = e.CurrentSelection?.FirstOrDefault() as EventService.EventInstance;
-            if (selected?.Event?.Id is long eventId)
+            if (selected != null)
         {
             // Clear selection to avoid repeated triggers
             EventsCollection.SelectedItem = null;
-            var since = selected.Since.HasValue ? selected.Since.Value.ToString("o") : null;
-            var until = selected.Until.HasValue ? selected.Until.Value.ToString("o") : null;
-            var uri = $"EventPage?id={eventId}" +
-                      (since != null ? $"&since={Uri.EscapeDataString(since)}" : string.Empty) +
-                      (until != null ? $"&until={Uri.EscapeDataString(until)}" : string.Empty);
-            await Shell.Current.GoToAsync(uri);
+            if (selected.IsCancelled)
+            {
+                return;
+            }
+            if (selected.Event?.Id is long eventId)
+        {
+                var since = selected.Since.HasValue ? selected.Since.Value.ToString("o") : null;
+                var until = selected.Until.HasValue ? selected.Until.Value.ToString("o") : null;
+                var uri = $"EventPage?id={eventId}" +
+                          (since != null ? $"&since={Uri.EscapeDataString(since)}" : string.Empty) +
+                          (until != null ? $"&until={Uri.EscapeDataString(until)}" : string.Empty);
+                await Shell.Current.GoToAsync(uri);
+        }
         }
     }
 
@@ -80,6 +97,10 @@ public partial class MainPage : ContentPage
     {
         if (sender is Border frame && frame.BindingContext is EventService.EventInstance instance && instance.Event?.Id is long eventId)
         {
+            if (instance.IsCancelled)
+            {
+                return;
+            }
             var since = instance.Since.HasValue ? instance.Since.Value.ToString("o") : null;
             var until = instance.Until.HasValue ? instance.Until.Value.ToString("o") : null;
             var uri = $"EventPage?id={eventId}" +
