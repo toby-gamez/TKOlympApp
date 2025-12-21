@@ -78,7 +78,7 @@ public partial class MainPage : ContentPage
 
     private async void OnEventCardTapped(object? sender, TappedEventArgs e)
     {
-        if (sender is Frame frame && frame.BindingContext is EventService.EventInstance instance && instance.Event?.Id is long eventId)
+        if (sender is Border frame && frame.BindingContext is EventService.EventInstance instance && instance.Event?.Id is long eventId)
         {
             var since = instance.Since.HasValue ? instance.Since.Value.ToString("o") : null;
             var until = instance.Until.HasValue ? instance.Until.Value.ToString("o") : null;

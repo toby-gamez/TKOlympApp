@@ -185,7 +185,7 @@ public partial class EventPage : ContentPage
                 range = sinceText;
             else if (!string.IsNullOrWhiteSpace(untilText))
                 range = untilText;
-            DateRangeLabel.Text = range;
+            DateRangeLabel.Text = "Termín: " + range;
             DateRangeLabel.IsVisible = !string.IsNullOrWhiteSpace(range);
             DescFrame.IsVisible = !string.IsNullOrWhiteSpace(DescLabel.Text);
             SummaryFrame.IsVisible = !string.IsNullOrWhiteSpace(SummaryLabel.Text);

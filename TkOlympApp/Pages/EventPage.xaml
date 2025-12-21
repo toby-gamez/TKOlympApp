@@ -12,49 +12,61 @@
         <VerticalStackLayout Padding="20" Spacing="12">
             <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" HorizontalOptions="Center"/>
 
-            <!-- Header (no frame) -->
+            <!-- Header (no Border) -->
             <VerticalStackLayout Spacing="8" Margin="8,6">
                 <Label x:Name="TitleLabel" FontAttributes="Bold" FontSize="20"/>
-                <Label x:Name="LocationLabel"/>
-                <Label x:Name="DateRangeLabel"/>
-                <HorizontalStackLayout Spacing="8">
-                    <Label x:Name="RegistrationOpenLabel" Text="Registrace otevřená" FontSize="12" TextColor="#2e7d32" IsVisible="False" />
-                    <Label x:Name="PublicLabel" Text="Veřejné" FontSize="12" TextColor="#0277bd" IsVisible="False" />
-                    <Label x:Name="VisibleLabel" Text="Viditelné" FontSize="12" TextColor="#6d4c41" IsVisible="False" />
-                </HorizontalStackLayout>
             </VerticalStackLayout>
+            
+            <!-- Meta Card -->
+            <Border Padding="12" Margin="8,6">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Informace" FontAttributes="Bold" />
+                    <Label x:Name="LocationLabel"/>
+                    <Label x:Name="DateRangeLabel"/>
+                    <Label x:Name="CreatedAtLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}"/>
+                    <Label x:Name="UpdatedAtLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}"/>
+                    <HorizontalStackLayout Spacing="12">
+                        <Label x:Name="RegistrationOpenLabel" Text="Registrace otevřená" FontSize="12" TextColor="#2e7d32" IsVisible="False" Style="{StaticResource MutedLabelStyle}"/>
+                        <Label x:Name="PublicLabel" Text="Veřejné" IsVisible="False" FontSize="12" Style="{StaticResource MutedLabelStyle}"/>
+                        <Label x:Name="VisibleLabel" Text="Viditelné" IsVisible="False" FontSize="12" Style="{StaticResource MutedLabelStyle}"/>
+                    </HorizontalStackLayout>
+                    <HorizontalStackLayout Spacing="12">
+                        <Label x:Name="CapacityLabel" FontSize="12"/>
+                        <Label x:Name="RegistrationsLabel" FontSize="12"/>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
 
             <!-- Description Card -->
-            <Frame x:Name="DescFrame" Padding="12" Margin="8,6" HasShadow="True" CornerRadius="8" BackgroundColor="#f2f2f2" BorderColor="#ddd" IsVisible="False">
+            <Border x:Name="DescFrame" Padding="12" Margin="8,6"  IsVisible="False">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
                 <VerticalStackLayout Spacing="6">
                     <Label Text="Popis" FontAttributes="Bold" />
                     <Label x:Name="DescLabel" LineBreakMode="WordWrap"/>
                 </VerticalStackLayout>
-            </Frame>
+            </Border>
 
             <!-- Summary Card -->
-            <Frame x:Name="SummaryFrame" Padding="12" Margin="8,6" HasShadow="True" CornerRadius="8" BackgroundColor="#f2f2f2" BorderColor="#ddd" IsVisible="False">
+            <Border x:Name="SummaryFrame" Padding="12" Margin="8,6"  IsVisible="False">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
                 <VerticalStackLayout Spacing="6">
                     <Label Text="Shrnutí" FontAttributes="Bold" />
-                    <Label x:Name="SummaryLabel" LineBreakMode="WordWrap" FontAttributes="Italic" TextColor="#444"/>
+                    <Label x:Name="SummaryLabel" LineBreakMode="WordWrap" FontAttributes="Italic"/>
                 </VerticalStackLayout>
-            </Frame>
-
-            <!-- Meta Card -->
-            <Frame Padding="12" Margin="8,6" HasShadow="True" CornerRadius="8" BackgroundColor="#f2f2f2" BorderColor="#ddd">
-                <VerticalStackLayout Spacing="6">
-                    <Label Text="Informace" FontAttributes="Bold" />
-                    <Label x:Name="CreatedAtLabel" FontSize="12" TextColor="#666" />
-                    <Label x:Name="UpdatedAtLabel" FontSize="12" TextColor="#666" />
-                    <HorizontalStackLayout Spacing="12">
-                        <Label x:Name="CapacityLabel"/>
-                        <Label x:Name="RegistrationsLabel"/>
-                    </HorizontalStackLayout>
-                </VerticalStackLayout>
-            </Frame>
+            </Border>
 
             <!-- Trainers Card -->
-            <Frame x:Name="TrainersFrame" Padding="12" Margin="8,6" HasShadow="True" CornerRadius="8" BackgroundColor="#f2f2f2" BorderColor="#ddd" IsVisible="False">
+            <Border x:Name="TrainersFrame" Padding="12" Margin="8,6"  IsVisible="False">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
                 <VerticalStackLayout Spacing="6">
                     <Label Text="Trenéři" FontAttributes="Bold" />
                     <CollectionView x:Name="TrainersCollection" HeightRequest="200">
@@ -67,10 +79,13 @@
                         </CollectionView.ItemTemplate>
                     </CollectionView>
                 </VerticalStackLayout>
-            </Frame>
+            </Border>
 
             <!-- Registrations Card -->
-            <Frame x:Name="RegistrationsFrame" Padding="12" Margin="8,6" HasShadow="True" CornerRadius="8" BackgroundColor="#f2f2f2" BorderColor="#ddd" IsVisible="False">
+            <Border x:Name="RegistrationsFrame" Padding="12" Margin="8,6"  IsVisible="False">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
                 <VerticalStackLayout Spacing="6">
                     <Label Text="Seznam přihlášených" FontAttributes="Bold" />
                     <CollectionView x:Name="RegistrationsCollection" HeightRequest="300">
@@ -83,7 +98,7 @@
                         </CollectionView.ItemTemplate>
                     </CollectionView>
                 </VerticalStackLayout>
-            </Frame>
+            </Border>
         </VerticalStackLayout>
     </ScrollView>
 

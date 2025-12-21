@@ -15,14 +15,17 @@
             <CollectionView x:Name="EventsCollection" HeightRequest="400" SelectionMode="Single" SelectionChanged="EventsCollection_SelectionChanged">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <Frame Padding="12" Margin="6" HasShadow="True" CornerRadius="8" BorderColor="#ddd" BackgroundColor="#f2f2f2">
-                            <Frame.GestureRecognizers>
+                        <Border Padding="12" Margin="6">
+                            <Border.GestureRecognizers>
                                 <TapGestureRecognizer Tapped="OnEventCardTapped" />
-                            </Frame.GestureRecognizers>
+                            </Border.GestureRecognizers>
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8" />
+                            </Border.StrokeShape>
                             <VerticalStackLayout Spacing="6">
                                 <Label Text="{Binding Event.Name}" FontAttributes="Bold" />
                                 <Label Text="{Binding Event.LocationText}" />
-                                <Label FontSize="12" TextColor="#666">
+                                <Label FontSize="12" Style="{StaticResource MutedLabelStyle}">
                                     <Label.FormattedText>
                                         <FormattedString>
                                             <Span Text="{Binding Since, StringFormat='{0:dd.MM.yyyy HH:mm}'}" />
@@ -34,7 +37,7 @@
                                     </Label.FormattedText>
                                 </Label>
                             </VerticalStackLayout>
-                        </Frame>
+                        </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
