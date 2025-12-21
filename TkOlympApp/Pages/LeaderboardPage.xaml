@@ -4,7 +4,9 @@
              x:Class="TkOlympApp.Pages.LeaderboardPage"
              Title="Žebříček">
 
-        <Grid>
+    <!-- Theme resources removed: use inline AppThemeBinding in setters to avoid nested value errors -->
+
+    <Grid>
         <!-- Main content -->
         <ScrollView>
             <VerticalStackLayout Padding="20" Spacing="12">
@@ -13,8 +15,8 @@
                     <CollectionView x:Name="ScoreboardCollection" ItemsLayout="VerticalList">
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
-                            <Grid Padding="8" ColumnDefinitions="40, *, 80" RowDefinitions="Auto">
-                                <Label Text="{Binding RankingDisplay}" Grid.Column="0" VerticalOptions="Center" HorizontalOptions="Center">
+                            <Grid Padding="8" ColumnDefinitions="40, *, 80" RowDefinitions="Auto" BackgroundColor="{Binding BackgroundColor}">
+                                <Label Text="{Binding RankingDisplay}" Grid.Column="0" VerticalOptions="Center" HorizontalOptions="Center" TextColor="{Binding TextColor}">
                                     <Label.Triggers>
                                         <DataTrigger TargetType="Label" Binding="{Binding IsCurrentUser}" Value="True">
                                             <Setter Property="TextColor" Value="{DynamicResource Primary}" />
@@ -22,7 +24,7 @@
                                         </DataTrigger>
                                     </Label.Triggers>
                                 </Label>
-                                <Label Text="{Binding PersonDisplay}" Grid.Column="1" VerticalOptions="Center">
+                                <Label Text="{Binding PersonDisplay}" Grid.Column="1" VerticalOptions="Center" TextColor="{Binding TextColor}">
                                     <Label.Triggers>
                                         <DataTrigger TargetType="Label" Binding="{Binding IsCurrentUser}" Value="True">
                                             <Setter Property="TextColor" Value="{DynamicResource Primary}" />
@@ -30,7 +32,7 @@
                                         </DataTrigger>
                                     </Label.Triggers>
                                 </Label>
-                                <Label Text="{Binding TotalScoreDisplay}" Grid.Column="2" VerticalOptions="Center" HorizontalOptions="End">
+                                <Label Text="{Binding TotalScoreDisplay}" Grid.Column="2" VerticalOptions="Center" HorizontalOptions="End" TextColor="{Binding TextColor}">
                                     <Label.Triggers>
                                         <DataTrigger TargetType="Label" Binding="{Binding IsCurrentUser}" Value="True">
                                             <Setter Property="TextColor" Value="{DynamicResource Primary}" />

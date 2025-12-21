@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.Graphics;
 using TkOlympApp.Services;
 
 namespace TkOlympApp.Pages;
@@ -75,14 +76,50 @@ public partial class LeaderboardPage : ContentPage
 
             foreach (var item in list)
             {
+                // Determine theme to pick readable colors
+                var theme = Application.Current?.RequestedTheme ?? AppTheme.Unspecified;
+                Color ThemeColor(string lightHex, string darkHex) => (theme == AppTheme.Dark) ? Color.FromArgb(darkHex) : Color.FromArgb(lightHex);
+
+                var rankSuffix = string.IsNullOrEmpty(item.RankingDisplay) ? string.Empty : item.RankingDisplay + ".";
+                var isCurrent = !string.IsNullOrEmpty(currentFullName) &&
+                                string.Equals(item.PersonDisplay?.Trim(), currentFullName, StringComparison.OrdinalIgnoreCase);
+
                 var row = new LeaderboardRow
                 {
                     PersonDisplay = item.PersonDisplay,
-                    RankingDisplay = string.IsNullOrEmpty(item.RankingDisplay) ? string.Empty : item.RankingDisplay + ".",
+                    RankingDisplay = rankSuffix,
                     TotalScoreDisplay = string.IsNullOrEmpty(item.TotalScoreDisplay) ? string.Empty : item.TotalScoreDisplay + " b",
-                    IsCurrentUser = !string.IsNullOrEmpty(currentFullName) &&
-                                    string.Equals(item.PersonDisplay?.Trim(), currentFullName, StringComparison.OrdinalIgnoreCase)
+                    IsCurrentUser = isCurrent,
+                    BackgroundColor = Colors.Transparent,
+                    TextColor = (theme == AppTheme.Dark) ? Color.FromArgb("#E0E0E0") : Color.FromArgb("#222222")
                 };
+
+                if (item.Ranking.HasValue)
+                {
+                    try
+                    {
+                        var r = (int)item.Ranking.Value;
+                        if (r == 1)
+                        {
+                            row.BackgroundColor = ThemeColor("#FFF9E6", "#3B2A00");
+                            row.TextColor = ThemeColor("#5A3D00", "#FFD700");
+                        }
+                        else if (r == 2)
+                        {
+                            row.BackgroundColor = ThemeColor("#F2F5F7", "#2B2F31");
+                            row.TextColor = ThemeColor("#37474F", "#E0E0E0");
+                        }
+                        else if (r == 3)
+                        {
+                            row.BackgroundColor = ThemeColor("#FAF0EC", "#3A2618");
+                            row.TextColor = ThemeColor("#5D4037", "#F0C49A");
+                        }
+                    }
+                    catch
+                    {
+                        // ignore conversion issues
+                    }
+                }
 
                 _rows.Add(row);
             }
@@ -111,5 +148,7 @@ public partial class LeaderboardPage : ContentPage
         public string RankingDisplay { get; init; } = string.Empty;
         public string TotalScoreDisplay { get; init; } = string.Empty;
         public bool IsCurrentUser { get; init; }
+        public Color BackgroundColor { get; set; } = Colors.Transparent;
+        public Color TextColor { get; set; } = Colors.Black;
     }
 }
