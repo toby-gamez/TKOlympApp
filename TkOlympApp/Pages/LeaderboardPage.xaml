@@ -3,9 +3,60 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TkOlympApp.Pages.LeaderboardPage"
              Title="Žebříček">
-    <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="12">
-            <Label Text="Zde bude tabulka výsledků." />
-        </VerticalStackLayout>
-    </ScrollView>
-</ContentPage>
+
+        <Grid>
+        <!-- Main content -->
+        <ScrollView>
+            <VerticalStackLayout Padding="20" Spacing="12">
+
+                <StackLayout Spacing="8">
+                    <StackLayout Orientation="Horizontal" Padding="4" Spacing="12" HorizontalOptions="FillAndExpand">
+                        <Label x:Name="EventTotalLabel" />
+                        <Label Text="Celkem sk. lekcí:" FontAttributes="Bold" />
+                        <Label x:Name="GroupTotalLabel" />
+                        <Label Text="Celkem ind. lekcí:" FontAttributes="Bold" />
+                        <Label x:Name="LessonTotalLabel" />
+                    </StackLayout>
+
+                    <CollectionView x:Name="ScoreboardCollection" ItemsLayout="VerticalList">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Padding="8" ColumnDefinitions="40, *, 80" RowDefinitions="Auto">
+                                <Label Text="{Binding RankingDisplay}" Grid.Column="0" VerticalOptions="Center" HorizontalOptions="Center">
+                                    <Label.Triggers>
+                                        <DataTrigger TargetType="Label" Binding="{Binding IsCurrentUser}" Value="True">
+                                            <Setter Property="TextColor" Value="{DynamicResource Primary}" />
+                                            <Setter Property="FontAttributes" Value="Bold" />
+                                        </DataTrigger>
+                                    </Label.Triggers>
+                                </Label>
+                                <Label Text="{Binding PersonDisplay}" Grid.Column="1" VerticalOptions="Center">
+                                    <Label.Triggers>
+                                        <DataTrigger TargetType="Label" Binding="{Binding IsCurrentUser}" Value="True">
+                                            <Setter Property="TextColor" Value="{DynamicResource Primary}" />
+                                            <Setter Property="FontAttributes" Value="Bold" />
+                                        </DataTrigger>
+                                    </Label.Triggers>
+                                </Label>
+                                <Label Text="{Binding TotalScoreDisplay}" Grid.Column="2" VerticalOptions="Center" HorizontalOptions="End">
+                                    <Label.Triggers>
+                                        <DataTrigger TargetType="Label" Binding="{Binding IsCurrentUser}" Value="True">
+                                            <Setter Property="TextColor" Value="{DynamicResource Primary}" />
+                                            <Setter Property="FontAttributes" Value="Bold" />
+                                        </DataTrigger>
+                                    </Label.Triggers>
+                                </Label>
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+                </StackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Loading indicator (centered) -->
+        <ActivityIndicator x:Name="LoadingIndicator" IsVisible="False" IsRunning="False" HorizontalOptions="Center" VerticalOptions="Center" />
+
+        </Grid>
+
+    </ContentPage>
