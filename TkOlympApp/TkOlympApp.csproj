@@ -42,13 +42,16 @@
     </PropertyGroup>
     
 
+    <ItemGroup>
+        <PackageReference Include="HtmlAgilityPack" Version="1.11.64" />
+    </ItemGroup>
 
     <ItemGroup>
         <!-- App Icon -->
         <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#ee1733" />
 
         <!-- Splash Screen -->
-        <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#ee1733" BaseSize="128,128" />
+        <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#ffffff" BaseSize="128,128" />
 
         <!-- Images -->
         <MauiImage Include="Resources\Images\*" />

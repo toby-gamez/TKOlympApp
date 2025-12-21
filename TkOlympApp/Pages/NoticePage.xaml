@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TkOlympApp.Pages.NoticePage"
+             Title="Oznámení">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="12">
+            <VerticalStackLayout Spacing="8" Margin="8,6">
+                <Label x:Name="TitleLabel" FontAttributes="Bold" FontSize="20" />
+            </VerticalStackLayout>
+                <Border x:Name="InfoFrame" Padding="12">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Informace" FontAttributes="Bold" />
+                    <Label x:Name="AuthorLabel" FontSize="12"/>
+                    <Label x:Name="CreatedAtLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}"/>
+                    <Label x:Name="UpdatedAtLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}" IsVisible="False" />
+                </VerticalStackLayout>
+            </Border>
+            <Border x:Name="BodyFrame" Padding="12">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Obsah" FontAttributes="Bold" />
+                    <Label x:Name="BodyLabel" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

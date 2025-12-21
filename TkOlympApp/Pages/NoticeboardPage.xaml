@@ -1,11 +1,42 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:TkOlympApp.Pages"
              x:Class="TkOlympApp.Pages.NoticeboardPage"
              Title="Nástěnka">
-    <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="12">
-            <Label Text="Zde bude obsah nástěnky." />
-        </VerticalStackLayout>
-    </ScrollView>
+    <Grid Padding="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <HorizontalStackLayout Grid.Row="0" Padding="0" Spacing="8" VerticalOptions="Center">
+            <Button x:Name="TabAktualityButton" Text="Aktuality" Clicked="OnTabAktualityClicked" />
+            <Button x:Name="TabStalaButton" Text="Stálá nástěnka" Clicked="OnTabStalaClicked" />
+            <ActivityIndicator x:Name="LoadingIndicator" IsVisible="False" IsRunning="False" HorizontalOptions="EndAndExpand" Margin="0,0,0,0" />
+        </HorizontalStackLayout>
+
+        <CollectionView Grid.Row="1" x:Name="AnnouncementsCollection" Margin="0" SelectionMode="None" VerticalOptions="FillAndExpand">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical" ItemSpacing="4" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Border Padding="12" Margin="6">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnAnnouncementTapped" />
+                        </Border.GestureRecognizers>
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="16" />
+                            <Label Text="{Binding CreatedAtText}" FontSize="12" Style="{StaticResource MutedLabelStyle}" />
+                            <Label Text="{Binding PlainBody}" LineBreakMode="TailTruncation" MaxLines="2" />
+                        </VerticalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
 </ContentPage>

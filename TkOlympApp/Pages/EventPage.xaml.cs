@@ -104,8 +104,9 @@ public partial class EventPage : ContentPage
             }
 
             TitleLabel.Text = string.IsNullOrWhiteSpace(ev.Name) ? ev.LocationText ?? "Událost" : ev.Name;
-            DescLabel.Text = HtmlToPlainText(ev.Description);
-            SummaryLabel.Text = HtmlToPlainText(ev.Summary);
+            // Render HTML content with richer formatting
+            DescLabel.FormattedText = HtmlHelpers.ToFormattedString(ev.Description);
+            SummaryLabel.FormattedText = HtmlHelpers.ToFormattedString(ev.Summary);
             var locName = ev.LocationText;
             LocationLabel.Text = string.IsNullOrWhiteSpace(locName) ? null : $"Místo konání: {locName}";
             LocationLabel.IsVisible = !string.IsNullOrWhiteSpace(LocationLabel.Text);
@@ -190,8 +191,9 @@ public partial class EventPage : ContentPage
                 range = untilText;
             DateRangeLabel.Text = "Termín: " + range;
             DateRangeLabel.IsVisible = !string.IsNullOrWhiteSpace(range);
-            DescFrame.IsVisible = !string.IsNullOrWhiteSpace(DescLabel.Text);
-            SummaryFrame.IsVisible = !string.IsNullOrWhiteSpace(SummaryLabel.Text);
+            // When using FormattedText the Label.Text remains empty; check original HTML fields instead
+            DescFrame.IsVisible = !string.IsNullOrWhiteSpace(ev.Description);
+            SummaryFrame.IsVisible = !string.IsNullOrWhiteSpace(ev.Summary);
             CreatedAtLabel.Text = $"Vytvořeno: {ev.CreatedAt:dd.MM.yyyy HH:mm}";
             if (ev.UpdatedAt.HasValue)
             {
