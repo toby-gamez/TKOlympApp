@@ -5,11 +5,9 @@
              x:Class="TkOlympApp.Pages.EventPage"
              Title="Událost">
 
-    <!--
-        <ContentPage.ToolbarItems>
-        <ToolbarItem Icon="{icons:Material Icon=CalendarMonth}" Clicked="OnReloadClicked"/> // fix icon
+    <ContentPage.ToolbarItems>
+        <ToolbarItem IconImageSource="{icons:Material Icon=Refresh}" Clicked="OnReloadClicked"/>
     </ContentPage.ToolbarItems>
-    -->
 
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="12">
