@@ -32,3 +32,4 @@ TkOlympApp/bin/*
 TkOlympApp/obj/*
 TkOlympApp/TkOlympApp.csproj
 global.json
+.github/*
