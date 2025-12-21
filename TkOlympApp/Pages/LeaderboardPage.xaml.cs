@@ -56,13 +56,7 @@ public partial class LeaderboardPage : ContentPage
 
             _rows.Clear();
             var list = await LeaderboardService.GetScoreboardsAsync();
-            if (list.Count > 0)
-            {
-                // use the first item's totals as informational header (they are identical per response)
-                EventTotalLabel.Text = list[0].EventTotalScore?.ToString() ?? string.Empty;
-                GroupTotalLabel.Text = list[0].GroupTotalScore?.ToString() ?? string.Empty;
-                LessonTotalLabel.Text = list[0].LessonTotalScore?.ToString() ?? string.Empty;
-            }
+            // totals were removed from the UI; nothing to set here
 
             // Try to get current user to allow highlighting their row
             string? currentFullName = null;

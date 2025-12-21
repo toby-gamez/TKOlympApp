@@ -10,14 +10,6 @@
             <VerticalStackLayout Padding="20" Spacing="12">
 
                 <StackLayout Spacing="8">
-                    <StackLayout Orientation="Horizontal" Padding="4" Spacing="12" HorizontalOptions="FillAndExpand">
-                        <Label x:Name="EventTotalLabel" />
-                        <Label Text="Celkem sk. lekcí:" FontAttributes="Bold" />
-                        <Label x:Name="GroupTotalLabel" />
-                        <Label Text="Celkem ind. lekcí:" FontAttributes="Bold" />
-                        <Label x:Name="LessonTotalLabel" />
-                    </StackLayout>
-
                     <CollectionView x:Name="ScoreboardCollection" ItemsLayout="VerticalList">
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
@@ -54,8 +46,11 @@
             </VerticalStackLayout>
         </ScrollView>
 
-        <!-- Loading indicator (centered) -->
-        <ActivityIndicator x:Name="LoadingIndicator" IsVisible="False" IsRunning="False" HorizontalOptions="Center" VerticalOptions="Center" />
+        <!-- Loading indicator (centered) with message -->
+        <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="6">
+            <ActivityIndicator x:Name="LoadingIndicator" IsVisible="False" IsRunning="False" HorizontalOptions="Center" />
+            <Label Text="Fakt to trvá dlouho..." IsVisible="{Binding Source={x:Reference LoadingIndicator}, Path=IsVisible}" HorizontalOptions="Center" />
+        </VerticalStackLayout>
 
         </Grid>
 
