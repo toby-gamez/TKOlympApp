@@ -56,6 +56,8 @@ public partial class EventPage : ContentPage
     {
         public string Text { get; set; } = string.Empty;
         public string? Secondary { get; set; }
+        public List<string> Trainers { get; set; } = new();
+        public bool HasTrainers => Trainers != null && Trainers.Count > 0;
         public bool HasSecondary => !string.IsNullOrWhiteSpace(Secondary);
     }
 
@@ -237,14 +239,13 @@ public partial class EventPage : ContentPage
                     : (string.IsNullOrWhiteSpace(man) ? woman : man);
 
                 var parts = new List<string>();
-                var status = n.Couple?.Status;
-                if (!string.IsNullOrWhiteSpace(status)) parts.Add($"Stav: {status}");
                 if (n.Couple?.Active == false) parts.Add("Neaktivní");
 
+                // Collect instance trainers separately to render them stacked in UI
+                var trainerParts = new List<string>();
                 var trainers = n.Couple?.Man?.EventInstanceTrainersList;
                 if (trainers != null && trainers.Count > 0)
                 {
-                    var trainerParts = new List<string>();
                     foreach (var t in trainers)
                     {
                         if (t == null) continue;
@@ -262,12 +263,29 @@ public partial class EventPage : ContentPage
                             trainerParts.Add(tn);
                         }
                     }
-                    if (trainerParts.Count > 0)
-                        parts.Add($"Trenéři: {string.Join(", ", trainerParts)}");
+                }
+
+                // Lesson demands attached to this registration (new)
+                var demands = n.EventLessonDemandsByRegistrationIdList;
+                if (demands != null && demands.Count > 0)
+                {
+                    var demandParts = new List<string>();
+                    foreach (var d in demands)
+                    {
+                        if (d == null) continue;
+                        var cnt = d.LessonCount;
+                        var tname = d.Trainer?.Name?.Trim();
+                        if (!string.IsNullOrWhiteSpace(tname))
+                            demandParts.Add($"{cnt}× {tname}");
+                        else
+                            demandParts.Add($"{cnt} lekcí");
+                    }
+                    if (demandParts.Count > 0)
+                        parts.Add(string.Join(", ", demandParts));
                 }
 
                 var secondary = parts.Count > 0 ? string.Join(" • ", parts) : null;
-                _registrations.Add(new RegistrationRow { Text = text, Secondary = secondary });
+                _registrations.Add(new RegistrationRow { Text = text, Secondary = secondary, Trainers = trainerParts });
             }
 
             RegistrationsFrame.IsVisible = _registrations.Count > 0;

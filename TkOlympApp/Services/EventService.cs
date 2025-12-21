@@ -15,7 +15,7 @@ public static class EventService
         var query = new GraphQlRequest
         {
             // Align fields with requested event + info query and field order
-            Query = "query MyQuery($id: BigInt!) { event(id: $id) { capacity createdAt description eventRegistrations { totalCount nodes { couple { active status man { name } woman { name } } } } isPublic isRegistrationOpen isVisible __typename name summary locationText eventTrainersList { lessonPrice { amount currency } name } updatedAt since until } }",
+            Query = "query MyQuery($id: BigInt!) { event(id: $id) { capacity createdAt description eventRegistrations { totalCount nodes { couple { active status man { name } woman { name } } eventLessonDemandsByRegistrationIdList { lessonCount trainer { name } } } } isPublic isRegistrationOpen isVisible __typename name summary locationText eventTrainersList { lessonPrice { amount currency } name } updatedAt since until } }",
             Variables = new Dictionary<string, object> { { "id", id } }
         };
 
@@ -66,7 +66,8 @@ public static class EventService
     );
 
     public sealed record EventRegistrationNode(
-        [property: JsonPropertyName("couple")] RegistrationCouple Couple
+        [property: JsonPropertyName("couple")] RegistrationCouple Couple,
+        [property: JsonPropertyName("eventLessonDemandsByRegistrationIdList")] List<EventLessonDemand>? EventLessonDemandsByRegistrationIdList
     );
 
     public sealed record RegistrationCouple(
@@ -84,6 +85,15 @@ public static class EventService
     public sealed record EventInstanceTrainer(
         [property: JsonPropertyName("name")] string? Name,
         [property: JsonPropertyName("lessonPrice")] Money? LessonPrice
+    );
+
+    public sealed record EventLessonDemand(
+        [property: JsonPropertyName("lessonCount")] int LessonCount,
+        [property: JsonPropertyName("trainer")] Trainer? Trainer
+    );
+
+    public sealed record Trainer(
+        [property: JsonPropertyName("name")] string? Name
     );
 
     // Trainers at the event level

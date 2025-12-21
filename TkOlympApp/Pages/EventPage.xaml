@@ -91,9 +91,17 @@
                     <CollectionView x:Name="RegistrationsCollection" HeightRequest="300">
                         <CollectionView.ItemTemplate>
                             <DataTemplate>
-                                <HorizontalStackLayout Padding="8" Spacing="8">
+                                <VerticalStackLayout Padding="8" Spacing="4">
                                     <Label Text="{Binding Text}" />
-                                </HorizontalStackLayout>
+                                    <Label Text="{Binding Secondary}" FontSize="12" Style="{StaticResource MutedLabelStyle}" IsVisible="{Binding HasSecondary}" />
+                                    <CollectionView ItemsSource="{Binding Trainers}" IsVisible="{Binding HasTrainers}" SelectionMode="None">
+                                        <CollectionView.ItemTemplate>
+                                            <DataTemplate>
+                                                <Label Text="{Binding .}" FontSize="12" Style="{StaticResource MutedLabelStyle}" />
+                                            </DataTemplate>
+                                        </CollectionView.ItemTemplate>
+                                    </CollectionView>
+                                </VerticalStackLayout>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                     </CollectionView>
