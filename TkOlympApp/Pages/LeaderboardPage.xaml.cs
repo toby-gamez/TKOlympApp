@@ -85,7 +85,7 @@ public partial class LeaderboardPage : ContentPage
                 {
                     PersonDisplay = item.PersonDisplay,
                     RankingDisplay = string.IsNullOrEmpty(item.RankingDisplay) ? string.Empty : item.RankingDisplay + ".",
-                    TotalScoreDisplay = string.IsNullOrEmpty(item.TotalScoreDisplay) ? string.Empty : item.TotalScoreDisplay + "b",
+                    TotalScoreDisplay = string.IsNullOrEmpty(item.TotalScoreDisplay) ? string.Empty : item.TotalScoreDisplay + " b",
                     IsCurrentUser = !string.IsNullOrEmpty(currentFullName) &&
                                     string.Equals(item.PersonDisplay?.Trim(), currentFullName, StringComparison.OrdinalIgnoreCase)
                 };
