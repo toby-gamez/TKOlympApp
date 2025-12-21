@@ -1,20 +1,20 @@
-# TkOlympApp
+# TK Olymp aplikace
 
 Krátký přehled projektu
-- **TkOlympApp** je klientská .NET MAUI aplikace (mobilní + desktop) sloužící jako klient pro rozpisovnik.cz. Aplikace zobrazuje události, žebříčky, nástěnku a detailní stránky událostí.
+- **TkOlympApp** je klientská .NET MAUI aplikace (mobilní) sloužící jako klient tkolymp.cz. Aplikace zobrazuje události, žebříčky, nástěnku a detailní stránky událostí.
 
 Použité technologie
-- Platforma: .NET MAUI (multi-target: Android, iOS, MacCatalyst, Windows)
+- Platforma: .NET MAUI (multi-target: Android, iOS, v budoucnu - Mac OS a Windows)
 - Jazyk: C# + XAML
 - Síť: GraphQL dotazy přes `HttpClient` (statické služby v `TkOlympApp/Services/`)
 - Serializace: `System.Text.Json` s `JsonSerializerDefaults.Web`
 
 Hlavní funkce
 - Autentizace a ukládání JWT do `SecureStorage` (viz `TkOlympApp/Services/AuthService.cs`).
-- Načítání a zobrazení eventů pomocí GraphQL (viz `TkOlympApp/Services/EventService.cs`).
+- Načítání a zobrazení údálostí pomocí GraphQL (viz `TkOlympApp/Services/EventService.cs`).
 - Nástěnka a oznámení (viz `TkOlympApp/Services/NoticeboardService.cs`).
 - Žebříčky (viz `TkOlympApp/Services/LeaderboardService.cs`).
-- Uživatelský profil a správa uživatelů (viz `TkOlympApp/Services/UserService.cs`).
+- Uživatelský profil (viz `TkOlympApp/Services/UserService.cs`).
 
 Struktura projektu (vybrané soubory)
 - `TkOlympApp/MauiProgram.cs` – konfigurace aplikace a registrace fontů/ikon.
