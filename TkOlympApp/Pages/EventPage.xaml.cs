@@ -103,7 +103,19 @@ public partial class EventPage : ContentPage
                 return;
             }
 
-            TitleLabel.Text = string.IsNullOrWhiteSpace(ev.Name) ? ev.LocationText ?? "Událost" : ev.Name;
+            // Use explicit naming: prefer event name, otherwise fall back to "Lekce: {trainer}" or "Lekce"
+            if (!string.IsNullOrWhiteSpace(ev.Name))
+            {
+                TitleLabel.Text = ev.Name;
+            }
+            else
+            {
+                var firstTrainer = ev.EventTrainersList?.FirstOrDefault()?.Name?.Trim();
+                if (!string.IsNullOrWhiteSpace(firstTrainer))
+                    TitleLabel.Text = $"Lekce: {firstTrainer}";
+                else
+                    TitleLabel.Text = "Lekce";
+            }
             // Render HTML content with richer formatting
             DescLabel.FormattedText = HtmlHelpers.ToFormattedString(ev.Description);
             SummaryLabel.FormattedText = HtmlHelpers.ToFormattedString(ev.Summary);

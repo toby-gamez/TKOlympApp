@@ -8,6 +8,7 @@
     <ContentPage.Resources>
         <ResourceDictionary>
             <converters:FriendlyDateConverter x:Key="FriendlyDateConverter" />
+            <converters:EventNameConverter x:Key="EventNameConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -35,7 +36,7 @@
                                 <RoundRectangle CornerRadius="8" />
                             </Border.StrokeShape>
                             <VerticalStackLayout Spacing="6">
-                                <Label Text="{Binding Event.Name}" FontAttributes="Bold">
+                                <Label Text="{Binding Event, Converter={StaticResource EventNameConverter}}" FontAttributes="Bold">
                                     <Label.Triggers>
                                         <DataTrigger TargetType="Label" Binding="{Binding IsCancelled}" Value="True">
                                             <Setter Property="TextDecorations" Value="Strikethrough" />

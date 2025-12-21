@@ -126,7 +126,7 @@ public static class EventService
 
         var query = new GraphQlRequest
         {
-            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $onlyMine: Boolean, $first: Int, $offset: Int, $onlyType: EventType) { myEventInstancesForRangeList(startRange: $startRange, endRange: $endRange, onlyMine: $onlyMine, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled locationId since until updatedAt tenant { couplesList { active man { firstName name lastName } woman { name lastName firstName } } } event { id description name locationText isRegistrationOpen isPublic guestPrice { amount currency } } } }",
+            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $onlyMine: Boolean, $first: Int, $offset: Int, $onlyType: EventType) { myEventInstancesForRangeList(startRange: $startRange, endRange: $endRange, onlyMine: $onlyMine, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled locationId since until updatedAt tenant { couplesList { active man { firstName name lastName } woman { name lastName firstName } } } event { id description name locationText isRegistrationOpen isPublic guestPrice { amount currency } eventTrainersList { name } } } }",
             Variables = variables
         };
 
@@ -169,7 +169,7 @@ public static class EventService
 
         var query = new GraphQlRequest
         {
-            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange) { id event { id name locationText } since until isCancelled } }",
+            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange) { id event { id name locationText eventTrainersList { name } } since until isCancelled } }",
             Variables = variables
         };
 
@@ -286,7 +286,8 @@ public static class EventService
         [property: JsonPropertyName("until")] DateTime? Until,
         [property: JsonPropertyName("isRegistrationOpen")] bool IsRegistrationOpen,
         [property: JsonPropertyName("isPublic")] bool IsPublic,
-        [property: JsonPropertyName("guestPrice")] Money? GuestPrice
+        [property: JsonPropertyName("guestPrice")] Money? GuestPrice,
+        [property: JsonPropertyName("eventTrainersList")] List<EventTrainer>? EventTrainersList
     );
 
     public sealed record Money(
