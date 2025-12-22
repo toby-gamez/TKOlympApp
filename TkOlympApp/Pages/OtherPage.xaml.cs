@@ -51,6 +51,18 @@ public partial class OtherPage : ContentPage
         }
     }
 
+    private async void OnPeopleClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            await Shell.Current.GoToAsync(nameof(PeoplePage));
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync("Chyba", ex.Message, "OK");
+        }
+    }
+
     private async void OnCohortGroupsClicked(object? sender, EventArgs e)
     {
         try

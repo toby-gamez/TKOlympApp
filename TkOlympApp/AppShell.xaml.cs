@@ -28,6 +28,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(nameof(EventPage), typeof(EventPage));
         Routing.RegisterRoute(nameof(TrainersAndLocationsPage), typeof(TrainersAndLocationsPage));
         Routing.RegisterRoute(nameof(CohortGroupsPage), typeof(CohortGroupsPage));
+        Routing.RegisterRoute(nameof(PeoplePage), typeof(PeoplePage));
 
         Dispatcher.Dispatch(async () =>
         {

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
+             x:Class="TkOlympApp.Pages.PeoplePage"
+             Title="Lidé">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        <HorizontalStackLayout Grid.Row="0" Padding="12" Spacing="8" VerticalOptions="Center">
+            <Label Text="Řazení:" VerticalOptions="Center" />
+            <Picker x:Name="SortPicker" Title="Řadit" WidthRequest="200" SelectedIndexChanged="OnSortChanged">
+                <Picker.Items>
+                    <x:String>Abecedně</x:String>
+                    <x:String>Podle narozenin</x:String>
+                </Picker.Items>
+            </Picker>
+            <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" HorizontalOptions="EndAndExpand" />
+        </HorizontalStackLayout>
+
+            <RefreshView x:Name="PeopleRefresh" Grid.Row="1" Refreshing="OnPeopleRefresh">
+            <CollectionView x:Name="PeopleCollection" SelectionMode="None" IsGrouped="False">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border x:Name="PersonBorder" StrokeShape="RoundRectangle 8" StrokeThickness="1" Padding="12" Margin="12,6">
+                            <Grid ColumnDefinitions="*,Auto" HorizontalOptions="FillAndExpand" VerticalOptions="Center">
+                                <VerticalStackLayout Grid.Column="0" HorizontalOptions="Start" VerticalOptions="Center">
+                                    <Label Text="{Binding FullName}" FontAttributes="Bold" />
+                                    <Label Text="{Binding DisplayBirthDate}" FontSize="12" Style="{StaticResource MutedLabelStyle}" />
+                                </VerticalStackLayout>
+                                <Label x:Name="CakeIcon" Grid.Column="1" Text="{mi:Material Icon=Cake}" IsVisible="{Binding IsBirthdayToday}" HorizontalOptions="End" VerticalOptions="Center" FontSize="26" Margin="8,0,0,0" TextColor="{StaticResource Primary}" />
+                            </Grid>
+                            <Border.Triggers>
+                                <DataTrigger TargetType="Border" Binding="{Binding IsBirthdayToday}" Value="True">
+                                    <Setter Property="Stroke" Value="{DynamicResource Primary}" />
+                                    <Setter Property="StrokeThickness" Value="2" />
+                                </DataTrigger>
+                            </Border.Triggers>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+
+        <!-- Manual reload removed — use pull-to-refresh -->
+    </Grid>
+</ContentPage>
