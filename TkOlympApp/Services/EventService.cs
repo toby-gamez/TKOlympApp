@@ -12,10 +12,10 @@ public static class EventService
     };
     public static async Task<EventDetails?> GetEventAsync(long id, CancellationToken ct = default)
     {
-        var query = new GraphQlRequest
+            var query = new GraphQlRequest
         {
-            // Align fields with requested event + info query and field order
-            Query = "query MyQuery($id: BigInt!) { event(id: $id) { capacity createdAt description eventRegistrations { totalCount nodes { couple { active status man { name } woman { name } } eventLessonDemandsByRegistrationIdList { lessonCount trainer { name } } person { firstName lastName } } } isPublic isRegistrationOpen isVisible __typename name summary locationText eventTrainersList { lessonPrice { amount currency } name } updatedAt since until } }",
+            // Request person names and couple names (including first name) and instance trainers for registrations
+            Query = "query MyQuery($id: BigInt!) { event(id: $id) { capacity createdAt description eventRegistrations { totalCount nodes { couple { active status man { name firstName lastName eventInstanceTrainersList { name lessonPrice { amount currency } } } woman { name firstName lastName eventInstanceTrainersList { name lessonPrice { amount currency } } } } eventLessonDemandsByRegistrationIdList { lessonCount trainer { name } } person { firstName lastName } } } isPublic isRegistrationOpen isVisible __typename name summary locationText eventTrainersList { lessonPrice { amount currency } name } updatedAt since until } }",
             Variables = new Dictionary<string, object> { { "id", id } }
         };
 
@@ -80,6 +80,7 @@ public static class EventService
 
     public sealed record RegistrationPerson(
         [property: JsonPropertyName("name")] string? Name,
+        [property: JsonPropertyName("lastName")] string? LastName,
         [property: JsonPropertyName("eventInstanceTrainersList")] List<EventInstanceTrainer>? EventInstanceTrainersList
     );
 

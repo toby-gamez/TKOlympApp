@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Globalization;
 using System.Linq;
 using TkOlympApp.Services;
@@ -124,6 +126,53 @@ public partial class MainPage : ContentPage
                 if (wg.Count > 0)
                     _weeks.Add(wg);
             }
+
+            // background fetch for missing first-registrant names using GetEventAsync
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    foreach (var week in _weeks)
+                    {
+                        foreach (var day in week)
+                        {
+                            foreach (var gt in day.GroupedTrainers)
+                            {
+                                foreach (var row in gt.Rows)
+                                {
+                                    if (string.IsNullOrWhiteSpace(row.FirstRegistrant) && row.Instance?.Event?.Id != 0)
+                                    {
+                                        try
+                                        {
+                                            var id = row.Instance.Event.Id;
+                                            var details = await EventService.GetEventAsync(id);
+                                            if (details?.EventRegistrations?.Nodes != null && details.EventRegistrations.Nodes.Count > 0)
+                                            {
+                                                var node = details.EventRegistrations.Nodes[0];
+                                                string name = string.Empty;
+                                                if (node?.Person != null)
+                                                    name = (node.Person.FirstName + " " + (node.Person.LastName ?? string.Empty)).Trim();
+                                                if (string.IsNullOrWhiteSpace(name) && node?.Couple != null)
+                                                {
+                                                    var manLn = node.Couple.Man?.LastName;
+                                                    var womanLn = node.Couple.Woman?.LastName;
+                                                    if (!string.IsNullOrWhiteSpace(manLn) && !string.IsNullOrWhiteSpace(womanLn)) name = manLn + " - " + womanLn;
+                                                    else if (!string.IsNullOrWhiteSpace(manLn)) name = manLn;
+                                                    else if (!string.IsNullOrWhiteSpace(womanLn)) name = womanLn;
+                                                }
+                                                if (!string.IsNullOrWhiteSpace(name))
+                                                    Device.BeginInvokeOnMainThread(() => row.FirstRegistrant = name);
+                                            }
+                                        }
+                                        catch { }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                catch { }
+            });
         }
         catch (Exception ex)
         {
@@ -326,23 +375,38 @@ public partial class MainPage : ContentPage
 
     // (no wrapper class) single events are stored in DayGroup.SingleEvents
 
-    public sealed class GroupedEventRow
+    public sealed class GroupedEventRow : INotifyPropertyChanged
     {
         public EventService.EventInstance Instance { get; }
         public string TimeRange { get; }
-        public string FirstRegistrant { get; }
+        private string _firstRegistrant;
+        public string FirstRegistrant
+        {
+            get => _firstRegistrant;
+            set
+            {
+                if (_firstRegistrant != value)
+                {
+                    _firstRegistrant = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FirstRegistrant)));
+                }
+            }
+        }
         public string DurationText { get; }
+
         public GroupedEventRow(EventService.EventInstance instance, string firstRegistrantOverride = "")
         {
             Instance = instance;
             var since = instance.Since;
             var until = instance.Until;
             TimeRange = (since.HasValue ? since.Value.ToString("HH:mm") : "--:--") + " - " + (until.HasValue ? until.Value.ToString("HH:mm") : "--:--");
-            FirstRegistrant = string.IsNullOrEmpty(firstRegistrantOverride) ? ComputeFirstRegistrant(instance) : firstRegistrantOverride;
+            _firstRegistrant = string.IsNullOrEmpty(firstRegistrantOverride) ? ComputeFirstRegistrant(instance) : firstRegistrantOverride;
             DurationText = ComputeDuration(instance);
         }
 
-        // expose a public helper to compute the registrant without needing an instance method call
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        // helper used when constructing groups
         public static string ComputeFirstRegistrantPublic(EventService.EventInstance inst) => ComputeFirstRegistrant(inst);
 
         private static string ComputeFirstRegistrant(EventService.EventInstance inst)
@@ -350,22 +414,80 @@ public partial class MainPage : ContentPage
             try
             {
                 // prefer eventRegistrationsList if available
-                var evt = inst.Event;
-                if (evt?.EventRegistrationsList != null && evt.EventRegistrationsList.Count > 0)
-                {
-                    var node = evt.EventRegistrationsList[0];
-                    if (node?.Person != null && !string.IsNullOrWhiteSpace(node.Person.Name))
-                        return node.Person.Name;
-                    if (node?.Couple != null)
+                    // prefer eventRegistrationsList if available
+                    var evt = inst.Event;
+                    if (evt?.EventRegistrationsList != null && evt.EventRegistrationsList.Count > 0)
                     {
-                        var manLn = node.Couple.Man?.LastName;
-                        var womanLn = node.Couple.Woman?.LastName;
-                        if (!string.IsNullOrWhiteSpace(manLn) && !string.IsNullOrWhiteSpace(womanLn))
-                            return manLn + " - " + womanLn;
-                        if (!string.IsNullOrWhiteSpace(manLn)) return manLn;
-                        if (!string.IsNullOrWhiteSpace(womanLn)) return womanLn;
+                        var regs = evt.EventRegistrationsList;
+                        int count = regs.Count;
+
+                        // collect best-possible surname/identifier for each registration
+                        var surnames = new System.Collections.Generic.List<string>();
+                        static string ExtractSurname(string full)
+                        {
+                            if (string.IsNullOrWhiteSpace(full)) return string.Empty;
+                            var parts = full.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+                            return parts.Length > 1 ? parts[parts.Length - 1] : full;
+                        }
+                        foreach (var node in regs)
+                        {
+                            try
+                            {
+                                if (node?.Person != null)
+                                {
+                                    var full = node.Person.Name ?? string.Empty;
+                                    if (!string.IsNullOrWhiteSpace(full))
+                                        surnames.Add(ExtractSurname(full));
+                                }
+                                else if (node?.Couple != null)
+                                {
+                                    var manLn = node.Couple.Man?.LastName;
+                                    var womanLn = node.Couple.Woman?.LastName;
+                                    if (!string.IsNullOrWhiteSpace(manLn) && !string.IsNullOrWhiteSpace(womanLn))
+                                        surnames.Add(manLn + " - " + womanLn);
+                                    else if (!string.IsNullOrWhiteSpace(manLn)) surnames.Add(manLn);
+                                    else if (!string.IsNullOrWhiteSpace(womanLn)) surnames.Add(womanLn);
+                                }
+                            }
+                            catch { }
+                        }
+
+                        if (count == 1)
+                        {
+                            var node = regs[0];
+                            if (node?.Person != null)
+                            {
+                                var full = node.Person.Name ?? string.Empty;
+                                if (!string.IsNullOrWhiteSpace(full)) return full;
+                            }
+                            if (node?.Couple != null)
+                            {
+                                var manLn = node.Couple.Man?.LastName;
+                                var womanLn = node.Couple.Woman?.LastName;
+                                if (!string.IsNullOrWhiteSpace(manLn) && !string.IsNullOrWhiteSpace(womanLn)) return manLn + " - " + womanLn;
+                                if (!string.IsNullOrWhiteSpace(manLn)) return manLn;
+                                if (!string.IsNullOrWhiteSpace(womanLn)) return womanLn;
+                            }
+                        }
+                        else if (count == 2)
+                        {
+                            if (surnames.Count >= 2)
+                                return surnames[0] + " - " + surnames[1];
+                            if (surnames.Count == 1) return surnames[0];
+                        }
+                        else // count >= 3
+                        {
+                            if (count == 3)
+                            {
+                                if (surnames.Count > 0) return string.Join(", ", surnames);
+                            }
+                            else // > 3
+                            {
+                                var take = surnames.Take(2).ToList();
+                                if (take.Count > 0) return string.Join(", ", take) + "...";
+                            }
+                        }
                     }
-                }
 
                 // fall back to tenant.couplesList (existing logic)
                 var tenant = inst.Tenant;
