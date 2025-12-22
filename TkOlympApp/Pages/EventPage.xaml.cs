@@ -316,9 +316,16 @@ public partial class EventPage : ContentPage
         }
     }
 
-    private async void OnReloadClicked(object? sender, EventArgs e)
+    private async void OnRefresh(object? sender, EventArgs e)
     {
-        await LoadAsync();
+        try
+        {
+            await LoadAsync();
+        }
+        finally
+        {
+            try { RefreshViewControl.IsRefreshing = false; } catch { }
+        }
     }
 
     private static string? HtmlToPlainText(string? html)

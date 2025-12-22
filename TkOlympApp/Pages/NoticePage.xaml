@@ -3,8 +3,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TkOlympApp.Pages.NoticePage"
              Title="Oznámení">
-    <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="12">
+    <RefreshView x:Name="NoticeRefresh" Refreshing="OnNoticeRefresh">
+        <ScrollView>
+            <VerticalStackLayout Padding="20" Spacing="12">
             <VerticalStackLayout Spacing="8" Margin="8,6">
                 <Label x:Name="TitleLabel" FontAttributes="Bold" FontSize="20" />
             </VerticalStackLayout>
@@ -29,5 +30,6 @@
                 </VerticalStackLayout>
             </Border>
         </VerticalStackLayout>
-    </ScrollView>
+        </ScrollView>
+    </RefreshView>
 </ContentPage>

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Maui.Controls;
+using System.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -15,17 +16,21 @@ public partial class MainPage : ContentPage
     {
         InitializeComponent();
         EventsCollection.ItemsSource = _events;
+        UpdateEmptyView();
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        try { Debug.WriteLine("MainPage: OnAppearing"); } catch { }
         await LoadEventsAsync();
     }
 
     private async Task LoadEventsAsync()
     {
+        try { Debug.WriteLine("MainPage: LoadEventsAsync start"); } catch { }
         if (_isLoading) return;
+        UpdateEmptyView();
         _isLoading = true;
         Loading.IsVisible = true;
         Loading.IsRunning = true;
@@ -71,12 +76,36 @@ public partial class MainPage : ContentPage
                 // ignore UI update failures
             }
             _isLoading = false;
+            // Update empty/visibility state after loading completes
+            UpdateEmptyView();
         }
     }
 
     private async void OnlyMineSwitch_Toggled(object? sender, ToggledEventArgs e)
     {
+        UpdateEmptyView();
         await LoadEventsAsync();
+    }
+
+    private void UpdateEmptyView()
+    {
+        try
+        {
+            var onlyMine = OnlyMineSwitch?.IsToggled ?? true;
+            var emptyText = onlyMine ? "Nemáte žádné události." : "Nejsou žádné události.";
+            if (EmptyLabel != null)
+            {
+                EmptyLabel.Text = emptyText;
+                var showEmpty = !_isLoading && _events.Count == 0;
+                EmptyLabel.IsVisible = showEmpty;
+                if (EventsCollection != null)
+                    EventsCollection.IsVisible = !showEmpty;
+            }
+        }
+        catch
+        {
+            // ignore UI update failures
+        }
     }
 
     private async void EventsCollection_SelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -126,6 +155,7 @@ public partial class MainPage : ContentPage
 
     private async void OnEventsRefresh(object? sender, EventArgs e)
     {
+        try { Debug.WriteLine("MainPage: OnEventsRefresh invoked"); } catch { }
         await LoadEventsAsync();
         try
         {

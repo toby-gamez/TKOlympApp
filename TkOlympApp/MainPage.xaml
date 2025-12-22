@@ -22,12 +22,12 @@
             <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" HorizontalOptions="Center"/>
             <Label Text="Mé" VerticalTextAlignment="Center"/>
             <Switch x:Name="OnlyMineSwitch" IsToggled="True" Toggled="OnlyMineSwitch_Toggled"/>
-            <Button Text="Reload" Clicked="OnReloadClicked" />
         </HorizontalStackLayout>
 
         <RefreshView x:Name="EventsRefresh" Refreshing="OnEventsRefresh" Grid.Row="1">
-            <CollectionView x:Name="EventsCollection" SelectionMode="Single" SelectionChanged="EventsCollection_SelectionChanged" VerticalOptions="FillAndExpand">
-            <CollectionView.ItemTemplate>
+            <Grid>
+                <CollectionView x:Name="EventsCollection" SelectionMode="Single" SelectionChanged="EventsCollection_SelectionChanged" VerticalOptions="FillAndExpand">
+                <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <Border Padding="12" Margin="6">
                             <Border.GestureRecognizers>
@@ -60,7 +60,9 @@
                         </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
-            </CollectionView>
+                </CollectionView>
+                <Label x:Name="EmptyLabel" IsVisible="False" VerticalOptions="CenterAndExpand" HorizontalOptions="Center" />
+            </Grid>
         </RefreshView>
     </Grid>
 

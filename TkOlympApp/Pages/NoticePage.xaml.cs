@@ -104,4 +104,16 @@ public partial class NoticePage : ContentPage
             await DisplayAlertAsync("Chyba načtení", ex.Message, "OK");
         }
     }
+
+    private async void OnNoticeRefresh(object? sender, EventArgs e)
+    {
+        try
+        {
+            await LoadAsync();
+        }
+        finally
+        {
+            try { NoticeRefresh.IsRefreshing = false; } catch { }
+        }
+    }
 }
