@@ -8,7 +8,7 @@ namespace TkOlympApp.Converters;
 
 public class EventNameConverter : IValueConverter
 {
-    public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is EventService.EventInfo ev)
         {
@@ -29,7 +29,7 @@ public class EventNameConverter : IValueConverter
         return value?.ToString() ?? string.Empty;
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         throw new NotSupportedException();
     }

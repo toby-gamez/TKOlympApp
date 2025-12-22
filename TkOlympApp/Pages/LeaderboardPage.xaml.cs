@@ -39,7 +39,7 @@ public partial class LeaderboardPage : ContentPage
         {
             try
             {
-                await DisplayAlert("Chyba", ex.Message, "OK");
+                await DisplayAlertAsync("Chyba", ex.Message, "OK");
             }
             catch
             {
@@ -66,7 +66,9 @@ public partial class LeaderboardPage : ContentPage
                 var current = await UserService.GetCurrentUserAsync();
                 if (current != null)
                 {
-                    currentFullName = string.Join(' ', new[] { current.UJmeno, current.UPrijmeni }.Where(s => !string.IsNullOrWhiteSpace(s))).Trim();
+                    // Coalesce potentially-null name parts to avoid nullability warnings
+                    var parts = new[] { current.UJmeno ?? string.Empty, current.UPrijmeni ?? string.Empty };
+                    currentFullName = string.Join(' ', parts.Where(s => !string.IsNullOrWhiteSpace(s))).Trim();
                 }
             }
             catch
@@ -86,7 +88,7 @@ public partial class LeaderboardPage : ContentPage
 
                 var row = new LeaderboardRow
                 {
-                    PersonDisplay = item.PersonDisplay,
+                    PersonDisplay = item.PersonDisplay ?? string.Empty,
                     RankingDisplay = rankSuffix,
                     TotalScoreDisplay = string.IsNullOrEmpty(item.TotalScoreDisplay) ? string.Empty : item.TotalScoreDisplay + " b",
                     IsCurrentUser = isCurrent,
@@ -124,10 +126,10 @@ public partial class LeaderboardPage : ContentPage
                 _rows.Add(row);
             }
         }
-        catch (Exception ex)
-        {
-            await DisplayAlert("Chyba", ex.Message, "OK");
-        }
+            catch (Exception ex)
+            {
+                await DisplayAlertAsync("Chyba", ex.Message, "OK");
+            }
         finally
         {
             try

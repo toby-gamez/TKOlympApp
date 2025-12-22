@@ -54,7 +54,7 @@ public partial class MainPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Chyba načtení", ex.Message, "OK");
+            await DisplayAlertAsync("Chyba načtení", ex.Message, "OK");
         }
         finally
         {

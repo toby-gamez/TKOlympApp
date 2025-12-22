@@ -17,8 +17,8 @@ public partial class OtherPage : ContentPage
         {
             await AuthService.LogoutAsync();
 
-            // Reset Shell to a clean state to avoid navigation stack issues
-            Application.Current.MainPage = new AppShell();
+            // Navigate to login route instead of setting Application.MainPage (obsolete setter)
+            await Shell.Current.GoToAsync($"//{nameof(LoginPage)}");
         }
         catch
         {
@@ -35,7 +35,7 @@ public partial class OtherPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Chyba", ex.Message, "OK");
+            await DisplayAlertAsync("Chyba", ex.Message, "OK");
         }
     }
 }

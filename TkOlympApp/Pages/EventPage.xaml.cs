@@ -99,7 +99,7 @@ public partial class EventPage : ContentPage
             var ev = await EventService.GetEventAsync(EventId);
             if (ev == null)
             {
-                await DisplayAlert("Nenalezeno", "Událost nebyla nalezena.", "OK");
+                await DisplayAlertAsync("Nenalezeno", "Událost nebyla nalezena.", "OK");
                 return;
             }
 
@@ -120,8 +120,8 @@ public partial class EventPage : ContentPage
             DescLabel.FormattedText = HtmlHelpers.ToFormattedString(ev.Description);
             SummaryLabel.FormattedText = HtmlHelpers.ToFormattedString(ev.Summary);
             var locName = ev.LocationText;
-            LocationLabel.Text = string.IsNullOrWhiteSpace(locName) ? null : $"Místo konání: {locName}";
-            LocationLabel.IsVisible = !string.IsNullOrWhiteSpace(LocationLabel.Text);
+            LocationLabel.Text = string.IsNullOrWhiteSpace(locName) ? string.Empty : $"Místo konání: {locName}";
+            LocationLabel.IsVisible = !string.IsNullOrWhiteSpace(locName);
             // Prefer since/until passed from instance navigation; otherwise use event-level values
             DateTime? since = ev.Since;
             DateTime? until = ev.Until;
@@ -214,7 +214,7 @@ public partial class EventPage : ContentPage
             }
             else
             {
-                UpdatedAtLabel.Text = null;
+                UpdatedAtLabel.Text = string.Empty;
                 UpdatedAtLabel.IsVisible = false;
             }
             RegistrationOpenLabel.IsVisible = ev.IsRegistrationOpen;
@@ -230,7 +230,7 @@ public partial class EventPage : ContentPage
                 if (t == null) continue;
                 var name = t.Name?.Trim();
                 var price = t.LessonPrice;
-                string line = name;
+                string line = name ?? string.Empty;
                 if (price != null && price.Amount != 0)
                 {
                     var cur = price.Currency;
@@ -307,7 +307,7 @@ public partial class EventPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Chyba načtení", ex.Message, "OK");
+            await DisplayAlertAsync("Chyba načtení", ex.Message, "OK");
         }
         finally
         {

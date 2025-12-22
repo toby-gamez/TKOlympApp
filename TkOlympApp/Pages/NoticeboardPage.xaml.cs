@@ -129,7 +129,7 @@ public partial class NoticeboardPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Chyba", ex.Message, "OK");
+            await DisplayAlertAsync("Chyba", ex.Message, "OK");
         }
         finally
         {
@@ -185,7 +185,7 @@ public partial class NoticeboardPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Chyba", ex.Message, "OK");
+            await DisplayAlertAsync("Chyba", ex.Message, "OK");
         }
         finally
         {
@@ -206,7 +206,7 @@ public partial class NoticeboardPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Chyba navigace", ex.Message, "OK");
+            await DisplayAlertAsync("Chyba navigace", ex.Message, "OK");
         }
     }
 }

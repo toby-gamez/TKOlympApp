@@ -18,7 +18,7 @@ public partial class LoginPage : ContentPage
 
         if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
         {
-            await DisplayAlert("Chyba", "Vyplňte prosím jméno i heslo.", "OK");
+            await DisplayAlertAsync("Chyba", "Vyplňte prosím jméno i heslo.", "OK");
             return;
         }
 
@@ -32,7 +32,7 @@ public partial class LoginPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Přihlášení selhalo", ex.Message, "OK");
+            await DisplayAlertAsync("Přihlášení selhalo", ex.Message, "OK");
         }
     }
 
