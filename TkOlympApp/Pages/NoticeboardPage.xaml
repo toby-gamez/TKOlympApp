@@ -16,7 +16,8 @@
             <ActivityIndicator x:Name="LoadingIndicator" IsVisible="False" IsRunning="False" HorizontalOptions="EndAndExpand" Margin="0,0,0,0" />
         </HorizontalStackLayout>
 
-        <CollectionView Grid.Row="1" x:Name="AnnouncementsCollection" Margin="0" SelectionMode="None" VerticalOptions="FillAndExpand">
+        <RefreshView x:Name="AnnouncementsRefresh" Refreshing="OnAnnouncementsRefresh" Grid.Row="1">
+            <CollectionView x:Name="AnnouncementsCollection" Margin="0" SelectionMode="None" VerticalOptions="FillAndExpand">
             <CollectionView.ItemsLayout>
                 <LinearItemsLayout Orientation="Vertical" ItemSpacing="4" />
             </CollectionView.ItemsLayout>
@@ -37,6 +38,7 @@
                     </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
-        </CollectionView>
+            </CollectionView>
+        </RefreshView>
     </Grid>
 </ContentPage>

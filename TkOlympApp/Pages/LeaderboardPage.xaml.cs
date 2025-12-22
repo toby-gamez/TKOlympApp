@@ -136,11 +136,34 @@ public partial class LeaderboardPage : ContentPage
             {
                 LoadingIndicator.IsRunning = false;
                 LoadingIndicator.IsVisible = false;
+                try
+                {
+                    if (LeaderboardRefresh != null)
+                        LeaderboardRefresh.IsRefreshing = false;
+                }
+                catch
+                {
+                    // ignore
+                }
             }
             catch
             {
                 // ignore failures updating UI elements
             }
+        }
+    }
+
+    private async void OnLeaderboardRefresh(object? sender, EventArgs e)
+    {
+        await LoadAsync();
+        try
+        {
+            if (LeaderboardRefresh != null)
+                LeaderboardRefresh.IsRefreshing = false;
+        }
+        catch
+        {
+            // ignore
         }
     }
 

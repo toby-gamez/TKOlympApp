@@ -25,8 +25,9 @@
             <Button Text="Reload" Clicked="OnReloadClicked" />
         </HorizontalStackLayout>
 
-        <CollectionView Grid.Row="1" x:Name="EventsCollection" SelectionMode="Single" SelectionChanged="EventsCollection_SelectionChanged" VerticalOptions="FillAndExpand">
-                <CollectionView.ItemTemplate>
+        <RefreshView x:Name="EventsRefresh" Refreshing="OnEventsRefresh" Grid.Row="1">
+            <CollectionView x:Name="EventsCollection" SelectionMode="Single" SelectionChanged="EventsCollection_SelectionChanged" VerticalOptions="FillAndExpand">
+            <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <Border Padding="12" Margin="6">
                             <Border.GestureRecognizers>
@@ -59,7 +60,8 @@
                         </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
-</CollectionView>
+            </CollectionView>
+        </RefreshView>
     </Grid>
 
 </ContentPage>

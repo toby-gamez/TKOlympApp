@@ -61,6 +61,15 @@ public partial class MainPage : ContentPage
             Loading.IsRunning = false;
             Loading.IsVisible = false;
             EventsCollection.IsVisible = true;
+            try
+            {
+                if (EventsRefresh != null)
+                    EventsRefresh.IsRefreshing = false;
+            }
+            catch
+            {
+                // ignore UI update failures
+            }
             _isLoading = false;
         }
     }
@@ -113,5 +122,19 @@ public partial class MainPage : ContentPage
     private async void OnReloadClicked(object? sender, EventArgs e)
     {
         await LoadEventsAsync();
+    }
+
+    private async void OnEventsRefresh(object? sender, EventArgs e)
+    {
+        await LoadEventsAsync();
+        try
+        {
+            if (EventsRefresh != null)
+                EventsRefresh.IsRefreshing = false;
+        }
+        catch
+        {
+            // ignore
+        }
     }
 }

@@ -13,6 +13,8 @@ namespace TkOlympApp.Pages;
 
 public partial class NoticeboardPage : ContentPage
 {
+    private bool _isAktualityActive = true;
+
     public NoticeboardPage()
     {
         InitializeComponent();
@@ -23,6 +25,7 @@ public partial class NoticeboardPage : ContentPage
 
     private void SetTabVisuals(bool aktivniAktuality)
     {
+        _isAktualityActive = aktivniAktuality;
         var theme = Application.Current?.RequestedTheme ?? AppTheme.Unspecified;
         if (theme == AppTheme.Light)
         {
@@ -135,6 +138,15 @@ public partial class NoticeboardPage : ContentPage
         {
             LoadingIndicator.IsRunning = false;
             LoadingIndicator.IsVisible = false;
+            try
+            {
+                if (AnnouncementsRefresh != null)
+                    AnnouncementsRefresh.IsRefreshing = false;
+            }
+            catch
+            {
+                // ignore
+            }
         }
     }
 
@@ -191,6 +203,15 @@ public partial class NoticeboardPage : ContentPage
         {
             LoadingIndicator.IsRunning = false;
             LoadingIndicator.IsVisible = false;
+            try
+            {
+                if (AnnouncementsRefresh != null)
+                    AnnouncementsRefresh.IsRefreshing = false;
+            }
+            catch
+            {
+                // ignore
+            }
         }
     }
 
@@ -207,6 +228,24 @@ public partial class NoticeboardPage : ContentPage
         catch (Exception ex)
         {
             await DisplayAlertAsync("Chyba navigace", ex.Message, "OK");
+        }
+    }
+
+    private async void OnAnnouncementsRefresh(object? sender, EventArgs e)
+    {
+        if (_isAktualityActive)
+            await LoadAnnouncementsAsync();
+        else
+            await LoadStickyAnnouncementsAsync();
+
+        try
+        {
+            if (AnnouncementsRefresh != null)
+                AnnouncementsRefresh.IsRefreshing = false;
+        }
+        catch
+        {
+            // ignore
         }
     }
 }

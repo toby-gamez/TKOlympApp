@@ -8,8 +8,9 @@
 
     <Grid>
         <!-- Main content -->
-        <ScrollView>
-            <VerticalStackLayout Padding="20" Spacing="12">
+        <RefreshView x:Name="LeaderboardRefresh" Refreshing="OnLeaderboardRefresh">
+            <ScrollView>
+                <VerticalStackLayout Padding="20" Spacing="12">
 
                 <StackLayout Spacing="8">
                     <CollectionView x:Name="ScoreboardCollection" ItemsLayout="VerticalList">
@@ -45,8 +46,9 @@
                     </CollectionView.ItemTemplate>
                 </CollectionView>
                 </StackLayout>
-            </VerticalStackLayout>
-        </ScrollView>
+                </VerticalStackLayout>
+            </ScrollView>
+        </RefreshView>
 
         <!-- Loading indicator (centered) with message -->
         <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="6">
