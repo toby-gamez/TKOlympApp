@@ -125,9 +125,9 @@ public static class EventService
         if (offset.HasValue) variables["offset"] = offset.Value;
         if (!string.IsNullOrEmpty(onlyType)) variables["onlyType"] = onlyType;
 
-        var query = new GraphQlRequest
+            var query = new GraphQlRequest
         {
-            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $onlyMine: Boolean, $first: Int, $offset: Int, $onlyType: EventType) { myEventInstancesForRangeList(startRange: $startRange, endRange: $endRange, onlyMine: $onlyMine, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled locationId since until updatedAt tenant { couplesList { active man { firstName name lastName } woman { name lastName firstName } } } event { id description name locationText isRegistrationOpen isPublic guestPrice { amount currency } eventTrainersList { name } } } }",
+            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $onlyMine: Boolean, $first: Int, $offset: Int, $onlyType: EventType) { myEventInstancesForRangeList(startRange: $startRange, endRange: $endRange, onlyMine: $onlyMine, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled locationId since until updatedAt event { id description name locationText isRegistrationOpen isPublic guestPrice { amount currency } eventTrainersList { name } eventRegistrationsList { person { name } couple { man { lastName } woman { lastName } } } } tenant { couplesList { active man { firstName name lastName } woman { name lastName firstName } } } } }",
             Variables = variables
         };
 
@@ -288,7 +288,26 @@ public static class EventService
         [property: JsonPropertyName("isRegistrationOpen")] bool IsRegistrationOpen,
         [property: JsonPropertyName("isPublic")] bool IsPublic,
         [property: JsonPropertyName("guestPrice")] Money? GuestPrice,
-        [property: JsonPropertyName("eventTrainersList")] List<EventTrainer>? EventTrainersList
+        [property: JsonPropertyName("eventTrainersList")] List<EventTrainer>? EventTrainersList,
+        [property: JsonPropertyName("eventRegistrationsList")] List<EventRegistrationShort>? EventRegistrationsList
+    );
+
+    public sealed record EventRegistrationShort(
+        [property: JsonPropertyName("person")] EventPersonShort? Person,
+        [property: JsonPropertyName("couple")] EventCoupleShort? Couple
+    );
+
+    public sealed record EventPersonShort(
+        [property: JsonPropertyName("name")] string? Name
+    );
+
+    public sealed record EventCoupleShort(
+        [property: JsonPropertyName("man")] EventCoupleMemberShort? Man,
+        [property: JsonPropertyName("woman")] EventCoupleMemberShort? Woman
+    );
+
+    public sealed record EventCoupleMemberShort(
+        [property: JsonPropertyName("lastName")] string? LastName
     );
 
     public sealed record Money(
