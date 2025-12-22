@@ -41,6 +41,20 @@ public partial class AppShell : Shell
                     // Show login without resetting Shell root to avoid route issues
                     await GoToAsync(nameof(LoginPage));
                 }
+                else
+                {
+                    // Ensure main page is visible and request a refresh after auth is ready
+                    try
+                    {
+                        try { await GoToAsync("//Kalendář"); } catch { }
+                        var current = Shell.Current?.CurrentPage;
+                        if (current is MainPage mp)
+                        {
+                            _ = mp.RefreshEventsAsync();
+                        }
+                    }
+                    catch { }
+                }
             }
             catch
             {

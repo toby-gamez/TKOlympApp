@@ -16,6 +16,7 @@ public partial class MainPage : ContentPage
     private readonly ObservableCollection<WeekGroup> _weeks = new();
     private bool _isLoading;
     private bool _onlyMine = true;
+    
 
     public MainPage()
     {
@@ -49,17 +50,38 @@ public partial class MainPage : ContentPage
         UpdateEmptyView();
     }
 
-    protected override async void OnAppearing()
+    protected override void OnAppearing()
     {
         base.OnAppearing();
         try { Debug.WriteLine("MainPage: OnAppearing"); } catch { }
-        await LoadEventsAsync();
+
+        try
+        {
+            Dispatcher.Dispatch(async () =>
+            {
+                try { await LoadEventsAsync(); } catch { }
+            });
+        }
+        catch
+        {
+            // fallback if dispatch isn't available
+            _ = LoadEventsAsync();
+        }
     }
 
     private async Task LoadEventsAsync()
     {
         try { Debug.WriteLine("MainPage: LoadEventsAsync start"); } catch { }
-        if (_isLoading) return;
+
+        // Ensure the RefreshView shows a refresh indicator when we start programmatically
+        try { if (EventsRefresh != null && !EventsRefresh.IsRefreshing) EventsRefresh.IsRefreshing = true; } catch { }
+
+        if (_isLoading)
+        {
+            // If a load is already in progress, ensure RefreshView isn't left spinning.
+            try { if (EventsRefresh != null) EventsRefresh.IsRefreshing = false; } catch { }
+            return;
+        }
         UpdateEmptyView();
         _isLoading = true;
         Loading.IsVisible = true;
@@ -194,7 +216,16 @@ public partial class MainPage : ContentPage
             }
             _isLoading = false;
             UpdateEmptyView();
+
+            // no-op
         }
+    }
+
+    // Public helper to request a refresh from external callers (e.g. AppShell after auth)
+    public async Task RefreshEventsAsync()
+    {
+        try { if (EventsRefresh != null && !EventsRefresh.IsRefreshing) EventsRefresh.IsRefreshing = true; } catch { }
+        await LoadEventsAsync();
     }
 
     private async void OnlyMineSwitch_Toggled(object? sender, ToggledEventArgs e)
