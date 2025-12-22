@@ -9,8 +9,10 @@
             <VerticalStackLayout Padding="20,0,20,0" Spacing="12">
                 <Label Text="Další nástroje a nastavení." />
 
-                <Button Text="O mně" Clicked="OnAboutMeClicked" />
-                <Button Text="Odeslat test notifikaci" Clicked="OnSendTestNotificationClicked" />
+                <Button Text="About me" Clicked="OnAboutMeClicked" />
+                <Button Text="Send test notification" Clicked="OnSendTestNotificationClicked" />
+                    <Button Text="Trenéři a tr. prostory" Clicked="OnTrainersClicked" />
+                    <Button Text="Tréninkové skupiny" Clicked="OnCohortGroupsClicked" />
             </VerticalStackLayout>
         </ScrollView>
 

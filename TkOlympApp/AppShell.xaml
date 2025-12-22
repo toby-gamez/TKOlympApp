@@ -30,6 +30,7 @@
             ContentTemplate="{DataTemplate pages:LeaderboardPage}"
             Route="Žebříček" />
 
+
         <ShellContent
             Title="Ostatní"
             Icon="{mi:Material Icon=MoreHoriz}"

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:TkOlympApp.Pages"
+             x:Class="TkOlympApp.Pages.CohortGroupsPage"
+             Title="Tréninkové skupiny">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="12">
+            <ActivityIndicator x:Name="LoadingIndicator" IsVisible="False" IsRunning="False" HorizontalOptions="End" />
+
+            <VerticalStackLayout x:Name="GroupsStack" Spacing="10" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

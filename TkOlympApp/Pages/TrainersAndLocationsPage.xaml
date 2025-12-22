@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:TkOlympApp.Pages"
+             x:Class="TkOlympApp.Pages.TrainersAndLocationsPage"
+             Title="Trenéři a tr. prostory">
+
+    <ScrollView>
+        <Grid Padding="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <ActivityIndicator x:Name="LoadingIndicator" IsVisible="False" IsRunning="False" Grid.Row="0" HorizontalOptions="End" />
+
+        <Label Text="Tréninkové prostory" FontAttributes="Bold" FontSize="16" Grid.Row="1" />
+
+        <VerticalStackLayout x:Name="LocationsStack" Grid.Row="2" Margin="0,8,0,8" Spacing="6">
+            <BindableLayout.ItemTemplate>
+                <DataTemplate>
+                        <Border Padding="12" Margin="0">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnLocationTapped" NumberOfTapsRequired="1" />
+                            </Border.GestureRecognizers>
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8" />
+                            </Border.StrokeShape>
+                            <Label Text="{Binding}" />
+                        </Border>
+                    </DataTemplate>
+            </BindableLayout.ItemTemplate>
+        </VerticalStackLayout>
+
+        <Label Text="Trenéři" FontAttributes="Bold" FontSize="16" Grid.Row="3" />
+
+        <VerticalStackLayout x:Name="TrainersStack" Grid.Row="3" Margin="0,36,0,0" Spacing="6">
+            <BindableLayout.ItemTemplate>
+                <DataTemplate>
+                    <Border Padding="12" Margin="0">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+                        <Label Text="{Binding}" />
+                    </Border>
+                </DataTemplate>
+            </BindableLayout.ItemTemplate>
+        </VerticalStackLayout>
+        </Grid>
+    </ScrollView>
+</ContentPage>

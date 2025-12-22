@@ -39,6 +39,30 @@ public partial class OtherPage : ContentPage
         }
     }
 
+    private async void OnTrainersClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            await Shell.Current.GoToAsync(nameof(TrainersAndLocationsPage));
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync("Chyba", ex.Message, "OK");
+        }
+    }
+
+    private async void OnCohortGroupsClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            await Shell.Current.GoToAsync(nameof(CohortGroupsPage));
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync("Chyba", ex.Message, "OK");
+        }
+    }
+
     private void OnSendTestNotificationClicked(object? sender, EventArgs e)
     {
         try
