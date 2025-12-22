@@ -246,17 +246,35 @@ public partial class EventPage : ContentPage
             {
                 var man = n.Couple?.Man?.Name?.Trim() ?? string.Empty;
                 var woman = n.Couple?.Woman?.Name?.Trim() ?? string.Empty;
-                if (string.IsNullOrWhiteSpace(man) && string.IsNullOrWhiteSpace(woman))
-                    continue; // drop empty rows
+                var personFirst = n.Person?.FirstName?.Trim() ?? string.Empty;
+                var personLast = n.Person?.LastName?.Trim() ?? string.Empty;
 
-                string text = !string.IsNullOrWhiteSpace(man) && !string.IsNullOrWhiteSpace(woman)
-                    ? $"{man} - {woman}"
-                    : (string.IsNullOrWhiteSpace(man) ? woman : man);
+                // If both couple and person are empty, skip
+                if (string.IsNullOrWhiteSpace(man) && string.IsNullOrWhiteSpace(woman)
+                    && string.IsNullOrWhiteSpace(personFirst) && string.IsNullOrWhiteSpace(personLast))
+                    continue;
+
+                string text;
+                if (!string.IsNullOrWhiteSpace(man) || !string.IsNullOrWhiteSpace(woman))
+                {
+                    text = !string.IsNullOrWhiteSpace(man) && !string.IsNullOrWhiteSpace(woman)
+                        ? $"{man} - {woman}"
+                        : (string.IsNullOrWhiteSpace(man) ? woman : man);
+                }
+                else
+                {
+                    // Single person entry
+                    text = string.IsNullOrWhiteSpace(personFirst)
+                        ? personLast
+                        : string.IsNullOrWhiteSpace(personLast)
+                            ? personFirst
+                            : $"{personFirst} {personLast}".Trim();
+                }
 
                 var parts = new List<string>();
                 if (n.Couple?.Active == false) parts.Add("Neaktivní");
 
-                // Collect instance trainers separately to render them stacked in UI
+                // Collect instance trainers for couple (person entries may not have these)
                 var trainerParts = new List<string>();
                 var trainers = n.Couple?.Man?.EventInstanceTrainersList;
                 if (trainers != null && trainers.Count > 0)
@@ -280,7 +298,7 @@ public partial class EventPage : ContentPage
                     }
                 }
 
-                // Lesson demands attached to this registration (new)
+                // Lesson demands attached to this registration
                 var demands = n.EventLessonDemandsByRegistrationIdList;
                 if (demands != null && demands.Count > 0)
                 {
