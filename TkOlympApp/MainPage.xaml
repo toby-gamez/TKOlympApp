@@ -12,19 +12,13 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
+    <ContentPage.ToolbarItems>
+        <ToolbarItem x:Name="OnlyMineToolbarItem" Text="Mé: Ano" Clicked="OnToggleOnlyMineClicked" Priority="0" Order="Primary" />
+    </ContentPage.ToolbarItems>
+
     <Grid Padding="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-
-        <HorizontalStackLayout Grid.Row="0" Spacing="8" VerticalOptions="Center">
-            <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" HorizontalOptions="Center"/>
-            <Label Text="Mé" VerticalTextAlignment="Center"/>
-            <Switch x:Name="OnlyMineSwitch" IsToggled="True" Toggled="OnlyMineSwitch_Toggled"/>
-        </HorizontalStackLayout>
-
-        <RefreshView x:Name="EventsRefresh" Refreshing="OnEventsRefresh" Grid.Row="1">
+        <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" HorizontalOptions="Center" />
+        <RefreshView x:Name="EventsRefresh" Refreshing="OnEventsRefresh">
             <Grid>
                 <CollectionView x:Name="EventsCollection" SelectionMode="Single" SelectionChanged="EventsCollection_SelectionChanged" VerticalOptions="FillAndExpand">
                 <CollectionView.ItemTemplate>

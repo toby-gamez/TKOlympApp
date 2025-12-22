@@ -11,11 +11,38 @@ public partial class MainPage : ContentPage
 {
     private readonly ObservableCollection<EventService.EventInstance> _events = new();
     private bool _isLoading;
+    private bool _onlyMine = true;
 
     public MainPage()
     {
-        InitializeComponent();
+        try
+        {
+            InitializeComponent();
+        }
+        catch (Exception ex)
+        {
+            try { Debug.WriteLine($"MainPage: InitializeComponent failed: {ex}"); } catch { }
+            Content = new Microsoft.Maui.Controls.StackLayout
+            {
+                Children =
+                {
+                    new Microsoft.Maui.Controls.Label { Text = "Chyba načítání stránky: " + ex.Message }
+                }
+            };
+            return;
+        }
+
         EventsCollection.ItemsSource = _events;
+        // Initialize toolbar text according to initial state
+        try
+        {
+            OnlyMineToolbarItem.Text = _onlyMine ? "Mé: Ano" : "Mé: Ne";
+        }
+        catch
+        {
+            // ignore if toolbar item not available in some platforms
+        }
+
         UpdateEmptyView();
     }
 
@@ -40,7 +67,7 @@ public partial class MainPage : ContentPage
             var today = DateTime.Now.Date;
             var start = today;
             var end = today.AddDays(30);
-            var onlyMine = OnlyMineSwitch?.IsToggled ?? true;
+            var onlyMine = _onlyMine;
             List<EventService.EventInstance> events;
             if (onlyMine)
             {
@@ -83,6 +110,7 @@ public partial class MainPage : ContentPage
 
     private async void OnlyMineSwitch_Toggled(object? sender, ToggledEventArgs e)
     {
+        // kept for compatibility but not used after moving to toolbar
         UpdateEmptyView();
         await LoadEventsAsync();
     }
@@ -91,7 +119,7 @@ public partial class MainPage : ContentPage
     {
         try
         {
-            var onlyMine = OnlyMineSwitch?.IsToggled ?? true;
+            var onlyMine = _onlyMine;
             var emptyText = onlyMine ? "Nemáte žádné události." : "Nejsou žádné události.";
             if (EmptyLabel != null)
             {
@@ -150,6 +178,21 @@ public partial class MainPage : ContentPage
 
     private async void OnReloadClicked(object? sender, EventArgs e)
     {
+        await LoadEventsAsync();
+    }
+
+    private async void OnToggleOnlyMineClicked(object? sender, EventArgs e)
+    {
+        _onlyMine = !_onlyMine;
+        try
+        {
+            OnlyMineToolbarItem.Text = _onlyMine ? "Mé: Ano" : "Mé: Ne";
+        }
+        catch
+        {
+            // ignore
+        }
+        UpdateEmptyView();
         await LoadEventsAsync();
     }
 
