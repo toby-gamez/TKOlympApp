@@ -27,6 +27,9 @@ public static class MauiProgram
         builder.Logging.AddDebug();
 #endif
 
-        return builder.Build();
+    // Initialize notification manager singleton so platform code can forward intents
+    TkOlympApp.Services.NotificationManagerService.EnsureInitialized();
+
+    return builder.Build();
     }
 }

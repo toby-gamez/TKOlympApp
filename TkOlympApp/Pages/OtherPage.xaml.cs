@@ -38,4 +38,18 @@ public partial class OtherPage : ContentPage
             await DisplayAlertAsync("Chyba", ex.Message, "OK");
         }
     }
+
+    private void OnSendTestNotificationClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            TkOlympApp.Services.NotificationManagerService.EnsureInitialized();
+            var mgr = TkOlympApp.Services.NotificationManagerService.Instance;
+            mgr?.SendNotification("Nová aktualita", "Test aktuality");
+        }
+        catch
+        {
+            // ignore
+        }
+    }
 }
