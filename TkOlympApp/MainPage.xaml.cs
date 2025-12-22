@@ -263,7 +263,17 @@ public partial class MainPage : ContentPage
     {
         try
         {
-            if (sender is Border border && border.BindingContext is GroupedEventRow row && row.Instance?.Event?.Id is long eventId)
+            GroupedEventRow? row = null;
+            if (sender is VisualElement ve)
+                row = ve.BindingContext as GroupedEventRow;
+            // fallback checks for other possible sender types
+            if (row == null)
+            {
+                if (sender is Border b) row = b.BindingContext as GroupedEventRow;
+                else if (sender is CollectionView cv) row = cv.BindingContext as GroupedEventRow;
+            }
+
+            if (row?.Instance?.Event?.Id is long eventId)
             {
                 if (row.Instance.IsCancelled) return;
                 var since = row.Instance.Since.HasValue ? row.Instance.Since.Value.ToString("o") : null;
@@ -336,6 +346,8 @@ public partial class MainPage : ContentPage
             })
             .OrderBy(g => g.Min(x => x.Since ?? x.UpdatedAt));
 
+            // (no precomputation needed) We'll always prefix grouped titles with "Lekce: "
+
             foreach (var g in groups)
             {
                 var ordered = g.OrderBy(i => i.Since).ToList();
@@ -346,6 +358,8 @@ public partial class MainPage : ContentPage
                 else
                 {
                     var trainerTitle = string.IsNullOrWhiteSpace(g.Key.Trainer) ? g.Key.Name : g.Key.Trainer;
+                    // Always prefix grouped titles with "Lekce: "
+                    trainerTitle = "Lekce: " + trainerTitle;
                     var gt = new GroupedTrainer(trainerTitle);
                     for (int i = 0; i < ordered.Count; i++)
                     {
