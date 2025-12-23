@@ -7,7 +7,8 @@ namespace TkOlympApp.Platforms.AndroidHelpers;
 public static class NotificationHelper
 {
     const string CHANNEL_ID = "tkolymp_updates";
-    const string CHANNEL_NAME = "Aktuality";
+    static string ChannelName => TkOlympApp.Services.LocalizationService.Get("Notifications_ChannelName") ?? "Updates";
+    static string ChannelDescription => TkOlympApp.Services.LocalizationService.Get("Notifications_ChannelDescription") ?? "Notifications";
 
     #pragma warning disable CS8602
     public static void ShowNotification(string title, string message)
@@ -30,9 +31,9 @@ public static class NotificationHelper
         // Create channel for Android O+
         if (global::Android.OS.Build.VERSION.SdkInt >= global::Android.OS.BuildVersionCodes.O)
         {
-            var channel = new NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationImportance.Default)
+            var channel = new NotificationChannel(CHANNEL_ID, ChannelName, NotificationImportance.Default)
             {
-                Description = "Notifikace o nových aktualitách"
+                Description = ChannelDescription
             };
             var nm = context.GetSystemService(global::Android.Content.Context.NotificationService) as global::Android.App.NotificationManager;
             nm?.CreateNotificationChannel(channel);

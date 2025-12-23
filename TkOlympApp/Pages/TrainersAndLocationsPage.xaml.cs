@@ -98,7 +98,7 @@ public partial class TrainersAndLocationsPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlertAsync("Error", ex.Message, "OK");
+            await DisplayAlertAsync(LocalizationService.Get("Error_Title"), ex.Message, LocalizationService.Get("Button_OK"));
         }
         finally
         {

@@ -2,7 +2,8 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TkOlympApp.Pages.NoticePage"
-             Title="Oznámení">
+             xmlns:svc="clr-namespace:TkOlympApp.Services"
+             Title="{svc:Translate NoticePage_Title}">
     <RefreshView x:Name="NoticeRefresh" Refreshing="OnNoticeRefresh">
         <ScrollView>
             <VerticalStackLayout Padding="20" Spacing="12">
@@ -14,7 +15,7 @@
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="6">
-                    <Label Text="Informace" FontAttributes="Bold" />
+                    <Label Text="{svc:Translate Notice_Info}" FontAttributes="Bold" />
                     <Label x:Name="AuthorLabel" FontSize="12"/>
                     <Label x:Name="CreatedAtLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}"/>
                     <Label x:Name="UpdatedAtLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}" IsVisible="False" />
@@ -25,7 +26,7 @@
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="6">
-                    <Label Text="Obsah" FontAttributes="Bold" />
+                    <Label Text="{svc:Translate Notice_Content}" FontAttributes="Bold" />
                     <Label x:Name="BodyLabel" />
                 </VerticalStackLayout>
             </Border>

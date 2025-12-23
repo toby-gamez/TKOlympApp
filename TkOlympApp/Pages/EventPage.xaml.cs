@@ -99,7 +99,7 @@ public partial class EventPage : ContentPage
             var ev = await EventService.GetEventAsync(EventId);
             if (ev == null)
             {
-                await DisplayAlertAsync("Nenalezeno", "Událost nebyla nalezena.", "OK");
+                await DisplayAlertAsync(LocalizationService.Get("NotFound_Title"), LocalizationService.Get("NotFound_Event"), LocalizationService.Get("Button_OK"));
                 return;
             }
 
@@ -325,7 +325,7 @@ public partial class EventPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlertAsync("Chyba načtení", ex.Message, "OK");
+            await DisplayAlertAsync(LocalizationService.Get("Error_Loading_Title"), ex.Message, LocalizationService.Get("Button_OK"));
         }
         finally
         {

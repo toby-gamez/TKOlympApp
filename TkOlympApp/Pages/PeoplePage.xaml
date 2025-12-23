@@ -3,12 +3,13 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
              x:Class="TkOlympApp.Pages.PeoplePage"
-             Title="Lidé">
+             xmlns:svc="clr-namespace:TkOlympApp.Services"
+             Title="{svc:Translate People_Title}">
 
     <Grid RowDefinitions="Auto,*,Auto">
         <HorizontalStackLayout Grid.Row="0" Padding="12" Spacing="8" VerticalOptions="Center">
-            <Label Text="Řazení:" VerticalOptions="Center" />
-            <Picker x:Name="SortPicker" Title="Řadit" WidthRequest="200" SelectedIndexChanged="OnSortChanged">
+            <Label Text="{svc:Translate People_SortLabel}" VerticalOptions="Center" />
+            <Picker x:Name="SortPicker" Title="{svc:Translate People_SortPickerTitle}" WidthRequest="200" SelectedIndexChanged="OnSortChanged">
                 <Picker.Items>
                     <x:String>Abecedně</x:String>
                     <x:String>Podle narozenin</x:String>

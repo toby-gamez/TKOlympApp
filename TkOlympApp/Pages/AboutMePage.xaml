@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:svc="clr-namespace:TkOlympApp.Services"
              x:Class="TkOlympApp.Pages.AboutMePage"
-             Title="O mně">
+             Title="{svc:Translate AboutMe_Title}">
 
     <Grid RowDefinitions="Auto,*">
         <ScrollView Grid.Row="1">
@@ -11,62 +12,62 @@
                 <Label x:Name="ErrorLabel" TextColor="Red" IsVisible="False" Margin="0,0,0,8" />
                 <!-- Každý řádek: "klíč: hodnota" v jedné řádce -->
                 <HorizontalStackLayout Spacing="6">
-                    <Label Text="Jméno:"/>
+                    <Label Text="{svc:Translate About_Name}"/>
                     <Label x:Name="NameValue"/>
                 </HorizontalStackLayout>
 
                 <HorizontalStackLayout Spacing="6">
-                    <Label Text="Příjmení:" />
+                    <Label Text="{svc:Translate About_Surname}" />
                     <Label x:Name="SurnameValue"/>
                 </HorizontalStackLayout>
 
                 <HorizontalStackLayout Spacing="6">
-                    <Label Text="Login:"/>
+                    <Label Text="{svc:Translate About_Login}"/>
                     <Label x:Name="LoginValue"/>
                 </HorizontalStackLayout>
 
                 <HorizontalStackLayout Spacing="6">
-                    <Label Text="Email:"/>
+                    <Label Text="{svc:Translate About_Email}"/>
                     <Label x:Name="EmailValue"/>
                 </HorizontalStackLayout>
 
                 <HorizontalStackLayout Spacing="6">
-                    <Label Text="ID:"/>
+                    <Label Text="{svc:Translate About_Id}"/>
                     <Label x:Name="IdValue"/>
                 </HorizontalStackLayout>
 
                 <HorizontalStackLayout Spacing="6">
-                    <Label Text="Tenant ID:"/>
+                    <Label Text="{svc:Translate About_TenantId}"/>
                     <Label x:Name="TenantValue"/>
                 </HorizontalStackLayout>
 
                 <HorizontalStackLayout Spacing="6">
-                    <Label Text="Poslední přihlášení:"/>
+                    <Label Text="{svc:Translate About_LastLogin}"/>
                     <Label x:Name="LastLoginValue"/>
                 </HorizontalStackLayout>
 
                 <HorizontalStackLayout Spacing="6">
-                    <Label Text="Poslední aktivita:"/>
+                    <Label Text="{svc:Translate About_LastActivity}"/>
                     <Label x:Name="LastActiveValue"/>
                 </HorizontalStackLayout>
 
                 <HorizontalStackLayout Spacing="6">
-                    <Label Text="Vytvořen (uživatel):"/>
+                    <Label Text="{svc:Translate About_CreatedUser}"/>
                     <Label x:Name="UCreatedAtValue"/>
                 </HorizontalStackLayout>
 
                 <HorizontalStackLayout Spacing="6">
-                    <Label Text="Vytvořen (záznam):"/>
+                    <Label Text="{svc:Translate About_CreatedRecord}"/>
                     <Label x:Name="CreatedAtValue"/>
                 </HorizontalStackLayout>
 
                 <HorizontalStackLayout Spacing="6">
-                    <Label Text="Aktualizován:"/>
+                    <Label Text="{svc:Translate About_Updated}"/>
                     <Label x:Name="UpdatedAtValue"/>
                 </HorizontalStackLayout>
 
                 <HorizontalStackLayout Spacing="6">
-                    <Label Text="Poslední verze:"/>
+                    <Label Text="{svc:Translate About_LastVersion}"/>
                     <Label x:Name="LastVersionValue"/>
                 </HorizontalStackLayout>
             </VerticalStackLayout>

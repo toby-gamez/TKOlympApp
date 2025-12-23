@@ -2,7 +2,8 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TkOlympApp.Pages.LeaderboardPage"
-             Title="Žebříček">
+             xmlns:svc="clr-namespace:TkOlympApp.Services"
+             Title="{svc:Translate Leaderboard}">
 
     <!-- Theme resources removed: use inline AppThemeBinding in setters to avoid nested value errors -->
 
@@ -55,7 +56,7 @@
         <!-- Loading indicator (centered) with message -->
         <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="6">
             <ActivityIndicator x:Name="LoadingIndicator" IsVisible="False" IsRunning="False" HorizontalOptions="Center" />
-            <Label Text="Fakt to trvá dlouho..." IsVisible="{Binding Source={x:Reference LoadingIndicator}, Path=IsVisible}" HorizontalOptions="Center" />
+            <Label Text="{svc:Translate Leaderboard_Loading}" IsVisible="{Binding Source={x:Reference LoadingIndicator}, Path=IsVisible}" HorizontalOptions="Center" />
         </VerticalStackLayout>
 
         </Grid>

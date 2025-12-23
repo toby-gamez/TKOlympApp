@@ -38,12 +38,12 @@ public class MainActivity : MauiAppCompatActivity
         try
         {
             var extras = Intent?.Extras;
-            if (extras?.GetBoolean("openNoticeboard") == true)
-            {
-                var title = extras.GetString("notificationTitle") ?? "Nová aktualita";
-                var message = extras.GetString("notificationMessage") ?? string.Empty;
-                TkOlympApp.Services.NotificationManagerService.HandleIntent(title, message);
-            }
+                if (extras?.GetBoolean("openNoticeboard") == true)
+                {
+                    var title = extras.GetString("notificationTitle") ?? TkOlympApp.Services.LocalizationService.Get("Notifications_NewPostTitle");
+                    var message = extras.GetString("notificationMessage") ?? string.Empty;
+                    TkOlympApp.Services.NotificationManagerService.HandleIntent(title, message);
+                }
         }
         catch
         {
@@ -67,16 +67,16 @@ public class MainActivity : MauiAppCompatActivity
                 {
                     // Show rationale dialog with option to open app settings
                     var builder = new Android.App.AlertDialog.Builder(this);
-                    builder.SetTitle("Povolit notifikace");
-                    builder.SetMessage("Aby aplikace mohla zobrazovat notifikace, povolte upozornění v nastavení aplikace.");
-                    builder.SetPositiveButton("Otevřít nastavení", (s, e) =>
+                    builder.SetTitle(TkOlympApp.Services.LocalizationService.Get("Notifications_Permission_Title"));
+                    builder.SetMessage(TkOlympApp.Services.LocalizationService.Get("Notifications_Permission_Message"));
+                    builder.SetPositiveButton(TkOlympApp.Services.LocalizationService.Get("Notifications_OpenSettings"), (s, e) =>
                     {
                         var intent = new Android.Content.Intent(Android.Provider.Settings.ActionApplicationDetailsSettings);
                         var uri = Android.Net.Uri.Parse("package:" + PackageName);
                         intent.SetData(uri);
                         StartActivity(intent);
                     });
-                    builder.SetNegativeButton("Zavřít", (s, e) => { });
+                    builder.SetNegativeButton(TkOlympApp.Services.LocalizationService.Get("Button_Close"), (s, e) => { });
                     var dlg = builder.Create();
                     dlg?.Show();
                 }

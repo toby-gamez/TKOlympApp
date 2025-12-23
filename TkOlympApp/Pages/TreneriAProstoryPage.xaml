@@ -2,8 +2,9 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:TkOlympApp.Pages"
+             xmlns:svc="clr-namespace:TkOlympApp.Services"
              x:Class="TkOlympApp.Pages.TreneriAProstoryPage"
-             Title="Trenéři a prostory">
+             Title="{svc:Translate TreneriAProstory_Title}">
 
     <Grid Padding="20">
         <Grid.RowDefinitions>
@@ -15,7 +16,7 @@
 
         <ActivityIndicator x:Name="LoadingIndicator" IsVisible="False" IsRunning="False" Grid.Row="0" HorizontalOptions="End" />
 
-        <Label Text="Prostory" FontAttributes="Bold" FontSize="16" Grid.Row="1" />
+        <Label Text="{svc:Translate Trainers_Locations_Label}" FontAttributes="Bold" FontSize="16" Grid.Row="1" />
 
         <CollectionView x:Name="LocationsCollection" Grid.Row="2" SelectionMode="None" Margin="0,8,0,8">
             <CollectionView.ItemsLayout>
@@ -33,7 +34,7 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <Label Text="Trenéři" FontAttributes="Bold" FontSize="16" Grid.Row="3" />
+        <Label Text="{svc:Translate Trainers_Label}" FontAttributes="Bold" FontSize="16" Grid.Row="3" />
 
         <CollectionView x:Name="TrainersCollection" Grid.Row="3" SelectionMode="None" Margin="0,36,0,0">
             <CollectionView.ItemsLayout>

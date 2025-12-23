@@ -69,7 +69,7 @@ public partial class NoticePage : ContentPage
             var a = await NoticeboardService.GetAnnouncementAsync(AnnouncementId);
             if (a == null)
             {
-                await DisplayAlertAsync("Nenalezeno", "Oznámení nebylo nalezeno.", "OK");
+                await DisplayAlertAsync(LocalizationService.Get("NotFound_Title"), LocalizationService.Get("NotFound_Notice"), LocalizationService.Get("Button_OK"));
                 return;
             }
 
@@ -101,7 +101,7 @@ public partial class NoticePage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlertAsync("Chyba načtení", ex.Message, "OK");
+            await DisplayAlertAsync(LocalizationService.Get("Error_Loading_Title"), ex.Message, LocalizationService.Get("Button_OK"));
         }
     }
 

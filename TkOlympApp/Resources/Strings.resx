@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, ...</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, ...</value></resheader>
+  <data name="AppTitle" xml:space="preserve"><value>TkOlympApp</value></data>
+  <data name="Calendar" xml:space="preserve"><value>Kalendář</value></data>
+  <data name="Language_Choose" xml:space="preserve"><value>Vyberte jazyk</value></data>
+  <data name="Language_Czech" xml:space="preserve"><value>Čeština</value></data>
+  <data name="Language_English" xml:space="preserve"><value>Angličtina</value></data>
+  <data name="Language_Vietnamese" xml:space="preserve"><value>Vietnamština</value></data>
+  <data name="Language_Ukrainian" xml:space="preserve"><value>Ukrajinština</value></data>
+  <data name="Button_Continue" xml:space="preserve"><value>Pokračovat</value></data>
+  <data name="Noticeboard" xml:space="preserve"><value>Nástěnka</value></data>
+  <data name="Leaderboard" xml:space="preserve"><value>Žebříček</value></data>
+  <data name="Other" xml:space="preserve"><value>Ostatní</value></data>
+  <data name="People_Title" xml:space="preserve"><value>Lidé</value></data>
+  <data name="People_SortLabel" xml:space="preserve"><value>Řazení:</value></data>
+  <data name="People_SortPickerTitle" xml:space="preserve"><value>Řadit</value></data>
+  <data name="Login_Title" xml:space="preserve"><value>Přihlášení</value></data>
+  <data name="Login_Placeholder_Username" xml:space="preserve"><value>Jméno</value></data>
+  <data name="Login_Placeholder_Password" xml:space="preserve"><value>Heslo</value></data>
+  <data name="Login_Button_Login" xml:space="preserve"><value>Přihlásit se</value></data>
+  <data name="About_Name" xml:space="preserve"><value>Jméno:</value></data>
+  <data name="About_Surname" xml:space="preserve"><value>Příjmení:</value></data>
+  <data name="About_Login" xml:space="preserve"><value>Login:</value></data>
+  <data name="About_Email" xml:space="preserve"><value>Email:</value></data>
+  <data name="About_Id" xml:space="preserve"><value>ID:</value></data>
+  <data name="About_TenantId" xml:space="preserve"><value>Tenant ID:</value></data>
+  <data name="About_LastLogin" xml:space="preserve"><value>Poslední přihlášení:</value></data>
+  <data name="About_LastActivity" xml:space="preserve"><value>Poslední aktivita:</value></data>
+  <data name="About_CreatedUser" xml:space="preserve"><value>Vytvořen (uživatel):</value></data>
+  <data name="About_CreatedRecord" xml:space="preserve"><value>Vytvořen (záznam):</value></data>
+  <data name="About_Updated" xml:space="preserve"><value>Aktualizován:</value></data>
+  <data name="About_LastVersion" xml:space="preserve"><value>Poslední verze:</value></data>
+  <data name="Notice_Info" xml:space="preserve"><value>Informace</value></data>
+  <data name="Notice_Content" xml:space="preserve"><value>Obsah</value></data>
+  <data name="Leaderboard_Loading" xml:space="preserve"><value>Fakt to trvá dlouho...</value></data>
+  <data name="Noticeboard_TabAktuality" xml:space="preserve"><value>Aktuality</value></data>
+  <data name="Noticeboard_TabStala" xml:space="preserve"><value>Stálá nástěnka</value></data>
+  <data name="Language_Title" xml:space="preserve"><value>Jazyk</value></data>
+  <data name="AboutMe_Title" xml:space="preserve"><value>O mně</value></data>
+  <data name="NoticePage_Title" xml:space="preserve"><value>Oznámení</value></data>
+  <data name="CohortGroups_Title" xml:space="preserve"><value>Tréninkové skupiny</value></data>
+  <data name="TrainersAndLocations_Title" xml:space="preserve"><value>Trenéři a tr. prostory</value></data>
+  <data name="TreneriAProstory_Title" xml:space="preserve"><value>Trenéři a prostory</value></data>
+  <data name="Trainers_Locations_Label" xml:space="preserve"><value>Tréninkové prostory</value></data>
+  <data name="Trainers_Label" xml:space="preserve"><value>Trenéři</value></data>
+  <data name="Other_Section_Members" xml:space="preserve"><value>Členové a klub</value></data>
+  <data name="Other_Item_Profile" xml:space="preserve"><value>Profil</value></data>
+  <data name="Other_Profile_Desc" xml:space="preserve"><value>Vše, co si o sobě můžeš jako normální smrtelník přát vědět.</value></data>
+  <data name="Other_Item_People" xml:space="preserve"><value>Lidé</value></data>
+  <data name="Other_People_Desc" xml:space="preserve"><value>Seznam tvých kamarádům PS: máš tam i jejich narozeniny.</value></data>
+  <data name="Other_Trainers_Label" xml:space="preserve"><value>Trenéři a tréninkové prostory</value></data>
+  <data name="Other_Trainers_Desc" xml:space="preserve"><value>Kdybys zapomněl, kam každý den chodíš.</value></data>
+  <data name="Other_CohortGroups_Label" xml:space="preserve"><value>Tréninkové skupiny</value></data>
+  <data name="Other_CohortGroups_Desc" xml:space="preserve"><value>Kdybys zapomněl, kde tančíš.</value></data>
+  <data name="Other_Section_App" xml:space="preserve"><value>Aplikace</value></data>
+  <data name="Other_Languages_Label" xml:space="preserve"><value>Jazyky</value></data>
+  <data name="Other_Languages_Desc" xml:space="preserve"><value>Kdyby ti jiný jazyk přišel víc pochuti.</value></data>
+  <data name="Other_Button_Logout" xml:space="preserve"><value>Odhlásit se</value></data>
+  <data name="Notifications_ChannelName" xml:space="preserve"><value>Aktuality</value></data>
+  <data name="Notifications_ChannelDescription" xml:space="preserve"><value>Notifikace o nových aktualitách</value></data>
+  <data name="Error_Loading_Title" xml:space="preserve"><value>Chyba načtení</value></data>
+  <data name="Error_Navigation_Title" xml:space="preserve"><value>Chyba navigace</value></data>
+  <data name="Error_Loading_Prefix" xml:space="preserve"><value>Chyba načítání stránky: </value></data>
+  <data name="GraphQL_UnknownError" xml:space="preserve"><value>Neznámá chyba GraphQL.</value></data>
+  <data name="Notifications_Permission_Title" xml:space="preserve"><value>Povolit notifikace</value></data>
+  <data name="Notifications_Permission_Message" xml:space="preserve"><value>Aby aplikace mohla zobrazovat notifikace, povolte upozornění v nastavení aplikace.</value></data>
+  <data name="Notifications_OpenSettings" xml:space="preserve"><value>Otevřít nastavení</value></data>
+  <data name="Button_Close" xml:space="preserve"><value>Zavřít</value></data>
+  <data name="Notifications_NewPostTitle" xml:space="preserve"><value>Nová aktualita</value></data>
+  <data name="NotFound_Title" xml:space="preserve"><value>Nenalezeno</value></data>
+  <data name="NotFound_Event" xml:space="preserve"><value>Událost nebyla nalezena.</value></data>
+  <data name="NotFound_Notice" xml:space="preserve"><value>Oznámení nebylo nalezeno.</value></data>
+  <data name="Error_Title" xml:space="preserve"><value>Chyba</value></data>
+  <data name="Login_Error_Missing" xml:space="preserve"><value>Vyplňte prosím jméno i heslo.</value></data>
+  <data name="Login_Failed_Title" xml:space="preserve"><value>Přihlášení selhalo</value></data>
+  <data name="Button_OK" xml:space="preserve"><value>OK</value></data>
+</root>

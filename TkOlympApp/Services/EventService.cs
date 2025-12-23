@@ -32,7 +32,7 @@ public static class EventService
         var data = JsonSerializer.Deserialize<GraphQlResponse<EventData>>(body, Options);
         if (data?.Errors != null && data.Errors.Count > 0)
         {
-            var msg = data.Errors[0].Message ?? "Neznámá chyba GraphQL.";
+            var msg = data.Errors[0].Message ?? LocalizationService.Get("GraphQL_UnknownError");
             throw new InvalidOperationException(msg);
         }
         return data?.Data?.Event;
@@ -145,7 +145,7 @@ public static class EventService
         var data = JsonSerializer.Deserialize<GraphQlResponse<MyEventInstancesData>>(body, Options);
         if (data?.Errors != null && data.Errors.Count > 0)
         {
-            var msg = data.Errors[0].Message ?? "Neznámá chyba GraphQL.";
+            var msg = data.Errors[0].Message ?? LocalizationService.Get("GraphQL_UnknownError");
             throw new InvalidOperationException(msg);
         }
         return data?.Data?.MyEventInstancesForRangeList ?? new List<EventInstance>();
@@ -188,7 +188,7 @@ public static class EventService
         var data = JsonSerializer.Deserialize<GraphQlResponse<EventInstancesForRangeData>>(body, Options);
         if (data?.Errors != null && data.Errors.Count > 0)
         {
-            var msg = data.Errors[0].Message ?? "Neznámá chyba GraphQL.";
+            var msg = data.Errors[0].Message ?? LocalizationService.Get("GraphQL_UnknownError");
             throw new InvalidOperationException(msg);
         }
 

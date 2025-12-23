@@ -35,7 +35,7 @@ public partial class OtherPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlertAsync("Chyba", ex.Message, "OK");
+            await DisplayAlertAsync(LocalizationService.Get("Error_Title"), ex.Message, LocalizationService.Get("Button_OK"));
         }
     }
 
@@ -47,7 +47,7 @@ public partial class OtherPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlertAsync("Chyba", ex.Message, "OK");
+            await DisplayAlertAsync(LocalizationService.Get("Error_Title"), ex.Message, LocalizationService.Get("Button_OK"));
         }
     }
 
@@ -59,7 +59,7 @@ public partial class OtherPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlertAsync("Chyba", ex.Message, "OK");
+            await DisplayAlertAsync(LocalizationService.Get("Error_Title"), ex.Message, LocalizationService.Get("Button_OK"));
         }
     }
 
@@ -71,7 +71,7 @@ public partial class OtherPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlertAsync("Chyba", ex.Message, "OK");
+            await DisplayAlertAsync(LocalizationService.Get("Error_Title"), ex.Message, LocalizationService.Get("Button_OK"));
         }
     }
 

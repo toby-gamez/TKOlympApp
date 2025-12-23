@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, ...</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, ...</value></resheader>
+  <data name="AppTitle" xml:space="preserve"><value>TkOlympApp</value></data>
+  <data name="Calendar" xml:space="preserve"><value>Lịch</value></data>
+  <data name="Language_Choose" xml:space="preserve"><value>Chọn ngôn ngữ</value></data>
+  <data name="Language_Czech" xml:space="preserve"><value>Tiếng Séc</value></data>
+  <data name="Language_English" xml:space="preserve"><value>Tiếng Anh</value></data>
+  <data name="Language_Vietnamese" xml:space="preserve"><value>Tiếng Việt</value></data>
+  <data name="Language_Ukrainian" xml:space="preserve"><value>Tiếng Ucraina</value></data>
+  <data name="Button_Continue" xml:space="preserve"><value>Tiếp tục</value></data>
+  <data name="Noticeboard" xml:space="preserve"><value>Bảng thông báo</value></data>
+  <data name="Leaderboard" xml:space="preserve"><value>Bảng xếp hạng</value></data>
+  <data name="Other" xml:space="preserve"><value>Khác</value></data>
+  <data name="People_Title" xml:space="preserve"><value>Mọi người</value></data>
+  <data name="People_SortLabel" xml:space="preserve"><value>Sắp xếp:</value></data>
+  <data name="People_SortPickerTitle" xml:space="preserve"><value>Sắp xếp</value></data>
+  <data name="Login_Title" xml:space="preserve"><value>Đăng nhập</value></data>
+  <data name="Login_Placeholder_Username" xml:space="preserve"><value>Tên</value></data>
+  <data name="Login_Placeholder_Password" xml:space="preserve"><value>Mật khẩu</value></data>
+  <data name="Login_Button_Login" xml:space="preserve"><value>Đăng nhập</value></data>
+  <data name="About_Name" xml:space="preserve"><value>Tên:</value></data>
+  <data name="About_Surname" xml:space="preserve"><value>Họ:</value></data>
+  <data name="About_Login" xml:space="preserve"><value>Login:</value></data>
+  <data name="About_Email" xml:space="preserve"><value>Email:</value></data>
+  <data name="About_Id" xml:space="preserve"><value>ID:</value></data>
+  <data name="About_TenantId" xml:space="preserve"><value>Tenant ID:</value></data>
+  <data name="About_LastLogin" xml:space="preserve"><value>Lần đăng nhập cuối:</value></data>
+  <data name="About_LastActivity" xml:space="preserve"><value>Hoạt động gần nhất:</value></data>
+  <data name="About_CreatedUser" xml:space="preserve"><value>Được tạo (người dùng):</value></data>
+  <data name="About_CreatedRecord" xml:space="preserve"><value>Được tạo (bản ghi):</value></data>
+  <data name="About_Updated" xml:space="preserve"><value>Đã cập nhật:</value></data>
+  <data name="About_LastVersion" xml:space="preserve"><value>Phiên bản cuối:</value></data>
+  <data name="Notice_Info" xml:space="preserve"><value>Thông tin</value></data>
+  <data name="Notice_Content" xml:space="preserve"><value>Nội dung</value></data>
+  <data name="Leaderboard_Loading" xml:space="preserve"><value>Thật sự mất thời gian...</value></data>
+  <data name="Noticeboard_TabAktuality" xml:space="preserve"><value>Tin tức</value></data>
+  <data name="Noticeboard_TabStala" xml:space="preserve"><value>Bảng cố định</value></data>
+  <data name="Language_Title" xml:space="preserve"><value>Ngôn ngữ</value></data>
+  <data name="AboutMe_Title" xml:space="preserve"><value>Về tôi</value></data>
+  <data name="NoticePage_Title" xml:space="preserve"><value>Thông báo</value></data>
+  <data name="CohortGroups_Title" xml:space="preserve"><value>Nhóm tập</value></data>
+  <data name="TrainersAndLocations_Title" xml:space="preserve"><value>Huấn luyện viên và địa điểm</value></data>
+  <data name="TreneriAProstory_Title" xml:space="preserve"><value>Huấn luyện viên và địa điểm</value></data>
+  <data name="Trainers_Locations_Label" xml:space="preserve"><value>Địa điểm tập</value></data>
+  <data name="Trainers_Label" xml:space="preserve"><value>Huấn luyện viên</value></data>
+  <data name="Other_Section_Members" xml:space="preserve"><value>Thành viên và câu lạc bộ</value></data>
+  <data name="Other_Item_Profile" xml:space="preserve"><value>Hồ sơ</value></data>
+  <data name="Other_Profile_Desc" xml:space="preserve"><value>Mọi thứ bạn có thể muốn biết về bản thân.</value></data>
+  <data name="Other_Item_People" xml:space="preserve"><value>Mọi người</value></data>
+  <data name="Other_People_Desc" xml:space="preserve"><value>Danh sách bạn bè của bạn. PS: có cả sinh nhật.</value></data>
+  <data name="Other_Trainers_Label" xml:space="preserve"><value>Huấn luyện viên và địa điểm</value></data>
+  <data name="Other_Trainers_Desc" xml:space="preserve"><value>Phòng khi bạn quên nơi bạn đến mỗi ngày.</value></data>
+  <data name="Other_CohortGroups_Label" xml:space="preserve"><value>Nhóm tập</value></data>
+  <data name="Other_CohortGroups_Desc" xml:space="preserve"><value>Phòng khi bạn quên nơi bạn nhảy.</value></data>
+  <data name="Other_Section_App" xml:space="preserve"><value>Ứng dụng</value></data>
+  <data name="Other_Languages_Label" xml:space="preserve"><value>Ngôn ngữ</value></data>
+  <data name="Other_Languages_Desc" xml:space="preserve"><value>Nếu bạn muốn ngôn ngữ khác.</value></data>
+  <data name="Other_Button_Logout" xml:space="preserve"><value>Đăng xuất</value></data>
+  <data name="Notifications_ChannelName" xml:space="preserve"><value>Tin tức</value></data>
+  <data name="Notifications_ChannelDescription" xml:space="preserve"><value>Thông báo về tin mới</value></data>
+  <data name="Error_Loading_Title" xml:space="preserve"><value>Lỗi při načítání</value></data>
+  <data name="Error_Navigation_Title" xml:space="preserve"><value>Lỗi điều hướng</value></data>
+  <data name="Error_Loading_Prefix" xml:space="preserve"><value>Lỗi tải trang: </value></data>
+  <data name="GraphQL_UnknownError" xml:space="preserve"><value>Lỗi GraphQL không xác định.</value></data>
+  <data name="Notifications_Permission_Title" xml:space="preserve"><value>Bật thông báo</value></data>
+  <data name="Notifications_Permission_Message" xml:space="preserve"><value>Để ứng dụng có thể hiển thị thông báo, hãy bật thông báo trong cài đặt ứng dụng.</value></data>
+  <data name="Notifications_OpenSettings" xml:space="preserve"><value>Mở cài đặt</value></data>
+  <data name="Button_Close" xml:space="preserve"><value>Đóng</value></data>
+  <data name="Notifications_NewPostTitle" xml:space="preserve"><value>Bài viết mới</value></data>
+  <data name="NotFound_Title" xml:space="preserve"><value>Không tìm thấy</value></data>
+  <data name="NotFound_Event" xml:space="preserve"><value>Không tìm thấy sự kiện.</value></data>
+  <data name="NotFound_Notice" xml:space="preserve"><value>Không tìm thấy thông báo.</value></data>
+  <data name="Error_Title" xml:space="preserve"><value>Lỗi</value></data>
+  <data name="Login_Error_Missing" xml:space="preserve"><value>Vui lòng nhập tên đăng nhập và mật khẩu.</value></data>
+  <data name="Login_Failed_Title" xml:space="preserve"><value>Đăng nhập thất bại</value></data>
+  <data name="Button_OK" xml:space="preserve"><value>OK</value></data>
+</root>

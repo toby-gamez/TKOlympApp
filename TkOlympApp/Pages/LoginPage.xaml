@@ -1,24 +1,25 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:svc="clr-namespace:TkOlympApp.Services"
              x:Class="TkOlympApp.Pages.LoginPage"
-             Title="Přihlášení"
+             Title="{svc:Translate Login_Title}"
              Shell.TabBarIsVisible="False"
              Shell.NavBarIsVisible="False">
 
     <VerticalStackLayout Padding="24" Spacing="16" HorizontalOptions="Center" VerticalOptions="Center">
 
         <Entry x:Name="UsernameEntry"
-               Placeholder="Jméno"
+               Placeholder="{svc:Translate Login_Placeholder_Username}"
                ReturnType="Next"
                ClearButtonVisibility="WhileEditing" />
 
         <Entry x:Name="PasswordEntry"
-               Placeholder="Heslo"
+               Placeholder="{svc:Translate Login_Placeholder_Password}"
                IsPassword="True"
                ReturnType="Done" />
 
-        <Button Text="Přihlásit se" Clicked="OnLoginClicked" />
+        <Button Text="{svc:Translate Login_Button_Login}" Clicked="OnLoginClicked" />
     </VerticalStackLayout>
 
 </ContentPage>

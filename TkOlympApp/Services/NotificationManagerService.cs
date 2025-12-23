@@ -86,7 +86,7 @@ namespace TkOlympApp.Services
                     var page = Application.Current?.Windows?.FirstOrDefault()?.Page;
                     if (page != null)
                     {
-                        await page.DisplayAlertAsync(title, message, "OK");
+                        await page.DisplayAlertAsync(title, message, LocalizationService.Get("Button_OK"));
                     }
                 }
                 catch

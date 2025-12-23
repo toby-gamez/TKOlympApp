@@ -132,7 +132,7 @@ public partial class NoticeboardPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlertAsync("Chyba", ex.Message, "OK");
+            await DisplayAlertAsync(LocalizationService.Get("Error_Title"), ex.Message, LocalizationService.Get("Button_OK"));
         }
         finally
         {
@@ -197,7 +197,7 @@ public partial class NoticeboardPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlertAsync("Chyba", ex.Message, "OK");
+            await DisplayAlertAsync(LocalizationService.Get("Error_Title"), ex.Message, LocalizationService.Get("Button_OK"));
         }
         finally
         {
@@ -227,7 +227,7 @@ public partial class NoticeboardPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlertAsync("Chyba navigace", ex.Message, "OK");
+            await DisplayAlertAsync(LocalizationService.Get("Error_Navigation_Title"), ex.Message, LocalizationService.Get("Button_OK"));
         }
     }
 

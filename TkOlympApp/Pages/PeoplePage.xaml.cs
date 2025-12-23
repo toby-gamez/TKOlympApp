@@ -45,7 +45,7 @@ public partial class PeoplePage : ContentPage
         }
         catch (System.Exception ex)
         {
-            await DisplayAlertAsync("Chyba načtení", ex.Message, "OK");
+            await DisplayAlertAsync(LocalizationService.Get("Error_Loading_Title"), ex.Message, LocalizationService.Get("Button_OK"));
         }
         finally
         {

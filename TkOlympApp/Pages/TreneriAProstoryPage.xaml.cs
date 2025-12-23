@@ -41,7 +41,7 @@ public partial class TreneriAProstoryPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlertAsync("Chyba", ex.Message, "OK");
+            await DisplayAlertAsync(LocalizationService.Get("Error_Title"), ex.Message, LocalizationService.Get("Button_OK"));
         }
         finally
         {

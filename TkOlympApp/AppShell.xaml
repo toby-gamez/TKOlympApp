@@ -4,35 +4,36 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:TkOlympApp"
+    xmlns:svc="clr-namespace:TkOlympApp.Services"
     xmlns:pages="clr-namespace:TkOlympApp.Pages"
     xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
-    Title="TkOlympApp"
+    Title="{svc:Translate AppTitle}"
     Shell.TabBarForegroundColor="{StaticResource Primary}"
     Shell.TabBarUnselectedColor="{StaticResource Gray500}"
     Shell.TabBarTitleColor="{StaticResource Primary}">
 
     <TabBar>
         <ShellContent
-            Title="Kalendář"
+            Title="{svc:Translate Calendar}"
             Icon="{mi:Material Icon=CalendarMonth}"
             ContentTemplate="{DataTemplate local:MainPage}"
             Route="Kalendář" />
 
         <ShellContent
-            Title="Nástěnka"
+            Title="{svc:Translate Noticeboard}"
             Icon="{mi:Material Icon=Article}"
             ContentTemplate="{DataTemplate pages:NoticeboardPage}"
             Route="Nástěnka" />
 
         <ShellContent
-            Title="Žebříček"
+            Title="{svc:Translate Leaderboard}"
             Icon="{mi:Material Icon=Leaderboard}"
             ContentTemplate="{DataTemplate pages:LeaderboardPage}"
             Route="Žebříček" />
 
 
         <ShellContent
-            Title="Ostatní"
+            Title="{svc:Translate Other}"
             Icon="{mi:Material Icon=MoreHoriz}"
             ContentTemplate="{DataTemplate pages:OtherPage}"
             Route="Ostatní" />

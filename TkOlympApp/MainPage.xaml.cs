@@ -32,7 +32,7 @@ public partial class MainPage : ContentPage
             {
                 Children =
                 {
-                    new Microsoft.Maui.Controls.Label { Text = "Chyba načítání stránky: " + ex.Message }
+                    new Microsoft.Maui.Controls.Label { Text = LocalizationService.Get("Error_Loading_Prefix") + ex.Message }
                 }
             };
             return;
@@ -201,7 +201,7 @@ public partial class MainPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlertAsync("Chyba načtení", ex.Message, "OK");
+            await DisplayAlertAsync(LocalizationService.Get("Error_Loading_Title"), ex.Message, LocalizationService.Get("Button_OK"));
         }
         finally
         {

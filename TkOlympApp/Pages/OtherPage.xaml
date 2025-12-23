@@ -2,12 +2,13 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TkOlympApp.Pages.OtherPage"
-             Title="Ostatní">
+             xmlns:svc="clr-namespace:TkOlympApp.Services"
+             Title="{svc:Translate Other}">
     <Grid RowDefinitions="Auto,* ,Auto">
 
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="20,0,20,0" Spacing="12">
-                <Label FontAttributes="Bold">Členové a klub</Label>
+                <Label FontAttributes="Bold">{svc:Translate Other_Section_Members}</Label>
                 <Border Padding="12" Margin="6">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="8" />
@@ -16,8 +17,8 @@
                         <TapGestureRecognizer Tapped="OnAboutMeClicked" />
                     </Border.GestureRecognizers>
                     <VerticalStackLayout>
-                        <Label FontAttributes="Bold">Profil</Label>
-                        <Label Style="{StaticResource MutedLabelStyle}">Vše, co si o sobě můžeš jako normální smrtelník přát vědět.</Label>
+                        <Label FontAttributes="Bold">{svc:Translate Other_Item_Profile}</Label>
+                        <Label Style="{StaticResource MutedLabelStyle}">{svc:Translate Other_Profile_Desc}</Label>
                     </VerticalStackLayout>    
                 </Border>
                 <Border Padding="12" Margin="6">
@@ -28,8 +29,8 @@
                         <TapGestureRecognizer Tapped="OnPeopleClicked" />
                     </Border.GestureRecognizers>
                     <VerticalStackLayout>
-                        <Label FontAttributes="Bold">Lidé</Label>
-                        <Label Style="{StaticResource MutedLabelStyle}">Seznam tvých kamarádům PS: máš tam i jejich narozeniny.</Label>
+                        <Label FontAttributes="Bold">{svc:Translate Other_Item_People}</Label>
+                        <Label Style="{StaticResource MutedLabelStyle}">{svc:Translate Other_People_Desc}</Label>
                     </VerticalStackLayout>    
                 </Border>
                 <Border Padding="12" Margin="6">
@@ -40,8 +41,8 @@
                         <TapGestureRecognizer Tapped="OnTrainersClicked" />
                     </Border.GestureRecognizers>
                     <VerticalStackLayout>
-                        <Label FontAttributes="Bold">Trenéři a tréninkové prostory</Label>
-                        <Label Style="{StaticResource MutedLabelStyle}">Kdybys zapomněl, kam každý den chodíš.</Label>
+                        <Label FontAttributes="Bold">{svc:Translate Other_Trainers_Label}</Label>
+                        <Label Style="{StaticResource MutedLabelStyle}">{svc:Translate Other_Trainers_Desc}</Label>
                     </VerticalStackLayout>
                 </Border>
                 <Border Padding="12" Margin="6">
@@ -52,11 +53,11 @@
                         <TapGestureRecognizer Tapped="OnCohortGroupsClicked" />
                     </Border.GestureRecognizers>
                     <VerticalStackLayout>
-                        <Label FontAttributes="Bold">Tréninkové skupiny</Label>
-                        <Label Style="{StaticResource MutedLabelStyle}">Kdybys zapomněl, kde tančíš.</Label>
+                        <Label FontAttributes="Bold">{svc:Translate Other_CohortGroups_Label}</Label>
+                        <Label Style="{StaticResource MutedLabelStyle}">{svc:Translate Other_CohortGroups_Desc}</Label>
                     </VerticalStackLayout>
                 </Border>
-                <Label FontAttributes="Bold">Aplikace</Label>
+                <Label FontAttributes="Bold">{svc:Translate Other_Section_App}</Label>
                 <Border Padding="12" Margin="6">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="8" />
@@ -65,16 +66,16 @@
                         <TapGestureRecognizer Tapped="OnCohortGroupsClicked" />
                     </Border.GestureRecognizers>
                     <VerticalStackLayout>
-                        <Label FontAttributes="Bold">Jazyky</Label>
-                        <Label Style="{StaticResource MutedLabelStyle}">Kdyby ti jiný jazyk přišel víc pochuti.</Label>
+                        <Label FontAttributes="Bold">{svc:Translate Other_Languages_Label}</Label>
+                        <Label Style="{StaticResource MutedLabelStyle}">{svc:Translate Other_Languages_Desc}</Label>
                     </VerticalStackLayout>
                 </Border>
             </VerticalStackLayout>
         </ScrollView>
 
-        <Button Grid.Row="2"
+                <Button Grid.Row="2"
                 Margin="20"
-                Text="Odhlásit se"
+                Text="{svc:Translate Other_Button_Logout}"
                 BackgroundColor="{DynamicResource Primary}"
                 TextColor="White"
                 Clicked="OnLogoutClicked" />

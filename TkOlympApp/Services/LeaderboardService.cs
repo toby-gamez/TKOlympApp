@@ -118,7 +118,7 @@ public static class LeaderboardService
         var data = JsonSerializer.Deserialize<GraphQlResponse<ScoreboardsData>>(body, Options);
         if (data?.Errors != null && data.Errors.Count > 0)
         {
-            var msg = data.Errors[0].Message ?? "Neznámá chyba GraphQL.";
+            var msg = data.Errors[0].Message ?? LocalizationService.Get("GraphQL_UnknownError");
             throw new InvalidOperationException(msg);
         }
 

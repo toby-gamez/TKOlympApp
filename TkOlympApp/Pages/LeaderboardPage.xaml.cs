@@ -21,7 +21,7 @@ public partial class LeaderboardPage : ContentPage
             // If initialization fails, show a simple fallback UI instead of crashing the app
             Content = new Label
             {
-                Text = "Chyba při inicializaci stránky: " + ex.Message,
+                Text = LocalizationService.Get("Error_Loading_Prefix") + ex.Message,
                 Padding = 20
             };
             return;
@@ -39,7 +39,7 @@ public partial class LeaderboardPage : ContentPage
         {
             try
             {
-                await DisplayAlertAsync("Chyba", ex.Message, "OK");
+                await DisplayAlertAsync(LocalizationService.Get("Error_Title"), ex.Message, LocalizationService.Get("Button_OK"));
             }
             catch
             {
@@ -128,7 +128,7 @@ public partial class LeaderboardPage : ContentPage
         }
             catch (Exception ex)
             {
-                await DisplayAlertAsync("Chyba", ex.Message, "OK");
+                await DisplayAlertAsync(LocalizationService.Get("Error_Title"), ex.Message, LocalizationService.Get("Button_OK"));
             }
         finally
         {

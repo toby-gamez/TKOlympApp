@@ -3,7 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:TkOlympApp.Pages"
              x:Class="TkOlympApp.Pages.NoticeboardPage"
-             Title="Nástěnka">
+             xmlns:svc="clr-namespace:TkOlympApp.Services"
+             Title="{svc:Translate Noticeboard}">
     <Grid Padding="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -11,8 +12,8 @@
         </Grid.RowDefinitions>
 
         <HorizontalStackLayout Grid.Row="0" Padding="0" Spacing="8" VerticalOptions="Center">
-            <Button x:Name="TabAktualityButton" Text="Aktuality" Clicked="OnTabAktualityClicked" />
-            <Button x:Name="TabStalaButton" Text="Stálá nástěnka" Clicked="OnTabStalaClicked" />
+            <Button x:Name="TabAktualityButton" Text="{svc:Translate Noticeboard_TabAktuality}" Clicked="OnTabAktualityClicked" />
+            <Button x:Name="TabStalaButton" Text="{svc:Translate Noticeboard_TabStala}" Clicked="OnTabStalaClicked" />
             <ActivityIndicator x:Name="LoadingIndicator" IsVisible="False" IsRunning="False" HorizontalOptions="EndAndExpand" Margin="0,0,0,0" />
         </HorizontalStackLayout>
 
