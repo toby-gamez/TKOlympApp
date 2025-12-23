@@ -74,10 +74,10 @@ public partial class NoticePage : ContentPage
             }
 
             TitleLabel.Text = a.Title ?? string.Empty;
-            CreatedAtLabel.Text = $"Vytvořeno: {a.CreatedAt:dd.MM.yyyy HH:mm}";
+            CreatedAtLabel.Text = (LocalizationService.Get("Notice_Created_Prefix") ?? "Vytvořeno: ") + a.CreatedAt.ToString("dd.MM.yyyy HH:mm");
             if (a.UpdatedAt.HasValue)
             {
-                UpdatedAtLabel.Text = $"Aktualizováno: {a.UpdatedAt:dd.MM.yyyy HH:mm}";
+                UpdatedAtLabel.Text = (LocalizationService.Get("Notice_Updated_Prefix") ?? "Aktualizováno: ") + a.UpdatedAt.Value.ToString("dd.MM.yyyy HH:mm");
                 UpdatedAtLabel.IsVisible = true;
             }
             else
@@ -87,7 +87,7 @@ public partial class NoticePage : ContentPage
 
             if (a.Author != null)
             {
-                AuthorLabel.Text = $"Autor: {a.Author.FirstName ?? string.Empty} {a.Author.LastName ?? string.Empty}";
+                AuthorLabel.Text = (LocalizationService.Get("Notice_Author_Prefix") ?? "Autor: ") + (a.Author.FirstName ?? string.Empty) + " " + (a.Author.LastName ?? string.Empty);
                 AuthorLabel.IsVisible = true;
             }
             else

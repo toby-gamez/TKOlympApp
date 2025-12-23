@@ -3,8 +3,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:converters="clr-namespace:TkOlympApp.Converters"
              xmlns:local="clr-namespace:TkOlympApp"
+             xmlns:svc="clr-namespace:TkOlympApp.Services"
              x:Class="TkOlympApp.MainPage"
-             Title="Kalendář">
+             Title="{svc:Translate Calendar}">
 
     <ContentPage.Resources>
         <ResourceDictionary>
@@ -22,8 +23,8 @@
         </Grid.RowDefinitions>
 
         <HorizontalStackLayout Grid.Row="0" Padding="0" Spacing="8" VerticalOptions="Center">
-            <Button x:Name="TabMyButton" Text="Mé" Clicked="OnTabMineClicked" />
-            <Button x:Name="TabAllButton" Text="Všech" Clicked="OnTabAllClicked" />
+            <Button x:Name="TabMyButton" Text="{svc:Translate Tab_My}" Clicked="OnTabMineClicked" />
+            <Button x:Name="TabAllButton" Text="{svc:Translate Tab_All}" Clicked="OnTabAllClicked" />
             <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" HorizontalOptions="EndAndExpand" Margin="0,0,0,0" />
         </HorizontalStackLayout>
 

@@ -29,20 +29,9 @@ public partial class App : Application
                 try
                 {
                     var stored = Preferences.Get("app_language", (string?)null);
-                    if (stored == null)
-                    {
-                        var defaultLang = LocalizationService.DetermineDefaultLanguage();
-                        var page = new Pages.LanguageSelectionPage(defaultLang);
-                        if (Shell.Current != null)
-                            await Shell.Current.Navigation.PushModalAsync(page);
-                        else
-                            await win.Page.Navigation.PushModalAsync(page);
-                    }
-                    else
-                    {
-                        LocalizationService.ApplyLanguage(stored);
-                        if (Shell.Current != null) await Shell.Current.GoToAsync("//Kalendář");
-                    }
+                    var lang = stored ?? LocalizationService.DetermineDefaultLanguage();
+                    LocalizationService.ApplyLanguage(lang);
+                    if (Shell.Current != null) await Shell.Current.GoToAsync("//Kalendář");
                 }
                 catch { }
             });

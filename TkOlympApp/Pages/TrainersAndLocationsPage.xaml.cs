@@ -82,7 +82,7 @@ public partial class TrainersAndLocationsPage : ContentPage
                             formatted = string.IsNullOrWhiteSpace(cur) ? a : $"{a} {cur}";
                         }
 
-                        return $"{formatted} / pár, 45'";
+                        return formatted + (LocalizationService.Get("Price_PerCouple45") ?? " / pár, 45'");
                     }
 
                     var priceStr = FormatPrice(t.GuestPrice45Min);

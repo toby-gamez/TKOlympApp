@@ -78,4 +78,33 @@
   <data name="Login_Error_Missing" xml:space="preserve"><value>Будь ласка, введіть ім'я користувача та пароль.</value></data>
   <data name="Login_Failed_Title" xml:space="preserve"><value>Не вдалося увійти</value></data>
   <data name="Button_OK" xml:space="preserve"><value>OK</value></data>
+  <data name="Tab_My" xml:space="preserve"><value>Мої</value></data>
+  <data name="Tab_All" xml:space="preserve"><value>Всі</value></data>
+  <data name="Today" xml:space="preserve"><value>Сьогодні</value></data>
+  <data name="Tomorrow" xml:space="preserve"><value>Завтра</value></data>
+  <data name="Empty_MyEvents" xml:space="preserve"><value>У вас немає подій.</value></data>
+  <data name="Empty_NoEvents" xml:space="preserve"><value>Немає подій.</value></data>
+  <data name="Lesson_Prefix" xml:space="preserve"><value>Урок: </value></data>
+  <data name="Lesson_Short" xml:space="preserve"><value>Урок</value></data>
+  <data name="Date_Today_Prefix" xml:space="preserve"><value>сьогодні </value></data>
+  <data name="Date_Tomorrow_Prefix" xml:space="preserve"><value>завтра </value></data>
+  <data name="Price_PerCouple45" xml:space="preserve"><value> / пара, 45'</value></data>
+  <data name="People_Sort_Alphabetical" xml:space="preserve"><value>За алфавітом</value></data>
+  <data name="People_Sort_ByBirthdays" xml:space="preserve"><value>За днями народження</value></data>
+  <data name="Event_Location_Prefix" xml:space="preserve"><value>Місце проведення: </value></data>
+  <data name="Event_DateRange_Prefix" xml:space="preserve"><value>Дата: </value></data>
+  <data name="Event_Created_Prefix" xml:space="preserve"><value>Створено: </value></data>
+  <data name="Event_Updated_Prefix" xml:space="preserve"><value>Оновлено: </value></data>
+  <data name="Notice_Created_Prefix" xml:space="preserve"><value>Створено: </value></data>
+  <data name="Notice_Updated_Prefix" xml:space="preserve"><value>Оновлено: </value></data>
+  <data name="Notice_Author_Prefix" xml:space="preserve"><value>Автор: </value></data>
+  <data name="EventPage_Title" xml:space="preserve"><value>Подія</value></data>
+  <data name="Event_Info_Label" xml:space="preserve"><value>Інформація</value></data>
+  <data name="Registration_Open" xml:space="preserve"><value>Реєстрація відкрита</value></data>
+  <data name="Public_Label" xml:space="preserve"><value>Публічне</value></data>
+  <data name="Visible_Label" xml:space="preserve"><value>Видимий</value></data>
+  <data name="Event_Description_Label" xml:space="preserve"><value>Опис</value></data>
+  <data name="Event_Summary_Label" xml:space="preserve"><value>Підсумок</value></data>
+  <data name="Event_Trainers_Label" xml:space="preserve"><value>Тренери</value></data>
+  <data name="Event_Registrations_Label" xml:space="preserve"><value>Список зареєстрованих</value></data>
 </root>

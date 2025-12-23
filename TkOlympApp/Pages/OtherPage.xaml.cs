@@ -88,4 +88,16 @@ public partial class OtherPage : ContentPage
             // ignore
         }
     }
+
+    private async void OnLanguagesClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            await Shell.Current.GoToAsync(nameof(LanguagePage));
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync(LocalizationService.Get("Error_Navigation_Title"), ex.Message, LocalizationService.Get("Button_OK"));
+        }
+    }
 }

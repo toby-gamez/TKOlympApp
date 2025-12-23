@@ -20,6 +20,13 @@ public partial class PeoplePage : ContentPage
     {
         InitializeComponent();
         PeopleCollection.ItemsSource = _people;
+        try
+        {
+            SortPicker.Items.Clear();
+            SortPicker.Items.Add(LocalizationService.Get("People_Sort_Alphabetical") ?? "Alphabetical");
+            SortPicker.Items.Add(LocalizationService.Get("People_Sort_ByBirthdays") ?? "By birthdays");
+        }
+        catch { }
     }
 
     protected override async void OnAppearing()

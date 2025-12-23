@@ -123,7 +123,7 @@ public partial class MainPage : ContentPage
             }
 
             _weeks.Clear();
-            var culture = new CultureInfo("cs-CZ");
+            var culture = CultureInfo.CurrentUICulture ?? CultureInfo.CurrentCulture;
             foreach (var kv in weekMap)
             {
                 var weekStart = kv.Key;
@@ -135,8 +135,8 @@ public partial class MainPage : ContentPage
                     if (dayEvents.Count == 0) continue; // skip empty days
                     string dayLabel;
                     var todayDate = DateTime.Now.Date;
-                    if (date == todayDate) dayLabel = "Dnes";
-                    else if (date == todayDate.AddDays(1)) dayLabel = "Zítra";
+                    if (date == todayDate) dayLabel = LocalizationService.Get("Today") ?? "Dnes";
+                    else if (date == todayDate.AddDays(1)) dayLabel = LocalizationService.Get("Tomorrow") ?? "Zítra";
                     else
                     {
                         var name = culture.DateTimeFormat.GetDayName(date.DayOfWeek);
@@ -242,7 +242,7 @@ public partial class MainPage : ContentPage
         try
         {
             var onlyMine = _onlyMine;
-            var emptyText = onlyMine ? "Nemáte žádné události." : "Nejsou žádné události.";
+            var emptyText = onlyMine ? (LocalizationService.Get("Empty_MyEvents") ?? "Nemáte žádné události.") : (LocalizationService.Get("Empty_NoEvents") ?? "Nejsou žádné události.");
             if (EmptyLabel != null)
             {
                 EmptyLabel.Text = emptyText;
@@ -430,9 +430,7 @@ public partial class MainPage : ContentPage
                 Name = e.Event?.Name ?? string.Empty,
                 Trainer = e.Event?.EventTrainersList?.FirstOrDefault()?.Name ?? string.Empty
             })
-            .OrderBy(g => g.Min(x => x.Since ?? x.UpdatedAt));
-
-            // (no precomputation needed) We'll always prefix grouped titles with "Lekce: "
+                .OrderBy(g => g.Min(x => x.Since ?? x.UpdatedAt));
 
             foreach (var g in groups)
             {
@@ -444,8 +442,9 @@ public partial class MainPage : ContentPage
                 else
                 {
                     var trainerTitle = string.IsNullOrWhiteSpace(g.Key.Trainer) ? g.Key.Name : g.Key.Trainer;
-                    // Always prefix grouped titles with "Lekce: "
-                    trainerTitle = "Lekce: " + trainerTitle;
+                    // Always prefix grouped titles with localized lesson prefix
+                    var lessonPrefix = LocalizationService.Get("Lesson_Prefix") ?? "Lekce: ";
+                    trainerTitle = lessonPrefix + trainerTitle;
                     var gt = new GroupedTrainer(trainerTitle);
                     for (int i = 0; i < ordered.Count; i++)
                     {

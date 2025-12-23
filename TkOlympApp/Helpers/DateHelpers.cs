@@ -1,4 +1,5 @@
 using System;
+using TkOlympApp.Services;
 
 namespace TkOlympApp.Helpers;
 
@@ -10,9 +11,9 @@ public static class DateHelpers
         var d = dt.Value;
         var today = DateTime.Now.Date;
         if (d.Date == today)
-            return $"dnes {d:HH:mm}";
+            return (LocalizationService.Get("Date_Today_Prefix") ?? "dnes ") + d.ToString("HH:mm");
         if (d.Date == today.AddDays(1))
-            return $"zítra {d:HH:mm}";
+            return (LocalizationService.Get("Date_Tomorrow_Prefix") ?? "zítra ") + d.ToString("HH:mm");
         return d.ToString("dd.MM.yyyy HH:mm");
     }
 }

@@ -2,8 +2,9 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:icons="http://www.aathifmahir.com/dotnet/2022/maui/icons"
+             xmlns:svc="clr-namespace:TkOlympApp.Services"
              x:Class="TkOlympApp.Pages.EventPage"
-             Title="Událost">
+             Title="{svc:Translate EventPage_Title}">
 
     <RefreshView x:Name="RefreshViewControl" Refreshing="OnRefresh">
         <ScrollView>
@@ -21,15 +22,15 @@
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="6">
-                    <Label Text="Informace" FontAttributes="Bold" />
+                    <Label Text="{svc:Translate Event_Info_Label}" FontAttributes="Bold" />
                     <Label x:Name="LocationLabel"/>
                     <Label x:Name="DateRangeLabel"/>
                     <Label x:Name="CreatedAtLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}"/>
                     <Label x:Name="UpdatedAtLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}"/>
                     <HorizontalStackLayout Spacing="12">
-                        <Label x:Name="RegistrationOpenLabel" Text="Registrace otevřená" FontSize="12" TextColor="#2e7d32" IsVisible="False" Style="{StaticResource MutedLabelStyle}"/>
-                        <Label x:Name="PublicLabel" Text="Veřejné" IsVisible="False" FontSize="12" Style="{StaticResource MutedLabelStyle}"/>
-                        <Label x:Name="VisibleLabel" Text="Viditelné" IsVisible="False" FontSize="12" Style="{StaticResource MutedLabelStyle}"/>
+                        <Label x:Name="RegistrationOpenLabel" Text="{svc:Translate Registration_Open}" FontSize="12" TextColor="#2e7d32" IsVisible="False" Style="{StaticResource MutedLabelStyle}"/>
+                        <Label x:Name="PublicLabel" Text="{svc:Translate Public_Label}" IsVisible="False" FontSize="12" Style="{StaticResource MutedLabelStyle}"/>
+                        <Label x:Name="VisibleLabel" Text="{svc:Translate Visible_Label}" IsVisible="False" FontSize="12" Style="{StaticResource MutedLabelStyle}"/>
                     </HorizontalStackLayout>
                     <HorizontalStackLayout Spacing="12">
                         <Label x:Name="CapacityLabel" FontSize="12"/>
@@ -44,7 +45,7 @@
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="6">
-                    <Label Text="Popis" FontAttributes="Bold" />
+                    <Label Text="{svc:Translate Event_Description_Label}" FontAttributes="Bold" />
                     <Label x:Name="DescLabel" LineBreakMode="WordWrap"/>
                 </VerticalStackLayout>
             </Border>
@@ -55,7 +56,7 @@
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="6">
-                    <Label Text="Shrnutí" FontAttributes="Bold" />
+                    <Label Text="{svc:Translate Event_Summary_Label}" FontAttributes="Bold" />
                     <Label x:Name="SummaryLabel" LineBreakMode="WordWrap" FontAttributes="Italic"/>
                 </VerticalStackLayout>
             </Border>
@@ -66,7 +67,7 @@
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="6">
-                    <Label Text="Trenéři" FontAttributes="Bold" />
+                    <Label Text="{svc:Translate Event_Trainers_Label}" FontAttributes="Bold" />
                     <CollectionView x:Name="TrainersCollection" HeightRequest="200">
                         <CollectionView.ItemTemplate>
                             <DataTemplate>
@@ -85,7 +86,7 @@
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="6">
-                    <Label Text="Seznam přihlášených" FontAttributes="Bold" />
+                    <Label Text="{svc:Translate Event_Registrations_Label}" FontAttributes="Bold" />
                     <CollectionView x:Name="RegistrationsCollection" HeightRequest="300">
                         <CollectionView.ItemTemplate>
                             <DataTemplate>

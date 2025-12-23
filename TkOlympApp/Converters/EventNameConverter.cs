@@ -19,10 +19,10 @@ public class EventNameConverter : IValueConverter
             if (trainers != null && trainers.Count > 0)
             {
                 var first = trainers.FirstOrDefault()?.Name?.Trim();
-                if (!string.IsNullOrWhiteSpace(first)) return $"Lekce: {first}";
+                if (!string.IsNullOrWhiteSpace(first)) return (LocalizationService.Get("Lesson_Prefix") ?? "Lekce: ") + first;
             }
 
-            return "Lekce";
+            return LocalizationService.Get("Lesson_Short") ?? "Lekce";
         }
 
         // Fallback if value is not the expected type

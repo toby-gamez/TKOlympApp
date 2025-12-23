@@ -8,7 +8,7 @@
 
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="20,0,20,0" Spacing="12">
-                <Label FontAttributes="Bold">{svc:Translate Other_Section_Members}</Label>
+                <Label FontAttributes="Bold" Text="{svc:Translate Other_Section_Members}" />
                 <Border Padding="12" Margin="6">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="8" />
@@ -17,8 +17,8 @@
                         <TapGestureRecognizer Tapped="OnAboutMeClicked" />
                     </Border.GestureRecognizers>
                     <VerticalStackLayout>
-                        <Label FontAttributes="Bold">{svc:Translate Other_Item_Profile}</Label>
-                        <Label Style="{StaticResource MutedLabelStyle}">{svc:Translate Other_Profile_Desc}</Label>
+                        <Label FontAttributes="Bold" Text="{svc:Translate Other_Item_Profile}" />
+                        <Label Style="{StaticResource MutedLabelStyle}" Text="{svc:Translate Other_Profile_Desc}" />
                     </VerticalStackLayout>    
                 </Border>
                 <Border Padding="12" Margin="6">
@@ -29,8 +29,8 @@
                         <TapGestureRecognizer Tapped="OnPeopleClicked" />
                     </Border.GestureRecognizers>
                     <VerticalStackLayout>
-                        <Label FontAttributes="Bold">{svc:Translate Other_Item_People}</Label>
-                        <Label Style="{StaticResource MutedLabelStyle}">{svc:Translate Other_People_Desc}</Label>
+                        <Label FontAttributes="Bold" Text="{svc:Translate Other_Item_People}" />
+                        <Label Style="{StaticResource MutedLabelStyle}" Text="{svc:Translate Other_People_Desc}" />
                     </VerticalStackLayout>    
                 </Border>
                 <Border Padding="12" Margin="6">
@@ -41,8 +41,8 @@
                         <TapGestureRecognizer Tapped="OnTrainersClicked" />
                     </Border.GestureRecognizers>
                     <VerticalStackLayout>
-                        <Label FontAttributes="Bold">{svc:Translate Other_Trainers_Label}</Label>
-                        <Label Style="{StaticResource MutedLabelStyle}">{svc:Translate Other_Trainers_Desc}</Label>
+                        <Label FontAttributes="Bold" Text="{svc:Translate Other_Trainers_Label}" />
+                        <Label Style="{StaticResource MutedLabelStyle}" Text="{svc:Translate Other_Trainers_Desc}" />
                     </VerticalStackLayout>
                 </Border>
                 <Border Padding="12" Margin="6">
@@ -53,21 +53,21 @@
                         <TapGestureRecognizer Tapped="OnCohortGroupsClicked" />
                     </Border.GestureRecognizers>
                     <VerticalStackLayout>
-                        <Label FontAttributes="Bold">{svc:Translate Other_CohortGroups_Label}</Label>
-                        <Label Style="{StaticResource MutedLabelStyle}">{svc:Translate Other_CohortGroups_Desc}</Label>
+                        <Label FontAttributes="Bold" Text="{svc:Translate Other_CohortGroups_Label}" />
+                        <Label Style="{StaticResource MutedLabelStyle}" Text="{svc:Translate Other_CohortGroups_Desc}" />
                     </VerticalStackLayout>
                 </Border>
-                <Label FontAttributes="Bold">{svc:Translate Other_Section_App}</Label>
+                <Label FontAttributes="Bold" Text="{svc:Translate Other_Section_App}" />
                 <Border Padding="12" Margin="6">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
                     <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnCohortGroupsClicked" />
+                        <TapGestureRecognizer Tapped="OnLanguagesClicked" />
                     </Border.GestureRecognizers>
                     <VerticalStackLayout>
-                        <Label FontAttributes="Bold">{svc:Translate Other_Languages_Label}</Label>
-                        <Label Style="{StaticResource MutedLabelStyle}">{svc:Translate Other_Languages_Desc}</Label>
+                        <Label FontAttributes="Bold" Text="{svc:Translate Other_Languages_Label}" />
+                        <Label Style="{StaticResource MutedLabelStyle}" Text="{svc:Translate Other_Languages_Desc}" />
                     </VerticalStackLayout>
                 </Border>
             </VerticalStackLayout>

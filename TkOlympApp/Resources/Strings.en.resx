@@ -78,4 +78,33 @@
   <data name="Login_Error_Missing" xml:space="preserve"><value>Please fill in both username and password.</value></data>
   <data name="Login_Failed_Title" xml:space="preserve"><value>Login failed</value></data>
   <data name="Button_OK" xml:space="preserve"><value>OK</value></data>
+  <data name="Tab_My" xml:space="preserve"><value>My</value></data>
+  <data name="Tab_All" xml:space="preserve"><value>All</value></data>
+  <data name="Today" xml:space="preserve"><value>Today</value></data>
+  <data name="Tomorrow" xml:space="preserve"><value>Tomorrow</value></data>
+  <data name="Empty_MyEvents" xml:space="preserve"><value>You have no events.</value></data>
+  <data name="Empty_NoEvents" xml:space="preserve"><value>There are no events.</value></data>
+  <data name="Lesson_Prefix" xml:space="preserve"><value>Lesson: </value></data>
+  <data name="Lesson_Short" xml:space="preserve"><value>Lesson</value></data>
+  <data name="Date_Today_Prefix" xml:space="preserve"><value>today </value></data>
+  <data name="Date_Tomorrow_Prefix" xml:space="preserve"><value>tomorrow </value></data>
+  <data name="Price_PerCouple45" xml:space="preserve"><value> / couple, 45'</value></data>
+  <data name="People_Sort_Alphabetical" xml:space="preserve"><value>Alphabetical</value></data>
+  <data name="People_Sort_ByBirthdays" xml:space="preserve"><value>By birthdays</value></data>
+  <data name="Event_Location_Prefix" xml:space="preserve"><value>Location: </value></data>
+  <data name="Event_DateRange_Prefix" xml:space="preserve"><value>Date: </value></data>
+  <data name="Event_Created_Prefix" xml:space="preserve"><value>Created: </value></data>
+  <data name="Event_Updated_Prefix" xml:space="preserve"><value>Updated: </value></data>
+  <data name="Notice_Created_Prefix" xml:space="preserve"><value>Created: </value></data>
+  <data name="Notice_Updated_Prefix" xml:space="preserve"><value>Updated: </value></data>
+  <data name="Notice_Author_Prefix" xml:space="preserve"><value>Author: </value></data>
+  <data name="EventPage_Title" xml:space="preserve"><value>Event</value></data>
+  <data name="Event_Info_Label" xml:space="preserve"><value>Info</value></data>
+  <data name="Registration_Open" xml:space="preserve"><value>Registration open</value></data>
+  <data name="Public_Label" xml:space="preserve"><value>Public</value></data>
+  <data name="Visible_Label" xml:space="preserve"><value>Visible</value></data>
+  <data name="Event_Description_Label" xml:space="preserve"><value>Description</value></data>
+  <data name="Event_Summary_Label" xml:space="preserve"><value>Summary</value></data>
+  <data name="Event_Trainers_Label" xml:space="preserve"><value>Trainers</value></data>
+  <data name="Event_Registrations_Label" xml:space="preserve"><value>Registrations</value></data>
 </root>

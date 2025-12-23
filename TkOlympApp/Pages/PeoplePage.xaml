@@ -11,8 +11,8 @@
             <Label Text="{svc:Translate People_SortLabel}" VerticalOptions="Center" />
             <Picker x:Name="SortPicker" Title="{svc:Translate People_SortPickerTitle}" WidthRequest="200" SelectedIndexChanged="OnSortChanged">
                 <Picker.Items>
-                    <x:String>Abecedně</x:String>
-                    <x:String>Podle narozenin</x:String>
+                    <x:String>{svc:Translate People_Sort_Alphabetical}</x:String>
+                    <x:String>{svc:Translate People_Sort_ByBirthdays}</x:String>
                 </Picker.Items>
             </Picker>
             <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" HorizontalOptions="EndAndExpand" />

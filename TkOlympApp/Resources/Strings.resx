@@ -78,4 +78,33 @@
   <data name="Login_Error_Missing" xml:space="preserve"><value>Vyplňte prosím jméno i heslo.</value></data>
   <data name="Login_Failed_Title" xml:space="preserve"><value>Přihlášení selhalo</value></data>
   <data name="Button_OK" xml:space="preserve"><value>OK</value></data>
+  <data name="Tab_My" xml:space="preserve"><value>Mé</value></data>
+  <data name="Tab_All" xml:space="preserve"><value>Všech</value></data>
+  <data name="Today" xml:space="preserve"><value>Dnes</value></data>
+  <data name="Tomorrow" xml:space="preserve"><value>Zítra</value></data>
+  <data name="Empty_MyEvents" xml:space="preserve"><value>Nemáte žádné události.</value></data>
+  <data name="Empty_NoEvents" xml:space="preserve"><value>Nejsou žádné události.</value></data>
+  <data name="Lesson_Prefix" xml:space="preserve"><value>Lekce: </value></data>
+  <data name="Lesson_Short" xml:space="preserve"><value>Lekce</value></data>
+  <data name="Date_Today_Prefix" xml:space="preserve"><value>dnes </value></data>
+  <data name="Date_Tomorrow_Prefix" xml:space="preserve"><value>zítra </value></data>
+  <data name="Price_PerCouple45" xml:space="preserve"><value> / pár, 45'</value></data>
+  <data name="People_Sort_Alphabetical" xml:space="preserve"><value>Abecedně</value></data>
+  <data name="People_Sort_ByBirthdays" xml:space="preserve"><value>Podle narozenin</value></data>
+  <data name="Event_Location_Prefix" xml:space="preserve"><value>Místo konání: </value></data>
+  <data name="Event_DateRange_Prefix" xml:space="preserve"><value>Termín: </value></data>
+  <data name="Event_Created_Prefix" xml:space="preserve"><value>Vytvořeno: </value></data>
+  <data name="Event_Updated_Prefix" xml:space="preserve"><value>Aktualizováno: </value></data>
+  <data name="Notice_Created_Prefix" xml:space="preserve"><value>Vytvořeno: </value></data>
+  <data name="Notice_Updated_Prefix" xml:space="preserve"><value>Aktualizováno: </value></data>
+  <data name="Notice_Author_Prefix" xml:space="preserve"><value>Autor: </value></data>
+  <data name="EventPage_Title" xml:space="preserve"><value>Událost</value></data>
+  <data name="Event_Info_Label" xml:space="preserve"><value>Informace</value></data>
+  <data name="Registration_Open" xml:space="preserve"><value>Registrace otevřená</value></data>
+  <data name="Public_Label" xml:space="preserve"><value>Veřejné</value></data>
+  <data name="Visible_Label" xml:space="preserve"><value>Viditelné</value></data>
+  <data name="Event_Description_Label" xml:space="preserve"><value>Popis</value></data>
+  <data name="Event_Summary_Label" xml:space="preserve"><value>Shrnutí</value></data>
+  <data name="Event_Trainers_Label" xml:space="preserve"><value>Trenéři</value></data>
+  <data name="Event_Registrations_Label" xml:space="preserve"><value>Seznam přihlášených</value></data>
 </root>

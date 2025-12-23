@@ -103,7 +103,7 @@ public partial class EventPage : ContentPage
                 return;
             }
 
-            // Use explicit naming: prefer event name, otherwise fall back to "Lekce: {trainer}" or "Lekce"
+            // Use explicit naming: prefer event name, otherwise fall back to localized "Lesson" prefix or short form
             if (!string.IsNullOrWhiteSpace(ev.Name))
             {
                 TitleLabel.Text = ev.Name;
@@ -112,15 +112,15 @@ public partial class EventPage : ContentPage
             {
                 var firstTrainer = ev.EventTrainersList?.FirstOrDefault()?.Name?.Trim();
                 if (!string.IsNullOrWhiteSpace(firstTrainer))
-                    TitleLabel.Text = $"Lekce: {firstTrainer}";
+                    TitleLabel.Text = (LocalizationService.Get("Lesson_Prefix") ?? "Lekce: ") + firstTrainer;
                 else
-                    TitleLabel.Text = "Lekce";
+                    TitleLabel.Text = LocalizationService.Get("Lesson_Short") ?? "Lekce";
             }
             // Render HTML content with richer formatting
             DescLabel.FormattedText = HtmlHelpers.ToFormattedString(ev.Description);
             SummaryLabel.FormattedText = HtmlHelpers.ToFormattedString(ev.Summary);
             var locName = ev.LocationText;
-            LocationLabel.Text = string.IsNullOrWhiteSpace(locName) ? string.Empty : $"Místo konání: {locName}";
+            LocationLabel.Text = string.IsNullOrWhiteSpace(locName) ? string.Empty : (LocalizationService.Get("Event_Location_Prefix") ?? "Místo konání: ") + locName;
             LocationLabel.IsVisible = !string.IsNullOrWhiteSpace(locName);
             // Prefer since/until passed from instance navigation; otherwise use event-level values
             DateTime? since = ev.Since;
@@ -201,15 +201,15 @@ public partial class EventPage : ContentPage
                 range = sinceText;
             else if (!string.IsNullOrWhiteSpace(untilText))
                 range = untilText;
-            DateRangeLabel.Text = "Termín: " + range;
+            DateRangeLabel.Text = (LocalizationService.Get("Event_DateRange_Prefix") ?? "Termín: ") + range;
             DateRangeLabel.IsVisible = !string.IsNullOrWhiteSpace(range);
             // When using FormattedText the Label.Text remains empty; check original HTML fields instead
             DescFrame.IsVisible = !string.IsNullOrWhiteSpace(ev.Description);
             SummaryFrame.IsVisible = !string.IsNullOrWhiteSpace(ev.Summary);
-            CreatedAtLabel.Text = $"Vytvořeno: {ev.CreatedAt:dd.MM.yyyy HH:mm}";
+            CreatedAtLabel.Text = (LocalizationService.Get("Event_Created_Prefix") ?? "Vytvořeno: ") + ev.CreatedAt.ToString("dd.MM.yyyy HH:mm");
             if (ev.UpdatedAt.HasValue)
             {
-                UpdatedAtLabel.Text = $"Aktualizováno: {ev.UpdatedAt:dd.MM.yyyy HH:mm}";
+                UpdatedAtLabel.Text = (LocalizationService.Get("Event_Updated_Prefix") ?? "Aktualizováno: ") + ev.UpdatedAt.Value.ToString("dd.MM.yyyy HH:mm");
                 UpdatedAtLabel.IsVisible = true;
             }
             else
