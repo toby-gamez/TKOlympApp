@@ -46,6 +46,8 @@
                     </CollectionView.ItemTemplate>
                 </CollectionView>
                 </StackLayout>
+
+                <!-- Raw response view removed -->
                 </VerticalStackLayout>
             </ScrollView>
         </RefreshView>
