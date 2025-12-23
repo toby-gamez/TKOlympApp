@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Globalization;
 using System.Linq;
 using TkOlympApp.Services;
+using Microsoft.Maui.Graphics;
 
 namespace TkOlympApp;
 
@@ -40,11 +41,11 @@ public partial class MainPage : ContentPage
         EventsCollection.ItemsSource = _weeks;
         try
         {
-            OnlyMineToolbarItem.Text = _onlyMine ? "Mé: Ano" : "Mé: Ne";
+            SetTopTabVisuals(_onlyMine);
         }
         catch
         {
-            // ignore if toolbar item not available in some platforms
+            // ignore if buttons not available on some platforms
         }
 
         UpdateEmptyView();
@@ -326,14 +327,66 @@ public partial class MainPage : ContentPage
     private async void OnToggleOnlyMineClicked(object? sender, EventArgs e)
     {
         _onlyMine = !_onlyMine;
+        try { SetTopTabVisuals(_onlyMine); } catch { }
+        UpdateEmptyView();
+        await LoadEventsAsync();
+    }
+
+    private void SetTopTabVisuals(bool myActive)
+    {
         try
         {
-            OnlyMineToolbarItem.Text = _onlyMine ? "Mé: Ano" : "Mé: Ne";
+            var theme = Application.Current?.RequestedTheme ?? AppTheme.Unspecified;
+            if (theme == AppTheme.Light)
+            {
+                if (myActive)
+                {
+                    TabMyButton.BackgroundColor = Colors.Black;
+                    TabMyButton.TextColor = Colors.White;
+                    TabAllButton.BackgroundColor = Colors.Transparent;
+                    TabAllButton.TextColor = Colors.Black;
+                }
+                else
+                {
+                    TabAllButton.BackgroundColor = Colors.Black;
+                    TabAllButton.TextColor = Colors.White;
+                    TabMyButton.BackgroundColor = Colors.Transparent;
+                    TabMyButton.TextColor = Colors.Black;
+                }
+            }
+            else
+            {
+                if (myActive)
+                {
+                    TabMyButton.BackgroundColor = Colors.LightGray;
+                    TabMyButton.TextColor = Colors.Black;
+                    TabAllButton.BackgroundColor = Colors.Transparent;
+                    TabAllButton.TextColor = Colors.White;
+                }
+                else
+                {
+                    TabAllButton.BackgroundColor = Colors.LightGray;
+                    TabAllButton.TextColor = Colors.Black;
+                    TabMyButton.BackgroundColor = Colors.Transparent;
+                    TabMyButton.TextColor = Colors.White;
+                }
+            }
         }
-        catch
-        {
-            // ignore
-        }
+        catch { }
+    }
+
+    private async void OnTabMineClicked(object? sender, EventArgs e)
+    {
+        _onlyMine = true;
+        try { SetTopTabVisuals(true); } catch { }
+        UpdateEmptyView();
+        await LoadEventsAsync();
+    }
+
+    private async void OnTabAllClicked(object? sender, EventArgs e)
+    {
+        _onlyMine = false;
+        try { SetTopTabVisuals(false); } catch { }
         UpdateEmptyView();
         await LoadEventsAsync();
     }

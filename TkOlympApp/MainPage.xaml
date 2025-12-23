@@ -13,13 +13,21 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <ContentPage.ToolbarItems>
-        <ToolbarItem x:Name="OnlyMineToolbarItem" Text="Mé: Ano" Clicked="OnToggleOnlyMineClicked" Priority="0" Order="Primary" />
-    </ContentPage.ToolbarItems>
+    
 
     <Grid Padding="20">
-        <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" HorizontalOptions="Center" />
-        <RefreshView x:Name="EventsRefresh" Refreshing="OnEventsRefresh">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <HorizontalStackLayout Grid.Row="0" Padding="0" Spacing="8" VerticalOptions="Center">
+            <Button x:Name="TabMyButton" Text="Mé" Clicked="OnTabMineClicked" />
+            <Button x:Name="TabAllButton" Text="Všech" Clicked="OnTabAllClicked" />
+            <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" HorizontalOptions="EndAndExpand" Margin="0,0,0,0" />
+        </HorizontalStackLayout>
+
+        <RefreshView x:Name="EventsRefresh" Refreshing="OnEventsRefresh" Grid.Row="1">
             <Grid>
                 <CollectionView x:Name="EventsCollection" IsGrouped="True" SelectionMode="None" VerticalOptions="FillAndExpand">
                     <CollectionView.GroupHeaderTemplate>
