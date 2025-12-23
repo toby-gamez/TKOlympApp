@@ -79,14 +79,14 @@ public partial class MainPage : ContentPage
         if (_isLoading)
         {
             // If a load is already in progress, ensure RefreshView isn't left spinning.
-            try { if (EventsRefresh != null) EventsRefresh.IsRefreshing = false; } catch { }
+            try { EventsRefresh?.IsRefreshing = false; } catch { }
             return;
         }
         UpdateEmptyView();
         _isLoading = true;
-        Loading.IsVisible = true;
-        Loading.IsRunning = true;
-        EventsCollection.IsVisible = false;
+        Loading?.IsVisible = true;
+        Loading?.IsRunning = true;
+        EventsCollection?.IsVisible = false;
         try
         {
             var today = DateTime.Now.Date;
@@ -162,11 +162,13 @@ public partial class MainPage : ContentPage
                             {
                                 foreach (var row in gt.Rows)
                                 {
-                                    if (string.IsNullOrWhiteSpace(row.FirstRegistrant) && row.Instance?.Event?.Id != 0)
+                                    var inst = row.Instance;
+                                    var evt = inst?.Event;
+                                    if (string.IsNullOrWhiteSpace(row.FirstRegistrant) && evt != null && evt.Id != 0)
                                     {
                                         try
                                         {
-                                            var id = row.Instance.Event.Id;
+                                            var id = evt.Id;
                                             var details = await EventService.GetEventAsync(id);
                                             if (details?.EventRegistrations?.Nodes != null && details.EventRegistrations.Nodes.Count > 0)
                                             {
@@ -183,7 +185,7 @@ public partial class MainPage : ContentPage
                                                     else if (!string.IsNullOrWhiteSpace(womanLn)) name = womanLn;
                                                 }
                                                 if (!string.IsNullOrWhiteSpace(name))
-                                                    Device.BeginInvokeOnMainThread(() => row.FirstRegistrant = name);
+                                                    Dispatcher?.Dispatch(() => row.FirstRegistrant = name);
                                             }
                                         }
                                         catch { }
@@ -202,9 +204,9 @@ public partial class MainPage : ContentPage
         }
         finally
         {
-            Loading.IsRunning = false;
-            Loading.IsVisible = false;
-            EventsCollection.IsVisible = true;
+            Loading?.IsRunning = false;
+            Loading?.IsVisible = false;
+            EventsCollection?.IsVisible = true;
             try
             {
                 if (EventsRefresh != null)
@@ -224,7 +226,7 @@ public partial class MainPage : ContentPage
     // Public helper to request a refresh from external callers (e.g. AppShell after auth)
     public async Task RefreshEventsAsync()
     {
-        try { if (EventsRefresh != null && !EventsRefresh.IsRefreshing) EventsRefresh.IsRefreshing = true; } catch { }
+        try { EventsRefresh?.IsRefreshing = true; } catch { }
         await LoadEventsAsync();
     }
 
@@ -262,7 +264,7 @@ public partial class MainPage : ContentPage
         if (selected != null)
         {
             // Clear selection on the source CollectionView (inner collection)
-            try { (sender as CollectionView).SelectedItem = null; } catch { }
+            try { var cv = sender as CollectionView; if (cv != null) cv.SelectedItem = null; } catch { }
             if (selected.IsCancelled) return;
             if (selected.Event?.Id is long eventId)
             {
@@ -342,8 +344,8 @@ public partial class MainPage : ContentPage
         await LoadEventsAsync();
         try
         {
-            if (EventsRefresh != null)
-                EventsRefresh.IsRefreshing = false;
+                if (EventsRefresh != null)
+                    EventsRefresh.IsRefreshing = false;
         }
         catch
         {

@@ -38,7 +38,7 @@ public class MainActivity : MauiAppCompatActivity
         try
         {
             var extras = Intent?.Extras;
-            if (extras != null && extras.ContainsKey("openNoticeboard") && extras.GetBoolean("openNoticeboard"))
+            if (extras?.GetBoolean("openNoticeboard") == true)
             {
                 var title = extras.GetString("notificationTitle") ?? "Nová aktualita";
                 var message = extras.GetString("notificationMessage") ?? string.Empty;
@@ -51,7 +51,7 @@ public class MainActivity : MauiAppCompatActivity
         }
 
         // Register AndroidX back dispatcher callback (non-obsolete)
-        OnBackPressedDispatcher.AddCallback(this, new BackCallback());
+        OnBackPressedDispatcher?.AddCallback(this, new BackCallback());
     }
 
     public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
@@ -78,7 +78,7 @@ public class MainActivity : MauiAppCompatActivity
                     });
                     builder.SetNegativeButton("Zavřít", (s, e) => { });
                     var dlg = builder.Create();
-                    dlg.Show();
+                    dlg?.Show();
                 }
                 catch
                 {

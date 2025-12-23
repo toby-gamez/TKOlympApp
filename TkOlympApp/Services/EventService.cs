@@ -15,7 +15,7 @@ public static class EventService
             var query = new GraphQlRequest
         {
             // Request person names and couple names (including first name) and instance trainers for registrations
-            Query = "query MyQuery($id: BigInt!) { event(id: $id) { capacity createdAt description eventRegistrations { totalCount nodes { couple { active status man { name firstName lastName eventInstanceTrainersList { name lessonPrice { amount currency } } } woman { name firstName lastName eventInstanceTrainersList { name lessonPrice { amount currency } } } } eventLessonDemandsByRegistrationIdList { lessonCount trainer { name } } person { firstName lastName } } } isPublic isRegistrationOpen isVisible __typename name summary locationText eventTrainersList { lessonPrice { amount currency } name } updatedAt since until } }",
+            Query = "query MyQuery($id: BigInt!) { event(id: $id) { capacity createdAt description eventRegistrations { totalCount nodes { couple { status man { name firstName lastName eventInstanceTrainersList { name lessonPrice { amount currency } } } woman { name firstName lastName eventInstanceTrainersList { name lessonPrice { amount currency } } } } eventLessonDemandsByRegistrationIdList { lessonCount trainer { name } } person { firstName lastName } } } isPublic isRegistrationOpen isVisible __typename name summary locationText eventTrainersList { lessonPrice { amount currency } name } updatedAt since until } }",
             Variables = new Dictionary<string, object> { { "id", id } }
         };
 
@@ -128,7 +128,7 @@ public static class EventService
 
             var query = new GraphQlRequest
         {
-            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $onlyMine: Boolean, $first: Int, $offset: Int, $onlyType: EventType) { myEventInstancesForRangeList(startRange: $startRange, endRange: $endRange, onlyMine: $onlyMine, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled locationId since until updatedAt event { id description name locationText isRegistrationOpen isPublic guestPrice { amount currency } eventTrainersList { name } eventRegistrationsList { person { name } couple { man { lastName } woman { lastName } } } } tenant { couplesList { active man { firstName name lastName } woman { name lastName firstName } } } } }",
+            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $onlyMine: Boolean, $first: Int, $offset: Int, $onlyType: EventType) { myEventInstancesForRangeList(startRange: $startRange, endRange: $endRange, onlyMine: $onlyMine, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled locationId since until updatedAt event { id description name locationText isRegistrationOpen isPublic guestPrice { amount currency } eventTrainersList { name } eventRegistrationsList { person { name } couple { man { lastName } woman { lastName } } } } tenant { couplesList { man { firstName name lastName } woman { name lastName firstName } } } } }",
             Variables = variables
         };
 

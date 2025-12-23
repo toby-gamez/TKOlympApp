@@ -33,7 +33,7 @@
                         </DataTemplate>
                     </CollectionView.GroupHeaderTemplate>
                     <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="local:DayGroup">
+                        <DataTemplate>
                             <VerticalStackLayout>
                                 <Label Text="{Binding DayLabel}" FontAttributes="Bold" Margin="6,8,6,4" />
                                 <!-- Render single event cards (when group size == 1) -->

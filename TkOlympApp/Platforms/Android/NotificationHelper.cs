@@ -9,39 +9,48 @@ public static class NotificationHelper
     const string CHANNEL_ID = "tkolymp_updates";
     const string CHANNEL_NAME = "Aktuality";
 
+    #pragma warning disable CS8602
     public static void ShowNotification(string title, string message)
     {
-            var context = Android.App.Application.Context;
+        var context = Android.App.Application.Context;
+        if (context == null) return;
 
-                var intent = new Intent(context, typeof(global::TkOlympApp.MainActivity));
+        var intent = new Intent(context, typeof(global::TkOlympApp.MainActivity));
         intent.SetFlags(ActivityFlags.ClearTop | ActivityFlags.SingleTop);
         intent.PutExtra("openNoticeboard", true);
         intent.PutExtra("notificationTitle", title ?? string.Empty);
         intent.PutExtra("notificationMessage", message ?? string.Empty);
 
         var pendingIntent = PendingIntent.GetActivity(context, 0, intent, PendingIntentFlags.Immutable | PendingIntentFlags.UpdateCurrent);
+        if (pendingIntent == null) return;
 
-            var notificationManagerCompat = NotificationManagerCompat.From(context);
+        var notificationManagerCompat = NotificationManagerCompat.From(context);
+        if (notificationManagerCompat == null) return;
 
         // Create channel for Android O+
-            if (global::Android.OS.Build.VERSION.SdkInt >= global::Android.OS.BuildVersionCodes.O)
+        if (global::Android.OS.Build.VERSION.SdkInt >= global::Android.OS.BuildVersionCodes.O)
         {
             var channel = new NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationImportance.Default)
             {
                 Description = "Notifikace o nových aktualitách"
             };
-                    var nm = context.GetSystemService(global::Android.Content.Context.NotificationService) as global::Android.App.NotificationManager;
-                nm?.CreateNotificationChannel(channel);
+            var nm = context.GetSystemService(global::Android.Content.Context.NotificationService) as global::Android.App.NotificationManager;
+            nm?.CreateNotificationChannel(channel);
         }
 
-        var builder = new NotificationCompat.Builder(context, CHANNEL_ID)
-                      .SetContentTitle(title)
-                      .SetContentText(message)
+        var builder = new NotificationCompat.Builder(context!, CHANNEL_ID)
+                      .SetContentTitle(title ?? string.Empty)
+                      .SetContentText(message ?? string.Empty)
                       .SetSmallIcon(Resource.Mipmap.appicon)
                       .SetAutoCancel(true)
                       .SetContentIntent(pendingIntent)
                       .SetPriority((int)NotificationPriority.Default);
 
-            notificationManagerCompat.Notify(System.DateTime.Now.GetHashCode(), builder.Build());
+        var built = builder.Build();
+        if (built != null)
+        {
+            notificationManagerCompat.Notify(System.DateTime.Now.GetHashCode(), built);
+        }
     }
+    #pragma warning restore CS8602
 }
