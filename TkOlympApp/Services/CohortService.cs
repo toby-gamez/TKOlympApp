@@ -13,10 +13,20 @@ public static class CohortService
 
     public static async Task<List<CohortGroup>> GetCohortGroupsAsync(CancellationToken ct = default)
     {
-        var query = new GraphQlRequest
-        {
-            Query = "query MyQuery { cohortGroups { nodes { cohortsList { colorRgb name description location isVisible } } } }"
-        };
+                var query = new GraphQlRequest
+                {
+                        Query = @"query Query {
+    getCurrentTenant {
+        id
+        cohortsList(condition: { isVisible: true }, orderBy: [NAME_ASC]) {
+            colorRgb
+            name
+            description
+            location
+        }
+    }
+}" 
+                };
 
         var json = JsonSerializer.Serialize(query, Options);
         using var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -35,7 +45,9 @@ public static class CohortService
             throw new InvalidOperationException(msg);
         }
 
-        return data?.Data?.CohortGroups?.Nodes ?? new List<CohortGroup>();
+        // API now returns cohortsList under getCurrentTenant; map it into the existing CohortGroup shape
+        var cohorts = data?.Data?.GetCurrentTenant?.CohortsList ?? new List<CohortItem>();
+        return new List<CohortGroup> { new CohortGroup(cohorts) };
     }
 
     private sealed class GraphQlRequest
@@ -57,12 +69,13 @@ public static class CohortService
 
     private sealed class CohortGroupsData
     {
-        [JsonPropertyName("cohortGroups")] public CohortGroupsWrapper? CohortGroups { get; set; }
+        [JsonPropertyName("getCurrentTenant")] public GetCurrentTenantWrapper? GetCurrentTenant { get; set; }
     }
 
-    private sealed class CohortGroupsWrapper
+    private sealed class GetCurrentTenantWrapper
     {
-        [JsonPropertyName("nodes")] public List<CohortGroup>? Nodes { get; set; }
+        [JsonPropertyName("id")] public string? Id { get; set; }
+        [JsonPropertyName("cohortsList")] public List<CohortItem>? CohortsList { get; set; }
     }
 
     public sealed record CohortGroup(
@@ -73,7 +86,6 @@ public static class CohortService
         [property: JsonPropertyName("colorRgb")] string? ColorRgb,
         [property: JsonPropertyName("name")] string? Name,
         [property: JsonPropertyName("description")] string? Description,
-        [property: JsonPropertyName("location")] string? Location,
-        [property: JsonPropertyName("isVisible")] bool? IsVisible
+        [property: JsonPropertyName("location")] string? Location
     );
 }

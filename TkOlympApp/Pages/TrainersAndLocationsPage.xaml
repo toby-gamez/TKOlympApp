@@ -43,7 +43,14 @@
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="8" />
                         </Border.StrokeShape>
-                        <Label Text="{Binding}" />
+                        <Grid VerticalOptions="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Label Text="{Binding Name}" Grid.Column="0" VerticalOptions="Center" />
+                            <Label Text="{Binding Price}" Grid.Column="1" VerticalOptions="Center" HorizontalOptions="End" FontSize="12" Style="{StaticResource MutedLabelStyle}" />
+                        </Grid>
                     </Border>
                 </DataTemplate>
             </BindableLayout.ItemTemplate>

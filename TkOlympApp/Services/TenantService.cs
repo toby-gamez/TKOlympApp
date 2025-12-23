@@ -15,7 +15,7 @@ public static class TenantService
     {
         var query = new GraphQlRequest
         {
-            Query = "query MyQuery { tenantLocationsList { name } tenantTrainersList { person { firstName lastName } } }"
+            Query = "query MyQuery { tenantLocationsList { name } tenantTrainersList { person { firstName lastName } guestPrice45Min { amount currency } guestPayout45Min { amount currency } } }"
         };
 
         var json = JsonSerializer.Serialize(query, Options);
@@ -68,11 +68,18 @@ public static class TenantService
     );
 
     public sealed record TenantTrainer(
-        [property: JsonPropertyName("person")] Person? Person
+        [property: JsonPropertyName("person")] Person? Person,
+        [property: JsonPropertyName("guestPrice45Min")] Price? GuestPrice45Min,
+        [property: JsonPropertyName("guestPayout45Min")] Price? GuestPayout45Min
     );
 
     public sealed record Person(
         [property: JsonPropertyName("firstName")] string? FirstName,
         [property: JsonPropertyName("lastName")] string? LastName
+    );
+
+    public sealed record Price(
+        [property: JsonPropertyName("amount")] decimal? Amount,
+        [property: JsonPropertyName("currency")] string? Currency
     );
 }

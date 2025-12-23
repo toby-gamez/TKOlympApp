@@ -12,6 +12,8 @@ public partial class TrainersAndLocationsPage : ContentPage
 {
     private bool _loaded;
 
+    private sealed record TrainerDisplay(string Name, string Price);
+
     public TrainersAndLocationsPage()
     {
         InitializeComponent();
@@ -45,9 +47,50 @@ public partial class TrainersAndLocationsPage : ContentPage
                     var p = t.Person;
                     var name = string.Join(' ', new[] { p?.FirstName?.Trim(), p?.LastName?.Trim() }
                         .Where(s => !string.IsNullOrWhiteSpace(s)));
-                    return name;
+
+                    static string FormatPrice(TenantService.Price? price)
+                    {
+                        if (price == null || price.Amount == null) return string.Empty;
+                        var amt = price.Amount.Value;
+                        var cur = price.Currency ?? string.Empty;
+
+                        static string FormatAmount(decimal value, bool forceNoDecimals)
+                        {
+                            if (forceNoDecimals) return decimal.Round(value, 0).ToString("0");
+                            return value == decimal.Truncate(value) ? value.ToString("0") : value.ToString("0.##");
+                        }
+
+                        string formatted;
+                        if (string.Equals(cur, "CZK", StringComparison.OrdinalIgnoreCase))
+                        {
+                            var a = FormatAmount(amt, true);
+                            formatted = $"{a},-";
+                        }
+                        else if (string.Equals(cur, "EUR", StringComparison.OrdinalIgnoreCase))
+                        {
+                            var a = FormatAmount(amt, false);
+                            formatted = $"{a} €";
+                        }
+                        else if (string.Equals(cur, "USD", StringComparison.OrdinalIgnoreCase) || string.Equals(cur, "USD", StringComparison.OrdinalIgnoreCase))
+                        {
+                            var a = FormatAmount(amt, false);
+                            formatted = $"{a} $";
+                        }
+                        else
+                        {
+                            var a = FormatAmount(amt, false);
+                            formatted = string.IsNullOrWhiteSpace(cur) ? a : $"{a} {cur}";
+                        }
+
+                        return $"{formatted} / pár, 45'";
+                    }
+
+                    var priceStr = FormatPrice(t.GuestPrice45Min);
+                    if (string.IsNullOrWhiteSpace(priceStr)) priceStr = FormatPrice(t.GuestPayout45Min);
+
+                    return new TrainerDisplay(name, priceStr);
                 })
-                .Where(n => !string.IsNullOrWhiteSpace(n))
+                .Where(td => !string.IsNullOrWhiteSpace(td.Name))
                 .ToList();
 
             BindableLayout.SetItemsSource(LocationsStack, locList);

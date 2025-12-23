@@ -95,7 +95,7 @@ public static class LeaderboardService
         };
 
         // Variables: cohortId if provided, default since = yesterday, until = today (date-only yyyy-MM-dd)
-        var variables = new Dictionary<string, object?>();
+        var variables = new Dictionary<string, object>();
         if (cohortId.HasValue)
             variables["cohortId"] = cohortId.Value;
 

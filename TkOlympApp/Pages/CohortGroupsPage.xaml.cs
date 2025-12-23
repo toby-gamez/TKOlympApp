@@ -40,7 +40,7 @@ public partial class CohortGroupsPage : ContentPage
             var groups = await CohortService.GetCohortGroupsAsync();
             var cohorts = groups
                 .SelectMany(g => g.CohortsList ?? new System.Collections.Generic.List<CohortService.CohortItem>())
-                .Where(ci => !string.IsNullOrWhiteSpace(ci?.Name) && ci.IsVisible != false)
+                .Where(ci => ci != null && !string.IsNullOrWhiteSpace(ci.Name))
                 .ToList();
 
             GroupsStack.Children.Clear();
