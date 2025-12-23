@@ -7,13 +7,68 @@
 
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="20,0,20,0" Spacing="12">
-                <Label Text="Další nástroje a nastavení." />
-
-                <Button Text="About me" Clicked="OnAboutMeClicked" />
-                <Button Text="Lidé" Clicked="OnPeopleClicked" />
-                <Button Text="Send test notification" Clicked="OnSendTestNotificationClicked" />
-                    <Button Text="Trenéři a tr. prostory" Clicked="OnTrainersClicked" />
-                    <Button Text="Tréninkové skupiny" Clicked="OnCohortGroupsClicked" />
+                <Label FontAttributes="Bold">Členové a klub</Label>
+                <Border Padding="12" Margin="6">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnAboutMeClicked" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout>
+                        <Label FontAttributes="Bold">Profil</Label>
+                        <Label Style="{StaticResource MutedLabelStyle}">Vše, co si o sobě můžeš jako normální smrtelník přát vědět.</Label>
+                    </VerticalStackLayout>    
+                </Border>
+                <Border Padding="12" Margin="6">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnPeopleClicked" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout>
+                        <Label FontAttributes="Bold">Lidé</Label>
+                        <Label Style="{StaticResource MutedLabelStyle}">Seznam tvých kamarádům PS: máš tam i jejich narozeniny.</Label>
+                    </VerticalStackLayout>    
+                </Border>
+                <Border Padding="12" Margin="6">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnTrainersClicked" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout>
+                        <Label FontAttributes="Bold">Trenéři a tréninkové prostory</Label>
+                        <Label Style="{StaticResource MutedLabelStyle}">Kdybys zapomněl, kam každý den chodíš.</Label>
+                    </VerticalStackLayout>
+                </Border>
+                <Border Padding="12" Margin="6">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnCohortGroupsClicked" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout>
+                        <Label FontAttributes="Bold">Tréninkové skupiny</Label>
+                        <Label Style="{StaticResource MutedLabelStyle}">Kdybys zapomněl, kde tančíš.</Label>
+                    </VerticalStackLayout>
+                </Border>
+                <Label FontAttributes="Bold">Aplikace</Label>
+                <Border Padding="12" Margin="6">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnCohortGroupsClicked" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout>
+                        <Label FontAttributes="Bold">Jazyky</Label>
+                        <Label Style="{StaticResource MutedLabelStyle}">Kdyby ti jiný jazyk přišel víc pochuti.</Label>
+                    </VerticalStackLayout>
+                </Border>
             </VerticalStackLayout>
         </ScrollView>
 
