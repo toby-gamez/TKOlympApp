@@ -70,6 +70,18 @@
                         <Label Style="{StaticResource MutedLabelStyle}" Text="{svc:Translate Other_Languages_Desc}" />
                     </VerticalStackLayout>
                 </Border>
+                <Border Padding="12" Margin="6">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnAboutAppClicked" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout>
+                        <Label FontAttributes="Bold" Text="O aplikaci" />
+                        <Label Style="{StaticResource MutedLabelStyle}" Text="Zobrazit informace o aplikaci a verzi" />
+                    </VerticalStackLayout>
+                </Border>
             </VerticalStackLayout>
         </ScrollView>
 
