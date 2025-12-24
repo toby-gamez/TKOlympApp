@@ -121,4 +121,29 @@
   <data name="Other_Author_Filip" xml:space="preserve"><value>перекладач, помічник і підтримка</value></data>
   <data name="Brainrot_Disclaimer" xml:space="preserve"><value>Застереження: Мова «Brainrot» є веселою варіацією оригінального додатка, збагаченою трохи «brainrot» гумором. Все це для розваги і не слід сприймати серйозно.</value></data>
   <data name="VersionFormat" xml:space="preserve"><value>Версія {0} (Build {1})</value></data>
+  <data name="Privacy_Title" xml:space="preserve"><value>Політика конфіденційності</value></data>
+  <data name="Privacy_EffectiveDate" xml:space="preserve"><value>Дата набрання чинності: 24 грудня 2025</value></data>
+  <data name="Privacy_Summary_Title" xml:space="preserve"><value>Короткий підсумок</value></data>
+  <data name="Privacy_Summary_Body" xml:space="preserve"><value>Додаток TkOlymp є клієнтом сервісу на https://api.rozpisovnik.cz. Ми збираємо лише дані, необхідні для роботи додатка (аутентифікація, відображення подій, сповіщення та інформація профілю).</value></data>
+  <data name="Privacy_S1_Title" xml:space="preserve"><value>1) Які дані ми збираємо</value></data>
+  <data name="Privacy_S1_Body" xml:space="preserve"><value>• Токен аутентифікації (JWT): зберігається локально у захищеному сховищі пристрою для авторизації викликів API (див. AuthService). • Дані з API: події, інстанси, сповіщення, інформація про користувачів/групи та рейтинги — завантажуються динамічно з GraphQL API згідно з вашим обліковим записом. • Додаткові дані: якщо ви заповнюєте профіль або змінюєте налаштування, вони використовуються для покращення досвіду користувача.</value></data>
+  <data name="Privacy_S2_Title" xml:space="preserve"><value>2) Де і як зберігаються дані</value></data>
+  <data name="Privacy_S2_Body" xml:space="preserve"><value>• Мережеві запити спрямовуються на https://api.rozpisovnik.cz/graphql. Додаток не створює власного центрального сховища даних поза провайдером API. • JWT зберігається в SecureStorage (платформне захищене сховище).</value></data>
+  <data name="Privacy_S3_Title" xml:space="preserve"><value>3) Мета обробки</value></data>
+  <data name="Privacy_S3_Body" xml:space="preserve"><value>Ми використовуємо дані для аутентифікації, авторизації, відображення ваших подій, надсилання та отримання сповіщень, керування рейтингами та інших функцій клієнта.</value></data>
+  <data name="Privacy_S4_Title" xml:space="preserve"><value>4) Передача та обробка третіми сторонами</value></data>
+  <data name="Privacy_S4_Body" xml:space="preserve"><value>• Дані не продаються і не передаються третім сторонам для маркетингу без вашої згоди. Ми передаємо дані лише провайдеру API та необхідним платформним службам (наприклад, карти), якщо ви ними користуєтесь. • Сповіщення доставляються платформними сервісами (Android/iOS) через NotificationManagerService або нативні API.</value></data>
+  <data name="Privacy_S5_Title" xml:space="preserve"><value>5) Дозволи та локальний доступ</value></data>
+  <data name="Privacy_S5_Body" xml:space="preserve"><value>Додаток запитує лише необхідні дозволи (наприклад, для карт або отримання сповіщень). Ми не отримуємо доступ до ваших контактів, фотогалерей або інших чутливих джерел без явного дозволу.</value></data>
+  <data name="Privacy_S6_Title" xml:space="preserve"><value>6) Як довго ми зберігаємо дані</value></data>
+  <data name="Privacy_S6_Body" xml:space="preserve"><value>JWT зберігається протягом дії токена або до моменту виходу/видалення облікового запису. Дані на боці API регулюються політикою провайдера; додаток не виконує довготривале локальне зберігання чутливих даних без згоди.</value></data>
+  <data name="Privacy_S7_Title" xml:space="preserve"><value>7) Ваші права</value></data>
+  <data name="Privacy_S7_Body" xml:space="preserve"><value>Ви маєте право вимагати доступ до своїх даних, їх виправлення або видалення. Для таких запитів зверніться до адміністратора сервісу або використайте канали зв'язку провайдера API.</value></data>
+  <data name="Privacy_S8_Title" xml:space="preserve"><value>8) Зміни політики</value></data>
+  <data name="Privacy_S8_Body" xml:space="preserve"><value>Політики можуть оновлюватися. Про суттєві зміни буде повідомлено в додатку або через сповіщення. Рекомендуємо час від часу перевіряти дату набрання чинності.</value></data>
+  <data name="Privacy_Contact_Title" xml:space="preserve"><value>Контакт</value></data>
+  <data name="Privacy_Contact_Prefix" xml:space="preserve"><value>Якщо у вас є питання щодо конфіденційності або запит на видалення, зверніться до адміністратора сервісу: </value></data>
+  <data name="Privacy_Contact_LinkText" xml:space="preserve"><value>tkolymp.cz/kontakt</value></data>
+  <data name="Privacy_TechnicalDetails" xml:space="preserve"><value>Технічні деталі: реалізацію аутентифікації та виклики GraphQL див. у `Services/AuthService.cs` та `Services/EventService.cs`. Сповіщення керуються `NotificationManagerService`.</value></data>
+  <data name="Privacy_List_Preview" xml:space="preserve"><value>Переглянути політику конфіденційності</value></data>
 </root>

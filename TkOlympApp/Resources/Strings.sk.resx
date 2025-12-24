@@ -121,4 +121,29 @@
     <data name="Other_Author_Filip" xml:space="preserve"><value>prekladateľ, podporovateľ a pomocník</value></data>
     <data name="Brainrot_Disclaimer" xml:space="preserve"><value>Upozornenie: Jazyk „Brainrot“ je zábavnou variáciou pôvodnej aplikácie, obohatenou o trochu humoru „brainrot“. Je to len pre zábavu a nemalo by sa to brať vážne.</value></data>
     <data name="VersionFormat" xml:space="preserve"><value>Verzia {0} (Build {1})</value></data>
+    <data name="Privacy_Title" xml:space="preserve"><value>Zásady ochrany osobných údajov</value></data>
+    <data name="Privacy_EffectiveDate" xml:space="preserve"><value>Dátum účinnosti: 24. decembra 2025</value></data>
+    <data name="Privacy_Summary_Title" xml:space="preserve"><value>Stručné zhrnutie</value></data>
+    <data name="Privacy_Summary_Body" xml:space="preserve"><value>Aplikácia TkOlymp je klient služby na https://api.rozpisovnik.cz. Zhromažďujeme len nevyhnutné údaje pre fungovanie aplikácie (autentifikácia, zobrazenie udalostí, notifikácie a informácie v profile).</value></data>
+    <data name="Privacy_S1_Title" xml:space="preserve"><value>1) Aké údaje zhromažďujeme</value></data>
+    <data name="Privacy_S1_Body" xml:space="preserve"><value>• Autentifikačný token (JWT): uložený lokálne v zabezpečenom úložisku zariadenia na autorizáciu volaní API (viď AuthService). • Údaje z API: udalosti, inštancie, notifikácie, informácie o používateľoch/skupinách a rebríčkoch — načítavajú sa dynamicky z GraphQL API podľa vášho konta. • Voliteľné údaje: ak vyplníte profil alebo upravíte nastavenia, použijú sa na vylepšenie používateľskej skúsenosti.</value></data>
+    <data name="Privacy_S2_Title" xml:space="preserve"><value>2) Kde a ako sú údaje uložené</value></data>
+    <data name="Privacy_S2_Body" xml:space="preserve"><value>• Sieťové požiadavky smerujú na https://api.rozpisovnik.cz/graphql. Aplikácia nevytvára vlastné centrálne úložisko dát mimo poskytovateľa API. • JWT je uložený v SecureStorage (platformné zabezpečené úložisko).</value></data>
+    <data name="Privacy_S3_Title" xml:space="preserve"><value>3) Účel spracovania</value></data>
+    <data name="Privacy_S3_Body" xml:space="preserve"><value>Údaje používame na autentifikáciu, autorizáciu, zobrazenie vašich udalostí, odosielanie a prijímanie notifikácií, správu rebríčkov a ďalšie funkcie klienta.</value></data>
+    <data name="Privacy_S4_Title" xml:space="preserve"><value>4) Zdieľanie a spracovanie tretími stranami</value></data>
+    <data name="Privacy_S4_Body" xml:space="preserve"><value>• Údaje nie sú predávané ani zdieľané s tretími stranami pre marketing bez vášho súhlasu. Zdieľame len s poskytovateľom API a nevyhnutnými systémovými službami (napr. mapy), ak ich použijete. • Notifikácie sú sprostredkované platformnými službami (Android/iOS) cez NotificationManagerService alebo natívne rozhrania.</value></data>
+    <data name="Privacy_S5_Title" xml:space="preserve"><value>5) Oprávnenia a lokálny prístup</value></data>
+    <data name="Privacy_S5_Body" xml:space="preserve"><value>Aplikácia vyžaduje len nevyhnutné oprávnenia (napr. zobrazenie máp alebo prijímanie notifikácií). Nepřistupujeme k vašim kontaktom, galériám ani ďalším citlivým zdrojom bez výslovného súhlasu.</value></data>
+    <data name="Privacy_S6_Title" xml:space="preserve"><value>6) Ako dlho uchovávame údaje</value></data>
+    <data name="Privacy_S6_Body" xml:space="preserve"><value>JWT sa uchováva po dobu platnosti tokenu alebo kým sa odhlásite/odstránite účet. Údaje na strane API sa riadia politikou poskytovateľa; aplikácia neuchováva dlhodobo citlivé údaje lokálne bez súhlasu.</value></data>
+    <data name="Privacy_S7_Title" xml:space="preserve"><value>7) Vaše práva</value></data>
+    <data name="Privacy_S7_Body" xml:space="preserve"><value>Máte právo požadovať prístup k vašim údajom, ich opravu alebo vymazanie. Pre tieto požiadavky kontaktujte správcu služby alebo použite kontaktné kanály poskytovateľa API.</value></data>
+    <data name="Privacy_S8_Title" xml:space="preserve"><value>8) Zmeny zásad</value></data>
+    <data name="Privacy_S8_Body" xml:space="preserve"><value>Zásady môžu byť aktualizované. O významných zmenách budeme informovať v aplikácii alebo prostredníctvom notifikácie. Odporúčame občas skontrolovať dátum účinnosti.</value></data>
+    <data name="Privacy_Contact_Title" xml:space="preserve"><value>Kontakt</value></data>
+    <data name="Privacy_Contact_Prefix" xml:space="preserve"><value>Ak máte otázku ohľadom ochrany osobných údajov alebo žiadosť o vymazanie, kontaktujte správcu služby: </value></data>
+    <data name="Privacy_Contact_LinkText" xml:space="preserve"><value>tkolymp.cz/kontakt</value></data>
+    <data name="Privacy_TechnicalDetails" xml:space="preserve"><value>Technické detaily: implementácia autentifikácie a volania GraphQL sú v `Services/AuthService.cs` a `Services/EventService.cs`. Notifikácie spravuje `NotificationManagerService`.</value></data>
+        <data name="Privacy_List_Preview" xml:space="preserve"><value>Prezrieť zásady ochrany osobných údajov</value></data>
 </root>

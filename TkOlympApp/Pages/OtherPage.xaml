@@ -82,6 +82,18 @@
                         <Label Style="{StaticResource MutedLabelStyle}" Text="{svc:Translate Other_AboutApp_Desc}" />
                     </VerticalStackLayout>
                 </Border>
+                <Border Padding="12" Margin="6">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnPrivacyPolicyClicked" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout>
+                        <Label FontAttributes="Bold" Text="{svc:Translate Privacy_Title}" />
+                        <Label Style="{StaticResource MutedLabelStyle}" Text="{svc:Translate Privacy_List_Preview}" />
+                    </VerticalStackLayout>
+                </Border>
             </VerticalStackLayout>
         </ScrollView>
 
