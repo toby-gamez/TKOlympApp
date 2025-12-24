@@ -12,6 +12,15 @@ public partial class App : Application
     public App()
     {
         InitializeComponent();
+        // Apply language early so AppShell and initial pages use correct culture
+        try
+        {
+            var stored = Preferences.Get("app_language", (string?)null);
+            var lang = stored ?? LocalizationService.DetermineDefaultLanguage();
+            LocalizationService.ApplyLanguage(lang);
+        }
+        catch { }
+
         // Keep constructor minimal; window + shell created in CreateWindow
     }
 
@@ -28,9 +37,6 @@ public partial class App : Application
                 try { await Task.Delay(150); } catch { }
                 try
                 {
-                    var stored = Preferences.Get("app_language", (string?)null);
-                    var lang = stored ?? LocalizationService.DetermineDefaultLanguage();
-                    LocalizationService.ApplyLanguage(lang);
                     if (Shell.Current != null) await Shell.Current.GoToAsync("//Kalendář");
                 }
                 catch { }
