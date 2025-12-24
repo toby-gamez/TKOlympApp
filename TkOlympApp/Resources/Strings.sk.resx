@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+    <resheader name="version"><value>2.0</value></resheader>
+    <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+    <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+    <data name="AppTitle" xml:space="preserve"><value>TkOlympApp</value></data>
+    <data name="Calendar" xml:space="preserve"><value>Kalendár</value></data>
+    <data name="Language_Choose" xml:space="preserve"><value>Vyberte jazyk</value></data>
+    <data name="Language_Czech" xml:space="preserve"><value>Čeština</value></data>
+    <data name="Language_English" xml:space="preserve"><value>Angličtina</value></data>
+    <data name="Language_Vietnamese" xml:space="preserve"><value>Vietnamčina</value></data>
+    <data name="Language_Ukrainian" xml:space="preserve"><value>Ukrajinčina</value></data>
+    <data name="Language_Norwegian" xml:space="preserve"><value>Nórčina</value></data>
+    <data name="Language_Slovak" xml:space="preserve"><value>Slovenčina</value></data>
+    <data name="Language_Slovenian" xml:space="preserve"><value>Slovinčina</value></data>
+    <data name="Language_en-AU" xml:space="preserve"><value>Brainrot</value></data>
+    <data name="Button_Continue" xml:space="preserve"><value>Pokračovať</value></data>
+    <data name="Noticeboard" xml:space="preserve"><value>Nástienka</value></data>
+    <data name="Leaderboard" xml:space="preserve"><value>Rebríček</value></data>
+    <data name="Other" xml:space="preserve"><value>Ostatné</value></data>
+    <data name="People_Title" xml:space="preserve"><value>Ľudia</value></data>
+    <data name="People_SortLabel" xml:space="preserve"><value>Radenie:</value></data>
+    <data name="People_SortPickerTitle" xml:space="preserve"><value>Zoradiť</value></data>
+    <data name="Login_Title" xml:space="preserve"><value>Prihlásenie</value></data>
+    <data name="Login_Placeholder_Username" xml:space="preserve"><value>Meno</value></data>
+    <data name="Login_Placeholder_Password" xml:space="preserve"><value>Heslo</value></data>
+    <data name="Login_Button_Login" xml:space="preserve"><value>Prihlásiť sa</value></data>
+    <data name="About_Name" xml:space="preserve"><value>Meno:</value></data>
+    <data name="About_Surname" xml:space="preserve"><value>Priezvisko:</value></data>
+    <data name="About_Login" xml:space="preserve"><value>Login:</value></data>
+    <data name="About_Email" xml:space="preserve"><value>Email:</value></data>
+    <data name="About_Id" xml:space="preserve"><value>ID:</value></data>
+    <data name="About_TenantId" xml:space="preserve"><value>Tenant ID:</value></data>
+    <data name="About_LastLogin" xml:space="preserve"><value>Posledné prihlásenie:</value></data>
+    <data name="About_LastActivity" xml:space="preserve"><value>Posledná aktivita:</value></data>
+    <data name="About_CreatedUser" xml:space="preserve"><value>Vytvorený (užívateľ):</value></data>
+    <data name="About_CreatedRecord" xml:space="preserve"><value>Vytvorený (záznam):</value></data>
+    <data name="About_Updated" xml:space="preserve"><value>Aktualizovaný:</value></data>
+    <data name="About_LastVersion" xml:space="preserve"><value>Posledná verzia:</value></data>
+    <data name="Notice_Info" xml:space="preserve"><value>Informácie</value></data>
+    <data name="Notice_Content" xml:space="preserve"><value>Obsah</value></data>
+    <data name="Leaderboard_Loading" xml:space="preserve"><value>Fakt to trvá dlho...</value></data>
+    <data name="Noticeboard_TabAktuality" xml:space="preserve"><value>Aktuality</value></data>
+    <data name="Noticeboard_TabStala" xml:space="preserve"><value>Stála nástenka</value></data>
+    <data name="Language_Title" xml:space="preserve"><value>Jazyk</value></data>
+    <data name="AboutMe_Title" xml:space="preserve"><value>O mne</value></data>
+    <data name="NoticePage_Title" xml:space="preserve"><value>Oznámenie</value></data>
+    <data name="CohortGroups_Title" xml:space="preserve"><value>Tréningové skupiny</value></data>
+    <data name="TrainersAndLocations_Title" xml:space="preserve"><value>Tréneri a tr. priestory</value></data>
+    <data name="TreneriAProstory_Title" xml:space="preserve"><value>Tréneri a priestory</value></data>
+    <data name="Trainers_Locations_Label" xml:space="preserve"><value>Tréningové priestory</value></data>
+    <data name="Trainers_Label" xml:space="preserve"><value>Tréneri</value></data>
+    <data name="Other_Section_Members" xml:space="preserve"><value>Členovia a klub</value></data>
+    <data name="Other_Item_Profile" xml:space="preserve"><value>Profil</value></data>
+    <data name="Other_Profile_Desc" xml:space="preserve"><value>Všetko, čo si o sebe môžeš ako normálny smrteľník priať vedieť.</value></data>
+    <data name="Other_Item_People" xml:space="preserve"><value>Ľudia</value></data>
+    <data name="Other_People_Desc" xml:space="preserve"><value>Zoznam tvojich kamarátov. PS: máš tam aj ich narodeniny.</value></data>
+    <data name="Other_Trainers_Label" xml:space="preserve"><value>Tréneri a tréningové priestory</value></data>
+    <data name="Other_Trainers_Desc" xml:space="preserve"><value>Keby si zabudol, kam každý deň chodíš.</value></data>
+    <data name="Other_CohortGroups_Label" xml:space="preserve"><value>Tréningové skupiny</value></data>
+    <data name="Other_CohortGroups_Desc" xml:space="preserve"><value>Keby si zabudol, kde tancuješ.</value></data>
+    <data name="Other_Section_App" xml:space="preserve"><value>Aplikácia</value></data>
+    <data name="Other_Languages_Label" xml:space="preserve"><value>Jazyky</value></data>
+    <data name="Other_Languages_Desc" xml:space="preserve"><value>Keby ti iný jazyk bol viac po chuti.</value></data>
+    <data name="Other_Button_Logout" xml:space="preserve"><value>Odhlásiť sa</value></data>
+    <data name="Notifications_ChannelName" xml:space="preserve"><value>Aktuality</value></data>
+    <data name="Notifications_ChannelDescription" xml:space="preserve"><value>Notifikácie o nových aktualitách</value></data>
+    <data name="Error_Loading_Title" xml:space="preserve"><value>Chyba načítania</value></data>
+    <data name="Error_Navigation_Title" xml:space="preserve"><value>Chyba navigácie</value></data>
+    <data name="Error_Loading_Prefix" xml:space="preserve"><value>Chyba načítania stránky: </value></data>
+    <data name="GraphQL_UnknownError" xml:space="preserve"><value>Neznáma chyba GraphQL.</value></data>
+    <data name="Notifications_Permission_Title" xml:space="preserve"><value>Povoliť notifikácie</value></data>
+    <data name="Notifications_Permission_Message" xml:space="preserve"><value>Aby aplikácia mohla zobrazovať notifikácie, povoľte upozornenia v nastavení aplikácie.</value></data>
+    <data name="Notifications_OpenSettings" xml:space="preserve"><value>Otvoriť nastavenia</value></data>
+    <data name="Button_Close" xml:space="preserve"><value>Zavrieť</value></data>
+    <data name="Notifications_NewPostTitle" xml:space="preserve"><value>Nová aktualita</value></data>
+    <data name="NotFound_Title" xml:space="preserve"><value>Nenájdené</value></data>
+    <data name="NotFound_Event" xml:space="preserve"><value>Udalosť nebola nájdená.</value></data>
+    <data name="NotFound_Notice" xml:space="preserve"><value>Oznámenie nebolo nájdené.</value></data>
+    <data name="Error_Title" xml:space="preserve"><value>Chyba</value></data>
+    <data name="Login_Error_Missing" xml:space="preserve"><value>Vyplňte prosím meno aj heslo.</value></data>
+    <data name="Login_Failed_Title" xml:space="preserve"><value>Prihlásenie zlyhalo</value></data>
+    <data name="Button_OK" xml:space="preserve"><value>OK</value></data>
+    <data name="Tab_My" xml:space="preserve"><value>Moje</value></data>
+    <data name="Tab_All" xml:space="preserve"><value>Všetkých</value></data>
+    <data name="Today" xml:space="preserve"><value>Dnes</value></data>
+    <data name="Tomorrow" xml:space="preserve"><value>Zajtra</value></data>
+    <data name="Empty_MyEvents" xml:space="preserve"><value>Nemáte žiadne udalosti.</value></data>
+    <data name="Empty_NoEvents" xml:space="preserve"><value>Nie sú žiadne udalosti.</value></data>
+    <data name="Lesson_Prefix" xml:space="preserve"><value>Lekcia: </value></data>
+    <data name="Lesson_Short" xml:space="preserve"><value>Lekcia</value></data>
+    <data name="Date_Today_Prefix" xml:space="preserve"><value>dnes </value></data>
+    <data name="Date_Tomorrow_Prefix" xml:space="preserve"><value>zajtra </value></data>
+    <data name="Price_PerCouple45" xml:space="preserve"><value> / pár, 45'</value></data>
+    <data name="People_Sort_Alphabetical" xml:space="preserve"><value>Abecedne</value></data>
+    <data name="People_Sort_ByBirthdays" xml:space="preserve"><value>Podľa narodenín</value></data>
+    <data name="Event_Location_Prefix" xml:space="preserve"><value>Miesto konania: </value></data>
+    <data name="Event_DateRange_Prefix" xml:space="preserve"><value>Termín: </value></data>
+    <data name="Event_Created_Prefix" xml:space="preserve"><value>Vytvorené: </value></data>
+    <data name="Event_Updated_Prefix" xml:space="preserve"><value>Aktualizované: </value></data>
+    <data name="Notice_Created_Prefix" xml:space="preserve"><value>Vytvorené: </value></data>
+    <data name="Notice_Updated_Prefix" xml:space="preserve"><value>Aktualizované: </value></data>
+    <data name="Notice_Author_Prefix" xml:space="preserve"><value>Autor: </value></data>
+    <data name="EventPage_Title" xml:space="preserve"><value>Udalosť</value></data>
+    <data name="Event_Info_Label" xml:space="preserve"><value>Informácie</value></data>
+    <data name="Registration_Open" xml:space="preserve"><value>Registrácia otvorená</value></data>
+    <data name="Public_Label" xml:space="preserve"><value>Verejné</value></data>
+    <data name="Visible_Label" xml:space="preserve"><value>Viditeľné</value></data>
+    <data name="Event_Description_Label" xml:space="preserve"><value>Popis</value></data>
+    <data name="Event_Summary_Label" xml:space="preserve"><value>Zhrnutie</value></data>
+    <data name="Event_Trainers_Label" xml:space="preserve"><value>Tréneri</value></data>
+    <data name="Event_Registrations_Label" xml:space="preserve"><value>Zoznam prihlásených</value></data>
+    <data name="Other_AboutApp_Label" xml:space="preserve"><value>O aplikácii</value></data>
+    <data name="Other_AboutApp_Desc" xml:space="preserve"><value>Všetko o tomto softvéri</value></data>
+    <data name="Other_AboutApp_Body" xml:space="preserve"><value>Táto aplikácia zobrazuje rozvrhy, novinky a informácie o tréneroch a priestoroch. Je pripojená k vzdialenému API a používa lokálne notifikácie na upozornenia o nových príspevkoch a udalostiach.</value></data>
+    <data name="Other_AboutApp_License_Title" xml:space="preserve"><value>Informácie o licenciách</value></data>
+    <data name="Other_AboutApp_License_Text" xml:space="preserve"><value>Tento projekt môže obsahovať knižnice tretích strán; overte licencie v závislostiach.</value></data>
+    <data name="Other_AboutApp_Authors_Title" xml:space="preserve"><value>Autori a prispievatelia</value></data>
+    <data name="Other_Author_Tobias" xml:space="preserve"><value>hlavný vývojár</value></data>
+    <data name="Other_Author_Filip" xml:space="preserve"><value>prekladateľ, podporovateľ a pomocník</value></data>
+</root>

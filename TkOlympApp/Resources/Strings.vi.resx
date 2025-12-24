@@ -11,6 +11,10 @@
   <data name="Language_English" xml:space="preserve"><value>Tiếng Anh</value></data>
   <data name="Language_Vietnamese" xml:space="preserve"><value>Tiếng Việt</value></data>
   <data name="Language_Ukrainian" xml:space="preserve"><value>Tiếng Ucraina</value></data>
+  <data name="Language_Norwegian" xml:space="preserve"><value>Tiếng Na Uy</value></data>
+  <data name="Language_Slovak" xml:space="preserve"><value>Tiếng Slovakia</value></data>
+  <data name="Language_Slovenian" xml:space="preserve"><value>Tiếng Slovenia</value></data>
+  <data name="Language_en-AU" xml:space="preserve"><value>Brainrot</value></data>
   <data name="Button_Continue" xml:space="preserve"><value>Tiếp tục</value></data>
   <data name="Noticeboard" xml:space="preserve"><value>Bảng thông báo</value></data>
   <data name="Leaderboard" xml:space="preserve"><value>Bảng xếp hạng</value></data>
@@ -107,4 +111,12 @@
   <data name="Event_Summary_Label" xml:space="preserve"><value>Tóm tắt</value></data>
   <data name="Event_Trainers_Label" xml:space="preserve"><value>Huấn luyện viên</value></data>
   <data name="Event_Registrations_Label" xml:space="preserve"><value>Danh sách đăng ký</value></data>
+  <data name="Other_AboutApp_Label" xml:space="preserve"><value>Về ứng dụng</value></data>
+  <data name="Other_AboutApp_Desc" xml:space="preserve"><value>Mọi thứ về phần mềm này</value></data>
+  <data name="Other_AboutApp_Body" xml:space="preserve"><value>Ứng dụng này hiển thị lịch trình, tin tức và thông tin về huấn luyện viên và địa điểm. Nó kết nối tới API từ xa và sử dụng thông báo cục bộ để thông báo về bài viết và sự kiện mới.</value></data>
+  <data name="Other_AboutApp_License_Title" xml:space="preserve"><value>Thông tin giấy phép</value></data>
+  <data name="Other_AboutApp_License_Text" xml:space="preserve"><value>Dự án này có thể bao gồm thư viện của bên thứ ba; kiểm tra giấy phép trong các phụ thuộc.</value></data>
+  <data name="Other_AboutApp_Authors_Title" xml:space="preserve"><value>Tác giả và người đóng góp</value></data>
+  <data name="Other_Author_Tobias" xml:space="preserve"><value>nhà phát triển chính</value></data>
+  <data name="Other_Author_Filip" xml:space="preserve"><value>người dịch, người hỗ trợ và trợ giúp</value></data>
 </root>

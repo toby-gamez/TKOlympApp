@@ -78,8 +78,8 @@
                         <TapGestureRecognizer Tapped="OnAboutAppClicked" />
                     </Border.GestureRecognizers>
                     <VerticalStackLayout>
-                        <Label FontAttributes="Bold" Text="O aplikaci" />
-                        <Label Style="{StaticResource MutedLabelStyle}" Text="Zobrazit informace o aplikaci a verzi" />
+                        <Label FontAttributes="Bold" Text="{svc:Translate Other_AboutApp_Label}" />
+                        <Label Style="{StaticResource MutedLabelStyle}" Text="{svc:Translate Other_AboutApp_Desc}" />
                     </VerticalStackLayout>
                 </Border>
             </VerticalStackLayout>
@@ -88,7 +88,7 @@
                 <Button Grid.Row="2"
                 Margin="20"
                 Text="{svc:Translate Other_Button_Logout}"
-                BackgroundColor="{DynamicResource Primary}"
+                BackgroundColor="{StaticResource Primary}"
                 TextColor="White"
                 Clicked="OnLogoutClicked" />
     </Grid>

@@ -11,6 +11,10 @@
   <data name="Language_English" xml:space="preserve"><value>English</value></data>
   <data name="Language_Vietnamese" xml:space="preserve"><value>Vietnamese</value></data>
   <data name="Language_Ukrainian" xml:space="preserve"><value>Ukrainian</value></data>
+  <data name="Language_Norwegian" xml:space="preserve"><value>Norwegian</value></data>
+  <data name="Language_Slovak" xml:space="preserve"><value>Slovak</value></data>
+  <data name="Language_Slovenian" xml:space="preserve"><value>Slovenian</value></data>
+  <data name="Language_en-AU" xml:space="preserve"><value>Brainrot</value></data>
   <data name="Button_Continue" xml:space="preserve"><value>Continue</value></data>
   <data name="Noticeboard" xml:space="preserve"><value>Noticeboard</value></data>
   <data name="Leaderboard" xml:space="preserve"><value>Leaderboard</value></data>
@@ -107,4 +111,12 @@
   <data name="Event_Summary_Label" xml:space="preserve"><value>Summary</value></data>
   <data name="Event_Trainers_Label" xml:space="preserve"><value>Trainers</value></data>
   <data name="Event_Registrations_Label" xml:space="preserve"><value>Registrations</value></data>
-</root>
+  <data name="Other_AboutApp_Label" xml:space="preserve"><value>About the Application</value></data>
+  <data name="Other_AboutApp_Desc" xml:space="preserve"><value>All about this software</value></data>
+  <data name="Other_AboutApp_Body" xml:space="preserve"><value>This app shows schedules, news and info about trainers and venues. It talks to a remote API and uses local notifications to nudge you about new posts and events.</value></data>
+    <data name="Other_AboutApp_License_Title" xml:space="preserve"><value>License vibes</value></data>
+    <data name="Other_AboutApp_License_Text" xml:space="preserve"><value>May contain third-party libraries; peep the licenses in deps.</value></data>
+    <data name="Other_AboutApp_Authors_Title" xml:space="preserve"><value>Authors &amp; homies</value></data>
+    <data name="Other_Author_Tobias" xml:space="preserve"><value>lead dev</value></data>
+    <data name="Other_Author_Filip" xml:space="preserve"><value>translator, supporter &amp; helper</value></data>
+  </root>

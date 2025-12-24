@@ -11,6 +11,10 @@
   <data name="Language_English" xml:space="preserve"><value>Англійська</value></data>
   <data name="Language_Vietnamese" xml:space="preserve"><value>Вʼєтнамська</value></data>
   <data name="Language_Ukrainian" xml:space="preserve"><value>Українська</value></data>
+  <data name="Language_Norwegian" xml:space="preserve"><value>Норвезька</value></data>
+  <data name="Language_Slovak" xml:space="preserve"><value>Словацька</value></data>
+  <data name="Language_Slovenian" xml:space="preserve"><value>Словенська</value></data>
+  <data name="Language_en-AU" xml:space="preserve"><value>Brainrot</value></data>
   <data name="Button_Continue" xml:space="preserve"><value>Продовжити</value></data>
   <data name="Noticeboard" xml:space="preserve"><value>Дошка оголошень</value></data>
   <data name="Leaderboard" xml:space="preserve"><value>Таблиця</value></data>
@@ -107,4 +111,12 @@
   <data name="Event_Summary_Label" xml:space="preserve"><value>Підсумок</value></data>
   <data name="Event_Trainers_Label" xml:space="preserve"><value>Тренери</value></data>
   <data name="Event_Registrations_Label" xml:space="preserve"><value>Список зареєстрованих</value></data>
+  <data name="Other_AboutApp_Label" xml:space="preserve"><value>Про додаток</value></data>
+  <data name="Other_AboutApp_Desc" xml:space="preserve"><value>Все про це програмне забезпечення</value></data>
+  <data name="Other_AboutApp_Body" xml:space="preserve"><value>Цей додаток відображає розклади, новини та інформацію про тренерів і приміщення. Він підключається до віддаленого API та використовує локальні сповіщення для інформування про нові пости та події.</value></data>
+  <data name="Other_AboutApp_License_Title" xml:space="preserve"><value>Інформація про ліцензію</value></data>
+  <data name="Other_AboutApp_License_Text" xml:space="preserve"><value>Цей проєкт може містити бібліотеки сторонніх розробників; перевірте ліцензії у залежностях.</value></data>
+  <data name="Other_AboutApp_Authors_Title" xml:space="preserve"><value>Автори та контриб'ютори</value></data>
+  <data name="Other_Author_Tobias" xml:space="preserve"><value>головний розробник</value></data>
+  <data name="Other_Author_Filip" xml:space="preserve"><value>перекладач, помічник і підтримка</value></data>
 </root>

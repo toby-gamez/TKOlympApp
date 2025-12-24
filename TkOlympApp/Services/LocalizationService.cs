@@ -10,7 +10,7 @@ public static class LocalizationService
     const string PrefKey = "app_language";
     static readonly ResourceManager RM = new ResourceManager("TkOlympApp.Resources.Strings", typeof(LocalizationService).Assembly);
 
-    public static readonly string[] Supported = new[] { "cs", "en", "vi", "uk" };
+    public static readonly string[] Supported = new[] { "cs", "en", "vi", "uk", "no", "sk", "sl", "brainrot" };
 
     public static string? GetStoredLanguage() => Preferences.Get(PrefKey, (string?)null);
 
@@ -21,22 +21,26 @@ public static class LocalizationService
         return "en";
     }
 
-    public static void ApplyLanguage(string lang)
-    {
-        if (string.IsNullOrEmpty(lang)) return;
-        var culture = lang switch
+        public static void ApplyLanguage(string lang)
         {
-            "cs" => new CultureInfo("cs"),
-            "en" => new CultureInfo("en"),
-            "vi" => new CultureInfo("vi"),
-            "uk" => new CultureInfo("uk"),
-            _ => new CultureInfo("en")
-        };
+            if (string.IsNullOrEmpty(lang)) return;
+            var culture = lang switch
+            {
+                "cs" => new CultureInfo("cs"),
+                "en" => new CultureInfo("en"),
+                "vi" => new CultureInfo("vi"),
+                "uk" => new CultureInfo("uk"),
+                "no" => new CultureInfo("no"),
+                "sk" => new CultureInfo("sk"),
+                "sl" => new CultureInfo("sl"),
+                "en-AU" => new CultureInfo("en-AU"),
+                _ => new CultureInfo("en")
+            };
 
-        CultureInfo.DefaultThreadCurrentCulture = culture;
-        CultureInfo.DefaultThreadCurrentUICulture = culture;
-        Preferences.Set(PrefKey, lang);
-    }
+            CultureInfo.DefaultThreadCurrentCulture = culture;
+            CultureInfo.DefaultThreadCurrentUICulture = culture;
+            Preferences.Set(PrefKey, lang);
+        }
 
     public static string Get(string key)
     {

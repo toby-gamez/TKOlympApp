@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+    <resheader name="version"><value>2.0</value></resheader>
+    <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+    <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+    <data name="AppTitle" xml:space="preserve"><value>TkOlympApp</value></data>
+    <data name="Calendar" xml:space="preserve"><value>Koledar</value></data>
+    <data name="Language_Choose" xml:space="preserve"><value>Izberite jezik</value></data>
+    <data name="Language_Czech" xml:space="preserve"><value>Češčina</value></data>
+    <data name="Language_English" xml:space="preserve"><value>Angleščina</value></data>
+    <data name="Language_Vietnamese" xml:space="preserve"><value>Vietnamščina</value></data>
+    <data name="Language_Ukrainian" xml:space="preserve"><value>Ukrajinščina</value></data>
+    <data name="Language_Norwegian" xml:space="preserve"><value>Norveščina</value></data>
+    <data name="Language_Slovak" xml:space="preserve"><value>Slovaščina</value></data>
+    <data name="Language_Slovenian" xml:space="preserve"><value>Slovenščina</value></data>
+    <data name="Language_en-AU" xml:space="preserve"><value>Brainrot</value></data>
+    <data name="Button_Continue" xml:space="preserve"><value>Nadaljuj</value></data>
+    <data name="Noticeboard" xml:space="preserve"><value>Oglasna deska</value></data>
+    <data name="Leaderboard" xml:space="preserve"><value>Lestvica</value></data>
+    <data name="Other" xml:space="preserve"><value>Ostalo</value></data>
+    <data name="People_Title" xml:space="preserve"><value>Ljudje</value></data>
+    <data name="People_SortLabel" xml:space="preserve"><value>Razvrščanje:</value></data>
+    <data name="People_SortPickerTitle" xml:space="preserve"><value>Razvrsti</value></data>
+    <data name="Login_Title" xml:space="preserve"><value>Prijava</value></data>
+    <data name="Login_Placeholder_Username" xml:space="preserve"><value>Ime</value></data>
+    <data name="Login_Placeholder_Password" xml:space="preserve"><value>Geslo</value></data>
+    <data name="Login_Button_Login" xml:space="preserve"><value>Prijavi se</value></data>
+    <data name="About_Name" xml:space="preserve"><value>Ime:</value></data>
+    <data name="About_Surname" xml:space="preserve"><value>Priimek:</value></data>
+    <data name="About_Login" xml:space="preserve"><value>Login:</value></data>
+    <data name="About_Email" xml:space="preserve"><value>E-pošta:</value></data>
+    <data name="About_Id" xml:space="preserve"><value>ID:</value></data>
+    <data name="About_TenantId" xml:space="preserve"><value>Tenant ID:</value></data>
+    <data name="About_LastLogin" xml:space="preserve"><value>Zadnja prijava:</value></data>
+    <data name="About_LastActivity" xml:space="preserve"><value>Zadnja dejavnost:</value></data>
+    <data name="About_CreatedUser" xml:space="preserve"><value>Ustvarjen (uporabnik):</value></data>
+    <data name="About_CreatedRecord" xml:space="preserve"><value>Ustvarjen (zapis):</value></data>
+    <data name="About_Updated" xml:space="preserve"><value>Posodobljeno:</value></data>
+    <data name="About_LastVersion" xml:space="preserve"><value>Zadnja različica:</value></data>
+    <data name="Notice_Info" xml:space="preserve"><value>Informacije</value></data>
+    <data name="Notice_Content" xml:space="preserve"><value>Vsebina</value></data>
+    <data name="Leaderboard_Loading" xml:space="preserve"><value>To res traja dolgo...</value></data>
+    <data name="Noticeboard_TabAktuality" xml:space="preserve"><value>Novice</value></data>
+    <data name="Noticeboard_TabStala" xml:space="preserve"><value>Stalna oglasna deska</value></data>
+    <data name="Language_Title" xml:space="preserve"><value>Jezik</value></data>
+    <data name="AboutMe_Title" xml:space="preserve"><value>O meni</value></data>
+    <data name="NoticePage_Title" xml:space="preserve"><value>Obvestilo</value></data>
+    <data name="CohortGroups_Title" xml:space="preserve"><value>Skupine za trening</value></data>
+    <data name="TrainersAndLocations_Title" xml:space="preserve"><value>Trenerji in prostori</value></data>
+    <data name="TreneriAProstory_Title" xml:space="preserve"><value>Trenerji in prostori</value></data>
+    <data name="Trainers_Locations_Label" xml:space="preserve"><value>Prostori za trening</value></data>
+    <data name="Trainers_Label" xml:space="preserve"><value>Trenerji</value></data>
+    <data name="Other_Section_Members" xml:space="preserve"><value>Člani in klub</value></data>
+    <data name="Other_Item_Profile" xml:space="preserve"><value>Profil</value></data>
+    <data name="Other_Profile_Desc" xml:space="preserve"><value>Vse, kar bi si kot navaden smrtnik želel vedeti o sebi.</value></data>
+    <data name="Other_Item_People" xml:space="preserve"><value>Ljudje</value></data>
+    <data name="Other_People_Desc" xml:space="preserve"><value>Seznam tvojih prijateljev. PS: tam imaš tudi njihove rojstne dneve.</value></data>
+    <data name="Other_Trainers_Label" xml:space="preserve"><value>Trenerji in prostori za trening</value></data>
+    <data name="Other_Trainers_Desc" xml:space="preserve"><value>Če bi slučajno pozabil, kam hodiš vsak dan.</value></data>
+    <data name="Other_CohortGroups_Label" xml:space="preserve"><value>Skupine za trening</value></data>
+    <data name="Other_CohortGroups_Desc" xml:space="preserve"><value>Če bi slučajno pozabil, kje plešeš.</value></data>
+    <data name="Other_Section_App" xml:space="preserve"><value>Aplikacija</value></data>
+    <data name="Other_Languages_Label" xml:space="preserve"><value>Jeziki</value></data>
+    <data name="Other_Languages_Desc" xml:space="preserve"><value>Če bi ti drug jezik bolj ustrezal.</value></data>
+    <data name="Other_Button_Logout" xml:space="preserve"><value>Odjavi se</value></data>
+    <data name="Notifications_ChannelName" xml:space="preserve"><value>Novice</value></data>
+    <data name="Notifications_ChannelDescription" xml:space="preserve"><value>Obvestila o novicah</value></data>
+    <data name="Error_Loading_Title" xml:space="preserve"><value>Napaka pri nalaganju</value></data>
+    <data name="Error_Navigation_Title" xml:space="preserve"><value>Napaka pri navigaciji</value></data>
+    <data name="Error_Loading_Prefix" xml:space="preserve"><value>Napaka pri nalaganju strani: </value></data>
+    <data name="GraphQL_UnknownError" xml:space="preserve"><value>Neznana napaka GraphQL.</value></data>
+    <data name="Notifications_Permission_Title" xml:space="preserve"><value>Dovoli obvestila</value></data>
+    <data name="Notifications_Permission_Message" xml:space="preserve"><value>Da bo aplikacija lahko prikazovala obvestila, dovolite opozorila v nastavitvah.</value></data>
+    <data name="Notifications_OpenSettings" xml:space="preserve"><value>Odpri nastavitve</value></data>
+    <data name="Button_Close" xml:space="preserve"><value>Zapri</value></data>
+    <data name="Notifications_NewPostTitle" xml:space="preserve"><value>Nova novica</value></data>
+    <data name="NotFound_Title" xml:space="preserve"><value>Ni najdeno</value></data>
+    <data name="NotFound_Event" xml:space="preserve"><value>Dogodek ni bil najden.</value></data>
+    <data name="NotFound_Notice" xml:space="preserve"><value>Obvestilo ni bilo najdeno.</value></data>
+    <data name="Error_Title" xml:space="preserve"><value>Napaka</value></data>
+    <data name="Login_Error_Missing" xml:space="preserve"><value>Prosim, izpolnite ime in geslo.</value></data>
+    <data name="Login_Failed_Title" xml:space="preserve"><value>Prijava ni uspela</value></data>
+    <data name="Button_OK" xml:space="preserve"><value>V redu</value></data>
+    <data name="Tab_My" xml:space="preserve"><value>Moji</value></data>
+    <data name="Tab_All" xml:space="preserve"><value>Vsi</value></data>
+    <data name="Today" xml:space="preserve"><value>Danes</value></data>
+    <data name="Tomorrow" xml:space="preserve"><value>Jutri</value></data>
+    <data name="Empty_MyEvents" xml:space="preserve"><value>Nimate nobenih dogodkov.</value></data>
+    <data name="Empty_NoEvents" xml:space="preserve"><value>Ni dogodkov.</value></data>
+    <data name="Lesson_Prefix" xml:space="preserve"><value>Lekcija: </value></data>
+    <data name="Lesson_Short" xml:space="preserve"><value>Lekcija</value></data>
+    <data name="Date_Today_Prefix" xml:space="preserve"><value>danes </value></data>
+    <data name="Date_Tomorrow_Prefix" xml:space="preserve"><value>jutri </value></data>
+    <data name="Price_PerCouple45" xml:space="preserve"><value> / par, 45'</value></data>
+    <data name="People_Sort_Alphabetical" xml:space="preserve"><value>Po abecedi</value></data>
+    <data name="People_Sort_ByBirthdays" xml:space="preserve"><value>Po rojstnih dnevih</value></data>
+    <data name="Event_Location_Prefix" xml:space="preserve"><value>Kraj dogodka: </value></data>
+    <data name="Event_DateRange_Prefix" xml:space="preserve"><value>Termin: </value></data>
+    <data name="Event_Created_Prefix" xml:space="preserve"><value>Ustvarjeno: </value></data>
+    <data name="Event_Updated_Prefix" xml:space="preserve"><value>Posodobljeno: </value></data>
+    <data name="Notice_Created_Prefix" xml:space="preserve"><value>Ustvarjeno: </value></data>
+    <data name="Notice_Updated_Prefix" xml:space="preserve"><value>Posodobljeno: </value></data>
+    <data name="Notice_Author_Prefix" xml:space="preserve"><value>Avtor: </value></data>
+    <data name="EventPage_Title" xml:space="preserve"><value>Dogodek</value></data>
+    <data name="Event_Info_Label" xml:space="preserve"><value>Informacije</value></data>
+    <data name="Registration_Open" xml:space="preserve"><value>Registracija odprta</value></data>
+    <data name="Public_Label" xml:space="preserve"><value>Javno</value></data>
+    <data name="Visible_Label" xml:space="preserve"><value>Vidno</value></data>
+    <data name="Event_Description_Label" xml:space="preserve"><value>Opis</value></data>
+    <data name="Event_Summary_Label" xml:space="preserve"><value>Povzetek</value></data>
+    <data name="Event_Trainers_Label" xml:space="preserve"><value>Trenerji</value></data>
+    <data name="Event_Registrations_Label" xml:space="preserve"><value>Seznam prijavljenih</value></data>
+    <data name="Other_AboutApp_Label" xml:space="preserve"><value>O aplikaciji</value></data>
+    <data name="Other_AboutApp_Desc" xml:space="preserve"><value>Vse o tem programu</value></data>
+    <data name="Other_AboutApp_Body" xml:space="preserve"><value>Ta aplikacija prikazuje urnike, novice in informacije o trenerjih in prostorih. Povezana je z oddaljenim API-jem in uporablja lokalna obvestila za opozarjanje na nove objave in dogodke.</value></data>
+    <data name="Other_AboutApp_License_Title" xml:space="preserve"><value>Informacije o licencah</value></data>
+    <data name="Other_AboutApp_License_Text" xml:space="preserve"><value>Ta projekt lahko vključuje knjižnice tretjih oseb; preverite licence v odvisnostih.</value></data>
+    <data name="Other_AboutApp_Authors_Title" xml:space="preserve"><value>Avtorji in prispevalci</value></data>
+    <data name="Other_Author_Tobias" xml:space="preserve"><value>glavni razvijalec</value></data>
+    <data name="Other_Author_Filip" xml:space="preserve"><value>prevajalec, podpornik in pomočnik</value></data>
+</root>

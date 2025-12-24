@@ -22,10 +22,14 @@ public partial class LanguagePage : ContentPage
 
         var items = new List<LangItem>
         {
-            new LangItem { Code = "cs", Name = LocalizationService.Get("Language_Czech"), Flag = "🇨🇿", IsCurrent = stored == "cs" },
-            new LangItem { Code = "en", Name = LocalizationService.Get("Language_English"), Flag = "🇬🇧", IsCurrent = stored == "en" },
-            new LangItem { Code = "uk", Name = LocalizationService.Get("Language_Ukrainian"), Flag = "🇺🇦", IsCurrent = stored == "uk" },
-            new LangItem { Code = "vi", Name = LocalizationService.Get("Language_Vietnamese"), Flag = "🇻🇳", IsCurrent = stored == "vi" }
+            new LangItem { Code = "cs", Name = LocalizationService.Get("Language_Czech") ?? "Čeština", Flag = "🇨🇿", IsCurrent = stored == "cs" },
+            new LangItem { Code = "en", Name = LocalizationService.Get("Language_English") ?? "English", Flag = "🇬🇧", IsCurrent = stored == "en" },
+            new LangItem { Code = "uk", Name = LocalizationService.Get("Language_Ukrainian") ?? "Українська", Flag = "🇺🇦", IsCurrent = stored == "uk" },
+            new LangItem { Code = "vi", Name = LocalizationService.Get("Language_Vietnamese") ?? "Tiếng Việt", Flag = "🇻🇳", IsCurrent = stored == "vi" },
+            new LangItem { Code = "no", Name = LocalizationService.Get("Language_Norwegian") ?? "Norsk", Flag = "🇳🇴", IsCurrent = stored == "no" },
+            new LangItem { Code = "sk", Name = LocalizationService.Get("Language_Slovak") ?? "Slovenčina", Flag = "🇸🇰", IsCurrent = stored == "sk" },
+            new LangItem { Code = "sl", Name = LocalizationService.Get("Language_Slovenian") ?? "Slovenščina", Flag = "🇸🇮", IsCurrent = stored == "sl" },
+            new LangItem { Code = "en-AU", Name = LocalizationService.Get("Language_en-AU") ?? "Brainrot", Flag = "🧠", IsCurrent = stored == "en-AU" }
         };
 
         LangList.ItemsSource = items;

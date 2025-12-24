@@ -11,6 +11,10 @@
   <data name="Language_English" xml:space="preserve"><value>Angličtina</value></data>
   <data name="Language_Vietnamese" xml:space="preserve"><value>Vietnamština</value></data>
   <data name="Language_Ukrainian" xml:space="preserve"><value>Ukrajinština</value></data>
+  <data name="Language_Norwegian" xml:space="preserve"><value>Norština</value></data>
+  <data name="Language_Slovak" xml:space="preserve"><value>Slovenština</value></data>
+  <data name="Language_Slovenian" xml:space="preserve"><value>Slovinština</value></data>
+  <data name="Language_en-AU" xml:space="preserve"><value>Brainrot</value></data>
   <data name="Button_Continue" xml:space="preserve"><value>Pokračovat</value></data>
   <data name="Noticeboard" xml:space="preserve"><value>Nástěnka</value></data>
   <data name="Leaderboard" xml:space="preserve"><value>Žebříček</value></data>
@@ -107,4 +111,12 @@
   <data name="Event_Summary_Label" xml:space="preserve"><value>Shrnutí</value></data>
   <data name="Event_Trainers_Label" xml:space="preserve"><value>Trenéři</value></data>
   <data name="Event_Registrations_Label" xml:space="preserve"><value>Seznam přihlášených</value></data>
+  <data name="Other_AboutApp_Label" xml:space="preserve"><value>O aplikaci</value></data>
+  <data name="Other_AboutApp_Desc" xml:space="preserve"><value>Vše o tomto softwaru</value></data>
+  <data name="Other_AboutApp_Body" xml:space="preserve"><value>Tato aplikace zobrazuje rozvrhy, aktuality a informace o trenérech a prostorách. Je napojena na vzdálené API a využívá lokální notifikace pro upozornění na nové aktuality a události.</value></data>
+  <data name="Other_AboutApp_License_Title" xml:space="preserve"><value>Licenční informace</value></data>
+  <data name="Other_AboutApp_License_Text" xml:space="preserve"><value>Tento projekt může obsahovat třetí strany knihoven; ověřte licence v závislostech.</value></data>
+  <data name="Other_AboutApp_Authors_Title" xml:space="preserve"><value>Autoři a přispěvatelé</value></data>
+  <data name="Other_Author_Tobias" xml:space="preserve"><value>hlavní vývojář</value></data>
+  <data name="Other_Author_Filip" xml:space="preserve"><value>překladatel, podporovatel a pomocník</value></data>
 </root>

@@ -3,7 +3,8 @@
     x:Class="TkOlympApp.Pages.AboutAppPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    Title="O aplikaci">
+    xmlns:svc="clr-namespace:TkOlympApp.Services"
+    Title="{svc:Translate Other_AboutApp_Label}">
 
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="12">
@@ -15,20 +16,36 @@
             <Border.StrokeShape>
                 <RoundRectangle CornerRadius="8" />
             </Border.StrokeShape>
-                <Label Text="Tato aplikace zobrazuje rozvrhy, aktuality a informace o trenérech a prostorách. Je napojena na vzdálené API a využívá lokální notifikace pro upozornění na nové aktuality a události." />
+                <Label Text="{svc:Translate Other_AboutApp_Body}" />
             </Border>
 
-            <Label Text="Licenční informace" FontAttributes="Bold" />
-            <Label Text="Tento projekt může obsahovat třetí strany knihoven; ověřte licence v závislostech." />
+            <Label Text="{svc:Translate Other_AboutApp_License_Title}" FontAttributes="Bold" />
+            <Label Text="{svc:Translate Other_AboutApp_License_Text}" />
 
-            <Label Text="Autoři a přispěvatelé" FontAttributes="Bold" />
+            <Label Text="{svc:Translate Other_AboutApp_Authors_Title}" FontAttributes="Bold" />
             <Border Padding="12">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <VerticalStackLayout>
-                    <Label Text="Tobias Heneman - hlavní vývojář" />
-                    <Label Text="Filip Cani Canibal - překladatel, podporovatel a pomocník" />
+                    <Label>
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="Tobias Heneman" FontAttributes="Bold" />
+                                <Span Text=" - " />
+                                <Span Text="{svc:Translate Other_Author_Tobias}" />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                    <Label>
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="Filip Cani Canibal" FontAttributes="Bold" />
+                                <Span Text=" - " />
+                                <Span Text="{svc:Translate Other_Author_Filip}" />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
                 </VerticalStackLayout>
             </Border>
 
