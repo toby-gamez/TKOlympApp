@@ -37,7 +37,7 @@
     <data name="About_CreatedUser" xml:space="preserve"><value>Ustvarjen (uporabnik):</value></data>
     <data name="About_CreatedRecord" xml:space="preserve"><value>Ustvarjen (zapis):</value></data>
     <data name="About_Updated" xml:space="preserve"><value>Posodobljeno:</value></data>
-    <data name="About_LastVersion" xml:space="preserve"><value>Zadnja različica:</value></data>
+    <!-- About_LastVersion removed -->
     <data name="Notice_Info" xml:space="preserve"><value>Informacije</value></data>
     <data name="Notice_Content" xml:space="preserve"><value>Vsebina</value></data>
     <data name="Leaderboard_Loading" xml:space="preserve"><value>To res traja dolgo...</value></data>

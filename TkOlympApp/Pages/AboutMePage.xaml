@@ -69,10 +69,7 @@
                             <Label x:Name="UpdatedAtValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
                         </HorizontalStackLayout>
 
-                        <HorizontalStackLayout Spacing="6">
-                            <Label Text="{svc:Translate About_LastVersion}" FontAttributes="Bold" FontSize="12"/>
-                            <Label x:Name="LastVersionValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
-                        </HorizontalStackLayout>
+                        <!-- lastVersion removed from API, field hidden -->
                     </VerticalStackLayout>
                 </Border>
             </VerticalStackLayout>

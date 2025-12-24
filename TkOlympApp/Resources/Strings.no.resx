@@ -37,7 +37,7 @@
     <data name="About_CreatedUser" xml:space="preserve"><value>Opprettet (bruker):</value></data>
     <data name="About_CreatedRecord" xml:space="preserve"><value>Opprettet (oppføring):</value></data>
     <data name="About_Updated" xml:space="preserve"><value>Oppdatert:</value></data>
-    <data name="About_LastVersion" xml:space="preserve"><value>Siste versjon:</value></data>
+    <!-- About_LastVersion removed -->
     <data name="Notice_Info" xml:space="preserve"><value>Informasjon</value></data>
     <data name="Notice_Content" xml:space="preserve"><value>Innhold</value></data>
     <data name="Leaderboard_Loading" xml:space="preserve"><value>Dette tar virkelig lang tid...</value></data>

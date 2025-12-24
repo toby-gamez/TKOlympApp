@@ -38,7 +38,7 @@
     <data name="About_CreatedUser" xml:space="preserve"><value>Spawned (User):</value></data>
     <data name="About_CreatedRecord" xml:space="preserve"><value>Spawned (Record):</value></data>
     <data name="About_Updated" xml:space="preserve"><value>Glow Up:</value></data>
-    <data name="About_LastVersion" xml:space="preserve"><value>Patch:</value></data>
+    <!-- About_LastVersion removed -->
     <data name="Notice_Info" xml:space="preserve"><value>Lore</value></data>
     <data name="Notice_Content" xml:space="preserve"><value>Yapping</value></data>
     <data name="Leaderboard_Loading" xml:space="preserve"><value>Hold up, let him cook...</value></data>

@@ -40,7 +40,7 @@ public partial class AboutMePage : ContentPage
             UCreatedAtValue.Text = NonEmpty(FormatDt(user.UCreatedAt));
             CreatedAtValue.Text = NonEmpty(FormatDt(user.CreatedAt));
             UpdatedAtValue.Text = NonEmpty(FormatDt(user.UpdatedAt));
-            LastVersionValue.Text = NonEmpty(user.LastVersion);
+            // lastVersion removed from API — no longer displayed
         }
         catch (Exception ex)
         {

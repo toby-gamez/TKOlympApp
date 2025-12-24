@@ -12,11 +12,11 @@ public static class UserService
         PropertyNameCaseInsensitive = true
     };
 
-    public static async Task<CurrentUser?> GetCurrentUserAsync(CancellationToken ct = default)
+        public static async Task<CurrentUser?> GetCurrentUserAsync(CancellationToken ct = default)
     {
         var query = new GraphQlRequest
         {
-            Query = "query MyQuery($versionId: String!) { getCurrentUser(versionId: $versionId) { uEmail uJmeno uLogin uCreatedAt createdAt id lastActiveAt lastLogin lastVersion tenantId uPrijmeni updatedAt } }",
+            Query = "query MyQuery($versionId: String!) { getCurrentUser(versionId: $versionId) { uEmail uJmeno uLogin uCreatedAt createdAt id lastActiveAt lastLogin tenantId uPrijmeni updatedAt } }",
             Variables = new Dictionary<string, object> { { "versionId", "" } }
         };
 
@@ -55,7 +55,6 @@ public static class UserService
         long Id,
         DateTime? LastActiveAt,
         DateTime? LastLogin,
-        string? LastVersion,
         long TenantId,
         string? UPrijmeni,
         DateTime UpdatedAt

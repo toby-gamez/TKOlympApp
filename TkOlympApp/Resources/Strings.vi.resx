@@ -37,7 +37,7 @@
   <data name="About_CreatedUser" xml:space="preserve"><value>Được tạo (người dùng):</value></data>
   <data name="About_CreatedRecord" xml:space="preserve"><value>Được tạo (bản ghi):</value></data>
   <data name="About_Updated" xml:space="preserve"><value>Đã cập nhật:</value></data>
-  <data name="About_LastVersion" xml:space="preserve"><value>Phiên bản cuối:</value></data>
+  <!-- About_LastVersion removed -->
   <data name="Notice_Info" xml:space="preserve"><value>Thông tin</value></data>
   <data name="Notice_Content" xml:space="preserve"><value>Nội dung</value></data>
   <data name="Leaderboard_Loading" xml:space="preserve"><value>Thật sự mất thời gian...</value></data>
