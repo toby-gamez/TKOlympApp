@@ -44,7 +44,7 @@
   <data name="Noticeboard_TabAktuality" xml:space="preserve"><value>Новини</value></data>
   <data name="Noticeboard_TabStala" xml:space="preserve"><value>Постійна дошка</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Мова</value></data>
-  <data name="AboutMe_Title" xml:space="preserve"><value>Про мене</value></data>
+  <data name="AboutMe_Title" xml:space="preserve"><value>Профіль</value></data>
   <data name="NoticePage_Title" xml:space="preserve"><value>Оголошення</value></data>
   <data name="CohortGroups_Title" xml:space="preserve"><value>Тренувальні групи</value></data>
   <data name="TrainersAndLocations_Title" xml:space="preserve"><value>Тренери та майданчики</value></data>
@@ -119,4 +119,6 @@
   <data name="Other_AboutApp_Authors_Title" xml:space="preserve"><value>Автори та контриб'ютори</value></data>
   <data name="Other_Author_Tobias" xml:space="preserve"><value>головний розробник</value></data>
   <data name="Other_Author_Filip" xml:space="preserve"><value>перекладач, помічник і підтримка</value></data>
+  <data name="Brainrot_Disclaimer" xml:space="preserve"><value>Застереження: Мова «Brainrot» є веселою варіацією оригінального додатка, збагаченою трохи «brainrot» гумором. Все це для розваги і не слід сприймати серйозно.</value></data>
+  <data name="VersionFormat" xml:space="preserve"><value>Версія {0} (Build {1})</value></data>
 </root>

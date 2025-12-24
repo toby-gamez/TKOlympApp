@@ -44,7 +44,7 @@
   <data name="Noticeboard_TabAktuality" xml:space="preserve"><value>Aktuality</value></data>
   <data name="Noticeboard_TabStala" xml:space="preserve"><value>Stálá nástěnka</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Jazyk</value></data>
-  <data name="AboutMe_Title" xml:space="preserve"><value>O mně</value></data>
+  <data name="AboutMe_Title" xml:space="preserve"><value>Profil</value></data>
   <data name="NoticePage_Title" xml:space="preserve"><value>Oznámení</value></data>
   <data name="CohortGroups_Title" xml:space="preserve"><value>Tréninkové skupiny</value></data>
   <data name="TrainersAndLocations_Title" xml:space="preserve"><value>Trenéři a tr. prostory</value></data>
@@ -119,4 +119,6 @@
   <data name="Other_AboutApp_Authors_Title" xml:space="preserve"><value>Autoři a přispěvatelé</value></data>
   <data name="Other_Author_Tobias" xml:space="preserve"><value>hlavní vývojář</value></data>
   <data name="Other_Author_Filip" xml:space="preserve"><value>překladatel, podporovatel a pomocník</value></data>
+  <data name="Brainrot_Disclaimer" xml:space="preserve"><value>Prohlášení: 'Brainrot' jazyk je zábavnou obměnou původní aplikace, obohacenou o trochu 'brainrot' humoru. Je to všechno pro zábavu a nemá být brán vážně.</value></data>
+  <data name="VersionFormat" xml:space="preserve"><value>Verze {0} (Build {1})</value></data>
 </root>

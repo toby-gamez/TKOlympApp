@@ -19,7 +19,7 @@
     <data name="Noticeboard" xml:space="preserve"><value>Oppslagstavle</value></data>
     <data name="Leaderboard" xml:space="preserve"><value>Ledertavle</value></data>
     <data name="Other" xml:space="preserve"><value>Annet</value></data>
-    <data name="People_Title" xml:space="preserve"><value>Personer</value></data>
+    <data name="People_Title" xml:space="preserve"><value>Folk</value></data>
     <data name="People_SortLabel" xml:space="preserve"><value>Sortering:</value></data>
     <data name="People_SortPickerTitle" xml:space="preserve"><value>Sorter</value></data>
     <data name="Login_Title" xml:space="preserve"><value>Logg inn</value></data>
@@ -44,11 +44,11 @@
     <data name="Noticeboard_TabAktuality" xml:space="preserve"><value>Nyheter</value></data>
     <data name="Noticeboard_TabStala" xml:space="preserve"><value>Fast oppslagstavle</value></data>
     <data name="Language_Title" xml:space="preserve"><value>Språk</value></data>
-    <data name="AboutMe_Title" xml:space="preserve"><value>Om meg</value></data>
+    <data name="AboutMe_Title" xml:space="preserve"><value>Profil</value></data>
     <data name="NoticePage_Title" xml:space="preserve"><value>Kunngjøring</value></data>
     <data name="CohortGroups_Title" xml:space="preserve"><value>Treningsgrupper</value></data>
-    <data name="TrainersAndLocations_Title" xml:space="preserve"><value>Trenere og lokaler</value></data>
-    <data name="TreneriAProstory_Title" xml:space="preserve"><value>Trenere og lokaler</value></data>
+    <data name="TrainersAndLocations_Title" xml:space="preserve"><value>Trenere og treningslokaler</value></data>
+    <data name="TreneriAProstory_Title" xml:space="preserve"><value>Trenere og treningslokaler</value></data>
     <data name="Trainers_Locations_Label" xml:space="preserve"><value>Treningslokaler</value></data>
     <data name="Trainers_Label" xml:space="preserve"><value>Trenere</value></data>
     <data name="Other_Section_Members" xml:space="preserve"><value>Medlemmer og klubb</value></data>
@@ -119,4 +119,6 @@
     <data name="Other_AboutApp_Authors_Title" xml:space="preserve"><value>Forfattere og bidragsytere</value></data>
     <data name="Other_Author_Tobias" xml:space="preserve"><value>hovedutvikler</value></data>
     <data name="Other_Author_Filip" xml:space="preserve"><value>oversetter, støttespiller og hjelper</value></data>
+    <data name="Brainrot_Disclaimer" xml:space="preserve"><value>Ansvarsfraskrivelse: «Brainrot»-språket er en morsom variant av den opprinnelige applikasjonen, beriket med litt «brainrot»-humor. Det er kun ment for moro skyld og skal ikke tas på alvor.</value></data>
+    <data name="VersionFormat" xml:space="preserve"><value>Versjon {0} (Build {1})</value></data>
 </root>

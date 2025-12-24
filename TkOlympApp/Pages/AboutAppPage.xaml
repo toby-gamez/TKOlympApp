@@ -48,6 +48,7 @@
                     </Label>
                 </VerticalStackLayout>
             </Border>
+            <Label Text="{svc:Translate Brainrot_Disclaimer}" FontAttributes="Italic"/>
 
 
         </VerticalStackLayout>

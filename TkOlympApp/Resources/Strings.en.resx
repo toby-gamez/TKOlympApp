@@ -44,7 +44,7 @@
   <data name="Noticeboard_TabAktuality" xml:space="preserve"><value>News</value></data>
   <data name="Noticeboard_TabStala" xml:space="preserve"><value>Permanent board</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Language</value></data>
-  <data name="AboutMe_Title" xml:space="preserve"><value>About me</value></data>
+  <data name="AboutMe_Title" xml:space="preserve"><value>Profile</value></data>
   <data name="NoticePage_Title" xml:space="preserve"><value>Notice</value></data>
   <data name="CohortGroups_Title" xml:space="preserve"><value>Training groups</value></data>
   <data name="TrainersAndLocations_Title" xml:space="preserve"><value>Trainers and training locations</value></data>
@@ -114,9 +114,11 @@
   <data name="Other_AboutApp_Label" xml:space="preserve"><value>About the Application</value></data>
   <data name="Other_AboutApp_Desc" xml:space="preserve"><value>All about this software</value></data>
   <data name="Other_AboutApp_Body" xml:space="preserve"><value>This app shows schedules, news and info about trainers and venues. It talks to a remote API and uses local notifications to nudge you about new posts and events.</value></data>
-    <data name="Other_AboutApp_License_Title" xml:space="preserve"><value>License vibes</value></data>
+    <data name="Other_AboutApp_License_Title" xml:space="preserve"><value>License</value></data>
     <data name="Other_AboutApp_License_Text" xml:space="preserve"><value>May contain third-party libraries; peep the licenses in deps.</value></data>
-    <data name="Other_AboutApp_Authors_Title" xml:space="preserve"><value>Authors &amp; homies</value></data>
+    <data name="Other_AboutApp_Authors_Title" xml:space="preserve"><value>Authors &amp; contributors</value></data>
     <data name="Other_Author_Tobias" xml:space="preserve"><value>lead dev</value></data>
     <data name="Other_Author_Filip" xml:space="preserve"><value>translator, supporter &amp; helper</value></data>
+    <data name="Brainrot_Disclaimer" xml:space="preserve"><value>Disclaimer: 'Brainrot' language is a fun variation of the original application, enriched with a bit of 'brainrot' humor. It's all for fun and should not be taken seriously.</value></data>
+  <data name="VersionFormat" xml:space="preserve"><value>Version {0} (Build {1})</value></data>
   </root>

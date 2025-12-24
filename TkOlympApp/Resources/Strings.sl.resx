@@ -44,11 +44,11 @@
     <data name="Noticeboard_TabAktuality" xml:space="preserve"><value>Novice</value></data>
     <data name="Noticeboard_TabStala" xml:space="preserve"><value>Stalna oglasna deska</value></data>
     <data name="Language_Title" xml:space="preserve"><value>Jezik</value></data>
-    <data name="AboutMe_Title" xml:space="preserve"><value>O meni</value></data>
+    <data name="AboutMe_Title" xml:space="preserve"><value>Profil</value></data>
     <data name="NoticePage_Title" xml:space="preserve"><value>Obvestilo</value></data>
     <data name="CohortGroups_Title" xml:space="preserve"><value>Skupine za trening</value></data>
-    <data name="TrainersAndLocations_Title" xml:space="preserve"><value>Trenerji in prostori</value></data>
-    <data name="TreneriAProstory_Title" xml:space="preserve"><value>Trenerji in prostori</value></data>
+    <data name="TrainersAndLocations_Title" xml:space="preserve"><value>Trenerji in prostori za trening</value></data>
+    <data name="TreneriAProstory_Title" xml:space="preserve"><value>Trenerji in prostori za trening</value></data>
     <data name="Trainers_Locations_Label" xml:space="preserve"><value>Prostori za trening</value></data>
     <data name="Trainers_Label" xml:space="preserve"><value>Trenerji</value></data>
     <data name="Other_Section_Members" xml:space="preserve"><value>Člani in klub</value></data>
@@ -119,4 +119,6 @@
     <data name="Other_AboutApp_Authors_Title" xml:space="preserve"><value>Avtorji in prispevalci</value></data>
     <data name="Other_Author_Tobias" xml:space="preserve"><value>glavni razvijalec</value></data>
     <data name="Other_Author_Filip" xml:space="preserve"><value>prevajalec, podpornik in pomočnik</value></data>
+    <data name="Brainrot_Disclaimer" xml:space="preserve"><value>Upozornenie: Jazyk „Brainrot“ je zábavnou variáciou pôvodnej aplikácie, obohatenou o trochu humoru „brainrot“. Je to len pre zábavu a nemalo by sa to brať vážne.</value></data>
+    <data name="VersionFormat" xml:space="preserve"><value>Različica {0} (Build {1})</value></data>
 </root>

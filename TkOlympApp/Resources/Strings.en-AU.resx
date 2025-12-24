@@ -20,7 +20,7 @@
     <data name="Noticeboard" xml:space="preserve"><value>The Tea ☕</value></data>
     <data name="Leaderboard" xml:space="preserve"><value>Big Ws Only</value></data>
     <data name="Other" xml:space="preserve"><value>Random Stuff</value></data>
-    <data name="People_Title" xml:space="preserve"><value>The homies</value></data>
+    <data name="People_Title" xml:space="preserve"><value>The Homies</value></data>
     <data name="People_SortLabel" xml:space="preserve"><value>Sort by:</value></data>
     <data name="People_SortPickerTitle" xml:space="preserve"><value>Vibe Check</value></data>
     <data name="Login_Title" xml:space="preserve"><value>Vibe Check (Login)</value></data>
@@ -53,7 +53,7 @@
     <data name="Trainers_Locations_Label" xml:space="preserve"><value>Spots</value></data>
     <data name="Trainers_Label" xml:space="preserve"><value>Gym Bros</value></data>
     <data name="Other_Section_Members" xml:space="preserve"><value>Fam &amp; Guild</value></data>
-    <data name="Other_Item_Profile" xml:space="preserve"><value>Main character</value></data>
+    <data name="Other_Item_Profile" xml:space="preserve"><value>Main Character</value></data>
     <data name="Other_Profile_Desc" xml:space="preserve"><value>Everything about your main character arc.</value></data>
     <data name="Other_Item_People" xml:space="preserve"><value>The Homies</value></data>
     <data name="Other_People_Desc" xml:space="preserve"><value>List of frenemies. PS: Cake days included.</value></data>
@@ -62,7 +62,7 @@
     <data name="Other_CohortGroups_Label" xml:space="preserve"><value>Squads</value></data>
     <data name="Other_CohortGroups_Desc" xml:space="preserve"><value>Where u bust a move (literally).</value></data>
     <data name="Other_Section_App" xml:space="preserve"><value>The App</value></data>
-    <data name="Other_Languages_Label" xml:space="preserve"><value>Switch Teams</value></data>
+    <data name="Other_Languages_Label" xml:space="preserve"><value>Switch Tongue</value></data>
     <data name="Other_Languages_Desc" xml:space="preserve"><value>If u wanna speak enchantment table language.</value></data>
     <data name="Other_Button_Logout" xml:space="preserve"><value>Rage Quit</value></data>
     <data name="Notifications_ChannelName" xml:space="preserve"><value>Pings</value></data>
@@ -118,5 +118,7 @@
     <data name="Other_AboutApp_License_Text" xml:space="preserve"><value>This project might be borrowing some third-party libraries, so go peep the licenses in the dependencies if you care about the fine print (optional side quest).</value></data>
     <data name="Other_AboutApp_Authors_Title" xml:space="preserve"><value>The main squad</value></data>
     <data name="Other_Author_Tobias" xml:space="preserve"><value>lead developer, absolute brainlord, carrying the codebase</value></data>
-    <data name="Other_Author_Filip" xml:space="preserve"><value>translator, moral support, certified helper (not a Santa helper), W human, good boy</value></data>
+    <data name="Other_Author_Filip" xml:space="preserve"><value>translator, moral support, certified helper (not a <data name="Brainrot_Disclaimer" xml:space="preserve"><value>Disclaimer: This version is a fun twist on the original app, infused with a bit of 'brainrot' humor. It's all in good fun and not meant to be taken seriously. Enjoy the vibes!</value></data>Santa helper), W human, good boy</value></data>
+    <data name="Brainrot_Disclaimer" xml:space="preserve"><value>Disclaimer: 'Brainrot' language is a fun variation of the original application, enriched with a bit of 'brainrot' humor. It's all for fun and should not be taken seriously. Enjoy the vibes!</value></data>
+    <data name="VersionFormat" xml:space="preserve"><value>Remix {0} (Build {1})</value></data>
 </root>
