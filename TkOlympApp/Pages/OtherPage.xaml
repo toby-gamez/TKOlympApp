@@ -97,11 +97,6 @@
             </VerticalStackLayout>
         </ScrollView>
 
-                <Button Grid.Row="2"
-                Margin="20"
-                Text="{svc:Translate Other_Button_Logout}"
-                BackgroundColor="{StaticResource Primary}"
-                TextColor="White"
-                Clicked="OnLogoutClicked" />
+                
     </Grid>
 </ContentPage>

@@ -35,8 +35,6 @@ public partial class AboutMePage : ContentPage
             SurnameValue.Text = NonEmpty(user.UPrijmeni);
             LoginValue.Text = NonEmpty(user.ULogin);
             EmailValue.Text = NonEmpty(user.UEmail);
-            IdValue.Text = user.Id.ToString();
-            TenantValue.Text = user.TenantId.ToString();
             LastLoginValue.Text = NonEmpty(FormatDt(user.LastLogin));
             LastActiveValue.Text = NonEmpty(FormatDt(user.LastActiveAt));
             UCreatedAtValue.Text = NonEmpty(FormatDt(user.UCreatedAt));
@@ -60,4 +58,19 @@ public partial class AboutMePage : ContentPage
         => dt.HasValue ? dt.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm") : "";
 
     private static string NonEmpty(string? s) => string.IsNullOrWhiteSpace(s) ? "—" : s;
+
+    private async void OnLogoutClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            await AuthService.LogoutAsync();
+
+            // Navigate to login route
+            await Shell.Current.GoToAsync($"//{nameof(LoginPage)}");
+        }
+        catch
+        {
+            try { await Shell.Current.GoToAsync(nameof(LoginPage)); } catch { /* ignore */ }
+        }
+    }
 }

@@ -5,72 +5,84 @@
              x:Class="TkOlympApp.Pages.AboutMePage"
              Title="{svc:Translate AboutMe_Title}">
 
-    <Grid RowDefinitions="Auto,*">
+    <Grid RowDefinitions="Auto,*,Auto">
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="20" Spacing="12">
                 <ActivityIndicator x:Name="LoadingIndicator" IsRunning="False" IsVisible="False" />
                 <Label x:Name="ErrorLabel" TextColor="Red" IsVisible="False" Margin="0,0,0,8" />
-                <!-- Každý řádek: "klíč: hodnota" v jedné řádce -->
-                <HorizontalStackLayout Spacing="6">
-                    <Label Text="{svc:Translate About_Name}"/>
-                    <Label x:Name="NameValue"/>
-                </HorizontalStackLayout>
 
-                <HorizontalStackLayout Spacing="6">
-                    <Label Text="{svc:Translate About_Surname}" />
-                    <Label x:Name="SurnameValue"/>
-                </HorizontalStackLayout>
+                <!-- Primary: velké jméno nahoře, detaily pod ním -->
+                <Border Padding="12">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="8">
+                        <!-- Jméno a příjmení velkým písmem -->
+                        <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+                            <Label x:Name="NameValue" FontSize="22" FontAttributes="Bold"/>
+                            <Label x:Name="SurnameValue" FontSize="22" FontAttributes="Bold"/>
+                        </HorizontalStackLayout>
 
-                <HorizontalStackLayout Spacing="6">
-                    <Label Text="{svc:Translate About_Login}"/>
-                    <Label x:Name="LoginValue"/>
-                </HorizontalStackLayout>
+                        <!-- Důležité drobné údaje pod jménem -->
+                        <VerticalStackLayout Spacing="6" Padding="6,0,0,0">
+                            <HorizontalStackLayout Spacing="6">
+                                <Label Text="{svc:Translate About_Login}" FontAttributes="Bold" />
+                                <Label x:Name="LoginValue" HorizontalOptions="StartAndExpand" />
+                            </HorizontalStackLayout>
 
-                <HorizontalStackLayout Spacing="6">
-                    <Label Text="{svc:Translate About_Email}"/>
-                    <Label x:Name="EmailValue"/>
-                </HorizontalStackLayout>
+                            <HorizontalStackLayout Spacing="6">
+                                <Label Text="{svc:Translate About_Email}" FontAttributes="Bold" />
+                                <Label x:Name="EmailValue" HorizontalOptions="StartAndExpand" />
+                            </HorizontalStackLayout>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
 
-                <HorizontalStackLayout Spacing="6">
-                    <Label Text="{svc:Translate About_Id}"/>
-                    <Label x:Name="IdValue"/>
-                </HorizontalStackLayout>
+                <!-- Secondary: méně důležité informace -->
+                <Border Padding="12">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="8">
+                        <HorizontalStackLayout Spacing="6">
+                            <Label Text="{svc:Translate About_LastLogin}" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="LastLoginValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
 
-                <HorizontalStackLayout Spacing="6">
-                    <Label Text="{svc:Translate About_TenantId}"/>
-                    <Label x:Name="TenantValue"/>
-                </HorizontalStackLayout>
+                        <HorizontalStackLayout Spacing="6">
+                            <Label Text="{svc:Translate About_LastActivity}" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="LastActiveValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
 
-                <HorizontalStackLayout Spacing="6">
-                    <Label Text="{svc:Translate About_LastLogin}"/>
-                    <Label x:Name="LastLoginValue"/>
-                </HorizontalStackLayout>
+                        <HorizontalStackLayout Spacing="6">
+                            <Label Text="{svc:Translate About_CreatedUser}" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="UCreatedAtValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
 
-                <HorizontalStackLayout Spacing="6">
-                    <Label Text="{svc:Translate About_LastActivity}"/>
-                    <Label x:Name="LastActiveValue"/>
-                </HorizontalStackLayout>
+                        <HorizontalStackLayout Spacing="6">
+                            <Label Text="{svc:Translate About_CreatedRecord}" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="CreatedAtValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
 
-                <HorizontalStackLayout Spacing="6">
-                    <Label Text="{svc:Translate About_CreatedUser}"/>
-                    <Label x:Name="UCreatedAtValue"/>
-                </HorizontalStackLayout>
+                        <HorizontalStackLayout Spacing="6">
+                            <Label Text="{svc:Translate About_Updated}" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="UpdatedAtValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
 
-                <HorizontalStackLayout Spacing="6">
-                    <Label Text="{svc:Translate About_CreatedRecord}"/>
-                    <Label x:Name="CreatedAtValue"/>
-                </HorizontalStackLayout>
-
-                <HorizontalStackLayout Spacing="6">
-                    <Label Text="{svc:Translate About_Updated}"/>
-                    <Label x:Name="UpdatedAtValue"/>
-                </HorizontalStackLayout>
-
-                <HorizontalStackLayout Spacing="6">
-                    <Label Text="{svc:Translate About_LastVersion}"/>
-                    <Label x:Name="LastVersionValue"/>
-                </HorizontalStackLayout>
+                        <HorizontalStackLayout Spacing="6">
+                            <Label Text="{svc:Translate About_LastVersion}" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="LastVersionValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
             </VerticalStackLayout>
         </ScrollView>
+
+        <Button Grid.Row="2"
+                Margin="20"
+                Text="{svc:Translate Other_Button_Logout}"
+                BackgroundColor="{StaticResource Primary}"
+                TextColor="White"
+                Clicked="OnLogoutClicked" />
     </Grid>
 </ContentPage>
