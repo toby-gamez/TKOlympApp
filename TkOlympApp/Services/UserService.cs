@@ -2,6 +2,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Numerics;
 
 namespace TkOlympApp.Services;
 
@@ -59,5 +60,99 @@ public static class UserService
         string? UPrijmeni,
         DateTime UpdatedAt
     );
-    // couples-related helpers removed
+        public sealed record CoupleInfo(string ManName, string WomanName);
+
+        public static async Task<List<CoupleInfo>> GetActiveCouplesFromUsersAsync(CancellationToken ct = default)
+    {
+                var query = new GraphQlRequest
+                {
+                        Query = @"query {
+    users {
+        nodes {
+            userProxiesList {
+                person {
+                    activeCouplesList {
+                        man { firstName lastName }
+                        woman { firstName lastName }
+                    }
+                }
+            }
+        }
+    }
+}"
+                };
+
+                var json = JsonSerializer.Serialize(query, Options);
+                using var content = new StringContent(json, Encoding.UTF8, "application/json");
+                using var resp = await AuthService.Http.PostAsync("", content, ct);
+                resp.EnsureSuccessStatusCode();
+
+                var body = await resp.Content.ReadAsStringAsync(ct);
+                var data = JsonSerializer.Deserialize<GraphQlResponse<UsersData>>(body, Options);
+
+                var result = new List<CoupleInfo>();
+                if (data?.Data?.Users?.Nodes != null)
+                {
+                        foreach (var node in data.Data.Users.Nodes)
+                        {
+                                if (node?.UserProxiesList == null) continue;
+                                foreach (var proxy in node.UserProxiesList)
+                                {
+                                        var person = proxy?.Person;
+                                        if (person?.ActiveCouplesList == null) continue;
+                                        foreach (var c in person.ActiveCouplesList)
+                                        {
+                                                if (c == null) continue;
+                                                var manFirst = c.Man?.FirstName?.Trim();
+                                                var manLast = c.Man?.LastName?.Trim();
+                                                var womanFirst = c.Woman?.FirstName?.Trim();
+                                                var womanLast = c.Woman?.LastName?.Trim();
+                                                var manName = string.Join(" ", new[] { manFirst, manLast }.Where(s => !string.IsNullOrWhiteSpace(s))).Trim();
+                                                var womanName = string.Join(" ", new[] { womanFirst, womanLast }.Where(s => !string.IsNullOrWhiteSpace(s))).Trim();
+                                                if (string.IsNullOrEmpty(manName) && string.IsNullOrEmpty(womanName)) continue;
+                                                result.Add(new CoupleInfo(manName, womanName));
+                                        }
+                                }
+                        }
+                }
+
+                return result;
+    }
+
+    private sealed class UsersData
+    {
+        [JsonPropertyName("users")] public UsersWrapper? Users { get; set; }
+    }
+
+    private sealed class UsersWrapper
+    {
+        [JsonPropertyName("nodes")] public UserNode[]? Nodes { get; set; }
+    }
+
+    private sealed class UserNode
+    {
+        [JsonPropertyName("userProxiesList")] public UserProxy[]? UserProxiesList { get; set; }
+    }
+
+    private sealed class UserProxy
+    {
+        [JsonPropertyName("person")] public Person? Person { get; set; }
+    }
+
+    private sealed class Person
+    {
+        [JsonPropertyName("activeCouplesList")] public ActiveCouple[]? ActiveCouplesList { get; set; }
+    }
+
+    private sealed class ActiveCouple
+    {
+        [JsonPropertyName("man")] public PersonReference? Man { get; set; }
+        [JsonPropertyName("woman")] public PersonReference? Woman { get; set; }
+    }
+
+    private sealed class PersonReference
+    {
+        [JsonPropertyName("firstName")] public string? FirstName { get; set; }
+        [JsonPropertyName("lastName")] public string? LastName { get; set; }
+    }
 }

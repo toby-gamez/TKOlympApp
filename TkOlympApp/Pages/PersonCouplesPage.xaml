@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TkOlympApp.Pages.PersonCouplesPage"
+             Title="Páry osoby">
+
+    <ContentPage.Content>
+        <StackLayout Padding="16" Spacing="12">
+            <Label x:Name="TitleLabel" Text="Páry (active couples)" FontAttributes="Bold" FontSize="18" />
+            <ActivityIndicator x:Name="LoadingIndicator" IsRunning="True" IsVisible="False" />
+            <Label x:Name="EmptyLabel" Text="Žádné páry k zobrazení." IsVisible="False" Style="{StaticResource MutedLabelStyle}" />
+
+            <CollectionView x:Name="CouplesCollection" IsVisible="False">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Padding="10" Margin="4">
+                            <Label Text="{Binding}" />
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Button Text="Obnovit" Clicked="OnRefreshClicked" />
+        </StackLayout>
+    </ContentPage.Content>
+
+</ContentPage>

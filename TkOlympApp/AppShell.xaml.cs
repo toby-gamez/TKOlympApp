@@ -30,6 +30,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(nameof(TrainersAndLocationsPage), typeof(TrainersAndLocationsPage));
         Routing.RegisterRoute(nameof(CohortGroupsPage), typeof(CohortGroupsPage));
         Routing.RegisterRoute(nameof(PeoplePage), typeof(PeoplePage));
+        Routing.RegisterRoute(nameof(PersonCouplesPage), typeof(PersonCouplesPage));
         Routing.RegisterRoute(nameof(LanguagePage), typeof(TkOlympApp.Pages.LanguagePage));
         Routing.RegisterRoute(nameof(AboutAppPage), typeof(AboutAppPage));
         Routing.RegisterRoute(nameof(PrivacyPolicyPage), typeof(PrivacyPolicyPage));

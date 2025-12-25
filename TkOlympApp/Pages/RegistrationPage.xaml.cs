@@ -76,8 +76,28 @@ public partial class RegistrationPage : ContentPage
             CurrentUserLabel.Text = string.IsNullOrWhiteSpace(surname) ? name : $"{name} {surname}";
             CurrentUserLabel.IsVisible = true;
             ConfirmButton.IsEnabled = true;
-            // Note: couple-fetch helpers were removed from UserService.
-            // For now just show current user info; couples UI will be added later if needed.
+            // Load couples (global list for now) and show under user info
+            try
+            {
+                var couples = await UserService.GetActiveCouplesFromUsersAsync();
+                if (couples != null && couples.Count > 0)
+                {
+                    CouplesHeader.IsVisible = true;
+                    MyCouplesCollection.IsVisible = true;
+                    MyCouplesCollection.ItemsSource = couples.Select(c =>
+                        {
+                            var man = string.IsNullOrWhiteSpace(c.ManName) ? "" : c.ManName;
+                            var woman = string.IsNullOrWhiteSpace(c.WomanName) ? "" : c.WomanName;
+                            return (man + " - " + woman).Trim();
+                        }).ToList();
+                }
+                else
+                {
+                    CouplesHeader.IsVisible = false;
+                    MyCouplesCollection.IsVisible = false;
+                }
+            }
+            catch { }
         }
         catch { }
     }
@@ -91,6 +111,18 @@ public partial class RegistrationPage : ContentPage
             try { await Shell.Current.GoToAsync(".."); } catch { }
         }
         catch { }
+    }
+
+    private async void OnShowPersonCouplesClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            await Shell.Current.GoToAsync(nameof(PersonCouplesPage));
+        }
+        catch (Exception ex)
+        {
+            try { await DisplayAlert("Chyba", ex.Message, "OK"); } catch { }
+        }
     }
 }
 

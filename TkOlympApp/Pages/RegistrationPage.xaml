@@ -23,6 +23,19 @@
             <Label Text="Moje údaje" FontAttributes="Bold" />
             <Label x:Name="CurrentUserLabel" FontSize="14" Style="{StaticResource MutedLabelStyle}" />
 
+            <Label Text="Páry" FontAttributes="Bold" IsVisible="False" x:Name="CouplesHeader" />
+            <CollectionView x:Name="MyCouplesCollection" IsVisible="False">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Padding="8" Margin="4">
+                            <Label Text="{Binding}" />
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Button Text="Zobrazit páry osoby" HorizontalOptions="Fill" Clicked="OnShowPersonCouplesClicked" />
+
             <Button x:Name="ConfirmButton" Text="{svc:Translate Registration_Button_Text}" IsEnabled="False" HorizontalOptions="Fill" Clicked="OnConfirmClicked" />
         </VerticalStackLayout>
     </ScrollView>
