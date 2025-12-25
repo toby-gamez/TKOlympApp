@@ -106,6 +106,7 @@
     <data name="EventPage_Title" xml:space="preserve"><value>The Event</value></data>
     <data name="Event_Info_Label" xml:space="preserve"><value>Deets</value></data>
     <data name="Registration_Open" xml:space="preserve"><value>Get in line</value></data>
+    <data name="Registration_Button_Text" xml:space="preserve"><value>Sign up</value></data>
     <data name="Public_Label" xml:space="preserve"><value>For the streets</value></data>
     <data name="Visible_Label" xml:space="preserve"><value>Seen</value></data>
     <data name="Event_Description_Label" xml:space="preserve"><value>Context</value></data>

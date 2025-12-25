@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:svc="clr-namespace:TkOlympApp.Services"
+             x:Class="TkOlympApp.Pages.RegistrationPage"
+             Title="Registrace">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="12">
+            <Label x:Name="TitleLabel" FontAttributes="Bold" FontSize="20" />
+
+            <Border Padding="12" Margin="8,6">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Informace o registraci" FontAttributes="Bold" />
+                    <Label x:Name="EventInfoLabel" />
+                    <Label Text="Poznámka: registrace zatím není implementovaná." FontAttributes="Italic" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Label Text="Moje údaje" FontAttributes="Bold" />
+            <Label x:Name="CurrentUserLabel" FontSize="14" Style="{StaticResource MutedLabelStyle}" />
+
+            <Button x:Name="ConfirmButton" Text="{svc:Translate Registration_Button_Text}" IsEnabled="False" HorizontalOptions="Fill" Clicked="OnConfirmClicked" />
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

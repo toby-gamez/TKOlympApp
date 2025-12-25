@@ -105,6 +105,7 @@
   <data name="EventPage_Title" xml:space="preserve"><value>Подія</value></data>
   <data name="Event_Info_Label" xml:space="preserve"><value>Інформація</value></data>
   <data name="Registration_Open" xml:space="preserve"><value>Реєстрація відкрита</value></data>
+  <data name="Registration_Button_Text" xml:space="preserve"><value>Записатися</value></data>
   <data name="Public_Label" xml:space="preserve"><value>Публічне</value></data>
   <data name="Visible_Label" xml:space="preserve"><value>Видимий</value></data>
   <data name="Event_Description_Label" xml:space="preserve"><value>Опис</value></data>

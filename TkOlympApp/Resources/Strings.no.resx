@@ -105,6 +105,7 @@
     <data name="EventPage_Title" xml:space="preserve"><value>Hendelse</value></data>
     <data name="Event_Info_Label" xml:space="preserve"><value>Informasjon</value></data>
     <data name="Registration_Open" xml:space="preserve"><value>Påmelding åpen</value></data>
+    <data name="Registration_Button_Text" xml:space="preserve"><value>Meld deg på</value></data>
     <data name="Public_Label" xml:space="preserve"><value>Offentlig</value></data>
     <data name="Visible_Label" xml:space="preserve"><value>Synlig</value></data>
     <data name="Event_Description_Label" xml:space="preserve"><value>Beskrivelse</value></data>

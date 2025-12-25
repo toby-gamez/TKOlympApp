@@ -59,4 +59,5 @@ public static class UserService
         string? UPrijmeni,
         DateTime UpdatedAt
     );
+    // couples-related helpers removed
 }

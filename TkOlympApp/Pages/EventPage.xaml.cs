@@ -70,6 +70,7 @@ public partial class EventPage : ContentPage
         InitializeComponent();
         RegistrationsCollection.ItemsSource = _registrations;
         TrainersCollection.ItemsSource = _trainers;
+        try { RegisterButton.Clicked += OnRegisterButtonClicked; } catch { }
     }
 
     protected override async void OnAppearing()
@@ -218,6 +219,7 @@ public partial class EventPage : ContentPage
                 UpdatedAtLabel.IsVisible = false;
             }
             RegistrationOpenLabel.IsVisible = ev.IsRegistrationOpen;
+            RegisterButton.IsVisible = ev.IsRegistrationOpen;
             PublicLabel.IsVisible = ev.IsPublic;
             VisibleLabel.IsVisible = ev.IsVisible;
             CapacityLabel.Text = ev.Capacity.HasValue ? $"Kapacita: {ev.Capacity}" : "Kapacita: N/A";
@@ -344,6 +346,16 @@ public partial class EventPage : ContentPage
         {
             try { RefreshViewControl.IsRefreshing = false; } catch { }
         }
+    }
+
+    private async void OnRegisterButtonClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            if (EventId == 0) return;
+            await Shell.Current.GoToAsync($"{nameof(RegistrationPage)}?id={EventId}");
+        }
+        catch { }
     }
 
     private static string? HtmlToPlainText(string? html)
