@@ -58,6 +58,14 @@ public partial class RegistrationPage : ContentPage
                 dates = dates + " – " + DateHelpers.ToFriendlyDateTimeString(ev.Until);
             EventInfoLabel.Text = string.Join("\n", new[] { loc, dates }.Where(s => !string.IsNullOrWhiteSpace(s)));
 
+            // Show EventId for debugging / user info
+            try
+            {
+                EventIdLabel.Text = EventId != 0 ? EventId.ToString() : string.Empty;
+                EventIdLabel.IsVisible = !string.IsNullOrWhiteSpace(EventIdLabel.Text);
+            }
+            catch { }
+
             // Load and show current user info and selection list
             await LoadMyCouplesAsync();
         }
@@ -83,6 +91,15 @@ public partial class RegistrationPage : ContentPage
             var surname = string.IsNullOrWhiteSpace(me.UPrijmeni) ? string.Empty : me.UPrijmeni;
             CurrentUserLabel.Text = string.IsNullOrWhiteSpace(surname) ? name : $"{name} {surname}";
             CurrentUserLabel.IsVisible = true;
+            // Show current user's personId
+            try
+            {
+                PersonIdLabel.Text = me.Id.ToString();
+                PersonIdLabel.IsVisible = !string.IsNullOrWhiteSpace(PersonIdLabel.Text);
+            }
+            catch { PersonIdLabel.IsVisible = false; }
+            CoupleIdLabel.Text = string.Empty;
+            CoupleIdLabel.IsVisible = false;
             ConfirmButton.IsEnabled = false;
             // Load couples (global list for now) and show under user info
             try
@@ -154,11 +171,34 @@ public partial class RegistrationPage : ContentPage
         {
             _selectedOption = ro;
             ConfirmButton.IsEnabled = true;
+            // Show chosen ids
+            try
+            {
+                if (ro.Kind == "self")
+                {
+                    PersonIdLabel.Text = ro.Id ?? string.Empty;
+                    PersonIdLabel.IsVisible = !string.IsNullOrWhiteSpace(PersonIdLabel.Text);
+                    CoupleIdLabel.Text = string.Empty;
+                    CoupleIdLabel.IsVisible = false;
+                }
+                else if (ro.Kind == "couple")
+                {
+                    CoupleIdLabel.Text = ro.Id ?? string.Empty;
+                    CoupleIdLabel.IsVisible = !string.IsNullOrWhiteSpace(CoupleIdLabel.Text);
+                    PersonIdLabel.Text = string.Empty;
+                    PersonIdLabel.IsVisible = false;
+                }
+            }
+            catch { }
         }
         else
         {
             _selectedOption = null;
             ConfirmButton.IsEnabled = false;
+            PersonIdLabel.Text = string.Empty;
+            PersonIdLabel.IsVisible = false;
+            CoupleIdLabel.Text = string.Empty;
+            CoupleIdLabel.IsVisible = false;
         }
     }
 

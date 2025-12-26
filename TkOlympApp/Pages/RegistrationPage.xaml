@@ -23,6 +23,15 @@
             <Label Text="{svc:Translate Registration_MyDetails_Label}" FontAttributes="Bold" />
             <Label x:Name="CurrentUserLabel" FontSize="14" Style="{StaticResource MutedLabelStyle}" />
 
+            <!-- Debug IDs -->
+            <Label Text="Event ID:" FontAttributes="Bold" />
+            <Label x:Name="EventIdLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}" />
+
+            <Label Text="PersonId:" FontAttributes="Bold" />
+            <Label x:Name="PersonIdLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}" />
+
+            <Label Text="CoupleId:" FontAttributes="Bold" />
+            <Label x:Name="CoupleIdLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}" />
             <Label Text="{svc:Translate Registration_Whom_Label}" FontAttributes="Bold" x:Name="SelectionHeader" />
             <CollectionView x:Name="SelectionCollection" SelectionMode="Single" SelectionChanged="OnSelectionChanged">
                 <CollectionView.ItemTemplate>
