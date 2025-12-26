@@ -112,17 +112,5 @@ public partial class RegistrationPage : ContentPage
         }
         catch { }
     }
-
-    private async void OnShowPersonCouplesClicked(object? sender, EventArgs e)
-    {
-        try
-        {
-            await Shell.Current.GoToAsync(nameof(PersonCouplesPage));
-        }
-        catch (Exception ex)
-        {
-            try { await DisplayAlert("Chyba", ex.Message, "OK"); } catch { }
-        }
-    }
 }
 

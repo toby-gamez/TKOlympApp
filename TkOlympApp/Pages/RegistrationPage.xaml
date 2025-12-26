@@ -34,8 +34,6 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
-            <Button Text="Zobrazit páry osoby" HorizontalOptions="Fill" Clicked="OnShowPersonCouplesClicked" />
-
             <Button x:Name="ConfirmButton" Text="{svc:Translate Registration_Button_Text}" IsEnabled="False" HorizontalOptions="Fill" Clicked="OnConfirmClicked" />
         </VerticalStackLayout>
     </ScrollView>
