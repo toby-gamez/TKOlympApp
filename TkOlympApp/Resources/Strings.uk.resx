@@ -112,6 +112,7 @@
   <data name="Event_Summary_Label" xml:space="preserve"><value>Підсумок</value></data>
   <data name="Event_Trainers_Label" xml:space="preserve"><value>Тренери</value></data>
   <data name="Event_Registrations_Label" xml:space="preserve"><value>Список зареєстрованих</value></data>
+  <data name="Couple_Inactive" xml:space="preserve"><value>Неактивний</value></data>
   <data name="Other_AboutApp_Label" xml:space="preserve"><value>Про додаток</value></data>
   <data name="Other_AboutApp_Desc" xml:space="preserve"><value>Все про це програмне забезпечення</value></data>
   <data name="Other_AboutApp_Body" xml:space="preserve"><value>Цей додаток відображає розклади, новини та інформацію про тренерів і приміщення. Він підключається до віддаленого API та використовує локальні сповіщення для інформування про нові пости та події.</value></data>
@@ -152,6 +153,7 @@
   <data name="Event_Registered_Format" xml:space="preserve"><value>Зареєстровано: {0}</value></data>
   <data name="RegistrationPage_Title" xml:space="preserve"><value>Реєстрація</value></data>
   <data name="Registration_Info_Label" xml:space="preserve"><value>Інформація про реєстрацію</value></data>
+  <data name="Registration_Error_Title" xml:space="preserve"><value>Помилка реєстрації</value></data>
   <data name="Registration_Note" xml:space="preserve"><value>Примітка: реєстрація ще не реалізована.</value></data>
   <data name="Registration_MyDetails_Label" xml:space="preserve"><value>Мої дані</value></data>
   <data name="Registration_Whom_Label" xml:space="preserve"><value>Кого я реєструю</value></data>

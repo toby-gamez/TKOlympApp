@@ -112,6 +112,7 @@
   <data name="Event_Summary_Label" xml:space="preserve"><value>Tóm tắt</value></data>
   <data name="Event_Trainers_Label" xml:space="preserve"><value>Huấn luyện viên</value></data>
   <data name="Event_Registrations_Label" xml:space="preserve"><value>Danh sách đăng ký</value></data>
+  <data name="Couple_Inactive" xml:space="preserve"><value>Không hoạt động</value></data>
   <data name="Other_AboutApp_Label" xml:space="preserve"><value>Về ứng dụng</value></data>
   <data name="Other_AboutApp_Desc" xml:space="preserve"><value>Mọi thứ về phần mềm này</value></data>
   <data name="Other_AboutApp_Body" xml:space="preserve"><value>Ứng dụng này hiển thị lịch trình, tin tức và thông tin về huấn luyện viên và địa điểm. Nó kết nối tới API từ xa và sử dụng thông báo cục bộ để thông báo về bài viết và sự kiện mới.</value></data>
@@ -152,6 +153,7 @@
   <data name="Event_Registered_Format" xml:space="preserve"><value>Đã đăng ký: {0}</value></data>
   <data name="RegistrationPage_Title" xml:space="preserve"><value>Đăng ký</value></data>
   <data name="Registration_Info_Label" xml:space="preserve"><value>Thông tin đăng ký</value></data>
+  <data name="Registration_Error_Title" xml:space="preserve"><value>Lỗi đăng ký</value></data>
   <data name="Registration_Note" xml:space="preserve"><value>Lưu ý: đăng ký chưa được triển khai.</value></data>
   <data name="Registration_MyDetails_Label" xml:space="preserve"><value>Thông tin của tôi</value></data>
   <data name="Registration_Whom_Label" xml:space="preserve"><value>Người tôi đăng ký</value></data>

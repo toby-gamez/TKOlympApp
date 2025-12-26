@@ -112,6 +112,7 @@
     <data name="Event_Summary_Label" xml:space="preserve"><value>Sammendrag</value></data>
     <data name="Event_Trainers_Label" xml:space="preserve"><value>Trenere</value></data>
     <data name="Event_Registrations_Label" xml:space="preserve"><value>Påmeldingsliste</value></data>
+    <data name="Couple_Inactive" xml:space="preserve"><value>Inaktiv</value></data>
     <data name="Other_AboutApp_Label" xml:space="preserve"><value>Om appen</value></data>
     <data name="Other_AboutApp_Desc" xml:space="preserve"><value>Alt om denne programvaren</value></data>
     <data name="Other_AboutApp_Body" xml:space="preserve"><value>Denne appen viser timeplaner, nyheter og informasjon om trenere og lokaler. Den kobles til et eksternt API og bruker lokale varsler for å informere om nye innlegg og hendelser.</value></data>
@@ -152,6 +153,7 @@
     <data name="Event_Registered_Format" xml:space="preserve"><value>Registrert: {0}</value></data>
     <data name="RegistrationPage_Title" xml:space="preserve"><value>Registrering</value></data>
     <data name="Registration_Info_Label" xml:space="preserve"><value>Informasjon om registreringen</value></data>
+    <data name="Registration_Error_Title" xml:space="preserve"><value>Registreringsfeil</value></data>
     <data name="Registration_Note" xml:space="preserve"><value>Merk: registrering er ikke implementert ennå.</value></data>
     <data name="Registration_MyDetails_Label" xml:space="preserve"><value>Mine opplysninger</value></data>
     <data name="Registration_Whom_Label" xml:space="preserve"><value>Hvem jeg registrerer</value></data>

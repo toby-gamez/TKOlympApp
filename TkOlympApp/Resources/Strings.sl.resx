@@ -112,6 +112,7 @@
     <data name="Event_Summary_Label" xml:space="preserve"><value>Povzetek</value></data>
     <data name="Event_Trainers_Label" xml:space="preserve"><value>Trenerji</value></data>
     <data name="Event_Registrations_Label" xml:space="preserve"><value>Seznam prijavljenih</value></data>
+    <data name="Couple_Inactive" xml:space="preserve"><value>Neaktiven</value></data>
     <data name="Other_AboutApp_Label" xml:space="preserve"><value>O aplikaciji</value></data>
     <data name="Other_AboutApp_Desc" xml:space="preserve"><value>Vse o tem programu</value></data>
     <data name="Other_AboutApp_Body" xml:space="preserve"><value>Ta aplikacija prikazuje urnike, novice in informacije o trenerjih in prostorih. Povezana je z oddaljenim API-jem in uporablja lokalna obvestila za opozarjanje na nove objave in dogodke.</value></data>
@@ -152,6 +153,7 @@
       <data name="Event_Registered_Format" xml:space="preserve"><value>Registrirano: {0}</value></data>
       <data name="RegistrationPage_Title" xml:space="preserve"><value>Registracija</value></data>
       <data name="Registration_Info_Label" xml:space="preserve"><value>Informacije o registraciji</value></data>
+      <data name="Registration_Error_Title" xml:space="preserve"><value>Napaka pri registraciji</value></data>
       <data name="Registration_Note" xml:space="preserve"><value>Opomba: registracija še ni implementirana.</value></data>
       <data name="Registration_MyDetails_Label" xml:space="preserve"><value>Moji podatki</value></data>
       <data name="Registration_Whom_Label" xml:space="preserve"><value>Koga registriram</value></data>

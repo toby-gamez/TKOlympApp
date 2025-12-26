@@ -106,12 +106,13 @@
     <data name="EventPage_Title" xml:space="preserve"><value>The Event</value></data>
     <data name="Event_Info_Label" xml:space="preserve"><value>Deets</value></data>
     <data name="Registration_Open" xml:space="preserve"><value>Get in line</value></data>
-    <data name="Registration_Button_Text" xml:space="preserve"><value>Sign up</value></data>
+    <data name="Registration_Button_Text" xml:space="preserve"><value>Yeet in</value></data>
     <data name="Public_Label" xml:space="preserve"><value>For the streets</value></data>
     <data name="Visible_Label" xml:space="preserve"><value>Seen</value></data>
     <data name="Event_Description_Label" xml:space="preserve"><value>Context</value></data>
     <data name="Event_Summary_Label" xml:space="preserve"><value>TL;DR</value></data>
-    <data name="Event_Trainers_Label" xml:space="preserve"><value>Bosses</value></data>
+    <data name="Event_Trainers_Label" xml:space="preserve"><value>Gym bros</value></data>
+    <data name="Couple_Inactive" xml:space="preserve"><value>Lazy</value></data>
     <data name="Other_AboutApp_Label" xml:space="preserve"><value>About the App</value></data>
     <data name="Other_AboutApp_Desc" xml:space="preserve"><value>goated about this carti</value></data>
     <data name="Other_AboutApp_Body" xml:space="preserve"><value>This app is literally your go-to hub for schedules, news, and all the tea about trainers and locations. It’s hooked up to a remote API (very nerd, very slay) and drops notifications so you never miss a fresh post or event. Stay locked in fr.</value></data>
@@ -127,12 +128,13 @@
     <data name="Privacy_Summary_Title" xml:space="preserve"><value>TL;DR</value></data>
     <data name="Privacy_Summary_Body" xml:space="preserve"><value>TkOlymp is a client for the service at https://api.rozpisovnik.cz. We only grab what we need for the app to work (auth, event display, notifications, profile stuff).</value></data>
     <data name="Privacy_S1_Title" xml:space="preserve"><value>1) What we collect</value></data>
-        <data name="Event_Capacity_Format" xml:space="preserve"><value>Capacity: {0} (Gaps: {1})</value></data>
-        <data name="Event_Capacity_NA" xml:space="preserve"><value>Capacity: N/A</value></data>
-        <data name="Event_Registered_Format" xml:space="preserve"><value>Registered: {0}</value></data>
+        <data name="Event_Capacity_Format" xml:space="preserve"><value>Cap: {0} (Gaps: {1})</value></data>
+        <data name="Event_Capacity_NA" xml:space="preserve"><value>Cap: N/A</value></data>
+        <data name="Event_Registered_Format" xml:space="preserve"><value>Reg: {0}</value></data>
         <data name="RegistrationPage_Title" xml:space="preserve"><value>Registrashun</value></data>
         <data name="Registration_Info_Label" xml:space="preserve"><value>Reg info, mate</value></data>
-        <data name="Registration_Note" xml:space="preserve"><value>Note: registration ain't wired yet.</value></data>
+        <data name="Registration_Error_Title" xml:space="preserve"><value>Reg error</value></data>
+        <data name="Registration_Note" xml:space="preserve"><value>Note: reg ain't wired yet.</value></data>
         <data name="Registration_MyDetails_Label" xml:space="preserve"><value>Me details</value></data>
         <data name="Registration_Whom_Label" xml:space="preserve"><value>Who I'm signing up</value></data>
     <data name="Privacy_S1_Body" xml:space="preserve"><value>• JWT token: kept on your device's secure stash to auth API calls (see AuthService). • API data: events, instances, notifications, user/group info and leaderboards — pulled live from GraphQL. • Optional: profile fields and settings to make the app nicer.</value></data>

@@ -112,6 +112,7 @@
     <data name="Event_Summary_Label" xml:space="preserve"><value>Zhrnutie</value></data>
     <data name="Event_Trainers_Label" xml:space="preserve"><value>Tréneri</value></data>
     <data name="Event_Registrations_Label" xml:space="preserve"><value>Zoznam prihlásených</value></data>
+    <data name="Couple_Inactive" xml:space="preserve"><value>Neaktívny</value></data>
     <data name="Other_AboutApp_Label" xml:space="preserve"><value>O aplikácii</value></data>
     <data name="Other_AboutApp_Desc" xml:space="preserve"><value>Všetko o tomto softvéri</value></data>
     <data name="Other_AboutApp_Body" xml:space="preserve"><value>Táto aplikácia zobrazuje rozvrhy, novinky a informácie o tréneroch a priestoroch. Je pripojená k vzdialenému API a používa lokálne notifikácie na upozornenia o nových príspevkoch a udalostiach.</value></data>
@@ -152,6 +153,7 @@
       <data name="Event_Registered_Format" xml:space="preserve"><value>Registrované: {0}</value></data>
       <data name="RegistrationPage_Title" xml:space="preserve"><value>Registrácia</value></data>
       <data name="Registration_Info_Label" xml:space="preserve"><value>Informácie o registrácii</value></data>
+      <data name="Registration_Error_Title" xml:space="preserve"><value>Chyba registrácie</value></data>
       <data name="Registration_Note" xml:space="preserve"><value>Poznámka: registrácia ešte nie je implementovaná.</value></data>
       <data name="Registration_MyDetails_Label" xml:space="preserve"><value>Moje údaje</value></data>
       <data name="Registration_Whom_Label" xml:space="preserve"><value>Koho registrujem</value></data>

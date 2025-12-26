@@ -287,7 +287,7 @@ public partial class EventPage : ContentPage
                 }
 
                 var parts = new List<string>();
-                if (n.Couple?.Active == false) parts.Add("Neaktivní");
+                if (n.Couple?.Active == false) parts.Add(LocalizationService.Get("Couple_Inactive") ?? "Neaktivní");
 
                 // Collect instance trainers for couple (person entries may not have these)
                 var trainerParts = new List<string>();
