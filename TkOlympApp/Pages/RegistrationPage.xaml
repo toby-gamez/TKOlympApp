@@ -3,32 +3,32 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:svc="clr-namespace:TkOlympApp.Services"
              x:Class="TkOlympApp.Pages.RegistrationPage"
-             Title="Registrace">
+             Title="{svc:Translate RegistrationPage_Title}">
 
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="12">
-            <Label x:Name="TitleLabel" FontAttributes="Bold" FontSize="20" />
+            <Label x:Name="TitleLabel" FontAttributes="Bold" FontSize="20" Text="{svc:Translate RegistrationPage_Title}" />
 
             <Border Padding="12" Margin="8,6">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="6">
-                    <Label Text="Informace o registraci" FontAttributes="Bold" />
+                    <Label Text="{svc:Translate Registration_Info_Label}" FontAttributes="Bold" />
                     <Label x:Name="EventInfoLabel" />
-                    <Label Text="Poznámka: registrace zatím není implementovaná." FontAttributes="Italic" />
+                    <Label Text="{svc:Translate Registration_Note}" FontAttributes="Italic" />
                 </VerticalStackLayout>
             </Border>
 
-            <Label Text="Moje údaje" FontAttributes="Bold" />
+            <Label Text="{svc:Translate Registration_MyDetails_Label}" FontAttributes="Bold" />
             <Label x:Name="CurrentUserLabel" FontSize="14" Style="{StaticResource MutedLabelStyle}" />
 
-            <Label Text="Páry" FontAttributes="Bold" IsVisible="False" x:Name="CouplesHeader" />
-            <CollectionView x:Name="MyCouplesCollection" IsVisible="False">
+            <Label Text="{svc:Translate Registration_Whom_Label}" FontAttributes="Bold" x:Name="SelectionHeader" />
+            <CollectionView x:Name="SelectionCollection" SelectionMode="Single" SelectionChanged="OnSelectionChanged">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <Border Padding="8" Margin="4">
-                            <Label Text="{Binding}" />
+                            <Label Text="{Binding DisplayText}" />
                         </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>

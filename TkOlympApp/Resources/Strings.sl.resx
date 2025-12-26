@@ -147,4 +147,12 @@
     <data name="Privacy_Contact_LinkText" xml:space="preserve"><value>tkolymp.cz/kontakt</value></data>
     <data name="Privacy_TechnicalDetails" xml:space="preserve"><value>Tehnični podatki: implementacija overjanja in klicev GraphQL je v `Services/AuthService.cs` in `Services/EventService.cs`. Obvestila upravlja `NotificationManagerService`.</value></data>
         <data name="Privacy_List_Preview" xml:space="preserve"><value>Ogled pravilnika o zasebnosti</value></data>
-</root>
+      <data name="Event_Capacity_Format" xml:space="preserve"><value>Kapaciteta: {0} (Prosto: {1})</value></data>
+      <data name="Event_Capacity_NA" xml:space="preserve"><value>Kapaciteta: N/A</value></data>
+      <data name="Event_Registered_Format" xml:space="preserve"><value>Registrirano: {0}</value></data>
+      <data name="RegistrationPage_Title" xml:space="preserve"><value>Registracija</value></data>
+      <data name="Registration_Info_Label" xml:space="preserve"><value>Informacije o registraciji</value></data>
+      <data name="Registration_Note" xml:space="preserve"><value>Opomba: registracija še ni implementirana.</value></data>
+      <data name="Registration_MyDetails_Label" xml:space="preserve"><value>Moji podatki</value></data>
+      <data name="Registration_Whom_Label" xml:space="preserve"><value>Koga registriram</value></data>
+    </root>

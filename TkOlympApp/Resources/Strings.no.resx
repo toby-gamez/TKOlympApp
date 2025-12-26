@@ -146,5 +146,13 @@
     <data name="Privacy_Contact_Prefix" xml:space="preserve"><value>Hvis du har spørsmål om personvern eller ønsker sletting, kontakt tjenestens administrator: </value></data>
     <data name="Privacy_Contact_LinkText" xml:space="preserve"><value>tkolymp.cz/kontakt</value></data>
     <data name="Privacy_TechnicalDetails" xml:space="preserve"><value>Tekniske detaljer: implementasjon av autentisering og GraphQL-anrop finnes i `Services/AuthService.cs` og `Services/EventService.cs`. Varsler administreres av `NotificationManagerService`.</value></data>
-    <data name="Privacy_List_Preview" xml:space="preserve"><value>Se personvernregler</value></data>
+        <data name="Privacy_List_Preview" xml:space="preserve"><value>Se personvernregler</value></data>
+    <data name="Event_Capacity_Format" xml:space="preserve"><value>Kapasitet: {0} (Ledig: {1})</value></data>
+    <data name="Event_Capacity_NA" xml:space="preserve"><value>Kapasitet: N/A</value></data>
+    <data name="Event_Registered_Format" xml:space="preserve"><value>Registrert: {0}</value></data>
+    <data name="RegistrationPage_Title" xml:space="preserve"><value>Registrering</value></data>
+    <data name="Registration_Info_Label" xml:space="preserve"><value>Informasjon om registreringen</value></data>
+    <data name="Registration_Note" xml:space="preserve"><value>Merk: registrering er ikke implementert ennå.</value></data>
+    <data name="Registration_MyDetails_Label" xml:space="preserve"><value>Mine opplysninger</value></data>
+    <data name="Registration_Whom_Label" xml:space="preserve"><value>Hvem jeg registrerer</value></data>
 </root>

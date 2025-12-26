@@ -219,11 +219,24 @@ public partial class EventPage : ContentPage
                 UpdatedAtLabel.IsVisible = false;
             }
             RegistrationOpenLabel.IsVisible = ev.IsRegistrationOpen;
-            RegisterButton.IsVisible = ev.IsRegistrationOpen;
+            var registered = ev.EventRegistrations?.TotalCount ?? 0;
+            var capacity = ev.Capacity;
+            var hasSpace = !capacity.HasValue || registered < capacity.Value;
+            RegisterButton.IsVisible = ev.IsRegistrationOpen && hasSpace;
             PublicLabel.IsVisible = ev.IsPublic;
             VisibleLabel.IsVisible = ev.IsVisible;
-            CapacityLabel.Text = ev.Capacity.HasValue ? $"Kapacita: {ev.Capacity}" : "Kapacita: N/A";
-            RegistrationsLabel.Text = $"Registrováno: {ev.EventRegistrations?.TotalCount ?? 0}";
+            if (capacity.HasValue)
+            {
+                var available = Math.Max(0, capacity.Value - registered);
+                var fmt = LocalizationService.Get("Event_Capacity_Format") ?? "Kapacita: {0} (Volno: {1})";
+                CapacityLabel.Text = string.Format(fmt, capacity.Value, available);
+            }
+            else
+            {
+                CapacityLabel.Text = LocalizationService.Get("Event_Capacity_NA") ?? "Kapacita: N/A";
+            }
+
+            RegistrationsLabel.Text = string.Format(LocalizationService.Get("Event_Registered_Format") ?? "Registrováno: {0}", registered);
 
             // Trainers (event level)
             _trainers.Clear();

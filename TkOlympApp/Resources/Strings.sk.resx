@@ -147,4 +147,12 @@
     <data name="Privacy_Contact_LinkText" xml:space="preserve"><value>tkolymp.cz/kontakt</value></data>
     <data name="Privacy_TechnicalDetails" xml:space="preserve"><value>Technické detaily: implementácia autentifikácie a volania GraphQL sú v `Services/AuthService.cs` a `Services/EventService.cs`. Notifikácie spravuje `NotificationManagerService`.</value></data>
         <data name="Privacy_List_Preview" xml:space="preserve"><value>Prezrieť zásady ochrany osobných údajov</value></data>
-</root>
+      <data name="Event_Capacity_Format" xml:space="preserve"><value>Kapacita: {0} (Voľné: {1})</value></data>
+      <data name="Event_Capacity_NA" xml:space="preserve"><value>Kapacita: N/A</value></data>
+      <data name="Event_Registered_Format" xml:space="preserve"><value>Registrované: {0}</value></data>
+      <data name="RegistrationPage_Title" xml:space="preserve"><value>Registrácia</value></data>
+      <data name="Registration_Info_Label" xml:space="preserve"><value>Informácie o registrácii</value></data>
+      <data name="Registration_Note" xml:space="preserve"><value>Poznámka: registrácia ešte nie je implementovaná.</value></data>
+      <data name="Registration_MyDetails_Label" xml:space="preserve"><value>Moje údaje</value></data>
+      <data name="Registration_Whom_Label" xml:space="preserve"><value>Koho registrujem</value></data>
+    </root>

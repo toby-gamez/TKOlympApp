@@ -147,4 +147,12 @@
   <data name="Privacy_Contact_LinkText" xml:space="preserve"><value>tkolymp.cz/kontakt</value></data>
   <data name="Privacy_TechnicalDetails" xml:space="preserve"><value>Technical details: implementation of authentication and GraphQL calls can be found in `Services/AuthService.cs` and `Services/EventService.cs`. Notifications are managed by `NotificationManagerService`.</value></data>
   <data name="Privacy_List_Preview" xml:space="preserve"><value>View privacy policy</value></data>
+  <data name="Event_Capacity_Format" xml:space="preserve"><value>Capacity: {0} (Available: {1})</value></data>
+  <data name="Event_Capacity_NA" xml:space="preserve"><value>Capacity: N/A</value></data>
+  <data name="Event_Registered_Format" xml:space="preserve"><value>Registered: {0}</value></data>
+  <data name="RegistrationPage_Title" xml:space="preserve"><value>Registration</value></data>
+  <data name="Registration_Info_Label" xml:space="preserve"><value>Registration info</value></data>
+  <data name="Registration_Note" xml:space="preserve"><value>Note: registration is not implemented yet.</value></data>
+  <data name="Registration_MyDetails_Label" xml:space="preserve"><value>My details</value></data>
+  <data name="Registration_Whom_Label" xml:space="preserve"><value>Whom I register</value></data>
   </root>

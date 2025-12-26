@@ -60,7 +60,7 @@ public static class UserService
         string? UPrijmeni,
         DateTime UpdatedAt
     );
-        public sealed record CoupleInfo(string ManName, string WomanName);
+        public sealed record CoupleInfo(string ManName, string WomanName, string? Id);
 
         public static async Task<List<CoupleInfo>> GetActiveCouplesFromUsersAsync(CancellationToken ct = default)
     {
@@ -72,6 +72,7 @@ public static class UserService
             userProxiesList {
                 person {
                     activeCouplesList {
+                        id
                         man { firstName lastName }
                         woman { firstName lastName }
                     }
@@ -103,14 +104,15 @@ public static class UserService
                                         foreach (var c in person.ActiveCouplesList)
                                         {
                                                 if (c == null) continue;
-                                                var manFirst = c.Man?.FirstName?.Trim();
-                                                var manLast = c.Man?.LastName?.Trim();
-                                                var womanFirst = c.Woman?.FirstName?.Trim();
-                                                var womanLast = c.Woman?.LastName?.Trim();
+                                            var manFirst = c.Man?.FirstName?.Trim();
+                                            var manLast = c.Man?.LastName?.Trim();
+                                            var womanFirst = c.Woman?.FirstName?.Trim();
+                                            var womanLast = c.Woman?.LastName?.Trim();
+                                            var coupleId = c.Id;
                                                 var manName = string.Join(" ", new[] { manFirst, manLast }.Where(s => !string.IsNullOrWhiteSpace(s))).Trim();
                                                 var womanName = string.Join(" ", new[] { womanFirst, womanLast }.Where(s => !string.IsNullOrWhiteSpace(s))).Trim();
-                                                if (string.IsNullOrEmpty(manName) && string.IsNullOrEmpty(womanName)) continue;
-                                                result.Add(new CoupleInfo(manName, womanName));
+                                            if (string.IsNullOrEmpty(manName) && string.IsNullOrEmpty(womanName)) continue;
+                                            result.Add(new CoupleInfo(manName, womanName, coupleId));
                                         }
                                 }
                         }
@@ -146,6 +148,7 @@ public static class UserService
 
     private sealed class ActiveCouple
     {
+        [JsonPropertyName("id")] public string? Id { get; set; }
         [JsonPropertyName("man")] public PersonReference? Man { get; set; }
         [JsonPropertyName("woman")] public PersonReference? Woman { get; set; }
     }
