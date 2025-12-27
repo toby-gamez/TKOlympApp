@@ -13,6 +13,14 @@ public static class UserService
         PropertyNameCaseInsensitive = true
     };
 
+    // Person id derived from userProxiesList.person.id — can be set by UI after fetching
+    public static string? CurrentPersonId { get; private set; }
+
+    public static void SetCurrentPersonId(string? personId)
+    {
+        CurrentPersonId = personId;
+    }
+
         public static async Task<CurrentUser?> GetCurrentUserAsync(CancellationToken ct = default)
     {
         var query = new GraphQlRequest

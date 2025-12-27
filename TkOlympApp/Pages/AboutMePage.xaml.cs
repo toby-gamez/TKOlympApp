@@ -1,4 +1,8 @@
 using Microsoft.Maui.Controls;
+using System.Linq;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using TkOlympApp.Services;
 
 namespace TkOlympApp.Pages;
@@ -41,6 +45,39 @@ public partial class AboutMePage : ContentPage
             CreatedAtValue.Text = NonEmpty(FormatDt(user.CreatedAt));
             UpdatedAtValue.Text = NonEmpty(FormatDt(user.UpdatedAt));
             // lastVersion removed from API — no longer displayed
+
+            // Fetch userProxiesList -> person -> id and display in second border
+            try
+            {
+                var gqlReq = new { query = "query MyQuery { userProxiesList { person { id } } }" };
+                var options = new JsonSerializerOptions(JsonSerializerDefaults.Web)
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+
+                var json = JsonSerializer.Serialize(gqlReq, options);
+                using var content = new StringContent(json, Encoding.UTF8, "application/json");
+                using var resp = await AuthService.Http.PostAsync("", content);
+                resp.EnsureSuccessStatusCode();
+
+                var body = await resp.Content.ReadAsStringAsync();
+                var parsed = JsonSerializer.Deserialize<GraphQlResp<UserProxiesData>>(body, options);
+                var proxyId = parsed?.Data?.UserProxiesList?.FirstOrDefault()?.Person?.Id;
+                ProxyIdValue.Text = NonEmpty(proxyId);
+                // Treat this proxy id as my personId globally
+                try
+                {
+                    UserService.SetCurrentPersonId(proxyId);
+                }
+                catch
+                {
+                    // ignore failures setting person id
+                }
+            }
+            catch
+            {
+                ProxyIdValue.Text = "—";
+            }
         }
         catch (Exception ex)
         {
@@ -72,5 +109,25 @@ public partial class AboutMePage : ContentPage
         {
             try { await Shell.Current.GoToAsync(nameof(LoginPage)); } catch { /* ignore */ }
         }
+    }
+
+    private sealed class GraphQlResp<T>
+    {
+        [JsonPropertyName("data")] public T? Data { get; set; }
+    }
+
+    private sealed class UserProxiesData
+    {
+        [JsonPropertyName("userProxiesList")] public UserProxy[]? UserProxiesList { get; set; }
+    }
+
+    private sealed class UserProxy
+    {
+        [JsonPropertyName("person")] public Person? Person { get; set; }
+    }
+
+    private sealed class Person
+    {
+        [JsonPropertyName("id")] public string? Id { get; set; }
     }
 }

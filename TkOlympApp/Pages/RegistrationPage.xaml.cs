@@ -168,13 +168,30 @@ public partial class RegistrationPage : ContentPage
             }
             var name = string.IsNullOrWhiteSpace(me.UJmeno) ? me.ULogin : me.UJmeno;
             var surname = string.IsNullOrWhiteSpace(me.UPrijmeni) ? string.Empty : me.UPrijmeni;
-            CurrentUserLabel.Text = string.IsNullOrWhiteSpace(surname) ? name : $"{name} {surname}";
+            var displayName = string.IsNullOrWhiteSpace(surname) ? name : $"{name} {surname}";
+            string pidDisplay = null;
+            try { pidDisplay = UserService.CurrentPersonId; } catch { pidDisplay = null; }
+            if (string.IsNullOrWhiteSpace(pidDisplay)) pidDisplay = "není";
+            displayName = $"{displayName} ({pidDisplay})";
+            CurrentUserLabel.Text = displayName;
             CurrentUserLabel.IsVisible = true;
-            // Show current user's personId
+            // Show current user's personId — use only proxy/person id (never fallback to me.Id)
             try
             {
-                PersonIdLabel.Text = me.Id.ToString();
-                PersonIdLabel.IsVisible = !string.IsNullOrWhiteSpace(PersonIdLabel.Text);
+                string? selectedPersonId = null;
+                try { selectedPersonId = UserService.CurrentPersonId; } catch { selectedPersonId = null; }
+                // Do NOT fallback to me.Id — show 'není' when proxy id not present
+                if (string.IsNullOrWhiteSpace(selectedPersonId))
+                {
+                    PersonIdLabel.Text = "není";
+                    PersonIdLabel.IsVisible = true;
+                    ConfirmButton.IsEnabled = false;
+                }
+                else
+                {
+                    PersonIdLabel.Text = selectedPersonId;
+                    PersonIdLabel.IsVisible = true;
+                }
             }
             catch { PersonIdLabel.IsVisible = false; }
             CoupleIdLabel.Text = string.Empty;
@@ -186,7 +203,13 @@ public partial class RegistrationPage : ContentPage
                 var couples = await UserService.GetActiveCouplesFromUsersAsync();
                 // Build selection: self + optional couples
                 var options = new List<RegistrationOption>();
-                options.Add(new RegistrationOption($"Já: {CurrentUserLabel.Text}", "self", me.Id.ToString()));
+                // Use proxy/person id only — do not add 'self' option when CurrentPersonId is missing
+                string? myPersonIdOption = null;
+                try { myPersonIdOption = UserService.CurrentPersonId; } catch { myPersonIdOption = null; }
+                if (!string.IsNullOrWhiteSpace(myPersonIdOption))
+                {
+                    options.Add(new RegistrationOption($"Já: {CurrentUserLabel.Text}", "self", myPersonIdOption));
+                }
                 if (couples != null && couples.Count > 0)
                 {
                     foreach (var c in couples)
@@ -361,8 +384,8 @@ public partial class RegistrationPage : ContentPage
 
         if (!string.IsNullOrWhiteSpace(personId))
         {
-            if (long.TryParse(personId, out var pid)) reg["personId"] = pid.ToString();
-            else throw new InvalidOperationException(LocalizationService.Get("Registration_IdNumeric") ?? "PersonId must be numeric.");
+            // Send personId as-is (may be non-numeric proxy/person id)
+            reg["personId"] = personId;
         }
         if (!string.IsNullOrWhiteSpace(coupleId))
         {

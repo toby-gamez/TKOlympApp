@@ -43,7 +43,7 @@
             <CollectionView x:Name="SelectionCollection" SelectionMode="Single" SelectionChanged="OnSelectionChanged">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <Border Padding="8" Margin="4">
+                        <Border Style="{StaticResource SelectableItemContainer}">
                             <Label Text="{Binding DisplayText}" />
                         </Border>
                     </DataTemplate>
@@ -55,7 +55,7 @@
             <CollectionView x:Name="TrainerSelectionCollection" SelectionMode="None" IsVisible="False">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <Border Padding="8" Margin="4">
+                        <Border Style="{StaticResource SelectableItemContainer}">
                             <HorizontalStackLayout Spacing="12" VerticalOptions="Center">
                                 <Label Text="{Binding Name}" VerticalOptions="Center" />
                                 <Label Text="{Binding Count}" VerticalOptions="Center" />

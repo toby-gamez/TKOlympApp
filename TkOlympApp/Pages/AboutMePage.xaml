@@ -69,6 +69,11 @@
                             <Label x:Name="UpdatedAtValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
                         </HorizontalStackLayout>
 
+                        <HorizontalStackLayout Spacing="6">
+                            <Label Text="ID" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="ProxyIdValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
+
                         <!-- lastVersion removed from API, field hidden -->
                     </VerticalStackLayout>
                 </Border>
