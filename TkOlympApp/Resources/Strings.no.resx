@@ -154,7 +154,18 @@
     <data name="RegistrationPage_Title" xml:space="preserve"><value>Registrering</value></data>
     <data name="Registration_Info_Label" xml:space="preserve"><value>Informasjon om registreringen</value></data>
     <data name="Registration_Error_Title" xml:space="preserve"><value>Registreringsfeil</value></data>
-    <data name="Registration_Note" xml:space="preserve"><value>Merk: registrering er ikke implementert ennå.</value></data>
+    <data name="Registration_Note" xml:space="preserve"><value>Velg hvem du vil melde på. Hvis du ikke melder deg på en individuell time, velg antall individuelle timer med trenere (maks. 10/trener). </value></data>
     <data name="Registration_MyDetails_Label" xml:space="preserve"><value>Mine opplysninger</value></data>
     <data name="Registration_Whom_Label" xml:space="preserve"><value>Hvem jeg registrerer</value></data>
+    <data name="Registration_Trainer_Label" xml:space="preserve"><value>Trenere</value></data>
+    <data name="Registration_NoSelection" xml:space="preserve"><value>Velg hvem du vil registrere.</value></data>
+    <data name="Registration_Confirm_Message" xml:space="preserve"><value>Registrering sendt</value></data>
+    <data name="Registration_Confirm_Title" xml:space="preserve"><value>Registrering</value></data>
+    <data name="Registration_IdNumeric" xml:space="preserve"><value>CoupleId må være numerisk.</value></data>
+    <data name="Registration_TrainerReservationNotAllowed" xml:space="preserve"><value>Trenerreservasjon ikke tillatt</value></data>
+    <data name="Label_EventId" xml:space="preserve"><value>Arrangement-ID:</value></data>
+    <data name="Label_PersonId" xml:space="preserve"><value>Person-ID:</value></data>
+    <data name="Label_CoupleId" xml:space="preserve"><value>Par-ID:</value></data>
+    <data name="Label_GraphQL" xml:space="preserve"><value>GraphQL</value></data>
+    <data name="Registration_My_Prefix" xml:space="preserve"><value>Meg: </value></data>
 </root>

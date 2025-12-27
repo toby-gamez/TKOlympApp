@@ -154,7 +154,18 @@
   <data name="RegistrationPage_Title" xml:space="preserve"><value>Đăng ký</value></data>
   <data name="Registration_Info_Label" xml:space="preserve"><value>Thông tin đăng ký</value></data>
   <data name="Registration_Error_Title" xml:space="preserve"><value>Lỗi đăng ký</value></data>
-  <data name="Registration_Note" xml:space="preserve"><value>Lưu ý: đăng ký chưa được triển khai.</value></data>
+  <data name="Registration_Note" xml:space="preserve"><value>Chọn người bạn muốn đăng ký. Nếu bạn không đăng ký bài học cá nhân, hãy chọn số lượng bài học cá nhân với huấn luyện viên (tối đa 10/huấn luyện viên). </value></data>
   <data name="Registration_MyDetails_Label" xml:space="preserve"><value>Thông tin của tôi</value></data>
   <data name="Registration_Whom_Label" xml:space="preserve"><value>Người tôi đăng ký</value></data>
+  <data name="Registration_Trainer_Label" xml:space="preserve"><value>Huấn luyện viên</value></data>
+  <data name="Registration_NoSelection" xml:space="preserve"><value>Chọn người bạn muốn đăng ký.</value></data>
+  <data name="Registration_Confirm_Message" xml:space="preserve"><value>Đã gửi đăng ký</value></data>
+  <data name="Registration_Confirm_Title" xml:space="preserve"><value>Đăng ký</value></data>
+  <data name="Registration_IdNumeric" xml:space="preserve"><value>CoupleId phải là số.</value></data>
+  <data name="Registration_TrainerReservationNotAllowed" xml:space="preserve"><value>Không cho phép đặt lịch với huấn luyện viên</value></data>
+  <data name="Label_EventId" xml:space="preserve"><value>ID sự kiện:</value></data>
+  <data name="Label_PersonId" xml:space="preserve"><value>ID người:</value></data>
+  <data name="Label_CoupleId" xml:space="preserve"><value>ID cặp:</value></data>
+  <data name="Label_GraphQL" xml:space="preserve"><value>GraphQL</value></data>
+  <data name="Registration_My_Prefix" xml:space="preserve"><value>Tôi: </value></data>
 </root>

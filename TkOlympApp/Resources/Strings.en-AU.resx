@@ -134,9 +134,20 @@
         <data name="RegistrationPage_Title" xml:space="preserve"><value>Registrashun</value></data>
         <data name="Registration_Info_Label" xml:space="preserve"><value>Reg info, mate</value></data>
         <data name="Registration_Error_Title" xml:space="preserve"><value>Reg error</value></data>
-        <data name="Registration_Note" xml:space="preserve"><value>Note: reg ain't wired yet.</value></data>
+        <data name="Registration_Note" xml:space="preserve"><value>Select who’s getting signed up. If it’s not a solo lesson, choose your 1-on-1 trainer sessions (max 10 each). This part matters, no cap.</value></data>
         <data name="Registration_MyDetails_Label" xml:space="preserve"><value>Me details</value></data>
         <data name="Registration_Whom_Label" xml:space="preserve"><value>Who I'm signing up</value></data>
+        <data name="Registration_Trainer_Label" xml:space="preserve"><value>Gym Bros</value></data>
+        <data name="Registration_NoSelection" xml:space="preserve"><value>Pick who gets signed up, fam.</value></data>
+        <data name="Registration_Confirm_Message" xml:space="preserve"><value>You're in, bruv</value></data>
+        <data name="Registration_Confirm_Title" xml:space="preserve"><value>Signed</value></data>
+        <data name="Registration_IdNumeric" xml:space="preserve"><value>CoupleId gotta be numeric, chief.</value></data>
+        <data name="Registration_TrainerReservationNotAllowed" xml:space="preserve"><value>Trainer bookings are a no-go</value></data>
+        <data name="Label_EventId" xml:space="preserve"><value>Event Tag:</value></data>
+        <data name="Label_PersonId" xml:space="preserve"><value>Person Tag:</value></data>
+        <data name="Label_CoupleId" xml:space="preserve"><value>Duo Tag:</value></data>
+        <data name="Label_GraphQL" xml:space="preserve"><value>GraphQL</value></data>
+            <data name="Registration_My_Prefix" xml:space="preserve"><value>Me: </value></data>
     <data name="Privacy_S1_Body" xml:space="preserve"><value>• JWT token: kept on your device's secure stash to auth API calls (see AuthService). • API data: events, instances, notifications, user/group info and leaderboards — pulled live from GraphQL. • Optional: profile fields and settings to make the app nicer.</value></data>
     <data name="Privacy_S2_Title" xml:space="preserve"><value>2) Where data lives</value></data>
     <data name="Privacy_S2_Body" xml:space="preserve"><value>• Network hits go to https://api.rozpisovnik.cz/graphql. We don't run our own central data farm. • JWT sits in SecureStorage (platform secure storage).</value></data>

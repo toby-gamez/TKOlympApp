@@ -25,19 +25,19 @@
 
             <!-- Debug IDs -->
 
-            <Label x:Name="TrainerReservationNotAllowedLabel" Text="není možna rezervace tréninků" FontAttributes="Bold" TextColor="#b71c1c" IsVisible="False" />
+            <Label x:Name="TrainerReservationNotAllowedLabel" Text="{svc:Translate Registration_TrainerReservationNotAllowed}" FontAttributes="Bold" TextColor="#b71c1c" IsVisible="False" />
 
             <Label x:Name="TrainerCountLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}" IsVisible="False" />
 
             <Label x:Name="EventNameDisplayLabel" FontAttributes="Bold" FontSize="14" IsVisible="False" />
 
-            <Label Text="Event ID:" FontAttributes="Bold" IsVisible="False" />
+            <Label Text="{svc:Translate Label_EventId}" FontAttributes="Bold" IsVisible="False" />
             <Label x:Name="EventIdLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}" IsVisible="False" />
 
-            <Label Text="PersonId:" FontAttributes="Bold" IsVisible="False" />
+            <Label Text="{svc:Translate Label_PersonId}" FontAttributes="Bold" IsVisible="False" />
             <Label x:Name="PersonIdLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}" IsVisible="False" />
 
-            <Label Text="CoupleId:" FontAttributes="Bold" IsVisible="False" />
+            <Label Text="{svc:Translate Label_CoupleId}" FontAttributes="Bold" IsVisible="False" />
             <Label x:Name="CoupleIdLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}" IsVisible="False" />
             <Label Text="{svc:Translate Registration_Whom_Label}" FontAttributes="Bold" x:Name="SelectionHeader" />
             <CollectionView x:Name="SelectionCollection" SelectionMode="Single" SelectionChanged="OnSelectionChanged">
@@ -70,7 +70,7 @@
             </CollectionView>
 
             <Button x:Name="ConfirmButton" Text="{svc:Translate Registration_Button_Text}" IsEnabled="False" HorizontalOptions="Fill" Clicked="OnConfirmClicked" />
-            <Label Text="GraphQL" FontAttributes="Bold" Margin="0,8,0,0" IsVisible="False" />
+            <Label Text="{svc:Translate Label_GraphQL}" FontAttributes="Bold" Margin="0,8,0,0" IsVisible="False" />
             <Editor x:Name="MutationPreview" IsReadOnly="True" AutoSize="TextChanges" HeightRequest="140" Margin="0,4,0,0" IsVisible="False" />
         </VerticalStackLayout>
     </ScrollView>

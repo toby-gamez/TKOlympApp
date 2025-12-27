@@ -154,7 +154,18 @@
       <data name="RegistrationPage_Title" xml:space="preserve"><value>Registracija</value></data>
       <data name="Registration_Info_Label" xml:space="preserve"><value>Informacije o registraciji</value></data>
       <data name="Registration_Error_Title" xml:space="preserve"><value>Napaka pri registraciji</value></data>
-      <data name="Registration_Note" xml:space="preserve"><value>Opomba: registracija še ni implementirana.</value></data>
+      <data name="Registration_Note" xml:space="preserve"><value>Izberite, koga želite registrirati. Če se ne registrirate za individualno uro, izberite število individualnih ur s trenerji (največ 10 na trenerja). </value></data>
       <data name="Registration_MyDetails_Label" xml:space="preserve"><value>Moji podatki</value></data>
       <data name="Registration_Whom_Label" xml:space="preserve"><value>Koga registriram</value></data>
+      <data name="Registration_Trainer_Label" xml:space="preserve"><value>Trenerji</value></data>
+      <data name="Registration_NoSelection" xml:space="preserve"><value>Izberite, koga želite registrirati.</value></data>
+      <data name="Registration_Confirm_Message" xml:space="preserve"><value>Prijava poslana</value></data>
+      <data name="Registration_Confirm_Title" xml:space="preserve"><value>Prijava</value></data>
+      <data name="Registration_IdNumeric" xml:space="preserve"><value>ID para mora biti številski.</value></data>
+      <data name="Registration_TrainerReservationNotAllowed" xml:space="preserve"><value>Rezervacija trenerjev ni dovoljena</value></data>
+      <data name="Label_EventId" xml:space="preserve"><value>ID dogodka:</value></data>
+      <data name="Label_PersonId" xml:space="preserve"><value>ID osebe:</value></data>
+      <data name="Label_CoupleId" xml:space="preserve"><value>ID para:</value></data>
+      <data name="Label_GraphQL" xml:space="preserve"><value>GraphQL</value></data>
+      <data name="Registration_My_Prefix" xml:space="preserve"><value>Jaz: </value></data>
     </root>

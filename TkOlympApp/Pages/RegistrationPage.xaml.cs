@@ -204,7 +204,8 @@ public partial class RegistrationPage : ContentPage
                 try { myPersonIdOption = UserService.CurrentPersonId; } catch { myPersonIdOption = null; }
                 if (!string.IsNullOrWhiteSpace(myPersonIdOption))
                 {
-                    options.Add(new RegistrationOption($"Já: {CurrentUserLabel.Text}", "self", myPersonIdOption));
+                    var mePrefix = LocalizationService.Get("Registration_My_Prefix") ?? "Já: ";
+                    options.Add(new RegistrationOption($"{mePrefix}{CurrentUserLabel.Text}", "self", myPersonIdOption));
                 }
                 if (couples != null && couples.Count > 0)
                 {

@@ -154,7 +154,18 @@
   <data name="RegistrationPage_Title" xml:space="preserve"><value>Registrace</value></data>
   <data name="Registration_Info_Label" xml:space="preserve"><value>Informace o registraci</value></data>
   <data name="Registration_Error_Title" xml:space="preserve"><value>Chyba registrace</value></data>
-  <data name="Registration_Note" xml:space="preserve"><value>Poznámka: registrace zatím není implementovaná.</value></data>
+  <data name="Registration_Note" xml:space="preserve"><value>Vyberte si koho chcete přihlásit. Pokud se nepřihlašujete na individuální lekci vyberte počet individuálních lekcí s trenéry (max 10 na trenéra).</value></data>
   <data name="Registration_MyDetails_Label" xml:space="preserve"><value>Moje údaje</value></data>
   <data name="Registration_Whom_Label" xml:space="preserve"><value>Koho registruji</value></data>
+  <data name="Registration_Trainer_Label" xml:space="preserve"><value>Trenéři</value></data>
+  <data name="Registration_NoSelection" xml:space="preserve"><value>Vyberte, koho chcete registrovat.</value></data>
+  <data name="Registration_Confirm_Message" xml:space="preserve"><value>Registrace odeslána</value></data>
+  <data name="Registration_Confirm_Title" xml:space="preserve"><value>Registrace</value></data>
+  <data name="Registration_IdNumeric" xml:space="preserve"><value>CoupleId musí být číselné.</value></data>
+  <data name="Registration_TrainerReservationNotAllowed" xml:space="preserve"><value>Není možná rezervace tréninků</value></data>
+  <data name="Label_EventId" xml:space="preserve"><value>ID události:</value></data>
+  <data name="Label_PersonId" xml:space="preserve"><value>ID osoby:</value></data>
+  <data name="Label_CoupleId" xml:space="preserve"><value>ID páru:</value></data>
+  <data name="Label_GraphQL" xml:space="preserve"><value>GraphQL</value></data>
+  <data name="Registration_My_Prefix" xml:space="preserve"><value>Já: </value></data>
 </root>

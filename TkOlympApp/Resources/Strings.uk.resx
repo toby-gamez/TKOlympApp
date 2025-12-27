@@ -154,7 +154,18 @@
   <data name="RegistrationPage_Title" xml:space="preserve"><value>Реєстрація</value></data>
   <data name="Registration_Info_Label" xml:space="preserve"><value>Інформація про реєстрацію</value></data>
   <data name="Registration_Error_Title" xml:space="preserve"><value>Помилка реєстрації</value></data>
-  <data name="Registration_Note" xml:space="preserve"><value>Примітка: реєстрація ще не реалізована.</value></data>
+  <data name="Registration_Note" xml:space="preserve"><value>Виберіть, кого ви хочете зареєструвати. Якщо ви не реєструєтеся на індивідуальне заняття, виберіть кількість індивідуальних занять з тренерами (максимум 10/тренер).</value></data>
   <data name="Registration_MyDetails_Label" xml:space="preserve"><value>Мої дані</value></data>
   <data name="Registration_Whom_Label" xml:space="preserve"><value>Кого я реєструю</value></data>
+  <data name="Registration_Trainer_Label" xml:space="preserve"><value>Тренери</value></data>
+  <data name="Registration_NoSelection" xml:space="preserve"><value>Виберіть, кого ви хочете зареєструвати.</value></data>
+  <data name="Registration_Confirm_Message" xml:space="preserve"><value>Реєстрацію надіслано</value></data>
+  <data name="Registration_Confirm_Title" xml:space="preserve"><value>Реєстрація</value></data>
+  <data name="Registration_IdNumeric" xml:space="preserve"><value>ID пари має бути числовим.</value></data>
+  <data name="Registration_TrainerReservationNotAllowed" xml:space="preserve"><value>Резервування тренера заборонено</value></data>
+  <data name="Label_EventId" xml:space="preserve"><value>ID події:</value></data>
+  <data name="Label_PersonId" xml:space="preserve"><value>ID особи:</value></data>
+  <data name="Label_CoupleId" xml:space="preserve"><value>ID пари:</value></data>
+  <data name="Label_GraphQL" xml:space="preserve"><value>GraphQL</value></data>
+  <data name="Registration_My_Prefix" xml:space="preserve"><value>Я: </value></data>
 </root>
