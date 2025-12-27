@@ -394,10 +394,10 @@ public partial class RegistrationPage : ContentPage
             else throw new InvalidOperationException(LocalizationService.Get("Registration_IdNumeric") ?? "CoupleId must be numeric.");
         }
 
-        // If trainer reservations are not allowed, include an empty lessons object inside each registration
+        // If trainer reservations are not allowed, include an empty lessons array inside each registration
         if (_trainerReservationNotAllowed)
         {
-            reg["lessons"] = new Dictionary<string, object>();
+            reg["lessons"] = new List<Dictionary<string, object>>();
         }
         else
         {
