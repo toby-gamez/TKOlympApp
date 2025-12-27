@@ -24,6 +24,13 @@
             <Label x:Name="CurrentUserLabel" FontSize="14" Style="{StaticResource MutedLabelStyle}" />
 
             <!-- Debug IDs -->
+
+            <Label x:Name="TrainerReservationNotAllowedLabel" Text="není možna rezervace tréninků" FontAttributes="Bold" TextColor="#b71c1c" IsVisible="False" />
+
+            <Label x:Name="TrainerCountLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}" IsVisible="False" />
+
+            <Label x:Name="EventNameDisplayLabel" FontAttributes="Bold" FontSize="14" IsVisible="False" />
+
             <Label Text="Event ID:" FontAttributes="Bold" />
             <Label x:Name="EventIdLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}" />
 
@@ -38,6 +45,22 @@
                     <DataTemplate>
                         <Border Padding="8" Margin="4">
                             <Label Text="{Binding DisplayText}" />
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Trainer selection: shown when a registration target is selected and trainer reservations are allowed -->
+            <Label x:Name="TrainerSelectionHeader" Text="{svc:Translate Registration_Trainer_Label}" FontAttributes="Bold" IsVisible="False" />
+            <CollectionView x:Name="TrainerSelectionCollection" SelectionMode="None" IsVisible="False">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Padding="8" Margin="4">
+                            <HorizontalStackLayout Spacing="12" VerticalOptions="Center">
+                                <Label Text="{Binding Name}" VerticalOptions="Center" />
+                                <Label Text="{Binding Count}" VerticalOptions="Center" />
+                                <Stepper Minimum="0" Maximum="10" Increment="1" Value="{Binding Count, Mode=TwoWay}" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
                         </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>

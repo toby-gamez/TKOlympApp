@@ -15,7 +15,7 @@ public static class EventService
             var query = new GraphQlRequest
         {
             // Request person names and couple names (including first name) and instance trainers for registrations
-            Query = "query MyQuery($id: BigInt!) { event(id: $id) { capacity createdAt description eventRegistrations { totalCount nodes { couple { status man { name firstName lastName eventInstanceTrainersList { name lessonPrice { amount currency } } } woman { name firstName lastName eventInstanceTrainersList { name lessonPrice { amount currency } } } } eventLessonDemandsByRegistrationIdList { lessonCount trainer { name } } person { firstName lastName } } } isPublic isRegistrationOpen isVisible __typename name summary locationText eventTrainersList { lessonPrice { amount currency } name } updatedAt since until } }",
+            Query = "query MyQuery($id: BigInt!) { event(id: $id) { capacity createdAt description eventRegistrations { totalCount nodes { couple { status man { name firstName lastName eventInstanceTrainersList { name lessonPrice { amount currency } } } woman { name firstName lastName eventInstanceTrainersList { name lessonPrice { amount currency } } } } eventLessonDemandsByRegistrationIdList { lessonCount trainer { id name } } person { firstName lastName } } } isPublic isRegistrationOpen isVisible __typename name summary locationText eventTrainersList { id name lessonPrice { amount currency } updatedAt } updatedAt since until } }",
             Variables = new Dictionary<string, object> { { "id", id } }
         };
 
@@ -100,6 +100,7 @@ public static class EventService
 
     // Trainers at the event level
     public sealed record EventTrainer(
+        [property: JsonPropertyName("id")] string? Id,
         [property: JsonPropertyName("name")] string? Name,
         [property: JsonPropertyName("lessonPrice")] Money? LessonPrice,
         [property: JsonPropertyName("updatedAt")] DateTime? UpdatedAt

@@ -221,8 +221,7 @@ public partial class EventPage : ContentPage
             RegistrationOpenLabel.IsVisible = ev.IsRegistrationOpen;
             var registered = ev.EventRegistrations?.TotalCount ?? 0;
             var capacity = ev.Capacity;
-            var hasSpace = !capacity.HasValue || registered < capacity.Value;
-            RegisterButton.IsVisible = ev.IsRegistrationOpen && hasSpace;
+            RegisterButton.IsVisible = ev.IsRegistrationOpen;
             PublicLabel.IsVisible = ev.IsPublic;
             VisibleLabel.IsVisible = ev.IsVisible;
             if (capacity.HasValue)

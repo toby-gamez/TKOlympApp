@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Net.Http;
+using System.ComponentModel;
 
 namespace TkOlympApp.Pages;
 
@@ -18,6 +19,9 @@ public partial class RegistrationPage : ContentPage
 {
     private long _eventId;
     private RegistrationOption? _selectedOption;
+    private bool _trainerReservationNotAllowed = false;
+    private EventService.EventDetails? _currentEvent;
+    private TrainerOption? _selectedTrainer;
     
 
     public long EventId
@@ -36,6 +40,36 @@ public partial class RegistrationPage : ContentPage
     }
 
     private sealed record RegistrationOption(string DisplayText, string Kind, string? Id);
+    private sealed class TrainerOption : INotifyPropertyChanged
+    {
+        private int _count;
+        public string DisplayText { get; set; }
+        public string Name { get; set; }
+        public string? Id { get; set; }
+        public int Count
+        {
+            get => _count;
+            set
+            {
+                if (_count != value)
+                {
+                    _count = value;
+                    OnPropertyChanged(nameof(Count));
+                }
+            }
+        }
+
+        public TrainerOption(string displayText, string name, int count, string? id)
+        {
+            DisplayText = displayText;
+            Name = name;
+            _count = count;
+            Id = id;
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        private void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
 
 
     private async Task LoadAsync()
@@ -44,6 +78,7 @@ public partial class RegistrationPage : ContentPage
         {
             if (EventId == 0) return;
             var ev = await EventService.GetEventAsync(EventId);
+            _currentEvent = ev;
             if (ev == null)
             {
                 TitleLabel.Text = LocalizationService.Get("NotFound_Event");
@@ -66,8 +101,52 @@ public partial class RegistrationPage : ContentPage
             }
             catch { }
 
+                    // Show trainer count
+                    var trainerCount = ev.EventTrainersList?.Count ?? 0;
+                    try
+                    {
+                        TrainerCountLabel.Text = $"Počet trenérů: {trainerCount}";
+                        TrainerCountLabel.IsVisible = true;
+                    }
+                    catch { }
+
+                    // Show event name (fallback handled below)
+                    try
+                    {
+                        var nameText = string.IsNullOrWhiteSpace(ev.Name) ? (LocalizationService.Get("Event_NoName") ?? "(bez názvu)") : ev.Name;
+                        EventNameDisplayLabel.Text = nameText;
+                        EventNameDisplayLabel.IsVisible = true;
+                    }
+                    catch { }
+
+                    // New logic: if event has no name (empty/null) AND exactly one trainer, show warning
+                    // Do not block registration — mark flag so we can send empty lessons list in the mutation
+                    try
+                    {
+                        var nameMissing = string.IsNullOrWhiteSpace(ev.Name);
+                        if (nameMissing && trainerCount == 1)
+                        {
+                            TrainerReservationNotAllowedLabel.IsVisible = true;
+                            _trainerReservationNotAllowed = true;
+                            // do not disable registration; allow user to select and confirm
+                        }
+                        else
+                        {
+                            TrainerReservationNotAllowedLabel.IsVisible = false;
+                            _trainerReservationNotAllowed = false;
+                        }
+                    }
+                    catch { }
+
             // Load and show current user info and selection list
             await LoadMyCouplesAsync();
+            // hide trainer selection initially
+            try
+            {
+                TrainerSelectionCollection.IsVisible = false;
+                TrainerSelectionHeader.IsVisible = false;
+            }
+            catch { }
         }
         catch (Exception)
         {
@@ -190,6 +269,20 @@ public partial class RegistrationPage : ContentPage
                 }
             }
             catch { }
+            // When a registration target is selected, show trainer selection if allowed
+            try
+            {
+                if (!_trainerReservationNotAllowed && _currentEvent?.EventTrainersList != null && _currentEvent.EventTrainersList.Count > 0)
+                {
+                    _ = LoadTrainerSelectionAsync();
+                }
+                else
+                {
+                    TrainerSelectionCollection.IsVisible = false;
+                    TrainerSelectionHeader.IsVisible = false;
+                }
+            }
+            catch { }
         }
         else
         {
@@ -199,7 +292,55 @@ public partial class RegistrationPage : ContentPage
             PersonIdLabel.IsVisible = false;
             CoupleIdLabel.Text = string.Empty;
             CoupleIdLabel.IsVisible = false;
+            try
+            {
+                TrainerSelectionCollection.IsVisible = false;
+                TrainerSelectionHeader.IsVisible = false;
+            }
+            catch { }
         }
+    }
+
+    private async Task LoadTrainerSelectionAsync()
+    {
+        try
+        {
+            var ev = _currentEvent;
+            if (ev == null) return;
+
+            // Build trainer options from event's trainer list (prefer ids when available)
+            var options = new List<TrainerOption>();
+            if (ev.EventTrainersList != null)
+            {
+                foreach (var t in ev.EventTrainersList.OrderBy(x => x?.Name))
+                {
+                    var name = t?.Name ?? string.Empty;
+                    options.Add(new TrainerOption(name, name, 0, t?.Id));
+                }
+            }
+
+            TrainerSelectionCollection.ItemsSource = options;
+            TrainerSelectionHeader.IsVisible = true;
+            TrainerSelectionCollection.IsVisible = true;
+        }
+        catch { }
+    }
+
+    private void OnTrainerSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        // Not used anymore (selection disabled)
+    }
+
+    private void OnTrainerCountChanged(object sender, ValueChangedEventArgs e)
+    {
+        try
+        {
+            if (sender is Stepper s && s.BindingContext is TrainerOption to)
+            {
+                to.Count = (int)e.NewValue;
+            }
+        }
+        catch { }
     }
 
     private async Task<bool> CreateRegistrationAsync(string? personId, string? coupleId)
@@ -229,6 +370,40 @@ public partial class RegistrationPage : ContentPage
             else throw new InvalidOperationException(LocalizationService.Get("Registration_IdNumeric") ?? "CoupleId must be numeric.");
         }
 
+        // If trainer reservations are not allowed, include an empty lessons object inside each registration
+        if (_trainerReservationNotAllowed)
+        {
+            reg["lessons"] = new Dictionary<string, object>();
+        }
+        else
+        {
+            try
+            {
+                // collect chosen lessons per trainer (trainerId -> lessonCount)
+                var lessonsList = new List<Dictionary<string, object>>();
+                if (TrainerSelectionCollection.ItemsSource is IEnumerable<TrainerOption> tos)
+                {
+                    foreach (var t in tos)
+                    {
+                        if (t != null && t.Count > 0)
+                        {
+                            if (string.IsNullOrWhiteSpace(t.Id))
+                            {
+                                throw new InvalidOperationException($"Missing trainerId for trainer: {t.Name}");
+                            }
+                            lessonsList.Add(new Dictionary<string, object>
+                            {
+                                ["trainerId"] = t.Id!,
+                                ["lessonCount"] = t.Count
+                            });
+                        }
+                    }
+                }
+                if (lessonsList.Count > 0) reg["lessons"] = lessonsList;
+            }
+            catch { }
+        }
+
         var clientMutationId = Guid.NewGuid().ToString();
         var variables = new Dictionary<string, object>
         {
@@ -238,6 +413,8 @@ public partial class RegistrationPage : ContentPage
                 ["clientMutationId"] = clientMutationId
             }
         };
+
+        // lessons are now placed inside each registration (`reg`) above
 
         var gql = new Dictionary<string, object>
         {
