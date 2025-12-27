@@ -1,6 +1,7 @@
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Maui.Storage;
@@ -79,6 +80,28 @@ public static class AuthService
         // Persist and set default auth header for future requests
         await SecureStorage.SetAsync("jwt", jwt);
         Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        // After login, try to fetch the user's person id (userProxiesList.person.id) and persist it
+        try
+        {
+            var gqlReq2 = new GraphQlRequest { Query = "query { userProxiesList { person { id } } }" };
+            var json2 = JsonSerializer.Serialize(gqlReq2);
+            using var content2 = new StringContent(json2, Encoding.UTF8, "application/json");
+            using var resp2 = await Client.PostAsync("", content2, ct);
+            resp2.EnsureSuccessStatusCode();
+
+            var body2 = await resp2.Content.ReadAsStringAsync(ct);
+            var options2 = new JsonSerializerOptions(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = true };
+            var parsed = JsonSerializer.Deserialize<GraphQlResponse<UserProxiesData>>(body2, options2);
+            var id = parsed?.Data?.UserProxiesList?.FirstOrDefault()?.Person?.Id;
+            if (!string.IsNullOrWhiteSpace(id))
+            {
+                await UserService.SetCurrentPersonIdAsync(id);
+            }
+        }
+        catch
+        {
+            // non-critical: ignore failures fetching/persisting person id
+        }
         return jwt;
     }
 
@@ -119,5 +142,20 @@ public static class AuthService
     private sealed class LoginResult
     {
         [JsonPropertyName("jwt")] public string? Jwt { get; set; }
+    }
+
+    private sealed class UserProxiesData
+    {
+        [JsonPropertyName("userProxiesList")] public UserProxy[]? UserProxiesList { get; set; }
+    }
+
+    private sealed class UserProxy
+    {
+        [JsonPropertyName("person")] public Person? Person { get; set; }
+    }
+
+    private sealed class Person
+    {
+        [JsonPropertyName("id")] public string? Id { get; set; }
     }
 }

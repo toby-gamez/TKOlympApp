@@ -158,6 +158,7 @@ public partial class RegistrationPage : ContentPage
     {
         try
         {
+            try { await UserService.InitializeAsync(); } catch { }
             var me = await UserService.GetCurrentUserAsync();
             if (me == null)
             {

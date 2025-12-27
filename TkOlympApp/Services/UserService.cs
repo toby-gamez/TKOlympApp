@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Numerics;
+using Microsoft.Maui.Storage;
 
 namespace TkOlympApp.Services;
 
@@ -19,6 +20,40 @@ public static class UserService
     public static void SetCurrentPersonId(string? personId)
     {
         CurrentPersonId = personId;
+        _ = SetCurrentPersonIdAsync(personId);
+    }
+
+    public static async Task SetCurrentPersonIdAsync(string? personId)
+    {
+        CurrentPersonId = personId;
+        try
+        {
+            if (string.IsNullOrEmpty(personId))
+            {
+                await SecureStorage.SetAsync("currentPersonId", string.Empty);
+            }
+            else
+            {
+                await SecureStorage.SetAsync("currentPersonId", personId);
+            }
+        }
+        catch
+        {
+            // Ignore secure storage errors to avoid crashing UI; persistence is best-effort.
+        }
+    }
+
+    public static async Task InitializeAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            var stored = await SecureStorage.GetAsync("currentPersonId");
+            if (!string.IsNullOrWhiteSpace(stored)) CurrentPersonId = stored;
+        }
+        catch
+        {
+            // ignore
+        }
     }
 
         public static async Task<CurrentUser?> GetCurrentUserAsync(CancellationToken ct = default)
