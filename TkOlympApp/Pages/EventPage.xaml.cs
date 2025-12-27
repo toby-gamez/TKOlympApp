@@ -181,7 +181,7 @@ public partial class EventPage : ContentPage
                 {
                     var startRange = DateTime.Now.Date.AddDays(-30);
                     var endRange = DateTime.Now.Date.AddDays(365);
-                    var instances = await EventService.GetMyEventInstancesForRangeAsync(startRange, endRange, onlyMine: true);
+                    var instances = await EventService.GetMyEventInstancesForRangeAsync(startRange, endRange);
                     var match = instances.FirstOrDefault(i => i.Event?.Id == EventId);
                     if (match != null)
                     {

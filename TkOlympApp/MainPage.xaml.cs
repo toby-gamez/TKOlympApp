@@ -96,7 +96,7 @@ public partial class MainPage : ContentPage
             List<EventService.EventInstance> events;
             if (_onlyMine)
             {
-                events = await EventService.GetMyEventInstancesForRangeAsync(start, end, onlyMine: true);
+                events = await EventService.GetMyEventInstancesForRangeAsync(start, end);
             }
             else
             {

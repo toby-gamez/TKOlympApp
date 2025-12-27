@@ -109,7 +109,6 @@ public static class EventService
     public static async Task<List<EventInstance>> GetMyEventInstancesForRangeAsync(
         DateTime startRange,
         DateTime endRange,
-        bool onlyMine = true,
         int? first = null,
         int? offset = null,
         string? onlyType = null,
@@ -119,7 +118,6 @@ public static class EventService
         {
             {"startRange", startRange.ToString("o")},
             {"endRange", endRange.ToString("o")},
-            {"onlyMine", onlyMine}
         };
 
         if (first.HasValue) variables["first"] = first.Value;
@@ -128,7 +126,7 @@ public static class EventService
 
             var query = new GraphQlRequest
         {
-            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $onlyMine: Boolean, $first: Int, $offset: Int, $onlyType: EventType) { myEventInstancesForRangeList(startRange: $startRange, endRange: $endRange, onlyMine: $onlyMine, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled locationId since until updatedAt event { id description name locationText isRegistrationOpen isPublic guestPrice { amount currency } eventTrainersList { name } eventRegistrationsList { person { name } couple { man { lastName } woman { lastName } } } } tenant { couplesList { man { firstName name lastName } woman { name lastName firstName } } } } }",
+            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $first: Int, $offset: Int, $onlyType: EventType) { myEventInstancesForRangeList(startRange: $startRange, endRange: $endRange, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled locationId since until updatedAt event { id description name locationText isRegistrationOpen isPublic guestPrice { amount currency } eventTrainersList { name } eventRegistrationsList { person { name } couple { man { lastName } woman { lastName } } } } tenant { couplesList { man { firstName name lastName } woman { name lastName firstName } } } } }",
             Variables = variables
         };
 
