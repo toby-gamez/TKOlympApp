@@ -97,7 +97,6 @@ public partial class RegistrationPage : ContentPage
             try
             {
                 EventIdLabel.Text = EventId != 0 ? EventId.ToString() : string.Empty;
-                EventIdLabel.IsVisible = !string.IsNullOrWhiteSpace(EventIdLabel.Text);
             }
             catch { }
 
@@ -106,7 +105,6 @@ public partial class RegistrationPage : ContentPage
                     try
                     {
                         TrainerCountLabel.Text = $"Počet trenérů: {trainerCount}";
-                        TrainerCountLabel.IsVisible = true;
                     }
                     catch { }
 
@@ -115,7 +113,6 @@ public partial class RegistrationPage : ContentPage
                     {
                         var nameText = string.IsNullOrWhiteSpace(ev.Name) ? (LocalizationService.Get("Event_NoName") ?? "(bez názvu)") : ev.Name;
                         EventNameDisplayLabel.Text = nameText;
-                        EventNameDisplayLabel.IsVisible = true;
                     }
                     catch { }
 
@@ -185,13 +182,11 @@ public partial class RegistrationPage : ContentPage
                 if (string.IsNullOrWhiteSpace(selectedPersonId))
                 {
                     PersonIdLabel.Text = "není";
-                    PersonIdLabel.IsVisible = true;
                     ConfirmButton.IsEnabled = false;
                 }
                 else
                 {
                     PersonIdLabel.Text = selectedPersonId;
-                    PersonIdLabel.IsVisible = true;
                 }
             }
             catch { PersonIdLabel.IsVisible = false; }
@@ -280,16 +275,12 @@ public partial class RegistrationPage : ContentPage
                 if (ro.Kind == "self")
                 {
                     PersonIdLabel.Text = ro.Id ?? string.Empty;
-                    PersonIdLabel.IsVisible = !string.IsNullOrWhiteSpace(PersonIdLabel.Text);
                     CoupleIdLabel.Text = string.Empty;
-                    CoupleIdLabel.IsVisible = false;
                 }
                 else if (ro.Kind == "couple")
                 {
                     CoupleIdLabel.Text = ro.Id ?? string.Empty;
-                    CoupleIdLabel.IsVisible = !string.IsNullOrWhiteSpace(CoupleIdLabel.Text);
                     PersonIdLabel.Text = string.Empty;
-                    PersonIdLabel.IsVisible = false;
                 }
             }
             catch { }
@@ -313,9 +304,7 @@ public partial class RegistrationPage : ContentPage
             _selectedOption = null;
             ConfirmButton.IsEnabled = false;
             PersonIdLabel.Text = string.Empty;
-            PersonIdLabel.IsVisible = false;
             CoupleIdLabel.Text = string.Empty;
-            CoupleIdLabel.IsVisible = false;
             try
             {
                 TrainerSelectionCollection.IsVisible = false;
@@ -362,6 +351,30 @@ public partial class RegistrationPage : ContentPage
             if (sender is Stepper s && s.BindingContext is TrainerOption to)
             {
                 to.Count = (int)e.NewValue;
+            }
+        }
+        catch { }
+    }
+
+    private void OnTrainerPlusClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            if (sender is Button b && b.BindingContext is TrainerOption to)
+            {
+                if (to.Count < 10) to.Count = to.Count + 1;
+            }
+        }
+        catch { }
+    }
+
+    private void OnTrainerMinusClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            if (sender is Button b && b.BindingContext is TrainerOption to)
+            {
+                if (to.Count > 0) to.Count = to.Count - 1;
             }
         }
         catch { }
@@ -447,12 +460,7 @@ public partial class RegistrationPage : ContentPage
         };
 
         var json = JsonSerializer.Serialize(gql, options);
-        try
-        {
-            // show mutation/variables to user before sending
-            MutationPreview.Text = json;
-        }
-        catch { }
+        // Do not show raw GraphQL/mutation payload in UI (MutationPreview hidden)
 
         using var content = new StringContent(json, Encoding.UTF8, "application/json");
         using var resp = await AuthService.Http.PostAsync("", content);

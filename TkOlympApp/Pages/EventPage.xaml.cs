@@ -70,7 +70,6 @@ public partial class EventPage : ContentPage
         InitializeComponent();
         RegistrationsCollection.ItemsSource = _registrations;
         TrainersCollection.ItemsSource = _trainers;
-        try { RegisterButton.Clicked += OnRegisterButtonClicked; } catch { }
     }
 
     protected override async void OnAppearing()
