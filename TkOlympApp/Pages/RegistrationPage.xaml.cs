@@ -36,7 +36,22 @@ public partial class RegistrationPage : ContentPage
 
     public RegistrationPage()
     {
-        InitializeComponent();
+        try
+        {
+            InitializeComponent();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"RegistrationPage XAML init error: {ex}");
+            try
+            {
+                Device.BeginInvokeOnMainThread(async () =>
+                {
+                    try { await DisplayAlert("XAML Error", ex.Message, "OK"); } catch { }
+                });
+            }
+            catch { }
+        }
     }
 
     private sealed record RegistrationOption(string DisplayText, string Kind, string? Id);
@@ -256,8 +271,7 @@ public partial class RegistrationPage : ContentPage
             if (success)
             {
                 var msg = LocalizationService.Get("Registration_Confirm_Message") ?? "Registrace odeslána";
-                await DisplayAlert(LocalizationService.Get("Registration_Confirm_Title") ?? "Registrace", msg, LocalizationService.Get("Button_OK") ?? "OK");
-                try { await Shell.Current.GoToAsync(".."); } catch { }
+                await ShowSuccessAndGoBackAsync(msg);
             }
         }
         catch { }
@@ -486,6 +500,29 @@ public partial class RegistrationPage : ContentPage
             }
             return resp.IsSuccessStatusCode;
         }
+    }
+
+    private async Task ShowSuccessAndGoBackAsync(string message)
+    {
+        try
+        {
+            // set localized message if available
+            SuccessText.Text = message;
+        }
+        catch { }
+
+        try
+        {
+            SuccessOverlay.IsVisible = true;
+            // start from a small scale for a pop animation
+            SuccessIcon.Scale = 0.6;
+            await SuccessIcon.ScaleTo(1.1, 300, Easing.CubicOut);
+            await SuccessIcon.ScaleTo(1.0, 150, Easing.CubicIn);
+            // keep overlay briefly visible then navigate back
+            await Task.Delay(900);
+            try { await Shell.Current.GoToAsync(".."); } catch { }
+        }
+        catch { }
     }
 
     private sealed class GraphQlResponse<T>

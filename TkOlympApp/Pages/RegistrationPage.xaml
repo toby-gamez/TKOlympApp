@@ -5,8 +5,9 @@
              x:Class="TkOlympApp.Pages.RegistrationPage"
              Title="{svc:Translate RegistrationPage_Title}">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="12">
+    <Grid>
+        <ScrollView>
+            <VerticalStackLayout Padding="20" Spacing="12">
             <Label x:Name="TitleLabel" FontAttributes="Bold" FontSize="20" Text="{svc:Translate RegistrationPage_Title}" />
 
             <Border Padding="12" Margin="8,6">
@@ -71,8 +72,23 @@
 
             <Button x:Name="ConfirmButton" Text="{svc:Translate Registration_Button_Text}" IsEnabled="False" HorizontalOptions="Fill" Clicked="OnConfirmClicked" />
             <Label Text="{svc:Translate Label_GraphQL}" FontAttributes="Bold" Margin="0,8,0,0" IsVisible="False" />
-            <Editor x:Name="MutationPreview" IsReadOnly="True" AutoSize="TextChanges" HeightRequest="140" Margin="0,4,0,0" IsVisible="False" />
-        </VerticalStackLayout>
-    </ScrollView>
+                <Editor x:Name="MutationPreview" IsReadOnly="True" AutoSize="TextChanges" HeightRequest="140" Margin="0,4,0,0" IsVisible="False" />
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Fullscreen success overlay (hidden by default) -->
+        <Grid x:Name="SuccessOverlay" IsVisible="False" BackgroundColor="#AA000000" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand">
+            <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="12" Padding="24">
+                <!-- Check inside a green circular border so it always renders -->
+                <Border BackgroundColor="#2e7d32" WidthRequest="160" HeightRequest="160" HorizontalOptions="Center" VerticalOptions="Center">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="80" />
+                    </Border.StrokeShape>
+                    <Label x:Name="SuccessIcon" Text="✔" FontSize="96" TextColor="White" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+                <Label x:Name="SuccessText" Text="Registrace odeslána" TextColor="#c8e6c9" FontAttributes="Bold" FontSize="20" HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+        </Grid>
+    </Grid>
 
 </ContentPage>
