@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:svc="clr-namespace:TkOlympApp.Services"
+             x:Class="TkOlympApp.Pages.DeleteRegistrationsPage"
+             Title="{svc:Translate DeleteRegistrations_Title}">
+
+    <VerticalStackLayout Padding="16" Spacing="12">
+        <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" HorizontalOptions="Center" />
+
+        <Label Text="{svc:Translate DeleteRegistrations_Description}" />
+
+        <CollectionView x:Name="RegistrationsCollection" SelectionMode="Single" HeightRequest="400" SelectionChanged="OnSelectionChanged">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <VerticalStackLayout Padding="12" Spacing="4">
+                        <Label Text="{Binding Text}" FontAttributes="Bold" />
+                        <Label Text="{Binding Secondary}" FontSize="12" />
+                    </VerticalStackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Button x:Name="DeleteButton" Text="{svc:Translate Delete_Button_Text}" IsEnabled="False" Clicked="OnDeleteClicked" />
+    </VerticalStackLayout>
+
+</ContentPage>

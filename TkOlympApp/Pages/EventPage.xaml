@@ -42,6 +42,12 @@
             <!-- Register Button (visible when registration is open) -->
             <Button x:Name="RegisterButton" Text="{svc:Translate Registration_Button_Text}" IsVisible="False" Margin="8,6" HorizontalOptions="Fill" Clicked="OnRegisterButtonClicked" />
 
+            <!-- Actions shown when already registered: Edit + Delete on one row (hidden by default) -->
+            <HorizontalStackLayout x:Name="RegistrationActionsRow" IsVisible="False" Spacing="12" Margin="8,6" HorizontalOptions="Fill">
+                <Button x:Name="EditRegistrationButton" Text="{svc:Translate Edit_Button_Text}" HorizontalOptions="FillAndExpand" />
+                <Button x:Name="DeleteRegistrationButton" Text="{svc:Translate Delete_Button_Text}" HorizontalOptions="FillAndExpand" Clicked="OnDeleteRegistrationsClicked" />
+            </HorizontalStackLayout>
+
             <!-- Description Card -->
             <Border x:Name="DescFrame" Padding="12" Margin="8,6"  IsVisible="False">
                 <Border.StrokeShape>

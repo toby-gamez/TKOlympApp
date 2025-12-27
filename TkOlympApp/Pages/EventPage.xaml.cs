@@ -255,6 +255,7 @@ public partial class EventPage : ContentPage
             TrainersFrame.IsVisible = _trainers.Count > 0;
 
             _registrations.Clear();
+            var seen = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var n in ev.EventRegistrations?.Nodes ?? new List<EventService.EventRegistrationNode>())
             {
                 var man = n.Couple?.Man?.Name?.Trim() ?? string.Empty;
@@ -331,10 +332,82 @@ public partial class EventPage : ContentPage
                 }
 
                 var secondary = parts.Count > 0 ? string.Join(" • ", parts) : null;
-                _registrations.Add(new RegistrationRow { Text = text, Secondary = secondary, Trainers = trainerParts });
+                var key = (text ?? string.Empty) + "|" + (secondary ?? string.Empty);
+                if (!seen.Contains(key))
+                {
+                    seen.Add(key);
+                    _registrations.Add(new RegistrationRow { Text = text, Secondary = secondary, Trainers = trainerParts });
+                }
             }
 
             RegistrationsFrame.IsVisible = _registrations.Count > 0;
+
+            // Determine whether current user (or one of their active couples) is registered for this event
+            try
+            {
+                await UserService.InitializeAsync();
+                var me = await UserService.GetCurrentUserAsync();
+                var myFirst = me?.UJmeno?.Trim() ?? string.Empty;
+                var myLast = me?.UPrijmeni?.Trim() ?? string.Empty;
+                var myFull = string.IsNullOrWhiteSpace(myFirst) ? myLast : string.IsNullOrWhiteSpace(myLast) ? myFirst : (myFirst + " " + myLast).Trim();
+
+                var myCouples = new List<UserService.CoupleInfo>();
+                try { myCouples = await UserService.GetActiveCouplesFromUsersAsync(); } catch { }
+
+                bool userRegistered = false;
+
+                foreach (var node in ev.EventRegistrations?.Nodes ?? new List<EventService.EventRegistrationNode>())
+                {
+                    if (node == null) continue;
+                    // Check person-based registration (match by first/last name)
+                    var pFirst = node.Person?.FirstName?.Trim() ?? string.Empty;
+                    var pLast = node.Person?.LastName?.Trim() ?? string.Empty;
+                    var pFull = string.IsNullOrWhiteSpace(pFirst) ? pLast : string.IsNullOrWhiteSpace(pLast) ? pFirst : (pFirst + " " + pLast).Trim();
+                    if (!string.IsNullOrWhiteSpace(myFull) && !string.IsNullOrWhiteSpace(pFull) && string.Equals(myFull, pFull, StringComparison.OrdinalIgnoreCase))
+                    {
+                        userRegistered = true;
+                        break;
+                    }
+
+                    // Check couple-based registration (match by man/woman names against user's active couples)
+                    var man = node.Couple?.Man?.Name?.Trim() ?? string.Empty;
+                    var woman = node.Couple?.Woman?.Name?.Trim() ?? string.Empty;
+                    if (!string.IsNullOrWhiteSpace(man) || !string.IsNullOrWhiteSpace(woman))
+                    {
+                        foreach (var c in myCouples)
+                        {
+                            try
+                            {
+                                var myMan = c.ManName?.Trim() ?? string.Empty;
+                                var myWoman = c.WomanName?.Trim() ?? string.Empty;
+                                // Compare trimmed case-insensitive both members if available, otherwise compare single-name entries
+                                bool manMatch = !string.IsNullOrWhiteSpace(man) && !string.IsNullOrWhiteSpace(myMan) && string.Equals(man, myMan, StringComparison.OrdinalIgnoreCase);
+                                bool womanMatch = !string.IsNullOrWhiteSpace(woman) && !string.IsNullOrWhiteSpace(myWoman) && string.Equals(woman, myWoman, StringComparison.OrdinalIgnoreCase);
+                                if ((manMatch && womanMatch) || (manMatch && string.IsNullOrWhiteSpace(myWoman)) || (womanMatch && string.IsNullOrWhiteSpace(myMan)))
+                                {
+                                    userRegistered = true;
+                                    break;
+                                }
+                                // Fallback: compare combined "man - woman" style
+                                var combined = (!string.IsNullOrWhiteSpace(man) && !string.IsNullOrWhiteSpace(woman)) ? (man + " - " + woman) : (man + woman);
+                                var myCombined = (!string.IsNullOrWhiteSpace(myMan) && !string.IsNullOrWhiteSpace(myWoman)) ? (myMan + " - " + myWoman) : (myMan + myWoman);
+                                if (!string.IsNullOrWhiteSpace(combined) && !string.IsNullOrWhiteSpace(myCombined) && string.Equals(combined, myCombined, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    userRegistered = true;
+                                    break;
+                                }
+                            }
+                            catch { }
+                        }
+                        if (userRegistered) break;
+                    }
+                }
+
+                RegistrationActionsRow.IsVisible = userRegistered;
+                // Show Register button only when registration is open and user isn't already registered
+                RegisterButton.IsVisible = ev.IsRegistrationOpen && !userRegistered;
+            }
+            catch { }
         }
         catch (Exception ex)
         {
@@ -367,6 +440,19 @@ public partial class EventPage : ContentPage
             await Shell.Current.GoToAsync($"{nameof(RegistrationPage)}?id={EventId}");
         }
         catch { }
+    }
+
+    private async void OnDeleteRegistrationsClicked(object? sender, EventArgs e)
+    {
+            try
+            {
+                await Shell.Current.GoToAsync($"{nameof(DeleteRegistrationsPage)}?eventId={EventId}");
+            }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Navigation to DeleteRegistrationsPage failed: {ex}");
+            try { await DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+        }
     }
 
     private static string? HtmlToPlainText(string? html)
