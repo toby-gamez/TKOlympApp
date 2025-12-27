@@ -206,42 +206,67 @@ public partial class RegistrationPage : ContentPage
     {
         var options = new JsonSerializerOptions(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = true };
 
-        var eventReg = new Dictionary<string, object>
+        // Ensure we have either a personId or coupleId to send
+        if (string.IsNullOrWhiteSpace(personId) && string.IsNullOrWhiteSpace(coupleId))
         {
-            ["eventId"] = EventId
-        };
-        if (!string.IsNullOrWhiteSpace(personId)) eventReg["personId"] = personId!;
-        if (!string.IsNullOrWhiteSpace(coupleId)) eventReg["coupleId"] = coupleId!;
+            throw new InvalidOperationException(LocalizationService.Get("Registration_NoSelection") ?? "Vyberte, koho chcete registrovat.");
+        }
 
+        // Build variables payload with IDs as strings to avoid escaping issues
+        var reg = new Dictionary<string, object>
+        {
+            ["eventId"] = EventId.ToString()
+        };
+
+        if (!string.IsNullOrWhiteSpace(personId))
+        {
+            if (long.TryParse(personId, out var pid)) reg["personId"] = pid.ToString();
+            else throw new InvalidOperationException(LocalizationService.Get("Registration_IdNumeric") ?? "PersonId must be numeric.");
+        }
+        if (!string.IsNullOrWhiteSpace(coupleId))
+        {
+            if (long.TryParse(coupleId, out var cid)) reg["coupleId"] = cid.ToString();
+            else throw new InvalidOperationException(LocalizationService.Get("Registration_IdNumeric") ?? "CoupleId must be numeric.");
+        }
+
+        var clientMutationId = Guid.NewGuid().ToString();
         var variables = new Dictionary<string, object>
         {
             ["input"] = new Dictionary<string, object>
             {
-                ["eventRegistration"] = eventReg
+                ["registrations"] = new List<Dictionary<string, object>> { reg },
+                ["clientMutationId"] = clientMutationId
             }
         };
 
         var gql = new Dictionary<string, object>
         {
-            ["query"] = "mutation CreateEventRegistration($input: CreateEventRegistrationInput!) { createEventRegistration(input: $input) { eventRegistration { id } } }",
+            ["query"] = "mutation RegisterToEvent($input: RegisterToEventManyInput!) { registerToEventMany(input: $input) { eventRegistrations { id } } }",
             ["variables"] = variables
         };
 
         var json = JsonSerializer.Serialize(gql, options);
+        try
+        {
+            // show mutation/variables to user before sending
+            MutationPreview.Text = json;
+        }
+        catch { }
+
         using var content = new StringContent(json, Encoding.UTF8, "application/json");
         using var resp = await AuthService.Http.PostAsync("", content);
         var body = await resp.Content.ReadAsStringAsync();
 
         try
         {
-            var data = JsonSerializer.Deserialize<GraphQlResponse<CreateEventRegistrationData>>(body, options);
+            var data = JsonSerializer.Deserialize<GraphQlResponse<RegisterToEventManyData>>(body, options);
             if (data?.Errors != null && data.Errors.Count > 0)
             {
                 var msg = data.Errors[0].Message ?? LocalizationService.Get("GraphQL_UnknownError");
                 throw new InvalidOperationException(msg);
             }
-            // success if we have an id
-            return data?.Data?.CreateEventRegistration?.EventRegistration?.Id != null;
+            // success if we have at least one returned registration id
+            return data?.Data?.RegisterToEventMany?.EventRegistrations != null && data.Data.RegisterToEventMany.EventRegistrations.Count > 0;
         }
         catch (JsonException)
         {
@@ -264,14 +289,14 @@ public partial class RegistrationPage : ContentPage
         [JsonPropertyName("message")] public string? Message { get; set; }
     }
 
-    private sealed class CreateEventRegistrationData
+    private sealed class RegisterToEventManyData
     {
-        [JsonPropertyName("createEventRegistration")] public CreateEventRegistrationPayload? CreateEventRegistration { get; set; }
+        [JsonPropertyName("registerToEventMany")] public RegisterToEventManyPayload? RegisterToEventMany { get; set; }
     }
 
-    private sealed class CreateEventRegistrationPayload
+    private sealed class RegisterToEventManyPayload
     {
-        [JsonPropertyName("eventRegistration")] public EventRegistrationResult? EventRegistration { get; set; }
+        [JsonPropertyName("eventRegistrations")] public List<EventRegistrationResult>? EventRegistrations { get; set; }
     }
 
     private sealed class EventRegistrationResult

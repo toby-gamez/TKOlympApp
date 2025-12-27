@@ -44,6 +44,8 @@
             </CollectionView>
 
             <Button x:Name="ConfirmButton" Text="{svc:Translate Registration_Button_Text}" IsEnabled="False" HorizontalOptions="Fill" Clicked="OnConfirmClicked" />
+            <Label Text="GraphQL" FontAttributes="Bold" Margin="0,8,0,0" />
+            <Editor x:Name="MutationPreview" IsReadOnly="True" AutoSize="TextChanges" HeightRequest="140" Margin="0,4,0,0" />
         </VerticalStackLayout>
     </ScrollView>
 
