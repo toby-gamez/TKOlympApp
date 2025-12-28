@@ -21,7 +21,6 @@ public partial class RegistrationPage : ContentPage
     private RegistrationOption? _selectedOption;
     private bool _trainerReservationNotAllowed = false;
     private EventService.EventDetails? _currentEvent;
-    private TrainerOption? _selectedTrainer;
     
 
     public long EventId
@@ -45,9 +44,9 @@ public partial class RegistrationPage : ContentPage
             System.Diagnostics.Debug.WriteLine($"RegistrationPage XAML init error: {ex}");
             try
             {
-                Device.BeginInvokeOnMainThread(async () =>
+                Dispatcher.Dispatch(async () =>
                 {
-                    try { await DisplayAlert("XAML Error", ex.Message, "OK"); } catch { }
+                    try { await DisplayAlertAsync("XAML Error", ex.Message, "OK"); } catch { }
                 });
             }
             catch { }
@@ -182,7 +181,7 @@ public partial class RegistrationPage : ContentPage
             var name = string.IsNullOrWhiteSpace(me.UJmeno) ? me.ULogin : me.UJmeno;
             var surname = string.IsNullOrWhiteSpace(me.UPrijmeni) ? string.Empty : me.UPrijmeni;
             var displayName = string.IsNullOrWhiteSpace(surname) ? name : $"{name} {surname}";
-            string pidDisplay = null;
+            string? pidDisplay = null;
             try { pidDisplay = UserService.CurrentPersonId; } catch { pidDisplay = null; }
             if (string.IsNullOrWhiteSpace(pidDisplay)) pidDisplay = "není";
             displayName = $"{displayName} ({pidDisplay})";
@@ -248,7 +247,7 @@ public partial class RegistrationPage : ContentPage
             if (EventId == 0) return;
             if (_selectedOption == null)
             {
-                await DisplayAlert(LocalizationService.Get("Registration_Error_Title") ?? "Chyba", LocalizationService.Get("Registration_NoSelection") ?? "Vyberte, koho chcete registrovat.", LocalizationService.Get("Button_OK") ?? "OK");
+                await DisplayAlertAsync(LocalizationService.Get("Registration_Error_Title") ?? "Chyba", LocalizationService.Get("Registration_NoSelection") ?? "Vyberte, koho chcete registrovat.", LocalizationService.Get("Button_OK") ?? "OK");
                 return;
             }
 
@@ -264,7 +263,7 @@ public partial class RegistrationPage : ContentPage
             }
             catch (Exception ex)
             {
-                await DisplayAlert(LocalizationService.Get("Registration_Error_Title") ?? "Chyba", ex.Message, LocalizationService.Get("Button_OK") ?? "OK");
+                await DisplayAlertAsync(LocalizationService.Get("Registration_Error_Title") ?? "Chyba", ex.Message, LocalizationService.Get("Button_OK") ?? "OK");
                 return;
             }
 
@@ -516,8 +515,8 @@ public partial class RegistrationPage : ContentPage
             SuccessOverlay.IsVisible = true;
             // start from a small scale for a pop animation
             SuccessIcon.Scale = 0.6;
-            await SuccessIcon.ScaleTo(1.1, 300, Easing.CubicOut);
-            await SuccessIcon.ScaleTo(1.0, 150, Easing.CubicIn);
+            await SuccessIcon.ScaleToAsync(1.1, 300, Easing.CubicOut);
+            await SuccessIcon.ScaleToAsync(1.0, 150, Easing.CubicIn);
             // keep overlay briefly visible then navigate back
             await Task.Delay(900);
             try { await Shell.Current.GoToAsync(".."); } catch { }

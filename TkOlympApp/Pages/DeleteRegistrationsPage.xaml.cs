@@ -40,9 +40,9 @@ public partial class DeleteRegistrationsPage : ContentPage
                 System.Diagnostics.Debug.WriteLine($"DeleteRegistrationsPage XAML init error: {ex}");
                 try
                 {
-                    Device.BeginInvokeOnMainThread(async () =>
+                    Dispatcher.Dispatch(async () =>
                     {
-                        try { await DisplayAlert(LocalizationService.Get("XAML_Error_Title") ?? "XAML Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+                        try { await DisplayAlertAsync(LocalizationService.Get("XAML_Error_Title") ?? "XAML Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
                     });
                 }
                 catch { }
@@ -133,7 +133,7 @@ public partial class DeleteRegistrationsPage : ContentPage
             var body = await resp.Content.ReadAsStringAsync();
             if (!resp.IsSuccessStatusCode)
             {
-                await DisplayAlert(LocalizationService.Get("Error_Loading_Title") ?? "Error", body, LocalizationService.Get("Button_OK") ?? "OK");
+                await DisplayAlertAsync(LocalizationService.Get("Error_Loading_Title") ?? "Error", body, LocalizationService.Get("Button_OK") ?? "OK");
                 return;
             }
 
@@ -238,7 +238,7 @@ public partial class DeleteRegistrationsPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert(LocalizationService.Get("Error_Loading_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK");
+            await DisplayAlertAsync(LocalizationService.Get("Error_Loading_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK");
         }
         finally
         {
@@ -281,7 +281,7 @@ public partial class DeleteRegistrationsPage : ContentPage
             confirmText = LocalizationService.Get("Delete_Confirm_Message") ?? "Smazat registraci?";
         }
 
-        var ok = await DisplayAlert(LocalizationService.Get("Delete_Confirm_Title") ?? "Confirm", confirmText, LocalizationService.Get("Button_OK") ?? "OK", LocalizationService.Get("Button_Cancel") ?? "Cancel");
+        var ok = await DisplayAlertAsync(LocalizationService.Get("Delete_Confirm_Title") ?? "Confirm", confirmText, LocalizationService.Get("Button_OK") ?? "OK", LocalizationService.Get("Button_Cancel") ?? "Cancel");
         if (!ok) return;
 
         try
@@ -311,25 +311,25 @@ public partial class DeleteRegistrationsPage : ContentPage
                 var body = await resp.Content.ReadAsStringAsync();
                 if (!resp.IsSuccessStatusCode)
                 {
-                    await DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", body, LocalizationService.Get("Button_OK") ?? "OK");
+                    await DisplayAlertAsync(LocalizationService.Get("Error_Title") ?? "Error", body, LocalizationService.Get("Button_OK") ?? "OK");
                     return;
                 }
 
                 using var doc = JsonDocument.Parse(body);
                 if (!(doc.RootElement.TryGetProperty("data", out var data) && data.TryGetProperty("deleteEventRegistration", out var del) && del.TryGetProperty("eventRegistration", out var er) && er.TryGetProperty("id", out var idEl)))
                 {
-                    if (doc.RootElement.TryGetProperty("errors", out var errs) && errs.ValueKind == JsonValueKind.Array && errs.GetArrayLength() > 0)
-                    {
-                        var first = errs[0];
-                        var msg = first.TryGetProperty("message", out var m) ? m.GetString() : body;
-                        await DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", msg ?? body, LocalizationService.Get("Button_OK") ?? "OK");
-                        return;
-                    }
-                    else
-                    {
-                        await DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", body, LocalizationService.Get("Button_OK") ?? "OK");
-                        return;
-                    }
+                        if (doc.RootElement.TryGetProperty("errors", out var errs) && errs.ValueKind == JsonValueKind.Array && errs.GetArrayLength() > 0)
+                        {
+                            var first = errs[0];
+                            var msg = first.TryGetProperty("message", out var m) ? m.GetString() : body;
+                            await DisplayAlertAsync(LocalizationService.Get("Error_Title") ?? "Error", msg ?? body, LocalizationService.Get("Button_OK") ?? "OK");
+                            return;
+                        }
+                        else
+                        {
+                            await DisplayAlertAsync(LocalizationService.Get("Error_Title") ?? "Error", body, LocalizationService.Get("Button_OK") ?? "OK");
+                            return;
+                        }
                 }
             }
 
@@ -345,7 +345,7 @@ public partial class DeleteRegistrationsPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK");
+            await DisplayAlertAsync(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK");
         }
     }
 }

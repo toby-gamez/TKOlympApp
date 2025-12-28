@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Maui.Controls;
 using TkOlympApp.Services;
 
@@ -40,22 +41,26 @@ public partial class LanguagePage : ContentPage
         if (e.CurrentSelection == null || e.CurrentSelection.Count == 0) return;
         if (e.CurrentSelection[0] is not LangItem it) return;
 
-        try
-        {
-            LocalizationService.ApplyLanguage(it.Code);
-            await DisplayAlert(LocalizationService.Get("Language_Title") ?? "Language", LocalizationService.Get("Language_Choose") ?? "Language changed", LocalizationService.Get("Button_OK") ?? "OK");
-
-            // Recreate Shell/MainPage so XAML markup extensions re-evaluate with new culture
             try
             {
-                Application.Current.MainPage = new AppShell();
+                LocalizationService.ApplyLanguage(it.Code);
+                await DisplayAlertAsync(LocalizationService.Get("Language_Title") ?? "Language", LocalizationService.Get("Language_Choose") ?? "Language changed", LocalizationService.Get("Button_OK") ?? "OK");
+
+                // Recreate Shell/MainPage so XAML markup extensions re-evaluate with new culture
+                try
+                {
+                    var win = Application.Current?.Windows?.FirstOrDefault();
+                    if (win != null)
+                        win.Page = new AppShell();
+                    else
+                        try { await Shell.Current.GoToAsync(".."); } catch { /* ignore */ }
+                }
+                catch
+                {
+                    // fallback: try navigate back
+                    try { await Shell.Current.GoToAsync(".."); } catch { /* ignore */ }
+                }
             }
-            catch
-            {
-                // fallback: try navigate back
-                try { await Shell.Current.GoToAsync(".."); } catch { /* ignore */ }
-            }
-        }
         catch
         {
             // ignore

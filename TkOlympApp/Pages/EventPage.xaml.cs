@@ -201,7 +201,7 @@ public partial class EventPage : ContentPage
                 range = sinceText;
             else if (!string.IsNullOrWhiteSpace(untilText))
                 range = untilText;
-            DateRangeLabel.Text = (LocalizationService.Get("Event_DateRange_Prefix") ?? "Termín: ") + range;
+            DateRangeLabel.Text = (LocalizationService.Get("Event_DateRange_Prefix") ?? "Termín: ") + (range ?? string.Empty);
             DateRangeLabel.IsVisible = !string.IsNullOrWhiteSpace(range);
             // When using FormattedText the Label.Text remains empty; check original HTML fields instead
             DescFrame.IsVisible = !string.IsNullOrWhiteSpace(ev.Description);
@@ -336,7 +336,7 @@ public partial class EventPage : ContentPage
                 if (!seen.Contains(key))
                 {
                     seen.Add(key);
-                    _registrations.Add(new RegistrationRow { Text = text, Secondary = secondary, Trainers = trainerParts });
+                    _registrations.Add(new RegistrationRow { Text = text ?? string.Empty, Secondary = secondary, Trainers = trainerParts });
                 }
             }
 
@@ -451,7 +451,7 @@ public partial class EventPage : ContentPage
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Navigation to DeleteRegistrationsPage failed: {ex}");
-            try { await DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+            try { await DisplayAlertAsync(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
         }
     }
 
