@@ -168,4 +168,15 @@
   <data name="Label_CoupleId" xml:space="preserve"><value>Couple ID:</value></data>
   <data name="Label_GraphQL" xml:space="preserve"><value>GraphQL</value></data>
   <data name="Registration_My_Prefix" xml:space="preserve"><value>Me: </value></data>
+  <data name="Edit_Button_Text" xml:space="preserve"><value>Edit</value></data>
+  <data name="Delete_Button_Text" xml:space="preserve"><value>Delete</value></data>
+  <data name="DeleteRegistrations_Title" xml:space="preserve"><value>Delete registrations</value></data>
+  <data name="DeleteRegistrations_Description" xml:space="preserve"><value>Select registrations to delete.</value></data>
+  <data name="DeleteRegistrations_Success_Text" xml:space="preserve"><value>Registration deleted</value></data>
+  <data name="DeleteRegistrations_Success_Icon" xml:space="preserve"><value>✔</value></data>
+  <data name="XAML_Error_Title" xml:space="preserve"><value>XAML Error</value></data>
+  <data name="Delete_Confirm_Title" xml:space="preserve"><value>Confirm</value></data>
+  <data name="Delete_Confirm_Message" xml:space="preserve"><value>Delete registration?</value></data>
+  <data name="Delete_Confirm_Message_Group" xml:space="preserve"><value>Delete all registrations for {0}?</value></data>
+  <data name="Button_Cancel" xml:space="preserve"><value>Cancel</value></data>
   </root>

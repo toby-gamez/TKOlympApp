@@ -168,4 +168,15 @@
   <data name="Label_CoupleId" xml:space="preserve"><value>ID páru:</value></data>
   <data name="Label_GraphQL" xml:space="preserve"><value>GraphQL</value></data>
   <data name="Registration_My_Prefix" xml:space="preserve"><value>Já: </value></data>
+  <data name="Edit_Button_Text" xml:space="preserve"><value>Upravit</value></data>
+  <data name="Delete_Button_Text" xml:space="preserve"><value>Smazat</value></data>
+  <data name="DeleteRegistrations_Title" xml:space="preserve"><value>Smazat registraci</value></data>
+  <data name="DeleteRegistrations_Description" xml:space="preserve"><value>Vyberte registrace, které chcete smazat.</value></data>
+  <data name="DeleteRegistrations_Success_Text" xml:space="preserve"><value>Registrace smazána</value></data>
+  <data name="DeleteRegistrations_Success_Icon" xml:space="preserve"><value>✔</value></data>
+  <data name="XAML_Error_Title" xml:space="preserve"><value>XAML chyba</value></data>
+  <data name="Delete_Confirm_Title" xml:space="preserve"><value>Potvrzení</value></data>
+  <data name="Delete_Confirm_Message" xml:space="preserve"><value>Smazat registraci?</value></data>
+  <data name="Delete_Confirm_Message_Group" xml:space="preserve"><value>Smazat všechny registrace pro {0}?</value></data>
+  <data name="Button_Cancel" xml:space="preserve"><value>Zrušit</value></data>
 </root>

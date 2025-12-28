@@ -168,4 +168,15 @@
   <data name="Label_CoupleId" xml:space="preserve"><value>ID пари:</value></data>
   <data name="Label_GraphQL" xml:space="preserve"><value>GraphQL</value></data>
   <data name="Registration_My_Prefix" xml:space="preserve"><value>Я: </value></data>
+  <data name="Edit_Button_Text" xml:space="preserve"><value>Редагувати</value></data>
+  <data name="Delete_Button_Text" xml:space="preserve"><value>Видалити</value></data>
+  <data name="DeleteRegistrations_Title" xml:space="preserve"><value>Видалити реєстрації</value></data>
+  <data name="DeleteRegistrations_Description" xml:space="preserve"><value>Виберіть реєстрації, які потрібно видалити.</value></data>
+  <data name="DeleteRegistrations_Success_Text" xml:space="preserve"><value>Реєстрацію видалено</value></data>
+  <data name="DeleteRegistrations_Success_Icon" xml:space="preserve"><value>✔</value></data>
+  <data name="XAML_Error_Title" xml:space="preserve"><value>Помилка XAML</value></data>
+  <data name="Delete_Confirm_Title" xml:space="preserve"><value>Підтвердити</value></data>
+  <data name="Delete_Confirm_Message" xml:space="preserve"><value>Видалити реєстрацію?</value></data>
+  <data name="Delete_Confirm_Message_Group" xml:space="preserve"><value>Видалити всі реєстрації для {0}?</value></data>
+  <data name="Button_Cancel" xml:space="preserve"><value>Скасувати</value></data>
 </root>

@@ -168,4 +168,15 @@
       <data name="Label_CoupleId" xml:space="preserve"><value>ID para:</value></data>
       <data name="Label_GraphQL" xml:space="preserve"><value>GraphQL</value></data>
       <data name="Registration_My_Prefix" xml:space="preserve"><value>Jaz: </value></data>
+      <data name="Edit_Button_Text" xml:space="preserve"><value>Uredi</value></data>
+      <data name="Delete_Button_Text" xml:space="preserve"><value>Izbriši</value></data>
+      <data name="DeleteRegistrations_Title" xml:space="preserve"><value>Izbriši prijave</value></data>
+      <data name="DeleteRegistrations_Description" xml:space="preserve"><value>Izberite prijave, ki jih želite izbrisati.</value></data>
+      <data name="DeleteRegistrations_Success_Text" xml:space="preserve"><value>Prijava izbrisana</value></data>
+      <data name="DeleteRegistrations_Success_Icon" xml:space="preserve"><value>✔</value></data>
+      <data name="XAML_Error_Title" xml:space="preserve"><value>Napaka XAML</value></data>
+      <data name="Delete_Confirm_Title" xml:space="preserve"><value>Potrdite</value></data>
+      <data name="Delete_Confirm_Message" xml:space="preserve"><value>Izbrisati prijavo?</value></data>
+      <data name="Delete_Confirm_Message_Group" xml:space="preserve"><value>Izbrisati vse prijave za {0}?</value></data>
+      <data name="Button_Cancel" xml:space="preserve"><value>Prekliči</value></data>
     </root>

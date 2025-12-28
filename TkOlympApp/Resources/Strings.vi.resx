@@ -168,4 +168,15 @@
   <data name="Label_CoupleId" xml:space="preserve"><value>ID cặp:</value></data>
   <data name="Label_GraphQL" xml:space="preserve"><value>GraphQL</value></data>
   <data name="Registration_My_Prefix" xml:space="preserve"><value>Tôi: </value></data>
+  <data name="Edit_Button_Text" xml:space="preserve"><value>Chỉnh sửa</value></data>
+  <data name="Delete_Button_Text" xml:space="preserve"><value>Xóa</value></data>
+  <data name="DeleteRegistrations_Title" xml:space="preserve"><value>Xóa đăng ký</value></data>
+  <data name="DeleteRegistrations_Description" xml:space="preserve"><value>Chọn các đăng ký bạn muốn xóa.</value></data>
+  <data name="DeleteRegistrations_Success_Text" xml:space="preserve"><value>Đăng ký đã được xóa</value></data>
+  <data name="DeleteRegistrations_Success_Icon" xml:space="preserve"><value>✔</value></data>
+  <data name="XAML_Error_Title" xml:space="preserve"><value>Lỗi XAML</value></data>
+  <data name="Delete_Confirm_Title" xml:space="preserve"><value>Xác nhận</value></data>
+  <data name="Delete_Confirm_Message" xml:space="preserve"><value>Xóa đăng ký?</value></data>
+  <data name="Delete_Confirm_Message_Group" xml:space="preserve"><value>Xóa tất cả đăng ký cho {0}?</value></data>
+  <data name="Button_Cancel" xml:space="preserve"><value>Hủy</value></data>
 </root>

@@ -1,6 +1,7 @@
 using Microsoft.Maui.Controls;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -12,8 +13,9 @@ namespace TkOlympApp.Pages;
 [QueryProperty(nameof(EventId), "eventId")]
 public partial class DeleteRegistrationsPage : ContentPage
 {
-    private readonly ObservableCollection<RegItem> _items = new();
+    private readonly ObservableCollection<RegGroup> _groups = new();
     private RegItem? _selected;
+    private RegGroup? _selectedGroup;
     private long _eventId;
 
     public long EventId
@@ -33,22 +35,22 @@ public partial class DeleteRegistrationsPage : ContentPage
         {
             InitializeComponent();
         }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"DeleteRegistrationsPage XAML init error: {ex}");
-            try
+            catch (Exception ex)
             {
-                Device.BeginInvokeOnMainThread(async () =>
+                System.Diagnostics.Debug.WriteLine($"DeleteRegistrationsPage XAML init error: {ex}");
+                try
                 {
-                    try { await DisplayAlert("XAML Error", ex.Message, "OK"); } catch { }
-                });
+                    Device.BeginInvokeOnMainThread(async () =>
+                    {
+                        try { await DisplayAlert(LocalizationService.Get("XAML_Error_Title") ?? "XAML Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+                    });
+                }
+                catch { }
             }
-            catch { }
-        }
 
         try
         {
-            RegistrationsCollection.ItemsSource = _items;
+            RegistrationsCollection.ItemsSource = _groups;
         }
         catch { }
     }
@@ -66,9 +68,41 @@ public partial class DeleteRegistrationsPage : ContentPage
         public string Secondary { get; set; } = string.Empty; // event or extra info
     }
 
+    private sealed class RegGroup : ObservableCollection<RegItem>
+    {
+        private readonly System.Collections.Generic.List<RegItem> _all = new();
+        public string Key { get; }
+        public int AllCount => _all.Count;
+
+        public RegGroup(string key)
+        {
+            Key = key;
+        }
+
+        public void AddToGroup(RegItem item)
+        {
+            _all.Add(item);
+            if (this.Count == 0)
+            {
+                base.Add(item);
+            }
+        }
+
+        public void RefreshVisible()
+        {
+            this.Clear();
+            var first = _all.FirstOrDefault();
+            if (first != null) base.Add(first);
+        }
+
+        public System.Collections.Generic.IEnumerable<string> GetAllIds() => _all.Select(i => i.Id);
+
+        public string FirstSecondary => _all.FirstOrDefault()?.Secondary ?? string.Empty;
+    }
+
     private async Task LoadAsync()
     {
-        _items.Clear();
+        _groups.Clear();
         Loading.IsVisible = true;
         Loading.IsRunning = true;
         try
@@ -185,7 +219,15 @@ public partial class DeleteRegistrationsPage : ContentPage
                                     display = !string.IsNullOrWhiteSpace(manName) && !string.IsNullOrWhiteSpace(womanName) ? (manName + " - " + womanName) : (manName + womanName);
                                 }
 
-                                _items.Add(new RegItem { Id = regId!, Text = string.IsNullOrWhiteSpace(display) ? regId! : display, Secondary = evtName });
+                                var item = new RegItem { Id = regId!, Text = string.IsNullOrWhiteSpace(display) ? regId! : display, Secondary = evtName };
+                                var groupKey = string.IsNullOrWhiteSpace(item.Text) ? "" : item.Text;
+                                var grp = _groups.FirstOrDefault(g => string.Equals(g.Key, groupKey, StringComparison.OrdinalIgnoreCase));
+                                if (grp == null)
+                                {
+                                    grp = new RegGroup(groupKey);
+                                    _groups.Add(grp);
+                                }
+                                grp.AddToGroup(item);
                             }
                         }
                         catch { }
@@ -208,56 +250,98 @@ public partial class DeleteRegistrationsPage : ContentPage
     private void OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         _selected = e.CurrentSelection?.Count > 0 ? e.CurrentSelection[0] as RegItem : null;
-        DeleteButton.IsEnabled = _selected != null;
+        if (_selected != null)
+        {
+            // find the group that contains this item
+            _selectedGroup = _groups.FirstOrDefault(g => g.Any(i => i.Id == _selected.Id));
+            DeleteButton.IsEnabled = true;
+        }
+        else
+        {
+            _selectedGroup = null;
+            DeleteButton.IsEnabled = false;
+        }
     }
+
+    
 
     private async void OnDeleteClicked(object? sender, EventArgs e)
     {
-        if (_selected == null) return;
-        var ok = await DisplayAlert(LocalizationService.Get("Delete_Confirm_Title") ?? "Confirm", LocalizationService.Get("Delete_Confirm_Message") ?? "Smazat registraci?", LocalizationService.Get("Button_OK") ?? "OK", LocalizationService.Get("Button_Cancel") ?? "Cancel");
+        // Deletion supports either a single selected RegItem or a selected RegGroup (delete all group's registrations)
+        if (_selected == null && _selectedGroup == null) return;
+
+        string confirmText;
+        if (_selectedGroup != null)
+        {
+            var template = LocalizationService.Get("Delete_Confirm_Message_Group") ?? "Smazat všechny registrace pro {0}?";
+            try { confirmText = string.Format(template, _selectedGroup.Key); } catch { confirmText = $"Smazat všechny registrace pro {_selectedGroup.Key}?"; }
+        }
+        else
+        {
+            confirmText = LocalizationService.Get("Delete_Confirm_Message") ?? "Smazat registraci?";
+        }
+
+        var ok = await DisplayAlert(LocalizationService.Get("Delete_Confirm_Title") ?? "Confirm", confirmText, LocalizationService.Get("Button_OK") ?? "OK", LocalizationService.Get("Button_Cancel") ?? "Cancel");
         if (!ok) return;
 
         try
         {
-            // Build mutation; id must be sent as string
-            var clientMutationId = Guid.NewGuid().ToString();
-            var gql = new
+            var idsToDelete = new System.Collections.Generic.List<string>();
+            if (_selectedGroup != null)
             {
-                query = "mutation DeleteReg($input: DeleteEventRegistrationInput!) { deleteEventRegistration(input: $input) { eventRegistration { id } } }",
-                variables = new { input = new { id = _selected.Id, clientMutationId = clientMutationId } }
-            };
-
-            var json = JsonSerializer.Serialize(gql);
-            using var content = new StringContent(json, Encoding.UTF8, "application/json");
-            using var resp = await AuthService.Http.PostAsync("", content);
-            var body = await resp.Content.ReadAsStringAsync();
-            if (!resp.IsSuccessStatusCode)
-            {
-                await DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", body, LocalizationService.Get("Button_OK") ?? "OK");
-                return;
-            }
-
-            // Basic success detection: presence of data.deleteEventRegistration.eventRegistration.id
-            using var doc = JsonDocument.Parse(body);
-            if (doc.RootElement.TryGetProperty("data", out var data) && data.TryGetProperty("deleteEventRegistration", out var del) && del.TryGetProperty("eventRegistration", out var er) && er.TryGetProperty("id", out var idEl))
-            {
-                await DisplayAlert(LocalizationService.Get("Delete_Success_Title") ?? "Deleted", LocalizationService.Get("Delete_Success_Message") ?? "Registrace smazána", LocalizationService.Get("Button_OK") ?? "OK");
-                await LoadAsync();
+                var firstId = _selectedGroup.GetAllIds().FirstOrDefault();
+                if (!string.IsNullOrWhiteSpace(firstId)) idsToDelete.Add(firstId);
             }
             else
             {
-                // Try to surface GraphQL errors
-                if (doc.RootElement.TryGetProperty("errors", out var errs) && errs.ValueKind == JsonValueKind.Array && errs.GetArrayLength() > 0)
+                idsToDelete.Add(_selected!.Id);
+            }
+            foreach (var id in idsToDelete)
+            {
+                var clientMutationId = Guid.NewGuid().ToString();
+                var gql = new
                 {
-                    var first = errs[0];
-                    var msg = first.TryGetProperty("message", out var m) ? m.GetString() : body;
-                    await DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", msg ?? body, LocalizationService.Get("Button_OK") ?? "OK");
-                }
-                else
+                    query = "mutation DeleteReg($input: DeleteEventRegistrationInput!) { deleteEventRegistration(input: $input) { eventRegistration { id } } }",
+                    variables = new { input = new { id = id, clientMutationId = clientMutationId } }
+                };
+
+                var json = JsonSerializer.Serialize(gql);
+                using var content = new StringContent(json, Encoding.UTF8, "application/json");
+                using var resp = await AuthService.Http.PostAsync("", content);
+                var body = await resp.Content.ReadAsStringAsync();
+                if (!resp.IsSuccessStatusCode)
                 {
                     await DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", body, LocalizationService.Get("Button_OK") ?? "OK");
+                    return;
+                }
+
+                using var doc = JsonDocument.Parse(body);
+                if (!(doc.RootElement.TryGetProperty("data", out var data) && data.TryGetProperty("deleteEventRegistration", out var del) && del.TryGetProperty("eventRegistration", out var er) && er.TryGetProperty("id", out var idEl)))
+                {
+                    if (doc.RootElement.TryGetProperty("errors", out var errs) && errs.ValueKind == JsonValueKind.Array && errs.GetArrayLength() > 0)
+                    {
+                        var first = errs[0];
+                        var msg = first.TryGetProperty("message", out var m) ? m.GetString() : body;
+                        await DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", msg ?? body, LocalizationService.Get("Button_OK") ?? "OK");
+                        return;
+                    }
+                    else
+                    {
+                        await DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", body, LocalizationService.Get("Button_OK") ?? "OK");
+                        return;
+                    }
                 }
             }
+
+            // show success overlay briefly then go back
+            try
+            {
+                SuccessText.Text = LocalizationService.Get("DeleteRegistrations_Success_Text") ?? "Registrace smazána";
+            }
+            catch { }
+            SuccessOverlay.IsVisible = true;
+            await Task.Delay(900);
+            try { await Shell.Current.GoToAsync("..", true); } catch { try { await Shell.Current.Navigation.PopAsync(); } catch { } }
         }
         catch (Exception ex)
         {

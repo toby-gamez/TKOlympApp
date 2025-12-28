@@ -5,23 +5,45 @@
              x:Class="TkOlympApp.Pages.DeleteRegistrationsPage"
              Title="{svc:Translate DeleteRegistrations_Title}">
 
-    <VerticalStackLayout Padding="16" Spacing="12">
-        <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" HorizontalOptions="Center" />
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
 
-        <Label Text="{svc:Translate DeleteRegistrations_Description}" />
+        <VerticalStackLayout Padding="16" Spacing="12" Grid.Row="0">
+            <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" HorizontalOptions="Center" />
 
-        <CollectionView x:Name="RegistrationsCollection" SelectionMode="Single" HeightRequest="400" SelectionChanged="OnSelectionChanged">
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <VerticalStackLayout Padding="12" Spacing="4">
-                        <Label Text="{Binding Text}" FontAttributes="Bold" />
-                        <Label Text="{Binding Secondary}" FontSize="12" />
-                    </VerticalStackLayout>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+            <Label Text="{svc:Translate DeleteRegistrations_Description}" />
 
-        <Button x:Name="DeleteButton" Text="{svc:Translate Delete_Button_Text}" IsEnabled="False" Clicked="OnDeleteClicked" />
-    </VerticalStackLayout>
+            <CollectionView x:Name="RegistrationsCollection" Style="{StaticResource ListCollectionView}" HeightRequest="400" SelectionChanged="OnSelectionChanged" IsGrouped="True">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource SelectableItemContainer}">
+                            <VerticalStackLayout Padding="12" Spacing="4">
+                                <Label Text="{Binding Text}" FontAttributes="Bold" />
+                                <Label Text="{Binding Secondary}" FontSize="12" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+
+        <Button x:Name="DeleteButton" Text="{svc:Translate Delete_Button_Text}" IsEnabled="False" Clicked="OnDeleteClicked" Grid.Row="1" Margin="16" HorizontalOptions="FillAndExpand" />
+
+        <!-- Success overlay (hidden by default) -->
+        <Grid x:Name="SuccessOverlay" IsVisible="False" BackgroundColor="#AA000000" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand" Grid.RowSpan="2">
+            <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="12" Padding="24">
+                <Border BackgroundColor="#2e7d32" WidthRequest="160" HeightRequest="160" HorizontalOptions="Center" VerticalOptions="Center">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="80" />
+                    </Border.StrokeShape>
+                    <Label x:Name="SuccessIcon" Text="{svc:Translate DeleteRegistrations_Success_Icon}" FontSize="96" TextColor="White" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+                <Label x:Name="SuccessText" Text="{svc:Translate DeleteRegistrations_Success_Text}" TextColor="#c8e6c9" FontAttributes="Bold" FontSize="20" HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+        </Grid>
+    </Grid>
 
 </ContentPage>

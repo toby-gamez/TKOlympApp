@@ -168,4 +168,15 @@
     <data name="Label_CoupleId" xml:space="preserve"><value>Par-ID:</value></data>
     <data name="Label_GraphQL" xml:space="preserve"><value>GraphQL</value></data>
     <data name="Registration_My_Prefix" xml:space="preserve"><value>Meg: </value></data>
+    <data name="Edit_Button_Text" xml:space="preserve"><value>Rediger</value></data>
+    <data name="Delete_Button_Text" xml:space="preserve"><value>Slett</value></data>
+    <data name="DeleteRegistrations_Title" xml:space="preserve"><value>Slett registreringer</value></data>
+    <data name="DeleteRegistrations_Description" xml:space="preserve"><value>Velg registreringer du vil slette.</value></data>
+    <data name="DeleteRegistrations_Success_Text" xml:space="preserve"><value>Registrering slettet</value></data>
+    <data name="DeleteRegistrations_Success_Icon" xml:space="preserve"><value>✔</value></data>
+    <data name="XAML_Error_Title" xml:space="preserve"><value>XAML-feil</value></data>
+    <data name="Delete_Confirm_Title" xml:space="preserve"><value>Bekreft</value></data>
+    <data name="Delete_Confirm_Message" xml:space="preserve"><value>Slette registreringen?</value></data>
+    <data name="Delete_Confirm_Message_Group" xml:space="preserve"><value>Slette alle registreringer for {0}?</value></data>
+    <data name="Button_Cancel" xml:space="preserve"><value>Avbryt</value></data>
 </root>
