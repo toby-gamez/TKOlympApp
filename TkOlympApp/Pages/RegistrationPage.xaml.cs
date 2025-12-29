@@ -213,6 +213,84 @@ public partial class RegistrationPage : ContentPage
                 var couples = await UserService.GetActiveCouplesFromUsersAsync();
                 // Build selection: self + optional couples
                 var options = new List<RegistrationOption>();
+                // Determine already-registered persons/couples by querying event instances (same approach as EditRegistrationsPage)
+                var registeredPersonNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var registeredCoupleIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                try
+                {
+                    var startRange = DateTime.Now.Date.AddYears(-1).ToString("o");
+                    var endRange = DateTime.Now.Date.AddYears(1).ToString("o");
+                    var queryObj = new
+                    {
+                        query = "query($startRange: Datetime!, $endRange: Datetime!) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange) { id event { id name eventRegistrationsList { id person { firstName lastName } couple { id man { firstName lastName } woman { firstName lastName } } } } } }",
+                        variables = new { startRange = startRange, endRange = endRange }
+                    };
+
+                    var json = JsonSerializer.Serialize(queryObj);
+                    using var content = new StringContent(json, Encoding.UTF8, "application/json");
+                    using var resp = await AuthService.Http.PostAsync("", content);
+                    if (resp.IsSuccessStatusCode)
+                    {
+                        var body = await resp.Content.ReadAsStringAsync();
+                        try
+                        {
+                            using var doc = JsonDocument.Parse(body);
+                            if (!doc.RootElement.TryGetProperty("data", out var data)) { }
+                            else if (data.TryGetProperty("eventInstancesForRangeList", out var instances) && instances.ValueKind == JsonValueKind.Array)
+                            {
+                                foreach (var inst in instances.EnumerateArray())
+                                {
+                                    try
+                                    {
+                                        if (!inst.TryGetProperty("event", out var ev) || ev.ValueKind == JsonValueKind.Null) continue;
+                                        // filter to current EventId
+                                        try
+                                        {
+                                            if (ev.TryGetProperty("id", out var evIdEl))
+                                            {
+                                                long parsedEvId = 0;
+                                                if (evIdEl.ValueKind == JsonValueKind.Number && evIdEl.TryGetInt64(out var n)) parsedEvId = n;
+                                                else parsedEvId = long.TryParse(evIdEl.GetRawText().Trim('"'), out var t) ? t : 0;
+                                                if (parsedEvId != 0 && parsedEvId != EventId) continue;
+                                            }
+                                        }
+                                        catch { }
+
+                                        if (!ev.TryGetProperty("eventRegistrationsList", out var regs) || regs.ValueKind != JsonValueKind.Array) continue;
+                                        foreach (var reg in regs.EnumerateArray())
+                                        {
+                                            try
+                                            {
+                                                // collect couple id if present
+                                                if (reg.TryGetProperty("couple", out var coupleEl) && coupleEl.ValueKind != JsonValueKind.Null)
+                                                {
+                                                    if (coupleEl.TryGetProperty("id", out var cidEl))
+                                                    {
+                                                        var cid = cidEl.GetRawText().Trim('"');
+                                                        if (!string.IsNullOrWhiteSpace(cid)) registeredCoupleIds.Add(cid);
+                                                    }
+                                                }
+
+                                                // collect person full name if present
+                                                if (reg.TryGetProperty("person", out var personEl) && personEl.ValueKind != JsonValueKind.Null)
+                                                {
+                                                    var pf = personEl.TryGetProperty("firstName", out var pff) ? pff.GetString() ?? string.Empty : string.Empty;
+                                                    var pl = personEl.TryGetProperty("lastName", out var pll) ? pll.GetString() ?? string.Empty : string.Empty;
+                                                    var pFull = string.IsNullOrWhiteSpace(pf) ? pl : (string.IsNullOrWhiteSpace(pl) ? pf : (pf + " " + pl).Trim());
+                                                    if (!string.IsNullOrWhiteSpace(pFull)) registeredPersonNames.Add(pFull);
+                                                }
+                                            }
+                                            catch { }
+                                        }
+                                    }
+                                    catch { }
+                                }
+                            }
+                        }
+                        catch { }
+                    }
+                }
+                catch { }
                 // Use proxy/person id only — do not add 'self' option when CurrentPersonId is missing
                 string? myPersonIdOption = null;
                 try { myPersonIdOption = UserService.CurrentPersonId; } catch { myPersonIdOption = null; }
@@ -232,8 +310,37 @@ public partial class RegistrationPage : ContentPage
                     }
                 }
 
+                // Filter out options that are already registered for this event
+                var filtered = new List<RegistrationOption>();
+                var myFirst = me?.UJmeno?.Trim() ?? string.Empty;
+                var myLast = me?.UPrijmeni?.Trim() ?? string.Empty;
+                var myFull = string.IsNullOrWhiteSpace(myFirst) ? myLast : string.IsNullOrWhiteSpace(myLast) ? myFirst : (myFirst + " " + myLast).Trim();
+                foreach (var opt in options)
+                {
+                    try
+                    {
+                        if (opt.Kind == "self")
+                        {
+                            if (string.IsNullOrWhiteSpace(myFull) || registeredPersonNames.Contains(myFull))
+                            {
+                                continue; // already registered
+                            }
+                        }
+                        else if (opt.Kind == "couple")
+                        {
+                            // match by couple id when possible
+                            if (!string.IsNullOrWhiteSpace(opt.Id) && registeredCoupleIds.Contains(opt.Id)) continue;
+                            // fallback: match by display text (man - woman)
+                            var key = opt.DisplayText?.Trim() ?? string.Empty;
+                            if (!string.IsNullOrWhiteSpace(key) && registeredPersonNames.Contains(key)) continue;
+                        }
+                        filtered.Add(opt);
+                    }
+                    catch { filtered.Add(opt); }
+                }
+
                 SelectionCollection.IsVisible = true;
-                SelectionCollection.ItemsSource = options;
+                SelectionCollection.ItemsSource = filtered;
             }
             catch { }
         }

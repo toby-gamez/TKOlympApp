@@ -220,7 +220,6 @@ public partial class EventPage : ContentPage
             RegistrationOpenLabel.IsVisible = ev.IsRegistrationOpen;
             var registered = ev.EventRegistrations?.TotalCount ?? 0;
             var capacity = ev.Capacity;
-            RegisterButton.IsVisible = ev.IsRegistrationOpen;
             PublicLabel.IsVisible = ev.IsPublic;
             VisibleLabel.IsVisible = ev.IsVisible;
             if (capacity.HasValue)
@@ -254,6 +253,26 @@ public partial class EventPage : ContentPage
             }
             TrainersFrame.IsVisible = _trainers.Count > 0;
 
+            // Hide edit-registration button when trainer reservations are not allowed
+            // (match RegistrationPage logic: if event has no name AND exactly one trainer)
+            try
+            {
+                var trainerCount = ev.EventTrainersList?.Count ?? 0;
+                var nameMissing = string.IsNullOrWhiteSpace(ev.Name);
+                if (nameMissing && trainerCount == 1)
+                {
+                    EditRegistrationButton.IsVisible = false;
+                    Grid.SetColumn(DeleteRegistrationButton, 0);
+                    Grid.SetColumnSpan(DeleteRegistrationButton, 2);
+                }
+                else
+                {
+                    EditRegistrationButton.IsVisible = true;
+                    Grid.SetColumn(DeleteRegistrationButton, 1);
+                    Grid.SetColumnSpan(DeleteRegistrationButton, 1);
+                }
+            }
+            catch { }
             _registrations.Clear();
             var seen = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var n in ev.EventRegistrations?.Nodes ?? new List<EventService.EventRegistrationNode>())
@@ -404,8 +423,7 @@ public partial class EventPage : ContentPage
                 }
 
                 RegistrationActionsRow.IsVisible = userRegistered;
-                // Show Register button only when registration is open and user isn't already registered
-                RegisterButton.IsVisible = ev.IsRegistrationOpen && !userRegistered;
+                // Register button is always visible (handled by XAML). Keep edit/delete visibility unchanged.
             }
             catch { }
         }

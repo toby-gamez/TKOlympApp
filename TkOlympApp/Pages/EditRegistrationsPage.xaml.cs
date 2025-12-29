@@ -90,6 +90,18 @@ public partial class EditRegistrationsPage : ContentPage
             if (first != null) base.Add(first);
         }
 
+        public void RevealMore(int maxToAdd)
+        {
+            if (maxToAdd <= 0) return;
+            int added = 0;
+            int start = this.Count;
+            for (int i = start; i < _all.Count && added < maxToAdd; i++)
+            {
+                base.Add(_all[i]);
+                added++;
+            }
+        }
+
         public System.Collections.Generic.IEnumerable<string> GetAllIds() => _all.Select(i => i.Id);
 
         public string FirstSecondary => _all.FirstOrDefault()?.Secondary ?? string.Empty;
@@ -302,6 +314,42 @@ public partial class EditRegistrationsPage : ContentPage
             TrainerSelectionCollection.IsVisible = false;
             TrainerSelectionHeader.IsVisible = false;
         }
+    }
+    
+    private void OnRegistrationsRemainingThresholdReached(object? sender, EventArgs e)
+    {
+        try
+        {
+            const int toAddTotal = 10;
+            int added = 0;
+            // First pass: add one per group to spread visible items
+            foreach (var g in _groups)
+            {
+                if (added >= toAddTotal) break;
+                if (g.AllCount > g.Count)
+                {
+                    g.RevealMore(1);
+                    added++;
+                }
+            }
+
+            // Second pass: fill remaining need from groups sequentially
+            if (added < toAddTotal)
+            {
+                foreach (var g in _groups)
+                {
+                    if (added >= toAddTotal) break;
+                    var remaining = g.AllCount - g.Count;
+                    if (remaining > 0)
+                    {
+                        var need = Math.Min(toAddTotal - added, remaining);
+                        g.RevealMore(need);
+                        added += need;
+                    }
+                }
+            }
+        }
+        catch { }
     }
     
     private async Task LoadTrainerSelectionAsync()
