@@ -168,7 +168,7 @@
     <data name="Label_CoupleId" xml:space="preserve"><value>Par-ID:</value></data>
     <data name="Label_GraphQL" xml:space="preserve"><value>GraphQL</value></data>
     <data name="Registration_My_Prefix" xml:space="preserve"><value>Meg: </value></data>
-    <data name="Edit_Button_Text" xml:space="preserve"><value>Rediger</value></data>
+    <data name="Edit_Button_Text" xml:space="preserve"><value>Rediger leksjonen</value></data>
     <data name="Delete_Button_Text" xml:space="preserve"><value>Slett</value></data>
     <data name="DeleteRegistrations_Title" xml:space="preserve"><value>Slett registreringer</value></data>
     <data name="DeleteRegistrations_Description" xml:space="preserve"><value>Velg registreringer du vil slette.</value></data>
@@ -179,4 +179,11 @@
     <data name="Delete_Confirm_Message" xml:space="preserve"><value>Slette registreringen?</value></data>
     <data name="Delete_Confirm_Message_Group" xml:space="preserve"><value>Slette alle registreringer for {0}?</value></data>
     <data name="Button_Cancel" xml:space="preserve"><value>Avbryt</value></data>
+        <data name="EditRegistrations_NoTrainerSelected" xml:space="preserve"><value>Feil</value></data>
+        <data name="EditRegistrations_NoTrainerSelected_Text" xml:space="preserve"><value>Velg minst én trener og antall timer.</value></data>
+        <data name="EditRegistrations_Success_Text" xml:space="preserve"><value>Endringer lagret</value></data>
+        <data name="EditRegistrations_Title" xml:space="preserve"><value>Rediger registreringer</value></data>
+        <data name="EditRegistrations_Description" xml:space="preserve"><value>Velg en registrering for å endre krav til timer.</value></data>
+        <data name="EditRegistrations_Trainers_Label" xml:space="preserve"><value>Trenere</value></data>
+        <data name="EditRegistrations_Button_Text" xml:space="preserve"><value>Bekreft</value></data>
 </root>

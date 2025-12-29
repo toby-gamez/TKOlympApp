@@ -168,8 +168,8 @@
   <data name="Label_CoupleId" xml:space="preserve"><value>ID páru:</value></data>
   <data name="Label_GraphQL" xml:space="preserve"><value>GraphQL</value></data>
   <data name="Registration_My_Prefix" xml:space="preserve"><value>Já: </value></data>
-  <data name="Edit_Button_Text" xml:space="preserve"><value>Upravit</value></data>
-  <data name="Delete_Button_Text" xml:space="preserve"><value>Smazat</value></data>
+  <data name="Edit_Button_Text" xml:space="preserve"><value>Upravit lekce</value></data>
+  <data name="Delete_Button_Text" xml:space="preserve"><value>Odhlásit se</value></data>
   <data name="DeleteRegistrations_Title" xml:space="preserve"><value>Smazat registraci</value></data>
   <data name="DeleteRegistrations_Description" xml:space="preserve"><value>Vyberte registrace, které chcete smazat.</value></data>
   <data name="DeleteRegistrations_Success_Text" xml:space="preserve"><value>Registrace smazána</value></data>
@@ -179,4 +179,11 @@
   <data name="Delete_Confirm_Message" xml:space="preserve"><value>Smazat registraci?</value></data>
   <data name="Delete_Confirm_Message_Group" xml:space="preserve"><value>Smazat všechny registrace pro {0}?</value></data>
   <data name="Button_Cancel" xml:space="preserve"><value>Zrušit</value></data>
+  <data name="EditRegistrations_NoTrainerSelected" xml:space="preserve"><value>Chyba</value></data>
+  <data name="EditRegistrations_NoTrainerSelected_Text" xml:space="preserve"><value>Vyberte alespoň jednoho trenéra a počet lekcí.</value></data>
+  <data name="EditRegistrations_Success_Text" xml:space="preserve"><value>Změny uloženy</value></data>
+  <data name="EditRegistrations_Title" xml:space="preserve"><value>Upravit registrace</value></data>
+  <data name="EditRegistrations_Description" xml:space="preserve"><value>Vyberte registraci pro úpravu požadavků na lekce.</value></data>
+  <data name="EditRegistrations_Trainers_Label" xml:space="preserve"><value>Trenéři</value></data>
+  <data name="EditRegistrations_Button_Text" xml:space="preserve"><value>Potvrdit</value></data>
 </root>

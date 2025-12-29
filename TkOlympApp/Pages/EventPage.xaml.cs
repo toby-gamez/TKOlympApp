@@ -455,6 +455,20 @@ public partial class EventPage : ContentPage
         }
     }
 
+    private async void OnEditRegistrationClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            if (EventId == 0) return;
+            await Shell.Current.GoToAsync($"{nameof(EditRegistrationsPage)}?eventId={EventId}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Navigation to EditRegistrationsPage failed: {ex}");
+            try { await DisplayAlertAsync(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+        }
+    }
+
     private static string? HtmlToPlainText(string? html)
     {
         if (string.IsNullOrWhiteSpace(html)) return html;

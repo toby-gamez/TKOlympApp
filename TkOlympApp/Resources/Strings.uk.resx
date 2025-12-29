@@ -168,7 +168,7 @@
   <data name="Label_CoupleId" xml:space="preserve"><value>ID пари:</value></data>
   <data name="Label_GraphQL" xml:space="preserve"><value>GraphQL</value></data>
   <data name="Registration_My_Prefix" xml:space="preserve"><value>Я: </value></data>
-  <data name="Edit_Button_Text" xml:space="preserve"><value>Редагувати</value></data>
+  <data name="Edit_Button_Text" xml:space="preserve"><value>редагувати урок</value></data>
   <data name="Delete_Button_Text" xml:space="preserve"><value>Видалити</value></data>
   <data name="DeleteRegistrations_Title" xml:space="preserve"><value>Видалити реєстрації</value></data>
   <data name="DeleteRegistrations_Description" xml:space="preserve"><value>Виберіть реєстрації, які потрібно видалити.</value></data>
@@ -179,4 +179,11 @@
   <data name="Delete_Confirm_Message" xml:space="preserve"><value>Видалити реєстрацію?</value></data>
   <data name="Delete_Confirm_Message_Group" xml:space="preserve"><value>Видалити всі реєстрації для {0}?</value></data>
   <data name="Button_Cancel" xml:space="preserve"><value>Скасувати</value></data>
+  <data name="EditRegistrations_NoTrainerSelected" xml:space="preserve"><value>Помилка</value></data>
+  <data name="EditRegistrations_NoTrainerSelected_Text" xml:space="preserve"><value>Виберіть хоча б одного тренера та кількість занять.</value></data>
+  <data name="EditRegistrations_Success_Text" xml:space="preserve"><value>Зміни збережено</value></data>
+  <data name="EditRegistrations_Title" xml:space="preserve"><value>Редагувати реєстрації</value></data>
+  <data name="EditRegistrations_Description" xml:space="preserve"><value>Виберіть реєстрацію для редагування вимог щодо занять.</value></data>
+  <data name="EditRegistrations_Trainers_Label" xml:space="preserve"><value>Тренери</value></data>
+  <data name="EditRegistrations_Button_Text" xml:space="preserve"><value>Підтвердити</value></data>
 </root>

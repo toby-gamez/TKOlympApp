@@ -168,7 +168,7 @@
     <data name="Privacy_Contact_LinkText" xml:space="preserve"><value>tkolymp.cz/kontakt</value></data>
     <data name="Privacy_TechnicalDetails" xml:space="preserve"><value>Technical bits: auth and GraphQL calls live in `Services/AuthService.cs` and `Services/EventService.cs`. Notifications handled by `NotificationManagerService`.</value></data>
     <data name="Privacy_List_Preview" xml:space="preserve"><value>Peep the privacy policy</value></data>
-    <data name="Edit_Button_Text" xml:space="preserve"><value>Tweak</value></data>
+    <data name="Edit_Button_Text" xml:space="preserve"><value>Tweak grinds</value></data>
     <data name="Delete_Button_Text" xml:space="preserve"><value>Yeet out</value></data>
     <data name="DeleteRegistrations_Title" xml:space="preserve"><value>Delete Registrashuns</value></data>
     <data name="DeleteRegistrations_Description" xml:space="preserve"><value>Pick the regos to yeet.</value></data>
@@ -179,4 +179,11 @@
     <data name="Delete_Confirm_Message" xml:space="preserve"><value>Yeet this registration?</value></data>
     <data name="Delete_Confirm_Message_Group" xml:space="preserve"><value>Yeet all regs for {0}?</value></data>
     <data name="Button_Cancel" xml:space="preserve"><value>Nah</value></data>
+    <data name="EditRegistrations_NoTrainerSelected" xml:space="preserve"><value>Major L</value></data>
+    <data name="EditRegistrations_NoTrainerSelected_Text" xml:space="preserve"><value>Pick at least one gym bro and how many grinds.</value></data>
+    <data name="EditRegistrations_Success_Text" xml:space="preserve"><value>Changes locked in, big W</value></data>
+    <data name="EditRegistrations_Title" xml:space="preserve"><value>Tweak Registrashuns</value></data>
+    <data name="EditRegistrations_Description" xml:space="preserve"><value>Pick a reg to tweak gym bro lesson demands.</value></data>
+    <data name="EditRegistrations_Trainers_Label" xml:space="preserve"><value>Gym Bros</value></data>
+    <data name="EditRegistrations_Button_Text" xml:space="preserve"><value>Lock In</value></data>
 </root>

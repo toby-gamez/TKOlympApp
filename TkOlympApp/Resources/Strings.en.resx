@@ -168,7 +168,7 @@
   <data name="Label_CoupleId" xml:space="preserve"><value>Couple ID:</value></data>
   <data name="Label_GraphQL" xml:space="preserve"><value>GraphQL</value></data>
   <data name="Registration_My_Prefix" xml:space="preserve"><value>Me: </value></data>
-  <data name="Edit_Button_Text" xml:space="preserve"><value>Edit</value></data>
+  <data name="Edit_Button_Text" xml:space="preserve"><value>Edit lessons</value></data>
   <data name="Delete_Button_Text" xml:space="preserve"><value>Delete</value></data>
   <data name="DeleteRegistrations_Title" xml:space="preserve"><value>Delete registrations</value></data>
   <data name="DeleteRegistrations_Description" xml:space="preserve"><value>Select registrations to delete.</value></data>
@@ -179,4 +179,11 @@
   <data name="Delete_Confirm_Message" xml:space="preserve"><value>Delete registration?</value></data>
   <data name="Delete_Confirm_Message_Group" xml:space="preserve"><value>Delete all registrations for {0}?</value></data>
   <data name="Button_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="EditRegistrations_NoTrainerSelected" xml:space="preserve"><value>Error</value></data>
+  <data name="EditRegistrations_NoTrainerSelected_Text" xml:space="preserve"><value>Select at least one trainer and the number of lessons.</value></data>
+  <data name="EditRegistrations_Success_Text" xml:space="preserve"><value>Changes saved</value></data>
+  <data name="EditRegistrations_Title" xml:space="preserve"><value>Edit registrations</value></data>
+  <data name="EditRegistrations_Description" xml:space="preserve"><value>Select a registration to edit lesson demands.</value></data>
+  <data name="EditRegistrations_Trainers_Label" xml:space="preserve"><value>Trainers</value></data>
+  <data name="EditRegistrations_Button_Text" xml:space="preserve"><value>Confirm</value></data>
   </root>

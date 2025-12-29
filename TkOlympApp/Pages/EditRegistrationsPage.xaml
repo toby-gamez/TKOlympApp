@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:svc="clr-namespace:TkOlympApp.Services"
+             x:Class="TkOlympApp.Pages.EditRegistrationsPage"
+             Title="{svc:Translate EditRegistrations_Title}">
+
+    <Grid>
+        <ScrollView>
+            <VerticalStackLayout Padding="16" Spacing="12">
+                <Label Text="{svc:Translate EditRegistrations_Title}" FontAttributes="Bold" FontSize="20" />
+
+                <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" HorizontalOptions="Center" />
+
+                <Label Text="{svc:Translate EditRegistrations_Description}" />
+
+                <CollectionView x:Name="RegistrationsCollection" Style="{StaticResource ListCollectionView}" HeightRequest="360" SelectionChanged="OnSelectionChanged" IsGrouped="True">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource SelectableItemContainer}">
+                                <VerticalStackLayout Padding="12" Spacing="4">
+                                    <Label Text="{Binding Text}" FontAttributes="Bold" />
+                                    <Label Text="{Binding Secondary}" FontSize="12" />
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <Label x:Name="TrainerSelectionHeader" Text="{svc:Translate EditRegistrations_Trainers_Label}" FontAttributes="Bold" IsVisible="False" />
+                <CollectionView x:Name="TrainerSelectionCollection" SelectionMode="None" IsVisible="False">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource SelectableItemContainer}">
+                                <Grid ColumnDefinitions="*,Auto" VerticalOptions="Center" Padding="6">
+                                    <Label Grid.Column="0" Text="{Binding Name}" VerticalOptions="Center" />
+                                    <HorizontalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center" HorizontalOptions="End">
+                                        <Button Text="-" WidthRequest="28" HeightRequest="28" CornerRadius="8" FontSize="22" Clicked="OnTrainerMinusClicked" />
+                                        <Label Text="{Binding Count}" VerticalOptions="Center" HorizontalOptions="Center" WidthRequest="28" HorizontalTextAlignment="Center" FontSize="14" />
+                                        <Button Text="+" WidthRequest="28" HeightRequest="28" CornerRadius="8" FontSize="22" Clicked="OnTrainerPlusClicked" />
+                                    </HorizontalStackLayout>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <Button x:Name="ConfirmButton" Text="{svc:Translate EditRegistrations_Button_Text}" IsEnabled="False" HorizontalOptions="Fill" Clicked="OnConfirmClicked" />
+
+                <!-- Success overlay -->
+                <Editor x:Name="MutationPreview" IsReadOnly="True" IsVisible="False" />
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Grid x:Name="SuccessOverlay" IsVisible="False" BackgroundColor="#AA000000" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand">
+            <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="12" Padding="24">
+                <Border BackgroundColor="#2e7d32" WidthRequest="160" HeightRequest="160" HorizontalOptions="Center" VerticalOptions="Center">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="80" />
+                    </Border.StrokeShape>
+                    <Label x:Name="SuccessIcon" Text="✔" FontSize="96" TextColor="White" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+                <Label x:Name="SuccessText" Text="{svc:Translate EditRegistrations_Success_Text}" TextColor="#c8e6c9" FontAttributes="Bold" FontSize="20" HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+        </Grid>
+    </Grid>
+
+</ContentPage>

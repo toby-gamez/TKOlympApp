@@ -43,8 +43,8 @@
             <Button x:Name="RegisterButton" Text="{svc:Translate Registration_Button_Text}" IsVisible="False" Margin="8,6" HorizontalOptions="Fill" Clicked="OnRegisterButtonClicked" />
 
             <!-- Actions shown when already registered: Edit + Delete on one row (hidden by default) -->
-            <Grid x:Name="RegistrationActionsRow" IsVisible="False" ColumnDefinitions="*,*" ColumnSpacing="12" Margin="8,6" HorizontalOptions="Fill">
-                <Button x:Name="EditRegistrationButton" Text="{svc:Translate Edit_Button_Text}" Grid.Column="0" HorizontalOptions="Fill" />
+                <Grid x:Name="RegistrationActionsRow" IsVisible="False" ColumnDefinitions="*,*" ColumnSpacing="12" Margin="8,6" HorizontalOptions="Fill">
+                <Button x:Name="EditRegistrationButton" Text="{svc:Translate Edit_Button_Text}" Grid.Column="0" HorizontalOptions="Fill" Clicked="OnEditRegistrationClicked" />
                 <Button x:Name="DeleteRegistrationButton" Text="{svc:Translate Delete_Button_Text}" Grid.Column="1" HorizontalOptions="Fill" Clicked="OnDeleteRegistrationsClicked" />
             </Grid>
 
