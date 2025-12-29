@@ -148,13 +148,27 @@
         <data name="Label_CoupleId" xml:space="preserve"><value>Duo Tag:</value></data>
         <data name="Label_GraphQL" xml:space="preserve"><value>GraphQL</value></data>
             <data name="Registration_My_Prefix" xml:space="preserve"><value>Me: </value></data>
-    <data name="Privacy_S1_Body" xml:space="preserve"><value>• JWT token: kept on your device's secure stash to auth API calls (see AuthService). • API data: events, instances, notifications, user/group info and leaderboards — pulled live from GraphQL. • Optional: profile fields and settings to make the app nicer.</value></data>
+        <data name="Privacy_S1_Body" xml:space="preserve">
+            <value>• JWT token: kept on your device's secure stash to auth API calls (see AuthService).
+
+• API data: events, instances, notifications, user/group info and leaderboards — pulled live from GraphQL.
+
+• Optional: profile fields and settings to make the app nicer.</value>
+        </data>
     <data name="Privacy_S2_Title" xml:space="preserve"><value>2) Where data lives</value></data>
-    <data name="Privacy_S2_Body" xml:space="preserve"><value>• Network hits go to https://api.rozpisovnik.cz/graphql. We don't run our own central data farm. • JWT sits in SecureStorage (platform secure storage).</value></data>
+        <data name="Privacy_S2_Body" xml:space="preserve">
+            <value>• Network hits go to https://api.rozpisovnik.cz/graphql. We don't run our own central data farm.
+
+• JWT sits in SecureStorage (platform secure storage).</value>
+        </data>
     <data name="Privacy_S3_Title" xml:space="preserve"><value>3) Why we process</value></data>
     <data name="Privacy_S3_Body" xml:space="preserve"><value>Used for auth, showing your events, sending and receiving notifications, leaderboard features and the usual client stuff.</value></data>
     <data name="Privacy_S4_Title" xml:space="preserve"><value>4) Sharing</value></data>
-    <data name="Privacy_S4_Body" xml:space="preserve"><value>• We don't sell your data or share it for marketing without consent. We only talk to the API provider and platform services (maps etc.) as needed. • Notifications go through platform services (Android/iOS) via NotificationManagerService/native APIs.</value></data>
+        <data name="Privacy_S4_Body" xml:space="preserve">
+            <value>• We don't sell your data or share it for marketing without consent. We only talk to the API provider and platform services (maps etc.) as needed.
+
+• Notifications go through platform services (Android/iOS) via NotificationManagerService/native APIs.</value>
+        </data>
     <data name="Privacy_S5_Title" xml:space="preserve"><value>5) Permissions</value></data>
     <data name="Privacy_S5_Body" xml:space="preserve"><value>We only ask for necessary perms (maps, notifications). No contact/gallery access without explicit permission.</value></data>
     <data name="Privacy_S6_Title" xml:space="preserve"><value>6) Retention</value></data>

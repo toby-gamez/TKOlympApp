@@ -9,34 +9,34 @@
             <Label Text="{svc:Translate Privacy_EffectiveDate}" FontAttributes="Italic" />
 
             <Label FontAttributes="Bold" Text="{svc:Translate Privacy_Summary_Title}" />
-            <Label Text="{svc:Translate Privacy_Summary_Body}" />
+            <Label Text="{svc:Translate Privacy_Summary_Body}" LineBreakMode="WordWrap" Margin="0,0,0,12" />
 
             <Label FontAttributes="Bold" Text="{svc:Translate Privacy_S1_Title}" />
-            <Label Text="{svc:Translate Privacy_S1_Body}" />
+            <Label Text="{svc:Translate Privacy_S1_Body}" LineBreakMode="WordWrap" Margin="0,0,0,12" />
 
             <Label FontAttributes="Bold" Text="{svc:Translate Privacy_S2_Title}" />
-            <Label Text="{svc:Translate Privacy_S2_Body}" />
+            <Label Text="{svc:Translate Privacy_S2_Body}" LineBreakMode="WordWrap" Margin="0,0,0,12" />
 
             <Label FontAttributes="Bold" Text="{svc:Translate Privacy_S3_Title}" />
-            <Label Text="{svc:Translate Privacy_S3_Body}" />
+            <Label Text="{svc:Translate Privacy_S3_Body}" LineBreakMode="WordWrap" Margin="0,0,0,12" />
 
             <Label FontAttributes="Bold" Text="{svc:Translate Privacy_S4_Title}" />
-            <Label Text="{svc:Translate Privacy_S4_Body}" />
+            <Label Text="{svc:Translate Privacy_S4_Body}" LineBreakMode="WordWrap" Margin="0,0,0,12" />
 
             <Label FontAttributes="Bold" Text="{svc:Translate Privacy_S5_Title}" />
-            <Label Text="{svc:Translate Privacy_S5_Body}" />
+            <Label Text="{svc:Translate Privacy_S5_Body}" LineBreakMode="WordWrap" Margin="0,0,0,12" />
 
             <Label FontAttributes="Bold" Text="{svc:Translate Privacy_S6_Title}" />
-            <Label Text="{svc:Translate Privacy_S6_Body}" />
+            <Label Text="{svc:Translate Privacy_S6_Body}" LineBreakMode="WordWrap" Margin="0,0,0,12" />
 
             <Label FontAttributes="Bold" Text="{svc:Translate Privacy_S7_Title}" />
-            <Label Text="{svc:Translate Privacy_S7_Body}" />
+            <Label Text="{svc:Translate Privacy_S7_Body}" LineBreakMode="WordWrap" Margin="0,0,0,12" />
 
             <Label FontAttributes="Bold" Text="{svc:Translate Privacy_S8_Title}" />
-            <Label Text="{svc:Translate Privacy_S8_Body}" />
+            <Label Text="{svc:Translate Privacy_S8_Body}" LineBreakMode="WordWrap" Margin="0,0,0,12" />
 
             <Label FontAttributes="Bold" Text="{svc:Translate Privacy_Contact_Title}" />
-            <Label>
+            <Label Margin="0,0,0,12">
                 <Label.FormattedText>
                     <FormattedString>
                         <Span Text="{svc:Translate Privacy_Contact_Prefix}" />
@@ -49,7 +49,7 @@
                 </Label.FormattedText>
             </Label>
 
-            <Label FontAttributes="Italic" Text="{svc:Translate Privacy_TechnicalDetails}" />
+            <Label FontAttributes="Italic" Text="{svc:Translate Privacy_TechnicalDetails}" LineBreakMode="WordWrap" Margin="0,0,0,12" />
 
         </VerticalStackLayout>
     </ScrollView>

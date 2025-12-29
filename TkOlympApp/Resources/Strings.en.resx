@@ -128,13 +128,27 @@
   <data name="Privacy_Summary_Title" xml:space="preserve"><value>Summary</value></data>
   <data name="Privacy_Summary_Body" xml:space="preserve"><value>The TkOlymp app is a client for the service at https://api.rozpisovnik.cz. We collect only the data necessary for the app to operate (authentication, event display, notifications and profile information).</value></data>
   <data name="Privacy_S1_Title" xml:space="preserve"><value>1) What data we collect</value></data>
-  <data name="Privacy_S1_Body" xml:space="preserve"><value>• Authentication token (JWT): stored locally in the device's secure storage to authorize API calls (see AuthService). • Data from the API: events, instances, notifications, user/group info and leaderboards — fetched dynamically from the GraphQL API according to your account. • Optional data: if you fill in profile details or change settings, they will be used to improve the user experience.</value></data>
+  <data name="Privacy_S1_Body" xml:space="preserve">
+    <value>• Authentication token (JWT): stored locally in the device's secure storage to authorize API calls (see AuthService).
+
+• Data from the API: events, instances, notifications, user/group info and leaderboards — fetched dynamically from the GraphQL API according to your account.
+
+• Optional data: if you fill in profile details or change settings, they will be used to improve the user experience.</value>
+  </data>
   <data name="Privacy_S2_Title" xml:space="preserve"><value>2) Where and how data is stored</value></data>
-  <data name="Privacy_S2_Body" xml:space="preserve"><value>• Network requests go to https://api.rozpisovnik.cz/graphql. The app does not create its own central data store outside the API provider. • JWT is stored in SecureStorage (platform secure storage).</value></data>
+  <data name="Privacy_S2_Body" xml:space="preserve">
+    <value>• Network requests go to https://api.rozpisovnik.cz/graphql. The app does not create its own central data store outside the API provider.
+
+• JWT is stored in SecureStorage (platform secure storage).</value>
+  </data>
   <data name="Privacy_S3_Title" xml:space="preserve"><value>3) Purpose of processing</value></data>
   <data name="Privacy_S3_Body" xml:space="preserve"><value>We use data for authentication, authorization, displaying your events, sending and receiving notifications, managing leaderboards and other expected client features.</value></data>
   <data name="Privacy_S4_Title" xml:space="preserve"><value>4) Sharing and third-party processing</value></data>
-  <data name="Privacy_S4_Body" xml:space="preserve"><value>• Data is not sold or shared with third parties for marketing without your consent. We share only with the API provider and necessary platform services (e.g., maps) if you use them. • Notifications are delivered via platform services (Android/iOS) through NotificationManagerService or native APIs.</value></data>
+  <data name="Privacy_S4_Body" xml:space="preserve">
+    <value>• Data is not sold or shared with third parties for marketing without your consent. We share only with the API provider and necessary platform services (e.g., maps) if you use them.
+
+• Notifications are delivered via platform services (Android/iOS) through NotificationManagerService or native APIs.</value>
+  </data>
   <data name="Privacy_S5_Title" xml:space="preserve"><value>5) Permissions and local access</value></data>
   <data name="Privacy_S5_Body" xml:space="preserve"><value>The app requests only necessary permissions (e.g., for maps or receiving notifications). We do not access your contacts, photo galleries or other sensitive sources without explicit permission.</value></data>
   <data name="Privacy_S6_Title" xml:space="preserve"><value>6) How long we keep data</value></data>

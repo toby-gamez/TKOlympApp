@@ -128,13 +128,20 @@
     <data name="Privacy_Summary_Title" xml:space="preserve"><value>Povzetek</value></data>
     <data name="Privacy_Summary_Body" xml:space="preserve"><value>Aplikacija TkOlymp je odjemalec storitve na https://api.rozpisovnik.cz. Zbiramo samo podatke, potrebne za delovanje aplikacije (overjanje, prikaz dogodkov, obvestila in podatki profila).</value></data>
     <data name="Privacy_S1_Title" xml:space="preserve"><value>1) Katere podatke zbiramo</value></data>
-    <data name="Privacy_S1_Body" xml:space="preserve"><value>• Avtorizacijski žeton (JWT): shranjen lokalno v varnem pomnilniku naprave za pooblastilo API klicev (glej AuthService). • Podatki iz API: dogodki, primerki, obvestila, informacije o uporabnikih/skupinah in lestvice — dinamično pridobljeni iz GraphQL API glede na vaš račun. • Neobvezni podatki: če izpolnite profil ali spremenite nastavitve, se uporabijo za izboljšanje uporabniške izkušnje.</value></data>
     <data name="Privacy_S2_Title" xml:space="preserve"><value>2) Kje in kako so podatki shranjeni</value></data>
-    <data name="Privacy_S2_Body" xml:space="preserve"><value>• Omrežni zahtevki gredo na https://api.rozpisovnik.cz/graphql. Aplikacija ne ustvarja lastne centralne baze podatkov zunaj ponudnika API. • JWT je shranjen v SecureStorage (varno shranjevanje platforme).</value></data>
+    <data name="Privacy_S2_Body" xml:space="preserve">
+      <value>• Omrežni zahtevki gredo na https://api.rozpisovnik.cz/graphql. Aplikacija ne ustvarja lastne centralne baze podatkov zunaj ponudnika API.
+
+• JWT je shranjen v SecureStorage (varno shranjevanje platforme).</value>
+    </data>
     <data name="Privacy_S3_Title" xml:space="preserve"><value>3) Namen obdelave</value></data>
     <data name="Privacy_S3_Body" xml:space="preserve"><value>Podatke uporabljamo za overjanje, avtorizacijo, prikaz vaših dogodkov, pošiljanje in prejemanje obvestil, upravljanje lestvic in druge funkcije odjemalca.</value></data>
     <data name="Privacy_S4_Title" xml:space="preserve"><value>4) Deljenje in obdelava s strani tretjih oseb</value></data>
-    <data name="Privacy_S4_Body" xml:space="preserve"><value>• Podatkov ne prodajamo in ne delimo s tretjimi osebami za trženje brez vašega soglasja. Delimo le s ponudnikom API in nujnimi platformnimi storitvami (npr. zemljevidi), če jih uporabljate. • Obvestila posredujejo platformne storitve (Android/iOS) preko NotificationManagerService ali nativnih API-jev.</value></data>
+    <data name="Privacy_S4_Body" xml:space="preserve">
+      <value>• Podatkov ne prodajamo in ne delimo s tretjimi osebami za trženje brez vašega soglasja. Delimo le s ponudnikom API in nujnimi platformnimi storitvami (npr. zemljevidi), če jih uporabljate.
+
+• Obvestila posredujejo platformne storitve (Android/iOS) preko NotificationManagerService ali nativnih API-jev.</value>
+    </data>
     <data name="Privacy_S5_Title" xml:space="preserve"><value>5) Dovoljenja in lokalni dostop</value></data>
     <data name="Privacy_S5_Body" xml:space="preserve"><value>Aplikacija zahteva le potrebna dovoljenja (npr. za prikaz zemljevidov ali prejemanje obvestil). Ne dostopamo do vaših stikov, galerij ali drugih občutljivih virov brez izrecnega dovoljenja.</value></data>
     <data name="Privacy_S6_Title" xml:space="preserve"><value>6) Kako dolgo hranimo podatke</value></data>

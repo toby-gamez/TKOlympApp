@@ -130,11 +130,19 @@
     <data name="Privacy_S1_Title" xml:space="preserve"><value>1) Aké údaje zhromažďujeme</value></data>
     <data name="Privacy_S1_Body" xml:space="preserve"><value>• Autentifikačný token (JWT): uložený lokálne v zabezpečenom úložisku zariadenia na autorizáciu volaní API (viď AuthService). • Údaje z API: udalosti, inštancie, notifikácie, informácie o používateľoch/skupinách a rebríčkoch — načítavajú sa dynamicky z GraphQL API podľa vášho konta. • Voliteľné údaje: ak vyplníte profil alebo upravíte nastavenia, použijú sa na vylepšenie používateľskej skúsenosti.</value></data>
     <data name="Privacy_S2_Title" xml:space="preserve"><value>2) Kde a ako sú údaje uložené</value></data>
-    <data name="Privacy_S2_Body" xml:space="preserve"><value>• Sieťové požiadavky smerujú na https://api.rozpisovnik.cz/graphql. Aplikácia nevytvára vlastné centrálne úložisko dát mimo poskytovateľa API. • JWT je uložený v SecureStorage (platformné zabezpečené úložisko).</value></data>
+    <data name="Privacy_S2_Body" xml:space="preserve">
+      <value>• Sieťové požiadavky smerujú na https://api.rozpisovnik.cz/graphql. Aplikácia nevytvára vlastné centrálne úložisko dát mimo poskytovateľa API.
+
+• JWT je uložený v SecureStorage (platformné zabezpečené úložisko).</value>
+    </data>
     <data name="Privacy_S3_Title" xml:space="preserve"><value>3) Účel spracovania</value></data>
     <data name="Privacy_S3_Body" xml:space="preserve"><value>Údaje používame na autentifikáciu, autorizáciu, zobrazenie vašich udalostí, odosielanie a prijímanie notifikácií, správu rebríčkov a ďalšie funkcie klienta.</value></data>
     <data name="Privacy_S4_Title" xml:space="preserve"><value>4) Zdieľanie a spracovanie tretími stranami</value></data>
-    <data name="Privacy_S4_Body" xml:space="preserve"><value>• Údaje nie sú predávané ani zdieľané s tretími stranami pre marketing bez vášho súhlasu. Zdieľame len s poskytovateľom API a nevyhnutnými systémovými službami (napr. mapy), ak ich použijete. • Notifikácie sú sprostredkované platformnými službami (Android/iOS) cez NotificationManagerService alebo natívne rozhrania.</value></data>
+    <data name="Privacy_S4_Body" xml:space="preserve">
+      <value>• Údaje nie sú predávané ani zdieľané s tretími stranami pre marketing bez vášho súhlasu. Zdieľame len s poskytovateľom API a nevyhnutnými systémovými službami (napr. mapy), ak ich použijete.
+
+• Notifikácie sú sprostredkované platformnými službami (Android/iOS) cez NotificationManagerService alebo natívne rozhrania.</value>
+    </data>
     <data name="Privacy_S5_Title" xml:space="preserve"><value>5) Oprávnenia a lokálny prístup</value></data>
     <data name="Privacy_S5_Body" xml:space="preserve"><value>Aplikácia vyžaduje len nevyhnutné oprávnenia (napr. zobrazenie máp alebo prijímanie notifikácií). Nepřistupujeme k vašim kontaktom, galériám ani ďalším citlivým zdrojom bez výslovného súhlasu.</value></data>
     <data name="Privacy_S6_Title" xml:space="preserve"><value>6) Ako dlho uchovávame údaje</value></data>

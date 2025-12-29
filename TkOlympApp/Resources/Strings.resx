@@ -114,7 +114,7 @@
   <data name="Event_Registrations_Label" xml:space="preserve"><value>Seznam přihlášených</value></data>
   <data name="Couple_Inactive" xml:space="preserve"><value>Neaktivní</value></data>
   <data name="Other_AboutApp_Label" xml:space="preserve"><value>O aplikaci</value></data>
-  <data name="Other_AboutApp_Desc" xml:space="preserve"><value>Vše o tomto softwaru</value></data>
+  <data name="Other_AboutApp_Desc" xml:space="preserve"><value>Vše o tomto softwaru.</value></data>
   <data name="Other_AboutApp_Body" xml:space="preserve"><value>Tato aplikace zobrazuje rozvrhy, aktuality a informace o trenérech a prostorách. Je napojena na vzdálené API a využívá lokální notifikace pro upozornění na nové aktuality a události.</value></data>
   <data name="Other_AboutApp_License_Title" xml:space="preserve"><value>Licenční informace</value></data>
   <data name="Other_AboutApp_License_Text" xml:space="preserve"><value>Tento projekt může obsahovat třetí strany knihoven; ověřte licence v závislostech.</value></data>
@@ -128,13 +128,27 @@
   <data name="Privacy_Summary_Title" xml:space="preserve"><value>Stručné shrnutí</value></data>
   <data name="Privacy_Summary_Body" xml:space="preserve"><value>Aplikace TkOlymp je klientem služby poskytované na https://api.rozpisovnik.cz. Shromažďujeme pouze nezbytná data pro provoz aplikace (autentizace, zobrazení událostí, oznámení a profilové informace).</value></data>
   <data name="Privacy_S1_Title" xml:space="preserve"><value>1) Jaká data shromažďujeme</value></data>
-  <data name="Privacy_S1_Body" xml:space="preserve"><value>• Autentizační token (JWT): ukládán lokálně ve zabezpečeném úložišti zařízení pro autorizaci volání API (viz AuthService). • Data z API: události, instance, oznámení, informace o uživatelích/skupinách a žebříčky — načítají se dynamicky z GraphQL API podle vašeho přihlášení. • Volitelná data: pokud v aplikaci vyplníte profilové údaje nebo upravíte nastavení, budou použita ke zlepšení uživatelské zkušenosti.</value></data>
+  <data name="Privacy_S1_Body" xml:space="preserve">
+    <value>• Autentizační token (JWT): ukládán lokálně ve zabezpečeném úložišti zařízení pro autorizaci volání API (viz AuthService).
+
+• Data z API: události, instance, oznámení, informace o uživatelích/skupinách a žebříčky — načítají se dynamicky z GraphQL API podle vašeho přihlášení.
+
+• Volitelná data: pokud v aplikaci vyplníte profilové údaje nebo upravíte nastavení, budou použita ke zlepšení uživatelské zkušenosti.</value>
+  </data>
   <data name="Privacy_S2_Title" xml:space="preserve"><value>2) Kde a jak jsou data uložena</value></data>
-  <data name="Privacy_S2_Body" xml:space="preserve"><value>• Síťové požadavky směrují na https://api.rozpisovnik.cz/graphql. Aplikace nevytváří vlastní centrální úložiště dat mimo poskytovatele API. • JWT je uložen v SecureStorage (platformní zabezpečené úložiště).</value></data>
+  <data name="Privacy_S2_Body" xml:space="preserve">
+    <value>• Síťové požadavky směrují na https://api.rozpisovnik.cz/graphql. Aplikace nevytváří vlastní centrální úložiště dat mimo poskytovatele API.
+
+• JWT je uložen v SecureStorage (platformní zabezpečené úložiště).</value>
+  </data>
   <data name="Privacy_S3_Title" xml:space="preserve"><value>3) Účel zpracování</value></data>
   <data name="Privacy_S3_Body" xml:space="preserve"><value>Data používáme pro: autentizaci, autorizaci, zobrazování vašich událostí, odesílání a přijímání notifikací, správu žebříčků a dalších funkcí, které očekáváte od klienta služby.</value></data>
   <data name="Privacy_S4_Title" xml:space="preserve"><value>4) Sdílení a zpracování třetími stranami</value></data>
-  <data name="Privacy_S4_Body" xml:space="preserve"><value>• Data nejsou prodávána ani sdílena s třetími stranami pro marketing bez vašeho souhlasu. Sdílíme pouze s poskytovatelem API a s nezbytnými systémovými službami (např. mapy), pokud je použijete. • Notifikace jsou zprostředkovány platformními službami (Android/iOS) přes NotificationManagerService nebo nativní rozhraní.</value></data>
+  <data name="Privacy_S4_Body" xml:space="preserve">
+    <value>• Data nejsou prodávána ani sdílena s třetími stranami pro marketing bez vašeho souhlasu. Sdílíme pouze s poskytovatelem API a s nezbytnými systémovými službami (např. mapy), pokud je použijete.
+
+• Notifikace jsou zprostředkovány platformními službami (Android/iOS) přes NotificationManagerService nebo nativní rozhraní.</value>
+  </data>
   <data name="Privacy_S5_Title" xml:space="preserve"><value>5) Oprávnění a lokální přístup</value></data>
   <data name="Privacy_S5_Body" xml:space="preserve"><value>Aplikace vyžaduje jen nezbytná oprávnění (např. pro zobrazování map nebo příjem notifikací). Nepřistupujeme k vašim kontaktům, fotogaleriím ani dalším citlivým zdrojům bez výslovného povolení.</value></data>
   <data name="Privacy_S6_Title" xml:space="preserve"><value>6) Jak dlouho data uchováváme</value></data>
@@ -147,7 +161,7 @@
   <data name="Privacy_Contact_Prefix" xml:space="preserve"><value>Máte-li dotaz k ochraně osobních údajů nebo žádost o výmaz, kontaktujte správce služby: </value></data>
   <data name="Privacy_Contact_LinkText" xml:space="preserve"><value>tkolymp.cz/kontakt</value></data>
   <data name="Privacy_TechnicalDetails" xml:space="preserve"><value>Technické detaily: implementace autentizace a volání GraphQL najdete v `Services/AuthService.cs` a `Services/EventService.cs`. Notifikace spravuje `NotificationManagerService`.</value></data>
-  <data name="Privacy_List_Preview" xml:space="preserve"><value>Prohlédnout zásady ochrany osobních údajů</value></data>
+  <data name="Privacy_List_Preview" xml:space="preserve"><value>Prohlédni si důležitý dokument.</value></data>
   <data name="Event_Capacity_Format" xml:space="preserve"><value>Kapacita: {0} (Volno: {1})</value></data>
   <data name="Event_Capacity_NA" xml:space="preserve"><value>Kapacita: N/A</value></data>
   <data name="Event_Registered_Format" xml:space="preserve"><value>Registrováno: {0}</value></data>

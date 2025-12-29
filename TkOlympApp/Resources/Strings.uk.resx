@@ -128,13 +128,27 @@
   <data name="Privacy_Summary_Title" xml:space="preserve"><value>Короткий підсумок</value></data>
   <data name="Privacy_Summary_Body" xml:space="preserve"><value>Додаток TkOlymp є клієнтом сервісу на https://api.rozpisovnik.cz. Ми збираємо лише дані, необхідні для роботи додатка (аутентифікація, відображення подій, сповіщення та інформація профілю).</value></data>
   <data name="Privacy_S1_Title" xml:space="preserve"><value>1) Які дані ми збираємо</value></data>
-  <data name="Privacy_S1_Body" xml:space="preserve"><value>• Токен аутентифікації (JWT): зберігається локально у захищеному сховищі пристрою для авторизації викликів API (див. AuthService). • Дані з API: події, інстанси, сповіщення, інформація про користувачів/групи та рейтинги — завантажуються динамічно з GraphQL API згідно з вашим обліковим записом. • Додаткові дані: якщо ви заповнюєте профіль або змінюєте налаштування, вони використовуються для покращення досвіду користувача.</value></data>
+  <data name="Privacy_S1_Body" xml:space="preserve">
+    <value>• Токен аутентифікації (JWT): зберігається локально у захищеному сховищі пристрою для авторизації викликів API (див. AuthService).
+
+• Дані з API: події, інстанси, сповіщення, інформація про користувачів/групи та рейтинги — завантажуються динамічно з GraphQL API згідно з вашим обліковим записом.
+
+• Додаткові дані: якщо ви заповнюєте профіль або змінюєте налаштування, вони використовуються для покращення досвіду користувача.</value>
+  </data>
   <data name="Privacy_S2_Title" xml:space="preserve"><value>2) Де і як зберігаються дані</value></data>
-  <data name="Privacy_S2_Body" xml:space="preserve"><value>• Мережеві запити спрямовуються на https://api.rozpisovnik.cz/graphql. Додаток не створює власного центрального сховища даних поза провайдером API. • JWT зберігається в SecureStorage (платформне захищене сховище).</value></data>
+  <data name="Privacy_S2_Body" xml:space="preserve">
+    <value>• Мережеві запити спрямовуються на https://api.rozpisovnik.cz/graphql. Додаток не створює власного центрального сховища даних поза провайдером API.
+
+• JWT зберігається в SecureStorage (платформне захищене сховище).</value>
+  </data>
   <data name="Privacy_S3_Title" xml:space="preserve"><value>3) Мета обробки</value></data>
   <data name="Privacy_S3_Body" xml:space="preserve"><value>Ми використовуємо дані для аутентифікації, авторизації, відображення ваших подій, надсилання та отримання сповіщень, керування рейтингами та інших функцій клієнта.</value></data>
   <data name="Privacy_S4_Title" xml:space="preserve"><value>4) Передача та обробка третіми сторонами</value></data>
-  <data name="Privacy_S4_Body" xml:space="preserve"><value>• Дані не продаються і не передаються третім сторонам для маркетингу без вашої згоди. Ми передаємо дані лише провайдеру API та необхідним платформним службам (наприклад, карти), якщо ви ними користуєтесь. • Сповіщення доставляються платформними сервісами (Android/iOS) через NotificationManagerService або нативні API.</value></data>
+  <data name="Privacy_S4_Body" xml:space="preserve">
+    <value>• Дані не продаються і не передаються третім сторонам для маркетингу без вашої згоди. Ми передаємо дані лише провайдеру API та необхідним платформним службам (наприклад, карти), якщо ви ними користуєтесь.
+
+• Сповіщення доставляються платформними сервісами (Android/iOS) через NotificationManagerService або нативні API.</value>
+  </data>
   <data name="Privacy_S5_Title" xml:space="preserve"><value>5) Дозволи та локальний доступ</value></data>
   <data name="Privacy_S5_Body" xml:space="preserve"><value>Додаток запитує лише необхідні дозволи (наприклад, для карт або отримання сповіщень). Ми не отримуємо доступ до ваших контактів, фотогалерей або інших чутливих джерел без явного дозволу.</value></data>
   <data name="Privacy_S6_Title" xml:space="preserve"><value>6) Як довго ми зберігаємо дані</value></data>

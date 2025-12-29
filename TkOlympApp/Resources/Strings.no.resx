@@ -128,13 +128,27 @@
     <data name="Privacy_Summary_Title" xml:space="preserve"><value>Sammendrag</value></data>
     <data name="Privacy_Summary_Body" xml:space="preserve"><value>TkOlymp-appen er en klient for tjenesten på https://api.rozpisovnik.cz. Vi samler bare inn data som er nødvendige for at appen skal fungere (autentisering, visning av hendelser, varsler og profilinformasjon).</value></data>
     <data name="Privacy_S1_Title" xml:space="preserve"><value>1) Hvilke data vi samler</value></data>
-    <data name="Privacy_S1_Body" xml:space="preserve"><value>• Autentiseringstoken (JWT): lagres lokalt i enhetens sikre lagring for å autorisere API-kall (se AuthService). • Data fra API: hendelser, instanser, varsler, bruker-/gruppeinformasjon og ranglister — hentes dynamisk fra GraphQL API basert på din konto. • Valgfrie data: hvis du fyller ut profilopplysninger eller endrer innstillinger, brukes de for å forbedre brukeropplevelsen.</value></data>
+        <data name="Privacy_S1_Body" xml:space="preserve">
+            <value>• Autentiseringstoken (JWT): lagres lokalt i enhetens sikre lagring for å autorisere API-kall (se AuthService).
+
+• Data fra API: hendelser, instanser, varsler, bruker-/gruppeinformasjon og ranglister — hentes dynamisk fra GraphQL API basert på din konto.
+
+• Valgfrie data: hvis du fyller ut profilopplysninger eller endrer innstillinger, brukes de for å forbedre brukeropplevelsen.</value>
+        </data>
     <data name="Privacy_S2_Title" xml:space="preserve"><value>2) Hvor og hvordan data lagres</value></data>
-    <data name="Privacy_S2_Body" xml:space="preserve"><value>• Nettverksforespørsler går til https://api.rozpisovnik.cz/graphql. Appen oppretter ikke eget sentralt datalager utenfor API-leverandøren. • JWT er lagret i SecureStorage (plattformens sikre lagring).</value></data>
+        <data name="Privacy_S2_Body" xml:space="preserve">
+            <value>• Nettverksforespørsler går til https://api.rozpisovnik.cz/graphql. Appen oppretter ikke eget sentralt datalager utenfor API-leverandøren.
+
+• JWT er lagret i SecureStorage (plattformens sikre lagring).</value>
+        </data>
     <data name="Privacy_S3_Title" xml:space="preserve"><value>3) Formål med behandling</value></data>
     <data name="Privacy_S3_Body" xml:space="preserve"><value>Vi bruker data til autentisering, autorisasjon, visning av dine hendelser, sending og mottak av varsler, håndtering av ranglister og andre funksjoner i klienten.</value></data>
     <data name="Privacy_S4_Title" xml:space="preserve"><value>4) Deling og behandling av tredjepart</value></data>
-    <data name="Privacy_S4_Body" xml:space="preserve"><value>• Data selges ikke eller deles med tredjepart for markedsføring uten ditt samtykke. Vi deler kun med API-leverandøren og nødvendige plattformtjenester (f.eks. kart) hvis du bruker dem. • Varsler formidles via plattformtjenester (Android/iOS) gjennom NotificationManagerService eller native APIer.</value></data>
+        <data name="Privacy_S4_Body" xml:space="preserve">
+            <value>• Data selges ikke eller deles med tredjepart for markedsføring uten ditt samtykke. Vi deler kun med API-leverandøren og nødvendige plattformtjenester (f.eks. kart) hvis du bruker dem.
+
+• Varsler formidles via plattformtjenester (Android/iOS) gjennom NotificationManagerService eller native APIer.</value>
+        </data>
     <data name="Privacy_S5_Title" xml:space="preserve"><value>5) Tillatelser og lokal tilgang</value></data>
     <data name="Privacy_S5_Body" xml:space="preserve"><value>Appen ber kun om nødvendige tillatelser (f.eks. for kart eller mottak av varsler). Vi får ikke tilgang til kontaktene dine, bildegallerier eller andre sensitive ressurser uten uttrykkelig tillatelse.</value></data>
     <data name="Privacy_S6_Title" xml:space="preserve"><value>6) Hvor lenge vi beholder data</value></data>
