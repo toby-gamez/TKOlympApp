@@ -182,7 +182,7 @@
   <data name="EditRegistrations_NoTrainerSelected" xml:space="preserve"><value>Chyba</value></data>
   <data name="EditRegistrations_NoTrainerSelected_Text" xml:space="preserve"><value>Vyberte alespoň jednoho trenéra a počet lekcí.</value></data>
   <data name="EditRegistrations_Success_Text" xml:space="preserve"><value>Změny uloženy</value></data>
-  <data name="EditRegistrations_Title" xml:space="preserve"><value>Upravit registrace</value></data>
+  <data name="EditRegistrations_Title" xml:space="preserve"><value>Upravit lekce</value></data>
   <data name="EditRegistrations_Description" xml:space="preserve"><value>Vyberte registraci pro úpravu požadavků na lekce.</value></data>
   <data name="EditRegistrations_Trainers_Label" xml:space="preserve"><value>Trenéři</value></data>
   <data name="EditRegistrations_Button_Text" xml:space="preserve"><value>Potvrdit</value></data>
