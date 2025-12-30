@@ -46,7 +46,7 @@ public partial class AboutMePage : ContentPage
             CreatedAtValue.Text = NonEmpty(FormatDt(user.CreatedAt));
             UpdatedAtValue.Text = NonEmpty(FormatDt(user.UpdatedAt));
             // Hide rows that have no meaningful value
-            try { LoginRow.IsVisible = !string.IsNullOrWhiteSpace(user.ULogin); } catch { }
+            
             try { EmailRow.IsVisible = !string.IsNullOrWhiteSpace(user.UEmail); } catch { }
             try { LastLoginRow.IsVisible = user.LastLogin.HasValue; } catch { }
             try { LastActiveRow.IsVisible = user.LastActiveAt.HasValue; } catch { }

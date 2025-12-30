@@ -22,14 +22,8 @@
                             <Label x:Name="NameValue" FontSize="22" FontAttributes="Bold"/>
                             <Label x:Name="SurnameValue" FontSize="22" FontAttributes="Bold"/>
                         </HorizontalStackLayout>
-
                         <!-- Důležité drobné údaje pod jménem -->
-                        <VerticalStackLayout Spacing="6" Padding="6,0,0,0">
-                            <HorizontalStackLayout x:Name="LoginRow" Spacing="6">
-                                <Label Text="{svc:Translate About_Login}" FontAttributes="Bold" />
-                                <Label x:Name="LoginValue" HorizontalOptions="StartAndExpand" />
-                            </HorizontalStackLayout>
-                        </VerticalStackLayout>
+                            <Label x:Name="LoginValue" HorizontalOptions="Center" />
                     </VerticalStackLayout>
                 </Border>
 

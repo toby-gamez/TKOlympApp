@@ -129,7 +129,7 @@
         <data name="About_Nationality" xml:space="preserve"><value>Region:</value></data>
         <data name="About_Gender" xml:space="preserve"><value>Avatar preset:</value></data>
         <data name="About_IsTrainer" xml:space="preserve"><value>Gym bro:</value></data>
-        <data name="About_Address" xml:space="preserve"><value>Home Base:</value></data>
+        <data name="About_Address" xml:space="preserve"><value>Home base:</value></data>
         <data name="About_WdsfId" xml:space="preserve"><value>WDSF ID:</value></data>
         <data name="About_CstsId" xml:space="preserve"><value>ČSTS ID:</value></data>
         <data name="About_NationalId" xml:space="preserve"><value>Oficial barcode:</value></data>
