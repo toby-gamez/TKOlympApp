@@ -107,7 +107,7 @@ public partial class AboutMePage : ContentPage
                             NationalityValue.Text = NonEmpty(NationalityHelper.GetLocalizedAdjective(person.Nationality?.Trim()));
                             AddressValue.Text = ComposeAddress(person.Address);
                             GenderValue.Text = MapGender(person.Gender);
-                            IsTrainerValue.Text = person.IsTrainer.HasValue ? (person.IsTrainer.Value ? "Ano" : "Ne") : "—";
+                            IsTrainerValue.Text = person.IsTrainer.HasValue ? (person.IsTrainer.Value ? LocalizationService.Get("About_Yes") : LocalizationService.Get("About_No")) : "—";
                             WdsfIdValue.Text = NonEmpty(person.WdsfId?.Trim());
                             CstsIdValue.Text = NonEmpty(person.CstsId?.Trim());
                             NationalIdValue.Text = NonEmpty(person.NationalIdNumber?.Trim());
@@ -240,10 +240,10 @@ public partial class AboutMePage : ContentPage
         if (string.IsNullOrWhiteSpace(gender)) return "—";
         return gender.Trim().ToUpperInvariant() switch
         {
-            "MAN" => "Muž",
-            "WOMAN" => "Žena",
-            _ => "Jiné",
-        };
+            "MAN" => LocalizationService.Get("About_Gender_Male"),
+            "WOMAN" => LocalizationService.Get("About_Gender_Female"),
+            _ => LocalizationService.Get("About_Gender_Other"),
+        } ?? "—";
     }
 
     private sealed class PersonRespData

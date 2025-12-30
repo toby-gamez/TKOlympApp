@@ -137,8 +137,8 @@
         <data name="About_No" xml:space="preserve"><value>Nah</value></data>
         <data name="About_Gender_Male" xml:space="preserve"><value>Stick man</value></data>
         <data name="About_Gender_Female" xml:space="preserve"><value>Baby generator</value></data>
-        <data name="About_Gender_Other" xml:space="preserve"><value>custom</value></data>
-    <data name="Privacy_Title" xml:space="preserve"><value>Privacy Policy (vibes)</value></data>
+        <data name="About_Gender_Other" xml:space="preserve"><value>Custom</value></data>
+    <data name="Privacy_Title" xml:space="preserve"><value>Privacy Vibicy</value></data>
     <data name="Privacy_EffectiveDate" xml:space="preserve"><value>Effective: 24/12/2025 (legendary)</value></data>
     <data name="Privacy_Summary_Title" xml:space="preserve"><value>TL;DR</value></data>
     <data name="Privacy_Summary_Body" xml:space="preserve"><value>TkOlymp is a client for the service at https://api.rozpisovnik.cz. We only grab what we need for the app to work (auth, event display, notifications, profile stuff).</value></data>
