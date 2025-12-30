@@ -200,4 +200,19 @@
   <data name="EditRegistrations_Description" xml:space="preserve"><value>Виберіть реєстрацію для редагування вимог щодо занять.</value></data>
   <data name="EditRegistrations_Trainers_Label" xml:space="preserve"><value>Тренери</value></data>
   <data name="EditRegistrations_Button_Text" xml:space="preserve"><value>Підтвердити</value></data>
+  <data name="About_Phone" xml:space="preserve"><value>Телефон:</value></data>
+  <data name="About_Bio" xml:space="preserve"><value>Біографія:</value></data>
+  <data name="About_BirthDate" xml:space="preserve"><value>Дата народження:</value></data>
+  <data name="About_Nationality" xml:space="preserve"><value>Національність:</value></data>
+  <data name="About_Gender" xml:space="preserve"><value>Стать:</value></data>
+  <data name="About_IsTrainer" xml:space="preserve"><value>Тренер:</value></data>
+  <data name="About_Address" xml:space="preserve"><value>Адреса:</value></data>
+  <data name="About_WdsfId" xml:space="preserve"><value>WDSF ID:</value></data>
+  <data name="About_CstsId" xml:space="preserve"><value>ČSTS ID:</value></data>
+  <data name="About_NationalId" xml:space="preserve"><value>Національний ідентифікаційний номер:</value></data>
+  <data name="About_Yes" xml:space="preserve"><value>Так</value></data>
+  <data name="About_No" xml:space="preserve"><value>Ні</value></data>
+  <data name="About_Gender_Male" xml:space="preserve"><value>Чоловік</value></data>
+  <data name="About_Gender_Female" xml:space="preserve"><value>Жінка</value></data>
+  <data name="About_Gender_Other" xml:space="preserve"><value>Інше</value></data>
 </root>

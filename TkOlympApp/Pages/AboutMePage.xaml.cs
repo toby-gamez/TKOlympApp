@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using TkOlympApp.Services;
+using TkOlympApp.Helpers;
 
 namespace TkOlympApp.Pages;
 
@@ -44,6 +45,14 @@ public partial class AboutMePage : ContentPage
             UCreatedAtValue.Text = NonEmpty(FormatDt(user.UCreatedAt));
             CreatedAtValue.Text = NonEmpty(FormatDt(user.CreatedAt));
             UpdatedAtValue.Text = NonEmpty(FormatDt(user.UpdatedAt));
+            // Hide rows that have no meaningful value
+            try { LoginRow.IsVisible = !string.IsNullOrWhiteSpace(user.ULogin); } catch { }
+            try { EmailRow.IsVisible = !string.IsNullOrWhiteSpace(user.UEmail); } catch { }
+            try { LastLoginRow.IsVisible = user.LastLogin.HasValue; } catch { }
+            try { LastActiveRow.IsVisible = user.LastActiveAt.HasValue; } catch { }
+            try { UCreatedAtRow.IsVisible = true; } catch { }
+            try { CreatedAtRow.IsVisible = user.CreatedAt.HasValue; } catch { }
+            try { UpdatedAtRow.IsVisible = true; } catch { }
             // lastVersion removed from API — no longer displayed
 
             // Fetch userProxiesList -> person -> id and display in second border
@@ -64,6 +73,7 @@ public partial class AboutMePage : ContentPage
                 var parsed = JsonSerializer.Deserialize<GraphQlResp<UserProxiesData>>(body, options);
                 var proxyId = parsed?.Data?.UserProxiesList?.FirstOrDefault()?.Person?.Id;
                 ProxyIdValue.Text = NonEmpty(proxyId);
+                try { ProxyIdRow.IsVisible = !string.IsNullOrWhiteSpace(proxyId); } catch { }
                 // Treat this proxy id as my personId globally
                 try
                 {
@@ -72,6 +82,58 @@ public partial class AboutMePage : ContentPage
                 catch
                 {
                     // ignore failures setting person id
+                }
+                // Fetch full person data for this person id
+                if (!string.IsNullOrWhiteSpace(proxyId))
+                {
+                        try
+                        {
+                            var query = "query MyQuery { person(id: \"" + proxyId + "\") { address { city conscriptionNumber district orientationNumber postalCode region street } bio birthDate createdAt cstsId email firstName gender isTrainer lastName nationalIdNumber nationality phone wdsfId } }";
+
+                        var gqlReqP = new { query };
+                        var jsonP = JsonSerializer.Serialize(gqlReqP, options);
+                        using var contentP = new StringContent(jsonP, Encoding.UTF8, "application/json");
+                        using var respP = await AuthService.Http.PostAsync("", contentP);
+                        respP.EnsureSuccessStatusCode();
+
+                        var bodyP = await respP.Content.ReadAsStringAsync();
+                        var parsedP = JsonSerializer.Deserialize<GraphQlResp<PersonRespData>>(bodyP, options);
+                        var person = parsedP?.Data?.Person;
+                        if (person != null)
+                        {
+                            BioValue.Text = NonEmpty(person.Bio?.Trim());
+                            BirthDateValue.Text = FormatDtString(person.BirthDate);
+                            PhoneValue.Text = NonEmpty(person.Phone?.Trim());
+                            NationalityValue.Text = NonEmpty(NationalityHelper.GetLocalizedAdjective(person.Nationality?.Trim()));
+                            AddressValue.Text = ComposeAddress(person.Address);
+                            GenderValue.Text = MapGender(person.Gender);
+                            IsTrainerValue.Text = person.IsTrainer.HasValue ? (person.IsTrainer.Value ? "Ano" : "Ne") : "—";
+                            WdsfIdValue.Text = NonEmpty(person.WdsfId?.Trim());
+                            CstsIdValue.Text = NonEmpty(person.CstsId?.Trim());
+                            NationalIdValue.Text = NonEmpty(person.NationalIdNumber?.Trim());
+                            // Toggle visibility per-row
+                            try { BioRow.IsVisible = !string.IsNullOrWhiteSpace(person.Bio); } catch { }
+                            try { BirthDateRow.IsVisible = !string.IsNullOrWhiteSpace(person.BirthDate); } catch { }
+                            try { PhoneRow.IsVisible = !string.IsNullOrWhiteSpace(person.Phone); } catch { }
+                            try { NationalityRow.IsVisible = !string.IsNullOrWhiteSpace(person.Nationality); } catch { }
+                            try { AddressRow.IsVisible = AddressValue.Text != "—"; } catch { }
+                            try { GenderRow.IsVisible = !string.IsNullOrWhiteSpace(person.Gender); } catch { }
+                            try { IsTrainerRow.IsVisible = person.IsTrainer.HasValue; } catch { }
+                            try { WdsfRow.IsVisible = !string.IsNullOrWhiteSpace(person.WdsfId); } catch { }
+                            try { CstsRow.IsVisible = !string.IsNullOrWhiteSpace(person.CstsId); } catch { }
+                            try { NationalIdRow.IsVisible = !string.IsNullOrWhiteSpace(person.NationalIdNumber); } catch { }
+
+                            // Parent border visibility
+                            try { ContactBorder.IsVisible = EmailRow.IsVisible || PhoneRow.IsVisible; } catch { }
+                            try { PersonalBorder.IsVisible = BioRow.IsVisible || BirthDateRow.IsVisible || NationalityRow.IsVisible || GenderRow.IsVisible || IsTrainerRow.IsVisible; } catch { }
+                            try { AddressBorder.IsVisible = AddressRow.IsVisible; } catch { }
+                            try { IdsBorder.IsVisible = ProxyIdRow.IsVisible || WdsfRow.IsVisible || CstsRow.IsVisible || NationalIdRow.IsVisible; } catch { }
+                        }
+                    }
+                    catch
+                    {
+                        // ignore person fetch errors
+                    }
                 }
             }
             catch
@@ -129,5 +191,92 @@ public partial class AboutMePage : ContentPage
     private sealed class Person
     {
         [JsonPropertyName("id")] public string? Id { get; set; }
+    }
+
+    private static string FormatDtString(string? s)
+    {
+        if (string.IsNullOrWhiteSpace(s)) return "—";
+        if (DateTime.TryParse(s, out var dt)) return dt.ToLocalTime().ToString("dd.MM.yyyy");
+        return s;
+    }
+
+    private static string ComposeAddress(Address? a)
+    {
+        if (a == null) return "—";
+        var street = a.Street?.Trim();
+        var conscription = a.ConscriptionNumber?.Trim(); // popisné
+        var orientation = a.OrientationNumber?.Trim(); // orientační
+
+        string numberPart;
+        if (!string.IsNullOrWhiteSpace(conscription) && !string.IsNullOrWhiteSpace(orientation))
+            numberPart = conscription + "/" + orientation; // pop/ori
+        else if (!string.IsNullOrWhiteSpace(conscription))
+            numberPart = conscription;
+        else if (!string.IsNullOrWhiteSpace(orientation))
+            numberPart = orientation;
+        else
+            numberPart = string.Empty;
+
+        // First segment: street + (optional) numberPart (no comma between them)
+        var first = string.IsNullOrWhiteSpace(street)
+            ? (string.IsNullOrWhiteSpace(numberPart) ? string.Empty : numberPart)
+            : (string.IsNullOrWhiteSpace(numberPart) ? street : street + " " + numberPart);
+
+        var postal = a.PostalCode?.Trim();
+        var city = a.City?.Trim();
+        var region = a.Region?.Trim();
+
+        var postalCity = string.Empty;
+        if (!string.IsNullOrWhiteSpace(postal) && !string.IsNullOrWhiteSpace(city)) postalCity = postal + " " + city;
+        else if (!string.IsNullOrWhiteSpace(postal)) postalCity = postal;
+        else if (!string.IsNullOrWhiteSpace(city)) postalCity = city;
+
+        var parts = new[] { first, postalCity, region }.Where(p => !string.IsNullOrWhiteSpace(p)).ToArray();
+        return parts.Length == 0 ? "—" : string.Join(", ", parts);
+    }
+
+    private static string MapGender(string? gender)
+    {
+        if (string.IsNullOrWhiteSpace(gender)) return "—";
+        return gender.Trim().ToUpperInvariant() switch
+        {
+            "MAN" => "Muž",
+            "WOMAN" => "Žena",
+            _ => "Jiné",
+        };
+    }
+
+    private sealed class PersonRespData
+    {
+        [JsonPropertyName("person")] public PersonDetail? Person { get; set; }
+    }
+
+    private sealed class PersonDetail
+    {
+        [JsonPropertyName("address")] public Address? Address { get; set; }
+        [JsonPropertyName("bio")] public string? Bio { get; set; }
+        [JsonPropertyName("birthDate")] public string? BirthDate { get; set; }
+        [JsonPropertyName("createdAt")] public string? CreatedAt { get; set; }
+        [JsonPropertyName("cstsId")] public string? CstsId { get; set; }
+        [JsonPropertyName("email")] public string? Email { get; set; }
+        [JsonPropertyName("firstName")] public string? FirstName { get; set; }
+        [JsonPropertyName("gender")] public string? Gender { get; set; }
+        [JsonPropertyName("isTrainer")] public bool? IsTrainer { get; set; }
+        [JsonPropertyName("lastName")] public string? LastName { get; set; }
+        [JsonPropertyName("nationalIdNumber")] public string? NationalIdNumber { get; set; }
+        [JsonPropertyName("nationality")] public string? Nationality { get; set; }
+        [JsonPropertyName("phone")] public string? Phone { get; set; }
+        [JsonPropertyName("wdsfId")] public string? WdsfId { get; set; }
+    }
+
+    private sealed class Address
+    {
+        [JsonPropertyName("city")] public string? City { get; set; }
+        [JsonPropertyName("conscriptionNumber")] public string? ConscriptionNumber { get; set; }
+        [JsonPropertyName("district")] public string? District { get; set; }
+        [JsonPropertyName("orientationNumber")] public string? OrientationNumber { get; set; }
+        [JsonPropertyName("postalCode")] public string? PostalCode { get; set; }
+        [JsonPropertyName("region")] public string? Region { get; set; }
+        [JsonPropertyName("street")] public string? Street { get; set; }
     }
 }

@@ -123,6 +123,21 @@
     <data name="Other_Author_Filip" xml:space="preserve"><value>translator, moral support, certified helper (not a Santa helper), W human, good boy</value></data>
     <data name="Brainrot_Disclaimer" xml:space="preserve"><value>Disclaimer: 'Brainrot' language is a fun variation of the original application, enriched with a bit of 'brainrot' humor. It's all for fun and should not be taken seriously. Enjoy the vibes!</value></data>
     <data name="VersionFormat" xml:space="preserve"><value>Remix {0} (Build {1})</value></data>
+        <data name="About_Phone" xml:space="preserve"><value>Old Ig:</value></data>
+        <data name="About_Bio" xml:space="preserve"><value>Bio:</value></data>
+        <data name="About_BirthDate" xml:space="preserve"><value>Spawn date:</value></data>
+        <data name="About_Nationality" xml:space="preserve"><value>Region:</value></data>
+        <data name="About_Gender" xml:space="preserve"><value>Avatar preset:</value></data>
+        <data name="About_IsTrainer" xml:space="preserve"><value>Gym bro:</value></data>
+        <data name="About_Address" xml:space="preserve"><value>Home Base:</value></data>
+        <data name="About_WdsfId" xml:space="preserve"><value>WDSF ID:</value></data>
+        <data name="About_CstsId" xml:space="preserve"><value>ČSTS ID:</value></data>
+        <data name="About_NationalId" xml:space="preserve"><value>Oficial barcode:</value></data>
+        <data name="About_Yes" xml:space="preserve"><value>Yeah</value></data>
+        <data name="About_No" xml:space="preserve"><value>Nah</value></data>
+        <data name="About_Gender_Male" xml:space="preserve"><value>Stick man</value></data>
+        <data name="About_Gender_Female" xml:space="preserve"><value>Baby generator</value></data>
+        <data name="About_Gender_Other" xml:space="preserve"><value>custom</value></data>
     <data name="Privacy_Title" xml:space="preserve"><value>Privacy Policy (vibes)</value></data>
     <data name="Privacy_EffectiveDate" xml:space="preserve"><value>Effective: 24/12/2025 (legendary)</value></data>
     <data name="Privacy_Summary_Title" xml:space="preserve"><value>TL;DR</value></data>

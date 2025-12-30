@@ -13,9 +13,9 @@
 
                 <!-- Primary: velké jméno nahoře, detaily pod ním -->
                 <Border Padding="12">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="8" />
-                </Border.StrokeShape>
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
                     <VerticalStackLayout Spacing="8">
                         <!-- Jméno a příjmení velkým písmem -->
                         <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
@@ -25,14 +25,9 @@
 
                         <!-- Důležité drobné údaje pod jménem -->
                         <VerticalStackLayout Spacing="6" Padding="6,0,0,0">
-                            <HorizontalStackLayout Spacing="6">
+                            <HorizontalStackLayout x:Name="LoginRow" Spacing="6">
                                 <Label Text="{svc:Translate About_Login}" FontAttributes="Bold" />
                                 <Label x:Name="LoginValue" HorizontalOptions="StartAndExpand" />
-                            </HorizontalStackLayout>
-
-                            <HorizontalStackLayout Spacing="6">
-                                <Label Text="{svc:Translate About_Email}" FontAttributes="Bold" />
-                                <Label x:Name="EmailValue" HorizontalOptions="StartAndExpand" />
                             </HorizontalStackLayout>
                         </VerticalStackLayout>
                     </VerticalStackLayout>
@@ -44,37 +39,122 @@
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
                     <VerticalStackLayout Spacing="8">
-                        <HorizontalStackLayout Spacing="6">
+                        <HorizontalStackLayout x:Name="LastLoginRow" Spacing="6">
                             <Label Text="{svc:Translate About_LastLogin}" FontAttributes="Bold" FontSize="12"/>
                             <Label x:Name="LastLoginValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
                         </HorizontalStackLayout>
 
-                        <HorizontalStackLayout Spacing="6">
+                        <HorizontalStackLayout x:Name="LastActiveRow" Spacing="6">
                             <Label Text="{svc:Translate About_LastActivity}" FontAttributes="Bold" FontSize="12"/>
                             <Label x:Name="LastActiveValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
                         </HorizontalStackLayout>
 
-                        <HorizontalStackLayout Spacing="6">
+                        <HorizontalStackLayout x:Name="UCreatedAtRow" Spacing="6">
                             <Label Text="{svc:Translate About_CreatedUser}" FontAttributes="Bold" FontSize="12"/>
                             <Label x:Name="UCreatedAtValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
                         </HorizontalStackLayout>
 
-                        <HorizontalStackLayout Spacing="6">
+                        <HorizontalStackLayout x:Name="CreatedAtRow" Spacing="6">
                             <Label Text="{svc:Translate About_CreatedRecord}" FontAttributes="Bold" FontSize="12"/>
                             <Label x:Name="CreatedAtValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
                         </HorizontalStackLayout>
 
-                        <HorizontalStackLayout Spacing="6">
+                        <HorizontalStackLayout x:Name="UpdatedAtRow" Spacing="6">
                             <Label Text="{svc:Translate About_Updated}" FontAttributes="Bold" FontSize="12"/>
                             <Label x:Name="UpdatedAtValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
                         </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
 
-                        <HorizontalStackLayout Spacing="6">
-                            <Label Text="ID" FontAttributes="Bold" FontSize="12"/>
+                <!-- Contact -->
+                <Border Padding="12" x:Name="ContactBorder">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="8">
+                        <HorizontalStackLayout x:Name="EmailRow" Spacing="6">
+                            <Label Text="{svc:Translate About_Email}" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="EmailValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
+
+                        <HorizontalStackLayout x:Name="PhoneRow" Spacing="6">
+                            <Label Text="{svc:Translate About_Phone}" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="PhoneValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Personal -->
+                <Border Padding="12" x:Name="PersonalBorder">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="8">
+                        <HorizontalStackLayout x:Name="BioRow" Spacing="6">
+                            <Label Text="{svc:Translate About_Bio}" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="BioValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
+
+                        <HorizontalStackLayout x:Name="BirthDateRow" Spacing="6">
+                            <Label Text="{svc:Translate About_BirthDate}" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="BirthDateValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
+
+                        <HorizontalStackLayout x:Name="NationalityRow" Spacing="6">
+                            <Label Text="{svc:Translate About_Nationality}" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="NationalityValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
+
+                        <HorizontalStackLayout x:Name="GenderRow" Spacing="6">
+                            <Label Text="{svc:Translate About_Gender}" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="GenderValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
+
+                        <HorizontalStackLayout x:Name="IsTrainerRow" Spacing="6">
+                            <Label Text="{svc:Translate About_IsTrainer}" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="IsTrainerValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Address -->
+                <Border Padding="12" x:Name="AddressBorder">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="8">
+                        <HorizontalStackLayout x:Name="AddressRow" Spacing="6">
+                            <Label Text="{svc:Translate About_Address}" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="AddressValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Identifiers -->
+                <Border Padding="12" x:Name="IdsBorder">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="8">
+                        <HorizontalStackLayout x:Name="ProxyIdRow" Spacing="6">
+                            <Label Text="{svc:Translate About_Id}" FontAttributes="Bold" FontSize="12"/>
                             <Label x:Name="ProxyIdValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
                         </HorizontalStackLayout>
 
-                        <!-- lastVersion removed from API, field hidden -->
+                        <HorizontalStackLayout x:Name="WdsfRow" Spacing="6">
+                            <Label Text="{svc:Translate About_WdsfId}" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="WdsfIdValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
+
+                        <HorizontalStackLayout x:Name="CstsRow" Spacing="6">
+                            <Label Text="{svc:Translate About_CstsId}" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="CstsIdValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
+
+                        <HorizontalStackLayout x:Name="NationalIdRow" Spacing="6">
+                            <Label Text="{svc:Translate About_NationalId}" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="NationalIdValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
                     </VerticalStackLayout>
                 </Border>
             </VerticalStackLayout>

@@ -194,4 +194,19 @@
     <data name="EditRegistrations_Description" xml:space="preserve"><value>Vyberte registráciu na úpravu požiadaviek na lekcie.</value></data>
     <data name="EditRegistrations_Trainers_Label" xml:space="preserve"><value>Tréneri</value></data>
     <data name="EditRegistrations_Button_Text" xml:space="preserve"><value>Potvrdiť</value></data>
+    <data name="About_Phone" xml:space="preserve"><value>Telefón:</value></data>
+    <data name="About_Bio" xml:space="preserve"><value>Bio:</value></data>
+    <data name="About_BirthDate" xml:space="preserve"><value>Dátum narodenia:</value></data>
+    <data name="About_Nationality" xml:space="preserve"><value>Národnosť:</value></data>
+    <data name="About_Gender" xml:space="preserve"><value>Pohlavie:</value></data>
+    <data name="About_IsTrainer" xml:space="preserve"><value>Tréner:</value></data>
+    <data name="About_Address" xml:space="preserve"><value>Adresa:</value></data>
+    <data name="About_WdsfId" xml:space="preserve"><value>WDSF ID:</value></data>
+    <data name="About_CstsId" xml:space="preserve"><value>ČSTS ID:</value></data>
+    <data name="About_NationalId" xml:space="preserve"><value>Rodné číslo:</value></data>
+    <data name="About_Yes" xml:space="preserve"><value>Áno</value></data>
+    <data name="About_No" xml:space="preserve"><value>Nie</value></data>
+    <data name="About_Gender_Male" xml:space="preserve"><value>Muž</value></data>
+    <data name="About_Gender_Female" xml:space="preserve"><value>Žena</value></data>
+    <data name="About_Gender_Other" xml:space="preserve"><value>Iné</value></data>
     </root>
