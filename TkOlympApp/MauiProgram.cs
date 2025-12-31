@@ -4,6 +4,7 @@ using Microsoft.Maui.Hosting;
 using MauiIcons.Material;
 using MauiIcons.FontAwesome;
 using MauiIcons.Fluent;
+using Indiko.Maui.Controls.SelectableLabel;
 
 namespace TkOlympApp;
 
@@ -17,6 +18,7 @@ public static class MauiProgram
             .UseMaterialMauiIcons()
             .UseFontAwesomeMauiIcons()
             .UseFluentMauiIcons()
+            .UseSelectableLabel()
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");

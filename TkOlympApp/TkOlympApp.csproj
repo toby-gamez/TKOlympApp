@@ -71,6 +71,7 @@
         <PackageReference Include="AathifMahir.Maui.MauiIcons.Material" Version="2.1.0" />
         <PackageReference Include="AathifMahir.Maui.MauiIcons.FontAwesome" Version="2.1.0" />
         <PackageReference Include="AathifMahir.Maui.MauiIcons.Fluent" Version="2.1.0" />
+        <PackageReference Include="Indiko.Maui.Controls.SelectableLabel" Version="1.1.2" />
     </ItemGroup>
 
     <!--     <PropertyGroup>
