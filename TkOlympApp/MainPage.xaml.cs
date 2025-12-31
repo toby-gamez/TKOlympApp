@@ -174,31 +174,39 @@ public partial class MainPage : ContentPage
                                 {
                                     var inst = row.Instance;
                                     var evt = inst?.Event;
-                                    if (string.IsNullOrWhiteSpace(row.FirstRegistrant) && evt != null && evt.Id != 0)
+                                    if (!row.IsLoaded && evt != null && evt.Id != 0)
                                     {
                                         try
                                         {
                                             var id = evt.Id;
                                             var details = await EventService.GetEventAsync(id);
-                                            if (details?.EventRegistrations?.Nodes != null && details.EventRegistrations.Nodes.Count > 0)
+                                            string name = string.Empty;
+                                            try
                                             {
-                                                var node = details.EventRegistrations.Nodes[0];
-                                                string name = string.Empty;
-                                                if (node?.Person != null)
-                                                    name = (node.Person.FirstName + " " + (node.Person.LastName ?? string.Empty)).Trim();
-                                                if (string.IsNullOrWhiteSpace(name) && node?.Couple != null)
+                                                if (details?.EventRegistrations?.Nodes != null && details.EventRegistrations.Nodes.Count > 0)
                                                 {
-                                                    var manLn = node.Couple.Man?.LastName;
-                                                    var womanLn = node.Couple.Woman?.LastName;
-                                                    if (!string.IsNullOrWhiteSpace(manLn) && !string.IsNullOrWhiteSpace(womanLn)) name = manLn + " - " + womanLn;
-                                                    else if (!string.IsNullOrWhiteSpace(manLn)) name = manLn;
-                                                    else if (!string.IsNullOrWhiteSpace(womanLn)) name = womanLn;
+                                                    var node = details.EventRegistrations.Nodes[0];
+                                                    if (node?.Person != null)
+                                                        name = (node.Person.FirstName + " " + (node.Person.LastName ?? string.Empty)).Trim();
+                                                    if (string.IsNullOrWhiteSpace(name) && node?.Couple != null)
+                                                    {
+                                                        var manLn = node.Couple.Man?.LastName;
+                                                        var womanLn = node.Couple.Woman?.LastName;
+                                                        if (!string.IsNullOrWhiteSpace(manLn) && !string.IsNullOrWhiteSpace(womanLn)) name = manLn + " - " + womanLn;
+                                                        else if (!string.IsNullOrWhiteSpace(manLn)) name = manLn;
+                                                        else if (!string.IsNullOrWhiteSpace(womanLn)) name = womanLn;
+                                                    }
                                                 }
-                                                if (!string.IsNullOrWhiteSpace(name))
-                                                    Dispatcher?.Dispatch(() => row.FirstRegistrant = name);
                                             }
+                                            catch { }
+                                            // Ensure we set the FirstRegistrant (may be empty) and mark row as loaded so triggers apply after fetch
+                                            Dispatcher?.Dispatch(() => { row.FirstRegistrant = name; row.IsLoaded = true; });
                                         }
-                                        catch { }
+                                        catch
+                                        {
+                                            // On any error, still mark row as loaded so UI doesn't stay in unknown state
+                                            Dispatcher?.Dispatch(() => { row.IsLoaded = true; });
+                                        }
                                     }
                                 }
                             }
@@ -527,6 +535,20 @@ public partial class MainPage : ContentPage
         public EventService.EventInstance Instance { get; }
         public string TimeRange { get; }
         private string _firstRegistrant;
+        private bool _isLoaded;
+        public bool IsLoaded
+        {
+            get => _isLoaded;
+            set
+            {
+                if (_isLoaded != value)
+                {
+                    _isLoaded = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsLoaded)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsFree)));
+                }
+            }
+        }
         public string FirstRegistrant
         {
             get => _firstRegistrant;
@@ -536,9 +558,13 @@ public partial class MainPage : ContentPage
                 {
                     _firstRegistrant = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FirstRegistrant)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsFree)));
                 }
             }
         }
+
+        // True when the row has completed loading and there is no registrant
+        public bool IsFree => IsLoaded && string.IsNullOrEmpty(FirstRegistrant);
         public string DurationText { get; }
 
         public GroupedEventRow(EventService.EventInstance instance, string firstRegistrantOverride = "")
@@ -548,6 +574,8 @@ public partial class MainPage : ContentPage
             var until = instance.Until;
             TimeRange = (since.HasValue ? since.Value.ToString("HH:mm") : "--:--") + " - " + (until.HasValue ? until.Value.ToString("HH:mm") : "--:--");
             _firstRegistrant = string.IsNullOrEmpty(firstRegistrantOverride) ? ComputeFirstRegistrant(instance) : firstRegistrantOverride;
+            // If we already have a non-empty registrant at construction, consider this row loaded
+            IsLoaded = !string.IsNullOrEmpty(_firstRegistrant);
             DurationText = ComputeDuration(instance);
         }
 
