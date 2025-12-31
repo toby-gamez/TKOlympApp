@@ -95,7 +95,7 @@
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="6">
-                    <Label Text="{svc:Translate Event_Registrations_Label}" FontAttributes="Bold" />
+                    <Label Text="{svc:Translate Event_Registrations_LABEL}" FontAttributes="Bold" />
                     <CollectionView x:Name="RegistrationsCollection" HeightRequest="300">
                         <CollectionView.ItemTemplate>
                             <DataTemplate>

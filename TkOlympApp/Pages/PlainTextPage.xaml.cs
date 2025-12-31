@@ -3,17 +3,19 @@ using Microsoft.Maui.ApplicationModel;
 using TkOlympApp.Services;
 using System.Windows.Input;
 using System.Diagnostics;
+using System;
+using Microsoft.Maui.ApplicationModel;
 
 namespace TkOlympApp.Pages;
 
-[QueryProperty(nameof(Text), "text")]
+[QueryProperty(nameof(PlainText), "text")]
 public partial class PlainTextPage : ContentPage
 {
     private string? _text;
 
     public ICommand PlainTextLongPressCommand { get; private set; }
 
-    public PlainTextPage()
+        public PlainTextPage()
     {
         InitializeComponent();
         PlainTextLongPressCommand = new Command(async () =>
@@ -34,21 +36,46 @@ public partial class PlainTextPage : ContentPage
                 try { await DisplayAlertAsync(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
             }
         });
-
         BindingContext = this;
     }
 
+    public static async Task ShowAsync(string text)
+    {
+        try
+        {
+            var page = new PlainTextPage();
+            // show the text enclosed in double quotes per request
+            page.PlainText = "\"" + (text ?? string.Empty) + "\"";
+            await Shell.Current.Navigation.PushAsync(page);
+        }
+        catch (Exception ex)
+        {
+            try { await Shell.Current.DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+        }
+    }
+
+    public static readonly BindableProperty PlainTextProperty = BindableProperty.Create(
+        nameof(PlainText), typeof(string), typeof(PlainTextPage), default(string), propertyChanged: (b, o, n) =>
+        {
+            var page = (PlainTextPage)b;
+            var s = n as string ?? string.Empty;
+            if (page.EditorText != null)
+                page.EditorText.Text = s;
+            else
+                page._text = s;
+        });
+
+    public string PlainText
+    {
+        get => (string)GetValue(PlainTextProperty);
+        set => SetValue(PlainTextProperty, value);
+    }
+
+    // Backwards-compatible alias for query binding
     public string? Text
     {
         get => _text;
-        set
-        {
-            _text = value;
-            if (EditorText != null)
-            {
-                EditorText.Text = _text ?? string.Empty;
-            }
-        }
+        set => PlainText = value ?? string.Empty;
     }
 
     protected override void OnAppearing()
@@ -56,7 +83,16 @@ public partial class PlainTextPage : ContentPage
         base.OnAppearing();
         if (EditorText != null)
         {
-            EditorText.Text = _text ?? string.Empty;
+            var pt = PlainText;
+            if (string.IsNullOrEmpty(pt) && !string.IsNullOrEmpty(TkOlympApp.Services.PlainTextService.LastText))
+            {
+                EditorText.Text = TkOlympApp.Services.PlainTextService.LastText;
+                TkOlympApp.Services.PlainTextService.LastText = null;
+            }
+            else
+            {
+                EditorText.Text = pt ?? string.Empty;
+            }
         }
     }
 

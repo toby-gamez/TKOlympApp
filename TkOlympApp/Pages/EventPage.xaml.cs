@@ -19,6 +19,8 @@ public partial class EventPage : ContentPage
     private string? _untilParam;
     private bool _appeared;
     private bool _loadRequested;
+    private string? _lastDescriptionHtml;
+    private string? _lastSummaryHtml;
 
     public long EventId
     {
@@ -119,6 +121,9 @@ public partial class EventPage : ContentPage
             // Render HTML content with richer formatting
             DescLabel.FormattedText = HtmlHelpers.ToFormattedString(ev.Description);
             SummaryLabel.FormattedText = HtmlHelpers.ToFormattedString(ev.Summary);
+            // keep original HTML for copy/plain-text view
+            _lastDescriptionHtml = ev.Description;
+            _lastSummaryHtml = ev.Summary;
             var locName = ev.LocationText;
             LocationLabel.Text = string.IsNullOrWhiteSpace(locName) ? string.Empty : (LocalizationService.Get("Event_Location_Prefix") ?? "Místo konání: ") + locName;
             LocationLabel.IsVisible = !string.IsNullOrWhiteSpace(locName);
@@ -458,6 +463,52 @@ public partial class EventPage : ContentPage
             await Shell.Current.GoToAsync($"{nameof(RegistrationPage)}?id={EventId}");
         }
         catch { }
+    }
+
+    private async void OnCopyDescriptionClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            var text = HtmlToPlainText(_lastDescriptionHtml) ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                try { await DisplayAlertAsync(LocalizationService.Get("PlainText_Empty_Title") ?? "Prázdný text", LocalizationService.Get("PlainText_Empty_Body") ?? "Žádný text ke zobrazení", LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+                return;
+            }
+
+            try
+            {
+                // Use PlainTextPage.ShowAsync to avoid any URI/XAML aggregation issues
+                await PlainTextPage.ShowAsync(text);
+            }
+            catch (Exception ex)
+            {
+                try { await DisplayAlertAsync(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+            }
+        }
+        catch (Exception ex)
+        {
+            try { await DisplayAlertAsync(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+        }
+    }
+
+    private async void OnCopySummaryClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            var text = HtmlToPlainText(_lastSummaryHtml) ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                try { await DisplayAlertAsync(LocalizationService.Get("PlainText_Empty_Title") ?? "Prázdný text", LocalizationService.Get("PlainText_Empty_Body") ?? "Žádný text ke zobrazení", LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+                return;
+            }
+
+            await PlainTextPage.ShowAsync(text);
+        }
+        catch (Exception ex)
+        {
+            try { await DisplayAlertAsync(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+        }
     }
 
     private async void OnDeleteRegistrationsClicked(object? sender, EventArgs e)

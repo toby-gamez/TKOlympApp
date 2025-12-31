@@ -26,7 +26,10 @@
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="6">
-                    <Label Text="{svc:Translate Notice_Content}" FontAttributes="Bold" />
+                    <HorizontalStackLayout>
+                        <Label Text="{svc:Translate Notice_Content}" FontAttributes="Bold" HorizontalOptions="StartAndExpand" />
+                        <Button x:Name="CopyBodyButton" Text="📋" Clicked="OnCopyBodyClicked" HorizontalOptions="End" BackgroundColor="Transparent" />
+                    </HorizontalStackLayout>
                     <Label x:Name="BodyLabel" />
                 </VerticalStackLayout>
             </Border>

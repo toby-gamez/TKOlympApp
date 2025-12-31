@@ -13,6 +13,7 @@ public partial class NoticePage : ContentPage
 {
     private long _announcementId;
     private bool _appeared;
+    private string? _lastBodyHtml;
 
     public long AnnouncementId
     {
@@ -97,11 +98,39 @@ public partial class NoticePage : ContentPage
 
             var formatted = HtmlHelpers.ToFormattedString(a.Body);
             BodyLabel.FormattedText = formatted;
+            _lastBodyHtml = a.Body;
             BodyFrame.IsVisible = formatted?.Spans?.Count > 0;
         }
         catch (Exception ex)
         {
             await DisplayAlertAsync(LocalizationService.Get("Error_Loading_Title"), ex.Message, LocalizationService.Get("Button_OK"));
+        }
+    }
+
+    private async void OnCopyBodyClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            var text = HtmlToPlainText(_lastBodyHtml) ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                try { await DisplayAlertAsync(LocalizationService.Get("PlainText_Empty_Title") ?? "Prázdný text", LocalizationService.Get("PlainText_Empty_Body") ?? "Žádný text ke zobrazení", LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+                return;
+            }
+
+            try
+            {
+                // Use PlainTextPage.ShowAsync to avoid any URI/XAML aggregation issues
+                await PlainTextPage.ShowAsync(text);
+            }
+            catch (Exception ex)
+            {
+                try { await DisplayAlertAsync(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+            }
+        }
+        catch (Exception ex)
+        {
+            try { await DisplayAlertAsync(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
         }
     }
 
