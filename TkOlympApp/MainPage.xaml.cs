@@ -17,6 +17,8 @@ public partial class MainPage : ContentPage
     private readonly ObservableCollection<WeekGroup> _weeks = new();
     private bool _isLoading;
     private bool _onlyMine = true;
+    private DateTime _weekStart;
+    private DateTime _weekEnd;
     
 
     public MainPage()
@@ -47,6 +49,11 @@ public partial class MainPage : ContentPage
         {
             // ignore if buttons not available on some platforms
         }
+
+        // initialize week range to current week (Monday..Sunday)
+        _weekStart = GetWeekStart(DateTime.Now);
+        _weekEnd = _weekStart.AddDays(6);
+        try { UpdateWeekLabel(); } catch { }
 
         UpdateEmptyView();
     }
@@ -90,9 +97,11 @@ public partial class MainPage : ContentPage
         EventsCollection?.IsVisible = false;
         try
         {
-            var today = DateTime.Now.Date;
-            var start = today;
-            var end = today.AddDays(30);
+            // use selected week range (Monday..Sunday)
+            var start = _weekStart.Date;
+            // extend end by one day to be inclusive across timezones
+            var end = _weekEnd.Date.AddDays(1);
+            try { Debug.WriteLine($"LoadEventsAsync: DateTime.Now={DateTime.Now:o}, start={start:o}, end={end:o}"); } catch { }
             List<EventService.EventInstance> events;
             if (_onlyMine)
             {
@@ -404,6 +413,45 @@ public partial class MainPage : ContentPage
         {
             // ignore
         }
+    }
+
+    // Week helpers and handlers
+    private static DateTime GetWeekStart(DateTime dt)
+    {
+        var d = dt.Date;
+        var isoDow = ((int)d.DayOfWeek == 0) ? 7 : (int)d.DayOfWeek; // Monday=1..Sunday=7
+        return d.AddDays(1 - isoDow).Date;
+    }
+
+    private void UpdateWeekLabel()
+    {
+        // Intentionally empty — UI should not display the week range here.
+        return;
+    }
+
+    private async void OnPrevWeekClicked(object? sender, EventArgs e)
+    {
+        _weekStart = _weekStart.AddDays(-7);
+        _weekEnd = _weekStart.AddDays(6);
+        try { UpdateWeekLabel(); } catch { }
+        await LoadEventsAsync();
+    }
+
+    private async void OnNextWeekClicked(object? sender, EventArgs e)
+    {
+        _weekStart = _weekStart.AddDays(7);
+        _weekEnd = _weekStart.AddDays(6);
+        try { UpdateWeekLabel(); } catch { }
+        await LoadEventsAsync();
+    }
+
+    private async void OnTodayWeekClicked(object? sender, EventArgs e)
+    {
+        _weekStart = GetWeekStart(DateTime.Now);
+        _weekEnd = _weekStart.AddDays(6);
+        try { Debug.WriteLine($"OnTodayWeekClicked: DateTime.Now={DateTime.Now:o}, weekStart={_weekStart:o}, weekEnd={_weekEnd:o}"); } catch { }
+        try { UpdateWeekLabel(); } catch { }
+        await LoadEventsAsync();
     }
 
     // Helper grouping types

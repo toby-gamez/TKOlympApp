@@ -217,4 +217,5 @@
   <data name="About_Gender_Other" xml:space="preserve"><value>Other</value></data>
   <data name="PlainText_Title" xml:space="preserve"><value>Text</value></data>
   <data name="PlainText_Intro" xml:space="preserve"><value>Select the text and copy it. Nothing complicated.</value></data>
+  <data name="Free" xml:space="preserve"><value>FREE</value></data>
   </root>

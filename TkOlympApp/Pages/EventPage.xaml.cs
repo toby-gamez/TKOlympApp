@@ -259,12 +259,11 @@ public partial class EventPage : ContentPage
             TrainersFrame.IsVisible = _trainers.Count > 0;
 
             // Hide edit-registration button when trainer reservations are not allowed
-            // (match RegistrationPage logic: if event has no name AND exactly one trainer)
+            // (depend only on trainer count: single trainer => hide edit)
             try
             {
                 var trainerCount = ev.EventTrainersList?.Count ?? 0;
-                var nameMissing = string.IsNullOrWhiteSpace(ev.Name);
-                if (nameMissing && trainerCount == 1)
+                if (trainerCount == 1)
                 {
                     EditRegistrationButton.IsVisible = false;
                     Grid.SetColumn(DeleteRegistrationButton, 0);
@@ -428,7 +427,30 @@ public partial class EventPage : ContentPage
                 }
 
                 RegistrationActionsRow.IsVisible = userRegistered;
-                // Register button is always visible (handled by XAML). Keep edit/delete visibility unchanged.
+
+                // If the event already finished (end date older than today), hide all registration UI
+                try
+                {
+                    var isPast = false;
+                    if (until.HasValue)
+                        isPast = until.Value.ToLocalTime().Date < DateTime.Now.Date;
+                    else if (since.HasValue)
+                        isPast = since.Value.ToLocalTime().Date < DateTime.Now.Date;
+
+                    if (isPast)
+                    {
+                        RegisterButton.IsVisible = false;
+                        RegistrationActionsRow.IsVisible = false;
+                        EditRegistrationButton.IsVisible = false;
+                        DeleteRegistrationButton.IsVisible = false;
+                    }
+                    else
+                    {
+                        // Ensure register button remains visible when event is not past
+                        RegisterButton.IsVisible = true;
+                    }
+                }
+                catch { }
             }
             catch { }
         }

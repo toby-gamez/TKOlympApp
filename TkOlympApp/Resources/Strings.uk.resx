@@ -166,6 +166,7 @@
   <data name="Event_Capacity_NA" xml:space="preserve"><value>Місткість: N/A</value></data>
   <data name="Event_Registered_Format" xml:space="preserve"><value>Зареєстровано: {0}</value></data>
   <data name="RegistrationPage_Title" xml:space="preserve"><value>Реєстрація</value></data>
+  <data name="Free" xml:space="preserve"><value>ВІЛЬНО</value></data>
   <data name="Registration_Info_Label" xml:space="preserve"><value>Інформація про реєстрацію</value></data>
   <data name="Registration_Error_Title" xml:space="preserve"><value>Помилка реєстрації</value></data>
   <data name="Registration_Note" xml:space="preserve"><value>Виберіть, кого ви хочете зареєструвати. Якщо ви не реєструєтеся на індивідуальне заняття, виберіть кількість індивідуальних занять з тренерами (максимум 10/тренер).</value></data>

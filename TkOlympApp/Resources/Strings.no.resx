@@ -198,6 +198,7 @@
     <data name="Label_GraphQL" xml:space="preserve"><value>GraphQL</value></data>
     <data name="Registration_My_Prefix" xml:space="preserve"><value>Meg: </value></data>
     <data name="Edit_Button_Text" xml:space="preserve"><value>Rediger leksjonen</value></data>
+    <data name="Free" xml:space="preserve"><value>LEDIG</value></data>
     <data name="Delete_Button_Text" xml:space="preserve"><value>Slett</value></data>
     <data name="DeleteRegistrations_Title" xml:space="preserve"><value>Slett registreringer</value></data>
     <data name="DeleteRegistrations_Description" xml:space="preserve"><value>Velg registreringer du vil slette.</value></data>

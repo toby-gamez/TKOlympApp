@@ -130,16 +130,14 @@ public partial class RegistrationPage : ContentPage
                     }
                     catch { }
 
-                    // New logic: if event has no name (empty/null) AND exactly one trainer, show warning
-                    // Do not block registration — mark flag so we can send empty lessons list in the mutation
+                    // Logic: if the event has exactly one trainer, mark trainer reservations as not allowed
+                    // (event name no longer matters for this decision)
                     try
                     {
-                        var nameMissing = string.IsNullOrWhiteSpace(ev.Name);
-                        if (nameMissing && trainerCount == 1)
+                        if (trainerCount == 1)
                         {
                             TrainerReservationNotAllowedLabel.IsVisible = true;
                             _trainerReservationNotAllowed = true;
-                            // do not disable registration; allow user to select and confirm
                         }
                         else
                         {

@@ -176,6 +176,7 @@
       <data name="Label_GraphQL" xml:space="preserve"><value>GraphQL</value></data>
       <data name="Registration_My_Prefix" xml:space="preserve"><value>Jaz: </value></data>
       <data name="Edit_Button_Text" xml:space="preserve"><value>Uredjanje lekcije</value></data>
+      <data name="Free" xml:space="preserve"><value>PROSTO</value></data>
       <data name="Delete_Button_Text" xml:space="preserve"><value>Izbriši</value></data>
       <data name="DeleteRegistrations_Title" xml:space="preserve"><value>Izbriši prijave</value></data>
       <data name="DeleteRegistrations_Description" xml:space="preserve"><value>Izberite prijave, ki jih želite izbrisati.</value></data>
