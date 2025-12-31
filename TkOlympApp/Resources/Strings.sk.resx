@@ -209,4 +209,6 @@
     <data name="About_Gender_Male" xml:space="preserve"><value>Muž</value></data>
     <data name="About_Gender_Female" xml:space="preserve"><value>Žena</value></data>
     <data name="About_Gender_Other" xml:space="preserve"><value>Iné</value></data>
+    <data name="PlainText_Title" xml:space="preserve"><value>Text</value></data>
+    <data name="PlainText_Intro" xml:space="preserve"><value>Vyberte text a skopírujte ho. Nič zložité.</value></data>
     </root>

@@ -215,4 +215,6 @@
         <data name="EditRegistrations_Description" xml:space="preserve"><value>Velg en registrering for å endre krav til timer.</value></data>
         <data name="EditRegistrations_Trainers_Label" xml:space="preserve"><value>Trenere</value></data>
         <data name="EditRegistrations_Button_Text" xml:space="preserve"><value>Bekreft</value></data>
-</root>
+        <data name="PlainText_Title" xml:space="preserve"><value>Tekst</value></data>
+        <data name="PlainText_Intro" xml:space="preserve"><value>Velg teksten og kopier den. Ikke noe komplisert.</value></data>
+    </root>

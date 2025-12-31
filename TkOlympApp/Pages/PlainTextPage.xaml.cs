@@ -44,8 +44,13 @@ public partial class PlainTextPage : ContentPage
         try
         {
             var page = new PlainTextPage();
-            // show the text enclosed in double quotes per request
-            page.PlainText = "\"" + (text ?? string.Empty) + "\"";
+            // Remove surrounding double quotes if present, and show the plain text
+            var t = text ?? string.Empty;
+            if (t.Length >= 2 && t.StartsWith("\"") && t.EndsWith("\""))
+                t = t.Substring(1, t.Length - 2);
+            page.PlainText = t;
+            // keep fallback copy for OnAppearing if needed
+            try { TkOlympApp.Services.PlainTextService.LastText = t; } catch { }
             await Shell.Current.Navigation.PushAsync(page);
         }
         catch (Exception ex)

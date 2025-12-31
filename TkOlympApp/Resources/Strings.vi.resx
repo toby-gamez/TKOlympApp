@@ -215,4 +215,6 @@
   <data name="About_Gender_Male" xml:space="preserve"><value>Nam</value></data>
   <data name="About_Gender_Female" xml:space="preserve"><value>Nữ</value></data>
   <data name="About_Gender_Other" xml:space="preserve"><value>Khác</value></data>
+  <data name="PlainText_Title" xml:space="preserve"><value>Văn bản</value></data>
+  <data name="PlainText_Intro" xml:space="preserve"><value>Chọn văn bản và sao chép nó. Không có gì phức tạp.</value></data>
 </root>

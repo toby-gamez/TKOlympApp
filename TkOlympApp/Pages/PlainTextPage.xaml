@@ -3,12 +3,16 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2021/maui/toolkit"
             xmlns:idk="clr-namespace:Indiko.Maui.Controls.SelectableLabel;assembly=Indiko.Maui.Controls.SelectableLabel"
+            xmlns:svc="clr-namespace:TkOlympApp.Services"
              x:Class="TkOlympApp.Pages.PlainTextPage"
-             Title="Text">
+             Title="{svc:Translate PlainText_Title}">
             <ContentPage.Content>
         <VerticalStackLayout Padding="12" Spacing="12">
-            <Label Text="Text" FontAttributes="Bold" FontSize="18" />
-            <Border>
+            <Label Text="{svc:Translate PlainText_Intro}"/>
+            <Border Padding="12" Margin="6">
+                <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
                 <ScrollView>
                     <idk:SelectableLabel
                         x:Name="EditorText"

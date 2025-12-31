@@ -215,4 +215,6 @@
     <data name="EditRegistrations_Description" xml:space="preserve"><value>Pick a reg to tweak gym bro lesson demands.</value></data>
     <data name="EditRegistrations_Trainers_Label" xml:space="preserve"><value>Gym Bros</value></data>
     <data name="EditRegistrations_Button_Text" xml:space="preserve"><value>Lock In</value></data>
+    <data name="PlainText_Title" xml:space="preserve"><value>Text</value></data>
+    <data name="PlainText_Intro" xml:space="preserve"><value>Bro just copypaste it lol. fr</value></data>
 </root>
