@@ -53,10 +53,14 @@
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
-                <VerticalStackLayout Spacing="6">
-                    <Label Text="{svc:Translate Event_Description_Label}" FontAttributes="Bold" />
-                    <Label x:Name="DescLabel" LineBreakMode="WordWrap"/>
-                </VerticalStackLayout>
+                
+                    <VerticalStackLayout Spacing="6">
+                        <Grid ColumnDefinitions="*,22" HorizontalOptions="Fill">
+                            <Label Text="{svc:Translate Event_Description_Label}" FontAttributes="Bold" Grid.Column="0" VerticalOptions="Center" />
+                            <Button x:Name="CopyDescriptionButton" Text="{icons:Material Icon=ContentCopy}" Clicked="OnCopyDescriptionClicked" Grid.Column="1" HorizontalOptions="End" BackgroundColor="Transparent" FontSize="12" TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" WidthRequest="22" MinimumWidthRequest="22" HeightRequest="22" MinimumHeightRequest="22" VerticalOptions="Center" Padding="4,0" />
+                        </Grid>
+                        <Label x:Name="DescLabel" LineBreakMode="WordWrap"/>
+                    </VerticalStackLayout>
             </Border>
 
             <!-- Summary Card -->
@@ -64,10 +68,14 @@
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
-                <VerticalStackLayout Spacing="6">
-                    <Label Text="{svc:Translate Event_Summary_Label}" FontAttributes="Bold" />
-                    <Label x:Name="SummaryLabel" LineBreakMode="WordWrap" FontAttributes="Italic"/>
-                </VerticalStackLayout>
+                
+                    <VerticalStackLayout Spacing="6">
+                        <Grid ColumnDefinitions="*,22" HorizontalOptions="Fill">
+                            <Label Text="{svc:Translate Event_Summary_Label}" FontAttributes="Bold" Grid.Column="0" VerticalOptions="Center" />
+                            <Button x:Name="CopySummaryButton" Text="{icons:Material Icon=ContentCopy}" Clicked="OnCopySummaryClicked" Grid.Column="1" HorizontalOptions="End" BackgroundColor="Transparent" FontSize="12" TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" WidthRequest="22" MinimumWidthRequest="22" HeightRequest="22" MinimumHeightRequest="22" VerticalOptions="Center" Padding="4,0" />
+                        </Grid>
+                        <Label x:Name="SummaryLabel" LineBreakMode="WordWrap" FontAttributes="Italic"/>
+                    </VerticalStackLayout>
             </Border>
 
             <!-- Trainers Card -->

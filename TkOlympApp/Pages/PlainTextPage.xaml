@@ -7,22 +7,22 @@
              x:Class="TkOlympApp.Pages.PlainTextPage"
              Title="{svc:Translate PlainText_Title}">
             <ContentPage.Content>
-        <VerticalStackLayout Padding="12" Spacing="12">
-            <Label Text="{svc:Translate PlainText_Intro}"/>
-            <Border Padding="12" Margin="6">
-                <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="8" />
-                </Border.StrokeShape>
                 <ScrollView>
-                    <idk:SelectableLabel
-                        x:Name="EditorText"
-                        Text="{Binding PlainText}"
-                        BackgroundColor="Transparent"
-                        TextColor="Black"
-                        Margin="6"
-                        LineBreakMode="WordWrap" />
+                    <VerticalStackLayout Padding="12" Spacing="12">
+                        <Label Text="{svc:Translate PlainText_Intro}"/>
+                        <Border Padding="12" Margin="6">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8" />
+                            </Border.StrokeShape>
+                            <idk:SelectableLabel
+                                x:Name="EditorText"
+                                Text="{Binding PlainText}"
+                                BackgroundColor="Transparent"
+                                TextColor="Black"
+                                Margin="6"
+                                LineBreakMode="WordWrap" />
+                        </Border>
+                    </VerticalStackLayout>
                 </ScrollView>
-            </Border>
-        </VerticalStackLayout>
-    </ContentPage.Content>
+            </ContentPage.Content>
 </ContentPage>

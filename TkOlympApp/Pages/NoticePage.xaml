@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TkOlympApp.Pages.NoticePage"
              xmlns:svc="clr-namespace:TkOlympApp.Services"
+             xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
              Title="{svc:Translate NoticePage_Title}">
     <RefreshView x:Name="NoticeRefresh" Refreshing="OnNoticeRefresh">
         <ScrollView>
@@ -26,10 +27,10 @@
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="6">
-                    <HorizontalStackLayout>
-                        <Label Text="{svc:Translate Notice_Content}" FontAttributes="Bold" HorizontalOptions="StartAndExpand" />
-                        <Button x:Name="CopyBodyButton" Text="📋" Clicked="OnCopyBodyClicked" HorizontalOptions="End" BackgroundColor="Transparent" />
-                    </HorizontalStackLayout>
+                    <Grid ColumnDefinitions="*,22" HorizontalOptions="Fill">
+                        <Label Text="{svc:Translate Notice_Content}" FontAttributes="Bold" Grid.Column="0" VerticalOptions="Center" />
+                        <Button x:Name="CopyBodyButton" Text="{mi:Material Icon=ContentCopy}" Clicked="OnCopyBodyClicked" Grid.Column="1" HorizontalOptions="End" BackgroundColor="Transparent" FontSize="12" TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" WidthRequest="22" MinimumWidthRequest="22" HeightRequest="22" MinimumHeightRequest="22" VerticalOptions="Center" Padding="4,0" />
+                    </Grid>
                     <Label x:Name="BodyLabel" />
                 </VerticalStackLayout>
             </Border>
