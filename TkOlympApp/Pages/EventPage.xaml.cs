@@ -63,6 +63,7 @@ public partial class EventPage : ContentPage
         public bool HasTrainers => Trainers != null && Trainers.Count > 0;
         public bool HasSecondary => !string.IsNullOrWhiteSpace(Secondary);
         public string? CoupleId { get; set; }
+        public string? PersonId { get; set; }
     }
 
     private readonly ObservableCollection<RegistrationRow> _registrations = new();
@@ -85,11 +86,19 @@ public partial class EventPage : ContentPage
             // Clear selection for UX
             try { RegistrationsCollection.SelectedItem = null; } catch { }
 
-            var id = selected.CoupleId;
-            if (!string.IsNullOrWhiteSpace(id))
+            var personId = selected.PersonId;
+            if (!string.IsNullOrWhiteSpace(personId))
+            {
+                // Navigate to PersonPage with personId
+                await Shell.Current.GoToAsync($"{nameof(PersonPage)}?personId={Uri.EscapeDataString(personId)}");
+                return;
+            }
+
+            var coupleId = selected.CoupleId;
+            if (!string.IsNullOrWhiteSpace(coupleId))
             {
                 // Navigate to CouplePage with id
-                await Shell.Current.GoToAsync($"{nameof(CouplePage)}?id={Uri.EscapeDataString(id)}");
+                await Shell.Current.GoToAsync($"{nameof(CouplePage)}?id={Uri.EscapeDataString(coupleId)}");
             }
         }
         catch
@@ -380,11 +389,18 @@ public partial class EventPage : ContentPage
 
                 var secondary = parts.Count > 0 ? string.Join(" • ", parts) : null;
                 var key = (text ?? string.Empty) + "|" + (secondary ?? string.Empty);
-                    if (!seen.Contains(key))
+                if (!seen.Contains(key))
+                {
+                    seen.Add(key);
+                    _registrations.Add(new RegistrationRow
                     {
-                        seen.Add(key);
-                        _registrations.Add(new RegistrationRow { Text = text ?? string.Empty, Secondary = secondary, Trainers = trainerParts, CoupleId = n.Couple?.Id });
-                    }
+                        Text = text ?? string.Empty,
+                        Secondary = secondary,
+                        Trainers = trainerParts,
+                        CoupleId = n.Couple?.Id,
+                        PersonId = n.Person?.Id
+                    });
+                }
             }
 
             RegistrationsFrame.IsVisible = _registrations.Count > 0;

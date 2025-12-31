@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:svc="clr-namespace:TkOlympApp.Services"
+             x:Class="TkOlympApp.Pages.PersonPage"
+             Title="{svc:Translate Person_Title}">
+
+    <Grid RowDefinitions="Auto,*">
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="20" Spacing="12">
+                <ActivityIndicator x:Name="LoadingIndicator" IsRunning="False" IsVisible="False" />
+                <Label x:Name="ErrorLabel" TextColor="Red" IsVisible="False" Margin="0,0,0,8" />
+
+                <!-- Primary: velké jméno nahoře, detaily pod ním -->
+                <Border Padding="12">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="8">
+                        <!-- Jméno a příjmení velkým písmem -->
+                        <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+                            <Label x:Name="NameValue" FontSize="22" FontAttributes="Bold"/>
+                            <Label x:Name="SurnameValue" FontSize="22" FontAttributes="Bold"/>
+                        </HorizontalStackLayout>
+                        <!-- Důležité drobné údaje pod jménem (login removed) -->
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Contact -->
+                <Border Padding="12" x:Name="ContactBorder">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="8">
+                        <HorizontalStackLayout x:Name="EmailRow" Spacing="6">
+                            <Label Text="{svc:Translate About_Email}" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="EmailValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
+
+                        <HorizontalStackLayout x:Name="PhoneRow" Spacing="6">
+                            <Label Text="{svc:Translate About_Phone}" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="PhoneValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Personal -->
+                <Border Padding="12" x:Name="PersonalBorder">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="8">
+                        <HorizontalStackLayout x:Name="BioRow" Spacing="6">
+                            <Label Text="{svc:Translate About_Bio}" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="BioValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
+
+                        <HorizontalStackLayout x:Name="BirthDateRow" Spacing="6">
+                            <Label Text="{svc:Translate About_BirthDate}" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="BirthDateValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
+
+                        <!-- Nationality removed -->
+
+                        <HorizontalStackLayout x:Name="GenderRow" Spacing="6">
+                            <Label Text="{svc:Translate About_Gender}" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="GenderValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
+
+                        <HorizontalStackLayout x:Name="IsTrainerRow" Spacing="6">
+                            <Label Text="{svc:Translate About_IsTrainer}" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="IsTrainerValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Address removed -->
+
+                <!-- Active couples -->
+                <Border x:Name="ActiveCouplesFrame" Padding="12" Margin="0,0,0,0" IsVisible="False">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="{svc:Translate Person_ActiveCouples_Label}" FontAttributes="Bold" />
+                        <CollectionView x:Name="ActiveCouplesCollection" HeightRequest="150" SelectionMode="Single" SelectionChanged="OnActiveCoupleSelected">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <HorizontalStackLayout Padding="8" Spacing="8">
+                                        <Label Text="{Binding Text}" />
+                                    </HorizontalStackLayout>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Identifiers: removed national id; keep proxy/wdsf/csts if needed -->
+                <Border Padding="12" x:Name="IdsBorder">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="8">
+
+                        <HorizontalStackLayout x:Name="ProxyIdRow" Spacing="6">
+                            <Label Text="{svc:Translate About_Id}" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="ProxyIdValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
+
+                        <HorizontalStackLayout x:Name="WdsfRow" Spacing="6">
+                            <Label Text="{svc:Translate About_WdsfId}" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="WdsfIdValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
+
+                        <HorizontalStackLayout x:Name="CstsRow" Spacing="6">
+                            <Label Text="{svc:Translate About_CstsId}" FontAttributes="Bold" FontSize="12"/>
+                            <Label x:Name="CstsIdValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                        </HorizontalStackLayout>
+
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+
+    </Grid>
+</ContentPage>

@@ -230,4 +230,7 @@
   <data name="PlainText_Title" xml:space="preserve"><value>Text</value></data>
   <data name="PlainText_Intro" xml:space="preserve"><value>Vyberte si text a zkopírujte si ho. Nic složitého.</value></data>
   <data name="Free" xml:space="preserve"><value>VOLNO</value></data>
+  <data name="Person_Title" xml:space="preserve"><value>Osoba</value></data>
+  <data name="Person_ActiveCouples_Label" xml:space="preserve"><value>Aktivní páry</value></data>
+  <data name="NotFound_Person" xml:space="preserve"><value>Osoba nebyla nalezena.</value></data>
 </root>

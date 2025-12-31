@@ -15,7 +15,7 @@ public static class EventService
             var query = new GraphQlRequest
         {
             // Request person names and couple names (including first name) and instance trainers for registrations
-            Query = "query MyQuery($id: BigInt!) { event(id: $id) { capacity createdAt description eventRegistrations { totalCount nodes { couple { id status man { name firstName lastName eventInstanceTrainersList { name lessonPrice { amount currency } } } woman { name firstName lastName eventInstanceTrainersList { name lessonPrice { amount currency } } } } eventLessonDemandsByRegistrationIdList { lessonCount trainer { id name } } person { firstName lastName } } } isPublic isRegistrationOpen isVisible __typename name summary locationText eventTrainersList { id name lessonPrice { amount currency } updatedAt } updatedAt since until } }",
+            Query = "query MyQuery($id: BigInt!) { event(id: $id) { capacity createdAt description eventRegistrations { totalCount nodes { couple { id status man { name firstName lastName eventInstanceTrainersList { name lessonPrice { amount currency } } } woman { name firstName lastName eventInstanceTrainersList { name lessonPrice { amount currency } } } } eventLessonDemandsByRegistrationIdList { lessonCount trainer { id name } } person { id firstName lastName } } } isPublic isRegistrationOpen isVisible __typename name summary locationText eventTrainersList { id name lessonPrice { amount currency } updatedAt } updatedAt since until } }",
             Variables = new Dictionary<string, object> { { "id", id } }
         };
 
@@ -274,6 +274,7 @@ public static class EventService
     );
 
     public sealed record Person(
+        [property: JsonPropertyName("id")] string? Id,
         [property: JsonPropertyName("firstName")] string? FirstName,
         [property: JsonPropertyName("name")] string? Name,
         [property: JsonPropertyName("lastName")] string? LastName

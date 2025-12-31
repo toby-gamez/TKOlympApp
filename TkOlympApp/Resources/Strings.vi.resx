@@ -230,4 +230,7 @@
   <data name="About_Gender_Other" xml:space="preserve"><value>Khác</value></data>
   <data name="PlainText_Title" xml:space="preserve"><value>Văn bản</value></data>
   <data name="PlainText_Intro" xml:space="preserve"><value>Chọn văn bản và sao chép nó. Không có gì phức tạp.</value></data>
+  <data name="Person_Title" xml:space="preserve"><value>Người</value></data>
+  <data name="Person_ActiveCouples_Label" xml:space="preserve"><value>Cặp đang hoạt động</value></data>
+  <data name="NotFound_Person" xml:space="preserve"><value>Không tìm thấy người.</value></data>
 </root>
