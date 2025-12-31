@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             x:Class="TkOlympApp.Pages.PlainTextPage"
+             Title="Text">
+
+    <ContentPage.Content>
+        <VerticalStackLayout Padding="12" Spacing="12">
+            <Label Text="Text" FontAttributes="Bold" FontSize="18" />
+            <Frame StrokeShape="RoundRectangle 6" Padding="0" HasShadow="False" BorderColor="LightGray">
+                <Frame.Behaviors>
+                    <toolkit:TouchBehavior LongPressCommand="{Binding PlainTextLongPressCommand}" LongPressDuration="800" />
+                </Frame.Behaviors>
+                <ScrollView>
+                    <Editor x:Name="EditorText"
+                            IsReadOnly="True"
+                            AutoSize="TextChanges"
+                            Keyboard="Text"
+                            BackgroundColor="Transparent"
+                            TextColor="Black"
+                            Margin="6"
+                            />
+                </ScrollView>
+            </Frame>
+        </VerticalStackLayout>
+    </ContentPage.Content>
+</ContentPage>
