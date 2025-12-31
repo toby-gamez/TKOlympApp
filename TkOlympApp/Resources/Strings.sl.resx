@@ -113,6 +113,18 @@
     <data name="Event_Trainers_Label" xml:space="preserve"><value>Trenerji</value></data>
     <data name="Event_Registrations_Label" xml:space="preserve"><value>Seznam prijavljenih</value></data>
     <data name="Couple_Inactive" xml:space="preserve"><value>Neaktiven</value></data>
+    <data name="Couple_Separator" xml:space="preserve"><value>-</value></data>
+    <data name="Couple_Error_MissingId" xml:space="preserve"><value>Manjka ID.</value></data>
+    <data name="Couple_Error_NotFound" xml:space="preserve"><value>Paar ni bil najden.</value></data>
+    <data name="Placeholder_Empty" xml:space="preserve"><value>—</value></data>
+    <data name="Couple_Title" xml:space="preserve"><value>Par</value></data>
+    <data name="Couple_Id" xml:space="preserve"><value>ID para:</value></data>
+    <data name="Couple_CreatedAt" xml:space="preserve"><value>Ustvarjeno:</value></data>
+    <data name="Couple_Man" xml:space="preserve"><value>Moški:</value></data>
+    <data name="Couple_Woman" xml:space="preserve"><value>Ženska:</value></data>
+    <data name="Couple_FirstName" xml:space="preserve"><value>Ime:</value></data>
+    <data name="Couple_LastName" xml:space="preserve"><value>Priimek:</value></data>
+    <data name="Couple_Phone" xml:space="preserve"><value>Telefon:</value></data>
     <data name="Other_AboutApp_Label" xml:space="preserve"><value>O aplikaciji</value></data>
     <data name="Other_AboutApp_Desc" xml:space="preserve"><value>Vse o tem programu</value></data>
     <data name="Other_AboutApp_Body" xml:space="preserve"><value>Ta aplikacija prikazuje urnike, novice in informacije o trenerjih in prostorih. Povezana je z oddaljenim API-jem in uporablja lokalna obvestila za opozarjanje na nove objave in dogodke.</value></data>

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:svc="clr-namespace:TkOlympApp.Services"
+             x:Class="TkOlympApp.Pages.CouplePage"
+             Title="{svc:Translate Couple_Title}">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="20" Spacing="12">
+                <ActivityIndicator x:Name="LoadingIndicator" IsRunning="False" IsVisible="False" />
+                <Label x:Name="ErrorLabel" TextColor="Red" IsVisible="False" Margin="0,0,0,8" />
+
+                <!-- Top: couple name similar to AboutMePage -->
+                <Border Padding="12">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="8">
+                        <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+                            <Label x:Name="ManNameValue" FontSize="20" FontAttributes="Bold" />
+                            <Label Text="{svc:Translate Couple_Separator}" FontSize="20" FontAttributes="Bold" />
+                            <Label x:Name="WomanNameValue" FontSize="20" FontAttributes="Bold" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Padding="12">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="8">
+                        <HorizontalStackLayout Spacing="6">
+                            <Label Text="{svc:Translate Couple_Id}" FontAttributes="Bold" FontSize="12" />
+                            <Label x:Name="IdValue" HorizontalOptions="StartAndExpand" FontSize="12" />
+                        </HorizontalStackLayout>
+
+                        <HorizontalStackLayout Spacing="6">
+                            <Label Text="{svc:Translate Couple_CreatedAt}" FontAttributes="Bold" FontSize="12" />
+                            <Label x:Name="CreatedAtValue" HorizontalOptions="StartAndExpand" FontSize="12" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Padding="12">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="{svc:Translate Couple_Man}" FontAttributes="Bold" />
+                        <HorizontalStackLayout x:Name="ManFirstNameRow" Spacing="6">
+                            <Label Text="{svc:Translate Couple_FirstName}" FontAttributes="Bold" FontSize="12" />
+                            <Label x:Name="ManFirstNameValue" HorizontalOptions="StartAndExpand" FontSize="12" />
+                        </HorizontalStackLayout>
+                        <HorizontalStackLayout x:Name="ManLastNameRow" Spacing="6">
+                            <Label Text="{svc:Translate Couple_LastName}" FontAttributes="Bold" FontSize="12" />
+                            <Label x:Name="ManLastNameValue" HorizontalOptions="StartAndExpand" FontSize="12" />
+                        </HorizontalStackLayout>
+                        <HorizontalStackLayout x:Name="ManPhoneRow" Spacing="6">
+                            <Label Text="{svc:Translate Couple_Phone}" FontAttributes="Bold" FontSize="12" />
+                            <Label x:Name="ManPhoneValue" HorizontalOptions="StartAndExpand" FontSize="12" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Padding="12">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="{svc:Translate Couple_Woman}" FontAttributes="Bold" />
+                        <HorizontalStackLayout x:Name="WomanFirstNameRow" Spacing="6">
+                            <Label Text="{svc:Translate Couple_FirstName}" FontAttributes="Bold" FontSize="12" />
+                            <Label x:Name="WomanFirstNameValue" HorizontalOptions="StartAndExpand" FontSize="12" />
+                        </HorizontalStackLayout>
+                        <HorizontalStackLayout x:Name="WomanLastNameRow" Spacing="6">
+                            <Label Text="{svc:Translate Couple_LastName}" FontAttributes="Bold" FontSize="12" />
+                            <Label x:Name="WomanLastNameValue" HorizontalOptions="StartAndExpand" FontSize="12" />
+                        </HorizontalStackLayout>
+                        <HorizontalStackLayout x:Name="WomanPhoneRow" Spacing="6">
+                            <Label Text="{svc:Translate Couple_Phone}" FontAttributes="Bold" FontSize="12" />
+                            <Label x:Name="WomanPhoneValue" HorizontalOptions="StartAndExpand" FontSize="12" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- logout removed for this page -->
+    </Grid>
+</ContentPage>

@@ -113,6 +113,18 @@
   <data name="Event_Trainers_Label" xml:space="preserve"><value>Тренери</value></data>
   <data name="Event_Registrations_Label" xml:space="preserve"><value>Список зареєстрованих</value></data>
   <data name="Couple_Inactive" xml:space="preserve"><value>Неактивний</value></data>
+  <data name="Couple_Separator" xml:space="preserve"><value>-</value></data>
+  <data name="Couple_Error_MissingId" xml:space="preserve"><value>Відсутній ідентифікатор.</value></data>
+  <data name="Couple_Error_NotFound" xml:space="preserve"><value>Пару не знайдено.</value></data>
+  <data name="Placeholder_Empty" xml:space="preserve"><value>—</value></data>
+  <data name="Couple_Title" xml:space="preserve"><value>Пара</value></data>
+  <data name="Couple_Id" xml:space="preserve"><value>ID пари:</value></data>
+  <data name="Couple_CreatedAt" xml:space="preserve"><value>Створено:</value></data>
+  <data name="Couple_Man" xml:space="preserve"><value>Чоловік:</value></data>
+  <data name="Couple_Woman" xml:space="preserve"><value>Жінка:</value></data>
+  <data name="Couple_FirstName" xml:space="preserve"><value>Ім'я:</value></data>
+  <data name="Couple_LastName" xml:space="preserve"><value>Прізвище:</value></data>
+  <data name="Couple_Phone" xml:space="preserve"><value>Телефон:</value></data>
   <data name="Other_AboutApp_Label" xml:space="preserve"><value>Про додаток</value></data>
   <data name="Other_AboutApp_Desc" xml:space="preserve"><value>Все про це програмне забезпечення</value></data>
   <data name="Other_AboutApp_Body" xml:space="preserve"><value>Цей додаток відображає розклади, новини та інформацію про тренерів і приміщення. Він підключається до віддаленого API та використовує локальні сповіщення для інформування про нові пости та події.</value></data>

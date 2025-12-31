@@ -113,6 +113,18 @@
     <data name="Event_Trainers_Label" xml:space="preserve"><value>Trenere</value></data>
     <data name="Event_Registrations_Label" xml:space="preserve"><value>Påmeldingsliste</value></data>
     <data name="Couple_Inactive" xml:space="preserve"><value>Inaktiv</value></data>
+    <data name="Couple_Separator" xml:space="preserve"><value>-</value></data>
+    <data name="Couple_Error_MissingId" xml:space="preserve"><value>Mangler ID.</value></data>
+    <data name="Couple_Error_NotFound" xml:space="preserve"><value>Par ikke funnet.</value></data>
+    <data name="Placeholder_Empty" xml:space="preserve"><value>—</value></data>
+    <data name="Couple_Title" xml:space="preserve"><value>Par</value></data>
+    <data name="Couple_Id" xml:space="preserve"><value>Par-ID:</value></data>
+    <data name="Couple_CreatedAt" xml:space="preserve"><value>Opprettet:</value></data>
+    <data name="Couple_Man" xml:space="preserve"><value>Mann:</value></data>
+    <data name="Couple_Woman" xml:space="preserve"><value>Kvinne:</value></data>
+    <data name="Couple_FirstName" xml:space="preserve"><value>Fornavn:</value></data>
+    <data name="Couple_LastName" xml:space="preserve"><value>Etternavn:</value></data>
+    <data name="Couple_Phone" xml:space="preserve"><value>Telefon:</value></data>
     <data name="Other_AboutApp_Label" xml:space="preserve"><value>Om appen</value></data>
     <data name="Other_AboutApp_Desc" xml:space="preserve"><value>Alt om denne programvaren</value></data>
     <data name="Other_AboutApp_Body" xml:space="preserve"><value>Denne appen viser timeplaner, nyheter og informasjon om trenere og lokaler. Den kobles til et eksternt API og bruker lokale varsler for å informere om nye innlegg og hendelser.</value></data>

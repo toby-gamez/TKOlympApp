@@ -25,6 +25,7 @@ public partial class AppShell : Shell
         // Register routes and navigate conditionally on startup
         Routing.RegisterRoute(nameof(LoginPage), typeof(LoginPage));
         Routing.RegisterRoute(nameof(AboutMePage), typeof(AboutMePage));
+        Routing.RegisterRoute(nameof(CouplePage), typeof(Pages.CouplePage));
         Routing.RegisterRoute(nameof(EventPage), typeof(EventPage));
         Routing.RegisterRoute(nameof(PlainTextPage), typeof(Pages.PlainTextPage));
         Routing.RegisterRoute(nameof(RegistrationPage), typeof(RegistrationPage));

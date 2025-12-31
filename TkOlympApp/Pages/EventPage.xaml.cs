@@ -62,6 +62,7 @@ public partial class EventPage : ContentPage
         public List<string> Trainers { get; set; } = new();
         public bool HasTrainers => Trainers != null && Trainers.Count > 0;
         public bool HasSecondary => !string.IsNullOrWhiteSpace(Secondary);
+        public string? CoupleId { get; set; }
     }
 
     private readonly ObservableCollection<RegistrationRow> _registrations = new();
@@ -72,6 +73,29 @@ public partial class EventPage : ContentPage
         InitializeComponent();
         RegistrationsCollection.ItemsSource = _registrations;
         TrainersCollection.ItemsSource = _trainers;
+    }
+
+    private async void OnRegistrationSelected(object? sender, SelectionChangedEventArgs e)
+    {
+        try
+        {
+            if (e.CurrentSelection == null || e.CurrentSelection.Count == 0) return;
+            var selected = e.CurrentSelection.FirstOrDefault() as RegistrationRow;
+            if (selected == null) return;
+            // Clear selection for UX
+            try { RegistrationsCollection.SelectedItem = null; } catch { }
+
+            var id = selected.CoupleId;
+            if (!string.IsNullOrWhiteSpace(id))
+            {
+                // Navigate to CouplePage with id
+                await Shell.Current.GoToAsync($"{nameof(CouplePage)}?id={Uri.EscapeDataString(id)}");
+            }
+        }
+        catch
+        {
+            // ignore navigation errors
+        }
     }
 
     protected override async void OnAppearing()
@@ -356,11 +380,11 @@ public partial class EventPage : ContentPage
 
                 var secondary = parts.Count > 0 ? string.Join(" • ", parts) : null;
                 var key = (text ?? string.Empty) + "|" + (secondary ?? string.Empty);
-                if (!seen.Contains(key))
-                {
-                    seen.Add(key);
-                    _registrations.Add(new RegistrationRow { Text = text ?? string.Empty, Secondary = secondary, Trainers = trainerParts });
-                }
+                    if (!seen.Contains(key))
+                    {
+                        seen.Add(key);
+                        _registrations.Add(new RegistrationRow { Text = text ?? string.Empty, Secondary = secondary, Trainers = trainerParts, CoupleId = n.Couple?.Id });
+                    }
             }
 
             RegistrationsFrame.IsVisible = _registrations.Count > 0;

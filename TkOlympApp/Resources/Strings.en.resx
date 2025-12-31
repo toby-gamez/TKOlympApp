@@ -113,6 +113,18 @@
   <data name="Event_Trainers_Label" xml:space="preserve"><value>Trainers</value></data>
   <data name="Event_Registrations_Label" xml:space="preserve"><value>Registrations</value></data>
   <data name="Couple_Inactive" xml:space="preserve"><value>Inactive</value></data>
+  <data name="Couple_Separator" xml:space="preserve"><value>-</value></data>
+  <data name="Couple_Error_MissingId" xml:space="preserve"><value>Missing ID.</value></data>
+  <data name="Couple_Error_NotFound" xml:space="preserve"><value>Couple not found.</value></data>
+  <data name="Placeholder_Empty" xml:space="preserve"><value>—</value></data>
+  <data name="Couple_Title" xml:space="preserve"><value>Couple</value></data>
+  <data name="Couple_Id" xml:space="preserve"><value>Couple ID:</value></data>
+  <data name="Couple_CreatedAt" xml:space="preserve"><value>Created at:</value></data>
+  <data name="Couple_Man" xml:space="preserve"><value>Man:</value></data>
+  <data name="Couple_Woman" xml:space="preserve"><value>Woman:</value></data>
+  <data name="Couple_FirstName" xml:space="preserve"><value>First name:</value></data>
+  <data name="Couple_LastName" xml:space="preserve"><value>Last name:</value></data>
+  <data name="Couple_Phone" xml:space="preserve"><value>Phone:</value></data>
   <data name="Other_AboutApp_Label" xml:space="preserve"><value>About the Application</value></data>
   <data name="Other_AboutApp_Desc" xml:space="preserve"><value>All about this software</value></data>
   <data name="Other_AboutApp_Body" xml:space="preserve"><value>This app shows schedules, news and info about trainers and venues. It talks to a remote API and uses local notifications to nudge you about new posts and events.</value></data>

@@ -77,6 +77,14 @@ public partial class MainPage : ContentPage
         }
     }
 
+    private static string NormalizeName(string? s)
+    {
+        if (string.IsNullOrWhiteSpace(s)) return string.Empty;
+        var normalized = s.Normalize(System.Text.NormalizationForm.FormD);
+        var chars = normalized.Where(c => System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark).ToArray();
+        return new string(chars).ToLowerInvariant().Trim();
+    }
+
     private async Task LoadEventsAsync()
     {
         try { Debug.WriteLine("MainPage: LoadEventsAsync start"); } catch { }
@@ -159,6 +167,87 @@ public partial class MainPage : ContentPage
                     _weeks.Add(wg);
             }
 
+            // Highlight rows in the "All" view when the registrant matches current user or user's active couples
+            List<string> normalizedHighlights = new();
+            if (!_onlyMine)
+            {
+                try
+                {
+                    var highlightNames = new List<string>();
+                    static void AddNameVariants(List<string> list, string? name)
+                    {
+                        if (string.IsNullOrWhiteSpace(name)) return;
+                        var v = name.Trim();
+                        if (!list.Contains(v, StringComparer.OrdinalIgnoreCase)) list.Add(v);
+                        // add surname (last token)
+                        var parts = v.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                        if (parts.Length > 0)
+                        {
+                            var last = parts[^1];
+                            if (!list.Contains(last, StringComparer.OrdinalIgnoreCase)) list.Add(last);
+                        }
+                    }
+                    try
+                    {
+                        var currentUser = await UserService.GetCurrentUserAsync();
+                        if (currentUser != null)
+                        {
+                            var full = ((currentUser.UJmeno ?? string.Empty) + " " + (currentUser.UPrijmeni ?? string.Empty)).Trim();
+                            AddNameVariants(highlightNames, full);
+                            AddNameVariants(highlightNames, currentUser.ULogin);
+                        }
+                    }
+                    catch { }
+
+                    try
+                    {
+                        var couples = await UserService.GetActiveCouplesFromUsersAsync();
+                        foreach (var c in couples)
+                        {
+                            AddNameVariants(highlightNames, c.ManName);
+                            AddNameVariants(highlightNames, c.WomanName);
+                            AddNameVariants(highlightNames, string.IsNullOrWhiteSpace(c.ManName) || string.IsNullOrWhiteSpace(c.WomanName) ? null : c.ManName + " - " + c.WomanName);
+                        }
+                    }
+                    catch { }
+
+                    var distinct = highlightNames.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+                    // normalize helper (remove diacritics, lower-case)
+                    static string NormalizeName(string? s)
+                    {
+                        if (string.IsNullOrWhiteSpace(s)) return string.Empty;
+                        var normalized = s.Normalize(System.Text.NormalizationForm.FormD);
+                        var chars = normalized.Where(c => System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark).ToArray();
+                        return new string(chars).ToLowerInvariant().Trim();
+                    }
+
+                    normalizedHighlights = distinct.Select(NormalizeName).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+                    try { System.Diagnostics.Debug.WriteLine("Highlight names: " + string.Join(",", distinct)); } catch { }
+                    foreach (var week in _weeks)
+                    {
+                        foreach (var day in week)
+                        {
+                            foreach (var gt in day.GroupedTrainers)
+                            {
+                                foreach (var row in gt.Rows)
+                                {
+                                    var fr = row.FirstRegistrant ?? string.Empty;
+                                    if (string.IsNullOrWhiteSpace(fr))
+                                    {
+                                        row.IsHighlighted = false;
+                                        continue;
+                                    }
+                                    var frNorm = NormalizeName(fr);
+                                    bool matched = !string.IsNullOrWhiteSpace(frNorm) && normalizedHighlights.Any(h => frNorm.Contains(h) || h.Contains(frNorm));
+                                    row.IsHighlighted = matched;
+                                }
+                            }
+                        }
+                    }
+                }
+                catch { }
+            }
+
             // background fetch for missing first-registrant names using GetEventAsync
             _ = Task.Run(async () =>
             {
@@ -200,7 +289,18 @@ public partial class MainPage : ContentPage
                                             }
                                             catch { }
                                             // Ensure we set the FirstRegistrant (may be empty) and mark row as loaded so triggers apply after fetch
-                                            Dispatcher?.Dispatch(() => { row.FirstRegistrant = name; row.IsLoaded = true; });
+                                            Dispatcher?.Dispatch(() => {
+                                                row.FirstRegistrant = name;
+                                                row.IsLoaded = true;
+                                                try
+                                                {
+                                                    var frNorm = NormalizeName(row.FirstRegistrant);
+                                                    var matched = !string.IsNullOrWhiteSpace(frNorm) && normalizedHighlights.Any(h => frNorm.Contains(h) || h.Contains(frNorm));
+                                                    row.IsHighlighted = matched;
+                                                    System.Diagnostics.Debug.WriteLine("Row firstRegistrant='" + row.FirstRegistrant + "' normalized='" + frNorm + "' matched=" + matched);
+                                                }
+                                                catch { }
+                                            });
                                         }
                                         catch
                                         {
@@ -565,6 +665,19 @@ public partial class MainPage : ContentPage
 
         // True when the row has completed loading and there is no registrant
         public bool IsFree => IsLoaded && string.IsNullOrEmpty(FirstRegistrant);
+        private bool _isHighlighted;
+        public bool IsHighlighted
+        {
+            get => _isHighlighted;
+            set
+            {
+                if (_isHighlighted != value)
+                {
+                    _isHighlighted = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsHighlighted)));
+                }
+            }
+        }
         public string DurationText { get; }
 
         public GroupedEventRow(EventService.EventInstance instance, string firstRegistrantOverride = "")

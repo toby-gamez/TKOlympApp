@@ -104,7 +104,7 @@
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="6">
                     <Label Text="{svc:Translate Event_Registrations_Label}" FontAttributes="Bold" />
-                    <CollectionView x:Name="RegistrationsCollection" HeightRequest="300">
+                    <CollectionView x:Name="RegistrationsCollection" HeightRequest="300" SelectionMode="Single" SelectionChanged="OnRegistrationSelected">
                         <CollectionView.ItemTemplate>
                             <DataTemplate>
                                 <VerticalStackLayout Padding="8" Spacing="4">

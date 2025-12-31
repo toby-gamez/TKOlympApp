@@ -113,6 +113,18 @@
     <data name="Event_Trainers_Label" xml:space="preserve"><value>Tréneri</value></data>
     <data name="Event_Registrations_Label" xml:space="preserve"><value>Zoznam prihlásených</value></data>
     <data name="Couple_Inactive" xml:space="preserve"><value>Neaktívny</value></data>
+    <data name="Couple_Separator" xml:space="preserve"><value>-</value></data>
+    <data name="Couple_Error_MissingId" xml:space="preserve"><value>ID chýba.</value></data>
+    <data name="Couple_Error_NotFound" xml:space="preserve"><value>Pár nebol nájdený.</value></data>
+    <data name="Placeholder_Empty" xml:space="preserve"><value>—</value></data>
+    <data name="Couple_Title" xml:space="preserve"><value>Pár</value></data>
+    <data name="Couple_Id" xml:space="preserve"><value>ID páru:</value></data>
+    <data name="Couple_CreatedAt" xml:space="preserve"><value>Vytvorené:</value></data>
+    <data name="Couple_Man" xml:space="preserve"><value>Muž:</value></data>
+    <data name="Couple_Woman" xml:space="preserve"><value>Žena:</value></data>
+    <data name="Couple_FirstName" xml:space="preserve"><value>Meno:</value></data>
+    <data name="Couple_LastName" xml:space="preserve"><value>Priezvisko:</value></data>
+    <data name="Couple_Phone" xml:space="preserve"><value>Telefón:</value></data>
     <data name="Other_AboutApp_Label" xml:space="preserve"><value>O aplikácii</value></data>
     <data name="Other_AboutApp_Desc" xml:space="preserve"><value>Všetko o tomto softvéri</value></data>
     <data name="Other_AboutApp_Body" xml:space="preserve"><value>Táto aplikácia zobrazuje rozvrhy, novinky a informácie o tréneroch a priestoroch. Je pripojená k vzdialenému API a používa lokálne notifikácie na upozornenia o nových príspevkoch a udalostiach.</value></data>

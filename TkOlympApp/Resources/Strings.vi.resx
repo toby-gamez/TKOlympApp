@@ -113,6 +113,18 @@
   <data name="Event_Trainers_Label" xml:space="preserve"><value>Huấn luyện viên</value></data>
   <data name="Event_Registrations_Label" xml:space="preserve"><value>Danh sách đăng ký</value></data>
   <data name="Couple_Inactive" xml:space="preserve"><value>Không hoạt động</value></data>
+  <data name="Couple_Separator" xml:space="preserve"><value>-</value></data>
+  <data name="Couple_Error_MissingId" xml:space="preserve"><value>Thiếu ID.</value></data>
+  <data name="Couple_Error_NotFound" xml:space="preserve"><value>Không tìm thấy cặp.</value></data>
+  <data name="Placeholder_Empty" xml:space="preserve"><value>—</value></data>
+  <data name="Couple_Title" xml:space="preserve"><value>Cặp đôi</value></data>
+  <data name="Couple_Id" xml:space="preserve"><value>ID cặp:</value></data>
+  <data name="Couple_CreatedAt" xml:space="preserve"><value>Được tạo:</value></data>
+  <data name="Couple_Man" xml:space="preserve"><value>Nam:</value></data>
+  <data name="Couple_Woman" xml:space="preserve"><value>Nữ:</value></data>
+  <data name="Couple_FirstName" xml:space="preserve"><value>Tên:</value></data>
+  <data name="Couple_LastName" xml:space="preserve"><value>Họ:</value></data>
+  <data name="Couple_Phone" xml:space="preserve"><value>Điện thoại:</value></data>
   <data name="Other_AboutApp_Label" xml:space="preserve"><value>Về ứng dụng</value></data>
   <data name="Other_AboutApp_Desc" xml:space="preserve"><value>Mọi thứ về phần mềm này</value></data>
   <data name="Other_AboutApp_Body" xml:space="preserve"><value>Ứng dụng này hiển thị lịch trình, tin tức và thông tin về huấn luyện viên và địa điểm. Nó kết nối tới API từ xa và sử dụng thông báo cục bộ để thông báo về bài viết và sự kiện mới.</value></data>

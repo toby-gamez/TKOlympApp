@@ -118,6 +118,9 @@
                                                                                                                     <Setter Property="Text" Value="{svc:Translate Free}" />
                                                                                                                     <Setter Property="TextColor" Value="Green" />
                                                                                                                 </DataTrigger>
+                                                                                                                        <DataTrigger TargetType="Label" Binding="{Binding IsHighlighted}" Value="True">
+                                                                                                                            <Setter Property="TextColor" Value="{StaticResource Primary}" />
+                                                                                                                        </DataTrigger>
                                                                                                             </Label.Triggers>
                                                                                                         </Label>
                                                                         <Label Text="{Binding DurationText}" Grid.Column="2" HorizontalOptions="End" />
