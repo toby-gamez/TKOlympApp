@@ -491,6 +491,8 @@
     <Style x:Key="ButtonSecondary" TargetType="Button">
         <Setter Property="BackgroundColor"
                 Value="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource SecondaryDark}}" />
+        <Setter Property="TextColor"
+                Value="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" />
     </Style>
     
 </ResourceDictionary>

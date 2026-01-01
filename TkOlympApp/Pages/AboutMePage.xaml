@@ -151,29 +151,30 @@
                         </HorizontalStackLayout>
                     </VerticalStackLayout>
                 </Border>
+                
+                <!-- Akční tlačítka pod celým obsahem -->
+                <VerticalStackLayout Margin="0,20,0,0" Spacing="8">
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <Button x:Name="ChangePasswordButton"
+                            Grid.Column="0"
+                            HorizontalOptions="FillAndExpand"
+                            Text="Změna hesla"
+                            Style="{StaticResource ButtonSecondary}"
+                            Clicked="OnChangePasswordClicked" />
+
+                        <Button x:Name="EditSelfButton"
+                            Grid.Column="1"
+                            HorizontalOptions="FillAndExpand"
+                            Text="Upravit sebe"
+                            Style="{StaticResource ButtonSecondary}"
+                            Clicked="OnEditSelfClicked" />
+                    </Grid>
+
+                    <Button
+                        Text="{svc:Translate Other_Button_Logout}"
+                        Clicked="OnLogoutClicked" />
+                </VerticalStackLayout>
             </VerticalStackLayout>
         </ScrollView>
-
-        <VerticalStackLayout Grid.Row="2" Margin="20" Spacing="8">
-                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                <Button x:Name="ChangePasswordButton"
-                    Grid.Column="0"
-                    HorizontalOptions="FillAndExpand"
-                    Text="Změna hesla"
-                    Style="{StaticResource ButtonSecondary}"
-                    Clicked="OnChangePasswordClicked" />
-
-                <Button x:Name="EditSelfButton"
-                    Grid.Column="1"
-                    HorizontalOptions="FillAndExpand"
-                    Text="Upravit sebe"
-                    Style="{StaticResource ButtonSecondary}"
-                    Clicked="OnEditSelfClicked" />
-                </Grid>
-
-            <Button
-            Text="{svc:Translate Other_Button_Logout}"
-            Clicked="OnLogoutClicked" />
-        </VerticalStackLayout>
     </Grid>
 </ContentPage>
