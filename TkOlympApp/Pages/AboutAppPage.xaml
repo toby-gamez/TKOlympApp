@@ -48,9 +48,10 @@
                     </Label>
                 </VerticalStackLayout>
             </Border>
-            <Label Text="{svc:Translate Brainrot_Disclaimer}" FontAttributes="Italic"/>
-
-
+            <VerticalStackLayout>
+                <Label Text="{svc:Translate Brainrot_Disclaimer}" FontAttributes="Italic"/>
+                <Label Text="© 2026 TK Olymp Olomouc, z. s." HorizontalOptions="Center" Margin="0,10,0,0" />
+            </VerticalStackLayout>
         </VerticalStackLayout>
     </ScrollView>
 
