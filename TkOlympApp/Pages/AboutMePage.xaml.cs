@@ -88,7 +88,7 @@ public partial class AboutMePage : ContentPage
                 {
                         try
                         {
-                            var query = "query MyQuery { person(id: \"" + proxyId + "\") { address { city conscriptionNumber district orientationNumber postalCode region street } bio birthDate createdAt cstsId email firstName gender isTrainer lastName nationalIdNumber nationality phone wdsfId } }";
+                            var query = "query MyQuery { person(id: \"" + proxyId + "\") { address { city conscriptionNumber district orientationNumber postalCode region street } bio birthDate createdAt cstsId email firstName prefixTitle suffixTitle gender isTrainer lastName nationalIdNumber nationality phone wdsfId } }";
 
                         var gqlReqP = new { query };
                         var jsonP = JsonSerializer.Serialize(gqlReqP, options);
@@ -101,6 +101,30 @@ public partial class AboutMePage : ContentPage
                         var person = parsedP?.Data?.Person;
                         if (person != null)
                         {
+                            // Format name with optional prefix/suffix titles
+                            static string FormatPrefixName(string? prefix, string? name)
+                            {
+                                prefix = prefix?.Trim();
+                                name = name?.Trim();
+                                if (string.IsNullOrWhiteSpace(prefix) && string.IsNullOrWhiteSpace(name)) return "—";
+                                if (string.IsNullOrWhiteSpace(name)) return prefix ?? "—";
+                                if (string.IsNullOrWhiteSpace(prefix)) return name!;
+                                return prefix + " " + name;
+                            }
+
+                            static string FormatNameSuffix(string? name, string? suffix)
+                            {
+                                name = name?.Trim();
+                                suffix = suffix?.Trim();
+                                if (string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(suffix)) return "—";
+                                if (string.IsNullOrWhiteSpace(name)) return suffix ?? "—";
+                                if (string.IsNullOrWhiteSpace(suffix)) return name!;
+                                return name + " " + suffix;
+                            }
+
+                            NameValue.Text = FormatPrefixName(person.PrefixTitle, person.FirstName);
+                            SurnameValue.Text = FormatNameSuffix(person.LastName, person.SuffixTitle);
+
                             BioValue.Text = NonEmpty(person.Bio?.Trim());
                             BirthDateValue.Text = FormatDtString(person.BirthDate);
                             PhoneValue.Text = NonEmpty(PhoneHelpers.Format(person.Phone?.Trim()));
@@ -296,6 +320,8 @@ public partial class AboutMePage : ContentPage
         [JsonPropertyName("cstsId")] public string? CstsId { get; set; }
         [JsonPropertyName("email")] public string? Email { get; set; }
         [JsonPropertyName("firstName")] public string? FirstName { get; set; }
+        [JsonPropertyName("prefixTitle")] public string? PrefixTitle { get; set; }
+        [JsonPropertyName("suffixTitle")] public string? SuffixTitle { get; set; }
         [JsonPropertyName("gender")] public string? Gender { get; set; }
         [JsonPropertyName("isTrainer")] public bool? IsTrainer { get; set; }
         [JsonPropertyName("lastName")] public string? LastName { get; set; }

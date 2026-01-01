@@ -59,7 +59,7 @@ namespace TkOlympApp.Pages
                     return;
                 }
 
-                var query = "query MyQuery { person(id: \"" + _personId + "\") { bio birthDate createdAt cstsId email firstName gender isTrainer lastName phone wdsfId activeCouplesList { id man { firstName lastName } woman { firstName lastName } } } }";
+                var query = "query MyQuery { person(id: \"" + _personId + "\") { bio birthDate createdAt cstsId email firstName prefixTitle suffixTitle gender isTrainer lastName phone wdsfId activeCouplesList { id man { firstName lastName } woman { firstName lastName } } } }";
 
                 var gqlReq = new { query };
                 var options = new JsonSerializerOptions(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = true };
@@ -78,9 +78,29 @@ namespace TkOlympApp.Pages
                     return;
                 }
 
-                // Populate fields
-                NameValue.Text = NonEmpty(person.FirstName?.Trim());
-                SurnameValue.Text = NonEmpty(person.LastName?.Trim());
+                // Populate fields (include prefix/suffix titles if present)
+                static string FormatPrefixName(string? prefix, string? name)
+                {
+                    prefix = prefix?.Trim();
+                    name = name?.Trim();
+                    if (string.IsNullOrWhiteSpace(prefix) && string.IsNullOrWhiteSpace(name)) return "—";
+                    if (string.IsNullOrWhiteSpace(name)) return prefix ?? "—";
+                    if (string.IsNullOrWhiteSpace(prefix)) return name!;
+                    return prefix + " " + name;
+                }
+
+                static string FormatNameSuffix(string? name, string? suffix)
+                {
+                    name = name?.Trim();
+                    suffix = suffix?.Trim();
+                    if (string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(suffix)) return "—";
+                    if (string.IsNullOrWhiteSpace(name)) return suffix ?? "—";
+                    if (string.IsNullOrWhiteSpace(suffix)) return name!;
+                    return name + " " + suffix;
+                }
+
+                NameValue.Text = FormatPrefixName(person.PrefixTitle, person.FirstName);
+                SurnameValue.Text = FormatNameSuffix(person.LastName, person.SuffixTitle);
                 BioValue.Text = NonEmpty(person.Bio?.Trim());
                 BirthDateValue.Text = FormatDtString(person.BirthDate);
                 PhoneValue.Text = NonEmpty(PhoneHelpers.Format(person.Phone?.Trim()));
@@ -204,6 +224,8 @@ namespace TkOlympApp.Pages
             [JsonPropertyName("cstsId")] public string? CstsId { get; set; }
             [JsonPropertyName("email")] public string? Email { get; set; }
             [JsonPropertyName("firstName")] public string? FirstName { get; set; }
+            [JsonPropertyName("prefixTitle")] public string? PrefixTitle { get; set; }
+            [JsonPropertyName("suffixTitle")] public string? SuffixTitle { get; set; }
             [JsonPropertyName("gender")] public string? Gender { get; set; }
             [JsonPropertyName("isTrainer")] public bool? IsTrainer { get; set; }
             [JsonPropertyName("lastName")] public string? LastName { get; set; }

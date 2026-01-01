@@ -132,4 +132,21 @@ public partial class PeoplePage : ContentPage
         }
         catch { }
     }
+
+    private async void OnPersonSelected(object? sender, SelectionChangedEventArgs e)
+    {
+        try
+        {
+            if (e.CurrentSelection == null || e.CurrentSelection.Count == 0) return;
+            var sel = e.CurrentSelection.FirstOrDefault() as PeopleService.Person;
+            if (sel == null) return;
+            try { PeopleCollection.SelectedItem = null; } catch { }
+            var id = sel.Id;
+            if (!string.IsNullOrWhiteSpace(id))
+            {
+                await Shell.Current.GoToAsync($"{nameof(PersonPage)}?personId={Uri.EscapeDataString(id)}");
+            }
+        }
+        catch { }
+    }
 }

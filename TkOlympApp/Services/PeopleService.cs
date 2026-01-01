@@ -20,7 +20,7 @@ public static class PeopleService
     {
         var query = new GraphQlRequest
         {
-            Query = "query MyQuery { people { nodes { firstName lastName birthDate } } }"
+            Query = "query MyQuery { people { nodes { id firstName lastName birthDate } } }"
         };
 
         var json = JsonSerializer.Serialize(query, Options);
@@ -54,7 +54,7 @@ public static class PeopleService
         [JsonPropertyName("nodes")] public List<Person>? Nodes { get; set; }
     }
 
-    public sealed record Person(string? FirstName, string? LastName, string? BirthDate)
+    public sealed record Person(string? Id, string? FirstName, string? LastName, string? BirthDate)
     {
         public string FullName => string.Join(' ', new[] { FirstName, LastName }.Where(s => !string.IsNullOrWhiteSpace(s)));
 

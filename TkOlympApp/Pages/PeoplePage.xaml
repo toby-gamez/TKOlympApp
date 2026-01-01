@@ -19,7 +19,7 @@
         </HorizontalStackLayout>
 
             <RefreshView x:Name="PeopleRefresh" Grid.Row="1" Refreshing="OnPeopleRefresh">
-            <CollectionView x:Name="PeopleCollection" SelectionMode="None" IsGrouped="False">
+            <CollectionView x:Name="PeopleCollection" SelectionMode="Single" IsGrouped="False" SelectionChanged="OnPersonSelected">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <Border x:Name="PersonBorder" StrokeShape="RoundRectangle 8" StrokeThickness="1" Padding="12" Margin="12,6">
