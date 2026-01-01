@@ -103,7 +103,7 @@ public partial class AboutMePage : ContentPage
                         {
                             BioValue.Text = NonEmpty(person.Bio?.Trim());
                             BirthDateValue.Text = FormatDtString(person.BirthDate);
-                            PhoneValue.Text = NonEmpty(person.Phone?.Trim());
+                            PhoneValue.Text = NonEmpty(PhoneHelpers.Format(person.Phone?.Trim()));
                             NationalityValue.Text = NonEmpty(NationalityHelper.GetLocalizedAdjective(person.Nationality?.Trim()));
                             AddressValue.Text = ComposeAddress(person.Address);
                             GenderValue.Text = MapGender(person.Gender);
@@ -222,7 +222,7 @@ public partial class AboutMePage : ContentPage
             ? (string.IsNullOrWhiteSpace(numberPart) ? string.Empty : numberPart)
             : (string.IsNullOrWhiteSpace(numberPart) ? street : street + " " + numberPart);
 
-        var postal = a.PostalCode?.Trim();
+        var postal = PostalCodeHelpers.Format(a.PostalCode?.Trim());
         var city = a.City?.Trim();
         var region = a.Region?.Trim();
 

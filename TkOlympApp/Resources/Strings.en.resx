@@ -220,7 +220,7 @@
   <data name="About_IsTrainer" xml:space="preserve"><value>Trainer:</value></data>
   <data name="About_Address" xml:space="preserve"><value>Address:</value></data>
   <data name="About_WdsfId" xml:space="preserve"><value>WDSF ID:</value></data>
-  <data name="About_CstsId" xml:space="preserve"><value>ČSTS ID:</value></data>
+  <data name="About_CstsId" xml:space="preserve"><value>ČSTS IDT:</value></data>
   <data name="About_NationalId" xml:space="preserve"><value>National ID:</value></data>
   <data name="About_Yes" xml:space="preserve"><value>Yes</value></data>
   <data name="About_No" xml:space="preserve"><value>No</value></data>

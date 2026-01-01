@@ -83,7 +83,7 @@ namespace TkOlympApp.Pages
                 SurnameValue.Text = NonEmpty(person.LastName?.Trim());
                 BioValue.Text = NonEmpty(person.Bio?.Trim());
                 BirthDateValue.Text = FormatDtString(person.BirthDate);
-                PhoneValue.Text = NonEmpty(person.Phone?.Trim());
+                PhoneValue.Text = NonEmpty(PhoneHelpers.Format(person.Phone?.Trim()));
                 GenderValue.Text = MapGender(person.Gender);
                 IsTrainerValue.Text = person.IsTrainer.HasValue ? (person.IsTrainer.Value ? LocalizationService.Get("About_Yes") : LocalizationService.Get("About_No")) : "—";
                 WdsfIdValue.Text = NonEmpty(person.WdsfId?.Trim());

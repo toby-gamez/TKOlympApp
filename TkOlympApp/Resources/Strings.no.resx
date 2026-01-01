@@ -143,7 +143,7 @@
         <data name="About_IsTrainer" xml:space="preserve"><value>Er trener:</value></data>
         <data name="About_Address" xml:space="preserve"><value>Adresse:</value></data>
         <data name="About_WdsfId" xml:space="preserve"><value>WDSF ID:</value></data>
-        <data name="About_CstsId" xml:space="preserve"><value>ČSTS ID:</value></data>
+        <data name="About_CstsId" xml:space="preserve"><value>ČSTS IDT:</value></data>
         <data name="About_NationalId" xml:space="preserve"><value>Personnummer:</value></data>
         <data name="About_Yes" xml:space="preserve"><value>Ja</value></data>
         <data name="About_No" xml:space="preserve"><value>Nei</value></data>

@@ -3,6 +3,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using TkOlympApp.Services;
+using TkOlympApp.Helpers;
 
 namespace TkOlympApp.Pages;
 
@@ -10,6 +11,8 @@ namespace TkOlympApp.Pages;
 public partial class CouplePage : ContentPage
 {
     private string? _coupleId;
+    private string? _manId;
+    private string? _womanId;
     private bool _appeared;
     private bool _loadRequested;
 
@@ -59,6 +62,9 @@ public partial class CouplePage : ContentPage
                     return;
                 }
 
+                _manId = couple.Man?.Id;
+                _womanId = couple.Woman?.Id;
+
             IdValue.Text = NonEmpty(couple.Id);
             CreatedAtValue.Text = FormatDtString(couple.CreatedAt);
 
@@ -71,11 +77,11 @@ public partial class CouplePage : ContentPage
             // details below
             ManFirstNameValue.Text = NonEmpty(couple.Man?.FirstName);
             ManLastNameValue.Text = NonEmpty(couple.Man?.LastName);
-            ManPhoneValue.Text = NonEmpty(couple.Man?.Phone);
+            ManPhoneValue.Text = NonEmpty(PhoneHelpers.Format(couple.Man?.Phone?.Trim()));
 
             WomanFirstNameValue.Text = NonEmpty(couple.Woman?.FirstName);
             WomanLastNameValue.Text = NonEmpty(couple.Woman?.LastName);
-            WomanPhoneValue.Text = NonEmpty(couple.Woman?.Phone);
+            WomanPhoneValue.Text = NonEmpty(PhoneHelpers.Format(couple.Woman?.Phone?.Trim()));
 
             // visibility toggles for named rows
             try { ManFirstNameRow.IsVisible = !string.IsNullOrWhiteSpace(couple.Man?.FirstName); } catch { }
@@ -107,16 +113,25 @@ public partial class CouplePage : ContentPage
         return s;
     }
 
-    private async void OnLogoutClicked(object? sender, EventArgs e)
+    private async void OnManTapped(object? sender, EventArgs e)
     {
         try
         {
-            await AuthService.LogoutAsync();
-            await Shell.Current.GoToAsync($"//{nameof(LoginPage)}");
+            var id = _manId;
+            if (string.IsNullOrWhiteSpace(id)) return;
+            await Shell.Current.GoToAsync($"{nameof(PersonPage)}?personId={Uri.EscapeDataString(id)}");
         }
-        catch
+        catch { }
+    }
+
+    private async void OnWomanTapped(object? sender, EventArgs e)
+    {
+        try
         {
-            try { await Shell.Current.GoToAsync(nameof(LoginPage)); } catch { }
+            var id = _womanId;
+            if (string.IsNullOrWhiteSpace(id)) return;
+            await Shell.Current.GoToAsync($"{nameof(PersonPage)}?personId={Uri.EscapeDataString(id)}");
         }
+        catch { }
     }
 }

@@ -48,6 +48,9 @@
                     </Border.StrokeShape>
                     <VerticalStackLayout Spacing="8">
                         <Label Text="{svc:Translate Couple_Man}" FontAttributes="Bold" />
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnManTapped" NumberOfTapsRequired="1" />
+                        </Border.GestureRecognizers>
                         <HorizontalStackLayout x:Name="ManFirstNameRow" Spacing="6">
                             <Label Text="{svc:Translate Couple_FirstName}" FontAttributes="Bold" FontSize="12" />
                             <Label x:Name="ManFirstNameValue" HorizontalOptions="StartAndExpand" FontSize="12" />
@@ -69,6 +72,9 @@
                     </Border.StrokeShape>
                     <VerticalStackLayout Spacing="8">
                         <Label Text="{svc:Translate Couple_Woman}" FontAttributes="Bold" />
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnWomanTapped" NumberOfTapsRequired="1" />
+                        </Border.GestureRecognizers>
                         <HorizontalStackLayout x:Name="WomanFirstNameRow" Spacing="6">
                             <Label Text="{svc:Translate Couple_FirstName}" FontAttributes="Bold" FontSize="12" />
                             <Label x:Name="WomanFirstNameValue" HorizontalOptions="StartAndExpand" FontSize="12" />

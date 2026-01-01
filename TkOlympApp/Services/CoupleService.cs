@@ -16,7 +16,7 @@ public static class CoupleService
         // The GraphQL schema on the server uses BigInt for ids; avoid declaring a variable of type ID
         // and instead embed the id directly in the query (same pattern used elsewhere in the app).
         var safeId = id?.Replace("\\", "\\\\").Replace("\"", "\\\"") ?? string.Empty;
-        var query = "query MyQuery { couple(id: \"" + safeId + "\") { createdAt id man { firstName lastName phone } woman { firstName lastName phone } } }";
+        var query = "query MyQuery { couple(id: \"" + safeId + "\") { createdAt id man { id firstName lastName phone } woman { id firstName lastName phone } } }";
 
         var gqlReq = new { query };
         var json = JsonSerializer.Serialize(gqlReq, Options);
@@ -71,6 +71,7 @@ public static class CoupleService
 
     public sealed class Person
     {
+        [JsonPropertyName("id")] public string? Id { get; set; }
         [JsonPropertyName("firstName")] public string? FirstName { get; set; }
         [JsonPropertyName("lastName")] public string? LastName { get; set; }
         [JsonPropertyName("phone")] public string? Phone { get; set; }
