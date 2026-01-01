@@ -160,23 +160,19 @@
                     Grid.Column="0"
                     HorizontalOptions="FillAndExpand"
                     Text="Změna hesla"
-                    BackgroundColor="{StaticResource Secondary}"
-                    TextColor="White"
+                    Style="{StaticResource ButtonSecondary}"
                     Clicked="OnChangePasswordClicked" />
 
                 <Button x:Name="EditSelfButton"
                     Grid.Column="1"
                     HorizontalOptions="FillAndExpand"
                     Text="Upravit sebe"
-                    BackgroundColor="{StaticResource Secondary}"
-                    TextColor="White"
+                    Style="{StaticResource ButtonSecondary}"
                     Clicked="OnEditSelfClicked" />
                 </Grid>
 
             <Button
             Text="{svc:Translate Other_Button_Logout}"
-            BackgroundColor="{StaticResource Primary}"
-            TextColor="White"
             Clicked="OnLogoutClicked" />
         </VerticalStackLayout>
     </Grid>

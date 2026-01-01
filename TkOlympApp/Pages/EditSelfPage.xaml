@@ -220,7 +220,7 @@
 
             <VerticalStackLayout Spacing="8">
                 <Button Text="Uložit" Clicked="OnSaveClicked" HorizontalOptions="FillAndExpand" />
-                <Button Text="Zrušit" Clicked="OnCancelClicked" HorizontalOptions="FillAndExpand" />
+                <Button Text="Zrušit" Clicked="OnCancelClicked" HorizontalOptions="FillAndExpand" Style="{StaticResource ButtonSecondary}" />
             </VerticalStackLayout>
         </VerticalStackLayout>
     </ScrollView>
