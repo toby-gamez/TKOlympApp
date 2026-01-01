@@ -42,4 +42,9 @@
     <SolidColorBrush x:Key="Gray600Brush" Color="{StaticResource Gray600}"/>
     <SolidColorBrush x:Key="Gray900Brush" Color="{StaticResource Gray900}"/>
     <SolidColorBrush x:Key="Gray950Brush" Color="{StaticResource Gray950}"/>
+    
+    <!-- Success / Danger brushes for validation -->
+    <Color x:Key="Success">#28A745</Color>
+    <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource Success}"/>
+    <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource Primary}"/>
 </ResourceDictionary>

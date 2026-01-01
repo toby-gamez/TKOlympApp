@@ -161,6 +161,36 @@ public static class NationalityHelper
         return numericCode.Trim();
     }
 
+    // Return a sorted list of available country names (culture-aware)
+    public static List<string> GetAllCountryNamesSorted()
+    {
+        var comparer = StringComparer.Create(CultureInfo.CurrentUICulture, ignoreCase: true);
+        var list = _map.Values.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        list.Sort((a, b) => StringComparer.Create(CultureInfo.CurrentUICulture, ignoreCase: false).Compare(a, b));
+        return list;
+    }
+
+    // Try to find the numeric code for a given country name (case-insensitive)
+    public static bool TryGetNumericCodeForName(string? name, out string numericCode)
+    {
+        numericCode = string.Empty;
+        if (string.IsNullOrWhiteSpace(name)) return false;
+        try
+        {
+            var kv = _map.FirstOrDefault(kv2 => string.Equals(kv2.Value, name.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (!kv.Equals(default(KeyValuePair<int, string>)))
+            {
+                numericCode = kv.Key.ToString();
+                return true;
+            }
+        }
+        catch
+        {
+            // ignore
+        }
+        return false;
+    }
+
     // Return a localized adjectival (feminine for Slavic languages) form where available.
     public static string GetLocalizedAdjective(string? numericCodeOrName)
     {

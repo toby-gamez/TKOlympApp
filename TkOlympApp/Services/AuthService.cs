@@ -105,11 +105,21 @@ public static class AuthService
         return jwt;
     }
 
-    public static Task LogoutAsync()
+    public static async Task LogoutAsync()
     {
-        SecureStorage.Remove("jwt");
-        Client.DefaultRequestHeaders.Authorization = null;
-        return Task.CompletedTask;
+        try
+        {
+            // Persist empty token (best-effort) and clear auth header
+            try { await SecureStorage.SetAsync("jwt", string.Empty); } catch { }
+            Client.DefaultRequestHeaders.Authorization = null;
+
+            // Clear persisted person id as well
+            try { await UserService.SetCurrentPersonIdAsync(null); } catch { }
+        }
+        catch
+        {
+            // ignore
+        }
     }
 
     private sealed class GraphQlRequest

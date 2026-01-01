@@ -164,14 +164,36 @@ public partial class AboutMePage : ContentPage
         {
             await AuthService.LogoutAsync();
 
-            // Navigate to login route
-            await Shell.Current.GoToAsync($"//{nameof(LoginPage)}");
+            try { await Shell.Current.GoToAsync(nameof(LoginPage)); } catch { try { await Shell.Current.GoToAsync($"//{nameof(LoginPage)}"); } catch { } }
         }
         catch
         {
             try { await Shell.Current.GoToAsync(nameof(LoginPage)); } catch { /* ignore */ }
         }
     }
+
+    private async void OnChangePasswordClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            await Shell.Current.Navigation.PushModalAsync(new ChangePasswordPage());
+        }
+        catch { }
+    }
+
+    private async void OnEditSelfClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            await Shell.Current.Navigation.PushModalAsync(new EditSelfPage());
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Navigation to PersonPage failed: {ex}");
+        }
+    }
+
+    // Password change moved to modal ChangePasswordPage
 
     private sealed class GraphQlResp<T>
     {
