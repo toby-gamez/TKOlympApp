@@ -84,6 +84,10 @@
     <data name="Button_OK" xml:space="preserve"><value>V redu</value></data>
     <data name="Tab_My" xml:space="preserve"><value>Moji</value></data>
     <data name="Tab_All" xml:space="preserve"><value>Vsi</value></data>
+    <data name="Button_Save" xml:space="preserve"><value>Shrani</value></data>
+    <data name="Button_ChangePassword" xml:space="preserve"><value>Spremeni geslo</value></data>
+    <data name="Button_ChangePassword_Open" xml:space="preserve"><value>Sprememba gesla</value></data>
+    <data name="Button_EditSelf" xml:space="preserve"><value>Uredi profil</value></data>
     <data name="Today" xml:space="preserve"><value>Danes</value></data>
     <data name="Tomorrow" xml:space="preserve"><value>Jutri</value></data>
     <data name="Empty_MyEvents" xml:space="preserve"><value>Nimate nobenih dogodkov.</value></data>
@@ -207,6 +211,54 @@
       <data name="EditRegistrations_Trainers_Label" xml:space="preserve"><value>Trenerji</value></data>
       <data name="EditRegistrations_Button_Text" xml:space="preserve"><value>Potrdi</value></data>
     <data name="About_Phone" xml:space="preserve"><value>Telefon:</value></data>
+    <data name="Page_EditSelf_Title" xml:space="preserve"><value>Uredi profil</value></data>
+    <data name="EditSelf_PersonalInfo" xml:space="preserve"><value>Osebni podatki</value></data>
+    <data name="Label_FirstName" xml:space="preserve"><value>Ime:</value></data>
+    <data name="Placeholder_FirstName" xml:space="preserve"><value>Ime</value></data>
+    <data name="Label_LastName" xml:space="preserve"><value>Priimek:</value></data>
+    <data name="Placeholder_LastName" xml:space="preserve"><value>Priimek</value></data>
+    <data name="Label_PrefixTitle" xml:space="preserve"><value>Pred naslovom:</value></data>
+    <data name="Placeholder_PrefixTitle" xml:space="preserve"><value>Pred naslovom</value></data>
+    <data name="Label_SuffixTitle" xml:space="preserve"><value>Za naslovom:</value></data>
+    <data name="Placeholder_SuffixTitle" xml:space="preserve"><value>Za naslovom</value></data>
+    <data name="Label_Gender" xml:space="preserve"><value>Spol:</value></data>
+    <data name="Gender_Other" xml:space="preserve"><value>Drugo</value></data>
+    <data name="Gender_Male" xml:space="preserve"><value>Moški</value></data>
+    <data name="Gender_Female" xml:space="preserve"><value>Ženska</value></data>
+    <data name="Label_BirthDate" xml:space="preserve"><value>Datum rojstva:</value></data>
+    <data name="EditSelf_Contact" xml:space="preserve"><value>Kontakt</value></data>
+    <data name="Label_Email" xml:space="preserve"><value>E-pošta:</value></data>
+    <data name="Placeholder_Email" xml:space="preserve"><value>E-pošta</value></data>
+    <data name="Label_Phone" xml:space="preserve"><value>Telefon:</value></data>
+    <data name="Placeholder_Phone" xml:space="preserve"><value>Telefon</value></data>
+    <data name="Label_Nationality" xml:space="preserve"><value>Nacionalnost:</value></data>
+    <data name="EditSelf_Identifiers" xml:space="preserve"><value>Identifikatorji</value></data>
+    <data name="Label_WdsfId" xml:space="preserve"><value>WDSF ID:</value></data>
+    <data name="Placeholder_WdsfId" xml:space="preserve"><value>WDSF ID</value></data>
+    <data name="Label_CstsId" xml:space="preserve"><value>ČSTS IDT:</value></data>
+    <data name="Placeholder_CstsId" xml:space="preserve"><value>ČSTS IDT</value></data>
+    <data name="Label_NationalId" xml:space="preserve"><value>Rodno številko:</value></data>
+    <data name="Placeholder_NationalId" xml:space="preserve"><value>Rodno številko</value></data>
+    <data name="EditSelf_Address" xml:space="preserve"><value>Naslov</value></data>
+    <data name="Label_Street" xml:space="preserve"><value>Ulica:</value></data>
+    <data name="Placeholder_Street" xml:space="preserve"><value>Ulica</value></data>
+    <data name="Label_City" xml:space="preserve"><value>Mesto:</value></data>
+    <data name="Placeholder_City" xml:space="preserve"><value>Mesto</value></data>
+    <data name="Label_PostalCode" xml:space="preserve"><value>Poštna številka:</value></data>
+    <data name="Placeholder_PostalCode" xml:space="preserve"><value>Poštna številka</value></data>
+    <data name="Label_Region" xml:space="preserve"><value>Regija:</value></data>
+    <data name="Placeholder_Region" xml:space="preserve"><value>Regija</value></data>
+    <data name="Label_District" xml:space="preserve"><value>Okraj:</value></data>
+    <data name="Placeholder_District" xml:space="preserve"><value>Okraj</value></data>
+    <data name="Label_ConscriptionNumber" xml:space="preserve"><value>Hišna številka:</value></data>
+    <data name="Placeholder_ConscriptionNumber" xml:space="preserve"><value>Hišna številka</value></data>
+    <data name="Label_OrientationNumber" xml:space="preserve"><value>Orientacijska številka:</value></data>
+    <data name="Placeholder_OrientationNumber" xml:space="preserve"><value>Orientacijska številka</value></data>
+    <data name="Label_Bio" xml:space="preserve"><value>Bio</value></data>
+    <data name="Error_OperationFailed_Message" xml:space="preserve"><value>Operacija ni uspela.</value></data>
+    <data name="Notification_NewAnnouncement_Title" xml:space="preserve"><value>Nova objava</value></data>
+    <data name="Notification_NewAnnouncement_Message" xml:space="preserve"><value>Nova objava</value></data>
+    <data name="ChangePassword_Title" xml:space="preserve"><value>Spremeni geslo</value></data>
     <data name="About_Bio" xml:space="preserve"><value>Bio:</value></data>
     <data name="About_BirthDate" xml:space="preserve"><value>Datum rojstva:</value></data>
     <data name="About_Nationality" xml:space="preserve"><value>Državljanstvo:</value></data>

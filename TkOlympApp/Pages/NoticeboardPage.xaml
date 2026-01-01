@@ -32,7 +32,7 @@
                             <RoundRectangle CornerRadius="8" />
                         </Border.StrokeShape>
                         <VerticalStackLayout Spacing="6">
-                            <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="16" />
+                            <Label Text="{Binding Title}" FontAttributes="Bold" />
                             <Label Text="{Binding CreatedAtText}" FontSize="12" Style="{StaticResource MutedLabelStyle}" />
                             <Label Text="{Binding PlainBody}" LineBreakMode="TailTruncation" MaxLines="2" />
                         </VerticalStackLayout>

@@ -38,6 +38,8 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(nameof(AboutAppPage), typeof(AboutAppPage));
         Routing.RegisterRoute(nameof(PrivacyPolicyPage), typeof(PrivacyPolicyPage));
         Routing.RegisterRoute(nameof(PersonPage), typeof(PersonPage));
+        Routing.RegisterRoute(nameof(EditRegistrationsPage), typeof(EditRegistrationsPage));
+        Routing.RegisterRoute(nameof(ChangePasswordPage), typeof(ChangePasswordPage));
 
         Dispatcher.Dispatch(async () =>
         {
@@ -146,7 +148,9 @@ public partial class AppShell : Shell
                 if (newest != null && newest.Id > _lastSeenAnnouncementId)
                 {
                     NotificationManagerService.EnsureInitialized();
-                    NotificationManagerService.Instance?.SendNotification("Nová aktualita", newest.Title ?? "Nová aktualita");
+                    var title = LocalizationService.Get("Notification_NewAnnouncement_Title") ?? "Nová aktualita";
+                    var message = newest.Title ?? LocalizationService.Get("Notification_NewAnnouncement_Message") ?? "Nová aktualita";
+                    NotificationManagerService.Instance?.SendNotification(title, message);
                     _lastSeenAnnouncementId = newest.Id;
                     Preferences.Set("lastSeenAnnouncementId", _lastSeenAnnouncementId);
                 }
@@ -156,7 +160,9 @@ public partial class AppShell : Shell
                 if (newestSticky != null && newestSticky.Id > _lastSeenStickyId)
                 {
                     NotificationManagerService.EnsureInitialized();
-                    NotificationManagerService.Instance?.SendNotification("Nová aktualita", newestSticky.Title ?? "Nová aktualita");
+                    var titleSticky = LocalizationService.Get("Notification_NewAnnouncement_Title") ?? "Nová aktualita";
+                    var messageSticky = newestSticky.Title ?? LocalizationService.Get("Notification_NewAnnouncement_Message") ?? "Nová aktualita";
+                    NotificationManagerService.Instance?.SendNotification(titleSticky, messageSticky);
                     _lastSeenStickyId = newestSticky.Id;
                     Preferences.Set("lastSeenStickyId", _lastSeenStickyId);
                 }

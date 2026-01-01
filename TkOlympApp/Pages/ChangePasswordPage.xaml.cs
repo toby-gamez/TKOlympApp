@@ -18,15 +18,15 @@ public partial class ChangePasswordPage : ContentPage
     {
         var newText = e.NewTextValue ?? string.Empty;
         // length feedback
-        if (newText.Length >= 8)
-        {
-            LengthLabel.Text = $"Délka: {newText.Length}/8 (OK)";
+            if (newText.Length >= 8)
+            {
+                LengthLabel.Text = string.Format(LocalizationService.Get("ChangePassword_Length_OK_Format") ?? "Délka: {0}/8 (OK)", newText.Length);
             NewPassBorder.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current.Resources["SuccessBrush"];
             NewPassBorder.StrokeThickness = 2;
         }
         else
         {
-            LengthLabel.Text = $"Délka: {newText.Length}/8";
+                LengthLabel.Text = string.Format(LocalizationService.Get("ChangePassword_Length_Format") ?? "Délka: {0}/8", newText.Length);
             NewPassBorder.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current.Resources["Gray300Brush"];
             NewPassBorder.StrokeThickness = 1;
         }
@@ -37,7 +37,7 @@ public partial class ChangePasswordPage : ContentPage
         {
             if (newText == confirm)
             {
-                MatchLabel.Text = "Hesla se shodují";
+                    MatchLabel.Text = LocalizationService.Get("ChangePassword_Match_OK") ?? "Hesla se shodují";
                 ConfirmPassBorder.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current.Resources["SuccessBrush"];
                 ConfirmPassBorder.StrokeThickness = 2;
                 // also ensure new-pass border shows success when both conditions met
@@ -49,14 +49,14 @@ public partial class ChangePasswordPage : ContentPage
             }
             else
             {
-                MatchLabel.Text = "Hesla se neshodují";
+                    MatchLabel.Text = LocalizationService.Get("ChangePassword_Match_MISMATCH") ?? "Hesla se neshodují";
                 ConfirmPassBorder.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current.Resources["DangerBrush"];
                 ConfirmPassBorder.StrokeThickness = 2;
             }
         }
         else
         {
-            MatchLabel.Text = "Hesla: -";
+                MatchLabel.Text = LocalizationService.Get("ChangePassword_Match_None") ?? "Hesla: -";
             ConfirmPassBorder.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current.Resources["Gray300Brush"];
         }
     }
@@ -69,13 +69,13 @@ public partial class ChangePasswordPage : ContentPage
         // match feedback
         if (string.IsNullOrEmpty(confirm))
         {
-            MatchLabel.Text = "Hesla: -";
+                MatchLabel.Text = LocalizationService.Get("ChangePassword_Match_None") ?? "Hesla: -";
             ConfirmPassBorder.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current.Resources["Gray300Brush"];
             ConfirmPassBorder.StrokeThickness = 1;
         }
         else if (confirm == newPass)
         {
-            MatchLabel.Text = "Hesla se shodují";
+                MatchLabel.Text = LocalizationService.Get("ChangePassword_Match_OK") ?? "Hesla se shodují";
             ConfirmPassBorder.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current.Resources["SuccessBrush"];
             ConfirmPassBorder.StrokeThickness = 2;
             if ((NewPassEntry.Text ?? string.Empty).Length >= 8)
@@ -86,7 +86,7 @@ public partial class ChangePasswordPage : ContentPage
         }
         else
         {
-            MatchLabel.Text = "Hesla se neshodují";
+                MatchLabel.Text = LocalizationService.Get("ChangePassword_Match_MISMATCH") ?? "Hesla se neshodují";
             ConfirmPassBorder.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current.Resources["DangerBrush"];
             ConfirmPassBorder.StrokeThickness = 2;
         }
@@ -128,14 +128,14 @@ public partial class ChangePasswordPage : ContentPage
 
             if (string.IsNullOrWhiteSpace(newPass))
             {
-                ErrorLabel.Text = "Zadejte nové heslo.";
+                    ErrorLabel.Text = LocalizationService.Get("ChangePassword_EnterNew") ?? "Zadejte nové heslo.";
                 ErrorLabel.IsVisible = true;
                 return;
             }
 
             if (newPass != confirm)
             {
-                ErrorLabel.Text = "Hesla se neshodují.";
+                    ErrorLabel.Text = LocalizationService.Get("ChangePassword_Error_Mismatch") ?? "Hesla se neshodují.";
                 ErrorLabel.IsVisible = true;
                 return;
             }
@@ -178,7 +178,7 @@ public partial class ChangePasswordPage : ContentPage
             }
             catch
             {
-                try { await Application.Current.MainPage.DisplayAlert("Hotovo", "Heslo bylo úspěšně změněno. Proběhlo automatické odhlášení.", "OK"); } catch { }
+                    try { await Application.Current.MainPage.DisplayAlert(LocalizationService.Get("ChangePassword_Success_Title") ?? "Hotovo", LocalizationService.Get("ChangePassword_Success_LoggedOut_Message") ?? "Heslo bylo úspěšně změněno. Proběhlo automatické odhlášení.", LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
             }
         }
         catch (Exception ex)

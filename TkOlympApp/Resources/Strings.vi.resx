@@ -84,6 +84,10 @@
   <data name="Button_OK" xml:space="preserve"><value>OK</value></data>
   <data name="Tab_My" xml:space="preserve"><value>Của tôi</value></data>
   <data name="Tab_All" xml:space="preserve"><value>Tất cả</value></data>
+  <data name="Button_Save" xml:space="preserve"><value>Lưu</value></data>
+  <data name="Button_ChangePassword" xml:space="preserve"><value>Đổi mật khẩu</value></data>
+  <data name="Button_ChangePassword_Open" xml:space="preserve"><value>Thay đổi mật khẩu</value></data>
+  <data name="Button_EditSelf" xml:space="preserve"><value>Chỉnh sửa hồ sơ</value></data>
   <data name="Today" xml:space="preserve"><value>Hôm nay</value></data>
   <data name="Tomorrow" xml:space="preserve"><value>Ngày mai</value></data>
   <data name="Empty_MyEvents" xml:space="preserve"><value>Bạn không có sự kiện nào.</value></data>

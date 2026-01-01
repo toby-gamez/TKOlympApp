@@ -84,6 +84,25 @@
   <data name="Button_OK" xml:space="preserve"><value>OK</value></data>
   <data name="Tab_My" xml:space="preserve"><value>My</value></data>
   <data name="Tab_All" xml:space="preserve"><value>All</value></data>
+  <data name="Error_Loading_User" xml:space="preserve"><value>Failed to load user.</value></data>
+  <data name="Error_MissingPersonId" xml:space="preserve"><value>Person ID is not available.</value></data>
+  <data name="Error_Saving" xml:space="preserve"><value>Error while saving.</value></data>
+  <data name="Save_Success_Title" xml:space="preserve"><value>Done</value></data>
+  <data name="Save_Success_Message" xml:space="preserve"><value>Data have been saved.</value></data>
+  <data name="ChangePassword_Length_Format" xml:space="preserve"><value>Length: {0}/8</value></data>
+  <data name="ChangePassword_Length_OK_Format" xml:space="preserve"><value>Length: {0}/8 (OK)</value></data>
+  <data name="ChangePassword_Match_OK" xml:space="preserve"><value>Passwords match</value></data>
+  <data name="ChangePassword_Match_MISMATCH" xml:space="preserve"><value>Passwords do not match</value></data>
+  <data name="ChangePassword_Match_None" xml:space="preserve"><value>Passwords: -</value></data>
+  <data name="ChangePassword_EnterNew" xml:space="preserve"><value>Enter new password.</value></data>
+  <data name="ChangePassword_Error_Mismatch" xml:space="preserve"><value>Passwords do not match.</value></data>
+  <data name="ChangePassword_Failure" xml:space="preserve"><value>Error changing password.</value></data>
+  <data name="ChangePassword_Success_Title" xml:space="preserve"><value>Done</value></data>
+  <data name="ChangePassword_Success_LoggedOut_Message" xml:space="preserve"><value>Password changed successfully. Automatic logout executed.</value></data>
+  <data name="Button_Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Button_ChangePassword" xml:space="preserve"><value>Change password</value></data>
+  <data name="Button_ChangePassword_Open" xml:space="preserve"><value>Change password</value></data>
+  <data name="Button_EditSelf" xml:space="preserve"><value>Edit profile</value></data>
   <data name="Today" xml:space="preserve"><value>Today</value></data>
   <data name="Tomorrow" xml:space="preserve"><value>Tomorrow</value></data>
   <data name="Empty_MyEvents" xml:space="preserve"><value>You have no events.</value></data>
@@ -216,9 +235,57 @@
   <data name="About_Bio" xml:space="preserve"><value>Bio:</value></data>
   <data name="About_BirthDate" xml:space="preserve"><value>Birth date:</value></data>
   <data name="About_Nationality" xml:space="preserve"><value>Nationality:</value></data>
+    <data name="Error_OperationFailed_Message" xml:space="preserve"><value>Operation failed.</value></data>
+    <data name="Notification_NewAnnouncement_Title" xml:space="preserve"><value>New announcement</value></data>
+    <data name="Notification_NewAnnouncement_Message" xml:space="preserve"><value>New announcement</value></data>
+    <data name="ChangePassword_Title" xml:space="preserve"><value>Change password</value></data>
   <data name="About_Gender" xml:space="preserve"><value>Gender:</value></data>
   <data name="About_IsTrainer" xml:space="preserve"><value>Trainer:</value></data>
   <data name="About_Address" xml:space="preserve"><value>Address:</value></data>
+  <data name="Page_EditSelf_Title" xml:space="preserve"><value>Edit profile</value></data>
+  <data name="EditSelf_PersonalInfo" xml:space="preserve"><value>Personal information</value></data>
+  <data name="Label_FirstName" xml:space="preserve"><value>First name:</value></data>
+  <data name="Placeholder_FirstName" xml:space="preserve"><value>First name</value></data>
+  <data name="Label_LastName" xml:space="preserve"><value>Last name:</value></data>
+  <data name="Placeholder_LastName" xml:space="preserve"><value>Last name</value></data>
+  <data name="Label_PrefixTitle" xml:space="preserve"><value>Prefix title:</value></data>
+  <data name="Placeholder_PrefixTitle" xml:space="preserve"><value>Prefix title</value></data>
+  <data name="Label_SuffixTitle" xml:space="preserve"><value>Suffix title:</value></data>
+  <data name="Placeholder_SuffixTitle" xml:space="preserve"><value>Suffix title</value></data>
+  <data name="Label_Gender" xml:space="preserve"><value>Gender:</value></data>
+  <data name="Gender_Other" xml:space="preserve"><value>Other</value></data>
+  <data name="Gender_Male" xml:space="preserve"><value>Male</value></data>
+  <data name="Gender_Female" xml:space="preserve"><value>Female</value></data>
+  <data name="Label_BirthDate" xml:space="preserve"><value>Birth date:</value></data>
+  <data name="EditSelf_Contact" xml:space="preserve"><value>Contact</value></data>
+  <data name="Label_Email" xml:space="preserve"><value>Email:</value></data>
+  <data name="Placeholder_Email" xml:space="preserve"><value>Email</value></data>
+  <data name="Label_Phone" xml:space="preserve"><value>Phone:</value></data>
+  <data name="Placeholder_Phone" xml:space="preserve"><value>Phone</value></data>
+  <data name="Label_Nationality" xml:space="preserve"><value>Nationality:</value></data>
+  <data name="EditSelf_Identifiers" xml:space="preserve"><value>Identifiers</value></data>
+  <data name="Label_WdsfId" xml:space="preserve"><value>WDSF ID:</value></data>
+  <data name="Placeholder_WdsfId" xml:space="preserve"><value>WDSF ID</value></data>
+  <data name="Label_CstsId" xml:space="preserve"><value>ČSTS IDT:</value></data>
+  <data name="Placeholder_CstsId" xml:space="preserve"><value>ČSTS IDT</value></data>
+  <data name="Label_NationalId" xml:space="preserve"><value>National ID:</value></data>
+  <data name="Placeholder_NationalId" xml:space="preserve"><value>National ID</value></data>
+  <data name="EditSelf_Address" xml:space="preserve"><value>Address</value></data>
+  <data name="Label_Street" xml:space="preserve"><value>Street:</value></data>
+  <data name="Placeholder_Street" xml:space="preserve"><value>Street</value></data>
+  <data name="Label_City" xml:space="preserve"><value>City:</value></data>
+  <data name="Placeholder_City" xml:space="preserve"><value>City</value></data>
+  <data name="Label_PostalCode" xml:space="preserve"><value>Postal code:</value></data>
+  <data name="Placeholder_PostalCode" xml:space="preserve"><value>Postal code</value></data>
+  <data name="Label_Region" xml:space="preserve"><value>Region:</value></data>
+  <data name="Placeholder_Region" xml:space="preserve"><value>Region</value></data>
+  <data name="Label_District" xml:space="preserve"><value>District:</value></data>
+  <data name="Placeholder_District" xml:space="preserve"><value>District</value></data>
+  <data name="Label_ConscriptionNumber" xml:space="preserve"><value>Conscription number:</value></data>
+  <data name="Placeholder_ConscriptionNumber" xml:space="preserve"><value>Conscription number</value></data>
+  <data name="Label_OrientationNumber" xml:space="preserve"><value>Orientation number:</value></data>
+  <data name="Placeholder_OrientationNumber" xml:space="preserve"><value>Orientation number</value></data>
+  <data name="Label_Bio" xml:space="preserve"><value>Bio</value></data>
   <data name="About_WdsfId" xml:space="preserve"><value>WDSF ID:</value></data>
   <data name="About_CstsId" xml:space="preserve"><value>ČSTS IDT:</value></data>
   <data name="About_NationalId" xml:space="preserve"><value>National ID:</value></data>

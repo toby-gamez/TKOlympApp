@@ -158,14 +158,14 @@
                         <Button x:Name="ChangePasswordButton"
                             Grid.Column="0"
                             HorizontalOptions="FillAndExpand"
-                            Text="Změna hesla"
+                            Text="{svc:Translate Button_ChangePassword_Open}"
                             Style="{StaticResource ButtonSecondary}"
                             Clicked="OnChangePasswordClicked" />
 
                         <Button x:Name="EditSelfButton"
                             Grid.Column="1"
                             HorizontalOptions="FillAndExpand"
-                            Text="Upravit sebe"
+                            Text="{svc:Translate Button_EditSelf}"
                             Style="{StaticResource ButtonSecondary}"
                             Clicked="OnEditSelfClicked" />
                     </Grid>

@@ -68,6 +68,20 @@ public partial class EditSelfPage : ContentPage
     private async Task LoadAsync()
     {
         ErrorLabel.IsVisible = false;
+        // populate gender picker with localized items (x:String with markup extensions may not evaluate)
+        try
+        {
+            GenderPicker.ItemsSource = new[]
+            {
+                LocalizationService.Get("Gender_Other") ?? (LocalizationService.Get("About_Gender_Other") ?? "Other"),
+                LocalizationService.Get("Gender_Male") ?? (LocalizationService.Get("About_Gender_Male") ?? "Male"),
+                LocalizationService.Get("Gender_Female") ?? (LocalizationService.Get("About_Gender_Female") ?? "Female")
+            };
+        }
+        catch
+        {
+            // ignore
+        }
         // populate nationality picker
         try
         {
@@ -82,7 +96,7 @@ public partial class EditSelfPage : ContentPage
         {
             if (string.IsNullOrWhiteSpace(_personId))
             {
-                ErrorLabel.Text = "ID osoby není dostupné.";
+                ErrorLabel.Text = LocalizationService.Get("Error_MissingPersonId") ?? "ID osoby není dostupné.";
                 ErrorLabel.IsVisible = true;
                 return;
             }
@@ -250,9 +264,9 @@ public partial class EditSelfPage : ContentPage
 
             var body = await resp.Content.ReadAsStringAsync();
             var parsed = JsonSerializer.Deserialize<GraphQlResp<object>>(body, options);
-            if (parsed?.Errors != null && parsed.Errors.Length > 0)
+                if (parsed?.Errors != null && parsed.Errors.Length > 0)
             {
-                ErrorLabel.Text = parsed.Errors[0].Message ?? "Chyba při ukládání.";
+                ErrorLabel.Text = parsed.Errors[0].Message ?? (LocalizationService.Get("Error_Saving") ?? "Chyba při ukládání.");
                 ErrorLabel.IsVisible = true;
                 return;
             }
@@ -265,7 +279,7 @@ public partial class EditSelfPage : ContentPage
             }
 
             try { await Shell.Current.Navigation.PopModalAsync(); } catch { }
-            try { await Application.Current.MainPage.DisplayAlert("Hotovo", "Údaje byly uloženy.", "OK"); } catch { }
+            try { await Application.Current.MainPage.DisplayAlert(LocalizationService.Get("Save_Success_Title") ?? "Hotovo", LocalizationService.Get("Save_Success_Message") ?? "Údaje byly uloženy.", LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
         }
         catch (Exception ex)
         {

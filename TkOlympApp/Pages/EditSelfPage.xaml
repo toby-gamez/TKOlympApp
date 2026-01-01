@@ -1,20 +1,21 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:svc="clr-namespace:TkOlympApp.Services"
              x:Class="TkOlympApp.Pages.EditSelfPage"
-             Title="Upravit sebe">
+             Title="{svc:Translate Page_EditSelf_Title}">
 
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="12">
-            <Label Text="Osobní údaje" FontAttributes="Bold" FontSize="18" />
+            <Label Text="{svc:Translate EditSelf_PersonalInfo}" FontAttributes="Bold" FontSize="18" />
 
             <Border StrokeThickness="1" Padding="8">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                    <Label Text="Jméno:" VerticalOptions="Center" />
-                    <Entry x:Name="FirstNameEntry" Placeholder="Jméno" HorizontalOptions="FillAndExpand" />
+                    <Label Text="{svc:Translate Label_FirstName}" VerticalOptions="Center" />
+                    <Entry x:Name="FirstNameEntry" Placeholder="{svc:Translate Placeholder_FirstName}" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -23,8 +24,8 @@
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                    <Label Text="Příjmení:" VerticalOptions="Center" />
-                    <Entry x:Name="LastNameEntry" Placeholder="Příjmení" HorizontalOptions="FillAndExpand" />
+                    <Label Text="{svc:Translate Label_LastName}" VerticalOptions="Center" />
+                    <Entry x:Name="LastNameEntry" Placeholder="{svc:Translate Placeholder_LastName}" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -33,8 +34,8 @@
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                    <Label Text="Titul před jménem:" VerticalOptions="Center" />
-                    <Entry x:Name="PrefixTitleEntry" Placeholder="Titul před jménem" HorizontalOptions="FillAndExpand" />
+                    <Label Text="{svc:Translate Label_PrefixTitle}" VerticalOptions="Center" />
+                    <Entry x:Name="PrefixTitleEntry" Placeholder="{svc:Translate Placeholder_PrefixTitle}" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -43,8 +44,8 @@
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                    <Label Text="Titul za jménem:" VerticalOptions="Center" />
-                    <Entry x:Name="SuffixTitleEntry" Placeholder="Titul za jménem" HorizontalOptions="FillAndExpand" />
+                    <Label Text="{svc:Translate Label_SuffixTitle}" VerticalOptions="Center" />
+                    <Entry x:Name="SuffixTitleEntry" Placeholder="{svc:Translate Placeholder_SuffixTitle}" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -53,12 +54,12 @@
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                    <Label Text="Pohlaví:" VerticalOptions="Center" />
+                    <Label Text="{svc:Translate Label_Gender}" VerticalOptions="Center" />
                     <Picker x:Name="GenderPicker" HorizontalOptions="FillAndExpand">
                         <Picker.Items>
-                            <x:String>Jiné</x:String>
-                            <x:String>Muž</x:String>
-                            <x:String>Žena</x:String>
+                            <x:String>{svc:Translate Gender_Other}</x:String>
+                            <x:String>{svc:Translate Gender_Male}</x:String>
+                            <x:String>{svc:Translate Gender_Female}</x:String>
                         </Picker.Items>
                     </Picker>
                 </HorizontalStackLayout>
@@ -69,20 +70,20 @@
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                    <Label Text="Datum narození:" VerticalOptions="Center" />
+                    <Label Text="{svc:Translate Label_BirthDate}" VerticalOptions="Center" />
                     <DatePicker x:Name="BirthDatePicker" Format="yyyy-MM-dd" DateSelected="OnBirthDateSelected" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
-            <Label Text="Kontakt" FontAttributes="Bold" FontSize="18" />
+            <Label Text="{svc:Translate EditSelf_Contact}" FontAttributes="Bold" FontSize="18" />
 
             <Border StrokeThickness="1" Padding="8">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                    <Label Text="E-mail:" VerticalOptions="Center" />
-                    <Entry x:Name="EmailEntry" Placeholder="E-mail" Keyboard="Email" HorizontalOptions="FillAndExpand" />
+                    <Label Text="{svc:Translate Label_Email}" VerticalOptions="Center" />
+                    <Entry x:Name="EmailEntry" Placeholder="{svc:Translate Placeholder_Email}" Keyboard="Email" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -91,8 +92,8 @@
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                    <Label Text="Telefon:" VerticalOptions="Center" />
-                    <Entry x:Name="PhoneEntry" Placeholder="Telefon" Keyboard="Telephone" HorizontalOptions="FillAndExpand" />
+                    <Label Text="{svc:Translate Label_Phone}" VerticalOptions="Center" />
+                    <Entry x:Name="PhoneEntry" Placeholder="{svc:Translate Placeholder_Phone}" Keyboard="Telephone" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -101,20 +102,20 @@
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                    <Label Text="Národnost:" VerticalOptions="Center" />
+                    <Label Text="{svc:Translate Label_Nationality}" VerticalOptions="Center" />
                     <Picker x:Name="NationalityPicker" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
-            <Label Text="Identifikátory" FontAttributes="Bold" FontSize="18" />
+            <Label Text="{svc:Translate EditSelf_Identifiers}" FontAttributes="Bold" FontSize="18" />
 
             <Border StrokeThickness="1" Padding="8">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                    <Label Text="WDSF ID:" VerticalOptions="Center" />
-                    <Entry x:Name="WdsfEntry" Placeholder="WDSF ID" HorizontalOptions="FillAndExpand" />
+                    <Label Text="{svc:Translate Label_WdsfId}" VerticalOptions="Center" />
+                    <Entry x:Name="WdsfEntry" Placeholder="{svc:Translate Placeholder_WdsfId}" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -123,8 +124,8 @@
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                    <Label Text="ČSTS IDT:" VerticalOptions="Center" />
-                    <Entry x:Name="CstsEntry" Placeholder="ČSTS IDT" HorizontalOptions="FillAndExpand" />
+                    <Label Text="{svc:Translate Label_CstsId}" VerticalOptions="Center" />
+                    <Entry x:Name="CstsEntry" Placeholder="{svc:Translate Placeholder_CstsId}" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -133,29 +134,19 @@
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                    <Label Text="Rodné číslo:" VerticalOptions="Center" />
-                    <Entry x:Name="NationalIdEntry" Placeholder="Rodné číslo / National ID" HorizontalOptions="FillAndExpand" />
+                    <Label Text="{svc:Translate Label_NationalId}" VerticalOptions="Center" />
+                    <Entry x:Name="NationalIdEntry" Placeholder="{svc:Translate Placeholder_NationalId}" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
-            <Label Text="Adresa" FontAttributes="Bold" FontSize="18" />
+            <Label Text="{svc:Translate EditSelf_Address}" FontAttributes="Bold" FontSize="18" />
             <Border StrokeThickness="1" Padding="8">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                    <Label Text="Ulice:" VerticalOptions="Center" />
-                    <Entry x:Name="StreetEntry" Placeholder="Ulice" HorizontalOptions="FillAndExpand" />
-                </HorizontalStackLayout>
-            </Border>
-
-            <Border StrokeThickness="1" Padding="8">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="8" />
-                </Border.StrokeShape>
-                <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                    <Label Text="Město:" VerticalOptions="Center" />
-                    <Entry x:Name="CityEntry" Placeholder="Město" HorizontalOptions="FillAndExpand" />
+                    <Label Text="{svc:Translate Label_Street}" VerticalOptions="Center" />
+                    <Entry x:Name="StreetEntry" Placeholder="{svc:Translate Placeholder_Street}" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -164,8 +155,8 @@
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                    <Label Text="PSČ:" VerticalOptions="Center" />
-                    <Entry x:Name="PostalCodeEntry" Placeholder="PSČ" HorizontalOptions="FillAndExpand" />
+                    <Label Text="{svc:Translate Label_City}" VerticalOptions="Center" />
+                    <Entry x:Name="CityEntry" Placeholder="{svc:Translate Placeholder_City}" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -174,8 +165,8 @@
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                    <Label Text="Kraj:" VerticalOptions="Center" />
-                    <Entry x:Name="RegionEntry" Placeholder="Kraj" HorizontalOptions="FillAndExpand" />
+                    <Label Text="{svc:Translate Label_PostalCode}" VerticalOptions="Center" />
+                    <Entry x:Name="PostalCodeEntry" Placeholder="{svc:Translate Placeholder_PostalCode}" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -184,8 +175,8 @@
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                    <Label Text="Městská část:" VerticalOptions="Center" />
-                    <Entry x:Name="DistrictEntry" Placeholder="Městská část" HorizontalOptions="FillAndExpand" />
+                    <Label Text="{svc:Translate Label_Region}" VerticalOptions="Center" />
+                    <Entry x:Name="RegionEntry" Placeholder="{svc:Translate Placeholder_Region}" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -194,8 +185,8 @@
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                    <Label Text="Číslo popisné:" VerticalOptions="Center" />
-                    <Entry x:Name="ConscriptionNumberEntry" Placeholder="Číslo popisné" HorizontalOptions="FillAndExpand" />
+                    <Label Text="{svc:Translate Label_District}" VerticalOptions="Center" />
+                    <Entry x:Name="DistrictEntry" Placeholder="{svc:Translate Placeholder_District}" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -204,11 +195,21 @@
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                    <Label Text="Číslo orientační:" VerticalOptions="Center" />
-                    <Entry x:Name="OrientationNumberEntry" Placeholder="Číslo orientační" HorizontalOptions="FillAndExpand" />
+                    <Label Text="{svc:Translate Label_ConscriptionNumber}" VerticalOptions="Center" />
+                    <Entry x:Name="ConscriptionNumberEntry" Placeholder="{svc:Translate Placeholder_ConscriptionNumber}" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
-            <Label Text="Bio" FontAttributes="Bold" FontSize="18" />
+
+            <Border StrokeThickness="1" Padding="8">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+                <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                    <Label Text="{svc:Translate Label_OrientationNumber}" VerticalOptions="Center" />
+                    <Entry x:Name="OrientationNumberEntry" Placeholder="{svc:Translate Placeholder_OrientationNumber}" HorizontalOptions="FillAndExpand" />
+                </HorizontalStackLayout>
+            </Border>
+            <Label Text="{svc:Translate Label_Bio}" FontAttributes="Bold" FontSize="18" />
             <Border StrokeThickness="1" Padding="8">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="8" />
@@ -219,8 +220,8 @@
             <Label x:Name="ErrorLabel" TextColor="Red" IsVisible="False" />
 
             <VerticalStackLayout Spacing="8">
-                <Button Text="Uložit" Clicked="OnSaveClicked" HorizontalOptions="FillAndExpand" />
-                <Button Text="Zrušit" Clicked="OnCancelClicked" HorizontalOptions="FillAndExpand" Style="{StaticResource ButtonSecondary}" />
+                <Button Text="{svc:Translate Button_Save}" Clicked="OnSaveClicked" HorizontalOptions="FillAndExpand" />
+                <Button Text="{svc:Translate Button_Cancel}" Clicked="OnCancelClicked" HorizontalOptions="FillAndExpand" Style="{StaticResource ButtonSecondary}" />
             </VerticalStackLayout>
         </VerticalStackLayout>
     </ScrollView>

@@ -84,6 +84,25 @@
   <data name="Button_OK" xml:space="preserve"><value>OK</value></data>
   <data name="Tab_My" xml:space="preserve"><value>Mé</value></data>
   <data name="Tab_All" xml:space="preserve"><value>Všech</value></data>
+  <data name="Error_Loading_User" xml:space="preserve"><value>Nepodařilo se načíst uživatele.</value></data>
+  <data name="Error_MissingPersonId" xml:space="preserve"><value>ID osoby není dostupné.</value></data>
+  <data name="Error_Saving" xml:space="preserve"><value>Chyba při ukládání.</value></data>
+  <data name="Save_Success_Title" xml:space="preserve"><value>Hotovo</value></data>
+  <data name="Save_Success_Message" xml:space="preserve"><value>Údaje byly uloženy.</value></data>
+  <data name="ChangePassword_Length_Format" xml:space="preserve"><value>Délka: {0}/8</value></data>
+  <data name="ChangePassword_Length_OK_Format" xml:space="preserve"><value>Délka: {0}/8 (OK)</value></data>
+  <data name="ChangePassword_Match_OK" xml:space="preserve"><value>Hesla se shodují</value></data>
+  <data name="ChangePassword_Match_MISMATCH" xml:space="preserve"><value>Hesla se neshodují</value></data>
+  <data name="ChangePassword_Match_None" xml:space="preserve"><value>Hesla: -</value></data>
+  <data name="ChangePassword_EnterNew" xml:space="preserve"><value>Zadejte nové heslo.</value></data>
+  <data name="ChangePassword_Error_Mismatch" xml:space="preserve"><value>Hesla se neshodují.</value></data>
+  <data name="ChangePassword_Failure" xml:space="preserve"><value>Chyba při změně hesla.</value></data>
+  <data name="ChangePassword_Success_Title" xml:space="preserve"><value>Hotovo</value></data>
+  <data name="ChangePassword_Success_LoggedOut_Message" xml:space="preserve"><value>Heslo bylo úspěšně změněno. Proběhlo automatické odhlášení.</value></data>
+  <data name="Button_Save" xml:space="preserve"><value>Uložit</value></data>
+  <data name="Button_ChangePassword" xml:space="preserve"><value>Změnit heslo</value></data>
+  <data name="Button_ChangePassword_Open" xml:space="preserve"><value>Změna hesla</value></data>
+  <data name="Button_EditSelf" xml:space="preserve"><value>Upravit sebe</value></data>
   <data name="Today" xml:space="preserve"><value>Dnes</value></data>
   <data name="Tomorrow" xml:space="preserve"><value>Zítra</value></data>
   <data name="Empty_MyEvents" xml:space="preserve"><value>Nemáte žádné události.</value></data>
@@ -219,6 +238,54 @@
   <data name="About_Gender" xml:space="preserve"><value>Pohlaví:</value></data>
   <data name="About_IsTrainer" xml:space="preserve"><value>Je trenér:</value></data>
   <data name="About_Address" xml:space="preserve"><value>Adresa:</value></data>
+  <data name="Page_EditSelf_Title" xml:space="preserve"><value>Upravit sebe</value></data>
+  <data name="EditSelf_PersonalInfo" xml:space="preserve"><value>Osobní údaje</value></data>
+  <data name="Label_FirstName" xml:space="preserve"><value>Jméno:</value></data>
+  <data name="Placeholder_FirstName" xml:space="preserve"><value>Jméno</value></data>
+  <data name="Label_LastName" xml:space="preserve"><value>Příjmení:</value></data>
+  <data name="Placeholder_LastName" xml:space="preserve"><value>Příjmení</value></data>
+  <data name="Label_PrefixTitle" xml:space="preserve"><value>Titul před jménem:</value></data>
+  <data name="Placeholder_PrefixTitle" xml:space="preserve"><value>Titul před jménem</value></data>
+  <data name="Label_SuffixTitle" xml:space="preserve"><value>Titul za jménem:</value></data>
+  <data name="Placeholder_SuffixTitle" xml:space="preserve"><value>Titul za jménem</value></data>
+  <data name="Label_Gender" xml:space="preserve"><value>Pohlaví:</value></data>
+  <data name="Gender_Other" xml:space="preserve"><value>Jiné</value></data>
+  <data name="Gender_Male" xml:space="preserve"><value>Muž</value></data>
+  <data name="Gender_Female" xml:space="preserve"><value>Žena</value></data>
+  <data name="Label_BirthDate" xml:space="preserve"><value>Datum narození:</value></data>
+  <data name="EditSelf_Contact" xml:space="preserve"><value>Kontakt</value></data>
+  <data name="Label_Email" xml:space="preserve"><value>E-mail:</value></data>
+  <data name="Placeholder_Email" xml:space="preserve"><value>E-mail</value></data>
+  <data name="Label_Phone" xml:space="preserve"><value>Telefon:</value></data>
+  <data name="Placeholder_Phone" xml:space="preserve"><value>Telefon</value></data>
+  <data name="Label_Nationality" xml:space="preserve"><value>Národnost:</value></data>
+  <data name="EditSelf_Identifiers" xml:space="preserve"><value>Identifikátory</value></data>
+  <data name="Label_WdsfId" xml:space="preserve"><value>WDSF ID:</value></data>
+  <data name="Placeholder_WdsfId" xml:space="preserve"><value>WDSF ID</value></data>
+  <data name="Label_CstsId" xml:space="preserve"><value>ČSTS IDT:</value></data>
+  <data name="Placeholder_CstsId" xml:space="preserve"><value>ČSTS IDT</value></data>
+  <data name="Label_NationalId" xml:space="preserve"><value>Rodné číslo:</value></data>
+  <data name="Placeholder_NationalId" xml:space="preserve"><value>Rodné číslo</value></data>
+  <data name="EditSelf_Address" xml:space="preserve"><value>Adresa</value></data>
+  <data name="Label_Street" xml:space="preserve"><value>Ulice:</value></data>
+  <data name="Placeholder_Street" xml:space="preserve"><value>Ulice</value></data>
+  <data name="Label_City" xml:space="preserve"><value>Město:</value></data>
+  <data name="Placeholder_City" xml:space="preserve"><value>Město</value></data>
+  <data name="Label_PostalCode" xml:space="preserve"><value>PSČ:</value></data>
+  <data name="Placeholder_PostalCode" xml:space="preserve"><value>PSČ</value></data>
+  <data name="Label_Region" xml:space="preserve"><value>Kraj:</value></data>
+  <data name="Placeholder_Region" xml:space="preserve"><value>Kraj</value></data>
+  <data name="Label_District" xml:space="preserve"><value>Městská část:</value></data>
+  <data name="Placeholder_District" xml:space="preserve"><value>Městská část</value></data>
+  <data name="Label_ConscriptionNumber" xml:space="preserve"><value>Číslo popisné:</value></data>
+  <data name="Placeholder_ConscriptionNumber" xml:space="preserve"><value>Číslo popisné</value></data>
+  <data name="Label_OrientationNumber" xml:space="preserve"><value>Číslo orientační:</value></data>
+  <data name="Placeholder_OrientationNumber" xml:space="preserve"><value>Číslo orientační</value></data>
+  <data name="Label_Bio" xml:space="preserve"><value>Bio</value></data>
+  <data name="Error_OperationFailed_Message" xml:space="preserve"><value>Operace selhala.</value></data>
+  <data name="ChangePassword_Title" xml:space="preserve"><value>Změna hesla</value></data>
+  <data name="Notification_NewAnnouncement_Title" xml:space="preserve"><value>Nová aktualita</value></data>
+  <data name="Notification_NewAnnouncement_Message" xml:space="preserve"><value>Nová aktualita</value></data>
   <data name="About_WdsfId" xml:space="preserve"><value>WDSF ID:</value></data>
   <data name="About_CstsId" xml:space="preserve"><value>ČSTS IDT:</value></data>
   <data name="About_NationalId" xml:space="preserve"><value>Rodné číslo:</value></data>

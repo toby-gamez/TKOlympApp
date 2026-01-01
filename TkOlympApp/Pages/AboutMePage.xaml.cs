@@ -32,7 +32,7 @@ public partial class AboutMePage : ContentPage
             if (user == null)
             {
                 ErrorLabel.IsVisible = true;
-                ErrorLabel.Text = "Nepodařilo se načíst uživatele.";
+                ErrorLabel.Text = LocalizationService.Get("Error_Loading_User") ?? "Nepodařilo se načíst uživatele.";
                 return;
             }
 
@@ -168,6 +168,10 @@ public partial class AboutMePage : ContentPage
         }
         catch
         {
+            var title = LocalizationService.Get("Error_Title") ?? "Chyba";
+            var msg = LocalizationService.Get("Error_OperationFailed_Message") ?? "Operace selhala.";
+            var ok = LocalizationService.Get("Button_OK") ?? "OK";
+            try { await DisplayAlert(title, msg, ok); } catch { }
             try { await Shell.Current.GoToAsync(nameof(LoginPage)); } catch { /* ignore */ }
         }
     }
@@ -178,7 +182,13 @@ public partial class AboutMePage : ContentPage
         {
             await Shell.Current.Navigation.PushModalAsync(new ChangePasswordPage());
         }
-        catch { }
+        catch (Exception ex)
+        {
+            var title = LocalizationService.Get("Error_Title") ?? "Chyba";
+            var msg = LocalizationService.Get("Error_OperationFailed_Message") ?? ex.Message ?? "Operace selhala.";
+            var ok = LocalizationService.Get("Button_OK") ?? "OK";
+            try { await DisplayAlert(title, msg, ok); } catch { }
+        }
     }
 
     private async void OnEditSelfClicked(object? sender, EventArgs e)
@@ -190,6 +200,10 @@ public partial class AboutMePage : ContentPage
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Navigation to PersonPage failed: {ex}");
+            var title = LocalizationService.Get("Error_Title") ?? "Chyba";
+            var msg = LocalizationService.Get("Error_OperationFailed_Message") ?? ex.Message ?? "Operace selhala.";
+            var ok = LocalizationService.Get("Button_OK") ?? "OK";
+            try { await DisplayAlert(title, msg, ok); } catch { }
         }
     }
 
