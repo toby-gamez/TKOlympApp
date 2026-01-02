@@ -55,6 +55,9 @@ public partial class LeaderboardPage : ContentPage
             LoadingIndicator.IsVisible = true;
             LoadingIndicator.IsRunning = true;
 
+            // Hide the list while loading so the previous content isn't visible behind the loader
+            try { if (ScoreboardCollection != null) ScoreboardCollection.IsVisible = false; } catch { }
+
             _rows.Clear();
             var list = await LeaderboardService.GetScoreboardsAsync();
             // totals were removed from the UI; nothing to set here
@@ -76,55 +79,128 @@ public partial class LeaderboardPage : ContentPage
                 // ignore failures fetching current user; highlighting will be disabled
             }
 
-            foreach (var item in list)
+            // Avoid touching UI types on a background thread: compute only lightweight strings there
+            var theme = Application.Current?.RequestedTheme ?? AppTheme.Unspecified;
+            var processedData = await Task.Run(() =>
             {
-                // Determine theme to pick readable colors
-                var theme = Application.Current?.RequestedTheme ?? AppTheme.Unspecified;
-                Color ThemeColor(string lightHex, string darkHex) => (theme == AppTheme.Dark) ? Color.FromArgb(darkHex) : Color.FromArgb(lightHex);
+                var tmp = new List<(string PersonDisplay, string RankingDisplay, string TotalScoreDisplay, bool IsCurrentUser, int? Ranking)>();
 
-                var rankSuffix = string.IsNullOrEmpty(item.RankingDisplay) ? string.Empty : item.RankingDisplay + ".";
-                var isCurrent = !string.IsNullOrEmpty(currentFullName) &&
-                                string.Equals(item.PersonDisplay?.Trim(), currentFullName, StringComparison.OrdinalIgnoreCase);
-
-                var row = new LeaderboardRow
+                foreach (var item in list)
                 {
-                    PersonDisplay = item.PersonDisplay ?? string.Empty,
-                    RankingDisplay = rankSuffix,
-                    TotalScoreDisplay = string.IsNullOrEmpty(item.TotalScoreDisplay) ? string.Empty : item.TotalScoreDisplay + " b",
-                    IsCurrentUser = isCurrent,
-                    BackgroundColor = Colors.Transparent,
-                    TextColor = (theme == AppTheme.Dark) ? Color.FromArgb("#E0E0E0") : Color.FromArgb("#222222")
-                };
+                    var rankSuffix = string.IsNullOrEmpty(item.RankingDisplay) ? string.Empty : item.RankingDisplay + ".";
+                    var isCurrent = !string.IsNullOrEmpty(currentFullName) &&
+                                    string.Equals(item.PersonDisplay?.Trim(), currentFullName, StringComparison.OrdinalIgnoreCase);
 
-                if (item.Ranking.HasValue)
-                {
-                    try
-                    {
-                        var r = (int)item.Ranking.Value;
-                        if (r == 1)
-                        {
-                            row.BackgroundColor = ThemeColor("#FFF9E6", "#3B2A00");
-                            row.TextColor = ThemeColor("#5A3D00", "#FFD700");
-                        }
-                        else if (r == 2)
-                        {
-                            row.BackgroundColor = ThemeColor("#F2F5F7", "#2B2F31");
-                            row.TextColor = ThemeColor("#37474F", "#E0E0E0");
-                        }
-                        else if (r == 3)
-                        {
-                            row.BackgroundColor = ThemeColor("#FAF0EC", "#3A2618");
-                            row.TextColor = ThemeColor("#5D4037", "#F0C49A");
-                        }
-                    }
-                    catch
-                    {
-                        // ignore conversion issues
-                    }
+                    int? ranking = item.Ranking.HasValue ? (int?)item.Ranking.Value : null;
+
+                    tmp.Add((item.PersonDisplay ?? string.Empty,
+                             rankSuffix,
+                             string.IsNullOrEmpty(item.TotalScoreDisplay) ? string.Empty : item.TotalScoreDisplay + " b",
+                             isCurrent,
+                             ranking));
                 }
 
-                _rows.Add(row);
-            }
+                return tmp;
+            });
+
+            // Map lightweight data to UI types on the UI thread
+            Dispatcher.Dispatch(() =>
+            {
+                try
+                {
+                    var rows = new List<LeaderboardRow>();
+                    Color ThemeColor(string lightHex, string darkHex) => (theme == AppTheme.Dark) ? Color.FromArgb(darkHex) : Color.FromArgb(lightHex);
+
+                    foreach (var d in processedData)
+                    {
+                        var row = new LeaderboardRow
+                        {
+                            PersonDisplay = d.PersonDisplay,
+                            RankingDisplay = d.RankingDisplay,
+                            TotalScoreDisplay = d.TotalScoreDisplay,
+                            IsCurrentUser = d.IsCurrentUser,
+                            BackgroundColor = Colors.Transparent,
+                            TextColor = (theme == AppTheme.Dark) ? Color.FromArgb("#E0E0E0") : Color.FromArgb("#222222")
+                        };
+
+                        if (d.Ranking.HasValue)
+                        {
+                            try
+                            {
+                                var r = d.Ranking.Value;
+                                if (r == 1)
+                                {
+                                    row.BackgroundColor = ThemeColor("#FFF9E6", "#3B2A00");
+                                    row.TextColor = ThemeColor("#5A3D00", "#FFD700");
+                                }
+                                else if (r == 2)
+                                {
+                                    row.BackgroundColor = ThemeColor("#F2F5F7", "#2B2F31");
+                                    row.TextColor = ThemeColor("#37474F", "#E0E0E0");
+                                }
+                                else if (r == 3)
+                                {
+                                    row.BackgroundColor = ThemeColor("#FAF0EC", "#3A2618");
+                                    row.TextColor = ThemeColor("#5D4037", "#F0C49A");
+                                }
+                            }
+                            catch
+                            {
+                                // ignore conversion issues
+                            }
+                        }
+
+                        rows.Add(row);
+                    }
+
+                    ScoreboardCollection.ItemsSource = rows;
+                    // Show the list now that new items are assigned
+                    try { if (ScoreboardCollection != null) ScoreboardCollection.IsVisible = true; } catch { }
+                }
+                catch
+                {
+                    _rows.Clear();
+                    foreach (var d in processedData)
+                    {
+                        var row = new LeaderboardRow
+                        {
+                            PersonDisplay = d.PersonDisplay,
+                            RankingDisplay = d.RankingDisplay,
+                            TotalScoreDisplay = d.TotalScoreDisplay,
+                            IsCurrentUser = d.IsCurrentUser,
+                            BackgroundColor = Colors.Transparent,
+                            TextColor = (theme == AppTheme.Dark) ? Color.FromArgb("#E0E0E0") : Color.FromArgb("#222222")
+                        };
+
+                        if (d.Ranking.HasValue)
+                        {
+                            try
+                            {
+                                var r = d.Ranking.Value;
+                                if (r == 1)
+                                {
+                                    row.BackgroundColor = (theme == AppTheme.Dark) ? Color.FromArgb("#3B2A00") : Color.FromArgb("#FFF9E6");
+                                    row.TextColor = (theme == AppTheme.Dark) ? Color.FromArgb("#FFD700") : Color.FromArgb("#5A3D00");
+                                }
+                                else if (r == 2)
+                                {
+                                    row.BackgroundColor = (theme == AppTheme.Dark) ? Color.FromArgb("#2B2F31") : Color.FromArgb("#F2F5F7");
+                                    row.TextColor = (theme == AppTheme.Dark) ? Color.FromArgb("#E0E0E0") : Color.FromArgb("#37474F");
+                                }
+                                else if (r == 3)
+                                {
+                                    row.BackgroundColor = (theme == AppTheme.Dark) ? Color.FromArgb("#3A2618") : Color.FromArgb("#FAF0EC");
+                                    row.TextColor = (theme == AppTheme.Dark) ? Color.FromArgb("#F0C49A") : Color.FromArgb("#5D4037");
+                                }
+                            }
+                            catch { }
+                        }
+
+                        _rows.Add(row);
+                    }
+                    try { if (ScoreboardCollection != null) ScoreboardCollection.IsVisible = true; } catch { }
+                }
+            });
         }
             catch (Exception ex)
             {
