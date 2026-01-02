@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Storage;
 using TkOlympApp.Pages;
+using TkOlympApp.Helpers;
 using TkOlympApp.Services;
 
 namespace TkOlympApp;
@@ -24,6 +25,7 @@ public partial class AppShell : Shell
 
         // Register routes and navigate conditionally on startup
         Routing.RegisterRoute(nameof(LoginPage), typeof(LoginPage));
+        Routing.RegisterRoute(nameof(FirstRunPage), typeof(FirstRunPage));
         Routing.RegisterRoute(nameof(AboutMePage), typeof(AboutMePage));
         Routing.RegisterRoute(nameof(CouplePage), typeof(Pages.CouplePage));
         Routing.RegisterRoute(nameof(EventPage), typeof(EventPage));
@@ -45,12 +47,27 @@ public partial class AppShell : Shell
         {
             try
             {
+                // Show first-run page if needed before further startup navigation
+                try
+                {
+                    if (!FirstRunHelper.HasSeen())
+                    {
+                        try { await GoToAsync(nameof(FirstRunPage)); } catch { }
+                    }
+                }
+                catch { }
+
                 await AuthService.InitializeAsync();
                 var hasToken = await AuthService.HasTokenAsync();
                 if (!hasToken)
                 {
                     // Show login without resetting Shell root to avoid route issues
-                    await GoToAsync(nameof(LoginPage));
+                    // But do not override the FirstRunPage if it is currently shown
+                    var current = Shell.Current?.CurrentPage;
+                    if (!(current is FirstRunPage))
+                    {
+                        await GoToAsync(nameof(LoginPage));
+                    }
                 }
                 else
                 {

@@ -4,6 +4,7 @@ using Microsoft.Maui.Controls;
 using Microsoft.Maui.Storage;
 using System.Threading.Tasks;
 using TkOlympApp.Services;
+using TkOlympApp.Helpers;
 
 namespace TkOlympApp;
 
@@ -37,7 +38,21 @@ public partial class App : Application
                 try { await Task.Delay(150); } catch { }
                 try
                 {
-                    if (Shell.Current != null) await Shell.Current.GoToAsync("//Kalendář");
+                    if (Shell.Current != null)
+                    {
+                        // If this is the first run, show FirstRunPage first
+                        try
+                        {
+                            if (!FirstRunHelper.HasSeen())
+                            {
+                                try { await Shell.Current.GoToAsync("FirstRunPage"); } catch { }
+                                return;
+                            }
+                        }
+                        catch { }
+
+                        try { await Shell.Current.GoToAsync("//Kalendář"); } catch { }
+                    }
                 }
                 catch { }
             });
