@@ -44,6 +44,13 @@
     <SolidColorBrush x:Key="Gray900Brush" Color="{StaticResource Gray900}"/>
     <SolidColorBrush x:Key="Gray950Brush" Color="{StaticResource Gray950}"/>
     
+
+    <!-- Responsive primary brush: uses Primary in Light, PrimaryDark in Dark -->
+    <SolidColorBrush x:Key="RespPrimary" Color="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+        <!-- Note: AppThemeBinding cannot be converted to a Color resource here.
+            Use `{DynamicResource Primary}` for `TextColor`, or apply AppThemeBinding
+            directly where the property is set: `TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"`.
+        -->
     <!-- Success / Danger brushes for validation -->
     <Color x:Key="Success">#28A745</Color>
     <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource Success}"/>

@@ -42,7 +42,7 @@
                 <CollectionView x:Name="EventsCollection" IsGrouped="True" SelectionMode="None" VerticalOptions="FillAndExpand">
                     <CollectionView.GroupHeaderTemplate>
                         <DataTemplate>
-                            <Border Stroke="{StaticResource PrimaryBrush}" StrokeThickness="2" Padding="8" Margin="6,12,6,0">
+                            <Border Stroke="{StaticResource RespPrimary}" StrokeThickness="2" Padding="8" Margin="6,12,6,0">
                                 <Border.StrokeShape>
                                     <RoundRectangle CornerRadius="6" />
                                 </Border.StrokeShape>

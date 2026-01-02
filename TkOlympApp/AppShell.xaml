@@ -8,9 +8,7 @@
     xmlns:pages="clr-namespace:TkOlympApp.Pages"
     xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
     Title="{svc:Translate AppTitle}"
-    Shell.TabBarForegroundColor="{StaticResource Primary}"
-    Shell.TabBarUnselectedColor="{StaticResource Gray500}"
-    Shell.TabBarTitleColor="{StaticResource Primary}">
+    Shell.TabBarUnselectedColor="{StaticResource Gray500}">
 
     <TabBar>
         <ShellContent
