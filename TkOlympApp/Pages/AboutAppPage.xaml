@@ -16,18 +16,28 @@
             <Border.StrokeShape>
                 <RoundRectangle CornerRadius="8" />
             </Border.StrokeShape>
-                <Label Text="{svc:Translate Other_AboutApp_Body}" />
+                <VerticalStackLayout>
+                    <Label Text="{svc:Translate AboutApp_Description}" FontAttributes="Bold" />
+                    <Label Text="{svc:Translate Other_AboutApp_Body}" />
+                </VerticalStackLayout>
             </Border>
 
-            <Label Text="{svc:Translate Other_AboutApp_License_Title}" FontAttributes="Bold" />
-            <Label Text="{svc:Translate Other_AboutApp_License_Text}" />
 
-            <Label Text="{svc:Translate Other_AboutApp_Authors_Title}" FontAttributes="Bold" />
             <Border Padding="12">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <VerticalStackLayout>
+                    <Label Text="{svc:Translate Other_AboutApp_License_Title}" FontAttributes="Bold" />
+                    <Label Text="{svc:Translate Other_AboutApp_License_Text}" />
+                </VerticalStackLayout>
+            </Border>
+            <Border Padding="12">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+                <VerticalStackLayout>
+                    <Label Text="{svc:Translate Other_AboutApp_Authors_Title}" FontAttributes="Bold" />
                     <Label>
                         <Label.FormattedText>
                             <FormattedString>
