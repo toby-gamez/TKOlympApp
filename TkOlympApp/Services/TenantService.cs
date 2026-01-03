@@ -11,12 +11,12 @@ public static class TenantService
         PropertyNameCaseInsensitive = true
     };
 
-    public static async Task<(List<Location> Locations, List<TenantTrainer> Trainers)> GetLocationsAndTrainersAsync(CancellationToken ct = default)
-    {
-        var query = new GraphQlRequest
+        public static async Task<(List<Location> Locations, List<TenantTrainer> Trainers)> GetLocationsAndTrainersAsync(CancellationToken ct = default)
         {
-            Query = "query MyQuery { tenantLocationsList { name } tenantTrainersList { person { firstName lastName } guestPrice45Min { amount currency } guestPayout45Min { amount currency } } }"
-        };
+            var query = new GraphQlRequest
+            {
+                Query = "query MyQuery { tenantLocationsList { name } tenantTrainersList { person { id firstName lastName prefixTitle suffixTitle } guestPrice45Min { amount currency } guestPayout45Min { amount currency } } }"
+            };
 
         var json = JsonSerializer.Serialize(query, Options);
         using var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -74,8 +74,11 @@ public static class TenantService
     );
 
     public sealed record Person(
+        [property: JsonPropertyName("id")] string? Id,
         [property: JsonPropertyName("firstName")] string? FirstName,
-        [property: JsonPropertyName("lastName")] string? LastName
+        [property: JsonPropertyName("lastName")] string? LastName,
+        [property: JsonPropertyName("prefixTitle")] string? PrefixTitle,
+        [property: JsonPropertyName("suffixTitle")] string? SuffixTitle
     );
 
     public sealed record Price(

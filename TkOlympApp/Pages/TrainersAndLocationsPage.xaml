@@ -41,6 +41,9 @@
             <BindableLayout.ItemTemplate>
                 <DataTemplate>
                     <Border Padding="12" Margin="0">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnTrainerTapped" NumberOfTapsRequired="1" />
+                        </Border.GestureRecognizers>
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="8" />
                         </Border.StrokeShape>

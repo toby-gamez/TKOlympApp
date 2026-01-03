@@ -12,7 +12,7 @@ public partial class TrainersAndLocationsPage : ContentPage
 {
     private bool _loaded;
 
-    private sealed record TrainerDisplay(string Name, string Price);
+    private sealed record TrainerDisplay(string Name, string Price, string? PersonId);
 
     public TrainersAndLocationsPage()
     {
@@ -45,7 +45,7 @@ public partial class TrainersAndLocationsPage : ContentPage
                 .Select(t =>
                 {
                     var p = t.Person;
-                    var name = string.Join(' ', new[] { p?.FirstName?.Trim(), p?.LastName?.Trim() }
+                    var name = string.Join(' ', new[] { p?.PrefixTitle?.Trim(), p?.FirstName?.Trim(), p?.LastName?.Trim(), p?.SuffixTitle?.Trim() }
                         .Where(s => !string.IsNullOrWhiteSpace(s)));
 
                     static string FormatPrice(TenantService.Price? price)
@@ -88,7 +88,7 @@ public partial class TrainersAndLocationsPage : ContentPage
                     var priceStr = FormatPrice(t.GuestPrice45Min);
                     if (string.IsNullOrWhiteSpace(priceStr)) priceStr = FormatPrice(t.GuestPayout45Min);
 
-                    return new TrainerDisplay(name, priceStr);
+                    return new TrainerDisplay(name, priceStr, p?.Id);
                 })
                 .Where(td => !string.IsNullOrWhiteSpace(td.Name))
                 .ToList();
@@ -135,5 +135,18 @@ public partial class TrainersAndLocationsPage : ContentPage
         {
             // best-effort - ignore failures silently
         }
+    }
+
+    private async void OnTrainerTapped(object? sender, EventArgs e)
+    {
+        try
+        {
+            if (sender is VisualElement ve && ve.BindingContext is TrainerDisplay td && !string.IsNullOrWhiteSpace(td.PersonId))
+            {
+                var id = td.PersonId!;
+                await Shell.Current.GoToAsync($"{nameof(PersonPage)}?personId={Uri.EscapeDataString(id)}");
+            }
+        }
+        catch { }
     }
 }
