@@ -16,6 +16,17 @@
     <data name="Language_Slovenian" xml:space="preserve"><value>Slovinčina</value></data>
     <data name="Language_en-AU" xml:space="preserve"><value>Brainrot</value></data>
     <data name="Button_Continue" xml:space="preserve"><value>Pokračovať</value></data>
+    <data name="Button_Next" xml:space="preserve"><value>Ďalej</value></data>
+    <data name="FirstRun_Title" xml:space="preserve"><value>Vitajte v aplikácii</value></data>
+    <data name="FirstRun_Body" xml:space="preserve"><value>Prejdite si krátky sprievodca aplikáciou.</value></data>
+    <data name="FirstRun_Slide1_Caption" xml:space="preserve"><value>Vaše udalosti, skupinové tréningy a individuálne lekcie na jednom mieste</value></data>
+    <data name="FirstRun_Slide2_Caption" xml:space="preserve"><value>Všetky udalosti, lekcie a skupinové tréningy tiež tu</value></data>
+    <data name="FirstRun_Slide3_Caption" xml:space="preserve"><value>Detailný popis udalostí a lekcií, aby ste sa nestratili</value></data>
+    <data name="FirstRun_Slide4_Caption" xml:space="preserve"><value>Nástenná tabuľa s informáciami priamo od klubových trénerov</value></data>
+    <data name="FirstRun_Slide5_Caption" xml:space="preserve"><value>Konkurenčný rebríček, ktorý meria vašu aktivitu</value></data>
+    <data name="FirstRun_Slide6_Caption" xml:space="preserve"><value>Všetky ostatné veci prehľadne na jednej stránke</value></data>
+    <data name="FirstRun_Slide7_Caption" xml:space="preserve"><value>Prezrite si svoje údaje a upravte ich</value></data>
+    <data name="FirstRun_Slide8_Caption" xml:space="preserve"><value>Kalendár už nie je potrebný, narodeniny priamo v aplikácii</value></data>
     <data name="Noticeboard" xml:space="preserve"><value>Nástienka</value></data>
     <data name="Leaderboard" xml:space="preserve"><value>Rebríček</value></data>
     <data name="Other" xml:space="preserve"><value>Ostatné</value></data>
@@ -26,6 +37,7 @@
     <data name="Login_Placeholder_Username" xml:space="preserve"><value>Meno</value></data>
     <data name="Login_Placeholder_Password" xml:space="preserve"><value>Heslo</value></data>
     <data name="Login_Button_Login" xml:space="preserve"><value>Prihlásiť sa</value></data>
+    <data name="Login_Description" xml:space="preserve"><value>Po prihlásení budete mať prístup ku všetkým funkciám aplikácie.</value></data>
     <data name="About_Name" xml:space="preserve"><value>Meno:</value></data>
     <data name="About_Surname" xml:space="preserve"><value>Priezvisko:</value></data>
     <data name="About_Login" xml:space="preserve"><value>Login:</value></data>

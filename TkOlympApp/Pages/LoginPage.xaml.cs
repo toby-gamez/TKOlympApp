@@ -11,6 +11,16 @@ public partial class LoginPage : ContentPage
         Shell.SetTabBarIsVisible(this, false);
     }
 
+    private void OnUsernameBorderTapped(object? sender, EventArgs e)
+    {
+        UsernameEntry?.Focus();
+    }
+
+    private void OnPasswordBorderTapped(object? sender, EventArgs e)
+    {
+        PasswordEntry?.Focus();
+    }
+
     private async void OnLoginClicked(object? sender, EventArgs e)
     {
         var username = UsernameEntry.Text?.Trim() ?? string.Empty;

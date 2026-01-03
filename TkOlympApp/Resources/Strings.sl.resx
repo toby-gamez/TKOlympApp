@@ -16,6 +16,17 @@
     <data name="Language_Slovenian" xml:space="preserve"><value>Slovenščina</value></data>
     <data name="Language_en-AU" xml:space="preserve"><value>Brainrot</value></data>
     <data name="Button_Continue" xml:space="preserve"><value>Nadaljuj</value></data>
+    <data name="Button_Next" xml:space="preserve"><value>Naprej</value></data>
+    <data name="FirstRun_Title" xml:space="preserve"><value>Dobrodošli v aplikaciji</value></data>
+    <data name="FirstRun_Body" xml:space="preserve"><value>Oglejte si kratek vodič po aplikaciji.</value></data>
+    <data name="FirstRun_Slide1_Caption" xml:space="preserve"><value>Vaši dogodki, skupinski treningi in individualne ure na enem mestu</value></data>
+    <data name="FirstRun_Slide2_Caption" xml:space="preserve"><value>Vsi dogodki, ure in skupinski treningi tudi tukaj</value></data>
+    <data name="FirstRun_Slide3_Caption" xml:space="preserve"><value>Podrobni opisi dogodkov in ur, da se ne izgubite</value></data>
+    <data name="FirstRun_Slide4_Caption" xml:space="preserve"><value>Oglasna deska z informacijami neposredno od trenerjev kluba</value></data>
+    <data name="FirstRun_Slide5_Caption" xml:space="preserve"><value>Tekmovalna lestvica, ki meri vašo aktivnost</value></data>
+    <data name="FirstRun_Slide6_Caption" xml:space="preserve"><value>Vse ostale stvari pregledno na eni strani</value></data>
+    <data name="FirstRun_Slide7_Caption" xml:space="preserve"><value>Oglejte si svoje podatke in jih uredite</value></data>
+    <data name="FirstRun_Slide8_Caption" xml:space="preserve"><value>Koledar ni več potreben — rojstni dnevi neposredno v aplikaciji</value></data>
     <data name="Noticeboard" xml:space="preserve"><value>Oglasna deska</value></data>
     <data name="Leaderboard" xml:space="preserve"><value>Lestvica</value></data>
     <data name="Other" xml:space="preserve"><value>Ostalo</value></data>
@@ -26,6 +37,7 @@
     <data name="Login_Placeholder_Username" xml:space="preserve"><value>Ime</value></data>
     <data name="Login_Placeholder_Password" xml:space="preserve"><value>Geslo</value></data>
     <data name="Login_Button_Login" xml:space="preserve"><value>Prijavi se</value></data>
+    <data name="Login_Description" xml:space="preserve"><value>Po prijavi boste imeli dostop do vseh funkcij aplikacije.</value></data>
     <data name="About_Name" xml:space="preserve"><value>Ime:</value></data>
     <data name="About_Surname" xml:space="preserve"><value>Priimek:</value></data>
     <data name="About_Login" xml:space="preserve"><value>Login:</value></data>

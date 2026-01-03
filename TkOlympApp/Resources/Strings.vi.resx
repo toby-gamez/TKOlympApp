@@ -16,6 +16,17 @@
   <data name="Language_Slovenian" xml:space="preserve"><value>Tiếng Slovenia</value></data>
   <data name="Language_en-AU" xml:space="preserve"><value>Brainrot</value></data>
   <data name="Button_Continue" xml:space="preserve"><value>Tiếp tục</value></data>
+  <data name="Button_Next" xml:space="preserve"><value>Tiếp theo</value></data>
+  <data name="FirstRun_Title" xml:space="preserve"><value>Chào mừng đến với ứng dụng</value></data>
+  <data name="FirstRun_Body" xml:space="preserve"><value>Hãy trải nghiệm nhanh hướng dẫn của ứng dụng.</value></data>
+  <data name="FirstRun_Slide1_Caption" xml:space="preserve"><value>Sự kiện, lớp nhóm và bài học cá nhân của bạn ở một nơi</value></data>
+  <data name="FirstRun_Slide2_Caption" xml:space="preserve"><value>Tất cả sự kiện, lớp học và khóa tập nhóm cũng có ở đây</value></data>
+  <data name="FirstRun_Slide3_Caption" xml:space="preserve"><value>Mô tả chi tiết về sự kiện và bài học để bạn không bị lạc</value></data>
+  <data name="FirstRun_Slide4_Caption" xml:space="preserve"><value>Bảng thông báo từ huấn luyện viên câu lạc bộ</value></data>
+  <data name="FirstRun_Slide5_Caption" xml:space="preserve"><value>Bảng xếp hạng cạnh tranh đo lường hoạt động của bạn</value></data>
+  <data name="FirstRun_Slide6_Caption" xml:space="preserve"><value>Tất cả các mục khác gọn gàng trên một trang</value></data>
+  <data name="FirstRun_Slide7_Caption" xml:space="preserve"><value>Xem và chỉnh sửa thông tin cá nhân của bạn</value></data>
+  <data name="FirstRun_Slide8_Caption" xml:space="preserve"><value>Không cần lịch nữa — sinh nhật ngay trong ứng dụng</value></data>
   <data name="Noticeboard" xml:space="preserve"><value>Bảng thông báo</value></data>
   <data name="Leaderboard" xml:space="preserve"><value>Bảng xếp hạng</value></data>
   <data name="Other" xml:space="preserve"><value>Khác</value></data>
@@ -26,6 +37,7 @@
   <data name="Login_Placeholder_Username" xml:space="preserve"><value>Tên</value></data>
   <data name="Login_Placeholder_Password" xml:space="preserve"><value>Mật khẩu</value></data>
   <data name="Login_Button_Login" xml:space="preserve"><value>Đăng nhập</value></data>
+  <data name="Login_Description" xml:space="preserve"><value>Sau khi đăng nhập, bạn sẽ có quyền truy cập tất cả các tính năng của ứng dụng.</value></data>
   <data name="About_Name" xml:space="preserve"><value>Tên:</value></data>
   <data name="About_Surname" xml:space="preserve"><value>Họ:</value></data>
   <data name="About_Login" xml:space="preserve"><value>Login:</value></data>

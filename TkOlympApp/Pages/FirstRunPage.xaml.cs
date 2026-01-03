@@ -16,16 +16,24 @@ public partial class FirstRunPage : ContentPage
             InitializeComponent();
             try
             {
+                // Localized onboarding slides
+                Title = LocalizationService.Get("FirstRun_Title");
+                TitleLabel.Text = LocalizationService.Get("FirstRun_Title");
+                BodyLabel.Text = LocalizationService.Get("FirstRun_Body");
+
+                var nextText = LocalizationService.Get("Button_Next");
+                var continueText = LocalizationService.Get("Button_Continue");
+
                 var slides = new List<Slide>
                 {
-                    new Slide("onboarding1.png", "Rychlé hledání závodů", "Další"),
-                    new Slide("onboarding2.png", "Sledujte své výsledky", "Další"),
-                    new Slide("onboarding3.png", "Správa přihlášek", "Další"),
-                    new Slide("onboarding4.png", "Notifikace a upozornění", "Další"),
-                    new Slide("onboarding5.png", "Seznam trenérů a prostor", "Další"),
-                    new Slide("onboarding6.png", "Žebříčky a výsledky", "Další"),
-                    new Slide("onboarding7.png", "Sdílejte a komunikujte", "Další"),
-                    new Slide("onboarding8.png", "Přizpůsobte si nastavení", "Pokračovat")
+                    new Slide("onboarding1.png", LocalizationService.Get("FirstRun_Slide1_Caption"), nextText),
+                    new Slide("onboarding2.png", LocalizationService.Get("FirstRun_Slide2_Caption"), nextText),
+                    new Slide("onboarding3.png", LocalizationService.Get("FirstRun_Slide3_Caption"), nextText),
+                    new Slide("onboarding4.png", LocalizationService.Get("FirstRun_Slide4_Caption"), nextText),
+                    new Slide("onboarding5.png", LocalizationService.Get("FirstRun_Slide5_Caption"), nextText),
+                    new Slide("onboarding6.png", LocalizationService.Get("FirstRun_Slide6_Caption"), nextText),
+                    new Slide("onboarding7.png", LocalizationService.Get("FirstRun_Slide7_Caption"), nextText),
+                    new Slide("onboarding8.png", LocalizationService.Get("FirstRun_Slide8_Caption"), continueText)
                 };
 
                 OnboardingCarousel.ItemsSource = slides;

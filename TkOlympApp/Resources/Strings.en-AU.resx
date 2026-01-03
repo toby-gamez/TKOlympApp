@@ -17,6 +17,17 @@
     <data name="Language_Slovenian" xml:space="preserve"><value>Tara Bohak Language</value></data>
     <data name="Language_en-AU" xml:space="preserve"><value>67</value></data>
     <data name="Button_Continue" xml:space="preserve"><value>Let's Goooo</value></data>
+    <data name="Button_Next" xml:space="preserve"><value>Next-o</value></data>
+    <data name="FirstRun_Title" xml:space="preserve"><value>G'day — welcome to the app</value></data>
+    <data name="FirstRun_Body" xml:space="preserve"><value>Take a cheeky tour, mate.</value></data>
+    <data name="FirstRun_Slide1_Caption" xml:space="preserve"><value>Your events, group trainings and private lessons, all vibes in one place</value></data>
+    <data name="FirstRun_Slide2_Caption" xml:space="preserve"><value>All events, lessons and group trainings hangin' here too</value></data>
+    <data name="FirstRun_Slide3_Caption" xml:space="preserve"><value>Detailed scribbles about events and lessons so you don't get lost</value></data>
+    <data name="FirstRun_Slide4_Caption" xml:space="preserve"><value>Noticeboard: club coach tea and updates</value></data>
+    <data name="FirstRun_Slide5_Caption" xml:space="preserve"><value>Leaderboard — show off your activity</value></data>
+    <data name="FirstRun_Slide6_Caption" xml:space="preserve"><value>Everything else, tidy on one page</value></data>
+    <data name="FirstRun_Slide7_Caption" xml:space="preserve"><value>Peek and tweak your data, make it snazzy</value></data>
+    <data name="FirstRun_Slide8_Caption" xml:space="preserve"><value>Calendar? Nah. Birthdays live in the app</value></data>
     <data name="Noticeboard" xml:space="preserve"><value>The Tea ☕</value></data>
     <data name="Leaderboard" xml:space="preserve"><value>Big Ws Only</value></data>
     <data name="Other" xml:space="preserve"><value>Random Stuff</value></data>
@@ -27,6 +38,7 @@
     <data name="Login_Placeholder_Username" xml:space="preserve"><value>Main Character</value></data>
     <data name="Login_Placeholder_Password" xml:space="preserve"><value>Secret Sauce</value></data>
     <data name="Login_Button_Login" xml:space="preserve"><value>Slide In</value></data>
+    <data name="Login_Description" xml:space="preserve"><value>Yeet in to unlock all the app's vibes and features.</value></data>
     <data name="About_Name" xml:space="preserve"><value>Tag:</value></data>
     <data name="About_Surname" xml:space="preserve"><value>Clan Tag:</value></data>
     <data name="About_Login" xml:space="preserve"><value>Handle:</value></data>

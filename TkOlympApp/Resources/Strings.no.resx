@@ -16,6 +16,17 @@
     <data name="Language_Slovenian" xml:space="preserve"><value>Slovensk</value></data>
     <data name="Language_en-AU" xml:space="preserve"><value>Brainrot</value></data>
     <data name="Button_Continue" xml:space="preserve"><value>Fortsett</value></data>
+    <data name="Button_Next" xml:space="preserve"><value>Neste</value></data>
+    <data name="FirstRun_Title" xml:space="preserve"><value>Velkommen til appen</value></data>
+    <data name="FirstRun_Body" xml:space="preserve"><value>Ta en rask omvisning i appen.</value></data>
+    <data name="FirstRun_Slide1_Caption" xml:space="preserve"><value>Dine hendelser, gruppetreninger og private timer på ett sted</value></data>
+    <data name="FirstRun_Slide2_Caption" xml:space="preserve"><value>Alle hendelser, timer og gruppetreninger her også</value></data>
+    <data name="FirstRun_Slide3_Caption" xml:space="preserve"><value>Detaljerte beskrivelser av hendelser og timer slik at du ikke går deg vill</value></data>
+    <data name="FirstRun_Slide4_Caption" xml:space="preserve"><value>Oppslagstavle med informasjon direkte fra klubbtrenerne</value></data>
+    <data name="FirstRun_Slide5_Caption" xml:space="preserve"><value>En konkurransebasert resultattavle som måler aktiviteten din</value></data>
+    <data name="FirstRun_Slide6_Caption" xml:space="preserve"><value>Alle andre ting oversiktlig på én side</value></data>
+    <data name="FirstRun_Slide7_Caption" xml:space="preserve"><value>Se og rediger dine personopplysninger</value></data>
+    <data name="FirstRun_Slide8_Caption" xml:space="preserve"><value>Ingen kalender nødvendig lenger — bursdager direkte i appen</value></data>
     <data name="Noticeboard" xml:space="preserve"><value>Oppslagstavle</value></data>
     <data name="Leaderboard" xml:space="preserve"><value>Ledertavle</value></data>
     <data name="Other" xml:space="preserve"><value>Annet</value></data>
@@ -26,6 +37,7 @@
     <data name="Login_Placeholder_Username" xml:space="preserve"><value>Brukernavn</value></data>
     <data name="Login_Placeholder_Password" xml:space="preserve"><value>Passord</value></data>
     <data name="Login_Button_Login" xml:space="preserve"><value>Logg inn</value></data>
+    <data name="Login_Description" xml:space="preserve"><value>Etter innlogging får du tilgang til alle funksjonene i appen.</value></data>
     <data name="About_Name" xml:space="preserve"><value>Fornavn:</value></data>
     <data name="About_Surname" xml:space="preserve"><value>Etternavn:</value></data>
     <data name="About_Login" xml:space="preserve"><value>Login:</value></data>
