@@ -471,11 +471,21 @@ public partial class EventPage : ContentPage
                 // If the event already finished (end date older than today), hide all registration UI
                 try
                 {
+                    // Compare only the date portion to avoid time-of-day/offset issues.
+                    // Use UTC dates for a stable comparison regardless of Kind/local conversion.
                     var isPast = false;
                     if (until.HasValue)
-                        isPast = until.Value.ToLocalTime().Date < DateTime.Now.Date;
+                    {
+                        var untilDateUtc = until.Value.ToUniversalTime().Date;
+                        var todayUtc = DateTime.UtcNow.Date;
+                        isPast = untilDateUtc < todayUtc;
+                    }
                     else if (since.HasValue)
-                        isPast = since.Value.ToLocalTime().Date < DateTime.Now.Date;
+                    {
+                        var sinceDateUtc = since.Value.ToUniversalTime().Date;
+                        var todayUtc = DateTime.UtcNow.Date;
+                        isPast = sinceDateUtc < todayUtc;
+                    }
 
                     if (isPast)
                     {
