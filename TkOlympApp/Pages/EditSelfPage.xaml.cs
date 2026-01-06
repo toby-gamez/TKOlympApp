@@ -174,6 +174,23 @@ public partial class EditSelfPage : ContentPage
         try
         {
             ErrorLabel.IsVisible = false;
+
+            // Validate that all address fields are filled (required)
+            var missing = new System.Collections.Generic.List<string>();
+            if (string.IsNullOrWhiteSpace(StreetEntry.Text)) missing.Add(LocalizationService.Get("Label_Street") ?? "Ulice");
+            if (string.IsNullOrWhiteSpace(CityEntry.Text)) missing.Add(LocalizationService.Get("Label_City") ?? "Město");
+            if (string.IsNullOrWhiteSpace(PostalCodeEntry.Text)) missing.Add(LocalizationService.Get("Label_PostalCode") ?? "PSČ");
+            if (string.IsNullOrWhiteSpace(RegionEntry.Text)) missing.Add(LocalizationService.Get("Label_Region") ?? "Kraj");
+            if (string.IsNullOrWhiteSpace(DistrictEntry.Text)) missing.Add(LocalizationService.Get("Label_District") ?? "Okres");
+            if (string.IsNullOrWhiteSpace(ConscriptionNumberEntry.Text)) missing.Add(LocalizationService.Get("Label_ConscriptionNumber") ?? "Číslo narukování");
+            if (string.IsNullOrWhiteSpace(OrientationNumberEntry.Text)) missing.Add(LocalizationService.Get("Label_OrientationNumber") ?? "Orient. číslo");
+            if (missing.Count > 0)
+            {
+                ErrorLabel.Text = LocalizationService.Get("Error_AddressRequired") ?? "Vyplňte prosím všechna pole adresy.";
+                ErrorLabel.IsVisible = true;
+                return;
+            }
+
             if (string.IsNullOrWhiteSpace(_personId))
             {
                 ErrorLabel.Text = "ID osoby není dostupné.";

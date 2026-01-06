@@ -146,7 +146,8 @@
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="{svc:Translate Label_Street}" VerticalOptions="Center" />
-                    <Entry x:Name="StreetEntry" Placeholder="{svc:Translate Placeholder_Street}" HorizontalOptions="FillAndExpand" />
+                    <Label Text="*" TextColor="Red" VerticalOptions="Center" Margin="4,0,0,0" />
+                    <Entry x:Name="StreetEntry" Placeholder="{svc:Translate Placeholder_Street}" HorizontalOptions="FillAndExpand" ClearButtonVisibility="WhileEditing" MaxLength="100" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -156,7 +157,8 @@
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="{svc:Translate Label_City}" VerticalOptions="Center" />
-                    <Entry x:Name="CityEntry" Placeholder="{svc:Translate Placeholder_City}" HorizontalOptions="FillAndExpand" />
+                    <Label Text="*" TextColor="Red" VerticalOptions="Center" Margin="4,0,0,0" />
+                    <Entry x:Name="CityEntry" Placeholder="{svc:Translate Placeholder_City}" HorizontalOptions="FillAndExpand" ClearButtonVisibility="WhileEditing" MaxLength="60" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -166,7 +168,8 @@
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="{svc:Translate Label_PostalCode}" VerticalOptions="Center" />
-                    <Entry x:Name="PostalCodeEntry" Placeholder="{svc:Translate Placeholder_PostalCode}" HorizontalOptions="FillAndExpand" />
+                    <Label Text="*" TextColor="Red" VerticalOptions="Center" Margin="4,0,0,0" />
+                    <Entry x:Name="PostalCodeEntry" Placeholder="{svc:Translate Placeholder_PostalCode}" HorizontalOptions="FillAndExpand" ClearButtonVisibility="WhileEditing" MaxLength="10" Keyboard="Numeric" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -176,7 +179,8 @@
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="{svc:Translate Label_Region}" VerticalOptions="Center" />
-                    <Entry x:Name="RegionEntry" Placeholder="{svc:Translate Placeholder_Region}" HorizontalOptions="FillAndExpand" />
+                    <Label Text="*" TextColor="Red" VerticalOptions="Center" Margin="4,0,0,0" />
+                    <Entry x:Name="RegionEntry" Placeholder="{svc:Translate Placeholder_Region}" HorizontalOptions="FillAndExpand" ClearButtonVisibility="WhileEditing" MaxLength="60" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -186,6 +190,7 @@
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="{svc:Translate Label_District}" VerticalOptions="Center" />
+                    <Label Text="*" TextColor="Red" VerticalOptions="Center" Margin="4,0,0,0" />
                     <Entry x:Name="DistrictEntry" Placeholder="{svc:Translate Placeholder_District}" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
@@ -196,7 +201,8 @@
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="{svc:Translate Label_ConscriptionNumber}" VerticalOptions="Center" />
-                    <Entry x:Name="ConscriptionNumberEntry" Placeholder="{svc:Translate Placeholder_ConscriptionNumber}" HorizontalOptions="FillAndExpand" />
+                    <Label Text="*" TextColor="Red" VerticalOptions="Center" Margin="4,0,0,0" />
+                    <Entry x:Name="ConscriptionNumberEntry" Placeholder="{svc:Translate Placeholder_ConscriptionNumber}" HorizontalOptions="FillAndExpand" ClearButtonVisibility="WhileEditing" MaxLength="30" Keyboard="Numeric" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -206,7 +212,8 @@
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="{svc:Translate Label_OrientationNumber}" VerticalOptions="Center" />
-                    <Entry x:Name="OrientationNumberEntry" Placeholder="{svc:Translate Placeholder_OrientationNumber}" HorizontalOptions="FillAndExpand" />
+                    <Label Text="*" TextColor="Red" VerticalOptions="Center" Margin="4,0,0,0" />
+                    <Entry x:Name="OrientationNumberEntry" Placeholder="{svc:Translate Placeholder_OrientationNumber}" HorizontalOptions="FillAndExpand" ClearButtonVisibility="WhileEditing" MaxLength="30" Keyboard="Numeric" />
                 </HorizontalStackLayout>
             </Border>
             <Label Text="{svc:Translate Label_Bio}" FontAttributes="Bold" FontSize="18" />
