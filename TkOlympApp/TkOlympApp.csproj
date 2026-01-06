@@ -76,12 +76,26 @@
         <PackageReference Include="Indiko.Maui.Controls.SelectableLabel" Version="1.1.2" />
     </ItemGroup>
 
-    <!--     <PropertyGroup>
+        <!--     <PropertyGroup>
         <AndroidKeyStore>true</AndroidKeyStore>
         <AndroidSigningKeyStore>tkolymp.keystore</AndroidSigningKeyStore>
         <AndroidSigningKeyAlias>TkOlymp</AndroidSigningKeyAlias>
         <AndroidSigningKeyPass>Tgr45*$d</AndroidSigningKeyPass>
         <AndroidSigningStorePass>Tgr45*$d</AndroidSigningStorePass>
     </PropertyGroup> -->
+
+        <!-- Enable ProGuard/R8 for Release builds only. Conservative rules are provided in
+                 Platforms/Android/proguard.cfg to avoid runtime crashes when enabling shrink/obfuscation. -->
+        <PropertyGroup Condition="'$(Configuration)'=='Release' and $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+            <AndroidEnableProguard>false</AndroidEnableProguard>
+            <AndroidLinkTool>r8</AndroidLinkTool>
+            <AndroidLinkMode>SdkOnly</AndroidLinkMode>
+        </PropertyGroup>
+
+        <ItemGroup>
+            <ProguardConfigurationFiles Include="Platforms\Android\proguard.cfg" />
+        </ItemGroup>
+
+        <!-- Debug builds: do not enable code shrinking (keep default behavior for faster dev iteration) -->
 
 </Project>
