@@ -108,25 +108,25 @@
                                                             <CollectionView.ItemTemplate>
                                                                 <DataTemplate>
                                                                     <Grid ColumnDefinitions="120,*,Auto" Padding="6,4" ColumnSpacing="8">
-                                                                        <Grid.GestureRecognizers>
-                                                                            <TapGestureRecognizer Tapped="OnGroupedRowTapped" />
-                                                                        </Grid.GestureRecognizers>
-                                                                        <Label Text="{Binding TimeRange}" Grid.Column="0" />
-                                                                                                        <Label Text="{Binding FirstRegistrant}" Grid.Column="1">
-                                                                                                            <Label.Triggers>
-                                                                                                                <DataTrigger TargetType="Label" Binding="{Binding IsFree}" Value="True">
-                                                                                                                    <Setter Property="Text" Value="{svc:Translate Free}" />
-                                                                                                                    <Setter Property="TextColor" Value="Green" />
-                                                                                                                </DataTrigger>
-                                                                                                                        <DataTrigger TargetType="Label" Binding="{Binding IsHighlighted}" Value="True">
-                                                                                                                            <Setter Property="TextColor" Value="{StaticResource Primary}" />
-                                                                                                                        </DataTrigger>
-                                                                                                            </Label.Triggers>
-                                                                                                        </Label>
-                                                                        <Label Text="{Binding DurationText}" Grid.Column="2" HorizontalOptions="End" />
-                                                                    </Grid>
-                                                                </DataTemplate>
-                                                            </CollectionView.ItemTemplate>
+                                                                            <Grid.GestureRecognizers>
+                                                                                <TapGestureRecognizer Tapped="OnGroupedRowTapped" />
+                                                                            </Grid.GestureRecognizers>
+                                                                            <Label Text="{Binding TimeRange}" Grid.Column="0" />
+                                                                            <Label Text="{Binding FirstRegistrant}" Grid.Column="1">
+                                                                                <Label.Triggers>
+                                                                                    <DataTrigger TargetType="Label" Binding="{Binding IsFree}" Value="True">
+                                                                                        <Setter Property="Text" Value="{svc:Translate Free}" />
+                                                                                        <Setter Property="TextColor" Value="Green" />
+                                                                                    </DataTrigger>
+                                                                                    <DataTrigger TargetType="Label" Binding="{Binding IsHighlighted}" Value="True">
+                                                                                        <Setter Property="FontAttributes" Value="Bold" />
+                                                                                    </DataTrigger>
+                                                                                </Label.Triggers>
+                                                                            </Label>
+                                                                            <Label Text="{Binding DurationText}" Grid.Column="2" HorizontalOptions="End" />
+                                                                        </Grid>
+                                                                    </DataTemplate>
+                                                                </CollectionView.ItemTemplate>
                                                         </CollectionView>
                                                     </VerticalStackLayout>
                                                 </Border>
