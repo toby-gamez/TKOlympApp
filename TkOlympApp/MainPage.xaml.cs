@@ -160,7 +160,7 @@ public partial class MainPage : ContentPage
                         dayLabel = char.ToUpper(name[0], culture) + name.Substring(1) + $" {date:dd.MM.}";
                     }
 
-                    var dg = new DayGroup(dayLabel, dayEvents);
+                    var dg = new DayGroup(dayLabel, date, dayEvents);
                     wg.Add(dg);
                 }
                 if (wg.Count > 0)
@@ -555,11 +555,37 @@ public partial class MainPage : ContentPage
 
     private async void OnTodayWeekClicked(object? sender, EventArgs e)
     {
-        _weekStart = GetWeekStart(DateTime.Now);
+        var currentWeekStart = GetWeekStart(DateTime.Now);
+        var alreadyOnCurrentWeek = _weekStart == currentWeekStart;
+
+        _weekStart = currentWeekStart;
         _weekEnd = _weekStart.AddDays(6);
-        try { Debug.WriteLine($"OnTodayWeekClicked: DateTime.Now={DateTime.Now:o}, weekStart={_weekStart:o}, weekEnd={_weekEnd:o}"); } catch { }
+        try { Debug.WriteLine($"OnTodayWeekClicked: DateTime.Now={DateTime.Now:o}, weekStart={_weekStart:o}, weekEnd={_weekEnd:o}, alreadyOnCurrentWeek={alreadyOnCurrentWeek}"); } catch { }
         try { UpdateWeekLabel(); } catch { }
         await LoadEventsAsync();
+
+        if (alreadyOnCurrentWeek)
+        {
+            try
+            {
+                var today = DateTime.Now.Date;
+                // find the week and day group for today
+                foreach (var wg in _weeks)
+                {
+                    var dg = wg.FirstOrDefault(d => d.Date == today);
+                    if (dg != null)
+                    {
+                        try
+                        {
+                            EventsCollection?.ScrollTo(dg, wg, ScrollToPosition.Start, true);
+                        }
+                        catch { }
+                        break;
+                    }
+                }
+            }
+            catch { }
+        }
     }
 
     // Helper grouping types
@@ -572,12 +598,14 @@ public partial class MainPage : ContentPage
     public sealed class DayGroup
     {
         public string DayLabel { get; }
+        public DateTime Date { get; }
         public ObservableCollection<GroupedTrainer> GroupedTrainers { get; }
         public ObservableCollection<EventService.EventInstance> SingleEvents { get; }
 
-        public DayGroup(string dayLabel, IEnumerable<EventService.EventInstance> events)
+        public DayGroup(string dayLabel, DateTime date, IEnumerable<EventService.EventInstance> events)
         {
             DayLabel = dayLabel;
+            Date = date;
             GroupedTrainers = new ObservableCollection<GroupedTrainer>();
             SingleEvents = new ObservableCollection<EventService.EventInstance>();
 
