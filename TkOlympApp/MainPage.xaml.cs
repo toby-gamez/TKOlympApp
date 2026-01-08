@@ -19,6 +19,8 @@ public partial class MainPage : ContentPage
     private bool _onlyMine = true;
     private DateTime _weekStart;
     private DateTime _weekEnd;
+    private bool _rawVisible = false;
+    private string? _lastRawJson = null;
     
 
     public MainPage()
@@ -118,6 +120,8 @@ public partial class MainPage : ContentPage
             else
             {
                 events = await EventService.GetEventInstancesForRangeListAsync(start, end);
+                // capture raw JSON response for UI
+                try { _lastRawJson = EventService.LastEventInstancesForRangeRawJson; } catch { _lastRawJson = null; }
             }
 
             // Group events by day (date only) and then into weeks (Monday-based)
@@ -394,6 +398,21 @@ public partial class MainPage : ContentPage
                 await Shell.Current.GoToAsync(uri);
             }
         }
+    }
+
+    private void OnToggleRawClicked(object? sender, EventArgs e)
+    {
+        _rawVisible = !_rawVisible;
+        try
+        {
+            var rawLabel = this.FindByName<Label>("RawResponseLabel");
+            if (rawLabel != null)
+            {
+                rawLabel.IsVisible = _rawVisible;
+                rawLabel.Text = _lastRawJson ?? string.Empty;
+            }
+        }
+        catch { }
     }
 
     private async void OnEventCardTapped(object? sender, TappedEventArgs e)

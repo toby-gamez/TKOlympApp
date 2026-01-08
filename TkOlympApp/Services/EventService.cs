@@ -10,6 +10,8 @@ public static class EventService
     {
         PropertyNameCaseInsensitive = true
     };
+    // Last raw JSON response for eventInstancesForRangeList (for UI/debugging)
+    public static string? LastEventInstancesForRangeRawJson { get; private set; }
     public static async Task<EventDetails?> GetEventAsync(long id, CancellationToken ct = default)
     {
             var query = new GraphQlRequest
@@ -171,7 +173,7 @@ public static class EventService
 
         var query = new GraphQlRequest
         {
-            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange) { id event { id name locationText eventTrainersList { name } } since until isCancelled } }",
+            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange) { id event { id name locationText eventTrainersList { name } eventTargetCohortsList { cohortId cohort { colorRgb } } } since until isCancelled } }",
             Variables = variables
         };
 
@@ -185,6 +187,8 @@ public static class EventService
         }
 
         var body = await resp.Content.ReadAsStringAsync(ct);
+        // Store raw JSON for debugging / UI display
+        LastEventInstancesForRangeRawJson = body;
         var data = JsonSerializer.Deserialize<GraphQlResponse<EventInstancesForRangeData>>(body, Options);
         if (data?.Errors != null && data.Errors.Count > 0)
         {
@@ -291,7 +295,17 @@ public static class EventService
         [property: JsonPropertyName("isPublic")] bool IsPublic,
         [property: JsonPropertyName("guestPrice")] Money? GuestPrice,
         [property: JsonPropertyName("eventTrainersList")] List<EventTrainer>? EventTrainersList,
+        [property: JsonPropertyName("eventTargetCohortsList")] List<EventTargetCohortLink>? EventTargetCohortsList,
         [property: JsonPropertyName("eventRegistrationsList")] List<EventRegistrationShort>? EventRegistrationsList
+    );
+
+    public sealed record EventTargetCohortLink(
+        [property: JsonPropertyName("cohortId")] long? CohortId,
+        [property: JsonPropertyName("cohort")] CohortRef? Cohort
+    );
+
+    public sealed record CohortRef(
+        [property: JsonPropertyName("colorRgb")] string? ColorRgb
     );
 
     public sealed record EventRegistrationShort(

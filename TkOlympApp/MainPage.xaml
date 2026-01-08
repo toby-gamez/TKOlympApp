@@ -10,6 +10,8 @@
     <ContentPage.Resources>
         <ResourceDictionary>
             <converters:FriendlyDateConverter x:Key="FriendlyDateConverter" />
+            <converters:CohortColorConverter x:Key="CohortColorConverter" />
+            <converters:CohortHasColorConverter x:Key="CohortHasColorConverter" />
             <converters:EventNameConverter x:Key="EventNameConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
@@ -27,6 +29,7 @@
             <HorizontalStackLayout Grid.Column="0" Padding="0" Spacing="8" VerticalOptions="Center">
                 <Button x:Name="TabMyButton" Text="{svc:Translate Tab_My}" Clicked="OnTabMineClicked" />
                 <Button x:Name="TabAllButton" Text="{svc:Translate Tab_All}" Clicked="OnTabAllClicked" />
+                <Button x:Name="ToggleRawButton" Text="Raw" Clicked="OnToggleRawClicked" />
                 <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" HorizontalOptions="Center" Margin="0,0,0,0" />
             </HorizontalStackLayout>
 
@@ -66,13 +69,28 @@
                                                     <RoundRectangle CornerRadius="8" />
                                                 </Border.StrokeShape>
                                                 <VerticalStackLayout Spacing="6">
-                                                    <Label Text="{Binding Event, Converter={StaticResource EventNameConverter}}" FontAttributes="Bold">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <Label Text="{Binding Event, Converter={StaticResource EventNameConverter}}" FontAttributes="Bold" Grid.Column="0">
                                                         <Label.Triggers>
                                                             <DataTrigger TargetType="Label" Binding="{Binding IsCancelled}" Value="True">
                                                                 <Setter Property="TextDecorations" Value="Strikethrough" />
                                                             </DataTrigger>
                                                         </Label.Triggers>
-                                                    </Label>
+                                                        </Label>
+                                                        <Border WidthRequest="18" HeightRequest="18" Padding="0" Margin="0" Grid.Column="1" HorizontalOptions="End" VerticalOptions="Center"
+                                                                IsVisible="{Binding Event.EventTargetCohortsList, Converter={StaticResource CohortHasColorConverter}}">
+                                                            <Border.StrokeShape>
+                                                                <RoundRectangle CornerRadius="9" />
+                                                            </Border.StrokeShape>
+                                                            <Border.Background>
+                                                                <Binding Path="Event.EventTargetCohortsList" Converter="{StaticResource CohortColorConverter}" />
+                                                            </Border.Background>
+                                                        </Border>
+                                                    </Grid>
                                                     <Label Text="{Binding Event.LocationText}" />
                                                     <Label FontSize="12" Style="{StaticResource MutedLabelStyle}">
                                                         <Label.FormattedText>
@@ -139,6 +157,7 @@
                     </CollectionView.ItemTemplate>
                 </CollectionView>
                 <Label x:Name="EmptyLabel" IsVisible="False" VerticalOptions="CenterAndExpand" HorizontalOptions="Center" />
+                <Label x:Name="RawResponseLabel" IsVisible="False" VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand" LineBreakMode="WordWrap" />
             </Grid>
         </RefreshView>
     </Grid>
