@@ -15,10 +15,9 @@ namespace TkOlympApp.Converters
             {
                 if (value == null) return null!;
 
-                // Expecting a list of EventTargetCohortLink or similar
+                // Handle JsonElement array (raw deserialized JSON)
                 if (value is System.Text.Json.JsonElement je)
                 {
-                    // fallback: try to extract first cohort.colorRgb from JsonElement
                     if (je.ValueKind == System.Text.Json.JsonValueKind.Array && je.GetArrayLength() > 0)
                     {
                         foreach (var el in je.EnumerateArray())
@@ -34,32 +33,34 @@ namespace TkOlympApp.Converters
                             }
                         }
                     }
-                }
-
-                if (value is System.Collections.IEnumerable list)
-                {
-                    foreach (var item in list)
+                    // If JsonElement is a single object, try cohort.colorRgb there too
+                    if (je.ValueKind == System.Text.Json.JsonValueKind.Object)
                     {
-                        if (item == null) continue;
-                        // item may be EventService.EventTargetCohortLink
-                        var type = item.GetType();
-                        var cohortProp = type.GetProperty("Cohort");
-                        if (cohortProp != null)
+                        if (je.TryGetProperty("cohort", out var cohort) && cohort.ValueKind == System.Text.Json.JsonValueKind.Object)
                         {
-                            var cohortVal = cohortProp.GetValue(item);
-                            if (cohortVal != null)
+                            if (cohort.TryGetProperty("colorRgb", out var colorEl) && colorEl.ValueKind == System.Text.Json.JsonValueKind.String)
                             {
-                                var colorProp = cohortVal.GetType().GetProperty("ColorRgb");
-                                if (colorProp != null)
-                                {
-                                    var colorStr = colorProp.GetValue(cohortVal) as string;
-                                    var brush = TryParseColorBrush(colorStr);
-                                    if (brush != null) return brush;
-                                }
+                                var s = colorEl.GetString();
+                                var brush = TryParseColorBrush(s);
+                                if (brush != null) return brush;
                             }
                         }
                     }
                 }
+
+                // If value is an enumerable (list of links), extract first non-empty color
+                if (value is System.Collections.IEnumerable list)
+                {
+                    foreach (var item in list)
+                    {
+                        var b = BrushFromPossibleCohortItem(item);
+                        if (b != null) return b;
+                    }
+                }
+
+                // If value is a single item (EventTargetCohortLink), try to extract its cohort.colorRgb
+                var singleBrush = BrushFromPossibleCohortItem(value);
+                if (singleBrush != null) return singleBrush;
 
                 return null!;
             }
@@ -67,6 +68,53 @@ namespace TkOlympApp.Converters
             {
                 return null!;
             }
+        }
+
+        private Brush? BrushFromPossibleCohortItem(object? item)
+        {
+            if (item == null) return null;
+            try
+            {
+                // If item is JsonElement object
+                if (item is System.Text.Json.JsonElement je && je.ValueKind == System.Text.Json.JsonValueKind.Object)
+                {
+                    if (je.TryGetProperty("cohort", out var cohort) && cohort.ValueKind == System.Text.Json.JsonValueKind.Object)
+                    {
+                        if (cohort.TryGetProperty("colorRgb", out var colorEl) && colorEl.ValueKind == System.Text.Json.JsonValueKind.String)
+                        {
+                            return TryParseColorBrush(colorEl.GetString());
+                        }
+                    }
+                    return null;
+                }
+
+                // Reflection: look for Cohort property with ColorRgb
+                var type = item.GetType();
+                var cohortProp = type.GetProperty("Cohort");
+                if (cohortProp != null)
+                {
+                    var cohortVal = cohortProp.GetValue(item);
+                    if (cohortVal != null)
+                    {
+                        var colorProp = cohortVal.GetType().GetProperty("ColorRgb");
+                        if (colorProp != null)
+                        {
+                            var colorStr = colorProp.GetValue(cohortVal) as string;
+                            return TryParseColorBrush(colorStr);
+                        }
+                    }
+                }
+
+                // Fallback: if object itself has ColorRgb property
+                var colorDirect = type.GetProperty("ColorRgb");
+                if (colorDirect != null)
+                {
+                    var s = colorDirect.GetValue(item) as string;
+                    return TryParseColorBrush(s);
+                }
+            }
+            catch { }
+            return null;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();

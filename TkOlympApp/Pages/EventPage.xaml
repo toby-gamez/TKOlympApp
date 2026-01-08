@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:icons="http://www.aathifmahir.com/dotnet/2022/maui/icons"
              xmlns:svc="clr-namespace:TkOlympApp.Services"
+             xmlns:converters="clr-namespace:TkOlympApp.Converters"
              x:Class="TkOlympApp.Pages.EventPage"
              Title="{svc:Translate EventPage_Title}">
 
@@ -24,11 +25,21 @@
                 <VerticalStackLayout Spacing="6">
                     <Grid ColumnDefinitions="*,Auto">
                         <Label Text="{svc:Translate Event_Info_Label}" FontAttributes="Bold" Grid.Column="0" VerticalOptions="Center" />
-                        <Border x:Name="CohortDot" WidthRequest="18" HeightRequest="18" Padding="0" Margin="0" Grid.Column="1" HorizontalOptions="End" VerticalOptions="Center" IsVisible="False">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="9" />
-                            </Border.StrokeShape>
-                        </Border>
+                        <HorizontalStackLayout x:Name="CohortDots" Grid.Column="1" HorizontalOptions="End" VerticalOptions="Center" Spacing="6">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <Border WidthRequest="18" HeightRequest="18" Padding="0" Margin="0" HorizontalOptions="End" VerticalOptions="Center"
+                                            IsVisible="{Binding ., Converter={StaticResource CohortItemHasColorConverter}}">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="9" />
+                                        </Border.StrokeShape>
+                                        <Border.Background>
+                                            <Binding Path="." Converter="{StaticResource CohortColorConverter}" />
+                                        </Border.Background>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </HorizontalStackLayout>
                     </Grid>
                     <Label x:Name="LocationLabel"/>
                     <Label x:Name="DateRangeLabel"/>

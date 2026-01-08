@@ -408,27 +408,11 @@ public partial class EventPage : ContentPage
 
             RegistrationsFrame.IsVisible = _registrations.Count > 0;
 
-            // Show cohort color dot in info card if available
+            // Render cohort color dots (if any) using BindableLayout on CohortDots
             try
             {
-                Brush? brush = null;
-                try
-                {
-                    var conv = new CohortColorConverter();
-                    var cvResult = conv.Convert(ev.EventTargetCohortsList as object, typeof(Brush), null, CultureInfo.CurrentUICulture);
-                    brush = cvResult as Brush;
-                }
-                catch { }
-
-                if (brush != null)
-                {
-                    CohortDot.Background = brush;
-                    CohortDot.IsVisible = true;
-                }
-                else
-                {
-                    CohortDot.IsVisible = false;
-                }
+                try { BindableLayout.SetItemsSource(CohortDots, ev.EventTargetCohortsList); } catch { BindableLayout.SetItemsSource(CohortDots, null); }
+                try { CohortDots.IsVisible = (ev.EventTargetCohortsList != null && ev.EventTargetCohortsList.Count > 0); } catch { CohortDots.IsVisible = false; }
             }
             catch { }
 

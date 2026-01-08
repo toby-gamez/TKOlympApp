@@ -11,6 +11,7 @@
         <ResourceDictionary>
             <converters:FriendlyDateConverter x:Key="FriendlyDateConverter" />
             <converters:CohortColorConverter x:Key="CohortColorConverter" />
+            <converters:CohortItemHasColorConverter x:Key="CohortItemHasColorConverter" />
             <converters:CohortHasColorConverter x:Key="CohortHasColorConverter" />
             <converters:EventNameConverter x:Key="EventNameConverter" />
         </ResourceDictionary>
@@ -81,15 +82,22 @@
                                                             </DataTrigger>
                                                         </Label.Triggers>
                                                         </Label>
-                                                        <Border WidthRequest="18" HeightRequest="18" Padding="0" Margin="0" Grid.Column="1" HorizontalOptions="End" VerticalOptions="Center"
-                                                                IsVisible="{Binding Event.EventTargetCohortsList, Converter={StaticResource CohortHasColorConverter}}">
-                                                            <Border.StrokeShape>
-                                                                <RoundRectangle CornerRadius="9" />
-                                                            </Border.StrokeShape>
-                                                            <Border.Background>
-                                                                <Binding Path="Event.EventTargetCohortsList" Converter="{StaticResource CohortColorConverter}" />
-                                                            </Border.Background>
-                                                        </Border>
+                                                        <HorizontalStackLayout Grid.Column="1" HorizontalOptions="End" VerticalOptions="Center" Spacing="6"
+                                                            BindableLayout.ItemsSource="{Binding Event.EventTargetCohortsList}">
+                                                            <BindableLayout.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <Border WidthRequest="18" HeightRequest="18" Padding="0" Margin="0" HorizontalOptions="End" VerticalOptions="Center"
+                                                                            IsVisible="{Binding ., Converter={StaticResource CohortItemHasColorConverter}}">
+                                                                        <Border.StrokeShape>
+                                                                            <RoundRectangle CornerRadius="9" />
+                                                                        </Border.StrokeShape>
+                                                                        <Border.Background>
+                                                                            <Binding Path="." Converter="{StaticResource CohortColorConverter}" />
+                                                                        </Border.Background>
+                                                                    </Border>
+                                                                </DataTemplate>
+                                                            </BindableLayout.ItemTemplate>
+                                                        </HorizontalStackLayout>
                                                     </Grid>
                                                     <Label Text="{Binding Event.LocationText}" />
                                                     <Label FontSize="12" Style="{StaticResource MutedLabelStyle}">
