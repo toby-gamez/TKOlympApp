@@ -17,7 +17,7 @@ public static class EventService
             var query = new GraphQlRequest
         {
             // Request person names and couple names (including first name) and instance trainers for registrations
-            Query = "query MyQuery($id: BigInt!) { event(id: $id) { capacity createdAt description eventRegistrations { totalCount nodes { couple { id status man { name firstName lastName eventInstanceTrainersList { name lessonPrice { amount currency } } } woman { name firstName lastName eventInstanceTrainersList { name lessonPrice { amount currency } } } } eventLessonDemandsByRegistrationIdList { lessonCount trainer { id name } } person { id firstName lastName } } } isPublic isRegistrationOpen isVisible __typename name summary locationText eventTrainersList { id name lessonPrice { amount currency } updatedAt } updatedAt since until } }",
+            Query = "query MyQuery($id: BigInt!) { event(id: $id) { capacity createdAt description eventRegistrations { totalCount nodes { couple { id status man { name firstName lastName eventInstanceTrainersList { name lessonPrice { amount currency } } } woman { name firstName lastName eventInstanceTrainersList { name lessonPrice { amount currency } } } } eventLessonDemandsByRegistrationIdList { lessonCount trainer { id name } } person { id firstName lastName } } } isPublic isRegistrationOpen isVisible __typename name summary locationText eventTrainersList { id name lessonPrice { amount currency } updatedAt } updatedAt since until eventTargetCohortsList { cohortId cohort { colorRgb } } } }",
             Variables = new Dictionary<string, object> { { "id", id } }
         };
 
@@ -59,7 +59,8 @@ public static class EventService
         [property: JsonPropertyName("name")] string? Name,
         [property: JsonPropertyName("summary")] string? Summary,
         [property: JsonPropertyName("locationText")] string? LocationText,
-        [property: JsonPropertyName("eventTrainersList")] List<EventTrainer>? EventTrainersList
+        [property: JsonPropertyName("eventTrainersList")] List<EventTrainer>? EventTrainersList,
+        [property: JsonPropertyName("eventTargetCohortsList")] List<EventTargetCohortLink>? EventTargetCohortsList
     );
 
     public sealed record EventRegistrations(

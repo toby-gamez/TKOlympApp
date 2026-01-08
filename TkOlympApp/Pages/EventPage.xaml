@@ -22,7 +22,14 @@
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="6">
-                    <Label Text="{svc:Translate Event_Info_Label}" FontAttributes="Bold" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="{svc:Translate Event_Info_Label}" FontAttributes="Bold" Grid.Column="0" VerticalOptions="Center" />
+                        <Border x:Name="CohortDot" WidthRequest="18" HeightRequest="18" Padding="0" Margin="0" Grid.Column="1" HorizontalOptions="End" VerticalOptions="Center" IsVisible="False">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="9" />
+                            </Border.StrokeShape>
+                        </Border>
+                    </Grid>
                     <Label x:Name="LocationLabel"/>
                     <Label x:Name="DateRangeLabel"/>
                     <Label x:Name="CreatedAtLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}"/>

@@ -6,6 +6,9 @@ using System.Globalization;
 using System.Diagnostics;
 using TkOlympApp.Services;
 using TkOlympApp.Helpers;
+using TkOlympApp.Converters;
+using Microsoft.Maui.Graphics;
+using Microsoft.Maui.Controls;
 
 namespace TkOlympApp.Pages;
 
@@ -404,6 +407,30 @@ public partial class EventPage : ContentPage
             }
 
             RegistrationsFrame.IsVisible = _registrations.Count > 0;
+
+            // Show cohort color dot in info card if available
+            try
+            {
+                Brush? brush = null;
+                try
+                {
+                    var conv = new CohortColorConverter();
+                    var cvResult = conv.Convert(ev.EventTargetCohortsList as object, typeof(Brush), null, CultureInfo.CurrentUICulture);
+                    brush = cvResult as Brush;
+                }
+                catch { }
+
+                if (brush != null)
+                {
+                    CohortDot.Background = brush;
+                    CohortDot.IsVisible = true;
+                }
+                else
+                {
+                    CohortDot.IsVisible = false;
+                }
+            }
+            catch { }
 
             // Determine whether current user (or one of their active couples) is registered for this event
             try
