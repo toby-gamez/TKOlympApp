@@ -142,6 +142,7 @@
   <data name="Event_Description_Label" xml:space="preserve"><value>Popis</value></data>
   <data name="Event_Summary_Label" xml:space="preserve"><value>Shrnutí</value></data>
   <data name="Event_Trainers_Label" xml:space="preserve"><value>Trenéři</value></data>
+  <data name="Event_Cohorts_Label" xml:space="preserve"><value>Tréninkové skupiny</value></data>
   <data name="Event_Registrations_Label" xml:space="preserve"><value>Seznam přihlášených</value></data>
   <data name="Couple_Inactive" xml:space="preserve"><value>Neaktivní</value></data>
   <data name="Couple_Separator" xml:space="preserve"><value>-</value></data>

@@ -127,6 +127,7 @@
     <data name="Event_Description_Label" xml:space="preserve"><value>Opis</value></data>
     <data name="Event_Summary_Label" xml:space="preserve"><value>Povzetek</value></data>
     <data name="Event_Trainers_Label" xml:space="preserve"><value>Trenerji</value></data>
+    <data name="Event_Cohorts_Label" xml:space="preserve"><value>Skupine za trening</value></data>
     <data name="Event_Registrations_Label" xml:space="preserve"><value>Seznam prijavljenih</value></data>
     <data name="Couple_Inactive" xml:space="preserve"><value>Neaktiven</value></data>
     <data name="Couple_Separator" xml:space="preserve"><value>-</value></data>

@@ -142,6 +142,7 @@
   <data name="Event_Description_Label" xml:space="preserve"><value>Опис</value></data>
   <data name="Event_Summary_Label" xml:space="preserve"><value>Підсумок</value></data>
   <data name="Event_Trainers_Label" xml:space="preserve"><value>Тренери</value></data>
+  <data name="Event_Cohorts_Label" xml:space="preserve"><value>Тренувальні групи</value></data>
   <data name="Event_Registrations_Label" xml:space="preserve"><value>Список зареєстрованих</value></data>
   <data name="Couple_Inactive" xml:space="preserve"><value>Неактивний</value></data>
   <data name="Couple_Separator" xml:space="preserve"><value>-</value></data>

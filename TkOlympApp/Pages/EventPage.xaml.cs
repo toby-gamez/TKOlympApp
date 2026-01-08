@@ -9,6 +9,7 @@ using TkOlympApp.Helpers;
 using TkOlympApp.Converters;
 using Microsoft.Maui.Graphics;
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.Controls.Shapes;
 
 namespace TkOlympApp.Pages;
 
@@ -408,13 +409,50 @@ public partial class EventPage : ContentPage
 
             RegistrationsFrame.IsVisible = _registrations.Count > 0;
 
-            // Render cohort color dots (if any) using BindableLayout on CohortDots
+            // Render cohort color dots (if any) by building children manually (reliable rendering)
             try
             {
-                try { BindableLayout.SetItemsSource(CohortDots, ev.EventTargetCohortsList); } catch { BindableLayout.SetItemsSource(CohortDots, null); }
-                try { CohortDots.IsVisible = (ev.EventTargetCohortsList != null && ev.EventTargetCohortsList.Count > 0); } catch { CohortDots.IsVisible = false; }
+                CohortDots.Children.Clear();
+                var list = ev.EventTargetCohortsList ?? new System.Collections.Generic.List<EventService.EventTargetCohortLink>();
+                foreach (var link in list)
+                {
+                    try
+                    {
+                        var c = link?.Cohort;
+                        if (c == null) continue;
+                        var name = c.Name ?? string.Empty;
+                        var colorBrush = TryParseColorBrush(c.ColorRgb) ?? new SolidColorBrush(Colors.LightGray);
+
+                        var row = new Grid { VerticalOptions = LayoutOptions.Center, HorizontalOptions = LayoutOptions.Fill };
+                        row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
+                        row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+                        var nameLabel = new Label { Text = name, VerticalOptions = LayoutOptions.Center, HorizontalOptions = LayoutOptions.Start };
+                        row.Add(nameLabel);
+
+                        var dot = new Border
+                        {
+                            WidthRequest = 20,
+                            HeightRequest = 20,
+                            Padding = 0,
+                            Margin = new Thickness(0),
+                            HorizontalOptions = LayoutOptions.End,
+                            VerticalOptions = LayoutOptions.Center,
+                            Background = colorBrush,
+                            Stroke = null,
+                            StrokeShape = new RoundRectangle { CornerRadius = 10 }
+                        };
+                        row.Add(dot, 1, 0);
+
+                        CohortDots.Children.Add(row);
+                    }
+                    catch { }
+                }
+
+                CohortDots.IsVisible = CohortDots.Children.Count > 0;
+                try { CohortsFrame.IsVisible = CohortDots.IsVisible; } catch { CohortsFrame.IsVisible = false; }
             }
-            catch { }
+            catch { CohortDots.IsVisible = false; try { CohortsFrame.IsVisible = false; } catch { } }
 
             // Determine whether current user (or one of their active couples) is registered for this event
             try
@@ -643,5 +681,33 @@ public partial class EventPage : ContentPage
         text = WebUtility.HtmlDecode(text);
         // Trim excess whitespace
         return text.Trim();
+    }
+
+    private Brush? TryParseColorBrush(string? colorRgb)
+    {
+        if (string.IsNullOrWhiteSpace(colorRgb)) return null;
+        var s = colorRgb.Trim();
+        try
+        {
+            if (s.StartsWith("#"))
+                return new SolidColorBrush(Color.FromArgb(s));
+
+            if (s.Length == 6)
+                return new SolidColorBrush(Color.FromArgb("#" + s));
+
+            if (s.StartsWith("rgb", StringComparison.OrdinalIgnoreCase))
+            {
+                var digits = System.Text.RegularExpressions.Regex.Matches(s, "\\d+");
+                if (digits.Count >= 3)
+                {
+                    var r = int.Parse(digits[0].Value);
+                    var g = int.Parse(digits[1].Value);
+                    var b = int.Parse(digits[2].Value);
+                    return new SolidColorBrush(Color.FromRgb(r, g, b));
+                }
+            }
+        }
+        catch { }
+        return null;
     }
 }

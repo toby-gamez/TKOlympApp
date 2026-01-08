@@ -17,7 +17,7 @@ public static class EventService
             var query = new GraphQlRequest
         {
             // Request person names and couple names (including first name) and instance trainers for registrations
-            Query = "query MyQuery($id: BigInt!) { event(id: $id) { capacity createdAt description eventRegistrations { totalCount nodes { couple { id status man { name firstName lastName eventInstanceTrainersList { name lessonPrice { amount currency } } } woman { name firstName lastName eventInstanceTrainersList { name lessonPrice { amount currency } } } } eventLessonDemandsByRegistrationIdList { lessonCount trainer { id name } } person { id firstName lastName } } } isPublic isRegistrationOpen isVisible __typename name summary locationText eventTrainersList { id name lessonPrice { amount currency } updatedAt } updatedAt since until eventTargetCohortsList { cohortId cohort { colorRgb } } } }",
+            Query = "query MyQuery($id: BigInt!) { event(id: $id) { capacity createdAt description eventRegistrations { totalCount nodes { couple { id status man { name firstName lastName eventInstanceTrainersList { name lessonPrice { amount currency } } } woman { name firstName lastName eventInstanceTrainersList { name lessonPrice { amount currency } } } } eventLessonDemandsByRegistrationIdList { lessonCount trainer { id name } } person { id firstName lastName } } } isPublic isRegistrationOpen isVisible __typename name summary locationText eventTrainersList { id name lessonPrice { amount currency } updatedAt } updatedAt since until eventTargetCohortsList { cohortId cohort { id name colorRgb } } } }",
             Variables = new Dictionary<string, object> { { "id", id } }
         };
 
@@ -174,7 +174,7 @@ public static class EventService
 
         var query = new GraphQlRequest
         {
-            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange) { id event { id name locationText eventTrainersList { name } eventTargetCohortsList { cohortId cohort { colorRgb } } } since until isCancelled } }",
+            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange) { id event { id name locationText eventTrainersList { name } eventTargetCohortsList { cohortId cohort { id name colorRgb } } } since until isCancelled } }",
             Variables = variables
         };
 
@@ -306,6 +306,8 @@ public static class EventService
     );
 
     public sealed record CohortRef(
+        [property: JsonPropertyName("id")] long? Id,
+        [property: JsonPropertyName("name")] string? Name,
         [property: JsonPropertyName("colorRgb")] string? ColorRgb
     );
 

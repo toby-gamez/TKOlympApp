@@ -86,7 +86,7 @@
                                                             BindableLayout.ItemsSource="{Binding Event.EventTargetCohortsList}">
                                                             <BindableLayout.ItemTemplate>
                                                                 <DataTemplate>
-                                                                    <Border WidthRequest="18" HeightRequest="18" Padding="0" Margin="0" HorizontalOptions="End" VerticalOptions="Center"
+                                                                    <Border WidthRequest="18" HeightRequest="18" Padding="0" Margin="0" HorizontalOptions="End" StrokeThickness="0" VerticalOptions="Center"
                                                                             IsVisible="{Binding ., Converter={StaticResource CohortItemHasColorConverter}}">
                                                                         <Border.StrokeShape>
                                                                             <RoundRectangle CornerRadius="9" />
