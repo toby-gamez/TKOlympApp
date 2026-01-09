@@ -76,6 +76,8 @@
   <data name="Other_Languages_Label" xml:space="preserve"><value>Ngôn ngữ</value></data>
   <data name="Other_Languages_Desc" xml:space="preserve"><value>Nếu bạn muốn ngôn ngữ khác.</value></data>
   <data name="Other_Button_Logout" xml:space="preserve"><value>Đăng xuất</value></data>
+  <data name="Other_Item_Events" xml:space="preserve"><value>Sự kiện</value></data>
+  <data name="Other_Events_Desc" xml:space="preserve"><value>Sự kiện của câu lạc bộ ma thuật của chúng tôi.</value></data>
   <data name="Notifications_ChannelName" xml:space="preserve"><value>Tin tức</value></data>
   <data name="Notifications_ChannelDescription" xml:space="preserve"><value>Thông báo về tin mới</value></data>
   <data name="Error_Loading_Title" xml:space="preserve"><value>Lỗi tải</value></data>
@@ -251,4 +253,7 @@
   <data name="Person_ActiveCouples_Label" xml:space="preserve"><value>Cặp đang hoạt động</value></data>
   <data name="NotFound_Person" xml:space="preserve"><value>Không tìm thấy người.</value></data>
   <data name="AboutApp_Description" xml:space="preserve"><value>Mô tả ứng dụng</value></data>
+  <data name="Events_Title" xml:space="preserve"><value>Sự kiện</value></data>
+  <data name="Planned" xml:space="preserve"><value>Đã lên kế hoạch</value></data>
+  <data name="Occurred" xml:space="preserve"><value>Đã diễn ra</value></data>
 </root>

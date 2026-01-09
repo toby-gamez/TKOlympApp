@@ -76,6 +76,8 @@
     <data name="Other_Languages_Label" xml:space="preserve"><value>Jazyky</value></data>
     <data name="Other_Languages_Desc" xml:space="preserve"><value>Keby ti iný jazyk bol viac po chuti.</value></data>
     <data name="Other_Button_Logout" xml:space="preserve"><value>Odhlásiť sa</value></data>
+    <data name="Other_Item_Events" xml:space="preserve"><value>Podujatia</value></data>
+    <data name="Other_Events_Desc" xml:space="preserve"><value>Podujatia nášho kúzelného klubu.</value></data>
     <data name="Notifications_ChannelName" xml:space="preserve"><value>Aktuality</value></data>
     <data name="Notifications_ChannelDescription" xml:space="preserve"><value>Notifikácie o nových aktualitách</value></data>
     <data name="Error_Loading_Title" xml:space="preserve"><value>Chyba načítania</value></data>
@@ -260,4 +262,7 @@
     <data name="Person_ActiveCouples_Label" xml:space="preserve"><value>Aktívne páry</value></data>
     <data name="NotFound_Person" xml:space="preserve"><value>Osoba nebola nájdená.</value></data>
     <data name="AboutApp_Description" xml:space="preserve"><value>Popis aplikácie</value></data>
+    <data name="Events_Title" xml:space="preserve"><value>Podujatia</value></data>
+    <data name="Planned" xml:space="preserve"><value>Plánované</value></data>
+    <data name="Occurred" xml:space="preserve"><value>Prebehlo</value></data>
     </root>

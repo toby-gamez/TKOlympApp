@@ -57,6 +57,19 @@
                         <Label Style="{StaticResource MutedLabelStyle}" Text="{svc:Translate Other_CohortGroups_Desc}" />
                     </VerticalStackLayout>
                 </Border>
+
+                <Border Padding="12" Margin="6">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnEventsClicked" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout>
+                        <Label FontAttributes="Bold" Text="{svc:Translate Other_Item_Events}" />
+                        <Label Style="{StaticResource MutedLabelStyle}" Text="{svc:Translate Other_Events_Desc}" />
+                    </VerticalStackLayout>
+                </Border>
                 <Label FontAttributes="Bold" Text="{svc:Translate Other_Section_App}" />
                 <Border Padding="12" Margin="6">
                     <Border.StrokeShape>

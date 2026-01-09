@@ -67,7 +67,7 @@
   <data name="Other_Item_Profile" xml:space="preserve"><value>Profil</value></data>
   <data name="Other_Profile_Desc" xml:space="preserve"><value>Vše, co si o sobě můžeš jako normální smrtelník přát vědět.</value></data>
   <data name="Other_Item_People" xml:space="preserve"><value>Lidé</value></data>
-  <data name="Other_People_Desc" xml:space="preserve"><value>Seznam tvých kamarádům PS: máš tam i jejich narozeniny.</value></data>
+  <data name="Other_People_Desc" xml:space="preserve"><value>Seznam tvých kamarádů. PS: máš tam i jejich narozeniny.</value></data>
   <data name="Other_Trainers_Label" xml:space="preserve"><value>Trenéři a tréninkové prostory</value></data>
   <data name="Other_Trainers_Desc" xml:space="preserve"><value>Kdybys zapomněl, kam každý den chodíš.</value></data>
   <data name="Other_CohortGroups_Label" xml:space="preserve"><value>Tréninkové skupiny</value></data>
@@ -76,6 +76,8 @@
   <data name="Other_Languages_Label" xml:space="preserve"><value>Jazyky</value></data>
   <data name="Other_Languages_Desc" xml:space="preserve"><value>Kdyby ti jiný jazyk přišel víc pochuti.</value></data>
   <data name="Other_Button_Logout" xml:space="preserve"><value>Odhlásit se</value></data>
+  <data name="Other_Item_Events" xml:space="preserve"><value>Akce</value></data>
+  <data name="Other_Events_Desc" xml:space="preserve"><value>Akce našeho kouzelného klubíku.</value></data>
   <data name="Notifications_ChannelName" xml:space="preserve"><value>Aktuality</value></data>
   <data name="Notifications_ChannelDescription" xml:space="preserve"><value>Notifikace o nových aktualitách</value></data>
   <data name="Error_Loading_Title" xml:space="preserve"><value>Chyba načtení</value></data>
@@ -134,6 +136,9 @@
   <data name="Notice_Updated_Prefix" xml:space="preserve"><value>Aktualizováno: </value></data>
   <data name="Notice_Author_Prefix" xml:space="preserve"><value>Autor: </value></data>
   <data name="EventPage_Title" xml:space="preserve"><value>Událost</value></data>
+  <data name="Events_Title" xml:space="preserve"><value>Akce</value></data>
+  <data name="Planned" xml:space="preserve"><value>Plánované</value></data>
+  <data name="Occurred" xml:space="preserve"><value>Proběhlé</value></data>
   <data name="Event_Info_Label" xml:space="preserve"><value>Informace</value></data>
   <data name="Registration_Open" xml:space="preserve"><value>Registrace otevřená</value></data>
   <data name="Registration_Button_Text" xml:space="preserve"><value>Zapsat se</value></data>

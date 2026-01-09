@@ -123,4 +123,16 @@ public partial class OtherPage : ContentPage
             await DisplayAlertAsync(LocalizationService.Get("Error_Navigation_Title"), ex.Message, LocalizationService.Get("Button_OK"));
         }
     }
+
+    private async void OnEventsClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            await Shell.Current.GoToAsync(nameof(EventsPage));
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync(LocalizationService.Get("Error_Navigation_Title"), ex.Message, LocalizationService.Get("Button_OK"));
+        }
+    }
 }

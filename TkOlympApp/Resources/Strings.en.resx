@@ -76,6 +76,8 @@
   <data name="Other_Languages_Label" xml:space="preserve"><value>Languages</value></data>
   <data name="Other_Languages_Desc" xml:space="preserve"><value>If another language would taste better to you.</value></data>
   <data name="Other_Button_Logout" xml:space="preserve"><value>Log out</value></data>
+  <data name="Other_Item_Events" xml:space="preserve"><value>Events</value></data>
+  <data name="Other_Events_Desc" xml:space="preserve"><value>Events of our magic club.</value></data>
   <data name="Notifications_ChannelName" xml:space="preserve"><value>News</value></data>
   <data name="Notifications_ChannelDescription" xml:space="preserve"><value>Notifications about new posts</value></data>
   <data name="Error_Loading_Title" xml:space="preserve"><value>Loading error</value></data>
@@ -134,6 +136,9 @@
   <data name="Notice_Updated_Prefix" xml:space="preserve"><value>Updated: </value></data>
   <data name="Notice_Author_Prefix" xml:space="preserve"><value>Author: </value></data>
   <data name="EventPage_Title" xml:space="preserve"><value>Event</value></data>
+  <data name="Events_Title" xml:space="preserve"><value>Events</value></data>
+  <data name="Planned" xml:space="preserve"><value>Planned</value></data>
+  <data name="Occurred" xml:space="preserve"><value>Occurred</value></data>
   <data name="Event_Info_Label" xml:space="preserve"><value>Info</value></data>
   <data name="Registration_Open" xml:space="preserve"><value>Registration open</value></data>
   <data name="Registration_Button_Text" xml:space="preserve"><value>Sign up</value></data>

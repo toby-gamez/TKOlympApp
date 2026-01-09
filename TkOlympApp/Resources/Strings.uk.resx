@@ -76,6 +76,8 @@
   <data name="Other_Languages_Label" xml:space="preserve"><value>Мови</value></data>
   <data name="Other_Languages_Desc" xml:space="preserve"><value>Якщо вам більше до смаку інша мова.</value></data>
   <data name="Other_Button_Logout" xml:space="preserve"><value>Вийти</value></data>
+  <data name="Other_Item_Events" xml:space="preserve"><value>Події</value></data>
+  <data name="Other_Events_Desc" xml:space="preserve"><value>Події нашого чарівного клубу.</value></data>
   <data name="Notifications_ChannelName" xml:space="preserve"><value>Новини</value></data>
   <data name="Notifications_ChannelDescription" xml:space="preserve"><value>Сповіщення про нові пости</value></data>
   <data name="Error_Loading_Title" xml:space="preserve"><value>Помилка завантаження</value></data>
@@ -266,4 +268,7 @@
   <data name="Person_ActiveCouples_Label" xml:space="preserve"><value>Активні пари</value></data>
   <data name="NotFound_Person" xml:space="preserve"><value>Особа не знайдена.</value></data>
   <data name="AboutApp_Description" xml:space="preserve"><value>Опис додатку</value></data>
+  <data name="Events_Title" xml:space="preserve"><value>Події</value></data>
+  <data name="Planned" xml:space="preserve"><value>Заплановано</value></data>
+  <data name="Occurred" xml:space="preserve"><value>Відбулися</value></data>
 </root>

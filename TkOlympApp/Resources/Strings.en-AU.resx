@@ -77,6 +77,8 @@
     <data name="Other_Languages_Label" xml:space="preserve"><value>Switch Tongue</value></data>
     <data name="Other_Languages_Desc" xml:space="preserve"><value>If u wanna speak enchantment table language.</value></data>
     <data name="Other_Button_Logout" xml:space="preserve"><value>Rage Quit</value></data>
+    <data name="Other_Item_Events" xml:space="preserve"><value>Skibidi days</value></data>
+    <data name="Other_Events_Desc" xml:space="preserve"><value>Events of our magic club.</value></data>
     <data name="Notifications_ChannelName" xml:space="preserve"><value>Pings</value></data>
     <data name="Notifications_ChannelDescription" xml:space="preserve"><value>Spam about new tea</value></data>
     <data name="Error_Loading_Title" xml:space="preserve"><value>Bruh Moment</value></data>
@@ -266,4 +268,7 @@
     <data name="Person_ActiveCouples_Label" xml:space="preserve"><value>Active Duos</value></data>
     <data name="NotFound_Person" xml:space="preserve"><value>Person ghosted us.</value></data>
     <data name="AboutApp_Description" xml:space="preserve"><value>App Lore</value></data>
+    <data name="Events_Title" xml:space="preserve"><value>Skibidi days</value></data>
+    <data name="Planned" xml:space="preserve"><value>Soon fr fr</value></data>
+    <data name="Occurred" xml:space="preserve"><value>Canon event</value></data>
 </root>
