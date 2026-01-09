@@ -1,4 +1,5 @@
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.ApplicationModel;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -45,7 +46,7 @@ public partial class FirstRunPage : ContentPage
         }
         catch (Exception x)
         {
-            DisplayAlert("Chyba", $"Při inicializaci stránky došlo k chybě: {x.Message}", "OK");
+            MainThread.BeginInvokeOnMainThread(() => { _ = Shell.Current.DisplayAlertAsync("Chyba", $"Při inicializaci stránky došlo k chybě: {x.Message}", "OK"); });
         }
         
     }
@@ -85,7 +86,7 @@ public partial class FirstRunPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Chyba", $"Při ukládání nastavení došlo k chybě: {ex.Message}", "OK");
+            await DisplayAlertAsync("Chyba", $"Při ukládání nastavení došlo k chybě: {ex.Message}", "OK");
             return;
         }
 
@@ -96,7 +97,7 @@ public partial class FirstRunPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Chyba", $"Navigace selhala: {ex.Message}", "OK");
+            await DisplayAlertAsync("Chyba", $"Navigace selhala: {ex.Message}", "OK");
         }
     }
 }

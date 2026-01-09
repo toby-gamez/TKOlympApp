@@ -20,74 +20,74 @@ public partial class ChangePasswordPage : ContentPage
         // length feedback
             if (newText.Length >= 8)
             {
-                LengthLabel.Text = string.Format(LocalizationService.Get("ChangePassword_Length_OK_Format") ?? "Délka: {0}/8 (OK)", newText.Length);
-            NewPassBorder.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current.Resources["SuccessBrush"];
-            NewPassBorder.StrokeThickness = 2;
+                LengthLabel!.Text = string.Format(LocalizationService.Get("ChangePassword_Length_OK_Format") ?? "Délka: {0}/8 (OK)", newText.Length);
+            NewPassBorder!.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current!.Resources["SuccessBrush"];
+            NewPassBorder!.StrokeThickness = 2;
         }
         else
         {
-                LengthLabel.Text = string.Format(LocalizationService.Get("ChangePassword_Length_Format") ?? "Délka: {0}/8", newText.Length);
-            NewPassBorder.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current.Resources["Gray300Brush"];
-            NewPassBorder.StrokeThickness = 1;
+                LengthLabel!.Text = string.Format(LocalizationService.Get("ChangePassword_Length_Format") ?? "Délka: {0}/8", newText.Length);
+            NewPassBorder!.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current!.Resources["Gray300Brush"];
+            NewPassBorder!.StrokeThickness = 1;
         }
 
         // match feedback (use confirm field)
-        var confirm = ConfirmPassEntry.Text ?? string.Empty;
+        var confirm = ConfirmPassEntry!.Text ?? string.Empty;
         if (!string.IsNullOrEmpty(confirm))
         {
             if (newText == confirm)
             {
-                    MatchLabel.Text = LocalizationService.Get("ChangePassword_Match_OK") ?? "Hesla se shodují";
-                ConfirmPassBorder.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current.Resources["SuccessBrush"];
-                ConfirmPassBorder.StrokeThickness = 2;
+                    MatchLabel!.Text = LocalizationService.Get("ChangePassword_Match_OK") ?? "Hesla se shodují";
+                ConfirmPassBorder!.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current!.Resources["SuccessBrush"];
+                ConfirmPassBorder!.StrokeThickness = 2;
                 // also ensure new-pass border shows success when both conditions met
                 if (newText.Length >= 8)
                 {
-                    NewPassBorder.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current.Resources["SuccessBrush"];
-                    NewPassBorder.StrokeThickness = 2;
+                    NewPassBorder!.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current!.Resources["SuccessBrush"];
+                    NewPassBorder!.StrokeThickness = 2;
                 }
             }
             else
             {
-                    MatchLabel.Text = LocalizationService.Get("ChangePassword_Match_MISMATCH") ?? "Hesla se neshodují";
-                ConfirmPassBorder.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current.Resources["DangerBrush"];
-                ConfirmPassBorder.StrokeThickness = 2;
+                    MatchLabel!.Text = LocalizationService.Get("ChangePassword_Match_MISMATCH") ?? "Hesla se neshodují";
+                ConfirmPassBorder!.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current!.Resources["DangerBrush"];
+                ConfirmPassBorder!.StrokeThickness = 2;
             }
         }
         else
         {
-                MatchLabel.Text = LocalizationService.Get("ChangePassword_Match_None") ?? "Hesla: -";
-            ConfirmPassBorder.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current.Resources["Gray300Brush"];
+                MatchLabel!.Text = LocalizationService.Get("ChangePassword_Match_None") ?? "Hesla: -";
+            ConfirmPassBorder!.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current!.Resources["Gray300Brush"];
         }
     }
 
     private void OnConfirmPassTextChanged(object? sender, TextChangedEventArgs e)
     {
         var confirm = e.NewTextValue ?? string.Empty;
-        var newPass = NewPassEntry.Text ?? string.Empty;
+        var newPass = NewPassEntry!.Text ?? string.Empty;
 
         // match feedback
         if (string.IsNullOrEmpty(confirm))
         {
-                MatchLabel.Text = LocalizationService.Get("ChangePassword_Match_None") ?? "Hesla: -";
-            ConfirmPassBorder.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current.Resources["Gray300Brush"];
-            ConfirmPassBorder.StrokeThickness = 1;
+                MatchLabel!.Text = LocalizationService.Get("ChangePassword_Match_None") ?? "Hesla: -";
+            ConfirmPassBorder!.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current!.Resources["Gray300Brush"];
+            ConfirmPassBorder!.StrokeThickness = 1;
         }
         else if (confirm == newPass)
         {
-                MatchLabel.Text = LocalizationService.Get("ChangePassword_Match_OK") ?? "Hesla se shodují";
-            ConfirmPassBorder.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current.Resources["SuccessBrush"];
-            ConfirmPassBorder.StrokeThickness = 2;
+                MatchLabel!.Text = LocalizationService.Get("ChangePassword_Match_OK") ?? "Hesla se shodují";
+            ConfirmPassBorder!.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current!.Resources["SuccessBrush"];
+            ConfirmPassBorder!.StrokeThickness = 2;
             if ((NewPassEntry.Text ?? string.Empty).Length >= 8)
             {
-                NewPassBorder.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current.Resources["SuccessBrush"];
-                NewPassBorder.StrokeThickness = 2;
+                NewPassBorder!.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current!.Resources["SuccessBrush"];
+                    NewPassBorder.StrokeThickness = 2;
             }
         }
         else
         {
                 MatchLabel.Text = LocalizationService.Get("ChangePassword_Match_MISMATCH") ?? "Hesla se neshodují";
-            ConfirmPassBorder.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current.Resources["DangerBrush"];
+            ConfirmPassBorder!.Stroke = (Microsoft.Maui.Controls.Brush)Application.Current!.Resources["DangerBrush"];
             ConfirmPassBorder.StrokeThickness = 2;
         }
     }
@@ -178,7 +178,7 @@ public partial class ChangePasswordPage : ContentPage
             }
             catch
             {
-                    try { await Application.Current.MainPage.DisplayAlert(LocalizationService.Get("ChangePassword_Success_Title") ?? "Hotovo", LocalizationService.Get("ChangePassword_Success_LoggedOut_Message") ?? "Heslo bylo úspěšně změněno. Proběhlo automatické odhlášení.", LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+                    try { await Shell.Current.DisplayAlertAsync(LocalizationService.Get("ChangePassword_Success_Title") ?? "Hotovo", LocalizationService.Get("ChangePassword_Success_LoggedOut_Message") ?? "Heslo bylo úspěšně změněno. Proběhlo automatické odhlášení.", LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
             }
         }
         catch (Exception ex)

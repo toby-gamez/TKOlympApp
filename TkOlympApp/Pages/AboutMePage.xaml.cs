@@ -195,7 +195,7 @@ public partial class AboutMePage : ContentPage
             var title = LocalizationService.Get("Error_Title") ?? "Chyba";
             var msg = LocalizationService.Get("Error_OperationFailed_Message") ?? "Operace selhala.";
             var ok = LocalizationService.Get("Button_OK") ?? "OK";
-            try { await DisplayAlert(title, msg, ok); } catch { }
+            try { await DisplayAlertAsync(title, msg, ok); } catch { }
             try { await Shell.Current.GoToAsync(nameof(LoginPage)); } catch { /* ignore */ }
         }
     }
@@ -211,7 +211,7 @@ public partial class AboutMePage : ContentPage
             var title = LocalizationService.Get("Error_Title") ?? "Chyba";
             var msg = LocalizationService.Get("Error_OperationFailed_Message") ?? ex.Message ?? "Operace selhala.";
             var ok = LocalizationService.Get("Button_OK") ?? "OK";
-            try { await DisplayAlert(title, msg, ok); } catch { }
+            try { await DisplayAlertAsync(title, msg, ok); } catch { }
         }
     }
 
@@ -227,7 +227,7 @@ public partial class AboutMePage : ContentPage
             var title = LocalizationService.Get("Error_Title") ?? "Chyba";
             var msg = LocalizationService.Get("Error_OperationFailed_Message") ?? ex.Message ?? "Operace selhala.";
             var ok = LocalizationService.Get("Button_OK") ?? "OK";
-            try { await DisplayAlert(title, msg, ok); } catch { }
+            try { await DisplayAlertAsync(title, msg, ok); } catch { }
         }
     }
 

@@ -11,10 +11,10 @@ public partial class LeaderboardPage : ContentPage
 
     public LeaderboardPage()
     {
-        try
-        {
-            InitializeComponent();
-            ScoreboardCollection.ItemsSource = _rows;
+            try
+            {
+                InitializeComponent();
+                ScoreboardCollection!.ItemsSource = _rows;
         }
         catch (Exception ex)
         {
@@ -50,10 +50,10 @@ public partial class LeaderboardPage : ContentPage
 
     private async Task LoadAsync()
     {
-        try
-        {
-            LoadingIndicator.IsVisible = true;
-            LoadingIndicator.IsRunning = true;
+            try
+            {
+                LoadingIndicator!.IsVisible = true;
+                LoadingIndicator.IsRunning = true;
 
             // Hide the list while loading so the previous content isn't visible behind the loader
             try { if (ScoreboardCollection != null) ScoreboardCollection.IsVisible = false; } catch { }
@@ -153,7 +153,7 @@ public partial class LeaderboardPage : ContentPage
                         rows.Add(row);
                     }
 
-                    ScoreboardCollection.ItemsSource = rows;
+                    ScoreboardCollection!.ItemsSource = rows;
                     // Show the list now that new items are assigned
                     try { if (ScoreboardCollection != null) ScoreboardCollection.IsVisible = true; } catch { }
                 }
@@ -208,14 +208,14 @@ public partial class LeaderboardPage : ContentPage
             }
         finally
         {
-            try
-            {
-                LoadingIndicator.IsRunning = false;
-                LoadingIndicator.IsVisible = false;
+                try
+                {
+                    LoadingIndicator!.IsRunning = false;
+                    LoadingIndicator.IsVisible = false;
                 try
                 {
                     if (LeaderboardRefresh != null)
-                        LeaderboardRefresh.IsRefreshing = false;
+                        LeaderboardRefresh!.IsRefreshing = false;
                 }
                 catch
                 {

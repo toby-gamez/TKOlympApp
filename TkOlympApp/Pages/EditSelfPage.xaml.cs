@@ -296,7 +296,7 @@ public partial class EditSelfPage : ContentPage
             }
 
             try { await Shell.Current.Navigation.PopModalAsync(); } catch { }
-            try { await Application.Current.MainPage.DisplayAlert(LocalizationService.Get("Save_Success_Title") ?? "Hotovo", LocalizationService.Get("Save_Success_Message") ?? "Údaje byly uloženy.", LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+            try { await Shell.Current.DisplayAlertAsync(LocalizationService.Get("Save_Success_Title") ?? "Hotovo", LocalizationService.Get("Save_Success_Message") ?? "Údaje byly uloženy.", LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
         }
         catch (Exception ex)
         {

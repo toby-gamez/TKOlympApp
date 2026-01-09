@@ -55,7 +55,7 @@ public partial class PlainTextPage : ContentPage
         }
         catch (Exception ex)
         {
-            try { await Shell.Current.DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+            try { await Shell.Current.DisplayAlertAsync(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
         }
     }
 

@@ -31,7 +31,6 @@
             <HorizontalStackLayout Grid.Column="0" Padding="0" Spacing="8" VerticalOptions="Center">
                 <Button x:Name="TabMyButton" Text="{svc:Translate Tab_My}" Clicked="OnTabMineClicked" />
                 <Button x:Name="TabAllButton" Text="{svc:Translate Tab_All}" Clicked="OnTabAllClicked" />
-                <Button x:Name="ToggleRawButton" Text="Raw" Clicked="OnToggleRawClicked" />
                 <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" HorizontalOptions="Center" Margin="0,0,0,0" />
             </HorizontalStackLayout>
 
@@ -292,7 +291,7 @@
                         </VerticalStackLayout>
                     </ScrollView>
                 <Label x:Name="EmptyLabel" IsVisible="False" VerticalOptions="CenterAndExpand" HorizontalOptions="Center" />
-                <Label x:Name="RawResponseLabel" IsVisible="False" VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand" LineBreakMode="WordWrap" />
+                
             </Grid>
         </RefreshView>
     </Grid>
