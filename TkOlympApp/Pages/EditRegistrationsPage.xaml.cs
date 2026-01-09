@@ -367,9 +367,9 @@ public partial class EditRegistrationsPage : ContentPage
             }
 
             var options = new System.Collections.Generic.List<TrainerOption>();
-            foreach (var t in ev.EventTrainersList.OrderBy(x => x?.Name))
+            foreach (var t in ev.EventTrainersList.OrderBy(x => (x?.Name ?? string.Empty).Trim()))
             {
-                options.Add(new TrainerOption(t?.Name ?? string.Empty, 0, t?.Id));
+                options.Add(new TrainerOption((t?.Name ?? string.Empty).Trim(), 0, t?.Id));
             }
 
             TrainerSelectionCollection.ItemsSource = options;

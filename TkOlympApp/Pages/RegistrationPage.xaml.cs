@@ -444,9 +444,9 @@ public partial class RegistrationPage : ContentPage
             var options = new List<TrainerOption>();
             if (ev.EventTrainersList != null)
             {
-                foreach (var t in ev.EventTrainersList.OrderBy(x => x?.Name))
+                foreach (var t in ev.EventTrainersList.OrderBy(x => (x?.Name ?? string.Empty).Trim()))
                 {
-                    var name = t?.Name ?? string.Empty;
+                    var name = (t?.Name ?? string.Empty).Trim();
                     options.Add(new TrainerOption(name, name, 0, t?.Id));
                 }
             }

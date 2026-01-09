@@ -20,13 +20,12 @@
                     <Label Text="{svc:Translate Registration_Note}" FontAttributes="Italic" />
                 </VerticalStackLayout>
             </Border>
+            <Label x:Name="TrainerReservationNotAllowedLabel" Text="{svc:Translate Registration_TrainerReservationNotAllowed}" FontAttributes="Bold" IsVisible="False" />
 
             <Label Text="{svc:Translate Registration_MyDetails_Label}" FontAttributes="Bold" />
             <Label x:Name="CurrentUserLabel" FontSize="14" Style="{StaticResource MutedLabelStyle}" />
 
             <!-- Debug IDs -->
-
-            <Label x:Name="TrainerReservationNotAllowedLabel" Text="{svc:Translate Registration_TrainerReservationNotAllowed}" FontAttributes="Bold" TextColor="#b71c1c" IsVisible="False" />
 
             <Label x:Name="TrainerCountLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}" IsVisible="False" />
 

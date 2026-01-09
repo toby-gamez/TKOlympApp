@@ -14,6 +14,7 @@
             <converters:CohortItemHasColorConverter x:Key="CohortItemHasColorConverter" />
             <converters:CohortHasColorConverter x:Key="CohortHasColorConverter" />
             <converters:EventNameConverter x:Key="EventNameConverter" />
+            <converters:LocationOrTrainersConverter x:Key="LocationOrTrainersConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -99,7 +100,7 @@
                                                             </BindableLayout.ItemTemplate>
                                                         </HorizontalStackLayout>
                                                     </Grid>
-                                                    <Label Text="{Binding Event.LocationText}" />
+                                                    <Label Text="{Binding Event, Converter={StaticResource LocationOrTrainersConverter}}" />
                                                     <Label FontSize="12" Style="{StaticResource MutedLabelStyle}">
                                                         <Label.FormattedText>
                                                             <FormattedString>

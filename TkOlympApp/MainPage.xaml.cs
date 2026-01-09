@@ -631,7 +631,7 @@ public partial class MainPage : ContentPage
             // group by event name + trainer name (same day already)
             var groups = events.GroupBy(e => new {
                 Name = e.Event?.Name ?? string.Empty,
-                Trainer = e.Event?.EventTrainersList?.FirstOrDefault()?.Name ?? string.Empty
+                Trainer = e.Event?.EventTrainersList?.FirstOrDefault()?.Name?.Trim() ?? string.Empty
             })
                 .OrderBy(g => g.Min(x => x.Since ?? x.UpdatedAt));
 
