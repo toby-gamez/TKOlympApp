@@ -42,7 +42,8 @@ public partial class MainPage : ContentPage
             return;
         }
 
-        EventsCollection.ItemsSource = _weeks;
+        // Bind the generated weeks collection to the static stack layout
+        try { BindableLayout.SetItemsSource(EventsStack, _weeks); } catch { }
         try
         {
             SetTopTabVisuals(_onlyMine);
@@ -104,7 +105,7 @@ public partial class MainPage : ContentPage
         _isLoading = true;
         Loading?.IsVisible = true;
         Loading?.IsRunning = true;
-        EventsCollection?.IsVisible = false;
+            EventsScroll?.IsVisible = false;
         try
         {
             // use selected week range (Monday..Sunday)
@@ -328,7 +329,7 @@ public partial class MainPage : ContentPage
         {
             Loading?.IsRunning = false;
             Loading?.IsVisible = false;
-            EventsCollection?.IsVisible = true;
+            EventsScroll?.IsVisible = true;
             try
             {
                 if (EventsRefresh != null)
@@ -370,8 +371,8 @@ public partial class MainPage : ContentPage
                 var total = _weeks.Sum(w => w.Sum(d => d.TotalRows));
                 var showEmpty = !_isLoading && total == 0;
                 EmptyLabel.IsVisible = showEmpty;
-                if (EventsCollection != null)
-                    EventsCollection.IsVisible = !showEmpty;
+                if (EventsScroll != null)
+                    EventsScroll.IsVisible = !showEmpty;
             }
         }
         catch
@@ -596,7 +597,50 @@ public partial class MainPage : ContentPage
                     {
                         try
                         {
-                            EventsCollection?.ScrollTo(dg, wg, ScrollToPosition.Start, true);
+                            // Find the visual element for the day group inside the generated BindableLayout children
+                            Microsoft.Maui.Controls.VisualElement? FindWithContext(Microsoft.Maui.IView root, object ctx)
+                            {
+                                try
+                                {
+                                    if (root == null) return null;
+                                    if (root is Microsoft.Maui.Controls.VisualElement ve)
+                                    {
+                                        if (ve.BindingContext == ctx) return ve;
+                                        if (ve is Microsoft.Maui.Controls.Layout layout)
+                                        {
+                                            foreach (var child in layout.Children)
+                                            {
+                                                var found = FindWithContext(child, ctx);
+                                                if (found != null) return found;
+                                            }
+                                        }
+                                    }
+                                }
+                                catch { }
+                                return null;
+                            }
+
+                            Microsoft.Maui.Controls.VisualElement? target = null;
+                            if (EventsStack != null)
+                            {
+                                foreach (var weekChild in EventsStack.Children)
+                                {
+                                    try
+                                    {
+                                        if (weekChild is Microsoft.Maui.Controls.VisualElement v && v.BindingContext == wg)
+                                        {
+                                            target = FindWithContext(weekChild, dg);
+                                            if (target != null) break;
+                                        }
+                                    }
+                                    catch { }
+                                }
+                            }
+
+                            if (target != null && EventsScroll != null)
+                            {
+                                await EventsScroll.ScrollToAsync(target, ScrollToPosition.Start, true);
+                            }
                         }
                         catch { }
                         break;
