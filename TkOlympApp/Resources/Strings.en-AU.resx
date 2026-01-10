@@ -155,7 +155,7 @@
     <data name="Couple_Title" xml:space="preserve"><value>Duo</value></data>
     <data name="Couple_Id" xml:space="preserve"><value>Duo ID:</value></data>
     <data name="Couple_CreatedAt" xml:space="preserve"><value>Spawned at:</value></data>
-    <data name="Couple_Man" xml:space="preserve"><value>Cappuccino Assassino:</value></data>
+    <data name="Couple_Man" xml:space="preserve"><value>Cappuccino assassino:</value></data>
     <data name="Couple_Woman" xml:space="preserve"><value>Ballerina cappuccina:</value></data>
     <data name="Couple_FirstName" xml:space="preserve"><value>Tag:</value></data>
     <data name="Couple_LastName" xml:space="preserve"><value>Crew tag:</value></data>
@@ -182,7 +182,7 @@
         <data name="About_NationalId" xml:space="preserve"><value>Oficial barcode:</value></data>
         <data name="About_Yes" xml:space="preserve"><value>Yeah</value></data>
         <data name="About_No" xml:space="preserve"><value>Nah</value></data>
-        <data name="About_Gender_Male" xml:space="preserve"><value>Cappuccino Assassino</value></data>
+        <data name="About_Gender_Male" xml:space="preserve"><value>Cappuccino assassino</value></data>
         <data name="About_Gender_Female" xml:space="preserve"><value>Ballerina cappuccina</value></data>
         <data name="About_Gender_Other" xml:space="preserve"><value>Custom</value></data>
     <data name="Privacy_Title" xml:space="preserve"><value>Privacy Vibicy</value></data>
