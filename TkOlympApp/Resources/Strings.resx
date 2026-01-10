@@ -67,7 +67,7 @@
   <data name="Other_Item_Profile" xml:space="preserve"><value>Profil</value></data>
   <data name="Other_Profile_Desc" xml:space="preserve"><value>Vše, co si o sobě můžeš jako normální smrtelník přát vědět.</value></data>
   <data name="Other_Item_People" xml:space="preserve"><value>Lidé</value></data>
-  <data name="Other_People_Desc" xml:space="preserve"><value>Seznam tvých kamarádů. PS: máš tam i jejich narozeniny.</value></data>
+  <data name="Other_People_Desc" xml:space="preserve"><value>Seznam tvých kamarádů.y PS: máš tam i jejich narozeniny.</value></data>
   <data name="Other_Trainers_Label" xml:space="preserve"><value>Trenéři a tréninkové prostory</value></data>
   <data name="Other_Trainers_Desc" xml:space="preserve"><value>Kdybys zapomněl, kam každý den chodíš.</value></data>
   <data name="Other_CohortGroups_Label" xml:space="preserve"><value>Tréninkové skupiny</value></data>

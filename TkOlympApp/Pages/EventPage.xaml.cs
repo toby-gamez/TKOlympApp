@@ -259,7 +259,8 @@ public partial class EventPage : ContentPage
                 UpdatedAtLabel.Text = string.Empty;
                 UpdatedAtLabel.IsVisible = false;
             }
-            RegistrationOpenLabel.IsVisible = ev.IsRegistrationOpen;
+            var isRegistrationOpen = ev.IsRegistrationOpen;
+            RegistrationOpenLabel.IsVisible = isRegistrationOpen;
             var registered = ev.EventRegistrations?.TotalCount ?? 0;
             var capacity = ev.Capacity;
             PublicLabel.IsVisible = ev.IsPublic;
@@ -515,7 +516,7 @@ public partial class EventPage : ContentPage
                     }
                 }
 
-                RegistrationActionsRow.IsVisible = userRegistered;
+                RegistrationActionsRow.IsVisible = userRegistered && isRegistrationOpen;
 
                 // If the event already finished (end date older than today), hide all registration UI
                 try
@@ -545,8 +546,15 @@ public partial class EventPage : ContentPage
                     }
                     else
                     {
-                        // Ensure register button remains visible when event is not past
-                        RegisterButton.IsVisible = true;
+                        // Ensure register button remains visible only when event is not past AND registration is open
+                        RegisterButton.IsVisible = isRegistrationOpen;
+                        // Also hide registration action buttons when registration is closed
+                        if (!isRegistrationOpen)
+                        {
+                            RegistrationActionsRow.IsVisible = false;
+                            EditRegistrationButton.IsVisible = false;
+                            DeleteRegistrationButton.IsVisible = false;
+                        }
                     }
                 }
                 catch { }
