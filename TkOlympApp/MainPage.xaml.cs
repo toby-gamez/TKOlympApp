@@ -656,32 +656,49 @@ public partial class MainPage : ContentPage
             GroupedTrainers = new ObservableCollection<GroupedTrainer>();
             SingleEvents = new ObservableCollection<EventService.EventInstance>();
 
-            // group by event name + trainer name (same day already)
-            var groups = events.GroupBy(e => new {
-                Name = e.Event?.Name ?? string.Empty,
-                Trainer = e.Event?.EventTrainersList?.FirstOrDefault()?.Name?.Trim() ?? string.Empty
-            })
+            // Separate events into groupable (lesson with exactly one trainer) and single events
+            var groupableEvents = new List<EventService.EventInstance>();
+            var singleEventsList = new List<EventService.EventInstance>();
+
+            foreach (var evt in events)
+            {
+                var isLesson = string.Equals(evt.Event?.Type, "lesson", StringComparison.OrdinalIgnoreCase);
+                var trainerCount = evt.Event?.EventTrainersList?.Count ?? 0;
+                
+                if (isLesson && trainerCount == 1)
+                {
+                    groupableEvents.Add(evt);
+                }
+                else
+                {
+                    singleEventsList.Add(evt);
+                }
+            }
+
+            // Group groupable events by trainer name
+            var groups = groupableEvents.GroupBy(e => e.Event?.EventTrainersList?.FirstOrDefault()?.Name?.Trim() ?? string.Empty)
                 .OrderBy(g => g.Min(x => x.Since ?? x.UpdatedAt));
 
             foreach (var g in groups)
             {
-                var ordered = g.OrderBy(i => i.Since).ToList();
-                if (ordered.Count == 1)
+                var ordered = g.OrderBy(i => i.Since ?? i.UpdatedAt).ToList();
+                var trainerName = g.Key;
+                var trainerTitle = string.IsNullOrWhiteSpace(trainerName) ? LocalizationService.Get("Lessons") ?? "Lekce" : trainerName;
+                var gt = new GroupedTrainer(trainerTitle);
+                
+                for (int i = 0; i < ordered.Count; i++)
                 {
-                    SingleEvents.Add(ordered[0]);
+                    var inst = ordered[i];
+                    var firstRegistrant = i == 0 ? GroupedEventRow.ComputeFirstRegistrantPublic(inst) : string.Empty;
+                    gt.Rows.Add(new GroupedEventRow(inst, firstRegistrant));
                 }
-                else
-                {
-                    var trainerTitle = string.IsNullOrWhiteSpace(g.Key.Trainer) ? g.Key.Name : g.Key.Trainer;
-                    var gt = new GroupedTrainer(trainerTitle);
-                    for (int i = 0; i < ordered.Count; i++)
-                    {
-                        var inst = ordered[i];
-                        var firstRegistrant = i == 0 ? GroupedEventRow.ComputeFirstRegistrantPublic(inst) : string.Empty;
-                        gt.Rows.Add(new GroupedEventRow(inst, firstRegistrant));
-                    }
-                    GroupedTrainers.Add(gt);
-                }
+                GroupedTrainers.Add(gt);
+            }
+
+            // Add all single events
+            foreach (var evt in singleEventsList.OrderBy(e => e.Since ?? e.UpdatedAt))
+            {
+                SingleEvents.Add(evt);
             }
         }
 
