@@ -224,7 +224,6 @@
   <data name="Registration_Confirm_Message" xml:space="preserve"><value>Реєстрацію надіслано</value></data>
   <data name="Registration_Confirm_Title" xml:space="preserve"><value>Реєстрація</value></data>
   <data name="Registration_IdNumeric" xml:space="preserve"><value>ID пари має бути числовим.</value></data>
-  <data name="Registration_TrainerReservationNotAllowed" xml:space="preserve"><value>Резервування тренера заборонено</value></data>
   <data name="Label_EventId" xml:space="preserve"><value>ID події:</value></data>
   <data name="Label_PersonId" xml:space="preserve"><value>ID особи:</value></data>
   <data name="Label_CoupleId" xml:space="preserve"><value>ID пари:</value></data>

@@ -204,7 +204,6 @@
         <data name="Registration_Confirm_Message" xml:space="preserve"><value>You're in, bruv</value></data>
         <data name="Registration_Confirm_Title" xml:space="preserve"><value>Signed</value></data>
         <data name="Registration_IdNumeric" xml:space="preserve"><value>CoupleId gotta be numeric, chief.</value></data>
-        <data name="Registration_TrainerReservationNotAllowed" xml:space="preserve"><value>Trainer bookings are a no-go</value></data>
         <data name="Label_EventId" xml:space="preserve"><value>Event Tag:</value></data>
         <data name="Label_PersonId" xml:space="preserve"><value>Person Tag:</value></data>
         <data name="Label_CoupleId" xml:space="preserve"><value>Duo Tag:</value></data>

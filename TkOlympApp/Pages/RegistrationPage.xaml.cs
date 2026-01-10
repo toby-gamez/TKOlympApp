@@ -114,38 +114,9 @@ public partial class RegistrationPage : ContentPage
             }
             catch { }
 
-                    // Show trainer count
-                    var trainerCount = ev.EventTrainersList?.Count ?? 0;
-                    try
-                    {
-                        TrainerCountLabel.Text = $"Počet trenérů: {trainerCount}";
-                    }
-                    catch { }
-
-                    // Show event name (fallback handled below)
-                    try
-                    {
-                        var nameText = string.IsNullOrWhiteSpace(ev.Name) ? (LocalizationService.Get("Event_NoName") ?? "(bez názvu)") : ev.Name;
-                        EventNameDisplayLabel.Text = nameText;
-                    }
-                    catch { }
-
-                    // Logic: if the event has exactly one trainer, mark trainer reservations as not allowed
-                    // (event name no longer matters for this decision)
-                    try
-                    {
-                        if (trainerCount == 1)
-                        {
-                            TrainerReservationNotAllowedLabel.IsVisible = true;
-                            _trainerReservationNotAllowed = true;
-                        }
-                        else
-                        {
-                            TrainerReservationNotAllowedLabel.IsVisible = false;
-                            _trainerReservationNotAllowed = false;
-                        }
-                    }
-                    catch { }
+                    // Logic: trainer reservations are not allowed for events of type "lesson" or "group"
+                    _trainerReservationNotAllowed = string.Equals(ev.Type, "lesson", StringComparison.OrdinalIgnoreCase) ||
+                                                     string.Equals(ev.Type, "group", StringComparison.OrdinalIgnoreCase);
 
             // Load and show current user info and selection list
             await LoadMyCouplesAsync();

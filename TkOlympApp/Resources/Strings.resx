@@ -226,7 +226,6 @@
   <data name="Registration_Confirm_Message" xml:space="preserve"><value>Registrace odeslána</value></data>
   <data name="Registration_Confirm_Title" xml:space="preserve"><value>Registrace</value></data>
   <data name="Registration_IdNumeric" xml:space="preserve"><value>CoupleId musí být číselné.</value></data>
-  <data name="Registration_TrainerReservationNotAllowed" xml:space="preserve"><value>Není možná rezervace tréninků</value></data>
   <data name="Label_EventId" xml:space="preserve"><value>ID události:</value></data>
   <data name="Label_PersonId" xml:space="preserve"><value>ID osoby:</value></data>
   <data name="Label_CoupleId" xml:space="preserve"><value>ID páru:</value></data>

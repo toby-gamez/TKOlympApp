@@ -209,7 +209,6 @@
   <data name="Registration_Confirm_Message" xml:space="preserve"><value>Đã gửi đăng ký</value></data>
   <data name="Registration_Confirm_Title" xml:space="preserve"><value>Đăng ký</value></data>
   <data name="Registration_IdNumeric" xml:space="preserve"><value>CoupleId phải là số.</value></data>
-  <data name="Registration_TrainerReservationNotAllowed" xml:space="preserve"><value>Không cho phép đặt lịch với huấn luyện viên</value></data>
   <data name="Label_EventId" xml:space="preserve"><value>ID sự kiện:</value></data>
   <data name="Label_PersonId" xml:space="preserve"><value>ID người:</value></data>
   <data name="Label_CoupleId" xml:space="preserve"><value>ID cặp:</value></data>

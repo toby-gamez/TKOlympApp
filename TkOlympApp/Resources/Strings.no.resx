@@ -238,7 +238,6 @@
     <data name="Registration_Confirm_Message" xml:space="preserve"><value>Registrering sendt</value></data>
     <data name="Registration_Confirm_Title" xml:space="preserve"><value>Registrering</value></data>
     <data name="Registration_IdNumeric" xml:space="preserve"><value>CoupleId må være numerisk.</value></data>
-    <data name="Registration_TrainerReservationNotAllowed" xml:space="preserve"><value>Trenerreservasjon ikke tillatt</value></data>
     <data name="Label_EventId" xml:space="preserve"><value>Arrangement-ID:</value></data>
     <data name="Label_PersonId" xml:space="preserve"><value>Person-ID:</value></data>
     <data name="Label_CoupleId" xml:space="preserve"><value>Par-ID:</value></data>

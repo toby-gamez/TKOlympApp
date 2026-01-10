@@ -201,7 +201,6 @@
       <data name="Registration_Confirm_Message" xml:space="preserve"><value>Prijava poslana</value></data>
       <data name="Registration_Confirm_Title" xml:space="preserve"><value>Prijava</value></data>
       <data name="Registration_IdNumeric" xml:space="preserve"><value>ID para mora biti številski.</value></data>
-      <data name="Registration_TrainerReservationNotAllowed" xml:space="preserve"><value>Rezervacija trenerjev ni dovoljena</value></data>
       <data name="Label_EventId" xml:space="preserve"><value>ID dogodka:</value></data>
       <data name="Label_PersonId" xml:space="preserve"><value>ID osebe:</value></data>
       <data name="Label_CoupleId" xml:space="preserve"><value>ID para:</value></data>
