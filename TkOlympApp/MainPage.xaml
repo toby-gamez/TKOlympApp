@@ -144,7 +144,13 @@
                                                                             <Grid.GestureRecognizers>
                                                                                 <TapGestureRecognizer Tapped="OnGroupedRowTapped" />
                                                                             </Grid.GestureRecognizers>
-                                                                            <Label Text="{Binding TimeRange}" Grid.Column="0" />
+                                                                            <Label Text="{Binding TimeRange}" Grid.Column="0">
+                                                                                <Label.Triggers>
+                                                                                    <DataTrigger TargetType="Label" Binding="{Binding IsCancelled}" Value="True">
+                                                                                        <Setter Property="TextDecorations" Value="Strikethrough" />
+                                                                                    </DataTrigger>
+                                                                                </Label.Triggers>
+                                                                            </Label>
                                                                             <Label Text="{Binding FirstRegistrant}" Grid.Column="1">
                                                                                 <Label.Triggers>
                                                                                     <DataTrigger TargetType="Label" Binding="{Binding IsFree}" Value="True">
@@ -154,9 +160,18 @@
                                                                                     <DataTrigger TargetType="Label" Binding="{Binding IsHighlighted}" Value="True">
                                                                                         <Setter Property="FontAttributes" Value="Bold" />
                                                                                     </DataTrigger>
+                                                                                    <DataTrigger TargetType="Label" Binding="{Binding IsCancelled}" Value="True">
+                                                                                        <Setter Property="TextDecorations" Value="Strikethrough" />
+                                                                                    </DataTrigger>
                                                                                 </Label.Triggers>
                                                                             </Label>
-                                                                            <Label Text="{Binding DurationText}" Grid.Column="2" HorizontalOptions="End" />
+                                                                            <Label Text="{Binding DurationText}" Grid.Column="2" HorizontalOptions="End">
+                                                                                <Label.Triggers>
+                                                                                    <DataTrigger TargetType="Label" Binding="{Binding IsCancelled}" Value="True">
+                                                                                        <Setter Property="TextDecorations" Value="Strikethrough" />
+                                                                                    </DataTrigger>
+                                                                                </Label.Triggers>
+                                                                            </Label>
                                                                         </Grid>
                                                                     </DataTemplate>
                                                                 </CollectionView.ItemTemplate>
@@ -272,7 +287,13 @@
                                                                                             <Grid.GestureRecognizers>
                                                                                                 <TapGestureRecognizer Tapped="OnGroupedRowTapped" />
                                                                                             </Grid.GestureRecognizers>
-                                                                                            <Label Text="{Binding TimeRange}" Grid.Column="0" />
+                                                                                            <Label Text="{Binding TimeRange}" Grid.Column="0">
+                                                                                                <Label.Triggers>
+                                                                                                    <DataTrigger TargetType="Label" Binding="{Binding IsCancelled}" Value="True">
+                                                                                                        <Setter Property="TextDecorations" Value="Strikethrough" />
+                                                                                                    </DataTrigger>
+                                                                                                </Label.Triggers>
+                                                                                            </Label>
                                                                                             <Label Text="{Binding FirstRegistrant}" Grid.Column="1">
                                                                                                 <Label.Triggers>
                                                                                                     <DataTrigger TargetType="Label" Binding="{Binding IsFree}" Value="True">
@@ -282,9 +303,18 @@
                                                                                                     <DataTrigger TargetType="Label" Binding="{Binding IsHighlighted}" Value="True">
                                                                                                         <Setter Property="FontAttributes" Value="Bold" />
                                                                                                     </DataTrigger>
+                                                                                                    <DataTrigger TargetType="Label" Binding="{Binding IsCancelled}" Value="True">
+                                                                                                        <Setter Property="TextDecorations" Value="Strikethrough" />
+                                                                                                    </DataTrigger>
                                                                                                 </Label.Triggers>
                                                                                             </Label>
-                                                                                            <Label Text="{Binding DurationText}" Grid.Column="2" HorizontalOptions="End" />
+                                                                                            <Label Text="{Binding DurationText}" Grid.Column="2" HorizontalOptions="End">
+                                                                                                <Label.Triggers>
+                                                                                                    <DataTrigger TargetType="Label" Binding="{Binding IsCancelled}" Value="True">
+                                                                                                        <Setter Property="TextDecorations" Value="Strikethrough" />
+                                                                                                    </DataTrigger>
+                                                                                                </Label.Triggers>
+                                                                                            </Label>
                                                                                         </Grid>
                                                                                     </DataTemplate>
                                                                                 </BindableLayout.ItemTemplate>

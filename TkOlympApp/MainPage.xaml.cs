@@ -723,6 +723,7 @@ public partial class MainPage : ContentPage
     {
         public EventService.EventInstance Instance { get; }
         public string TimeRange { get; }
+        public bool IsCancelled => Instance?.IsCancelled ?? false;
         private string _firstRegistrant;
         private bool _isLoaded;
         public bool IsLoaded
