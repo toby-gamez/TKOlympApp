@@ -68,6 +68,7 @@ public partial class EventPage : ContentPage
         public bool HasSecondary => !string.IsNullOrWhiteSpace(Secondary);
         public string? CoupleId { get; set; }
         public string? PersonId { get; set; }
+        public bool IsCurrentUserOrCouple { get; set; }
     }
 
     private readonly ObservableCollection<RegistrationRow> _registrations = new();
@@ -329,6 +330,21 @@ public partial class EventPage : ContentPage
                 }
             }
             catch { }
+
+            // Fetch current user and their couples for highlighting
+            var myFull = string.Empty;
+            var myCouples = new List<UserService.CoupleInfo>();
+            try
+            {
+                await UserService.InitializeAsync();
+                var me = await UserService.GetCurrentUserAsync();
+                var myFirst = me?.UJmeno?.Trim() ?? string.Empty;
+                var myLast = me?.UPrijmeni?.Trim() ?? string.Empty;
+                myFull = string.IsNullOrWhiteSpace(myFirst) ? myLast : string.IsNullOrWhiteSpace(myLast) ? myFirst : (myFirst + " " + myLast).Trim();
+                myCouples = await UserService.GetActiveCouplesFromUsersAsync();
+            }
+            catch { }
+
             _registrations.Clear();
             var seen = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var n in ev.EventRegistrations?.Nodes ?? new List<EventService.EventRegistrationNode>())
@@ -411,13 +427,48 @@ public partial class EventPage : ContentPage
                 if (!seen.Contains(key))
                 {
                     seen.Add(key);
+                    
+                    // Check if this registration belongs to current user or their couples
+                    bool isCurrentUserOrCouple = false;
+                    
+                    // Check person-based registration
+                    var pFirst = n.Person?.FirstName?.Trim() ?? string.Empty;
+                    var pLast = n.Person?.LastName?.Trim() ?? string.Empty;
+                    var pFull = string.IsNullOrWhiteSpace(pFirst) ? pLast : string.IsNullOrWhiteSpace(pLast) ? pFirst : (pFirst + " " + pLast).Trim();
+                    if (!string.IsNullOrWhiteSpace(myFull) && !string.IsNullOrWhiteSpace(pFull) && string.Equals(myFull, pFull, StringComparison.OrdinalIgnoreCase))
+                    {
+                        isCurrentUserOrCouple = true;
+                    }
+                    
+                    // Check couple-based registration
+                    if (!isCurrentUserOrCouple && (!string.IsNullOrWhiteSpace(man) || !string.IsNullOrWhiteSpace(woman)))
+                    {
+                        foreach (var c in myCouples)
+                        {
+                            try
+                            {
+                                var myMan = c.ManName?.Trim() ?? string.Empty;
+                                var myWoman = c.WomanName?.Trim() ?? string.Empty;
+                                bool manMatch = !string.IsNullOrWhiteSpace(man) && !string.IsNullOrWhiteSpace(myMan) && string.Equals(man, myMan, StringComparison.OrdinalIgnoreCase);
+                                bool womanMatch = !string.IsNullOrWhiteSpace(woman) && !string.IsNullOrWhiteSpace(myWoman) && string.Equals(woman, myWoman, StringComparison.OrdinalIgnoreCase);
+                                if ((manMatch && womanMatch) || (manMatch && string.IsNullOrWhiteSpace(myWoman)) || (womanMatch && string.IsNullOrWhiteSpace(myMan)))
+                                {
+                                    isCurrentUserOrCouple = true;
+                                    break;
+                                }
+                            }
+                            catch { }
+                        }
+                    }
+                    
                     _registrations.Add(new RegistrationRow
                     {
                         Text = text ?? string.Empty,
                         Secondary = secondary,
                         Trainers = trainerParts,
                         CoupleId = n.Couple?.Id,
-                        PersonId = n.Person?.Id
+                        PersonId = n.Person?.Id,
+                        IsCurrentUserOrCouple = isCurrentUserOrCouple
                     });
                 }
             }
@@ -472,15 +523,6 @@ public partial class EventPage : ContentPage
             // Determine whether current user (or one of their active couples) is registered for this event
             try
             {
-                await UserService.InitializeAsync();
-                var me = await UserService.GetCurrentUserAsync();
-                var myFirst = me?.UJmeno?.Trim() ?? string.Empty;
-                var myLast = me?.UPrijmeni?.Trim() ?? string.Empty;
-                var myFull = string.IsNullOrWhiteSpace(myFirst) ? myLast : string.IsNullOrWhiteSpace(myLast) ? myFirst : (myFirst + " " + myLast).Trim();
-
-                var myCouples = new List<UserService.CoupleInfo>();
-                try { myCouples = await UserService.GetActiveCouplesFromUsersAsync(); } catch { }
-
                 bool userRegistered = false;
 
                 foreach (var node in ev.EventRegistrations?.Nodes ?? new List<EventService.EventRegistrationNode>())

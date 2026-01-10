@@ -130,7 +130,13 @@
                         <CollectionView.ItemTemplate>
                             <DataTemplate>
                                 <VerticalStackLayout Padding="8" Spacing="4">
-                                    <Label Text="{Binding Text}" />
+                                    <Label Text="{Binding Text}">
+                                        <Label.Triggers>
+                                            <DataTrigger TargetType="Label" Binding="{Binding IsCurrentUserOrCouple}" Value="True">
+                                                <Setter Property="FontAttributes" Value="Bold" />
+                                            </DataTrigger>
+                                        </Label.Triggers>
+                                    </Label>
                                     <Label Text="{Binding Secondary}" FontSize="12" Style="{StaticResource MutedLabelStyle}" IsVisible="{Binding HasSecondary}" />
                                     <CollectionView ItemsSource="{Binding Trainers}" IsVisible="{Binding HasTrainers}" SelectionMode="None">
                                         <CollectionView.ItemTemplate>
