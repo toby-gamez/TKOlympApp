@@ -17,7 +17,7 @@ public static class EventService
             var query = new GraphQlRequest
         {
             // Request person names and couple names (including first name) and instance trainers for registrations
-            Query = "query MyQuery($id: BigInt!) { event(id: $id) { capacity createdAt description eventRegistrations { totalCount nodes { couple { id status man { name firstName lastName eventInstanceTrainersList { name lessonPrice { amount currency } } } woman { name firstName lastName eventInstanceTrainersList { name lessonPrice { amount currency } } } } eventLessonDemandsByRegistrationIdList { lessonCount trainer { id name } } person { id firstName lastName } } } isPublic isRegistrationOpen isVisible __typename name summary locationText eventTrainersList { id name lessonPrice { amount currency } updatedAt } updatedAt since until eventTargetCohortsList { cohortId cohort { id name colorRgb } } } }",
+            Query = "query MyQuery($id: BigInt!) { event(id: $id) { capacity createdAt description eventRegistrations { totalCount nodes { couple { id status man { name firstName lastName eventInstanceTrainersList { name lessonPrice { amount currency } } } woman { name firstName lastName eventInstanceTrainersList { name lessonPrice { amount currency } } } } eventLessonDemandsByRegistrationIdList { lessonCount trainer { id name } } person { id firstName lastName } } } isPublic isRegistrationOpen isVisible __typename name type summary locationText eventTrainersList { id name lessonPrice { amount currency } updatedAt } updatedAt since until eventTargetCohortsList { cohortId cohort { id name colorRgb } } } }",
             Variables = new Dictionary<string, object> { { "id", id } }
         };
 
@@ -57,6 +57,7 @@ public static class EventService
         [property: JsonPropertyName("isRegistrationOpen")] bool IsRegistrationOpen,
         [property: JsonPropertyName("isVisible")] bool IsVisible,
         [property: JsonPropertyName("name")] string? Name,
+        [property: JsonPropertyName("type")] string? Type,
         [property: JsonPropertyName("summary")] string? Summary,
         [property: JsonPropertyName("locationText")] string? LocationText,
         [property: JsonPropertyName("eventTrainersList")] List<EventTrainer>? EventTrainersList,
@@ -131,7 +132,7 @@ public static class EventService
 
             var query = new GraphQlRequest
         {
-            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $first: Int, $offset: Int, $onlyType: EventType) { myEventInstancesForRangeList(startRange: $startRange, endRange: $endRange, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled locationId since until updatedAt event { id description name locationText isRegistrationOpen isPublic guestPrice { amount currency } eventTrainersList { name } eventRegistrationsList { person { name } couple { man { lastName } woman { lastName } } } } tenant { couplesList { man { firstName name lastName } woman { name lastName firstName } } } } }",
+            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $first: Int, $offset: Int, $onlyType: EventType) { myEventInstancesForRangeList(startRange: $startRange, endRange: $endRange, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled locationId since until updatedAt event { id description name type locationText isRegistrationOpen isPublic guestPrice { amount currency } eventTrainersList { name } eventRegistrationsList { person { name } couple { man { lastName } woman { lastName } } } } tenant { couplesList { man { firstName name lastName } woman { name lastName firstName } } } } }",
             Variables = variables
         };
 
@@ -174,7 +175,7 @@ public static class EventService
 
         var query = new GraphQlRequest
         {
-            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange) { id event { id name locationText eventTrainersList { name } eventTargetCohortsList { cohortId cohort { id name colorRgb } } } since until isCancelled } }",
+            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange) { id event { id name type locationText eventTrainersList { name } eventTargetCohortsList { cohortId cohort { id name colorRgb } } } since until isCancelled } }",
             Variables = variables
         };
 
@@ -289,6 +290,7 @@ public static class EventService
         [property: JsonPropertyName("id")] long Id,
         [property: JsonPropertyName("description")] string? Description,
         [property: JsonPropertyName("name")] string Name,
+        [property: JsonPropertyName("type")] string? Type,
         [property: JsonPropertyName("locationText")] string? LocationText,
         [property: JsonPropertyName("since")] DateTime? Since,
         [property: JsonPropertyName("until")] DateTime? Until,

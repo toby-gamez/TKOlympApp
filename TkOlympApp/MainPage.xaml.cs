@@ -673,9 +673,6 @@ public partial class MainPage : ContentPage
                 else
                 {
                     var trainerTitle = string.IsNullOrWhiteSpace(g.Key.Trainer) ? g.Key.Name : g.Key.Trainer;
-                    // Always prefix grouped titles with localized lesson prefix
-                    var lessonPrefix = LocalizationService.Get("Lesson_Prefix") ?? "Lekce: ";
-                    trainerTitle = lessonPrefix + trainerTitle;
                     var gt = new GroupedTrainer(trainerTitle);
                     for (int i = 0; i < ordered.Count; i++)
                     {
