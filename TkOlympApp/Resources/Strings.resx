@@ -128,6 +128,7 @@
   <data name="Price_PerCouple45" xml:space="preserve"><value> / pár, 45'</value></data>
   <data name="People_Sort_Alphabetical" xml:space="preserve"><value>Abecedně</value></data>
   <data name="People_Sort_ByBirthdays" xml:space="preserve"><value>Podle narozenin</value></data>
+  <data name="Event_Type_Prefix" xml:space="preserve"><value>Typ: </value></data>
   <data name="Event_Location_Prefix" xml:space="preserve"><value>Místo konání: </value></data>
   <data name="Event_DateRange_Prefix" xml:space="preserve"><value>Termín: </value></data>
   <data name="Event_Created_Prefix" xml:space="preserve"><value>Vytvořeno: </value></data>
@@ -319,4 +320,9 @@
   <data name="Person_ActiveCouples_Label" xml:space="preserve"><value>Aktivní páry</value></data>
   <data name="NotFound_Person" xml:space="preserve"><value>Osoba nebyla nalezena.</value></data>
   <data name="AboutApp_Description" xml:space="preserve"><value>Popis aplikace</value></data>
+  <data name="EventType_Camp" xml:space="preserve"><value>soustředění</value></data>
+  <data name="EventType_Lesson" xml:space="preserve"><value>lekce</value></data>
+  <data name="EventType_Holiday" xml:space="preserve"><value>prázdniny</value></data>
+  <data name="EventType_Reservation" xml:space="preserve"><value>rezervace</value></data>
+  <data name="EventType_Group" xml:space="preserve"><value>vedená hodina</value></data>
 </root>

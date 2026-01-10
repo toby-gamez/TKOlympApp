@@ -128,6 +128,7 @@
   <data name="Price_PerCouple45" xml:space="preserve"><value> / couple, 45'</value></data>
   <data name="People_Sort_Alphabetical" xml:space="preserve"><value>Alphabetical</value></data>
   <data name="People_Sort_ByBirthdays" xml:space="preserve"><value>By birthdays</value></data>
+  <data name="Event_Type_Prefix" xml:space="preserve"><value>Type: </value></data>
   <data name="Event_Location_Prefix" xml:space="preserve"><value>Location: </value></data>
   <data name="Event_DateRange_Prefix" xml:space="preserve"><value>Date: </value></data>
   <data name="Event_Created_Prefix" xml:space="preserve"><value>Created: </value></data>
@@ -319,4 +320,9 @@
   <data name="Person_ActiveCouples_Label" xml:space="preserve"><value>Active couples</value></data>
   <data name="NotFound_Person" xml:space="preserve"><value>Person not found.</value></data>
   <data name="AboutApp_Description" xml:space="preserve"><value>App Description</value></data>
-  </root>
+    <data name="EventType_Camp" xml:space="preserve"><value>training camp</value></data>
+  <data name="EventType_Lesson" xml:space="preserve"><value>lesson</value></data>
+  <data name="EventType_Holiday" xml:space="preserve"><value>holiday</value></data>
+  <data name="EventType_Reservation" xml:space="preserve"><value>reservation</value></data>
+  <data name="EventType_Group" xml:space="preserve"><value>group session</value></data>
+</root>

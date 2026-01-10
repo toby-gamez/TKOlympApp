@@ -133,7 +133,7 @@
                                                     <VerticalStackLayout Spacing="6">
                                                         <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,4">
                                                             <Label Text="{Binding TrainerTitle}" FontAttributes="Bold" Grid.Column="0" />
-                                                            <Label Text="lekce" FontSize="12" Style="{StaticResource MutedLabelStyle}" Grid.Column="1" HorizontalOptions="End" VerticalOptions="Center" />
+                                                            <Label Text="{svc:Translate EventType_Lesson}" FontSize="12" Style="{StaticResource MutedLabelStyle}" Grid.Column="1" HorizontalOptions="End" VerticalOptions="Center" />
                                                         </Grid>
 
                                                         <!-- Rows rendered as grid-like table inside the group's border -->
@@ -263,7 +263,7 @@
                                                                         <VerticalStackLayout Spacing="6">
                                                                             <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,4">
                                                                                 <Label Text="{Binding TrainerTitle}" FontAttributes="Bold" Grid.Column="0" />
-                                                                                <Label Text="lekce" FontSize="12" Style="{StaticResource MutedLabelStyle}" Grid.Column="1" HorizontalOptions="End" VerticalOptions="Center" />
+                                                                                <Label Text="{svc:Translate EventType_Lesson}" FontSize="12" Style="{StaticResource MutedLabelStyle}" Grid.Column="1" HorizontalOptions="End" VerticalOptions="Center" />
                                                                             </Grid>
                                                                             <VerticalStackLayout BindableLayout.ItemsSource="{Binding Rows}">
                                                                                 <BindableLayout.ItemTemplate>

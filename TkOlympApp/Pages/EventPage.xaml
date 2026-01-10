@@ -10,6 +10,7 @@
     <ContentPage.Resources>
         <ResourceDictionary>
             <converters:CohortColorConverter x:Key="CohortColorConverter" />
+            <converters:EventTypeToLabelConverter x:Key="EventTypeToLabelConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -32,6 +33,7 @@
                     <Grid>
                         <Label Text="{svc:Translate Event_Info_Label}" FontAttributes="Bold" VerticalOptions="Center" />
                     </Grid>
+                    <Label x:Name="EventTypeLabel"/>
                     <Label x:Name="LocationLabel"/>
                     <Label x:Name="DateRangeLabel"/>
                     <Label x:Name="CreatedAtLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}"/>

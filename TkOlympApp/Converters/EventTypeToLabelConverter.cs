@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using Microsoft.Maui.Controls;
+using TkOlympApp.Services;
 
 namespace TkOlympApp.Converters
 {
@@ -12,11 +13,11 @@ namespace TkOlympApp.Converters
             if (string.IsNullOrEmpty(s)) return string.Empty;
             return s.ToUpperInvariant() switch
             {
-                "CAMP" => "tábor",
-                "LESSON" => "lekce",
-                "HOLIDAY" => "prázdniny",
-                "RESERVATION" => "rezervace",
-                "GROUP" => "vedená hodina",
+                "CAMP" => LocalizationService.Get("EventType_Camp") ?? "soustředění",
+                "LESSON" => LocalizationService.Get("EventType_Lesson") ?? "lekce",
+                "HOLIDAY" => LocalizationService.Get("EventType_Holiday") ?? "prázdniny",
+                "RESERVATION" => LocalizationService.Get("EventType_Reservation") ?? "rezervace",
+                "GROUP" => LocalizationService.Get("EventType_Group") ?? "vedená",
                 _ => s
             };
         }

@@ -129,6 +129,7 @@
     <data name="Price_PerCouple45" xml:space="preserve"><value> / duo, 45'</value></data>
     <data name="People_Sort_Alphabetical" xml:space="preserve"><value>ABC check</value></data>
     <data name="People_Sort_ByBirthdays" xml:space="preserve"><value>Cake Day</value></data>
+    <data name="Event_Type_Prefix" xml:space="preserve"><value>Vibe check: </value></data>
     <data name="Event_Location_Prefix" xml:space="preserve"><value>Map: </value></data>
     <data name="Event_DateRange_Prefix" xml:space="preserve"><value>When: </value></data>
     <data name="Event_Created_Prefix" xml:space="preserve"><value>Spawned: </value></data>
@@ -271,4 +272,9 @@
     <data name="Events_Title" xml:space="preserve"><value>Skibidi days</value></data>
     <data name="Planned" xml:space="preserve"><value>Soon fr fr</value></data>
     <data name="Occurred" xml:space="preserve"><value>Canon event</value></data>
+  <data name="EventType_Camp" xml:space="preserve"><value>training camp sesh</value></data>
+  <data name="EventType_Lesson" xml:space="preserve"><value>lesson fr fr</value></data>
+  <data name="EventType_Holiday" xml:space="preserve"><value>vacay mode</value></data>
+  <data name="EventType_Reservation" xml:space="preserve"><value>reg ngl</value></data>
+  <data name="EventType_Group" xml:space="preserve"><value>group grind</value></data>
 </root>

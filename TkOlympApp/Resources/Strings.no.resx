@@ -128,6 +128,7 @@
     <data name="Price_PerCouple45" xml:space="preserve"><value> / par, 45'</value></data>
     <data name="People_Sort_Alphabetical" xml:space="preserve"><value>Alfabetisk</value></data>
     <data name="People_Sort_ByBirthdays" xml:space="preserve"><value>Etter fødselsdag</value></data>
+    <data name="Event_Type_Prefix" xml:space="preserve"><value>Type: </value></data>
     <data name="Event_Location_Prefix" xml:space="preserve"><value>Sted: </value></data>
     <data name="Event_DateRange_Prefix" xml:space="preserve"><value>Dato: </value></data>
     <data name="Event_Created_Prefix" xml:space="preserve"><value>Opprettet: </value></data>
@@ -271,4 +272,9 @@
     <data name="Events_Title" xml:space="preserve"><value>Arrangementer</value></data>
     <data name="Planned" xml:space="preserve"><value>Planlagte</value></data>
     <data name="Occurred" xml:space="preserve"><value>Avholdt</value></data>
-    </root>
+      <data name="EventType_Camp" xml:space="preserve"><value>treningsleir</value></data>
+  <data name="EventType_Lesson" xml:space="preserve"><value>leksjon</value></data>
+  <data name="EventType_Holiday" xml:space="preserve"><value>ferie</value></data>
+  <data name="EventType_Reservation" xml:space="preserve"><value>reservasjon</value></data>
+  <data name="EventType_Group" xml:space="preserve"><value>gruppetime</value></data>
+</root>

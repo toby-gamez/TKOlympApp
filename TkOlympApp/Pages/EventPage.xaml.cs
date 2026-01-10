@@ -161,6 +161,20 @@ public partial class EventPage : ContentPage
             // keep original HTML for copy/plain-text view
             _lastDescriptionHtml = ev.Description;
             _lastSummaryHtml = ev.Summary;
+            // Event type
+            if (!string.IsNullOrWhiteSpace(ev.Type))
+            {
+                var converter = new EventTypeToLabelConverter();
+                var typeLabel = converter.Convert(ev.Type, typeof(string), null, System.Globalization.CultureInfo.CurrentCulture) as string;
+                EventTypeLabel.Text = (LocalizationService.Get("Event_Type_Prefix") ?? "Typ: ") + (typeLabel ?? ev.Type);
+                EventTypeLabel.IsVisible = true;
+            }
+            else
+            {
+                EventTypeLabel.Text = string.Empty;
+                EventTypeLabel.IsVisible = false;
+            }
+            
             var locName = ev.LocationText;
             LocationLabel.Text = string.IsNullOrWhiteSpace(locName) ? string.Empty : (LocalizationService.Get("Event_Location_Prefix") ?? "Místo konání: ") + locName;
             LocationLabel.IsVisible = !string.IsNullOrWhiteSpace(locName);
