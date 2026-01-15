@@ -55,6 +55,10 @@
     <data name="Leaderboard_Loading" xml:space="preserve"><value>Fakt to trvá dlho...</value></data>
     <data name="Noticeboard_TabAktuality" xml:space="preserve"><value>Aktuality</value></data>
     <data name="Noticeboard_TabStala" xml:space="preserve"><value>Stála nástenka</value></data>
+    <data name="Noticeboard_NewAnnouncement" xml:space="preserve"><value>Nové oznámenie</value></data>
+    <data name="Noticeboard_NewAnnouncements" xml:space="preserve"><value>Nové oznámenia ({0})</value></data>
+    <data name="Noticeboard_UpdatedAnnouncement" xml:space="preserve"><value>Aktualizované oznámenie</value></data>
+    <data name="Noticeboard_UpdatedAnnouncements" xml:space="preserve"><value>Aktualizované oznámenia ({0})</value></data>
     <data name="Language_Title" xml:space="preserve"><value>Jazyk</value></data>
     <data name="AboutMe_Title" xml:space="preserve"><value>Profil</value></data>
     <data name="NoticePage_Title" xml:space="preserve"><value>Oznámenie</value></data>
@@ -272,4 +276,8 @@
   <data name="EventType_Group" xml:space="preserve"><value>vedená hodina</value></data>
   <data name="Notification_EventInHour" xml:space="preserve"><value>O hodinu máte udalosť</value></data>
   <data name="Notification_EventInMinutes" xml:space="preserve"><value>O {0} minút máte udalosť</value></data>
+  <data name="Notification_EventCancelled" xml:space="preserve"><value>Udalosť zrušená</value></data>
+  <data name="Notification_EventTimeChanged" xml:space="preserve"><value>Zmena času udalosti</value></data>
+  <data name="Notification_EventLocationChanged" xml:space="preserve"><value>Zmena miesta udalosti</value></data>
+  <data name="Notification_EventDetailsChanged" xml:space="preserve"><value>Zmena detáilov udalosti</value></data>
 </root>

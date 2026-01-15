@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Text.Json;
+using Microsoft.Maui.Storage;
 using Plugin.LocalNotification;
 using Plugin.LocalNotification.AndroidOption;
 
@@ -17,6 +19,18 @@ public static class EventNotificationService
     private const string ChannelId = "tkolymp_events";
     private const string ChannelName = "Události a lekce";
     private const string ChannelDescription = "Upozornění na nadcházející události, lekce a tréninky";
+    private const string EventsSnapshotKey = "events_snapshot_v1";
+
+    private class EventSnapshot
+    {
+        public long Id { get; set; }
+        public DateTime? Since { get; set; }
+        public DateTime? Until { get; set; }
+        public string? LocationText { get; set; }
+        public string? EventName { get; set; }
+        public bool IsCancelled { get; set; }
+        public string? TrainersJson { get; set; }
+    }
 
     /// <summary>
     /// Initialize notification channel (Android)
@@ -298,5 +312,206 @@ public static class EventNotificationService
         }
         
         return sb.ToString();
+    }
+
+    /// <summary>
+    /// Check for changes in events and send immediate notifications for modifications and cancellations
+    /// </summary>
+    public static async Task CheckAndNotifyChangesAsync(List<EventService.EventInstance> currentEvents)
+    {
+        try
+        {
+            // Load previous snapshot
+            var previousSnapshotJson = await SecureStorage.GetAsync(EventsSnapshotKey);
+            if (string.IsNullOrEmpty(previousSnapshotJson))
+            {
+                // First run, save current state and exit
+                await SaveEventsSnapshotAsync(currentEvents);
+                return;
+            }
+
+            var previousSnapshots = JsonSerializer.Deserialize<List<EventSnapshot>>(previousSnapshotJson);
+            if (previousSnapshots == null)
+            {
+                await SaveEventsSnapshotAsync(currentEvents);
+                return;
+            }
+
+            var previousDict = previousSnapshots.ToDictionary(e => e.Id);
+            int changesDetected = 0;
+
+            foreach (var currentEvent in currentEvents)
+            {
+                if (currentEvent.Since == null) continue;
+
+                // Check if event existed before
+                if (!previousDict.TryGetValue(currentEvent.Id, out var previousEvent))
+                    continue; // New event, not a change
+
+                var eventName = currentEvent.Event?.Name ?? LocalizationService.Get("Event");
+                
+                // Check for cancellation
+                if (currentEvent.IsCancelled && !previousEvent.IsCancelled)
+                {
+                    await SendImmediateNotificationAsync(
+                        LocalizationService.Get("Notification_EventCancelled") ?? "Událost zrušena",
+                        $"{eventName}\n{FormatEventDescription(currentEvent.Since.Value, currentEvent.Event?.LocationText)}",
+                        currentEvent.Id
+                    );
+                    changesDetected++;
+                    continue;
+                }
+
+                // Skip if already cancelled
+                if (currentEvent.IsCancelled) continue;
+
+                // Check for time change
+                if (currentEvent.Since != previousEvent.Since || currentEvent.Until != previousEvent.Until)
+                {
+                    var oldTime = previousEvent.Since?.ToString("HH:mm") ?? "?";
+                    var newTime = currentEvent.Since?.ToString("HH:mm") ?? "?";
+                    await SendImmediateNotificationAsync(
+                        LocalizationService.Get("Notification_EventTimeChanged") ?? "Změna času události",
+                        $"{eventName}\n{oldTime} → {newTime}\n{currentEvent.Event?.LocationText ?? ""}",
+                        currentEvent.Id
+                    );
+                    changesDetected++;
+                    continue;
+                }
+
+                // Check for location change
+                var currentLocation = currentEvent.Event?.LocationText ?? "";
+                var previousLocation = previousEvent.LocationText ?? "";
+                if (currentLocation != previousLocation)
+                {
+                    await SendImmediateNotificationAsync(
+                        LocalizationService.Get("Notification_EventLocationChanged") ?? "Změna místa události",
+                        $"{eventName}\n{currentLocation}\n{FormatEventDescription(currentEvent.Since.Value, null)}",
+                        currentEvent.Id
+                    );
+                    changesDetected++;
+                    continue;
+                }
+
+                // Check for trainer change
+                var currentTrainers = JsonSerializer.Serialize(currentEvent.Event?.EventTrainersList?.Select(t => t.Name).OrderBy(n => n).ToList() ?? new List<string?>());
+                if (currentTrainers != previousEvent.TrainersJson)
+                {
+                    await SendImmediateNotificationAsync(
+                        LocalizationService.Get("Notification_EventDetailsChanged") ?? "Změna detailů události",
+                        $"{eventName}\n{FormatEventDescription(currentEvent.Since.Value, currentEvent.Event?.LocationText)}",
+                        currentEvent.Id
+                    );
+                    changesDetected++;
+                }
+            }
+
+            if (changesDetected > 0)
+            {
+                Debug.WriteLine($"EventNotificationService: Detected and notified {changesDetected} event change(s)");
+            }
+
+            // Save current snapshot for next comparison
+            await SaveEventsSnapshotAsync(currentEvents);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"EventNotificationService: Error checking for changes: {ex}");
+        }
+    }
+
+    private static async Task SaveEventsSnapshotAsync(List<EventService.EventInstance> events)
+    {
+        try
+        {
+            var snapshots = events.Where(e => e.Since != null).Select(e => new EventSnapshot
+            {
+                Id = e.Id,
+                Since = e.Since,
+                Until = e.Until,
+                LocationText = e.Event?.LocationText,
+                EventName = e.Event?.Name,
+                IsCancelled = e.IsCancelled,
+                TrainersJson = JsonSerializer.Serialize(e.Event?.EventTrainersList?.Select(t => t.Name).OrderBy(n => n).ToList() ?? new List<string?>())
+            }).ToList();
+
+            var json = JsonSerializer.Serialize(snapshots);
+            await SecureStorage.SetAsync(EventsSnapshotKey, json);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"EventNotificationService: Error saving snapshot: {ex}");
+        }
+    }
+
+    private static async Task SendImmediateNotificationAsync(string title, string description, long eventId)
+    {
+        try
+        {
+            EnsureChannelInitialized();
+
+            var notificationId = (int)(eventId % 10000) + 5000; // Use event ID to ensure uniqueness
+
+            var notification = new NotificationRequest
+            {
+                NotificationId = notificationId,
+                Title = title,
+                Description = description,
+                ReturningData = eventId.ToString(),
+                Android = new AndroidOptions
+                {
+                    ChannelId = ChannelId,
+                    Priority = AndroidPriority.Max, // Highest priority for immediate changes
+                    AutoCancel = true,
+                    VibrationPattern = new long[] { 0, 700, 300, 700 }, // Stronger vibration for changes
+                    TimeoutAfter = TimeSpan.FromHours(2),
+                    IconSmallName = new AndroidIcon("ic_notification")
+                },
+                CategoryType = NotificationCategoryType.Event
+            };
+
+            await LocalNotificationCenter.Current.Show(notification);
+            Debug.WriteLine($"EventNotificationService: Sent immediate notification: {title}");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"EventNotificationService: Failed to send immediate notification: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Initialize background worker for periodic change detection (Android only)
+    /// </summary>
+    public static void InitializeBackgroundChangeDetection()
+    {
+#if ANDROID
+        try
+        {
+            var constraints = new AndroidX.Work.Constraints.Builder()
+                .SetRequiredNetworkType(AndroidX.Work.NetworkType.Connected)
+                .SetRequiresBatteryNotLow(true)
+                .Build();
+
+            var workRequest = AndroidX.Work.PeriodicWorkRequest.Builder
+                .From<Platforms.Android.EventChangeCheckWorker>(TimeSpan.FromHours(1))
+                .SetConstraints(constraints)
+                .SetBackoffCriteria(AndroidX.Work.BackoffPolicy.Exponential, TimeSpan.FromMinutes(15))
+                .Build();
+
+            AndroidX.Work.WorkManager
+                .GetInstance(Android.App.Application.Context)
+                .EnqueueUniquePeriodicWork(
+                    "event_change_check",
+                    AndroidX.Work.ExistingPeriodicWorkPolicy.Keep,
+                    workRequest
+                );
+
+            Debug.WriteLine("EventNotificationService: Background change detection initialized (runs every 1 hour)");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"EventNotificationService: Failed to initialize background worker: {ex}");
+        }
+#endif
     }
 }

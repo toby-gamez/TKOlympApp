@@ -76,6 +76,9 @@ public partial class AppShell : Shell
                     try
                     {
                         await EventNotificationService.RequestNotificationPermissionAsync();
+                        
+                        // Initialize background change detection (checks every 1 hour)
+                        EventNotificationService.InitializeBackgroundChangeDetection();
                     }
                     catch { }
 

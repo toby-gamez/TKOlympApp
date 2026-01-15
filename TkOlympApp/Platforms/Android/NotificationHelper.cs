@@ -13,10 +13,10 @@ public static class NotificationHelper
     #pragma warning disable CS8602
     public static void ShowNotification(string title, string message)
     {
-        var context = Android.App.Application.Context;
+        var context = global::Android.App.Application.Context;
         if (context == null) return;
 
-        var intent = new Intent(context, typeof(global::TkOlympApp.MainActivity));
+        var intent = new Intent(context, typeof(TkOlympApp.MainActivity));
         intent.SetFlags(ActivityFlags.ClearTop | ActivityFlags.SingleTop);
         intent.PutExtra("openNoticeboard", true);
         intent.PutExtra("notificationTitle", title ?? string.Empty);
@@ -47,10 +47,10 @@ public static class NotificationHelper
                       .SetContentIntent(pendingIntent)
                       .SetPriority((int)NotificationPriority.Default);
 
-        var built = builder.Build();
-        if (built != null)
+        var notification = builder.Build();
+        if (notification != null)
         {
-            notificationManagerCompat.Notify(System.DateTime.Now.GetHashCode(), built);
+            notificationManagerCompat.Notify(System.DateTime.Now.GetHashCode(), notification);
         }
     }
     #pragma warning restore CS8602

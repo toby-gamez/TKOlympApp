@@ -47,6 +47,7 @@
     <ItemGroup>
         <PackageReference Include="HtmlAgilityPack" Version="1.11.64" />
         <PackageReference Include="Plugin.LocalNotification" Version="13.0.0" />
+        <PackageReference Include="Xamarin.AndroidX.Work.Runtime" Version="2.11.0.1" />
     </ItemGroup>
 
     <ItemGroup>

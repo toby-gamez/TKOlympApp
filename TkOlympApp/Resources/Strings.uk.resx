@@ -55,6 +55,10 @@
   <data name="Leaderboard_Loading" xml:space="preserve"><value>Це дійсно займає багато часу...</value></data>
   <data name="Noticeboard_TabAktuality" xml:space="preserve"><value>Новини</value></data>
   <data name="Noticeboard_TabStala" xml:space="preserve"><value>Постійна дошка</value></data>
+  <data name="Noticeboard_NewAnnouncement" xml:space="preserve"><value>Нове оголошення</value></data>
+  <data name="Noticeboard_NewAnnouncements" xml:space="preserve"><value>Нові оголошення ({0})</value></data>
+  <data name="Noticeboard_UpdatedAnnouncement" xml:space="preserve"><value>Оновлене оголошення</value></data>
+  <data name="Noticeboard_UpdatedAnnouncements" xml:space="preserve"><value>Оновлені оголошення ({0})</value></data>
   <data name="Language_Title" xml:space="preserve"><value>Мова</value></data>
   <data name="AboutMe_Title" xml:space="preserve"><value>Профіль</value></data>
   <data name="NoticePage_Title" xml:space="preserve"><value>Оголошення</value></data>
@@ -278,4 +282,8 @@
   <data name="EventType_Group" xml:space="preserve"><value>групове заняття</value></data>
   <data name="Notification_EventInHour" xml:space="preserve"><value>У вас подія через 1 годину</value></data>
   <data name="Notification_EventInMinutes" xml:space="preserve"><value>У вас подія через {0} хвилин</value></data>
+  <data name="Notification_EventCancelled" xml:space="preserve"><value>Подію скасовано</value></data>
+  <data name="Notification_EventTimeChanged" xml:space="preserve"><value>Час події змінено</value></data>
+  <data name="Notification_EventLocationChanged" xml:space="preserve"><value>Місце події змінено</value></data>
+  <data name="Notification_EventDetailsChanged" xml:space="preserve"><value>Деталі події змінено</value></data>
 </root>

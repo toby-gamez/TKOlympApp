@@ -123,11 +123,20 @@ public partial class MainPage : ContentPage
             }
 
             // Schedule notifications for upcoming events (1 hour and 5 minutes before)
+            // Load events 2 days ahead for notifications
             if (_onlyMine)
             {
                 try
                 {
-                    await EventNotificationService.ScheduleNotificationsForEventsAsync(events);
+                    var notifStart = DateTime.Now.Date;
+                    var notifEnd = DateTime.Now.Date.AddDays(2).AddHours(23).AddMinutes(59);
+                    var notifEvents = await EventService.GetMyEventInstancesForRangeAsync(notifStart, notifEnd);
+                    
+                    // Check for changes and cancellations first
+                    await EventNotificationService.CheckAndNotifyChangesAsync(notifEvents);
+                    
+                    // Then schedule upcoming notifications
+                    await EventNotificationService.ScheduleNotificationsForEventsAsync(notifEvents);
                 }
                 catch (Exception ex)
                 {
