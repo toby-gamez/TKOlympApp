@@ -18,14 +18,58 @@ public partial class EventsPage : ContentPage
         PropertyNameCaseInsensitive = true
     };
 
+    private bool _isPlannedActive = true;
+
     public ObservableCollection<EventItem> Items { get; } = new();
     public ObservableCollection<EventItem> PlannedItems { get; } = new();
     public ObservableCollection<EventItem> OccurredItems { get; } = new();
+    public ObservableCollection<EventItem> VisibleItems { get; } = new();
 
     public EventsPage()
     {
         InitializeComponent();
         BindingContext = this;
+        SetTabVisuals(true);
+    }
+
+    private void SetTabVisuals(bool isPlanned)
+    {
+        _isPlannedActive = isPlanned;
+        var theme = Application.Current?.RequestedTheme ?? AppTheme.Unspecified;
+        if (theme == AppTheme.Light)
+        {
+            if (isPlanned)
+            {
+                TabPlannedButton.BackgroundColor = Colors.Black;
+                TabPlannedButton.TextColor = Colors.White;
+                TabOccurredButton.BackgroundColor = Colors.Transparent;
+                TabOccurredButton.TextColor = Colors.Black;
+            }
+            else
+            {
+                TabOccurredButton.BackgroundColor = Colors.Black;
+                TabOccurredButton.TextColor = Colors.White;
+                TabPlannedButton.BackgroundColor = Colors.Transparent;
+                TabPlannedButton.TextColor = Colors.Black;
+            }
+        }
+        else
+        {
+            if (isPlanned)
+            {
+                TabPlannedButton.BackgroundColor = Colors.LightGray;
+                TabPlannedButton.TextColor = Colors.Black;
+                TabOccurredButton.BackgroundColor = Colors.Transparent;
+                TabOccurredButton.TextColor = Colors.White;
+            }
+            else
+            {
+                TabOccurredButton.BackgroundColor = Colors.LightGray;
+                TabOccurredButton.TextColor = Colors.Black;
+                TabPlannedButton.BackgroundColor = Colors.Transparent;
+                TabPlannedButton.TextColor = Colors.White;
+            }
+        }
     }
 
     protected override void OnAppearing()
@@ -42,7 +86,7 @@ public partial class EventsPage : ContentPage
         {
             var query = new GraphQlRequest
             {
-                Query = "query MyQuery { eventInstancesList { event { id name location { id name } isVisible type since until } since until location { id name } } }"
+                Query = "query MyQuery { eventInstancesList { event { id name location { id name } isVisible type } since until } }"
             };
 
             var json = JsonSerializer.Serialize(query, Options);
@@ -77,10 +121,9 @@ public partial class EventsPage : ContentPage
                 if (!ev.IsVisible) continue;
                 if (!string.Equals(ev.Type, "CAMP", StringComparison.OrdinalIgnoreCase)) continue;
 
-                // pick filled values preferring instance-level, fallback to event-level
-                var locationName = it.Location?.Name ?? ev.Location?.Name ?? string.Empty;
-                var since = it.Since ?? ev.Since;
-                var until = it.Until ?? ev.Until;
+                var locationName = ev.Location?.Name ?? string.Empty;
+                var since = it.Since;
+                var until = it.Until;
 
                 // Insert at 0 to show newest/last-received first
                 var item = new EventItem
@@ -100,9 +143,20 @@ public partial class EventsPage : ContentPage
                 }
                 else
                 {
-                    PlannedItems.Insert(0, item);
+                    PlannedItems.Add(item);
                 }
             }
+
+            // Sort PlannedItems by Since date (earliest first)
+            var sortedPlanned = PlannedItems.OrderBy(x => x.Since ?? DateTime.MaxValue).ToList();
+            PlannedItems.Clear();
+            foreach (var item in sortedPlanned)
+            {
+                PlannedItems.Add(item);
+            }
+
+            // Update the visible collection based on active tab
+            UpdateVisibleItems();
         }
         catch (Exception ex)
         {
@@ -119,6 +173,28 @@ public partial class EventsPage : ContentPage
     private async void OnRefresh(object? sender, EventArgs e)
     {
         _ = RefreshEventsAsync();
+    }
+
+    private void OnTabPlannedClicked(object? sender, EventArgs e)
+    {
+        SetTabVisuals(true);
+        UpdateVisibleItems();
+    }
+
+    private void OnTabOccurredClicked(object? sender, EventArgs e)
+    {
+        SetTabVisuals(false);
+        UpdateVisibleItems();
+    }
+
+    private void UpdateVisibleItems()
+    {
+        VisibleItems.Clear();
+        var source = _isPlannedActive ? PlannedItems : OccurredItems;
+        foreach (var item in source)
+        {
+            VisibleItems.Add(item);
+        }
     }
 
     private async void OnEventTapped(object? sender, EventArgs e)
@@ -157,7 +233,6 @@ public partial class EventsPage : ContentPage
         [JsonPropertyName("event")] public EventNode? Event { get; set; }
         [JsonPropertyName("since")] public DateTime? Since { get; set; }
         [JsonPropertyName("until")] public DateTime? Until { get; set; }
-        [JsonPropertyName("location")] public EventLocation? Location { get; set; }
     }
 
     private sealed class EventNode
@@ -166,8 +241,6 @@ public partial class EventsPage : ContentPage
         [JsonPropertyName("name")] public string? Name { get; set; }
         [JsonPropertyName("location")] public EventLocation? Location { get; set; }
         [JsonPropertyName("isVisible")] public bool IsVisible { get; set; }
-        [JsonPropertyName("since")] public DateTime? Since { get; set; }
-        [JsonPropertyName("until")] public DateTime? Until { get; set; }
         [JsonPropertyName("type")] public string? Type { get; set; }
     }
 

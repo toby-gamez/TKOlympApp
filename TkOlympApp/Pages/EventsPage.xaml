@@ -21,76 +21,42 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <HorizontalStackLayout Grid.Row="0" Spacing="8" VerticalOptions="Center" HorizontalOptions="Center">
-            <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" />
+        <HorizontalStackLayout Grid.Row="0" Spacing="8" VerticalOptions="Center" HorizontalOptions="Start">
+            <Button x:Name="TabPlannedButton" Text="{svc:Translate Planned}" Clicked="OnTabPlannedClicked" />
+            <Button x:Name="TabOccurredButton" Text="{svc:Translate Occurred}" Clicked="OnTabOccurredClicked" />
+            <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" HorizontalOptions="EndAndExpand" />
         </HorizontalStackLayout>
 
         <RefreshView x:Name="EventsRefresh" Refreshing="OnRefresh" Grid.Row="1">
             <ScrollView>
-                <VerticalStackLayout>
-                    <Label Text="{svc:Translate Planned}" FontAttributes="Bold" Margin="0,6,0,0" />
-
-                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding PlannedItems}" Spacing="0">
-                        <BindableLayout.ItemTemplate>
-                            <DataTemplate>
-                                <Border Padding="12" Margin="6">
-                                    <Border.GestureRecognizers>
-                                        <TapGestureRecognizer Tapped="OnEventTapped" />
-                                    </Border.GestureRecognizers>
-                                    <Border.StrokeShape>
-                                        <RoundRectangle CornerRadius="8" />
-                                    </Border.StrokeShape>
-                                    <VerticalStackLayout Spacing="6">
-                                        <Label Text="{Binding EventName}" FontAttributes="Bold" />
-                                        <Label Text="{Binding LocationName}"/>
-                                        <Label FontSize="12" Style="{StaticResource MutedLabelStyle}">
-                                            <Label.FormattedText>
-                                                <FormattedString>
-                                                    <Span Text="{Binding Since, Converter={StaticResource FriendlyDateConverter}}" />
-                                                    <Span Text="  " />
-                                                    <Span Text="–" />
-                                                    <Span Text="  " />
-                                                    <Span Text="{Binding Until, Converter={StaticResource FriendlyDateConverter}}" />
-                                                </FormattedString>
-                                            </Label.FormattedText>
-                                        </Label>
-                                    </VerticalStackLayout>
-                                </Border>
-                            </DataTemplate>
-                        </BindableLayout.ItemTemplate>
-                    </VerticalStackLayout>
-
-                    <Label Text="{svc:Translate Occurred}" FontAttributes="Bold" Margin="0,12,0,0" />
-
-                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding OccurredItems}" Spacing="0">
-                        <BindableLayout.ItemTemplate>
-                            <DataTemplate>
-                                <Border Padding="12" Margin="6">
-                                    <Border.GestureRecognizers>
-                                        <TapGestureRecognizer Tapped="OnEventTapped" />
-                                    </Border.GestureRecognizers>
-                                    <Border.StrokeShape>
-                                        <RoundRectangle CornerRadius="8" />
-                                    </Border.StrokeShape>
-                                    <VerticalStackLayout Spacing="6">
-                                        <Label Text="{Binding EventName}" FontAttributes="Bold" />
-                                        <Label Text="{Binding LocationName}" Style="{StaticResource MutedLabelStyle}" />
-                                        <Label FontSize="12" Style="{StaticResource MutedLabelStyle}">
-                                            <Label.FormattedText>
-                                                <FormattedString>
-                                                    <Span Text="{Binding Since, Converter={StaticResource FriendlyDateConverter}}" />
-                                                    <Span Text="  " />
-                                                    <Span Text="–" />
-                                                    <Span Text="  " />
-                                                    <Span Text="{Binding Until, Converter={StaticResource FriendlyDateConverter}}" />
-                                                </FormattedString>
-                                            </Label.FormattedText>
-                                        </Label>
-                                    </VerticalStackLayout>
-                                </Border>
-                            </DataTemplate>
-                        </BindableLayout.ItemTemplate>
-                    </VerticalStackLayout>
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding VisibleItems}" Spacing="0">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate>
+                            <Border Padding="12" Margin="6">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnEventTapped" />
+                                </Border.GestureRecognizers>
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="8" />
+                                </Border.StrokeShape>
+                                <VerticalStackLayout Spacing="6">
+                                    <Label Text="{Binding EventName}" FontAttributes="Bold" />
+                                    <Label Text="{Binding LocationName}"/>
+                                    <Label FontSize="12" Style="{StaticResource MutedLabelStyle}">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <Span Text="{Binding Since, Converter={StaticResource FriendlyDateConverter}}" />
+                                                <Span Text="  " />
+                                                <Span Text="–" />
+                                                <Span Text="  " />
+                                                <Span Text="{Binding Until, Converter={StaticResource FriendlyDateConverter}}" />
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
                 </VerticalStackLayout>
             </ScrollView>
         </RefreshView>
