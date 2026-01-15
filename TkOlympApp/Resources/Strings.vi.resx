@@ -261,4 +261,6 @@
   <data name="EventType_Holiday" xml:space="preserve"><value>kỳ nghỉ</value></data>
   <data name="EventType_Reservation" xml:space="preserve"><value>đặt chỗ</value></data>
   <data name="EventType_Group" xml:space="preserve"><value>buổi tập nhóm</value></data>
+  <data name="Notification_EventInHour" xml:space="preserve"><value>Bạn có sự kiện trong 1 giờ</value></data>
+  <data name="Notification_EventInMinutes" xml:space="preserve"><value>Bạn có sự kiện trong {0} phút</value></data>
 </root>

@@ -10,4 +10,9 @@
 	<uses-permission android:name="android.permission.INTERNET" />
     <!-- Required for posting notifications on Android 13+ -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Required for exact/reliable scheduled notifications (Android 12+) -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <!-- Wake lock for reliable notifications -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 </manifest>

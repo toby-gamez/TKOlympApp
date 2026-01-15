@@ -324,4 +324,6 @@
   <data name="EventType_Holiday" xml:space="preserve"><value>holiday</value></data>
   <data name="EventType_Reservation" xml:space="preserve"><value>reservation</value></data>
   <data name="EventType_Group" xml:space="preserve"><value>group session</value></data>
+  <data name="Notification_EventInHour" xml:space="preserve"><value>You have an event in 1 hour</value></data>
+  <data name="Notification_EventInMinutes" xml:space="preserve"><value>You have an event in {0} minutes</value></data>
 </root>

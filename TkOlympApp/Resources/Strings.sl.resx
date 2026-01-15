@@ -302,4 +302,6 @@
   <data name="EventType_Holiday" xml:space="preserve"><value>počitnice</value></data>
   <data name="EventType_Reservation" xml:space="preserve"><value>rezervacija</value></data>
   <data name="EventType_Group" xml:space="preserve"><value>skupinska ura</value></data>
+  <data name="Notification_EventInHour" xml:space="preserve"><value>Čez 1 uro imate dogodek</value></data>
+  <data name="Notification_EventInMinutes" xml:space="preserve"><value>Čez {0} minut imate dogodek</value></data>
 </root>

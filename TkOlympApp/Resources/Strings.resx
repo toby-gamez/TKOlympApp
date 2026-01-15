@@ -324,4 +324,6 @@
   <data name="EventType_Holiday" xml:space="preserve"><value>prázdniny</value></data>
   <data name="EventType_Reservation" xml:space="preserve"><value>rezervace</value></data>
   <data name="EventType_Group" xml:space="preserve"><value>vedená hodina</value></data>
+  <data name="Notification_EventInHour" xml:space="preserve"><value>Za hodinu máte událost</value></data>
+  <data name="Notification_EventInMinutes" xml:space="preserve"><value>Za {0} minut máte událost</value></data>
 </root>

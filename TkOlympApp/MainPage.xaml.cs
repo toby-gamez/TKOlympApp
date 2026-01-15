@@ -122,6 +122,19 @@ public partial class MainPage : ContentPage
                 events = await EventService.GetEventInstancesForRangeListAsync(start, end);
             }
 
+            // Schedule notifications for upcoming events (1 hour and 5 minutes before)
+            if (_onlyMine)
+            {
+                try
+                {
+                    await EventNotificationService.ScheduleNotificationsForEventsAsync(events);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"MainPage: Failed to schedule notifications: {ex}");
+                }
+            }
+
             // Group events by day (date only) and then into weeks (Monday-based)
             var groupsByDate = events
                 .GroupBy(e => e.Since.HasValue ? e.Since.Value.Date : e.UpdatedAt.Date)

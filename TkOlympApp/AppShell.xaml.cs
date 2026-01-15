@@ -72,6 +72,13 @@ public partial class AppShell : Shell
                 }
                 else
                 {
+                    // Request notification permissions after successful authentication
+                    try
+                    {
+                        await EventNotificationService.RequestNotificationPermissionAsync();
+                    }
+                    catch { }
+
                     // Ensure main page is visible and request a refresh after auth is ready
                     try
                     {

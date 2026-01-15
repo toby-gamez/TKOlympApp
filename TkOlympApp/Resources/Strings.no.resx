@@ -276,4 +276,6 @@
   <data name="EventType_Holiday" xml:space="preserve"><value>ferie</value></data>
   <data name="EventType_Reservation" xml:space="preserve"><value>reservasjon</value></data>
   <data name="EventType_Group" xml:space="preserve"><value>gruppetime</value></data>
+  <data name="Notification_EventInHour" xml:space="preserve"><value>Du har en hendelse om 1 time</value></data>
+  <data name="Notification_EventInMinutes" xml:space="preserve"><value>Du har en hendelse om {0} minutter</value></data>
 </root>

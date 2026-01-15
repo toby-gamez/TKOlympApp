@@ -5,6 +5,7 @@ using MauiIcons.Material;
 using MauiIcons.FontAwesome;
 using MauiIcons.Fluent;
 using Indiko.Maui.Controls.SelectableLabel;
+using Plugin.LocalNotification;
 
 namespace TkOlympApp;
 
@@ -15,6 +16,7 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
+            .UseLocalNotification()
             .UseMaterialMauiIcons()
             .UseFontAwesomeMauiIcons()
             .UseFluentMauiIcons()

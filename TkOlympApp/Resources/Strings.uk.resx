@@ -276,4 +276,6 @@
   <data name="EventType_Holiday" xml:space="preserve"><value>канікули</value></data>
   <data name="EventType_Reservation" xml:space="preserve"><value>бронювання</value></data>
   <data name="EventType_Group" xml:space="preserve"><value>групове заняття</value></data>
+  <data name="Notification_EventInHour" xml:space="preserve"><value>У вас подія через 1 годину</value></data>
+  <data name="Notification_EventInMinutes" xml:space="preserve"><value>У вас подія через {0} хвилин</value></data>
 </root>
