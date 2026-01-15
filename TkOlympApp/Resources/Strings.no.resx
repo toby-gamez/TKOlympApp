@@ -6,6 +6,7 @@
     <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
     <data name="AppTitle" xml:space="preserve"><value>TkOlympApp</value></data>
     <data name="Calendar" xml:space="preserve"><value>Kalender</value></data>
+    <data name="Overview" xml:space="preserve"><value>Oversikt</value></data>
     <data name="Language_Choose" xml:space="preserve"><value>Velg språk</value></data>
     <data name="Language_Czech" xml:space="preserve"><value>Tsjekkisk</value></data>
     <data name="Language_English" xml:space="preserve"><value>Engelsk</value></data>
@@ -68,6 +69,7 @@
     <data name="Trainers_Locations_Label" xml:space="preserve"><value>Treningslokaler</value></data>
     <data name="Trainers_Label" xml:space="preserve"><value>Trenere</value></data>
     <data name="Other_Section_Members" xml:space="preserve"><value>Medlemmer og klubb</value></data>
+    <data name="Other_Leaderboard_Desc" xml:space="preserve"><value>Rangeringsliste over dine prestasjoner og resultater.</value></data>
     <data name="Other_Item_Profile" xml:space="preserve"><value>Profil</value></data>
     <data name="Other_Profile_Desc" xml:space="preserve"><value>Alt du som en vanlig dødelig måtte ønske å vite om deg selv.</value></data>
     <data name="Other_Item_People" xml:space="preserve"><value>Folk</value></data>

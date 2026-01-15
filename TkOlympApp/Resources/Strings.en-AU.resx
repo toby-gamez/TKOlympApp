@@ -7,6 +7,7 @@
     <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
     <data name="AppTitle" xml:space="preserve"><value>TkOlympApp (No Cap Edition)</value></data>
     <data name="Calendar" xml:space="preserve"><value>The Plan 📅</value></data>
+    <data name="Overview" xml:space="preserve"><value>The Sitch 📊</value></data>
     <data name="Language_Choose" xml:space="preserve"><value>Choose ur fighter</value></data>
     <data name="Language_Czech" xml:space="preserve"><value>Cz (Based)</value></data>
     <data name="Language_English" xml:space="preserve"><value>English (Basic)</value></data>
@@ -69,6 +70,7 @@
     <data name="Trainers_Locations_Label" xml:space="preserve"><value>Spots</value></data>
     <data name="Trainers_Label" xml:space="preserve"><value>Gym Bros</value></data>
     <data name="Other_Section_Members" xml:space="preserve"><value>Fam &amp; Guild</value></data>
+    <data name="Other_Leaderboard_Desc" xml:space="preserve"><value>Flex ur wins and stats. No cap fr fr.</value></data>
     <data name="Other_Item_Profile" xml:space="preserve"><value>Main Character</value></data>
     <data name="Other_Profile_Desc" xml:space="preserve"><value>Everything about your main character arc.</value></data>
     <data name="Other_Item_People" xml:space="preserve"><value>The Homies</value></data>

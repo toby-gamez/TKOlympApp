@@ -6,6 +6,7 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, ...</value></resheader>
   <data name="AppTitle" xml:space="preserve"><value>TkOlympApp</value></data>
   <data name="Calendar" xml:space="preserve"><value>Lịch</value></data>
+  <data name="Overview" xml:space="preserve"><value>Tổng quan</value></data>
   <data name="Language_Choose" xml:space="preserve"><value>Chọn ngôn ngữ</value></data>
   <data name="Language_Czech" xml:space="preserve"><value>Tiếng Séc</value></data>
   <data name="Language_English" xml:space="preserve"><value>Tiếng Anh</value></data>
@@ -68,6 +69,7 @@
   <data name="Trainers_Locations_Label" xml:space="preserve"><value>Địa điểm tập</value></data>
   <data name="Trainers_Label" xml:space="preserve"><value>Huấn luyện viên</value></data>
   <data name="Other_Section_Members" xml:space="preserve"><value>Thành viên và câu lạc bộ</value></data>
+  <data name="Other_Leaderboard_Desc" xml:space="preserve"><value>Bảng xếp hạng thành tích và kết quả của bạn.</value></data>
   <data name="Other_Item_Profile" xml:space="preserve"><value>Hồ sơ</value></data>
   <data name="Other_Profile_Desc" xml:space="preserve"><value>Mọi thứ bạn có thể muốn biết về bản thân.</value></data>
   <data name="Other_Item_People" xml:space="preserve"><value>Mọi người</value></data>

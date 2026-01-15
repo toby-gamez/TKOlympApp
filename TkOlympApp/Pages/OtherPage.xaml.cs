@@ -75,6 +75,18 @@ public partial class OtherPage : ContentPage
         }
     }
 
+    private async void OnLeaderboardClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            await Shell.Current.GoToAsync(nameof(LeaderboardPage));
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync(LocalizationService.Get("Error_Title"), ex.Message, LocalizationService.Get("Button_OK"));
+        }
+    }
+
     private void OnSendTestNotificationClicked(object? sender, EventArgs e)
     {
         try

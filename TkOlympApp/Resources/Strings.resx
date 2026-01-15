@@ -6,6 +6,7 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, ...</value></resheader>
   <data name="AppTitle" xml:space="preserve"><value>TkOlympApp</value></data>
   <data name="Calendar" xml:space="preserve"><value>Kalendář</value></data>
+  <data name="Overview" xml:space="preserve"><value>Přehled</value></data>
   <data name="Language_Choose" xml:space="preserve"><value>Vyberte jazyk</value></data>
   <data name="Language_Czech" xml:space="preserve"><value>Čeština</value></data>
   <data name="Language_English" xml:space="preserve"><value>Angličtina</value></data>
@@ -68,10 +69,11 @@
   <data name="Trainers_Locations_Label" xml:space="preserve"><value>Tréninkové prostory</value></data>
   <data name="Trainers_Label" xml:space="preserve"><value>Trenéři</value></data>
   <data name="Other_Section_Members" xml:space="preserve"><value>Členové a klub</value></data>
+  <data name="Other_Leaderboard_Desc" xml:space="preserve"><value>Žebříček tvých úspěchů a výsledků.</value></data>
   <data name="Other_Item_Profile" xml:space="preserve"><value>Profil</value></data>
   <data name="Other_Profile_Desc" xml:space="preserve"><value>Vše, co si o sobě můžeš jako normální smrtelník přát vědět.</value></data>
   <data name="Other_Item_People" xml:space="preserve"><value>Lidé</value></data>
-  <data name="Other_People_Desc" xml:space="preserve"><value>Seznam tvých kamarádů.y PS: máš tam i jejich narozeniny.</value></data>
+  <data name="Other_People_Desc" xml:space="preserve"><value>Seznam tvých kamarádů. PS: máš tam i jejich narozeniny.</value></data>
   <data name="Other_Trainers_Label" xml:space="preserve"><value>Trenéři a tréninkové prostory</value></data>
   <data name="Other_Trainers_Desc" xml:space="preserve"><value>Kdybys zapomněl, kam každý den chodíš.</value></data>
   <data name="Other_CohortGroups_Label" xml:space="preserve"><value>Tréninkové skupiny</value></data>

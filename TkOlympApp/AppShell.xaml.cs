@@ -43,6 +43,8 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(nameof(PersonPage), typeof(PersonPage));
         Routing.RegisterRoute(nameof(EditRegistrationsPage), typeof(EditRegistrationsPage));
         Routing.RegisterRoute(nameof(ChangePasswordPage), typeof(ChangePasswordPage));
+        Routing.RegisterRoute(nameof(Pages.CalendarPage), typeof(Pages.CalendarPage));
+        Routing.RegisterRoute(nameof(LeaderboardPage), typeof(Pages.LeaderboardPage));
 
         Dispatcher.Dispatch(async () =>
         {
@@ -85,12 +87,7 @@ public partial class AppShell : Shell
                     // Ensure main page is visible and request a refresh after auth is ready
                     try
                     {
-                        try { await GoToAsync("//Kalendář"); } catch { }
-                        var current = Shell.Current?.CurrentPage;
-                        if (current is MainPage mp)
-                        {
-                            _ = mp.RefreshEventsAsync();
-                        }
+                        try { await GoToAsync("//Přehled"); } catch { }
                     }
                     catch { }
                 }

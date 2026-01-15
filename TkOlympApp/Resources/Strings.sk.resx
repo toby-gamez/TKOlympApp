@@ -6,6 +6,7 @@
     <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
     <data name="AppTitle" xml:space="preserve"><value>TkOlympApp</value></data>
     <data name="Calendar" xml:space="preserve"><value>Kalendár</value></data>
+    <data name="Overview" xml:space="preserve"><value>Prehľad</value></data>
     <data name="Language_Choose" xml:space="preserve"><value>Vyberte jazyk</value></data>
     <data name="Language_Czech" xml:space="preserve"><value>Čeština</value></data>
     <data name="Language_English" xml:space="preserve"><value>Angličtina</value></data>
@@ -68,6 +69,7 @@
     <data name="Trainers_Locations_Label" xml:space="preserve"><value>Tréningové priestory</value></data>
     <data name="Trainers_Label" xml:space="preserve"><value>Tréneri</value></data>
     <data name="Other_Section_Members" xml:space="preserve"><value>Členovia a klub</value></data>
+    <data name="Other_Leaderboard_Desc" xml:space="preserve"><value>Rebríček tvojich úspechov a výsledkov.</value></data>
     <data name="Other_Item_Profile" xml:space="preserve"><value>Profil</value></data>
     <data name="Other_Profile_Desc" xml:space="preserve"><value>Všetko, čo si o sebe môžeš ako normálny smrteľník priať vedieť.</value></data>
     <data name="Other_Item_People" xml:space="preserve"><value>Ľudia</value></data>

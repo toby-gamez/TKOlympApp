@@ -12,9 +12,15 @@
 
     <TabBar>
         <ShellContent
+            Title="{svc:Translate Overview}"
+            Icon="{mi:Material Icon=Dashboard}"
+            ContentTemplate="{DataTemplate local:MainPage}"
+            Route="Přehled" />
+
+        <ShellContent
             Title="{svc:Translate Calendar}"
             Icon="{mi:Material Icon=CalendarMonth}"
-            ContentTemplate="{DataTemplate local:MainPage}"
+            ContentTemplate="{DataTemplate pages:CalendarPage}"
             Route="Kalendář" />
 
         <ShellContent
@@ -24,11 +30,10 @@
             Route="Nástěnka" />
 
         <ShellContent
-            Title="{svc:Translate Leaderboard}"
-            Icon="{mi:Material Icon=Leaderboard}"
-            ContentTemplate="{DataTemplate pages:LeaderboardPage}"
-            Route="Žebříček" />
-
+            Title="{svc:Translate Events_Title}"
+            Icon="{mi:Material Icon=Event}"
+            ContentTemplate="{DataTemplate pages:EventsPage}"
+            Route="Akce" />
 
         <ShellContent
             Title="{svc:Translate Other}"

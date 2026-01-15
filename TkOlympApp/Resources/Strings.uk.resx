@@ -6,6 +6,7 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, ...</value></resheader>
   <data name="AppTitle" xml:space="preserve"><value>TkOlympApp</value></data>
   <data name="Calendar" xml:space="preserve"><value>Календар</value></data>
+  <data name="Overview" xml:space="preserve"><value>Огляд</value></data>
   <data name="Language_Choose" xml:space="preserve"><value>Виберіть мову</value></data>
   <data name="Language_Czech" xml:space="preserve"><value>Чеська</value></data>
   <data name="Language_English" xml:space="preserve"><value>Англійська</value></data>
@@ -68,6 +69,7 @@
   <data name="Trainers_Locations_Label" xml:space="preserve"><value>Майданчики для тренувань</value></data>
   <data name="Trainers_Label" xml:space="preserve"><value>Тренери</value></data>
   <data name="Other_Section_Members" xml:space="preserve"><value>Члени та клуб</value></data>
+  <data name="Other_Leaderboard_Desc" xml:space="preserve"><value>Таблиця ваших досягнень та результатів.</value></data>
   <data name="Other_Item_Profile" xml:space="preserve"><value>Профіль</value></data>
   <data name="Other_Profile_Desc" xml:space="preserve"><value>Все, що ви можете захотіти знати про себе.</value></data>
   <data name="Other_Item_People" xml:space="preserve"><value>Люди</value></data>
