@@ -1,4 +1,5 @@
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.Controls.Shapes;
 using System.Diagnostics;
 using System;
 using System.Collections.Generic;
@@ -14,11 +15,11 @@ namespace TkOlympApp.Pages;
 
 public partial class CalendarPage : ContentPage
 {
-    private readonly ObservableCollection<WeekGroup> _weeks = new();
     private bool _isLoading;
     private bool _onlyMine = true;
     private DateTime _weekStart;
     private DateTime _weekEnd;
+    private readonly List<TrainerDetailRow> _trainerDetailRows = new(); // for async updates
 
     public CalendarPage()
     {
@@ -39,8 +40,7 @@ public partial class CalendarPage : ContentPage
             return;
         }
 
-        // Bind the generated weeks collection to the static stack layout
-        try { BindableLayout.SetItemsSource(EventsStack, _weeks); } catch { }
+        // No binding needed - we'll generate views directly
         try
         {
             SetTopTabVisuals(_onlyMine);
@@ -139,17 +139,24 @@ public partial class CalendarPage : ContentPage
                 list.Add(date);
             }
 
-            _weeks.Clear();
+            // Clear previous views and tracking list
+            EventsStack.Children.Clear();
+            _trainerDetailRows.Clear();
+
             var culture = CultureInfo.CurrentUICulture ?? CultureInfo.CurrentCulture;
+
             foreach (var kv in weekMap)
             {
                 var weekStart = kv.Key;
                 var weekEnd = weekStart.AddDays(6);
-                var wg = new WeekGroup($"{weekStart:dd.MM.yyyy} – {weekEnd:dd.MM.yyyy}");
+                
+                // Week header
+                EventsStack.Children.Add(CreateWeekHeader($"{weekStart:dd.MM.yyyy} – {weekEnd:dd.MM.yyyy}"));
+
                 foreach (var date in kv.Value.OrderBy(d => d))
                 {
-                    if (!groupsByDate.TryGetValue(date, out var dayEvents)) continue;
-                    if (dayEvents.Count == 0) continue; // skip empty days
+                    if (!groupsByDate.TryGetValue(date, out var dayEvents) || dayEvents.Count == 0) continue;
+
                     string dayLabel;
                     var todayDate = DateTime.Now.Date;
                     if (date == todayDate) dayLabel = LocalizationService.Get("Today") ?? "Dnes";
@@ -160,11 +167,65 @@ public partial class CalendarPage : ContentPage
                         dayLabel = char.ToUpper(name[0], culture) + name.Substring(1) + $" {date:dd.MM.}";
                     }
 
-                    var dg = new DayGroup(dayLabel, date, dayEvents);
-                    wg.Add(dg);
+                    // Day header
+                    EventsStack.Children.Add(CreateDayHeader(dayLabel, date));
+
+                    // Separate events into groupable (lesson with exactly one trainer) and single events
+                    var groupableEvents = new List<EventService.EventInstance>();
+                    var singleEventsList = new List<EventService.EventInstance>();
+
+                    foreach (var evt in dayEvents)
+                    {
+                        var isLesson = string.Equals(evt.Event?.Type, "lesson", StringComparison.OrdinalIgnoreCase);
+                        var trainerCount = evt.Event?.EventTrainersList?.Count ?? 0;
+
+                        if (isLesson && trainerCount == 1)
+                        {
+                            groupableEvents.Add(evt);
+                        }
+                        else
+                        {
+                            singleEventsList.Add(evt);
+                        }
+                    }
+
+                    // Add single events
+                    foreach (var evt in singleEventsList.OrderBy(e => e.Since ?? e.UpdatedAt))
+                    {
+                        var since = evt.Since;
+                        var until = evt.Until;
+                        var timeRange = (since.HasValue ? since.Value.ToString("HH:mm") : "--:--") + " – " + (until.HasValue ? until.Value.ToString("HH:mm") : "--:--");
+                        var locationOrTrainers = ComputeLocationOrTrainers(evt);
+                        var eventName = ComputeEventName(evt);
+                        var eventTypeLabel = ComputeEventTypeLabel(evt.Event?.Type);
+
+                        EventsStack.Children.Add(CreateSingleEventCard(evt, timeRange, locationOrTrainers, eventName, eventTypeLabel));
+                    }
+
+                    // Add grouped trainers
+                    var groups = groupableEvents.GroupBy(e => e.Event?.EventTrainersList?.FirstOrDefault()?.Name?.Trim() ?? string.Empty)
+                        .OrderBy(g => g.Min(x => x.Since ?? x.UpdatedAt));
+
+                    foreach (var g in groups)
+                    {
+                        var ordered = g.OrderBy(i => i.Since ?? i.UpdatedAt).ToList();
+                        var trainerName = g.Key;
+                        var trainerTitle = string.IsNullOrWhiteSpace(trainerName) ? LocalizationService.Get("Lessons") ?? "Lekce" : trainerName;
+
+                        EventsStack.Children.Add(CreateTrainerGroupHeader(trainerTitle));
+
+                        for (int i = 0; i < ordered.Count; i++)
+                        {
+                            var inst = ordered[i];
+                            var firstRegistrant = i == 0 ? ComputeFirstRegistrant(inst) : string.Empty;
+                            var durationText = ComputeDuration(inst);
+                            var detailRow = new TrainerDetailRow(inst, firstRegistrant, durationText);
+                            _trainerDetailRows.Add(detailRow);
+                            
+                            EventsStack.Children.Add(CreateTrainerDetailRow(detailRow));
+                        }
+                    }
                 }
-                if (wg.Count > 0)
-                    _weeks.Add(wg);
             }
 
             // Highlight rows in the "All" view when the registrant matches current user or user's active couples
@@ -214,26 +275,18 @@ public partial class CalendarPage : ContentPage
                     var distinct = highlightNames.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
                     normalizedHighlights = distinct.Select(NormalizeName).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
                     try { System.Diagnostics.Debug.WriteLine("Highlight names: " + string.Join(",", distinct)); } catch { }
-                    foreach (var week in _weeks)
+                    
+                    foreach (var row in _trainerDetailRows)
                     {
-                        foreach (var day in week)
+                        var fr = row.FirstRegistrant ?? string.Empty;
+                        if (string.IsNullOrWhiteSpace(fr))
                         {
-                            foreach (var gt in day.GroupedTrainers)
-                            {
-                                foreach (var row in gt.Rows)
-                                {
-                                    var fr = row.FirstRegistrant ?? string.Empty;
-                                    if (string.IsNullOrWhiteSpace(fr))
-                                    {
-                                        row.IsHighlighted = false;
-                                        continue;
-                                    }
-                                    var frNorm = NormalizeName(fr);
-                                    bool matched = !string.IsNullOrWhiteSpace(frNorm) && normalizedHighlights.Any(h => frNorm.Contains(h) || h.Contains(frNorm));
-                                    row.IsHighlighted = matched;
-                                }
-                            }
+                            row.IsHighlighted = false;
+                            continue;
                         }
+                        var frNorm = NormalizeName(fr);
+                        bool matched = !string.IsNullOrWhiteSpace(frNorm) && normalizedHighlights.Any(h => frNorm.Contains(h) || h.Contains(frNorm));
+                        row.IsHighlighted = matched;
                     }
                 }
                 catch { }
@@ -244,62 +297,53 @@ public partial class CalendarPage : ContentPage
             {
                 try
                 {
-                    foreach (var week in _weeks)
+                    foreach (var row in _trainerDetailRows)
                     {
-                        foreach (var day in week)
+                        var inst = row.Instance;
+                        var evt = inst?.Event;
+                        if (!row.IsLoaded && evt != null && evt.Id != 0)
                         {
-                            foreach (var gt in day.GroupedTrainers)
+                            try
                             {
-                                foreach (var row in gt.Rows)
+                                var id = evt.Id;
+                                var details = await EventService.GetEventAsync(id);
+                                string name = string.Empty;
+                                try
                                 {
-                                    var inst = row.Instance;
-                                    var evt = inst?.Event;
-                                    if (!row.IsLoaded && evt != null && evt.Id != 0)
+                                    if (details?.EventRegistrations?.Nodes != null && details.EventRegistrations.Nodes.Count > 0)
                                     {
-                                        try
+                                        var node = details.EventRegistrations.Nodes[0];
+                                        if (node?.Person != null)
+                                            name = (node.Person.FirstName + " " + (node.Person.LastName ?? string.Empty)).Trim();
+                                        if (string.IsNullOrWhiteSpace(name) && node?.Couple != null)
                                         {
-                                            var id = evt.Id;
-                                            var details = await EventService.GetEventAsync(id);
-                                            string name = string.Empty;
-                                            try
-                                            {
-                                                if (details?.EventRegistrations?.Nodes != null && details.EventRegistrations.Nodes.Count > 0)
-                                                {
-                                                    var node = details.EventRegistrations.Nodes[0];
-                                                    if (node?.Person != null)
-                                                        name = (node.Person.FirstName + " " + (node.Person.LastName ?? string.Empty)).Trim();
-                                                    if (string.IsNullOrWhiteSpace(name) && node?.Couple != null)
-                                                    {
-                                                        var manLn = node.Couple.Man?.LastName;
-                                                        var womanLn = node.Couple.Woman?.LastName;
-                                                        if (!string.IsNullOrWhiteSpace(manLn) && !string.IsNullOrWhiteSpace(womanLn)) name = manLn + " - " + womanLn;
-                                                        else if (!string.IsNullOrWhiteSpace(manLn)) name = manLn;
-                                                        else if (!string.IsNullOrWhiteSpace(womanLn)) name = womanLn;
-                                                    }
-                                                }
-                                            }
-                                            catch { }
-                                            // Ensure we set the FirstRegistrant (may be empty) and mark row as loaded so triggers apply after fetch
-                                            Dispatcher?.Dispatch(() => {
-                                                row.FirstRegistrant = name;
-                                                row.IsLoaded = true;
-                                                try
-                                                {
-                                                    var frNorm = NormalizeName(row.FirstRegistrant);
-                                                    var matched = !string.IsNullOrWhiteSpace(frNorm) && normalizedHighlights.Any(h => frNorm.Contains(h) || h.Contains(frNorm));
-                                                    row.IsHighlighted = matched;
-                                                    System.Diagnostics.Debug.WriteLine("Row firstRegistrant='" + row.FirstRegistrant + "' normalized='" + frNorm + "' matched=" + matched);
-                                                }
-                                                catch { }
-                                            });
-                                        }
-                                        catch
-                                        {
-                                            // On any error, still mark row as loaded so UI doesn't stay in unknown state
-                                            Dispatcher?.Dispatch(() => { row.IsLoaded = true; });
+                                            var manLn = node.Couple.Man?.LastName;
+                                            var womanLn = node.Couple.Woman?.LastName;
+                                            if (!string.IsNullOrWhiteSpace(manLn) && !string.IsNullOrWhiteSpace(womanLn)) name = manLn + " - " + womanLn;
+                                            else if (!string.IsNullOrWhiteSpace(manLn)) name = manLn;
+                                            else if (!string.IsNullOrWhiteSpace(womanLn)) name = womanLn;
                                         }
                                     }
                                 }
+                                catch { }
+                                // Ensure we set the FirstRegistrant (may be empty) and mark row as loaded so triggers apply after fetch
+                                Dispatcher?.Dispatch(() => {
+                                    row.FirstRegistrant = name;
+                                    row.IsLoaded = true;
+                                    try
+                                    {
+                                        var frNorm = NormalizeName(row.FirstRegistrant);
+                                        var matched = !string.IsNullOrWhiteSpace(frNorm) && normalizedHighlights.Any(h => frNorm.Contains(h) || h.Contains(frNorm));
+                                        row.IsHighlighted = matched;
+                                        System.Diagnostics.Debug.WriteLine("Row firstRegistrant='" + row.FirstRegistrant + "' normalized='" + frNorm + "' matched=" + matched);
+                                    }
+                                    catch { }
+                                });
+                            }
+                            catch
+                            {
+                                // On any error, still mark row as loaded so UI doesn't stay in unknown state
+                                Dispatcher?.Dispatch(() => { row.IsLoaded = true; });
                             }
                         }
                     }
@@ -346,8 +390,8 @@ public partial class CalendarPage : ContentPage
             if (EmptyLabel != null)
             {
                 EmptyLabel.Text = emptyText;
-                var total = _weeks.Sum(w => w.Sum(d => d.TotalRows));
-                var showEmpty = !_isLoading && total == 0;
+                var totalRows = EventsStack?.Children?.Count ?? 0;
+                var showEmpty = !_isLoading && totalRows == 0;
                 EmptyLabel.IsVisible = showEmpty;
                 if (EventsScroll != null)
                     EventsScroll.IsVisible = !showEmpty;
@@ -361,15 +405,18 @@ public partial class CalendarPage : ContentPage
 
     private async void OnEventCardTapped(object? sender, TappedEventArgs e)
     {
-        if (sender is Border frame && frame.BindingContext is EventService.EventInstance instance && instance.Event?.Id is long eventId)
+        if (sender is VisualElement ve && ve.BindingContext is EventService.EventInstance instance)
         {
             if (instance.IsCancelled) return;
-            var since = instance.Since.HasValue ? instance.Since.Value.ToString("o") : null;
-            var until = instance.Until.HasValue ? instance.Until.Value.ToString("o") : null;
-            var uri = $"EventPage?id={eventId}" +
-                      (since != null ? $"&since={Uri.EscapeDataString(since)}" : string.Empty) +
-                      (until != null ? $"&until={Uri.EscapeDataString(until)}" : string.Empty);
-            await Shell.Current.GoToAsync(uri);
+            if (instance.Event?.Id is long eventId)
+            {
+                var since = instance.Since.HasValue ? instance.Since.Value.ToString("o") : null;
+                var until = instance.Until.HasValue ? instance.Until.Value.ToString("o") : null;
+                var uri = $"EventPage?id={eventId}" +
+                          (since != null ? $"&since={Uri.EscapeDataString(since)}" : string.Empty) +
+                          (until != null ? $"&until={Uri.EscapeDataString(until)}" : string.Empty);
+                await Shell.Current.GoToAsync(uri);
+            }
         }
     }
 
@@ -377,15 +424,9 @@ public partial class CalendarPage : ContentPage
     {
         try
         {
-            GroupedEventRow? row = null;
+            TrainerDetailRow? row = null;
             if (sender is VisualElement ve)
-                row = ve.BindingContext as GroupedEventRow;
-            // fallback checks for other possible sender types
-            if (row == null)
-            {
-                if (sender is Border b) row = b.BindingContext as GroupedEventRow;
-                else if (sender is CollectionView cv) row = cv.BindingContext as GroupedEventRow;
-            }
+                row = ve.BindingContext as TrainerDetailRow;
 
             if (row?.Instance?.Event?.Id is long eventId)
             {
@@ -506,79 +547,27 @@ public partial class CalendarPage : ContentPage
     private async void OnTodayWeekClicked(object? sender, EventArgs e)
     {
         var currentWeekStart = GetWeekStart(DateTime.Now);
-        var alreadyOnCurrentWeek = _weekStart == currentWeekStart;
-
         _weekStart = currentWeekStart;
         _weekEnd = _weekStart.AddDays(6);
-        try { Debug.WriteLine($"OnTodayWeekClicked: DateTime.Now={DateTime.Now:o}, weekStart={_weekStart:o}, weekEnd={_weekEnd:o}, alreadyOnCurrentWeek={alreadyOnCurrentWeek}"); } catch { }
+        try { Debug.WriteLine($"OnTodayWeekClicked: DateTime.Now={DateTime.Now:o}, weekStart={_weekStart:o}, weekEnd={_weekEnd:o}"); } catch { }
         try { UpdateWeekLabel(); } catch { }
         await LoadEventsAsync();
 
-        if (alreadyOnCurrentWeek)
+        // Scroll to today if possible
+        try
         {
-            try
+            var today = DateTime.Now.Date;
+            // Find day header with matching date
+            foreach (var child in EventsStack.Children)
             {
-                var today = DateTime.Now.Date;
-                // find the week and day group for today
-                foreach (var wg in _weeks)
+                if (child is VisualElement ve && ve.BindingContext is DayHeaderRow dhr && dhr.Date == today)
                 {
-                    var dg = wg.FirstOrDefault(d => d.Date == today);
-                    if (dg != null)
-                    {
-                        try
-                        {
-                            // Find the visual element for the day group inside the generated BindableLayout children
-                            Microsoft.Maui.Controls.VisualElement? FindWithContext(Microsoft.Maui.IView root, object ctx)
-                            {
-                                try
-                                {
-                                    if (root == null) return null;
-                                    if (root is Microsoft.Maui.Controls.VisualElement ve)
-                                    {
-                                        if (ve.BindingContext == ctx) return ve;
-                                        if (ve is Microsoft.Maui.Controls.Layout layout)
-                                        {
-                                            foreach (var child in layout.Children)
-                                            {
-                                                var found = FindWithContext(child, ctx);
-                                                if (found != null) return found;
-                                            }
-                                        }
-                                    }
-                                }
-                                catch { }
-                                return null;
-                            }
-
-                            Microsoft.Maui.Controls.VisualElement? target = null;
-                            if (EventsStack != null)
-                            {
-                                foreach (var weekChild in EventsStack.Children)
-                                {
-                                    try
-                                    {
-                                        if (weekChild is Microsoft.Maui.Controls.VisualElement v && v.BindingContext == wg)
-                                        {
-                                            target = FindWithContext(weekChild, dg);
-                                            if (target != null) break;
-                                        }
-                                    }
-                                    catch { }
-                                }
-                            }
-
-                            if (target != null && EventsScroll != null)
-                            {
-                                await EventsScroll.ScrollToAsync(target, ScrollToPosition.Start, true);
-                            }
-                        }
-                        catch { }
-                        break;
-                    }
+                    await EventsScroll.ScrollToAsync(ve, ScrollToPosition.Start, true);
+                    break;
                 }
             }
-            catch { }
         }
+        catch { }
     }
 
     private static async Task DisplayAlertAsync(string? title, string? message, string? cancel)
@@ -591,265 +580,366 @@ public partial class CalendarPage : ContentPage
         catch { }
     }
 
-    // Helper grouping types
-    public sealed class WeekGroup : ObservableCollection<DayGroup>
+    // Helper methods for computing display strings (replacing converter logic)
+    private static string ComputeEventName(EventService.EventInstance inst)
     {
-        public string WeekLabel { get; }
-        public WeekGroup(string weekLabel) { WeekLabel = weekLabel; }
+        try
+        {
+            var evt = inst.Event;
+            if (evt == null) return string.Empty;
+            return evt.Name ?? string.Empty;
+        }
+        catch { return string.Empty; }
     }
 
-    public sealed class DayGroup
+    private static string ComputeEventTypeLabel(string? type)
     {
-        public string DayLabel { get; }
-        public DateTime Date { get; }
-        public ObservableCollection<GroupedTrainer> GroupedTrainers { get; }
-        public ObservableCollection<EventService.EventInstance> SingleEvents { get; }
-
-        public DayGroup(string dayLabel, DateTime date, IEnumerable<EventService.EventInstance> events)
+        try
         {
-            DayLabel = dayLabel;
-            Date = date;
-            GroupedTrainers = new ObservableCollection<GroupedTrainer>();
-            SingleEvents = new ObservableCollection<EventService.EventInstance>();
-
-            // Separate events into groupable (lesson with exactly one trainer) and single events
-            var groupableEvents = new List<EventService.EventInstance>();
-            var singleEventsList = new List<EventService.EventInstance>();
-
-            foreach (var evt in events)
+            if (string.IsNullOrEmpty(type)) return string.Empty;
+            return type.ToUpperInvariant() switch
             {
-                var isLesson = string.Equals(evt.Event?.Type, "lesson", StringComparison.OrdinalIgnoreCase);
-                var trainerCount = evt.Event?.EventTrainersList?.Count ?? 0;
-
-                if (isLesson && trainerCount == 1)
-                {
-                    groupableEvents.Add(evt);
-                }
-                else
-                {
-                    singleEventsList.Add(evt);
-                }
-            }
-
-            // Group groupable events by trainer name
-            var groups = groupableEvents.GroupBy(e => e.Event?.EventTrainersList?.FirstOrDefault()?.Name?.Trim() ?? string.Empty)
-                .OrderBy(g => g.Min(x => x.Since ?? x.UpdatedAt));
-
-            foreach (var g in groups)
-            {
-                var ordered = g.OrderBy(i => i.Since ?? i.UpdatedAt).ToList();
-                var trainerName = g.Key;
-                var trainerTitle = string.IsNullOrWhiteSpace(trainerName) ? LocalizationService.Get("Lessons") ?? "Lekce" : trainerName;
-                var gt = new GroupedTrainer(trainerTitle);
-
-                for (int i = 0; i < ordered.Count; i++)
-                {
-                    var inst = ordered[i];
-                    var firstRegistrant = i == 0 ? GroupedEventRow.ComputeFirstRegistrantPublic(inst) : string.Empty;
-                    gt.Rows.Add(new GroupedEventRow(inst, firstRegistrant));
-                }
-                GroupedTrainers.Add(gt);
-            }
-
-            // Add all single events
-            foreach (var evt in singleEventsList.OrderBy(e => e.Since ?? e.UpdatedAt))
-            {
-                SingleEvents.Add(evt);
-            }
+                "CAMP" => LocalizationService.Get("EventType_Camp") ?? "soustředění",
+                "LESSON" => LocalizationService.Get("EventType_Lesson") ?? "lekce",
+                "HOLIDAY" => LocalizationService.Get("EventType_Holiday") ?? "prázdniny",
+                "RESERVATION" => LocalizationService.Get("EventType_Reservation") ?? "rezervace",
+                "GROUP" => LocalizationService.Get("EventType_Group") ?? "vedená",
+                _ => type
+            };
         }
-
-        // Count rows including single-event wrappers
-        public int TotalRows => (SingleEvents?.Count ?? 0) + GroupedTrainers.Sum(gt => gt.Rows.Count);
+        catch { return string.Empty; }
     }
 
-    public sealed class GroupedTrainer
+    private static string ComputeLocationOrTrainers(EventService.EventInstance inst)
     {
-        public string TrainerTitle { get; }
-        public ObservableCollection<GroupedEventRow> Rows { get; }
-        public GroupedTrainer(string trainerTitle)
+        try
         {
-            TrainerTitle = trainerTitle;
-            Rows = new ObservableCollection<GroupedEventRow>();
+            var evt = inst.Event;
+            if (evt == null) return string.Empty;
+
+            // Try locationText first (preferred)
+            if (!string.IsNullOrWhiteSpace(evt.LocationText))
+                return evt.LocationText;
+
+            // Fallback to trainers
+            var trainers = evt.EventTrainersList?.Select(t => t.Name).Where(n => !string.IsNullOrWhiteSpace(n)).ToList() ?? new List<string?>();
+            if (trainers.Count > 0)
+                return string.Join(", ", trainers);
+
+            return string.Empty;
         }
+        catch { return string.Empty; }
     }
 
-    public sealed class GroupedEventRow : INotifyPropertyChanged
+    private static string ComputeFirstRegistrant(EventService.EventInstance inst)
     {
-        public EventService.EventInstance Instance { get; }
-        public string TimeRange { get; }
-        public bool IsCancelled => Instance?.IsCancelled ?? false;
-        private string _firstRegistrant;
-        private bool _isLoaded;
-        public bool IsLoaded
+        try
         {
-            get => _isLoaded;
-            set
+            // prefer eventRegistrationsList if available
+            var evt = inst.Event;
+            if (evt?.EventRegistrationsList != null && evt.EventRegistrationsList.Count > 0)
             {
-                if (_isLoaded != value)
+                var regs = evt.EventRegistrationsList;
+                int count = regs.Count;
+
+                // collect best-possible surname/identifier for each registration
+                var surnames = new System.Collections.Generic.List<string>();
+                static string ExtractSurname(string full)
                 {
-                    _isLoaded = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsLoaded)));
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsFree)));
+                    if (string.IsNullOrWhiteSpace(full)) return string.Empty;
+                    var parts = full.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+                    return parts.Length > 1 ? parts[parts.Length - 1] : full;
                 }
-            }
-        }
-        public string FirstRegistrant
-        {
-            get => _firstRegistrant;
-            set
-            {
-                if (_firstRegistrant != value)
+                foreach (var node in regs)
                 {
-                    _firstRegistrant = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FirstRegistrant)));
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsFree)));
-                }
-            }
-        }
-
-        // True when the row has completed loading and there is no registrant
-        public bool IsFree => IsLoaded && string.IsNullOrEmpty(FirstRegistrant);
-        private bool _isHighlighted;
-        public bool IsHighlighted
-        {
-            get => _isHighlighted;
-            set
-            {
-                if (_isHighlighted != value)
-                {
-                    _isHighlighted = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsHighlighted)));
-                }
-            }
-        }
-        public string DurationText { get; }
-
-        public GroupedEventRow(EventService.EventInstance instance, string firstRegistrantOverride = "")
-        {
-            Instance = instance;
-            var since = instance.Since;
-            var until = instance.Until;
-            TimeRange = (since.HasValue ? since.Value.ToString("HH:mm") : "--:--") + " - " + (until.HasValue ? until.Value.ToString("HH:mm") : "--:--");
-            _firstRegistrant = string.IsNullOrEmpty(firstRegistrantOverride) ? ComputeFirstRegistrant(instance) : firstRegistrantOverride;
-            // If we already have a non-empty registrant at construction, consider this row loaded
-            IsLoaded = !string.IsNullOrEmpty(_firstRegistrant);
-            DurationText = ComputeDuration(instance);
-        }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        // helper used when constructing groups
-        public static string ComputeFirstRegistrantPublic(EventService.EventInstance inst) => ComputeFirstRegistrant(inst);
-
-        private static string ComputeFirstRegistrant(EventService.EventInstance inst)
-        {
-            try
-            {
-                // prefer eventRegistrationsList if available
-                var evt = inst.Event;
-                if (evt?.EventRegistrationsList != null && evt.EventRegistrationsList.Count > 0)
-                {
-                    var regs = evt.EventRegistrationsList;
-                    int count = regs.Count;
-
-                    // collect best-possible surname/identifier for each registration
-                    var surnames = new System.Collections.Generic.List<string>();
-                    static string ExtractSurname(string full)
+                    try
                     {
-                        if (string.IsNullOrWhiteSpace(full)) return string.Empty;
-                        var parts = full.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
-                        return parts.Length > 1 ? parts[parts.Length - 1] : full;
-                    }
-                    foreach (var node in regs)
-                    {
-                        try
-                        {
-                            if (node?.Person != null)
-                            {
-                                var full = node.Person.Name ?? string.Empty;
-                                if (!string.IsNullOrWhiteSpace(full))
-                                    surnames.Add(ExtractSurname(full));
-                            }
-                            else if (node?.Couple != null)
-                            {
-                                var manLn = node.Couple.Man?.LastName;
-                                var womanLn = node.Couple.Woman?.LastName;
-                                if (!string.IsNullOrWhiteSpace(manLn) && !string.IsNullOrWhiteSpace(womanLn))
-                                    surnames.Add(manLn + " - " + womanLn);
-                                else if (!string.IsNullOrWhiteSpace(manLn)) surnames.Add(manLn);
-                                else if (!string.IsNullOrWhiteSpace(womanLn)) surnames.Add(womanLn);
-                            }
-                        }
-                        catch { }
-                    }
-
-                    if (count == 1)
-                    {
-                        var node = regs[0];
                         if (node?.Person != null)
                         {
                             var full = node.Person.Name ?? string.Empty;
-                            if (!string.IsNullOrWhiteSpace(full)) return full;
+                            if (!string.IsNullOrWhiteSpace(full))
+                                surnames.Add(ExtractSurname(full));
                         }
-                        if (node?.Couple != null)
+                        else if (node?.Couple != null)
                         {
                             var manLn = node.Couple.Man?.LastName;
                             var womanLn = node.Couple.Woman?.LastName;
-                            if (!string.IsNullOrWhiteSpace(manLn) && !string.IsNullOrWhiteSpace(womanLn)) return manLn + " - " + womanLn;
-                            if (!string.IsNullOrWhiteSpace(manLn)) return manLn;
-                            if (!string.IsNullOrWhiteSpace(womanLn)) return womanLn;
+                            if (!string.IsNullOrWhiteSpace(manLn) && !string.IsNullOrWhiteSpace(womanLn))
+                                surnames.Add(manLn + " - " + womanLn);
+                            else if (!string.IsNullOrWhiteSpace(manLn)) surnames.Add(manLn);
+                            else if (!string.IsNullOrWhiteSpace(womanLn)) surnames.Add(womanLn);
                         }
                     }
-                    else if (count == 2)
-                    {
-                        if (surnames.Count >= 2)
-                            return surnames[0] + " - " + surnames[1];
-                        if (surnames.Count == 1) return surnames[0];
-                    }
-                    else // count >= 3
-                    {
-                        if (count == 3)
-                        {
-                            if (surnames.Count > 0) return string.Join(", ", surnames);
-                        }
-                        else // > 3
-                        {
-                            var take = surnames.Take(2).ToList();
-                            if (take.Count > 0) return string.Join(", ", take) + "...";
-                        }
-                    }
+                    catch { }
                 }
 
-                // fall back to tenant.couplesList (existing logic)
-                var tenant = inst.Tenant;
-                if (tenant?.CouplesList != null && tenant.CouplesList.Count > 0)
+                if (count == 1)
                 {
-                    var c = tenant.CouplesList[0];
-                    EventService.Person? p = c.Man ?? c.Woman;
-                    if (p != null)
+                    var node = regs[0];
+                    if (node?.Person != null)
                     {
-                        if (!string.IsNullOrWhiteSpace(p.FirstName))
-                            return (p.FirstName + " " + (p.Name ?? p.LastName ?? string.Empty)).Trim();
-                        return ((p.Name ?? string.Empty) + (string.IsNullOrWhiteSpace(p.LastName) ? string.Empty : " " + p.LastName)).Trim();
+                        var full = node.Person.Name ?? string.Empty;
+                        if (!string.IsNullOrWhiteSpace(full)) return full;
+                    }
+                    if (node?.Couple != null)
+                    {
+                        var manLn = node.Couple.Man?.LastName;
+                        var womanLn = node.Couple.Woman?.LastName;
+                        if (!string.IsNullOrWhiteSpace(manLn) && !string.IsNullOrWhiteSpace(womanLn)) return manLn + " - " + womanLn;
+                        if (!string.IsNullOrWhiteSpace(manLn)) return manLn;
+                        if (!string.IsNullOrWhiteSpace(womanLn)) return womanLn;
+                    }
+                }
+                else if (count == 2)
+                {
+                    if (surnames.Count >= 2)
+                        return surnames[0] + " - " + surnames[1];
+                    if (surnames.Count == 1) return surnames[0];
+                }
+                else // count >= 3
+                {
+                    if (count == 3)
+                    {
+                        if (surnames.Count > 0) return string.Join(", ", surnames);
+                    }
+                    else // > 3
+                    {
+                        var take = surnames.Take(2).ToList();
+                        if (take.Count > 0) return string.Join(", ", take) + "...";
                     }
                 }
             }
-            catch { }
-            return string.Empty;
-        }
 
-        private static string ComputeDuration(EventService.EventInstance inst)
-        {
-            try
+            // fall back to tenant.couplesList (existing logic)
+            var tenant = inst.Tenant;
+            if (tenant?.CouplesList != null && tenant.CouplesList.Count > 0)
             {
-                if (inst.Since.HasValue && inst.Until.HasValue)
+                var c = tenant.CouplesList[0];
+                EventService.Person? p = c.Man ?? c.Woman;
+                if (p != null)
                 {
-                    var mins = (int)(inst.Until.Value - inst.Since.Value).TotalMinutes;
-                    return mins > 0 ? mins + "'" : string.Empty;
+                    if (!string.IsNullOrWhiteSpace(p.FirstName))
+                        return (p.FirstName + " " + (p.Name ?? p.LastName ?? string.Empty)).Trim();
+                    return ((p.Name ?? string.Empty) + (string.IsNullOrWhiteSpace(p.LastName) ? string.Empty : " " + p.LastName)).Trim();
                 }
             }
-            catch { }
-            return string.Empty;
         }
+        catch { }
+        return string.Empty;
+    }
+
+    private static string ComputeDuration(EventService.EventInstance inst)
+    {
+        try
+        {
+            if (inst.Since.HasValue && inst.Until.HasValue)
+            {
+                var mins = (int)(inst.Until.Value - inst.Since.Value).TotalMinutes;
+                return mins > 0 ? mins + "'" : string.Empty;
+            }
+        }
+        catch { }
+        return string.Empty;
+    }
+
+    // View factory methods for static UI generation
+    private Border CreateWeekHeader(string weekLabel)
+    {
+        var border = new Border
+        {
+            Stroke = (Brush)Application.Current!.Resources["RespPrimary"],
+            StrokeThickness = 2,
+            Padding = new Thickness(8),
+            Margin = new Thickness(6, 12, 6, 0),
+            StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(6) }
+        };
+
+        var label = new Label
+        {
+            Text = weekLabel,
+            FontAttributes = FontAttributes.Bold,
+            HorizontalTextAlignment = TextAlignment.Center,
+            VerticalTextAlignment = TextAlignment.Center
+        };
+
+        border.Content = label;
+        return border;
+    }
+
+    private Label CreateDayHeader(string dayLabel, DateTime date)
+    {
+        var label = new Label
+        {
+            Text = dayLabel,
+            FontAttributes = FontAttributes.Bold,
+            Margin = new Thickness(6, 8, 6, 4),
+            BindingContext = new DayHeaderRow(dayLabel, date) // For scroll-to functionality
+        };
+        return label;
+    }
+
+    private Border CreateSingleEventCard(EventService.EventInstance instance, string timeRange, string locationOrTrainers, string eventName, string eventTypeLabel)
+    {
+        var border = new Border
+        {
+            Padding = new Thickness(12),
+            Margin = new Thickness(6),
+            StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(8) },
+            BindingContext = instance
+        };
+
+        var tapGesture = new TapGestureRecognizer();
+        tapGesture.Tapped += OnEventCardTapped;
+        border.GestureRecognizers.Add(tapGesture);
+
+        var stack = new VerticalStackLayout { Spacing = 6 };
+
+        // Title row
+        var titleGrid = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitionCollection
+            {
+                new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) },
+                new ColumnDefinition { Width = GridLength.Auto }
+            }
+        };
+
+        var titleLabel = new Label
+        {
+            Text = eventName,
+            FontAttributes = FontAttributes.Bold
+        };
+        if (instance.IsCancelled)
+            titleLabel.TextDecorations = TextDecorations.Strikethrough;
+        titleGrid.Add(titleLabel, 0);
+
+        var typeLabel = new Label
+        {
+            Text = eventTypeLabel,
+            FontSize = 12,
+            Style = (Style)Application.Current!.Resources["MutedLabelStyle"],
+            VerticalOptions = LayoutOptions.Center
+        };
+        titleGrid.Add(typeLabel, 1);
+
+        stack.Add(titleGrid);
+        stack.Add(new Label { Text = locationOrTrainers });
+        stack.Add(new Label
+        {
+            Text = timeRange,
+            FontSize = 12,
+            Style = (Style)Application.Current!.Resources["MutedLabelStyle"]
+        });
+
+        border.Content = stack;
+        return border;
+    }
+
+    private Border CreateTrainerGroupHeader(string trainerTitle)
+    {
+        var border = new Border
+        {
+            Padding = new Thickness(12, 8),
+            Margin = new Thickness(6, 6, 6, 0),
+            StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(8) }
+        };
+
+        var grid = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitionCollection
+            {
+                new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) },
+                new ColumnDefinition { Width = GridLength.Auto }
+            }
+        };
+
+        grid.Add(new Label
+        {
+            Text = trainerTitle,
+            FontAttributes = FontAttributes.Bold
+        }, 0);
+
+        grid.Add(new Label
+        {
+            Text = LocalizationService.Get("EventType_Lesson") ?? "Lekce",
+            FontSize = 12,
+            Style = (Style)Application.Current!.Resources["MutedLabelStyle"],
+            HorizontalOptions = LayoutOptions.End,
+            VerticalOptions = LayoutOptions.Center
+        }, 1);
+
+        border.Content = grid;
+        return border;
+    }
+
+    private Border CreateTrainerDetailRow(TrainerDetailRow row)
+    {
+        var border = new Border
+        {
+            StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(8) },
+            Stroke = (Color)Application.Current!.Resources["Gray200"],
+            StrokeThickness = 1,
+            Margin = new Thickness(6, 3),
+            Padding = 0,
+            BindingContext = row
+        };
+
+        var grid = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitionCollection
+            {
+                new ColumnDefinition { Width = new GridLength(120, GridUnitType.Absolute) },
+                new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) },
+                new ColumnDefinition { Width = GridLength.Auto }
+            },
+            Padding = new Thickness(12, 8),
+            ColumnSpacing = 8
+        };
+
+        var tapGesture = new TapGestureRecognizer();
+        tapGesture.Tapped += OnGroupedRowTapped;
+        grid.GestureRecognizers.Add(tapGesture);
+
+        var timeLabel = new Label();
+        timeLabel.SetBinding(Label.TextProperty, nameof(TrainerDetailRow.TimeRange));
+        if (row.IsCancelled)
+            timeLabel.TextDecorations = TextDecorations.Strikethrough;
+        grid.Add(timeLabel, 0);
+
+        var registrantLabel = new Label();
+        registrantLabel.SetBinding(Label.TextProperty, nameof(TrainerDetailRow.FirstRegistrant));
+        
+        // Dynamic styling based on properties
+        row.PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName == nameof(TrainerDetailRow.IsFree))
+            {
+                if (row.IsFree)
+                {
+                    registrantLabel.Text = LocalizationService.Get("Free") ?? "Volno";
+                    registrantLabel.TextColor = Colors.Green;
+                }
+            }
+            else if (e.PropertyName == nameof(TrainerDetailRow.IsHighlighted))
+            {
+                registrantLabel.FontAttributes = row.IsHighlighted ? FontAttributes.Bold : FontAttributes.None;
+            }
+        };
+        
+        if (row.IsCancelled)
+            registrantLabel.TextDecorations = TextDecorations.Strikethrough;
+        grid.Add(registrantLabel, 1);
+
+        var durationLabel = new Label
+        {
+            HorizontalOptions = LayoutOptions.End
+        };
+        durationLabel.SetBinding(Label.TextProperty, nameof(TrainerDetailRow.DurationText));
+        if (row.IsCancelled)
+            durationLabel.TextDecorations = TextDecorations.Strikethrough;
+        grid.Add(durationLabel, 2);
+
+        border.Content = grid;
+        return border;
     }
 }
