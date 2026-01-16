@@ -168,7 +168,7 @@ public partial class AppShell : Shell
         {
             try
             {
-                var announcements = await NoticeboardService.GetMyAnnouncementsAsync(ct);
+                var announcements = await NoticeboardService.GetMyAnnouncementsAsync(ct: ct);
                 var newest = announcements?.OrderByDescending(a => a.CreatedAt).FirstOrDefault();
                 if (newest != null && newest.Id > _lastSeenAnnouncementId)
                 {

@@ -12,12 +12,17 @@ public static class NoticeboardService
         PropertyNameCaseInsensitive = true
     };
 
-    public static async Task<List<Announcement>> GetMyAnnouncementsAsync(CancellationToken ct = default)
+    public static async Task<List<Announcement>> GetMyAnnouncementsAsync(bool? sticky = null, CancellationToken ct = default)
     {
         var query = new GraphQlRequest
         {
-            Query = "query MyQuery { myAnnouncements { nodes { body createdAt id isSticky isVisible title } } }"
+            Query = "query MyQuery($sticky: Boolean) { myAnnouncements(sticky: $sticky) { nodes { body createdAt id isSticky isVisible title author { id uJmeno uPrijmeni } updatedAt } } }"
         };
+
+        if (sticky.HasValue)
+        {
+            query.Variables = new Dictionary<string, object> { { "sticky", sticky.Value } };
+        }
 
         var json = JsonSerializer.Serialize(query, Options);
         using var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -71,8 +76,10 @@ public static class NoticeboardService
         [property: JsonPropertyName("title")] string? Title,
         [property: JsonPropertyName("body")] string? Body,
         [property: JsonPropertyName("createdAt")] DateTime CreatedAt,
+        [property: JsonPropertyName("updatedAt")] DateTime? UpdatedAt,
         [property: JsonPropertyName("isSticky")] bool IsSticky,
-        [property: JsonPropertyName("isVisible")] bool IsVisible
+        [property: JsonPropertyName("isVisible")] bool IsVisible,
+        [property: JsonPropertyName("author")] Author? Author
     );
 
     public static async Task<AnnouncementDetails?> GetAnnouncementAsync(long id, CancellationToken ct = default)
@@ -103,52 +110,12 @@ public static class NoticeboardService
         return data?.Data?.Announcement;
     }
 
-    public static async Task<List<StickyAnnouncement>> GetStickyAnnouncementsAsync(CancellationToken ct = default)
+    public static async Task<List<Announcement>> GetStickyAnnouncementsAsync(CancellationToken ct = default)
     {
-        var query = new GraphQlRequest
-        {
-            Query = "query MyQuery { stickyAnnouncements { nodes { author { uJmeno uPrijmeni } title body id isSticky updatedAt createdAt } } }"
-        };
-
-        var json = JsonSerializer.Serialize(query, Options);
-        using var content = new StringContent(json, Encoding.UTF8, "application/json");
-        using var resp = await AuthService.Http.PostAsync("", content, ct);
-        if (!resp.IsSuccessStatusCode)
-        {
-            var errorBody = await resp.Content.ReadAsStringAsync(ct);
-            throw new InvalidOperationException($"HTTP {(int)resp.StatusCode}: {errorBody}");
-        }
-
-        var body = await resp.Content.ReadAsStringAsync(ct);
-        var data = JsonSerializer.Deserialize<GraphQlResponse<StickyAnnouncementsData>>(body, Options);
-        if (data?.Errors != null && data.Errors.Count > 0)
-        {
-            var msg = data.Errors[0].Message ?? LocalizationService.Get("GraphQL_UnknownError");
-            throw new InvalidOperationException(msg);
-        }
-
-        return data?.Data?.StickyAnnouncements?.Nodes ?? new List<StickyAnnouncement>();
+        return await GetMyAnnouncementsAsync(sticky: true, ct);
     }
 
-    private sealed class StickyAnnouncementsData
-    {
-        [JsonPropertyName("stickyAnnouncements")] public StickyWrapper? StickyAnnouncements { get; set; }
-    }
 
-    private sealed class StickyWrapper
-    {
-        [JsonPropertyName("nodes")] public List<StickyAnnouncement>? Nodes { get; set; }
-    }
-
-    public sealed record StickyAnnouncement(
-        [property: JsonPropertyName("id")] long Id,
-        [property: JsonPropertyName("title")] string? Title,
-        [property: JsonPropertyName("body")] string? Body,
-        [property: JsonPropertyName("createdAt")] DateTime CreatedAt,
-        [property: JsonPropertyName("updatedAt")] DateTime? UpdatedAt,
-        [property: JsonPropertyName("isSticky")] bool IsSticky,
-        [property: JsonPropertyName("author")] Author? Author
-    );
 
     private sealed class AnnouncementData
     {
@@ -166,6 +133,7 @@ public static class NoticeboardService
     );
 
     public sealed record Author(
+        [property: JsonPropertyName("id")] long Id,
         [property: JsonPropertyName("uJmeno")] string? FirstName,
         [property: JsonPropertyName("uPrijmeni")] string? LastName
     );
