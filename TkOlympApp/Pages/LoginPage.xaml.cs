@@ -37,8 +37,8 @@ public partial class LoginPage : ContentPage
             // Attempt GraphQL login; throws if credentials invalid
             await AuthService.LoginAsync(username, password);
 
-            // Navigate to the first tab (Kalendář) defined in AppShell
-            await Shell.Current.GoToAsync("//Kalendář");
+            // Navigate to the first tab (Přehled/MainPage) defined in AppShell
+            await Shell.Current.GoToAsync("//Přehled");
         }
         catch (Exception ex)
         {

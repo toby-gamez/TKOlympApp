@@ -15,12 +15,14 @@ public partial class MainPage : ContentPage
 {
     private DayGroup? _currentDay;
     private bool _isLoading;
+    public ObservableCollection<NoticeboardService.Announcement> RecentAnnouncements { get; } = new();
 
     public MainPage()
     {
         try
         {
             InitializeComponent();
+            BindingContext = this;
         }
         catch (Exception ex)
         {
@@ -67,6 +69,9 @@ public partial class MainPage : ContentPage
 
                 // Load upcoming events for display
                 try { await LoadUpcomingEventsAsync(); } catch { }
+                
+                // Load recent announcements
+                try { await LoadRecentAnnouncementsAsync(); } catch { }
             });
         }
         catch
@@ -178,10 +183,54 @@ public partial class MainPage : ContentPage
         try
         {
             await LoadUpcomingEventsAsync();
+            await LoadRecentAnnouncementsAsync();
         }
         finally
         {
             try { if (sender is RefreshView rv) rv.IsRefreshing = false; } catch { }
+        }
+    }
+
+    private async Task LoadRecentAnnouncementsAsync()
+    {
+        try
+        {
+            var announcements = await NoticeboardService.GetMyAnnouncementsAsync();
+            RecentAnnouncements.Clear();
+            
+            // Vezmi 2 nejnovější (seřazené sestupně podle CreatedAt)
+            var recent = announcements
+                .OrderByDescending(a => a.CreatedAt)
+                .Take(2)
+                .ToList();
+            
+            foreach (var announcement in recent)
+            {
+                RecentAnnouncements.Add(announcement);
+            }
+            
+            // Nastav viditelnost sekce
+            try { RecentAnnouncementsSection.IsVisible = RecentAnnouncements.Count > 0; } catch { }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"MainPage: Failed to load recent announcements: {ex}");
+            try { RecentAnnouncementsSection.IsVisible = false; } catch { }
+        }
+    }
+
+    private async void OnAnnouncementTapped(object? sender, EventArgs e)
+    {
+        try
+        {
+            if (sender is Border border && border.BindingContext is NoticeboardService.Announcement announcement)
+            {
+                await Shell.Current.GoToAsync($"NoticePage?id={announcement.Id}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"MainPage: Navigation to notice failed: {ex}");
         }
     }
 

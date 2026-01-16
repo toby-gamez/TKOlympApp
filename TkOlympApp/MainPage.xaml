@@ -33,10 +33,11 @@
 
         <RefreshView Grid.Row="1" Refreshing="OnRefresh">
             <ScrollView>
-                <Grid>
-                    <VerticalStackLayout x:Name="DayContent" Spacing="8">
-                        <!-- Day Label -->
-                        <Label Text="{Binding DayLabel}" FontAttributes="Bold" Margin="6,0,6,4" FontSize="20" />
+                <VerticalStackLayout Spacing="16">
+                    <Grid>
+                        <VerticalStackLayout x:Name="DayContent" Spacing="8">
+                            <!-- Day Label -->
+                            <Label Text="{Binding DayLabel}" FontAttributes="Bold" Margin="6,0,6,4" FontSize="20" />
 
                         <!-- Single Events -->
                         <VerticalStackLayout BindableLayout.ItemsSource="{Binding SingleEvents}">
@@ -161,6 +162,30 @@
                     
                     <Label x:Name="EmptyLabel" Text="{svc:Translate NoUpcomingEvents}" IsVisible="False" VerticalOptions="CenterAndExpand" HorizontalOptions="Center" Style="{StaticResource MutedLabelStyle}" />
                 </Grid>
+                
+                <!-- Recent Announcements Section -->
+                <VerticalStackLayout x:Name="RecentAnnouncementsSection" Spacing="8" Margin="0,16,0,0">
+                    <Label Text="{svc:Translate Noticeboard}" FontSize="18" FontAttributes="Bold" Margin="6,0,6,4" />
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding RecentAnnouncements}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="12" Margin="6">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnAnnouncementTapped" />
+                                    </Border.GestureRecognizers>
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="8" />
+                                    </Border.StrokeShape>
+                                    <VerticalStackLayout Spacing="4">
+                                        <Label Text="{Binding Title}" FontAttributes="Bold" />
+                                        <Label Text="{Binding CreatedAt, StringFormat='{0:dd.MM.yyyy HH:mm}'}" FontSize="12" Style="{StaticResource MutedLabelStyle}" />
+                                    </VerticalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
             </ScrollView>
         </RefreshView>
     </Grid>
