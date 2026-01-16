@@ -104,6 +104,8 @@
   <data name="Button_OK" xml:space="preserve"><value>OK</value></data>
   <data name="Tab_My" xml:space="preserve"><value>Của tôi</value></data>
   <data name="Tab_All" xml:space="preserve"><value>Tất cả</value></data>
+  <data name="UpcomingEvents" xml:space="preserve"><value>Các buổi tập sắp tới</value></data>
+  <data name="NoUpcomingEvents" xml:space="preserve"><value>Không có buổi tập sắp tới</value></data>
   <data name="Button_Save" xml:space="preserve"><value>Lưu</value></data>
   <data name="Button_ChangePassword" xml:space="preserve"><value>Đổi mật khẩu</value></data>
   <data name="Button_ChangePassword_Open" xml:space="preserve"><value>Thay đổi mật khẩu</value></data>

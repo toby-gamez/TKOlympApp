@@ -104,6 +104,8 @@
   <data name="Button_OK" xml:space="preserve"><value>OK</value></data>
   <data name="Tab_My" xml:space="preserve"><value>Мої</value></data>
   <data name="Tab_All" xml:space="preserve"><value>Всі</value></data>
+  <data name="UpcomingEvents" xml:space="preserve"><value>Майбутні тренування</value></data>
+  <data name="NoUpcomingEvents" xml:space="preserve"><value>Немає майбутніх тренувань</value></data>
   <data name="Button_Save" xml:space="preserve"><value>Зберегти</value></data>
   <data name="Button_ChangePassword" xml:space="preserve"><value>Змінити пароль</value></data>
   <data name="Button_ChangePassword_Open" xml:space="preserve"><value>Зміна пароля</value></data>

@@ -104,6 +104,8 @@
   <data name="Button_OK" xml:space="preserve"><value>OK</value></data>
   <data name="Tab_My" xml:space="preserve"><value>My</value></data>
   <data name="Tab_All" xml:space="preserve"><value>All</value></data>
+  <data name="UpcomingEvents" xml:space="preserve"><value>Upcoming trainings</value></data>
+  <data name="NoUpcomingEvents" xml:space="preserve"><value>No upcoming trainings</value></data>
   <data name="Error_Loading_User" xml:space="preserve"><value>Failed to load user.</value></data>
   <data name="Error_MissingPersonId" xml:space="preserve"><value>Person ID is not available.</value></data>
   <data name="Error_Saving" xml:space="preserve"><value>Error while saving.</value></data>

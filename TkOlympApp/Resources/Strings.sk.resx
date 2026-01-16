@@ -104,6 +104,8 @@
     <data name="Button_OK" xml:space="preserve"><value>OK</value></data>
     <data name="Tab_My" xml:space="preserve"><value>Moje</value></data>
     <data name="Tab_All" xml:space="preserve"><value>Všetkých</value></data>
+    <data name="UpcomingEvents" xml:space="preserve"><value>Nadchádzajúce tréningy</value></data>
+    <data name="NoUpcomingEvents" xml:space="preserve"><value>Žiadne nadchádzajúce tréningy</value></data>
     <data name="Error_Loading_User" xml:space="preserve"><value>Nepodarilo sa načítať používateľa.</value></data>
     <data name="Error_MissingPersonId" xml:space="preserve"><value>ID osoby nie je dostupné.</value></data>
     <data name="Error_Saving" xml:space="preserve"><value>Chyba pri ukladaní.</value></data>
