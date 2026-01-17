@@ -35,6 +35,7 @@ public sealed class SingleEventRow : EventRow
     public string EventName { get; }
     public string EventTypeLabel { get; }
     public bool IsCancelled { get; }
+    public List<EventService.EventTargetCohortLink>? EventTargetCohortsList { get; }
 
     public SingleEventRow(
         EventService.EventInstance instance,
@@ -50,13 +51,19 @@ public sealed class SingleEventRow : EventRow
         EventName = eventName;
         EventTypeLabel = eventTypeLabel;
         IsCancelled = isCancelled;
+        EventTargetCohortsList = instance.Event?.EventTargetCohortsList;
     }
 }
 
 public sealed class TrainerGroupHeaderRow : EventRow
 {
     public string TrainerTitle { get; }
-    public TrainerGroupHeaderRow(string trainerTitle) => TrainerTitle = trainerTitle;
+    public List<EventService.EventTargetCohortLink>? EventTargetCohortsList { get; }
+    public TrainerGroupHeaderRow(string trainerTitle, List<EventService.EventTargetCohortLink>? eventTargetCohortsList = null)
+    {
+        TrainerTitle = trainerTitle;
+        EventTargetCohortsList = eventTargetCohortsList;
+    }
 }
 
 public sealed class TrainerDetailRow : EventRow, INotifyPropertyChanged

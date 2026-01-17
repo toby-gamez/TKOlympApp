@@ -211,8 +211,9 @@ public partial class CalendarPage : ContentPage
                         var ordered = g.OrderBy(i => i.Since ?? i.UpdatedAt).ToList();
                         var trainerName = g.Key;
                         var trainerTitle = string.IsNullOrWhiteSpace(trainerName) ? LocalizationService.Get("Lessons") ?? "Lekce" : trainerName;
+                        var cohorts = ordered.FirstOrDefault()?.Event?.EventTargetCohortsList;
 
-                        EventsStack.Children.Add(CreateTrainerGroupHeader(trainerTitle));
+                        EventsStack.Children.Add(CreateTrainerGroupHeader(trainerTitle, cohorts));
 
                         for (int i = 0; i < ordered.Count; i++)
                         {
@@ -813,6 +814,13 @@ public partial class CalendarPage : ContentPage
             titleLabel.TextDecorations = TextDecorations.Strikethrough;
         titleGrid.Add(titleLabel, 0);
 
+        var typeWithColorStack = new HorizontalStackLayout
+        {
+            Spacing = 6,
+            HorizontalOptions = LayoutOptions.End,
+            VerticalOptions = LayoutOptions.Center
+        };
+
         var typeLabel = new Label
         {
             Text = eventTypeLabel,
@@ -820,7 +828,33 @@ public partial class CalendarPage : ContentPage
             Style = (Style)Application.Current!.Resources["MutedLabelStyle"],
             VerticalOptions = LayoutOptions.Center
         };
-        titleGrid.Add(typeLabel, 1);
+        typeWithColorStack.Add(typeLabel);
+
+        // Add cohort color circle if available (to the right of the label)
+        var cohorts = instance.Event?.EventTargetCohortsList;
+        if (cohorts != null && cohorts.Count > 0)
+        {
+            var firstCohort = cohorts[0];
+            var colorRgb = firstCohort.Cohort?.ColorRgb;
+            if (!string.IsNullOrWhiteSpace(colorRgb))
+            {
+                var colorBrush = TryParseColorBrush(colorRgb);
+                if (colorBrush != null)
+                {
+                    var circle = new BoxView
+                    {
+                        WidthRequest = 12,
+                        HeightRequest = 12,
+                        CornerRadius = 6,
+                        Background = colorBrush,
+                        VerticalOptions = LayoutOptions.Center
+                    };
+                    typeWithColorStack.Add(circle);
+                }
+            }
+        }
+
+        titleGrid.Add(typeWithColorStack, 1);
 
         stack.Add(titleGrid);
         stack.Add(new Label { Text = locationOrTrainers });
@@ -835,7 +869,7 @@ public partial class CalendarPage : ContentPage
         return border;
     }
 
-    private Border CreateTrainerGroupHeader(string trainerTitle)
+    private Border CreateTrainerGroupHeader(string trainerTitle, List<EventService.EventTargetCohortLink>? cohorts = null)
     {
         var border = new Border
         {
@@ -859,14 +893,45 @@ public partial class CalendarPage : ContentPage
             FontAttributes = FontAttributes.Bold
         }, 0);
 
-        grid.Add(new Label
+        var typeWithColorStack = new HorizontalStackLayout
+        {
+            Spacing = 6,
+            HorizontalOptions = LayoutOptions.End,
+            VerticalOptions = LayoutOptions.Center
+        };
+
+        typeWithColorStack.Add(new Label
         {
             Text = LocalizationService.Get("EventType_Lesson") ?? "Lekce",
             FontSize = 12,
             Style = (Style)Application.Current!.Resources["MutedLabelStyle"],
-            HorizontalOptions = LayoutOptions.End,
             VerticalOptions = LayoutOptions.Center
-        }, 1);
+        });
+
+        // Add cohort color circle if available (to the right of the label)
+        if (cohorts != null && cohorts.Count > 0)
+        {
+            var firstCohort = cohorts[0];
+            var colorRgb = firstCohort.Cohort?.ColorRgb;
+            if (!string.IsNullOrWhiteSpace(colorRgb))
+            {
+                var colorBrush = TryParseColorBrush(colorRgb);
+                if (colorBrush != null)
+                {
+                    var circle = new BoxView
+                    {
+                        WidthRequest = 12,
+                        HeightRequest = 12,
+                        CornerRadius = 6,
+                        Background = colorBrush,
+                        VerticalOptions = LayoutOptions.Center
+                    };
+                    typeWithColorStack.Add(circle);
+                }
+            }
+        }
+
+        grid.Add(typeWithColorStack, 1);
 
         border.Content = grid;
         return border;
@@ -877,8 +942,6 @@ public partial class CalendarPage : ContentPage
         var border = new Border
         {
             StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(8) },
-            Stroke = (Color)Application.Current!.Resources["Gray200"],
-            StrokeThickness = 1,
             Margin = new Thickness(6, 3),
             Padding = 0,
             BindingContext = row
@@ -889,6 +952,7 @@ public partial class CalendarPage : ContentPage
             ColumnDefinitions = new ColumnDefinitionCollection
             {
                 new ColumnDefinition { Width = new GridLength(120, GridUnitType.Absolute) },
+                new ColumnDefinition { Width = GridLength.Auto },
                 new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) },
                 new ColumnDefinition { Width = GridLength.Auto }
             },
@@ -905,6 +969,26 @@ public partial class CalendarPage : ContentPage
         if (row.IsCancelled)
             timeLabel.TextDecorations = TextDecorations.Strikethrough;
         grid.Add(timeLabel, 0);
+
+        // Cohort color circle
+        var cohortList = row.Instance?.Event?.EventTargetCohortsList;
+        if (cohortList != null && cohortList.Count > 0)
+        {
+            var firstCohort = cohortList[0];
+            var colorBrush = TryParseColorBrush(firstCohort?.Cohort?.ColorRgb);
+            if (colorBrush != null)
+            {
+                var circle = new Border
+                {
+                    WidthRequest = 14,
+                    HeightRequest = 14,
+                    Background = colorBrush,
+                    VerticalOptions = LayoutOptions.Center,
+                    StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(7) }
+                };
+                grid.Add(circle, 1);
+            }
+        }
 
         var registrantLabel = new Label();
         registrantLabel.SetBinding(Label.TextProperty, nameof(TrainerDetailRow.FirstRegistrant));
@@ -928,7 +1012,7 @@ public partial class CalendarPage : ContentPage
         
         if (row.IsCancelled)
             registrantLabel.TextDecorations = TextDecorations.Strikethrough;
-        grid.Add(registrantLabel, 1);
+        grid.Add(registrantLabel, 2);
 
         var durationLabel = new Label
         {
@@ -937,9 +1021,37 @@ public partial class CalendarPage : ContentPage
         durationLabel.SetBinding(Label.TextProperty, nameof(TrainerDetailRow.DurationText));
         if (row.IsCancelled)
             durationLabel.TextDecorations = TextDecorations.Strikethrough;
-        grid.Add(durationLabel, 2);
+        grid.Add(durationLabel, 3);
 
         border.Content = grid;
         return border;
+    }
+
+    private Microsoft.Maui.Controls.Brush? TryParseColorBrush(string? colorRgb)
+    {
+        if (string.IsNullOrWhiteSpace(colorRgb)) return null;
+        var s = colorRgb.Trim();
+        try
+        {
+            if (s.StartsWith("#"))
+                return new SolidColorBrush(Color.FromArgb(s));
+
+            if (s.Length == 6)
+                return new SolidColorBrush(Color.FromArgb("#" + s));
+
+            if (s.StartsWith("rgb", StringComparison.OrdinalIgnoreCase))
+            {
+                var digits = System.Text.RegularExpressions.Regex.Matches(s, "\\d+");
+                if (digits.Count >= 3)
+                {
+                    var r = int.Parse(digits[0].Value);
+                    var g = int.Parse(digits[1].Value);
+                    var b = int.Parse(digits[2].Value);
+                    return new SolidColorBrush(Color.FromRgb(r, g, b));
+                }
+            }
+        }
+        catch { }
+        return null;
     }
 }

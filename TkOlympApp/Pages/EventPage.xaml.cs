@@ -299,15 +299,7 @@ public partial class EventPage : ContentPage
             {
                 if (t == null) continue;
                 var name = t.Name?.Trim();
-                var price = t.LessonPrice;
-                string line = name ?? string.Empty;
-                if (price != null && price.Amount != 0)
-                {
-                    var cur = price.Currency;
-                    var priceText = $"{price.Amount:0.##} {cur}";
-                    line = string.IsNullOrWhiteSpace(name) ? priceText : $"{name} {priceText}";
-                }
-                if (!string.IsNullOrWhiteSpace(line)) _trainers.Add(line);
+                if (!string.IsNullOrWhiteSpace(name)) _trainers.Add(name);
             }
             TrainersFrame.IsVisible = _trainers.Count > 0;
 
@@ -388,15 +380,7 @@ public partial class EventPage : ContentPage
                     {
                         if (t == null) continue;
                         var tn = (t.Name ?? string.Empty).Trim();
-                        var price = t.LessonPrice;
-                        if (price != null && price.Amount != 0)
-                        {
-                            var cur = price.Currency;
-                            trainerParts.Add(string.IsNullOrWhiteSpace(tn)
-                                ? $"{price.Amount:0.##} {cur}"
-                                : $"{tn} {price.Amount:0.##} {cur}");
-                        }
-                        else if (!string.IsNullOrWhiteSpace(tn))
+                        if (!string.IsNullOrWhiteSpace(tn))
                         {
                             trainerParts.Add(tn);
                         }
@@ -574,23 +558,23 @@ public partial class EventPage : ContentPage
 
                 RegistrationActionsRow.IsVisible = userRegistered && isRegistrationOpen;
 
-                // If the event already finished (end date older than today), hide all registration UI
+                // If the event already finished (end time in the past), hide all registration UI
                 try
                 {
-                    // Compare only the date portion to avoid time-of-day/offset issues.
-                    // Use UTC dates for a stable comparison regardless of Kind/local conversion.
+                    // Compare full DateTime including time to accurately determine if event has passed
                     var isPast = false;
                     if (until.HasValue)
                     {
-                        var untilDateUtc = until.Value.ToUniversalTime().Date;
-                        var todayUtc = DateTime.UtcNow.Date;
-                        isPast = untilDateUtc < todayUtc;
+                        var untilUtc = until.Value.ToUniversalTime();
+                        var nowUtc = DateTime.UtcNow;
+                        isPast = untilUtc < nowUtc;
                     }
                     else if (since.HasValue)
                     {
-                        var sinceDateUtc = since.Value.ToUniversalTime().Date;
-                        var todayUtc = DateTime.UtcNow.Date;
-                        isPast = sinceDateUtc < todayUtc;
+                        // If only start time is available, check if it was more than a day ago
+                        var sinceUtc = since.Value.ToUniversalTime();
+                        var nowUtc = DateTime.UtcNow;
+                        isPast = sinceUtc.AddDays(1) < nowUtc;
                     }
 
                     if (isPast)
