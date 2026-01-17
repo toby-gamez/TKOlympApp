@@ -103,8 +103,11 @@
     <data name="Login_Failed_Title" xml:space="preserve"><value>Prijava ni uspela</value></data>
     <data name="Button_OK" xml:space="preserve"><value>V redu</value></data>
     <data name="Tab_My" xml:space="preserve"><value>Moji</value></data>
-    <data name="Tab_All" xml:space="preserve"><value>Vsi</value></data>    <data name="UpcomingEvents" xml:space="preserve"><value>Prihajajoči treningi</value></data>
-    <data name="NoUpcomingEvents" xml:space="preserve"><value>Ni prihajajočih treningov</value></data>    <data name="Button_Save" xml:space="preserve"><value>Shrani</value></data>
+    <data name="Tab_All" xml:space="preserve"><value>Vsi</value></data>
+    <data name="UpcomingEvents" xml:space="preserve"><value>Prihajajoči treningi</value></data>
+    <data name="NoUpcomingEvents" xml:space="preserve"><value>Ni prihajajočih treningov</value></data>
+    <data name="UpcomingCamps" xml:space="preserve"><value>Prihajajoči tabori</value></data>
+    <data name="Button_Save" xml:space="preserve"><value>Shrani</value></data>
     <data name="Button_ChangePassword" xml:space="preserve"><value>Spremeni geslo</value></data>
     <data name="Button_ChangePassword_Open" xml:space="preserve"><value>Sprememba gesla</value></data>
     <data name="Button_EditSelf" xml:space="preserve"><value>Uredi profil</value></data>

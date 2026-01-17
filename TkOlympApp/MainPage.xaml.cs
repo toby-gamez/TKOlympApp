@@ -16,6 +16,7 @@ public partial class MainPage : ContentPage
     private DayGroup? _currentDay;
     private bool _isLoading;
     public ObservableCollection<NoticeboardService.Announcement> RecentAnnouncements { get; } = new();
+    public ObservableCollection<CampItem> UpcomingCamps { get; } = new();
 
     public MainPage()
     {
@@ -72,6 +73,9 @@ public partial class MainPage : ContentPage
                 
                 // Load recent announcements
                 try { await LoadRecentAnnouncementsAsync(); } catch { }
+                
+                // Load upcoming camps
+                try { await LoadUpcomingCampsAsync(); } catch { }
             });
         }
         catch
@@ -184,6 +188,7 @@ public partial class MainPage : ContentPage
         {
             await LoadUpcomingEventsAsync();
             await LoadRecentAnnouncementsAsync();
+            await LoadUpcomingCampsAsync();
         }
         finally
         {
@@ -231,6 +236,64 @@ public partial class MainPage : ContentPage
         catch (Exception ex)
         {
             Debug.WriteLine($"MainPage: Navigation to notice failed: {ex}");
+        }
+    }
+
+    private async Task LoadUpcomingCampsAsync()
+    {
+        try
+        {
+            var now = DateTime.Now;
+            var pastStart = now.Date.AddYears(-1); // Načte soustředění rok zpět
+            var futureEnd = now.Date.AddYears(1); // Načte soustředění na rok dopředu
+
+            var events = await EventService.GetMyEventInstancesForRangeAsync(pastStart, futureEnd);
+            
+            // Filtrujeme pouze CAMP eventy a seřadíme podle absolutní vzdálenosti od dnešního dne
+            var camps = events
+                .Where(e => string.Equals(e.Event?.Type, "CAMP", StringComparison.OrdinalIgnoreCase))
+                .Where(e => e.Since.HasValue)
+                .Select(e => new { Event = e, Distance = Math.Abs((e.Since!.Value.Date - now.Date).TotalDays) })
+                .OrderBy(x => x.Distance)
+                .Take(2)
+                .Select(x => x.Event)
+                .ToList();
+
+            UpcomingCamps.Clear();
+            foreach (var camp in camps)
+            {
+                UpcomingCamps.Add(new CampItem
+                {
+                    EventId = camp.Event?.Id ?? 0,
+                    EventName = camp.Event?.Name ?? string.Empty,
+                    LocationName = camp.Event?.LocationText ?? string.Empty,
+                    Since = camp.Since,
+                    Until = camp.Until
+                });
+            }
+
+            // Nastav viditelnost sekce
+            try { UpcomingCampsSection.IsVisible = UpcomingCamps.Count > 0; } catch { }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"MainPage: Failed to load upcoming camps: {ex}");
+            try { UpcomingCampsSection.IsVisible = false; } catch { }
+        }
+    }
+
+    private async void OnCampTapped(object? sender, EventArgs e)
+    {
+        try
+        {
+            if (sender is Border border && border.BindingContext is CampItem camp)
+            {
+                await Shell.Current.GoToAsync($"EventPage?id={camp.EventId}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"MainPage: Navigation to camp failed: {ex}");
         }
     }
 
@@ -478,5 +541,14 @@ public partial class MainPage : ContentPage
             catch { }
             return string.Empty;
         }
+    }
+
+    public sealed class CampItem
+    {
+        public long EventId { get; set; }
+        public string EventName { get; set; } = string.Empty;
+        public string LocationName { get; set; } = string.Empty;
+        public DateTime? Since { get; set; }
+        public DateTime? Until { get; set; }
     }
 }

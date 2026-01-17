@@ -22,28 +22,24 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-
-        <VerticalStackLayout Grid.Row="0" Spacing="8" Margin="0,0,0,12">
-            <Label Text="{svc:Translate Overview}" FontSize="32" FontAttributes="Bold" />
             <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                 <Label Text="{svc:Translate UpcomingEvents}" FontSize="18" FontAttributes="Bold" />
                 <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" />
             </HorizontalStackLayout>
-        </VerticalStackLayout>
 
         <RefreshView Grid.Row="1" Refreshing="OnRefresh">
             <ScrollView>
-                <VerticalStackLayout Spacing="16">
+                <VerticalStackLayout Spacing="8">
                     <Grid>
                         <VerticalStackLayout x:Name="DayContent" Spacing="8">
                             <!-- Day Label -->
-                            <Label Text="{Binding DayLabel}" FontAttributes="Bold" Margin="6,0,6,4" FontSize="20" />
+                            <Label Text="{Binding DayLabel}" FontAttributes="Bold" Margin="0,2,0,2" FontSize="12" />
 
                         <!-- Single Events -->
                         <VerticalStackLayout BindableLayout.ItemsSource="{Binding SingleEvents}">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Padding="12" Margin="6">
+                                    <Border Padding="12" Margin="0,4">
                                         <Border.GestureRecognizers>
                                             <TapGestureRecognizer Tapped="OnEventCardTapped" />
                                         </Border.GestureRecognizers>
@@ -102,15 +98,15 @@
                         </VerticalStackLayout>
 
                         <!-- Grouped Trainers -->
-                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding GroupedTrainers}" Margin="6">
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding GroupedTrainers}" Margin="0">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Padding="12" Margin="0,6,0,6">
+                                    <Border Padding="12" Margin="0,4">
                                         <Border.StrokeShape>
                                             <RoundRectangle CornerRadius="8" />
                                         </Border.StrokeShape>
                                         <VerticalStackLayout Spacing="6">
-                                            <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,4">
+                                            <Grid ColumnDefinitions="*,Auto" Margin="0,2,0,2">
                                                 <Label Text="{Binding TrainerTitle}" FontAttributes="Bold" Grid.Column="0" />
                                                 <Label Text="{svc:Translate EventType_Lesson}" FontSize="12" Style="{StaticResource MutedLabelStyle}" Grid.Column="1" HorizontalOptions="End" VerticalOptions="Center" />
                                             </Grid>
@@ -163,13 +159,47 @@
                     <Label x:Name="EmptyLabel" Text="{svc:Translate NoUpcomingEvents}" IsVisible="False" VerticalOptions="CenterAndExpand" HorizontalOptions="Center" Style="{StaticResource MutedLabelStyle}" />
                 </Grid>
                 
+                <!-- Upcoming Camps Section -->
+                <VerticalStackLayout x:Name="UpcomingCampsSection" Spacing="6" Margin="0,8,0,0">
+                    <Label Text="{svc:Translate UpcomingCamps}" FontSize="18" FontAttributes="Bold" Margin="0,0,0,4" />
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding UpcomingCamps}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="12" Margin="0,4">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnCampTapped" />
+                                    </Border.GestureRecognizers>
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="8" />
+                                    </Border.StrokeShape>
+                                    <VerticalStackLayout Spacing="6">
+                                        <Label Text="{Binding EventName}" FontAttributes="Bold" />
+                                        <Label Text="{Binding LocationName}"/>
+                                        <Label FontSize="12" Style="{StaticResource MutedLabelStyle}">
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <Span Text="{Binding Since, Converter={StaticResource FriendlyDateConverter}}" />
+                                                    <Span Text="  " />
+                                                    <Span Text="–" />
+                                                    <Span Text="  " />
+                                                    <Span Text="{Binding Until, Converter={StaticResource FriendlyDateConverter}}" />
+                                                </FormattedString>
+                                            </Label.FormattedText>
+                                        </Label>
+                                    </VerticalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+                
                 <!-- Recent Announcements Section -->
-                <VerticalStackLayout x:Name="RecentAnnouncementsSection" Spacing="8" Margin="0,16,0,0">
-                    <Label Text="{svc:Translate Noticeboard}" FontSize="18" FontAttributes="Bold" Margin="6,0,6,4" />
+                <VerticalStackLayout x:Name="RecentAnnouncementsSection" Spacing="6" Margin="0,8,0,0">
+                    <Label Text="{svc:Translate Noticeboard}" FontSize="18" FontAttributes="Bold" Margin="0,0,0,4" />
                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding RecentAnnouncements}">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate>
-                                <Border Padding="12" Margin="6">
+                                <Border Padding="12" Margin="0,4">
                                     <Border.GestureRecognizers>
                                         <TapGestureRecognizer Tapped="OnAnnouncementTapped" />
                                     </Border.GestureRecognizers>

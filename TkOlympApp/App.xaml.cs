@@ -51,7 +51,7 @@ public partial class App : Application
                         }
                         catch { }
 
-                        try { await Shell.Current.GoToAsync("//Kalendář"); } catch { }
+                        // Default tab (Overview/Přehled) is already set in AppShell constructor
                     }
                 }
                 catch { }

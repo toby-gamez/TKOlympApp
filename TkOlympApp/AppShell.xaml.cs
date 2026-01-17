@@ -22,6 +22,9 @@ public partial class AppShell : Shell
         InitializeComponent();
         // Workaround for URL-based XAML namespace resolution issues
         _ = new MauiIcon();
+        
+        // Set default route to MainPage (Overview) to prevent navigation flash
+        CurrentItem = Items[0];
 
         // Register routes and navigate conditionally on startup
         Routing.RegisterRoute(nameof(LoginPage), typeof(LoginPage));
@@ -85,12 +88,7 @@ public partial class AppShell : Shell
                     }
                     catch { }
 
-                    // Ensure main page is visible and request a refresh after auth is ready
-                    try
-                    {
-                        try { await GoToAsync("//Přehled"); } catch { }
-                    }
-                    catch { }
+                    // CurrentItem is already set to MainPage in constructor, no need to navigate
                 }
             }
             catch

@@ -106,6 +106,7 @@
     <data name="Tab_All" xml:space="preserve"><value>Alle</value></data>
     <data name="UpcomingEvents" xml:space="preserve"><value>Kommende treninger</value></data>
     <data name="NoUpcomingEvents" xml:space="preserve"><value>Ingen kommende treninger</value></data>
+    <data name="UpcomingCamps" xml:space="preserve"><value>Kommende treningsleirer</value></data>
     <data name="Error_Loading_User" xml:space="preserve"><value>Kunne ikke laste bruker.</value></data>
     <data name="Error_MissingPersonId" xml:space="preserve"><value>Person-ID er ikke tilgjengelig.</value></data>
     <data name="Error_Saving" xml:space="preserve"><value>Feil ved lagring.</value></data>
