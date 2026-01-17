@@ -47,7 +47,7 @@
     <data name="About_TenantId" xml:space="preserve"><value>Tenant ID:</value></data>
     <data name="About_LastLogin" xml:space="preserve"><value>Zadnja prijava:</value></data>
     <data name="About_LastActivity" xml:space="preserve"><value>Zadnja dejavnost:</value></data>
-    <data name="About_CreatedUser" xml:space="preserve"><value>Ustvarjen (uporabnik):</value></data>
+    <data name="About_Created" xml:space="preserve"><value>Ustvarjen:</value></data>
     <data name="About_CreatedRecord" xml:space="preserve"><value>Ustvarjen (zapis):</value></data>
     <data name="About_Updated" xml:space="preserve"><value>Posodobljeno:</value></data>
     <!-- About_LastVersion removed -->

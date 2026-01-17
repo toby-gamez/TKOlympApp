@@ -42,8 +42,7 @@ public partial class AboutMePage : ContentPage
             EmailValue.Text = NonEmpty(user.UEmail);
             LastLoginValue.Text = NonEmpty(FormatDt(user.LastLogin));
             LastActiveValue.Text = NonEmpty(FormatDt(user.LastActiveAt));
-            UCreatedAtValue.Text = NonEmpty(FormatDt(user.UCreatedAt));
-            CreatedAtValue.Text = NonEmpty(FormatDt(user.CreatedAt));
+            UCreatedAtValue.Text = NonEmpty(FormatDt(user.CreatedAt));
             UpdatedAtValue.Text = NonEmpty(FormatDt(user.UpdatedAt));
             // Hide rows that have no meaningful value
             
@@ -51,7 +50,6 @@ public partial class AboutMePage : ContentPage
             try { LastLoginRow.IsVisible = user.LastLogin.HasValue; } catch { }
             try { LastActiveRow.IsVisible = user.LastActiveAt.HasValue; } catch { }
             try { UCreatedAtRow.IsVisible = true; } catch { }
-            try { CreatedAtRow.IsVisible = user.CreatedAt.HasValue; } catch { }
             try { UpdatedAtRow.IsVisible = true; } catch { }
             // lastVersion removed from API — no longer displayed
 
@@ -67,10 +65,23 @@ public partial class AboutMePage : ContentPage
                 var json = JsonSerializer.Serialize(gqlReq, options);
                 using var content = new StringContent(json, Encoding.UTF8, "application/json");
                 using var resp = await AuthService.Http.PostAsync("", content);
-                resp.EnsureSuccessStatusCode();
-
+                
                 var body = await resp.Content.ReadAsStringAsync();
+                
+                if (!resp.IsSuccessStatusCode)
+                {
+                    var errorBody = await resp.Content.ReadAsStringAsync();
+                    throw new InvalidOperationException($"HTTP {(int)resp.StatusCode}: {errorBody}");
+                }
+                
                 var parsed = JsonSerializer.Deserialize<GraphQlResp<UserProxiesData>>(body, options);
+                
+                // Check for GraphQL errors even with 200 status
+                if (parsed?.Errors != null && parsed.Errors.Length > 0)
+                {
+                    var msg = parsed.Errors[0]?.Message ?? LocalizationService.Get("GraphQL_UnknownError");
+                    throw new InvalidOperationException(msg);
+                }
                 var proxyId = parsed?.Data?.UserProxiesList?.FirstOrDefault()?.Person?.Id;
                 ProxyIdValue.Text = NonEmpty(proxyId);
                 try { ProxyIdRow.IsVisible = !string.IsNullOrWhiteSpace(proxyId); } catch { }
@@ -94,10 +105,23 @@ public partial class AboutMePage : ContentPage
                         var jsonP = JsonSerializer.Serialize(gqlReqP, options);
                         using var contentP = new StringContent(jsonP, Encoding.UTF8, "application/json");
                         using var respP = await AuthService.Http.PostAsync("", contentP);
-                        respP.EnsureSuccessStatusCode();
-
+                        
                         var bodyP = await respP.Content.ReadAsStringAsync();
+                        
+                        if (!respP.IsSuccessStatusCode)
+                        {
+                            var errorBodyP = await respP.Content.ReadAsStringAsync();
+                            throw new InvalidOperationException($"HTTP {(int)respP.StatusCode}: {errorBodyP}");
+                        }
+                        
                         var parsedP = JsonSerializer.Deserialize<GraphQlResp<PersonRespData>>(bodyP, options);
+                        
+                        // Check for GraphQL errors even with 200 status
+                        if (parsedP?.Errors != null && parsedP.Errors.Length > 0)
+                        {
+                            var msg = parsedP.Errors[0]?.Message ?? LocalizationService.Get("GraphQL_UnknownError");
+                            throw new InvalidOperationException(msg);
+                        }
                         var person = parsedP?.Data?.Person;
                         if (person != null)
                         {
@@ -154,15 +178,20 @@ public partial class AboutMePage : ContentPage
                             try { IdsBorder.IsVisible = ProxyIdRow.IsVisible || WdsfRow.IsVisible || CstsRow.IsVisible || NationalIdRow.IsVisible; } catch { }
                         }
                     }
-                    catch
+                    catch (Exception exPerson)
                     {
-                        // ignore person fetch errors
+                        var title = LocalizationService.Get("Error_Title") ?? "Chyba";
+                        var ok = LocalizationService.Get("Button_OK") ?? "OK";
+                        try { await DisplayAlert(title, exPerson.Message, ok); } catch { }
                     }
                 }
             }
-            catch
+            catch (Exception exProxy)
             {
                 ProxyIdValue.Text = "—";
+                var title = LocalizationService.Get("Error_Title") ?? "Chyba";
+                var ok = LocalizationService.Get("Button_OK") ?? "OK";
+                try { await DisplayAlert(title, exProxy.Message, ok); } catch { }
             }
         }
         catch (Exception ex)
@@ -236,6 +265,12 @@ public partial class AboutMePage : ContentPage
     private sealed class GraphQlResp<T>
     {
         [JsonPropertyName("data")] public T? Data { get; set; }
+        [JsonPropertyName("errors")] public GraphQlError[]? Errors { get; set; }
+    }
+    
+    private sealed class GraphQlError
+    {
+        [JsonPropertyName("message")] public string? Message { get; set; }
     }
 
     private sealed class UserProxiesData

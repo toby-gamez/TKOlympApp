@@ -47,7 +47,7 @@
   <data name="About_TenantId" xml:space="preserve"><value>Tenant ID:</value></data>
   <data name="About_LastLogin" xml:space="preserve"><value>Last login:</value></data>
   <data name="About_LastActivity" xml:space="preserve"><value>Last activity:</value></data>
-  <data name="About_CreatedUser" xml:space="preserve"><value>Created (user):</value></data>
+  <data name="About_Created" xml:space="preserve"><value>Created:</value></data>
   <data name="About_CreatedRecord" xml:space="preserve"><value>Created (record):</value></data>
   <data name="About_Updated" xml:space="preserve"><value>Updated:</value></data>
   <!-- About_LastVersion removed -->

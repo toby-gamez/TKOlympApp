@@ -47,7 +47,7 @@
   <data name="About_TenantId" xml:space="preserve"><value>Tenant ID:</value></data>
   <data name="About_LastLogin" xml:space="preserve"><value>Останній вхід:</value></data>
   <data name="About_LastActivity" xml:space="preserve"><value>Остання активність:</value></data>
-  <data name="About_CreatedUser" xml:space="preserve"><value>Створено (користувач):</value></data>
+  <data name="About_Created" xml:space="preserve"><value>Створено:</value></data>
   <data name="About_CreatedRecord" xml:space="preserve"><value>Створено (запис):</value></data>
   <data name="About_Updated" xml:space="preserve"><value>Оновлено:</value></data>
   <!-- About_LastVersion removed -->

@@ -44,13 +44,8 @@
                         </HorizontalStackLayout>
 
                         <HorizontalStackLayout x:Name="UCreatedAtRow" Spacing="6">
-                            <Label Text="{svc:Translate About_CreatedUser}" FontAttributes="Bold" FontSize="12"/>
+                            <Label Text="{svc:Translate About_Created}" FontAttributes="Bold" FontSize="12"/>
                             <Label x:Name="UCreatedAtValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
-                        </HorizontalStackLayout>
-
-                        <HorizontalStackLayout x:Name="CreatedAtRow" Spacing="6">
-                            <Label Text="{svc:Translate About_CreatedRecord}" FontAttributes="Bold" FontSize="12"/>
-                            <Label x:Name="CreatedAtValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
                         </HorizontalStackLayout>
 
                         <HorizontalStackLayout x:Name="UpdatedAtRow" Spacing="6">

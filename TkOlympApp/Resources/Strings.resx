@@ -47,7 +47,7 @@
   <data name="About_TenantId" xml:space="preserve"><value>Tenant ID:</value></data>
   <data name="About_LastLogin" xml:space="preserve"><value>Poslední přihlášení:</value></data>
   <data name="About_LastActivity" xml:space="preserve"><value>Poslední aktivita:</value></data>
-  <data name="About_CreatedUser" xml:space="preserve"><value>Vytvořen (uživatel):</value></data>
+  <data name="About_Created" xml:space="preserve"><value>Vytvořen:</value></data>
   <data name="About_CreatedRecord" xml:space="preserve"><value>Vytvořen (záznam):</value></data>
   <data name="About_Updated" xml:space="preserve"><value>Aktualizován:</value></data>
   <!-- About_LastVersion removed -->
