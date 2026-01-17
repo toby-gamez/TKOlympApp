@@ -5,7 +5,7 @@
              x:Class="TkOlympApp.Pages.NoticeboardPage"
              xmlns:svc="clr-namespace:TkOlympApp.Services"
              Title="{svc:Translate Noticeboard}">
-    <Grid Padding="20">
+    <Grid Padding="20,12,20,0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />

@@ -17,7 +17,7 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <Grid Padding="20,12,20,20">
+    <Grid Padding="20,12,20,0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -33,7 +33,7 @@
                     <Grid>
                         <VerticalStackLayout x:Name="DayContent" Spacing="8">
                             <!-- Day Label -->
-                            <Label Text="{Binding DayLabel}" FontAttributes="Bold" Margin="0,2,0,2" FontSize="12" />
+                            <Label Text="{Binding DayLabel}" FontAttributes="Bold" Margin="0,2,0,2" FontSize="15" />
 
                         <!-- Single Events -->
                         <VerticalStackLayout BindableLayout.ItemsSource="{Binding SingleEvents}">

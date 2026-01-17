@@ -113,14 +113,14 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <Grid Padding="20,12,20,20">
+    <Grid Padding="20,12,20,0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
         <!-- Top row: My/All on the left, week navigation on the right -->
-        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Padding="0">
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Padding="0" Margin="0,0,0,5">
             <HorizontalStackLayout Grid.Column="0" Padding="0" Spacing="8" VerticalOptions="Center">
                 <Button x:Name="TabMyButton" Text="{svc:Translate Tab_My}" Clicked="OnTabMineClicked" />
                 <Button x:Name="TabAllButton" Text="{svc:Translate Tab_All}" Clicked="OnTabAllClicked" />
