@@ -41,6 +41,11 @@
         <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
         <!-- Ensure managed assemblies are embedded into the APK for device deployment -->
         <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+
+        <!-- Code Quality & Analysis -->
+        <EnableNETAnalyzers>true</EnableNETAnalyzers>
+        <AnalysisLevel>latest</AnalysisLevel>
+        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     </PropertyGroup>
     
 
