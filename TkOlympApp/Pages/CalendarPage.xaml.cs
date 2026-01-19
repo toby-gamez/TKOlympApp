@@ -50,8 +50,8 @@ public partial class CalendarPage : ContentPage
             // ignore if buttons not available on some platforms
         }
 
-        // initialize week range to current week (Monday..Sunday)
-        _weekStart = GetWeekStart(DateTime.Now);
+        // initialize week range to rolling 7-day window (today + 7 days)
+        _weekStart = DateTime.Now.Date;
         _weekEnd = _weekStart.AddDays(6);
         try { UpdateWeekLabel(); } catch { }
 
@@ -120,24 +120,14 @@ public partial class CalendarPage : ContentPage
                 events = await EventService.GetEventInstancesForRangeListAsync(start, end);
             }
 
-            // Group events by day (date only) and then into weeks (Monday-based)
+            // Group events by day (date only) - no ISO week grouping, just single rolling 7-day window
             var groupsByDate = events
                 .GroupBy(e => e.Since.HasValue ? e.Since.Value.Date : e.UpdatedAt.Date)
                 .ToDictionary(g => g.Key, g => g.OrderBy(ev => ev.Since).ToList());
 
-            // Week map: weekStart -> list of dates
+            // Single week map for current rolling window
             var weekMap = new SortedDictionary<DateTime, List<DateTime>>();
-            foreach (var date in groupsByDate.Keys.OrderBy(d => d))
-            {
-                var isoDow = ((int)date.DayOfWeek == 0) ? 7 : (int)date.DayOfWeek; // Monday=1..Sunday=7
-                var weekStart = date.AddDays(1 - isoDow).Date; // Monday
-                if (!weekMap.TryGetValue(weekStart, out var list))
-                {
-                    list = new List<DateTime>();
-                    weekMap[weekStart] = list;
-                }
-                list.Add(date);
-            }
+            weekMap[_weekStart] = groupsByDate.Keys.OrderBy(d => d).ToList();
 
             // Clear previous views and tracking list
             EventsStack.Children.Clear();
@@ -518,9 +508,8 @@ public partial class CalendarPage : ContentPage
     // Week helpers and handlers
     private static DateTime GetWeekStart(DateTime dt)
     {
-        var d = dt.Date;
-        var isoDow = ((int)d.DayOfWeek == 0) ? 7 : (int)d.DayOfWeek; // Monday=1..Sunday=7
-        return d.AddDays(1 - isoDow).Date;
+        // Rolling 7-day window starts from today
+        return dt.Date;
     }
 
     private void UpdateWeekLabel()
@@ -547,28 +536,19 @@ public partial class CalendarPage : ContentPage
 
     private async void OnTodayWeekClicked(object? sender, EventArgs e)
     {
-        var currentWeekStart = GetWeekStart(DateTime.Now);
-        _weekStart = currentWeekStart;
+        var today = DateTime.Now.Date;
+        // If already on today's week, don't reload
+        if (_weekStart == today)
+        {
+            try { Debug.WriteLine($"OnTodayWeekClicked: Already on today's week, skipping reload"); } catch { }
+            return;
+        }
+        
+        _weekStart = today;
         _weekEnd = _weekStart.AddDays(6);
         try { Debug.WriteLine($"OnTodayWeekClicked: DateTime.Now={DateTime.Now:o}, weekStart={_weekStart:o}, weekEnd={_weekEnd:o}"); } catch { }
         try { UpdateWeekLabel(); } catch { }
         await LoadEventsAsync();
-
-        // Scroll to today if possible
-        try
-        {
-            var today = DateTime.Now.Date;
-            // Find day header with matching date
-            foreach (var child in EventsStack.Children)
-            {
-                if (child is VisualElement ve && ve.BindingContext is DayHeaderRow dhr && dhr.Date == today)
-                {
-                    await EventsScroll.ScrollToAsync(ve, ScrollToPosition.Start, true);
-                    break;
-                }
-            }
-        }
-        catch { }
     }
 
     private static async Task DisplayAlertAsync(string? title, string? message, string? cancel)
