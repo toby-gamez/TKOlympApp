@@ -11,7 +11,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <HorizontalStackLayout Grid.Row="0" Padding="0" Spacing="8" VerticalOptions="Center">
+        <HorizontalStackLayout Grid.Row="0" Padding="0" Spacing="8" VerticalOptions="Center" Margin="0,0,0,5">
             <Button x:Name="TabAktualityButton" Text="{svc:Translate Noticeboard_TabAktuality}" Clicked="OnTabAktualityClicked" />
             <Button x:Name="TabStalaButton" Text="{svc:Translate Noticeboard_TabStala}" Clicked="OnTabStalaClicked" />
         </HorizontalStackLayout>
