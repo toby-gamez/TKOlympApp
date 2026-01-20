@@ -15,7 +15,7 @@ public static class TenantService
         {
             var query = new GraphQlRequest
             {
-                Query = "query MyQuery { tenantLocationsList { name } tenantTrainersList { person { id firstName lastName prefixTitle suffixTitle } guestPrice45Min { amount currency } guestPayout45Min { amount currency } } }"
+                Query = "query MyQuery { tenantLocationsList { name } tenantTrainersList { person { id firstName lastName prefixTitle suffixTitle } guestPrice45Min { amount currency } guestPayout45Min { amount currency } isVisible } }"
             };
 
         var json = JsonSerializer.Serialize(query, Options);
@@ -36,7 +36,9 @@ public static class TenantService
         }
 
         var locations = data?.Data?.TenantLocationsList ?? new List<Location>();
-        var trainers = data?.Data?.TenantTrainersList ?? new List<TenantTrainer>();
+        var trainers = (data?.Data?.TenantTrainersList ?? new List<TenantTrainer>())
+            .Where(t => t.IsVisible == true)
+            .ToList();
         return (locations, trainers);
     }
 
@@ -70,7 +72,8 @@ public static class TenantService
     public sealed record TenantTrainer(
         [property: JsonPropertyName("person")] Person? Person,
         [property: JsonPropertyName("guestPrice45Min")] Price? GuestPrice45Min,
-        [property: JsonPropertyName("guestPayout45Min")] Price? GuestPayout45Min
+        [property: JsonPropertyName("guestPayout45Min")] Price? GuestPayout45Min,
+        [property: JsonPropertyName("isVisible")] bool? IsVisible
     );
 
     public sealed record Person(
