@@ -79,7 +79,7 @@
     <data name="Other_Trainers_Desc" xml:space="preserve"><value>In case u forget where the grind happens.</value></data>
     <data name="Other_CohortGroups_Label" xml:space="preserve"><value>Squads</value></data>
     <data name="Other_CohortGroups_Desc" xml:space="preserve"><value>Where u bust a move (literally).</value></data>
-    <data name="Other_Section_App" xml:space="preserve"><value>The App</value></data>
+    <data name="Other_Section_App" xml:space="preserve"><value>The Matrix</value></data>
     <data name="Other_Languages_Label" xml:space="preserve"><value>Switch Tongue</value></data>
     <data name="Other_Languages_Desc" xml:space="preserve"><value>If u wanna speak enchantment table language.</value></data>
     <data name="Other_Button_Logout" xml:space="preserve"><value>Rage Quit</value></data>
@@ -103,8 +103,8 @@
     <data name="Login_Error_Missing" xml:space="preserve"><value>Bro, type something properly.</value></data>
     <data name="Login_Failed_Title" xml:space="preserve"><value>Access Denied (Skill Issue)</value></data>
     <data name="Button_OK" xml:space="preserve"><value>Bet</value></data>
-    <data name="Tab_My" xml:space="preserve"><value>Me</value></data>
-    <data name="Tab_All" xml:space="preserve"><value>Everyone</value></data>
+    <data name="Tab_My" xml:space="preserve"><value>Me fr</value></data>
+    <data name="Tab_All" xml:space="preserve"><value>Everynya</value></data>
     <data name="UpcomingEvents" xml:space="preserve"><value>Next gyms sesh</value></data>
     <data name="NoUpcomingEvents" xml:space="preserve"><value>No gyms comin up fr</value></data>
     <data name="UpcomingCamps" xml:space="preserve"><value>Upcoming grind camps</value></data>
@@ -169,7 +169,7 @@
     <data name="Couple_FirstName" xml:space="preserve"><value>Tag:</value></data>
     <data name="Couple_LastName" xml:space="preserve"><value>Crew tag:</value></data>
     <data name="Couple_Phone" xml:space="preserve"><value>Old Ig:</value></data>
-    <data name="Other_AboutApp_Label" xml:space="preserve"><value>About App</value></data>
+    <data name="Other_AboutApp_Label" xml:space="preserve"><value>The DNA 🧬</value></data>
     <data name="Other_AboutApp_Desc" xml:space="preserve"><value>goated about this carti</value></data>
     <data name="Other_AboutApp_Body" xml:space="preserve"><value>This app is literally your go-to hub for schedules, news, and all the tea about trainers and locations. It’s hooked up to a remote API (very nerd, very slay) and drops notifications so you never miss a fresh post or event. Stay locked in fr.</value></data>
     <data name="Other_AboutApp_License_Title" xml:space="preserve"><value>Legal lore</value></data>
@@ -276,7 +276,7 @@
     <data name="Person_Title" xml:space="preserve"><value>Character</value></data>
     <data name="Person_ActiveCouples_Label" xml:space="preserve"><value>Active Duos</value></data>
     <data name="NotFound_Person" xml:space="preserve"><value>Person ghosted us.</value></data>
-    <data name="AboutApp_Description" xml:space="preserve"><value>App Lore</value></data>
+    <data name="AboutApp_Description" xml:space="preserve"><value>App Sauce 🍝</value></data>
     <data name="Events_Title" xml:space="preserve"><value>Skibidi days</value></data>
     <data name="Planned" xml:space="preserve"><value>Soon fr fr</value></data>
     <data name="Occurred" xml:space="preserve"><value>Canon event</value></data>
