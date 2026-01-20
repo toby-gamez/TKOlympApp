@@ -80,8 +80,6 @@ public partial class EventsPage : ContentPage
 
     private async Task RefreshEventsAsync(CancellationToken ct = default)
     {
-        Loading.IsVisible = true;
-        Loading.IsRunning = true;
         try
         {
             var query = new GraphQlRequest
@@ -164,8 +162,6 @@ public partial class EventsPage : ContentPage
         }
         finally
         {
-            Loading.IsRunning = false;
-            Loading.IsVisible = false;
             EventsRefresh.IsRefreshing = false;
         }
     }

@@ -29,12 +29,22 @@ public partial class TrainersAndLocationsPage : ContentPage
         }
     }
 
+    private async void OnRefresh(object? sender, EventArgs e)
+    {
+        try
+        {
+            await LoadDataAsync();
+        }
+        finally
+        {
+            try { if (PageRefresh != null) PageRefresh.IsRefreshing = false; } catch { }
+        }
+    }
+
     private async Task LoadDataAsync()
     {
         try
         {
-            LoadingIndicator.IsVisible = true;
-            LoadingIndicator.IsRunning = true;
             var (locations, trainers) = await TenantService.GetLocationsAndTrainersAsync();
             var locList = locations
                 .Select(l => l.Name?.Trim())
@@ -99,11 +109,6 @@ public partial class TrainersAndLocationsPage : ContentPage
         catch (Exception ex)
         {
             await DisplayAlertAsync(LocalizationService.Get("Error_Title"), ex.Message, LocalizationService.Get("Button_OK"));
-        }
-        finally
-        {
-            LoadingIndicator.IsVisible = false;
-            LoadingIndicator.IsRunning = false;
         }
     }
 

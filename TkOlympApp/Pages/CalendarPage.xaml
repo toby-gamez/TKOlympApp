@@ -124,7 +124,7 @@
             <HorizontalStackLayout Grid.Column="0" Padding="0" Spacing="8" VerticalOptions="Center">
                 <Button x:Name="TabMyButton" Text="{svc:Translate Tab_My}" Clicked="OnTabMineClicked" />
                 <Button x:Name="TabAllButton" Text="{svc:Translate Tab_All}" Clicked="OnTabAllClicked" />
-                <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" HorizontalOptions="Center" Margin="0,0,0,0" />
+
             </HorizontalStackLayout>
 
             <HorizontalStackLayout Grid.Column="2" Padding="0" Spacing="8" VerticalOptions="Center" HorizontalOptions="End">

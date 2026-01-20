@@ -6,11 +6,11 @@
              x:Class="TkOlympApp.Pages.CohortGroupsPage"
              Title="{svc:Translate CohortGroups_Title}">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="12">
-            <ActivityIndicator x:Name="LoadingIndicator" IsVisible="False" IsRunning="False" HorizontalOptions="End" />
-
-            <VerticalStackLayout x:Name="GroupsStack" Spacing="10" />
-        </VerticalStackLayout>
-    </ScrollView>
+    <RefreshView x:Name="PageRefresh" Refreshing="OnRefresh">
+        <ScrollView>
+            <VerticalStackLayout Padding="20" Spacing="12">
+                <VerticalStackLayout x:Name="GroupsStack" Spacing="10" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </RefreshView>
 </ContentPage>

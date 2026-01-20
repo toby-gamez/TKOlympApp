@@ -14,7 +14,6 @@
         <HorizontalStackLayout Grid.Row="0" Padding="0" Spacing="8" VerticalOptions="Center">
             <Button x:Name="TabAktualityButton" Text="{svc:Translate Noticeboard_TabAktuality}" Clicked="OnTabAktualityClicked" />
             <Button x:Name="TabStalaButton" Text="{svc:Translate Noticeboard_TabStala}" Clicked="OnTabStalaClicked" />
-            <ActivityIndicator x:Name="LoadingIndicator" IsVisible="False" IsRunning="False" HorizontalOptions="EndAndExpand" Margin="0,0,0,0" />
         </HorizontalStackLayout>
 
         <RefreshView x:Name="AnnouncementsRefresh" Refreshing="OnAnnouncementsRefresh" Grid.Row="1">

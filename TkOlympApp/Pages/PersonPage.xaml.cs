@@ -44,22 +44,32 @@ namespace TkOlympApp.Pages
                 await LoadAsync();
         }
 
-        private async Task LoadAsync()
+    private async void OnRefresh(object? sender, EventArgs e)
+    {
+        try
         {
-            LoadingIndicator.IsVisible = true;
-            LoadingIndicator.IsRunning = true;
-            ErrorLabel.IsVisible = false;
+            await LoadAsync();
+        }
+        finally
+        {
+            try { if (PageRefresh != null) PageRefresh.IsRefreshing = false; } catch { }
+        }
+    }
 
-            try
+    private async Task LoadAsync()
+    {
+        ErrorLabel.IsVisible = false;
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(_personId))
             {
-                if (string.IsNullOrWhiteSpace(_personId))
-                {
-                    ErrorLabel.IsVisible = true;
-                    ErrorLabel.Text = "Missing personId";
-                    return;
-                }
+                ErrorLabel.IsVisible = true;
+                ErrorLabel.Text = "Missing personId";
+                return;
+            }
 
-                var query = "query MyQuery { person(id: \"" + _personId + "\") { bio birthDate createdAt cstsId email firstName prefixTitle suffixTitle gender isTrainer lastName phone wdsfId activeCouplesList { id man { firstName lastName } woman { firstName lastName } } } }";
+            var query = "query MyQuery { person(id: \"" + _personId + "\") { bio birthDate createdAt cstsId email firstName prefixTitle suffixTitle gender isTrainer lastName phone wdsfId activeCouplesList { id man { firstName lastName } woman { firstName lastName } } } }";
 
                 var gqlReq = new { query };
                 var options = new JsonSerializerOptions(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = true };
@@ -161,8 +171,6 @@ namespace TkOlympApp.Pages
             }
             finally
             {
-                LoadingIndicator.IsRunning = false;
-                LoadingIndicator.IsVisible = false;
                 _loadRequested = false;
             }
         }

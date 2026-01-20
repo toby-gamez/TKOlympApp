@@ -40,10 +40,20 @@ public partial class CouplePage : ContentPage
             await LoadAsync();
     }
 
+    private async void OnRefresh(object? sender, EventArgs e)
+    {
+        try
+        {
+            await LoadAsync();
+        }
+        finally
+        {
+            try { if (PageRefresh != null) PageRefresh.IsRefreshing = false; } catch { }
+        }
+    }
+
     private async Task LoadAsync(CancellationToken ct = default)
     {
-        LoadingIndicator.IsVisible = true;
-        LoadingIndicator.IsRunning = true;
         ErrorLabel.IsVisible = false;
             try
             {
@@ -99,8 +109,6 @@ public partial class CouplePage : ContentPage
         }
         finally
         {
-            LoadingIndicator.IsRunning = false;
-            LoadingIndicator.IsVisible = false;
         }
     }
 

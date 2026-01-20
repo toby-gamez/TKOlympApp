@@ -140,8 +140,6 @@ public partial class EditRegistrationsPage : ContentPage
     private async Task LoadAsync()
     {
         _groups.Clear();
-        Loading.IsVisible = true;
-        Loading.IsRunning = true;
         try
         {
             if (EventId == 0) return;
@@ -290,11 +288,6 @@ public partial class EditRegistrationsPage : ContentPage
         catch (Exception ex)
         {
             await DisplayAlertAsync(LocalizationService.Get("Error_Loading_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK");
-        }
-        finally
-        {
-            Loading.IsRunning = false;
-            Loading.IsVisible = false;
         }
     }
 

@@ -6,17 +6,17 @@
              Title="{svc:Translate DeleteRegistrations_Title}">
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+        <RefreshView x:Name="PageRefresh" Refreshing="OnRefresh">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-        <VerticalStackLayout Padding="16" Spacing="12" Grid.Row="0">
-            <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" HorizontalOptions="Center" />
+                <VerticalStackLayout Padding="16" Spacing="12" Grid.Row="0">
+                    <Label Text="{svc:Translate DeleteRegistrations_Description}" />
 
-            <Label Text="{svc:Translate DeleteRegistrations_Description}" />
-
-            <CollectionView x:Name="RegistrationsCollection" Style="{StaticResource ListCollectionView}" HeightRequest="400" SelectionChanged="OnSelectionChanged" IsGrouped="True">
+                <CollectionView x:Name="RegistrationsCollection" Style="{StaticResource ListCollectionView}" HeightRequest="400" SelectionChanged="OnSelectionChanged" IsGrouped="True">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <Border Style="{StaticResource SelectableItemContainer}">
@@ -28,12 +28,14 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-        </VerticalStackLayout>
+                </VerticalStackLayout>
 
-        <Button x:Name="DeleteButton" Text="{svc:Translate Delete_Button_Text}" IsEnabled="False" Clicked="OnDeleteClicked" Grid.Row="1" Margin="16" HorizontalOptions="FillAndExpand" />
+                <Button x:Name="DeleteButton" Text="{svc:Translate Delete_Button_Text}" IsEnabled="False" Clicked="OnDeleteClicked" Grid.Row="1" Margin="16" HorizontalOptions="FillAndExpand" />
+            </Grid>
+        </RefreshView>
 
         <!-- Success overlay (hidden by default) -->
-        <Grid x:Name="SuccessOverlay" IsVisible="False" BackgroundColor="#AA000000" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand" Grid.RowSpan="2">
+        <Grid x:Name="SuccessOverlay" IsVisible="False" BackgroundColor="#AA000000" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand">
             <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="12" Padding="24">
                 <Border BackgroundColor="#2e7d32" WidthRequest="160" HeightRequest="160" HorizontalOptions="Center" VerticalOptions="Center">
                     <Border.StrokeShape>
@@ -45,5 +47,4 @@
             </VerticalStackLayout>
         </Grid>
     </Grid>
-
 </ContentPage>

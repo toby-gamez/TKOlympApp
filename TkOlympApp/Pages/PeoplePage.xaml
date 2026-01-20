@@ -15,10 +15,9 @@
                     <x:String>{svc:Translate People_Sort_ByBirthdays}</x:String>
                 </Picker.Items>
             </Picker>
-            <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" HorizontalOptions="EndAndExpand" />
         </HorizontalStackLayout>
 
-            <RefreshView x:Name="PeopleRefresh" Grid.Row="1" Refreshing="OnPeopleRefresh">
+        <RefreshView x:Name="PeopleRefresh" Grid.Row="1" Refreshing="OnPeopleRefresh">
             <CollectionView x:Name="PeopleCollection" SelectionMode="Single" IsGrouped="False" SelectionChanged="OnPersonSelected">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>

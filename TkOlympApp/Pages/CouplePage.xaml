@@ -6,10 +6,10 @@
              Title="{svc:Translate Couple_Title}">
 
     <Grid RowDefinitions="Auto,*,Auto">
-        <ScrollView Grid.Row="1">
-            <VerticalStackLayout Padding="20" Spacing="12">
-                <ActivityIndicator x:Name="LoadingIndicator" IsRunning="False" IsVisible="False" />
-                <Label x:Name="ErrorLabel" TextColor="Red" IsVisible="False" Margin="0,0,0,8" />
+        <RefreshView x:Name="PageRefresh" Grid.Row="1" Refreshing="OnRefresh">
+            <ScrollView>
+                <VerticalStackLayout Padding="20" Spacing="12">
+                    <Label x:Name="ErrorLabel" TextColor="Red" IsVisible="False" Margin="0,0,0,8" />
 
                 <!-- Top: couple name similar to AboutMePage -->
                 <Border Padding="12">
@@ -90,8 +90,8 @@
                     </VerticalStackLayout>
                 </Border>
             </VerticalStackLayout>
-        </ScrollView>
-
+            </ScrollView>
+        </RefreshView>
         <!-- logout removed for this page -->
     </Grid>
 </ContentPage>

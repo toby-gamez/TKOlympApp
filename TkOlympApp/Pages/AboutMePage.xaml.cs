@@ -21,10 +21,20 @@ public partial class AboutMePage : ContentPage
         await LoadAsync();
     }
 
+    private async void OnRefresh(object? sender, EventArgs e)
+    {
+        try
+        {
+            await LoadAsync();
+        }
+        finally
+        {
+            try { if (PageRefresh != null) PageRefresh.IsRefreshing = false; } catch { }
+        }
+    }
+
     private async Task LoadAsync()
     {
-        LoadingIndicator.IsVisible = true;
-        LoadingIndicator.IsRunning = true;
         ErrorLabel.IsVisible = false;
         try
         {
@@ -201,8 +211,7 @@ public partial class AboutMePage : ContentPage
         }
         finally
         {
-            LoadingIndicator.IsRunning = false;
-            LoadingIndicator.IsVisible = false;
+            // LoadingIndicator removed - RefreshView handles loading UI
         }
     }
 

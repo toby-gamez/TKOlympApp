@@ -6,10 +6,10 @@
              Title="{svc:Translate AboutMe_Title}">
 
     <Grid RowDefinitions="Auto,*,Auto">
-        <ScrollView Grid.Row="1">
-            <VerticalStackLayout Padding="20" Spacing="12">
-                <ActivityIndicator x:Name="LoadingIndicator" IsRunning="False" IsVisible="False" />
-                <Label x:Name="ErrorLabel" TextColor="Red" IsVisible="False" Margin="0,0,0,8" />
+        <RefreshView x:Name="PageRefresh" Grid.Row="1" Refreshing="OnRefresh">
+            <ScrollView>
+                <VerticalStackLayout Padding="20" Spacing="12">
+                    <Label x:Name="ErrorLabel" TextColor="Red" IsVisible="False" Margin="0,0,0,8" />
 
                 <!-- Primary: velké jméno nahoře, detaily pod ním -->
                 <Border Padding="12">
@@ -171,5 +171,7 @@
                 </VerticalStackLayout>
             </VerticalStackLayout>
         </ScrollView>
+        </RefreshView>
+        <Button Text="{svc:Translate Edit_Button_Text}" Clicked="OnEditClicked" Grid.Row="2" Margin="20,12"/>
     </Grid>
 </ContentPage>

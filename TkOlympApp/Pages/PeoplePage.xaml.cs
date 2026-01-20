@@ -41,8 +41,6 @@ public partial class PeoplePage : ContentPage
     {
         if (_isLoading) return;
         _isLoading = true;
-        Loading.IsVisible = true;
-        Loading.IsRunning = true;
         PeopleCollection.IsVisible = false;
         try
         {
@@ -56,8 +54,6 @@ public partial class PeoplePage : ContentPage
         }
         finally
         {
-            Loading.IsRunning = false;
-            Loading.IsVisible = false;
             PeopleCollection.IsVisible = true;
             try
             {

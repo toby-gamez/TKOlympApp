@@ -179,7 +179,7 @@ public static class EventService
 
         var query = new GraphQlRequest
         {
-            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange) { id event { id name type locationText eventTrainersList { name } eventTargetCohortsList { cohortId cohort { id name colorRgb } } } since until isCancelled } }",
+            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $first: Int, $offset: Int, $onlyType: EventType) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange, first: $first, offset: $offset, onlyType: $onlyType) { id event { id name type locationText eventTrainersList { name } eventTargetCohortsList { cohortId cohort { id name colorRgb } } } since until isCancelled } }",
             Variables = variables
         };
 
@@ -221,6 +221,45 @@ public static class EventService
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Load all event instances for a date range with automatic pagination (loads batches of 15).
+    /// </summary>
+    public static async Task<List<EventInstance>> GetAllEventInstancesPagedAsync(
+        DateTime startRange,
+        DateTime endRange,
+        string? onlyType = null,
+        CancellationToken ct = default)
+    {
+        var allEvents = new List<EventInstance>();
+        int offset = 0;
+        const int batchSize = 15;
+        bool hasMore = true;
+
+        while (hasMore && !ct.IsCancellationRequested)
+        {
+            var batch = await GetEventInstancesForRangeListAsync(
+                startRange, endRange, batchSize, offset, onlyType, ct);
+            
+            if (batch.Count == 0)
+            {
+                hasMore = false;
+            }
+            else
+            {
+                allEvents.AddRange(batch);
+                offset += batch.Count;
+                
+                // If we got fewer than batchSize, we've reached the end
+                if (batch.Count < batchSize)
+                {
+                    hasMore = false;
+                }
+            }
+        }
+
+        return allEvents;
     }
 
     private sealed class GraphQlRequest

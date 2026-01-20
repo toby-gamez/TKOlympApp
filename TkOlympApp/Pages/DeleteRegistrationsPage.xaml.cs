@@ -103,8 +103,6 @@ public partial class DeleteRegistrationsPage : ContentPage
     private async Task LoadAsync()
     {
         _groups.Clear();
-        Loading.IsVisible = true;
-        Loading.IsRunning = true;
         try
         {
             // Determine current user's identifiers (personId and couple ids)
@@ -239,11 +237,6 @@ public partial class DeleteRegistrationsPage : ContentPage
         catch (Exception ex)
         {
             await DisplayAlertAsync(LocalizationService.Get("Error_Loading_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK");
-        }
-        finally
-        {
-            Loading.IsRunning = false;
-            Loading.IsVisible = false;
         }
     }
 

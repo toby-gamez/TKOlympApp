@@ -68,11 +68,7 @@ public partial class NoticeboardPage : ContentPage
     private async void OnTabAktualityClicked(object? sender, EventArgs e)
     {
         SetTabVisuals(true);
-        LoadingIndicator.IsVisible = true;
-        LoadingIndicator.IsRunning = true;
         await LoadAnnouncementsAsync();
-        LoadingIndicator.IsRunning = false;
-        LoadingIndicator.IsVisible = false;
     }
 
     private void OnTabStalaClicked(object? sender, EventArgs e)
@@ -101,8 +97,6 @@ public partial class NoticeboardPage : ContentPage
 
     private async Task LoadAnnouncementsAsync()
     {
-        LoadingIndicator.IsVisible = true;
-        LoadingIndicator.IsRunning = true;
         try
         {
             var list = await NoticeboardService.GetMyAnnouncementsAsync();
@@ -139,8 +133,6 @@ public partial class NoticeboardPage : ContentPage
         }
         finally
         {
-            LoadingIndicator.IsRunning = false;
-            LoadingIndicator.IsVisible = false;
             try
             {
                 if (AnnouncementsRefresh != null)
@@ -166,8 +158,6 @@ public partial class NoticeboardPage : ContentPage
     private async Task LoadStickyAnnouncementsAsync()
     {
         SetTabVisuals(false);
-        LoadingIndicator.IsVisible = true;
-        LoadingIndicator.IsRunning = true;
         try
         {
             var list = await NoticeboardService.GetStickyAnnouncementsAsync();
@@ -204,8 +194,6 @@ public partial class NoticeboardPage : ContentPage
         }
         finally
         {
-            LoadingIndicator.IsRunning = false;
-            LoadingIndicator.IsVisible = false;
             try
             {
                 if (AnnouncementsRefresh != null)

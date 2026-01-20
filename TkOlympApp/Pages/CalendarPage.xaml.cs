@@ -100,8 +100,6 @@ public partial class CalendarPage : ContentPage
         }
         UpdateEmptyView();
         _isLoading = true;
-        try { Loading.IsVisible = true; } catch { }
-        try { Loading.IsRunning = true; } catch { }
         try { EventsScroll.IsVisible = false; } catch { }
         try
         {
@@ -110,6 +108,7 @@ public partial class CalendarPage : ContentPage
             // extend end by one day to be inclusive across timezones
             var end = _weekEnd.Date.AddDays(1);
             try { Debug.WriteLine($"LoadEventsAsync: DateTime.Now={DateTime.Now:o}, start={start:o}, end={end:o}"); } catch { }
+            
             List<EventService.EventInstance> events;
             if (_onlyMine)
             {
@@ -117,107 +116,16 @@ public partial class CalendarPage : ContentPage
             }
             else
             {
+                // Load all events at once (fastest approach - single request)
                 events = await EventService.GetEventInstancesForRangeListAsync(start, end);
             }
-
-            // Group events by day (date only) - no ISO week grouping, just single rolling 7-day window
-            var groupsByDate = events
-                .GroupBy(e => e.Since.HasValue ? e.Since.Value.Date : e.UpdatedAt.Date)
-                .ToDictionary(g => g.Key, g => g.OrderBy(ev => ev.Since).ToList());
-
-            // Single week map for current rolling window
-            var weekMap = new SortedDictionary<DateTime, List<DateTime>>();
-            weekMap[_weekStart] = groupsByDate.Keys.OrderBy(d => d).ToList();
-
+            
             // Clear previous views and tracking list
             EventsStack.Children.Clear();
             _trainerDetailRows.Clear();
-
-            var culture = CultureInfo.CurrentUICulture ?? CultureInfo.CurrentCulture;
-
-            foreach (var kv in weekMap)
-            {
-                var weekStart = kv.Key;
-                var weekEnd = weekStart.AddDays(6);
-                
-                // Week header
-                EventsStack.Children.Add(CreateWeekHeader($"{weekStart:dd.MM.yyyy} – {weekEnd:dd.MM.yyyy}"));
-
-                foreach (var date in kv.Value.OrderBy(d => d))
-                {
-                    if (!groupsByDate.TryGetValue(date, out var dayEvents) || dayEvents.Count == 0) continue;
-
-                    string dayLabel;
-                    var todayDate = DateTime.Now.Date;
-                    if (date == todayDate) dayLabel = LocalizationService.Get("Today") ?? "Dnes";
-                    else if (date == todayDate.AddDays(1)) dayLabel = LocalizationService.Get("Tomorrow") ?? "Zítra";
-                    else
-                    {
-                        var name = culture.DateTimeFormat.GetDayName(date.DayOfWeek);
-                        dayLabel = char.ToUpper(name[0], culture) + name.Substring(1) + $" {date:dd.MM.}";
-                    }
-
-                    // Day header
-                    EventsStack.Children.Add(CreateDayHeader(dayLabel, date));
-
-                    // Separate events into groupable (lesson with exactly one trainer) and single events
-                    var groupableEvents = new List<EventService.EventInstance>();
-                    var singleEventsList = new List<EventService.EventInstance>();
-
-                    foreach (var evt in dayEvents)
-                    {
-                        var isLesson = string.Equals(evt.Event?.Type, "lesson", StringComparison.OrdinalIgnoreCase);
-                        var trainerCount = evt.Event?.EventTrainersList?.Count ?? 0;
-
-                        if (isLesson && trainerCount == 1)
-                        {
-                            groupableEvents.Add(evt);
-                        }
-                        else
-                        {
-                            singleEventsList.Add(evt);
-                        }
-                    }
-
-                    // Add single events
-                    foreach (var evt in singleEventsList.OrderBy(e => e.Since ?? e.UpdatedAt))
-                    {
-                        var since = evt.Since;
-                        var until = evt.Until;
-                        var timeRange = (since.HasValue ? since.Value.ToString("HH:mm") : "--:--") + " – " + (until.HasValue ? until.Value.ToString("HH:mm") : "--:--");
-                        var locationOrTrainers = ComputeLocationOrTrainers(evt);
-                        var eventName = ComputeEventName(evt);
-                        var eventTypeLabel = ComputeEventTypeLabel(evt.Event?.Type);
-
-                        EventsStack.Children.Add(CreateSingleEventCard(evt, timeRange, locationOrTrainers, eventName, eventTypeLabel));
-                    }
-
-                    // Add grouped trainers
-                    var groups = groupableEvents.GroupBy(e => e.Event?.EventTrainersList?.FirstOrDefault()?.Name?.Trim() ?? string.Empty)
-                        .OrderBy(g => g.Min(x => x.Since ?? x.UpdatedAt));
-
-                    foreach (var g in groups)
-                    {
-                        var ordered = g.OrderBy(i => i.Since ?? i.UpdatedAt).ToList();
-                        var trainerName = g.Key;
-                        var trainerTitle = string.IsNullOrWhiteSpace(trainerName) ? LocalizationService.Get("Lessons") ?? "Lekce" : trainerName;
-                        var cohorts = ordered.FirstOrDefault()?.Event?.EventTargetCohortsList;
-
-                        EventsStack.Children.Add(CreateTrainerGroupHeader(trainerTitle, cohorts));
-
-                        for (int i = 0; i < ordered.Count; i++)
-                        {
-                            var inst = ordered[i];
-                            var firstRegistrant = i == 0 ? ComputeFirstRegistrant(inst) : string.Empty;
-                            var durationText = ComputeDuration(inst);
-                            var detailRow = new TrainerDetailRow(inst, firstRegistrant, durationText);
-                            _trainerDetailRows.Add(detailRow);
-                            
-                            EventsStack.Children.Add(CreateTrainerDetailRow(detailRow));
-                        }
-                    }
-                }
-            }
+            
+            // Render all events
+            RenderEvents(events);
 
             // Highlight rows in the "All" view when the registrant matches current user or user's active couples
             List<string> normalizedHighlights = new();
@@ -348,8 +256,6 @@ public partial class CalendarPage : ContentPage
         }
         finally
         {
-            try { Loading.IsRunning = false; } catch { }
-            try { Loading.IsVisible = false; } catch { }
             try { EventsScroll.IsVisible = true; } catch { }
             try
             {
@@ -363,6 +269,239 @@ public partial class CalendarPage : ContentPage
             _isLoading = false;
             UpdateEmptyView();
         }
+    }
+
+    private void RenderEvents(List<EventService.EventInstance> events)
+    {
+        // Clear existing UI
+        EventsStack.Children.Clear();
+        _trainerDetailRows.Clear();
+
+        // Group events by day (date only) - no ISO week grouping, just single rolling 7-day window
+        var groupsByDate = events
+            .GroupBy(e => e.Since.HasValue ? e.Since.Value.Date : e.UpdatedAt.Date)
+            .ToDictionary(g => g.Key, g => g.OrderBy(ev => ev.Since).ToList());
+
+        // Single week map for current rolling window
+        var weekMap = new SortedDictionary<DateTime, List<DateTime>>();
+        weekMap[_weekStart] = groupsByDate.Keys.OrderBy(d => d).ToList();
+
+        var culture = CultureInfo.CurrentUICulture ?? CultureInfo.CurrentCulture;
+
+        foreach (var kv in weekMap)
+        {
+            var weekStart = kv.Key;
+            var weekEnd = weekStart.AddDays(6);
+            
+            // Week header
+            EventsStack.Children.Add(CreateWeekHeader($"{weekStart:dd.MM.yyyy} – {weekEnd:dd.MM.yyyy}"));
+
+            foreach (var date in kv.Value.OrderBy(d => d))
+            {
+                if (!groupsByDate.TryGetValue(date, out var dayEvents) || dayEvents.Count == 0) continue;
+
+                string dayLabel;
+                var todayDate = DateTime.Now.Date;
+                if (date == todayDate) dayLabel = LocalizationService.Get("Today") ?? "Dnes";
+                else if (date == todayDate.AddDays(1)) dayLabel = LocalizationService.Get("Tomorrow") ?? "Zítra";
+                else
+                {
+                    var name = culture.DateTimeFormat.GetDayName(date.DayOfWeek);
+                    dayLabel = char.ToUpper(name[0], culture) + name.Substring(1) + $" {date:dd.MM.}";
+                }
+
+                // Day header
+                EventsStack.Children.Add(CreateDayHeader(dayLabel, date));
+
+                // Separate events into groupable (lesson with exactly one trainer) and single events
+                var groupableEvents = new List<EventService.EventInstance>();
+                var singleEventsList = new List<EventService.EventInstance>();
+
+                foreach (var evt in dayEvents)
+                {
+                    var isLesson = string.Equals(evt.Event?.Type, "lesson", StringComparison.OrdinalIgnoreCase);
+                    var trainerCount = evt.Event?.EventTrainersList?.Count ?? 0;
+
+                    if (isLesson && trainerCount == 1)
+                    {
+                        groupableEvents.Add(evt);
+                    }
+                    else
+                    {
+                        singleEventsList.Add(evt);
+                    }
+                }
+
+                // Add single events
+                foreach (var evt in singleEventsList.OrderBy(e => e.Since ?? e.UpdatedAt))
+                {
+                    var since = evt.Since;
+                    var until = evt.Until;
+                    var timeRange = (since.HasValue ? since.Value.ToString("HH:mm") : "--:--") + " – " + (until.HasValue ? until.Value.ToString("HH:mm") : "--:--");
+                    var locationOrTrainers = ComputeLocationOrTrainers(evt);
+                    var eventName = ComputeEventName(evt);
+                    var eventTypeLabel = ComputeEventTypeLabel(evt.Event?.Type);
+
+                    EventsStack.Children.Add(CreateSingleEventCard(evt, timeRange, locationOrTrainers, eventName, eventTypeLabel));
+                }
+
+                // Add grouped trainers
+                var groups = groupableEvents.GroupBy(e => e.Event?.EventTrainersList?.FirstOrDefault()?.Name?.Trim() ?? string.Empty)
+                    .OrderBy(g => g.Min(x => x.Since ?? x.UpdatedAt));
+
+                foreach (var g in groups)
+                {
+                    var ordered = g.OrderBy(i => i.Since ?? i.UpdatedAt).ToList();
+                    var trainerName = g.Key;
+                    var trainerTitle = string.IsNullOrWhiteSpace(trainerName) ? LocalizationService.Get("Lessons") ?? "Lekce" : trainerName;
+                    var cohorts = ordered.FirstOrDefault()?.Event?.EventTargetCohortsList;
+
+                    EventsStack.Children.Add(CreateTrainerGroupHeader(trainerTitle, cohorts));
+
+                    for (int i = 0; i < ordered.Count; i++)
+                    {
+                        var inst = ordered[i];
+                        var firstRegistrant = i == 0 ? ComputeFirstRegistrant(inst) : string.Empty;
+                        var durationText = ComputeDuration(inst);
+                        var detailRow = new TrainerDetailRow(inst, firstRegistrant, durationText);
+                        _trainerDetailRows.Add(detailRow);
+                        
+                        EventsStack.Children.Add(CreateTrainerDetailRow(detailRow));
+                    }
+                }
+            }
+        }
+    }
+
+    private void AppendEvents(List<EventService.EventInstance> newBatch, List<EventService.EventInstance> allEvents)
+    {
+        // Efficiently append only the new events to existing UI structure
+        // instead of rebuilding everything
+        
+        var culture = CultureInfo.CurrentUICulture ?? CultureInfo.CurrentCulture;
+        
+        // Group new events by date
+        var newEventsByDate = newBatch
+            .GroupBy(e => e.Since.HasValue ? e.Since.Value.Date : e.UpdatedAt.Date)
+            .ToDictionary(g => g.Key, g => g.OrderBy(ev => ev.Since).ToList());
+        
+        foreach (var dateGroup in newEventsByDate.OrderBy(kv => kv.Key))
+        {
+            var date = dateGroup.Key;
+            var newDayEvents = dateGroup.Value;
+            
+            // Check if this date already exists in UI
+            var existingDayHeader = EventsStack.Children
+                .OfType<Label>()
+                .FirstOrDefault(l => l.BindingContext is DayHeaderRow dhr && dhr.Date == date);
+            
+            int insertIndex;
+            if (existingDayHeader == null)
+            {
+                // New day - need to add day header and events in correct position
+                string dayLabel;
+                var todayDate = DateTime.Now.Date;
+                if (date == todayDate) dayLabel = LocalizationService.Get("Today") ?? "Dnes";
+                else if (date == todayDate.AddDays(1)) dayLabel = LocalizationService.Get("Tomorrow") ?? "Zítra";
+                else
+                {
+                    var name = culture.DateTimeFormat.GetDayName(date.DayOfWeek);
+                    dayLabel = char.ToUpper(name[0], culture) + name.Substring(1) + $" {date:dd.MM.}";
+                }
+                
+                // Find correct position for this date
+                insertIndex = FindInsertPositionForDate(date);
+                EventsStack.Children.Insert(insertIndex, CreateDayHeader(dayLabel, date));
+                insertIndex++; // Move past the header
+            }
+            else
+            {
+                // Day already exists - append to end of that day's events
+                insertIndex = EventsStack.Children.IndexOf(existingDayHeader) + 1;
+                // Skip existing events for this day
+                while (insertIndex < EventsStack.Children.Count)
+                {
+                    var next = EventsStack.Children[insertIndex];
+                    // Stop when we hit next day header or week header
+                    if (next is Label label)
+                    {
+                        if (label.BindingContext is DayHeaderRow dhr && dhr.Date != date)
+                            break;
+                    }
+                    if (next is Border border && border.BindingContext == null) // Week header
+                        break;
+                    insertIndex++;
+                }
+            }
+            
+            // Add new events for this day
+            var groupableEvents = new List<EventService.EventInstance>();
+            var singleEventsList = new List<EventService.EventInstance>();
+            
+            foreach (var evt in newDayEvents)
+            {
+                var isLesson = string.Equals(evt.Event?.Type, "lesson", StringComparison.OrdinalIgnoreCase);
+                var trainerCount = evt.Event?.EventTrainersList?.Count ?? 0;
+                
+                if (isLesson && trainerCount == 1)
+                    groupableEvents.Add(evt);
+                else
+                    singleEventsList.Add(evt);
+            }
+            
+            // Add single events
+            foreach (var evt in singleEventsList.OrderBy(e => e.Since ?? e.UpdatedAt))
+            {
+                var since = evt.Since;
+                var until = evt.Until;
+                var timeRange = (since.HasValue ? since.Value.ToString("HH:mm") : "--:--") + " – " + (until.HasValue ? until.Value.ToString("HH:mm") : "--:--");
+                var locationOrTrainers = ComputeLocationOrTrainers(evt);
+                var eventName = ComputeEventName(evt);
+                var eventTypeLabel = ComputeEventTypeLabel(evt.Event?.Type);
+                
+                EventsStack.Children.Insert(insertIndex++, CreateSingleEventCard(evt, timeRange, locationOrTrainers, eventName, eventTypeLabel));
+            }
+            
+            // Add grouped trainers
+            var groups = groupableEvents.GroupBy(e => e.Event?.EventTrainersList?.FirstOrDefault()?.Name?.Trim() ?? string.Empty)
+                .OrderBy(g => g.Min(x => x.Since ?? x.UpdatedAt));
+            
+            foreach (var g in groups)
+            {
+                var ordered = g.OrderBy(i => i.Since ?? i.UpdatedAt).ToList();
+                var trainerName = g.Key;
+                var trainerTitle = string.IsNullOrWhiteSpace(trainerName) ? LocalizationService.Get("Lessons") ?? "Lekce" : trainerName;
+                var cohorts = ordered.FirstOrDefault()?.Event?.EventTargetCohortsList;
+                
+                EventsStack.Children.Insert(insertIndex++, CreateTrainerGroupHeader(trainerTitle, cohorts));
+                
+                for (int i = 0; i < ordered.Count; i++)
+                {
+                    var inst = ordered[i];
+                    var firstRegistrant = i == 0 ? ComputeFirstRegistrant(inst) : string.Empty;
+                    var durationText = ComputeDuration(inst);
+                    var detailRow = new TrainerDetailRow(inst, firstRegistrant, durationText);
+                    _trainerDetailRows.Add(detailRow);
+                    
+                    EventsStack.Children.Insert(insertIndex++, CreateTrainerDetailRow(detailRow));
+                }
+            }
+        }
+    }
+    
+    private int FindInsertPositionForDate(DateTime targetDate)
+    {
+        // Find where to insert a new day header based on date order
+        for (int i = 0; i < EventsStack.Children.Count; i++)
+        {
+            var child = EventsStack.Children[i];
+            if (child is Label label && label.BindingContext is DayHeaderRow dhr)
+            {
+                if (dhr.Date > targetDate)
+                    return i; // Insert before this day
+            }
+        }
+        return EventsStack.Children.Count; // Append at end
     }
 
     // Public helper to request a refresh from external callers (e.g. AppShell after auth)

@@ -123,8 +123,6 @@ public partial class EventPage : ContentPage
     private async Task LoadAsync()
     {
         if (EventId == 0) return;
-        Loading.IsVisible = true;
-        Loading.IsRunning = true;
         try
         {
             // Debug: log incoming navigation params and event-level times
@@ -604,11 +602,6 @@ public partial class EventPage : ContentPage
         catch (Exception ex)
         {
             await DisplayAlertAsync(LocalizationService.Get("Error_Loading_Title"), ex.Message, LocalizationService.Get("Button_OK"));
-        }
-        finally
-        {
-            Loading.IsRunning = false;
-            Loading.IsVisible = false;
         }
     }
 

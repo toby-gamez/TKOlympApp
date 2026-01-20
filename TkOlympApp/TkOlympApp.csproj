@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFrameworks>
             net10.0-android;
-            <!-- net10.0-ios; -->
+            <!-- net10.0-ios; allow only on macOS --> 
         </TargetFrameworks>
         <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
         <AndroidNdkDirectory>/opt/android-ndk</AndroidNdkDirectory>

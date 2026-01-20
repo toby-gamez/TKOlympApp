@@ -5,13 +5,12 @@
              x:Class="TkOlympApp.Pages.EditRegistrationsPage"
              Title="{svc:Translate EditRegistrations_Title}">
 
-    <Grid>
+    <RefreshView x:Name="PageRefresh" Refreshing="OnRefresh">
+        <Grid>
             <CollectionView x:Name="RegistrationsCollection" Style="{StaticResource ListCollectionView}" SelectionChanged="OnSelectionChanged" IsGrouped="True" RemainingItemsThreshold="5" RemainingItemsThresholdReached="OnRegistrationsRemainingThresholdReached" VerticalOptions="FillAndExpand">
                 <CollectionView.Header>
                     <VerticalStackLayout Padding="16" Spacing="12">
                         <Label Text="{svc:Translate EditRegistrations_Title}" FontAttributes="Bold" FontSize="20" />
-
-                        <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" HorizontalOptions="Center" />
 
                         <Label Text="{svc:Translate EditRegistrations_Description}" />
                     </VerticalStackLayout>
@@ -69,5 +68,5 @@
             </VerticalStackLayout>
         </Grid>
     </Grid>
-
+    </RefreshView>
 </ContentPage>

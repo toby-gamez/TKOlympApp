@@ -30,13 +30,22 @@ public partial class CohortGroupsPage : ContentPage
         }
     }
 
+    private async void OnRefresh(object? sender, EventArgs e)
+    {
+        try
+        {
+            await LoadAsync();
+        }
+        finally
+        {
+            try { if (PageRefresh != null) PageRefresh.IsRefreshing = false; } catch { }
+        }
+    }
+
     private async Task LoadAsync()
     {
         try
         {
-            LoadingIndicator.IsVisible = true;
-            LoadingIndicator.IsRunning = true;
-
             var groups = await CohortService.GetCohortGroupsAsync();
             var cohorts = groups
                 .SelectMany(g => g.CohortsList ?? new System.Collections.Generic.List<CohortService.CohortItem>())
@@ -149,11 +158,6 @@ public partial class CohortGroupsPage : ContentPage
         catch (Exception ex)
         {
             await DisplayAlertAsync(LocalizationService.Get("Error_Title"), ex.Message, LocalizationService.Get("Button_OK"));
-        }
-        finally
-        {
-            LoadingIndicator.IsVisible = false;
-            LoadingIndicator.IsRunning = false;
         }
     }
 

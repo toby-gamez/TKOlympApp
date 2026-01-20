@@ -24,7 +24,6 @@
         <HorizontalStackLayout Grid.Row="0" Spacing="8" VerticalOptions="Center" HorizontalOptions="Start">
             <Button x:Name="TabPlannedButton" Text="{svc:Translate Planned}" Clicked="OnTabPlannedClicked" />
             <Button x:Name="TabOccurredButton" Text="{svc:Translate Occurred}" Clicked="OnTabOccurredClicked" />
-            <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" HorizontalOptions="EndAndExpand" />
         </HorizontalStackLayout>
 
         <RefreshView x:Name="EventsRefresh" Refreshing="OnRefresh" Grid.Row="1">

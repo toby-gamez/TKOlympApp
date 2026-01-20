@@ -6,20 +6,18 @@
              x:Class="TkOlympApp.Pages.TrainersAndLocationsPage"
              Title="{svc:Translate TrainersAndLocations_Title}">
 
-    <ScrollView>
-        <Grid Padding="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
+    <RefreshView x:Name="PageRefresh" Refreshing="OnRefresh">
+        <ScrollView>
+            <Grid Padding="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
 
-        <ActivityIndicator x:Name="LoadingIndicator" IsVisible="False" IsRunning="False" Grid.Row="0" HorizontalOptions="End" />
+            <Label Text="{svc:Translate Trainers_Locations_Label}" FontAttributes="Bold" FontSize="16" Grid.Row="0" />
 
-        <Label Text="{svc:Translate Trainers_Locations_Label}" FontAttributes="Bold" FontSize="16" Grid.Row="1" />
-
-        <VerticalStackLayout x:Name="LocationsStack" Grid.Row="2" Margin="0,8,0,8" Spacing="6">
+        <VerticalStackLayout x:Name="LocationsStack" Grid.Row="1" Margin="0,8,0,8" Spacing="6">
             <BindableLayout.ItemTemplate>
                 <DataTemplate>
                         <Border Padding="12" Margin="0">
@@ -33,11 +31,11 @@
                         </Border>
                     </DataTemplate>
             </BindableLayout.ItemTemplate>
-        </VerticalStackLayout>
+            </VerticalStackLayout>
 
-        <Label Text="{svc:Translate Trainers_Label}" FontAttributes="Bold" FontSize="16" Grid.Row="3" />
-
-        <VerticalStackLayout x:Name="TrainersStack" Grid.Row="3" Margin="0,36,0,0" Spacing="6">
+            <VerticalStackLayout Grid.Row="2" Spacing="6">
+                <Label Text="{svc:Translate Trainers_Label}" FontAttributes="Bold" FontSize="16" Margin="0,12,0,0" />
+                <VerticalStackLayout x:Name="TrainersStack" Margin="0,36,0,0" Spacing="6">
             <BindableLayout.ItemTemplate>
                 <DataTemplate>
                     <Border Padding="12" Margin="0">
@@ -58,7 +56,9 @@
                     </Border>
                 </DataTemplate>
             </BindableLayout.ItemTemplate>
-        </VerticalStackLayout>
-        </Grid>
-    </ScrollView>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+            </Grid>
+        </ScrollView>
+    </RefreshView>
 </ContentPage>
