@@ -7,38 +7,21 @@
              Title="{svc:Translate People_Title}">
 
     <Grid RowDefinitions="Auto,*,Auto">
-        <HorizontalStackLayout Grid.Row="0" Padding="12" Spacing="8" VerticalOptions="Center">
-            <Label Text="{svc:Translate People_SortLabel}" VerticalOptions="Center" />
-            <Picker x:Name="SortPicker" Title="{svc:Translate People_SortPickerTitle}" WidthRequest="200" SelectedIndexChanged="OnSortChanged">
+        <Grid Grid.Row="0" Padding="12" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+            <Label Grid.Column="0" Text="{svc:Translate People_SortLabel}" VerticalOptions="Center" />
+            <Picker Grid.Column="1" x:Name="SortPicker" Title="{svc:Translate People_SortPickerTitle}" WidthRequest="200" SelectedIndexChanged="OnSortChanged" HorizontalOptions="Start">
                 <Picker.Items>
                     <x:String>{svc:Translate People_Sort_Alphabetical}</x:String>
                     <x:String>{svc:Translate People_Sort_ByBirthdays}</x:String>
                 </Picker.Items>
             </Picker>
-        </HorizontalStackLayout>
+            <Button Grid.Column="2" x:Name="FilterButton" Text="{svc:Translate People_FilterButton}" Clicked="OnFilterClicked" HorizontalOptions="End" />
+        </Grid>
 
         <RefreshView x:Name="PeopleRefresh" Grid.Row="1" Refreshing="OnPeopleRefresh">
-            <CollectionView x:Name="PeopleCollection" SelectionMode="Single" IsGrouped="False" SelectionChanged="OnPersonSelected">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <Border x:Name="PersonBorder" StrokeShape="RoundRectangle 8" StrokeThickness="1" Padding="12" Margin="12,6">
-                            <Grid ColumnDefinitions="*,Auto" HorizontalOptions="FillAndExpand" VerticalOptions="Center">
-                                <VerticalStackLayout Grid.Column="0" HorizontalOptions="Start" VerticalOptions="Center">
-                                    <Label Text="{Binding FullName}" FontAttributes="Bold" />
-                                    <Label Text="{Binding DisplayBirthDate}" FontSize="12" Style="{StaticResource MutedLabelStyle}" />
-                                </VerticalStackLayout>
-                                <Label x:Name="CakeIcon" Grid.Column="1" Text="{mi:Material Icon=Cake}" IsVisible="{Binding IsBirthdayToday}" HorizontalOptions="End" VerticalOptions="Center" FontSize="26" Margin="8,0,0,0" TextColor="{StaticResource Primary}" />
-                            </Grid>
-                            <Border.Triggers>
-                                <DataTrigger TargetType="Border" Binding="{Binding IsBirthdayToday}" Value="True">
-                                    <Setter Property="Stroke" Value="{DynamicResource Primary}" />
-                                    <Setter Property="StrokeThickness" Value="2" />
-                                </DataTrigger>
-                            </Border.Triggers>
-                        </Border>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+            <ScrollView>
+                <VerticalStackLayout x:Name="PeopleStack" Padding="12,6" Spacing="6" />
+            </ScrollView>
         </RefreshView>
 
         <!-- Manual reload removed — use pull-to-refresh -->

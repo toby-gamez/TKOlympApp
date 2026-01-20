@@ -34,6 +34,10 @@
   <data name="People_Title" xml:space="preserve"><value>Люди</value></data>
   <data name="People_SortLabel" xml:space="preserve"><value>Сортування:</value></data>
   <data name="People_SortPickerTitle" xml:space="preserve"><value>Сортувати</value></data>
+  <data name="People_FilterByCohorts" xml:space="preserve"><value>Фільтрувати за групами:</value></data>
+  <data name="People_FilterButton" xml:space="preserve"><value>Фільтр</value></data>
+  <data name="People_SelectAll" xml:space="preserve"><value>Вибрати все</value></data>
+  <data name="People_DeselectAll" xml:space="preserve"><value>Скасувати все</value></data>
   <data name="Login_Title" xml:space="preserve"><value>Вхід</value></data>
   <data name="Login_Placeholder_Username" xml:space="preserve"><value>Ім'я</value></data>
   <data name="Login_Placeholder_Password" xml:space="preserve"><value>Пароль</value></data>

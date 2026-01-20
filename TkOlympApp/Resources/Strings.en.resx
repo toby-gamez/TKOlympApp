@@ -34,6 +34,10 @@
   <data name="People_Title" xml:space="preserve"><value>People</value></data>
   <data name="People_SortLabel" xml:space="preserve"><value>Sorting:</value></data>
   <data name="People_SortPickerTitle" xml:space="preserve"><value>Sort</value></data>
+  <data name="People_FilterByCohorts" xml:space="preserve"><value>Filter by groups:</value></data>
+  <data name="People_FilterButton" xml:space="preserve"><value>Filter</value></data>
+  <data name="People_SelectAll" xml:space="preserve"><value>Select All</value></data>
+  <data name="People_DeselectAll" xml:space="preserve"><value>Deselect All</value></data>
   <data name="Login_Title" xml:space="preserve"><value>Login</value></data>
   <data name="Login_Placeholder_Username" xml:space="preserve"><value>Username</value></data>
   <data name="Login_Placeholder_Password" xml:space="preserve"><value>Password</value></data>

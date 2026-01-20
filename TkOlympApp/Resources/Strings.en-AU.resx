@@ -35,7 +35,9 @@
     <data name="People_Title" xml:space="preserve"><value>The Homies</value></data>
     <data name="People_SortLabel" xml:space="preserve"><value>Sort by:</value></data>
     <data name="People_SortPickerTitle" xml:space="preserve"><value>Vibe Check</value></data>
-    <data name="Login_Title" xml:space="preserve"><value>Vibe Check (Login)</value></data>
+    <data name="People_FilterByCohorts" xml:space="preserve"><value>Filter by squad:</value></data>
+    <data name="People_FilterButton" xml:space="preserve"><value>Filt</value></data>    <data name="People_SelectAll" xml:space="preserve"><value>All in</value></data>
+    <data name="People_DeselectAll" xml:space="preserve"><value>No cap</value></data>    <data name="Login_Title" xml:space="preserve"><value>Vibe Check (Login)</value></data>
     <data name="Login_Placeholder_Username" xml:space="preserve"><value>Main Character</value></data>
     <data name="Login_Placeholder_Password" xml:space="preserve"><value>Secret Sauce</value></data>
     <data name="Login_Button_Login" xml:space="preserve"><value>Slide In</value></data>

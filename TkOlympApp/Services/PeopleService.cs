@@ -20,7 +20,24 @@ public static class PeopleService
     {
         var query = new GraphQlRequest
         {
-            Query = "query MyQuery { people { nodes { id firstName lastName birthDate } } }"
+            Query = @"query MyQuery {
+  people {
+    nodes {
+      id
+      firstName
+      lastName
+      birthDate
+      cohortMembershipsList {
+        cohort {
+          name
+          id
+          colorRgb
+          isVisible
+        }
+      }
+    }
+  }
+}"
         };
 
         var json = JsonSerializer.Serialize(query, Options);
@@ -54,7 +71,13 @@ public static class PeopleService
         [JsonPropertyName("nodes")] public List<Person>? Nodes { get; set; }
     }
 
-    public sealed record Person(string? Id, string? FirstName, string? LastName, string? BirthDate)
+    public sealed record Person(
+        [property: JsonPropertyName("id")] string? Id,
+        [property: JsonPropertyName("firstName")] string? FirstName,
+        [property: JsonPropertyName("lastName")] string? LastName,
+        [property: JsonPropertyName("birthDate")] string? BirthDate,
+        [property: JsonPropertyName("cohortMembershipsList")] List<CohortMembership>? CohortMembershipsList
+    )
     {
         public string FullName => string.Join(' ', new[] { FirstName, LastName }.Where(s => !string.IsNullOrWhiteSpace(s)));
 
@@ -95,4 +118,15 @@ public static class PeopleService
 
         public bool IsBirthdayToday => DaysUntilNextBirthday.HasValue && DaysUntilNextBirthday.Value == 0;
     };
+
+    public sealed record CohortMembership(
+        [property: JsonPropertyName("cohort")] Cohort? Cohort
+    );
+
+    public sealed record Cohort(
+        [property: JsonPropertyName("id")] string? Id,
+        [property: JsonPropertyName("name")] string? Name,
+        [property: JsonPropertyName("colorRgb")] string? ColorRgb,
+        [property: JsonPropertyName("isVisible")] bool? IsVisible
+    );
 }

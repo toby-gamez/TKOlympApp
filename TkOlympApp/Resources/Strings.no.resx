@@ -34,6 +34,10 @@
     <data name="People_Title" xml:space="preserve"><value>Folk</value></data>
     <data name="People_SortLabel" xml:space="preserve"><value>Sortering:</value></data>
     <data name="People_SortPickerTitle" xml:space="preserve"><value>Sorter</value></data>
+  <data name="People_FilterByCohorts" xml:space="preserve"><value>Filtrer etter grupper:</value></data>
+  <data name="People_FilterButton" xml:space="preserve"><value>Filter</value></data>
+  <data name="People_SelectAll" xml:space="preserve"><value>Velg alle</value></data>
+  <data name="People_DeselectAll" xml:space="preserve"><value>Fjern alle</value></data>
     <data name="Login_Title" xml:space="preserve"><value>Logg inn</value></data>
     <data name="Login_Placeholder_Username" xml:space="preserve"><value>Brukernavn</value></data>
     <data name="Login_Placeholder_Password" xml:space="preserve"><value>Passord</value></data>
