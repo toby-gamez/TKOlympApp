@@ -69,7 +69,7 @@ namespace TkOlympApp.Pages
                 return;
             }
 
-            var query = "query MyQuery { person(id: \"" + _personId + "\") { bio birthDate createdAt cstsId email firstName prefixTitle suffixTitle gender isTrainer lastName phone wdsfId activeCouplesList { id man { firstName lastName } woman { firstName lastName } } cohortMembershipsList { cohort { colorRgb id name } } } }";
+            var query = "query MyQuery { person(id: \"" + _personId + "\") { bio birthDate createdAt cstsId email firstName prefixTitle suffixTitle gender isTrainer lastName phone wdsfId activeCouplesList { id man { firstName lastName } woman { firstName lastName } } cohortMembershipsList { cohort { colorRgb id name ordering isVisible } } } }";
 
                 var gqlReq = new { query };
                 var options = new JsonSerializerOptions(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = true };
@@ -153,7 +153,10 @@ namespace TkOlympApp.Pages
                 try
                 {
                     CohortDots.Children.Clear();
-                    var cohortsList = person.CohortMembershipsList ?? new List<CohortMembership>();
+                    var cohortsList = (person.CohortMembershipsList ?? new List<CohortMembership>())
+                        .Where(m => m?.Cohort?.IsVisible != false)
+                        .OrderBy(m => m?.Cohort?.Ordering ?? int.MaxValue)
+                        .ToList();
                     foreach (var membership in cohortsList)
                     {
                         try
@@ -313,6 +316,8 @@ namespace TkOlympApp.Pages
             [JsonPropertyName("id")] public string? Id { get; set; }
             [JsonPropertyName("name")] public string? Name { get; set; }
             [JsonPropertyName("colorRgb")] public string? ColorRgb { get; set; }
+            [JsonPropertyName("ordering")] public int? Ordering { get; set; }
+            [JsonPropertyName("isVisible")] public bool? IsVisible { get; set; }
         }
 
         private sealed class ActiveCoupleDisplay

@@ -5,7 +5,7 @@
              x:Class="TkOlympApp.Pages.AboutMePage"
              Title="{svc:Translate AboutMe_Title}">
 
-    <Grid RowDefinitions="Auto,*,Auto">
+    <Grid RowDefinitions="Auto,*">
         <RefreshView x:Name="PageRefresh" Grid.Row="1" Refreshing="OnRefresh">
             <ScrollView>
                 <VerticalStackLayout Padding="20" Spacing="12">
@@ -106,6 +106,17 @@
                     </VerticalStackLayout>
                 </Border>
 
+                <!-- Training groups / Cohorts -->
+                <Border x:Name="CohortsFrame" Padding="12" IsVisible="False">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="{svc:Translate Person_Cohorts_Label}" FontAttributes="Bold" />
+                        <StackLayout x:Name="CohortDots" Spacing="8" />
+                    </VerticalStackLayout>
+                </Border>
+
                 <!-- Address -->
                 <Border Padding="12" x:Name="AddressBorder">
                     <Border.StrokeShape>
@@ -172,6 +183,5 @@
             </VerticalStackLayout>
         </ScrollView>
         </RefreshView>
-        <Button Text="{svc:Translate Edit_Button_Text}" Clicked="OnEditClicked" Grid.Row="2" Margin="20,12"/>
     </Grid>
 </ContentPage>
