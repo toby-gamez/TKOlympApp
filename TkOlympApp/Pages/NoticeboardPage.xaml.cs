@@ -125,7 +125,7 @@ public partial class NoticeboardPage : ContentPage
             AnnouncementsCollection.ItemsSource = views;
             
             // Check for changes and send notifications
-            await NoticeboardNotificationService.CheckAndNotifyChangesAsync(list);
+            await NoticeboardNotificationService.CheckAndNotifyChangesAsync(list!);
         }
         catch (Exception ex)
         {

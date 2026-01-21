@@ -144,7 +144,7 @@ public partial class PeoplePage : ContentPage
             actionsList.AddRange(_cohortFilters.Select(f => $"{(f.IsChecked ? "✓" : "  ")} {f.CohortName}"));
 
             var actions = actionsList.ToArray();
-            var result = await DisplayActionSheet(
+            var result = await DisplayActionSheetAsync(
                 LocalizationService.Get("People_FilterByCohorts"),
                 LocalizationService.Get("Button_Cancel"),
                 null,
@@ -257,7 +257,7 @@ public partial class PeoplePage : ContentPage
                 new ColumnDefinition { Width = GridLength.Auto }
             },
             ColumnSpacing = 8,
-            HorizontalOptions = LayoutOptions.FillAndExpand,
+            HorizontalOptions = LayoutOptions.Fill,
             VerticalOptions = LayoutOptions.Center
         };
 

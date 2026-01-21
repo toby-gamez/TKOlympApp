@@ -35,7 +35,7 @@ public partial class LeaderboardPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert(LocalizationService.Get("Error_Title"), ex.Message, LocalizationService.Get("Button_OK"));
+            await DisplayAlertAsync(LocalizationService.Get("Error_Title"), ex.Message, LocalizationService.Get("Button_OK"));
         }
     }
 
@@ -92,7 +92,7 @@ public partial class LeaderboardPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlert(LocalizationService.Get("Error_Title"), ex.Message, LocalizationService.Get("Button_OK"));
+            await DisplayAlertAsync(LocalizationService.Get("Error_Title"), ex.Message, LocalizationService.Get("Button_OK"));
         }
         finally
         {

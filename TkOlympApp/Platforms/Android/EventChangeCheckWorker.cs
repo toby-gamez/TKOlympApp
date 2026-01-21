@@ -51,12 +51,12 @@ public class EventChangeCheckWorker : Worker
                 }
             }).Wait();
 
-            return Result.InvokeSuccess();
+            return Result.InvokeSuccess()!;
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"EventChangeCheckWorker: Worker failed: {ex}");
-            return Result.InvokeFailure();
+            return Result.InvokeFailure()!;
         }
     }
 }

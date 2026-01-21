@@ -690,12 +690,13 @@ public partial class CalendarPage : ContentPage
         await LoadEventsAsync();
     }
 
-    private static async Task DisplayAlertAsync(string? title, string? message, string? cancel)
+    private static new async Task DisplayAlertAsync(string? title, string? message, string? cancel)
     {
         try
         {
-            if (Application.Current?.MainPage != null)
-                await Application.Current.MainPage.DisplayAlert(title ?? string.Empty, message ?? string.Empty, cancel ?? "OK");
+            var window = Application.Current?.Windows?.FirstOrDefault();
+            if (window?.Page != null)
+                await window.Page.DisplayAlertAsync(title ?? string.Empty, message ?? string.Empty, cancel ?? "OK");
         }
         catch { }
     }
