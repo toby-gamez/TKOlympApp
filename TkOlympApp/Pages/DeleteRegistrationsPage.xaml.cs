@@ -35,18 +35,18 @@ public partial class DeleteRegistrationsPage : ContentPage
         {
             InitializeComponent();
         }
-            catch (Exception ex)
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"DeleteRegistrationsPage XAML init error: {ex}");
+            try
             {
-                System.Diagnostics.Debug.WriteLine($"DeleteRegistrationsPage XAML init error: {ex}");
-                try
+                Dispatcher.Dispatch(async () =>
                 {
-                    Dispatcher.Dispatch(async () =>
-                    {
-                        try { await DisplayAlertAsync(LocalizationService.Get("XAML_Error_Title") ?? "XAML Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
-                    });
-                }
-                catch { }
+                    try { await DisplayAlertAsync(LocalizationService.Get("XAML_Error_Title") ?? "XAML Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+                });
             }
+            catch { }
+        }
 
         try
         {
@@ -59,6 +59,12 @@ public partial class DeleteRegistrationsPage : ContentPage
     {
         base.OnAppearing();
         await LoadAsync();
+    }
+
+    private async void OnRefresh(object? sender, EventArgs e)
+    {
+        await LoadAsync();
+        PageRefresh.IsRefreshing = false;
     }
 
     private sealed class RegItem
@@ -256,7 +262,7 @@ public partial class DeleteRegistrationsPage : ContentPage
         }
     }
 
-    
+
 
     private async void OnDeleteClicked(object? sender, EventArgs e)
     {
@@ -311,18 +317,18 @@ public partial class DeleteRegistrationsPage : ContentPage
                 using var doc = JsonDocument.Parse(body);
                 if (!(doc.RootElement.TryGetProperty("data", out var data) && data.TryGetProperty("deleteEventRegistration", out var del) && del.TryGetProperty("eventRegistration", out var er) && er.TryGetProperty("id", out var idEl)))
                 {
-                        if (doc.RootElement.TryGetProperty("errors", out var errs) && errs.ValueKind == JsonValueKind.Array && errs.GetArrayLength() > 0)
-                        {
-                            var first = errs[0];
-                            var msg = first.TryGetProperty("message", out var m) ? m.GetString() : body;
-                            await DisplayAlertAsync(LocalizationService.Get("Error_Title") ?? "Error", msg ?? body, LocalizationService.Get("Button_OK") ?? "OK");
-                            return;
-                        }
-                        else
-                        {
-                            await DisplayAlertAsync(LocalizationService.Get("Error_Title") ?? "Error", body, LocalizationService.Get("Button_OK") ?? "OK");
-                            return;
-                        }
+                    if (doc.RootElement.TryGetProperty("errors", out var errs) && errs.ValueKind == JsonValueKind.Array && errs.GetArrayLength() > 0)
+                    {
+                        var first = errs[0];
+                        var msg = first.TryGetProperty("message", out var m) ? m.GetString() : body;
+                        await DisplayAlertAsync(LocalizationService.Get("Error_Title") ?? "Error", msg ?? body, LocalizationService.Get("Button_OK") ?? "OK");
+                        return;
+                    }
+                    else
+                    {
+                        await DisplayAlertAsync(LocalizationService.Get("Error_Title") ?? "Error", body, LocalizationService.Get("Button_OK") ?? "OK");
+                        return;
+                    }
                 }
             }
 

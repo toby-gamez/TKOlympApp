@@ -56,6 +56,12 @@ public partial class EditRegistrationsPage : ContentPage
         catch { }
     }
 
+    private async void OnRefresh(object? sender, EventArgs e)
+    {
+        await LoadAsync();
+        PageRefresh.IsRefreshing = false;
+    }
+
     private sealed class RegItem
     {
         public string Id { get; set; } = string.Empty;
@@ -308,7 +314,7 @@ public partial class EditRegistrationsPage : ContentPage
             TrainerSelectionHeader.IsVisible = false;
         }
     }
-    
+
     private void OnRegistrationsRemainingThresholdReached(object? sender, EventArgs e)
     {
         try
@@ -344,7 +350,7 @@ public partial class EditRegistrationsPage : ContentPage
         }
         catch { }
     }
-    
+
     private async Task LoadTrainerSelectionAsync()
     {
         try

@@ -1,10 +1,12 @@
 using System;
 using Microsoft.Maui.Controls;
 using System.Globalization;
+using Microsoft.Maui.Controls.Xaml;
 
 namespace TkOlympApp.Services
 {
     [ContentProperty("Text")]
+    [AcceptEmptyServiceProvider]
     public class TranslateExtension : IMarkupExtension
     {
         public string? Text { get; set; }

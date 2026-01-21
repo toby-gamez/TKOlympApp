@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFrameworks>
-            net10.0-android;
+            net10.0-android
             <!-- net10.0-ios; allow only on macOS --> 
         </TargetFrameworks>
         <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
@@ -47,9 +47,9 @@
         <AnalysisLevel>latest</AnalysisLevel>
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     </PropertyGroup>
-    
 
-    <ItemGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-android'">
         <PackageReference Include="HtmlAgilityPack" Version="1.11.64" />
         <PackageReference Include="Plugin.LocalNotification" Version="13.0.0" />
         <PackageReference Include="Xamarin.AndroidX.Work.Runtime" Version="2.11.0.1" />
