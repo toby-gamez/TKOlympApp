@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFrameworks>
-            net10.0-android
+            net10.0-android;
             <!-- net10.0-ios; allow only on macOS --> 
         </TargetFrameworks>
         <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
@@ -52,6 +52,17 @@
     <ItemGroup>
         <PackageReference Include="HtmlAgilityPack" Version="1.11.64" />
         <PackageReference Include="Plugin.LocalNotification" Version="13.0.0" />
+        <PackageReference Include="Xamarin.AndroidX.Work.Runtime" Version="2.11.0.1" />
+        <!-- Force consistent Lifecycle package versions to avoid NU1608 warnings -->
+        <PackageReference Include="Xamarin.AndroidX.Lifecycle.Process" Version="2.10.0.1" />
+        <PackageReference Include="Xamarin.AndroidX.Lifecycle.Runtime.Ktx" Version="2.10.0.1" />
+        <PackageReference Include="Xamarin.AndroidX.Lifecycle.Runtime.Ktx.Android" Version="2.10.0.1" />
+        <PackageReference Include="Xamarin.AndroidX.Lifecycle.ViewModel" Version="2.10.0.1" />
+        <PackageReference Include="Xamarin.AndroidX.Lifecycle.ViewModel.Android" Version="2.10.0.1" />
+        <PackageReference Include="Xamarin.AndroidX.Lifecycle.ViewModel.Ktx" Version="2.10.0.1" />
+        <PackageReference Include="Xamarin.AndroidX.Lifecycle.ViewModelSavedState" Version="2.10.0.1" />
+        <PackageReference Include="Xamarin.AndroidX.Lifecycle.ViewModelSavedState.Android" Version="2.10.0.1" />
+        <PackageReference Include="Xamarin.AndroidX.SavedState.SavedState.Ktx" Version="1.4.0.1" />
     </ItemGroup>
 
     <ItemGroup>
@@ -80,17 +91,15 @@
         <PackageReference Include="AathifMahir.Maui.MauiIcons.FontAwesome" Version="2.1.0" />
         <PackageReference Include="AathifMahir.Maui.MauiIcons.Fluent" Version="2.1.0" />
         <PackageReference Include="Indiko.Maui.Controls.SelectableLabel" Version="1.1.2" />
-        
     </ItemGroup>
 
-
-    <!--     <PropertyGroup>
-    <AndroidKeyStore>true</AndroidKeyStore>
-    <AndroidSigningKeyStore>tkolymp.keystore</AndroidSigningKeyStore>
-    <AndroidSigningKeyAlias>TkOlymp</AndroidSigningKeyAlias>
-    <AndroidSigningKeyPass>Tgr45*$d</AndroidSigningKeyPass>
-    <AndroidSigningStorePass>Tgr45*$d</AndroidSigningStorePass>
-</PropertyGroup> -->
+        <!--     <PropertyGroup>
+        <AndroidKeyStore>true</AndroidKeyStore>
+        <AndroidSigningKeyStore>tkolymp.keystore</AndroidSigningKeyStore>
+        <AndroidSigningKeyAlias>TkOlymp</AndroidSigningKeyAlias>
+        <AndroidSigningKeyPass>Tgr45*$d</AndroidSigningKeyPass>
+        <AndroidSigningStorePass>Tgr45*$d</AndroidSigningStorePass>
+    </PropertyGroup> -->
 
         <!-- Enable ProGuard/R8 for Release builds only. Conservative rules are provided in
                  Platforms/Android/proguard.cfg to avoid runtime crashes when enabling shrink/obfuscation. -->

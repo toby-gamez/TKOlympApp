@@ -240,7 +240,7 @@ public partial class AboutMePage : ContentPage
                     {
                         var title = LocalizationService.Get("Error_Title") ?? "Chyba";
                         var ok = LocalizationService.Get("Button_OK") ?? "OK";
-                        try { await DisplayAlert(title, exPerson.Message, ok); } catch { }
+                        try { await DisplayAlertAsync(title, exPerson.Message, ok); } catch { }
                     }
                 }
             }
@@ -249,7 +249,7 @@ public partial class AboutMePage : ContentPage
                 ProxyIdValue.Text = "—";
                 var title = LocalizationService.Get("Error_Title") ?? "Chyba";
                 var ok = LocalizationService.Get("Button_OK") ?? "OK";
-                try { await DisplayAlert(title, exProxy.Message, ok); } catch { }
+                try { await DisplayAlertAsync(title, exProxy.Message, ok); } catch { }
             }
         }
         catch (Exception ex)

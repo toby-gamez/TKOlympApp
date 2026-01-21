@@ -488,21 +488,21 @@ public static class EventNotificationService
         try
         {
             var constraints = new AndroidX.Work.Constraints.Builder()
-                .SetRequiredNetworkType(AndroidX.Work.NetworkType.Connected)
+                .SetRequiredNetworkType(AndroidX.Work.NetworkType.Connected!)
                 .SetRequiresBatteryNotLow(true)
                 .Build();
 
             var workRequest = AndroidX.Work.PeriodicWorkRequest.Builder
                 .From<Platforms.Android.EventChangeCheckWorker>(TimeSpan.FromHours(1))
                 .SetConstraints(constraints)
-                .SetBackoffCriteria(AndroidX.Work.BackoffPolicy.Exponential, TimeSpan.FromMinutes(15))
+                .SetBackoffCriteria(AndroidX.Work.BackoffPolicy.Exponential!, TimeSpan.FromMinutes(15))
                 .Build();
 
             AndroidX.Work.WorkManager
                 .GetInstance(Android.App.Application.Context)
                 .EnqueueUniquePeriodicWork(
                     "event_change_check",
-                    AndroidX.Work.ExistingPeriodicWorkPolicy.Keep,
+                    AndroidX.Work.ExistingPeriodicWorkPolicy.Keep!,
                     workRequest
                 );
 

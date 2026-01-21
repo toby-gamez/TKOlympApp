@@ -7,7 +7,7 @@ namespace TkOlympApp.Converters
 {
     public class EventTypeToLabelConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             var s = value as string;
             if (string.IsNullOrEmpty(s)) return string.Empty;
@@ -22,7 +22,7 @@ namespace TkOlympApp.Converters
             };
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotSupportedException();
         }

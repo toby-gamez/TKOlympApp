@@ -252,13 +252,30 @@ public partial class EventPage : ContentPage
             }
             var isRegistrationOpen = ev.IsRegistrationOpen;
             RegistrationOpenLabel.IsVisible = isRegistrationOpen;
+            
+            // Count actual occupied spots: couples = 2, singles = 1
+            var occupiedSpots = 0;
+            foreach (var n in ev.EventRegistrations?.Nodes ?? new List<EventService.EventRegistrationNode>())
+            {
+                if (n.Couple != null)
+                {
+                    // Couple registration counts as 2 spots
+                    occupiedSpots += 2;
+                }
+                else if (n.Person != null)
+                {
+                    // Single person registration counts as 1 spot
+                    occupiedSpots += 1;
+                }
+            }
+            
             var registered = ev.EventRegistrations?.TotalCount ?? 0;
             var capacity = ev.Capacity;
             PublicLabel.IsVisible = ev.IsPublic;
             VisibleLabel.IsVisible = ev.IsVisible;
             if (capacity.HasValue)
             {
-                var available = Math.Max(0, capacity.Value - registered);
+                var available = Math.Max(0, capacity.Value - occupiedSpots);
                 var fmt = LocalizationService.Get("Event_Capacity_Format") ?? "Kapacita: {0} (Volno: {1})";
                 CapacityLabel.Text = string.Format(fmt, capacity.Value, available);
             }

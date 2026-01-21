@@ -39,7 +39,7 @@
                         <VerticalStackLayout BindableLayout.ItemsSource="{Binding SingleEvents}">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Padding="12" Margin="0,4">
+                                    <Border Padding="12" Margin="6">
                                         <Border.GestureRecognizers>
                                             <TapGestureRecognizer Tapped="OnEventCardTapped" />
                                         </Border.GestureRecognizers>
@@ -83,7 +83,7 @@
                         <VerticalStackLayout BindableLayout.ItemsSource="{Binding GroupedTrainers}" Margin="0">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Padding="12" Margin="0,4">
+                                    <Border Padding="12" Margin="6">
                                         <Border.StrokeShape>
                                             <RoundRectangle CornerRadius="8" />
                                         </Border.StrokeShape>
@@ -147,7 +147,7 @@
                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding UpcomingCamps}">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate>
-                                <Border Padding="12" Margin="0,4">
+                                <Border Padding="12" Margin="6">
                                     <Border.GestureRecognizers>
                                         <TapGestureRecognizer Tapped="OnCampTapped" />
                                     </Border.GestureRecognizers>
@@ -181,7 +181,7 @@
                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding RecentAnnouncements}">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate>
-                                <Border Padding="12" Margin="0,4">
+                                <Border Padding="12" Margin="6">
                                     <Border.GestureRecognizers>
                                         <TapGestureRecognizer Tapped="OnAnnouncementTapped" />
                                     </Border.GestureRecognizers>
