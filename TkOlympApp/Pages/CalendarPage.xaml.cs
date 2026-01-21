@@ -540,11 +540,10 @@ public partial class CalendarPage : ContentPage
             if (instance.IsCancelled) return;
             if (instance.Event?.Id is long eventId)
             {
-                var since = instance.Since.HasValue ? instance.Since.Value.ToString("o") : null;
-                var until = instance.Until.HasValue ? instance.Until.Value.ToString("o") : null;
-                var uri = $"EventPage?id={eventId}" +
-                          (since != null ? $"&since={Uri.EscapeDataString(since)}" : string.Empty) +
-                          (until != null ? $"&until={Uri.EscapeDataString(until)}" : string.Empty);
+                // Pass eventInstanceId when available, otherwise just eventId
+                var uri = instance.Id > 0 
+                    ? $"EventPage?eventInstanceId={instance.Id}"
+                    : $"EventPage?id={eventId}";
                 await Shell.Current.GoToAsync(uri);
             }
         }
@@ -561,9 +560,10 @@ public partial class CalendarPage : ContentPage
             if (row?.Instance?.Event?.Id is long eventId)
             {
                 if (row.Instance.IsCancelled) return;
-                var since = row.Instance.Since.HasValue ? row.Instance.Since.Value.ToString("o") : null;
-                var until = row.Instance.Until.HasValue ? row.Instance.Until.Value.ToString("o") : null;
-                var uri = $"EventPage?id={eventId}" + (since != null ? $"&since={Uri.EscapeDataString(since)}" : string.Empty) + (until != null ? $"&until={Uri.EscapeDataString(until)}" : string.Empty);
+                // Pass eventInstanceId when available, otherwise just eventId
+                var uri = row.Instance.Id > 0 
+                    ? $"EventPage?eventInstanceId={row.Instance.Id}"
+                    : $"EventPage?id={eventId}";
                 await Shell.Current.GoToAsync(uri);
             }
         }

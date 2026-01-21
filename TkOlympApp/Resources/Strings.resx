@@ -330,6 +330,7 @@
   <data name="Free" xml:space="preserve"><value>VOLNO</value></data>
   <data name="Person_Title" xml:space="preserve"><value>Osoba</value></data>
   <data name="Person_ActiveCouples_Label" xml:space="preserve"><value>Aktivní páry</value></data>
+  <data name="Person_Cohorts_Label" xml:space="preserve"><value>Tréninkové skupiny</value></data>
   <data name="NotFound_Person" xml:space="preserve"><value>Osoba nebyla nalezena.</value></data>
   <data name="AboutApp_Description" xml:space="preserve"><value>Popis aplikace</value></data>
   <data name="EventType_Camp" xml:space="preserve"><value>soustředění</value></data>

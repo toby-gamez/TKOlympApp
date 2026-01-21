@@ -14,13 +14,11 @@ using Microsoft.Maui.Controls.Shapes;
 namespace TkOlympApp.Pages;
 
 [QueryProperty(nameof(EventId), "id")]
-[QueryProperty(nameof(SinceParam), "since")]
-[QueryProperty(nameof(UntilParam), "until")]
+[QueryProperty(nameof(EventInstanceId), "eventInstanceId")]
 public partial class EventPage : ContentPage
 {
     private long _eventId;
-    private string? _sinceParam;
-    private string? _untilParam;
+    private long _eventInstanceId;
     private bool _appeared;
     private bool _loadRequested;
     private string? _lastDescriptionHtml;
@@ -37,23 +35,12 @@ public partial class EventPage : ContentPage
         }
     }
 
-    public string? SinceParam
+    public long EventInstanceId
     {
-        get => _sinceParam;
+        get => _eventInstanceId;
         set
         {
-            _sinceParam = value;
-            _loadRequested = true;
-            if (_appeared) _ = LoadAsync();
-        }
-    }
-
-    public string? UntilParam
-    {
-        get => _untilParam;
-        set
-        {
-            _untilParam = value;
+            _eventInstanceId = value;
             _loadRequested = true;
             if (_appeared) _ = LoadAsync();
         }
@@ -122,19 +109,71 @@ public partial class EventPage : ContentPage
 
     private async Task LoadAsync()
     {
-        if (EventId == 0) return;
+        if (EventId == 0 && EventInstanceId == 0) return;
         try
         {
-            // Debug: log incoming navigation params and event-level times
-            try
-            {
-                var a = SinceParam ?? "(null)";
-                var b = UntilParam ?? "(null)";
-                Debug.WriteLine($"Debug - params: SinceParam: {a} | UntilParam: {b}");
-            }
-            catch { }
+            EventService.EventDetails? ev = null;
+            DateTime? since = null;
+            DateTime? until = null;
 
-            var ev = await EventService.GetEventAsync(EventId);
+            // Prefer loading from EventInstance (has specific since/until)
+            if (EventInstanceId > 0)
+            {
+                try
+                {
+                    Debug.WriteLine($"EventPage: Loading event instance {EventInstanceId}");
+                    var instance = await EventService.GetEventInstanceAsync(EventInstanceId);
+                    if (instance != null)
+                    {
+                        since = instance.Since;
+                        until = instance.Until;
+                        
+                        // Convert EventDetailsFromInstance to EventDetails
+                        if (instance.Event != null)
+                        {
+                            var instanceEvent = instance.Event;
+                            ev = new EventService.EventDetails(
+                                Capacity: instanceEvent.Capacity,
+                                CreatedAt: instanceEvent.CreatedAt,
+                                UpdatedAt: instanceEvent.UpdatedAt,
+                                Since: since,  // Use instance-level since/until
+                                Until: until,
+                                Description: instanceEvent.Description,
+                                EventRegistrations: instanceEvent.EventRegistrations,
+                                IsPublic: instanceEvent.IsPublic,
+                                IsRegistrationOpen: instanceEvent.IsRegistrationOpen,
+                                IsVisible: instanceEvent.IsVisible,
+                                Name: instanceEvent.Name,
+                                Type: instanceEvent.Type,
+                                Summary: instanceEvent.Summary,
+                                LocationText: instanceEvent.LocationText,
+                                EventTrainersList: instanceEvent.EventTrainersList,
+                                EventTargetCohortsList: instanceEvent.EventTargetCohortsList,
+                                EventInstancesList: null // Not needed when viewing specific instance
+                            );
+                        }
+                        Debug.WriteLine($"EventPage: Loaded instance - since={since?.ToString("o") ?? "(null)"}, until={until?.ToString("o") ?? "(null)"}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"EventPage: Failed to load event instance: {ex.Message}");
+                }
+            }
+
+            // Fallback to loading by EventId
+            if (ev == null && EventId > 0)
+            {
+                Debug.WriteLine($"EventPage: Loading event {EventId}");
+                ev = await EventService.GetEventAsync(EventId);
+                if (ev != null)
+                {
+                    since = ev.Since;
+                    until = ev.Until;
+                    Debug.WriteLine($"EventPage: Loaded event - since={since?.ToString("o") ?? "(null)"}, until={until?.ToString("o") ?? "(null)"}");
+                }
+            }
+
             if (ev == null)
             {
                 await DisplayAlertAsync(LocalizationService.Get("NotFound_Title"), LocalizationService.Get("NotFound_Event"), LocalizationService.Get("Button_OK"));
@@ -144,13 +183,20 @@ public partial class EventPage : ContentPage
             // Use explicit naming: prefer event name, otherwise fall back to localized "Lesson" prefix or short form
             if (!string.IsNullOrWhiteSpace(ev.Name))
             {
-                TitleLabel.Text = ev.Name;
+                var title = ev.Name;
+                // Remove "Lekce: " prefix if present
+                var lessonPrefix = LocalizationService.Get("Lesson_Prefix") ?? "Lekce: ";
+                if (title.StartsWith(lessonPrefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    title = title.Substring(lessonPrefix.Length).Trim();
+                }
+                TitleLabel.Text = title;
             }
             else
             {
                 var firstTrainer = ev.EventTrainersList?.FirstOrDefault()?.Name?.Trim();
                 if (!string.IsNullOrWhiteSpace(firstTrainer))
-                    TitleLabel.Text = (LocalizationService.Get("Lesson_Prefix") ?? "Lekce: ") + firstTrainer;
+                    TitleLabel.Text = firstTrainer;
                 else
                     TitleLabel.Text = LocalizationService.Get("Lesson_Short") ?? "Lekce";
             }
@@ -164,7 +210,7 @@ public partial class EventPage : ContentPage
             if (!string.IsNullOrWhiteSpace(ev.Type))
             {
                 var converter = new EventTypeToLabelConverter();
-                var typeLabel = converter.Convert(ev.Type, typeof(string), null, System.Globalization.CultureInfo.CurrentCulture) as string;
+                var typeLabel = converter.Convert(ev.Type, typeof(string), null!, System.Globalization.CultureInfo.CurrentCulture) as string;
                 EventTypeLabel.Text = (LocalizationService.Get("Event_Type_Prefix") ?? "Typ: ") + (typeLabel ?? ev.Type);
                 EventTypeLabel.IsVisible = true;
             }
@@ -177,76 +223,8 @@ public partial class EventPage : ContentPage
             var locName = ev.LocationText;
             LocationLabel.Text = string.IsNullOrWhiteSpace(locName) ? string.Empty : (LocalizationService.Get("Event_Location_Prefix") ?? "Místo konání: ") + locName;
             LocationLabel.IsVisible = !string.IsNullOrWhiteSpace(locName);
-            // Prefer since/until passed from instance navigation; otherwise use event-level values
-            DateTime? since = ev.Since;
-            DateTime? until = ev.Until;
 
-            // Try to parse incoming params; they may be URL-encoded or in different ISO forms.
-            var sinceRaw = SinceParam;
-            var untilRaw = UntilParam;
-            try { if (!string.IsNullOrWhiteSpace(sinceRaw)) sinceRaw = Uri.UnescapeDataString(sinceRaw); } catch { }
-            try { if (!string.IsNullOrWhiteSpace(untilRaw)) untilRaw = Uri.UnescapeDataString(untilRaw); } catch { }
-
-            if (!string.IsNullOrWhiteSpace(sinceRaw))
-            {
-                // Normalize common malformed form like 2025-12-28T0800:00.00000000 -> 2025-12-28T08:00:00.00000000
-                try
-                {
-                    // Insert missing colon after hour when pattern like T0800:... appears
-                    sinceRaw = Regex.Replace(sinceRaw, @"T(\d{2})(?=\d{2}:)", "T$1:");
-                }
-                catch { }
-
-                if (DateTime.TryParseExact(sinceRaw, "o", CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var sp))
-                    since = sp;
-                else if (DateTime.TryParse(sinceRaw, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var sp2))
-                    since = sp2;
-            }
-
-            if (!string.IsNullOrWhiteSpace(untilRaw))
-            {
-                try
-                {
-                    untilRaw = Regex.Replace(untilRaw, @"T(\d{2})(?=\d{2}:)", "T$1:");
-                }
-                catch { }
-
-                if (DateTime.TryParseExact(untilRaw, "o", CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var up))
-                    until = up;
-                else if (DateTime.TryParse(untilRaw, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var up2))
-                    until = up2;
-            }
-
-            // Debug: show raw params and final values used
-            try
-            {
-                var rawSince = sinceRaw ?? "(null)";
-                var rawUntil = untilRaw ?? "(null)";
-                var s = since.HasValue ? since.Value.ToString("o") : "(null)";
-                var u = until.HasValue ? until.Value.ToString("o") : "(null)";
-                Debug.WriteLine($"Debug - event: rawSince: {rawSince}\nrawUntil: {rawUntil}\nusedSince: {s}\nusedUntil: {u}");
-            }
-            catch { }
-
-            // If we still don't have instance-level since/until, try to fetch instances to derive them
-            if (!since.HasValue && !until.HasValue)
-            {
-                try
-                {
-                    var startRange = DateTime.Now.Date.AddDays(-30);
-                    var endRange = DateTime.Now.Date.AddDays(365);
-                    var instances = await EventService.GetMyEventInstancesForRangeAsync(startRange, endRange);
-                    var match = instances.FirstOrDefault(i => i.Event?.Id == EventId);
-                    if (match != null)
-                    {
-                        since = match.Since;
-                        until = match.Until;
-                        try { Debug.WriteLine($"Debug - fallback: Found instance fallback: since={since?.ToString("o") ?? "(null)"}, until={until?.ToString("o") ?? "(null)"}"); } catch { }
-                    }
-                }
-                catch { }
-            }
-
+            // since and until are already set from instance or event above
             var sinceText = DateHelpers.ToFriendlyDateTimeString(since);
             var untilText = DateHelpers.ToFriendlyDateTimeString(until);
             string? range = null;
@@ -291,6 +269,9 @@ public partial class EventPage : ContentPage
 
             RegistrationsLabel.Text = string.Format(LocalizationService.Get("Event_Registered_Format") ?? "Registrováno: {0}", registered);
 
+            // Check if this is a lesson (used in multiple places below)
+            var isLesson = string.Equals(ev.Type, "LESSON", StringComparison.OrdinalIgnoreCase);
+
             // Trainers (event level)
             _trainers.Clear();
             foreach (var t in ev.EventTrainersList ?? new List<TkOlympApp.Services.EventService.EventTrainer>())
@@ -299,7 +280,8 @@ public partial class EventPage : ContentPage
                 var name = t.Name?.Trim();
                 if (!string.IsNullOrWhiteSpace(name)) _trainers.Add(name);
             }
-            TrainersFrame.IsVisible = _trainers.Count > 0;
+            // Don't show trainers list for LESSON type events
+            TrainersFrame.IsVisible = _trainers.Count > 0 && !isLesson;
 
             // Hide edit-registration button when trainer reservations are not allowed
             // (depend only on trainer count: single trainer => hide edit)
@@ -337,16 +319,28 @@ public partial class EventPage : ContentPage
 
             _registrations.Clear();
             var seen = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            
             foreach (var n in ev.EventRegistrations?.Nodes ?? new List<EventService.EventRegistrationNode>())
             {
                 var man = n.Couple?.Man?.Name?.Trim() ?? string.Empty;
                 var woman = n.Couple?.Woman?.Name?.Trim() ?? string.Empty;
+                var personName = n.Person?.Name?.Trim() ?? string.Empty;
                 var personFirst = n.Person?.FirstName?.Trim() ?? string.Empty;
                 var personLast = n.Person?.LastName?.Trim() ?? string.Empty;
 
+                // For LESSON type, use fallback (firstName + lastName) if Name is empty
+                if (isLesson && string.IsNullOrWhiteSpace(personName) && (!string.IsNullOrWhiteSpace(personFirst) || !string.IsNullOrWhiteSpace(personLast)))
+                {
+                    personName = string.IsNullOrWhiteSpace(personFirst)
+                        ? personLast
+                        : string.IsNullOrWhiteSpace(personLast)
+                            ? personFirst
+                            : $"{personFirst} {personLast}".Trim();
+                }
+
                 // If both couple and person are empty, skip
                 if (string.IsNullOrWhiteSpace(man) && string.IsNullOrWhiteSpace(woman)
-                    && string.IsNullOrWhiteSpace(personFirst) && string.IsNullOrWhiteSpace(personLast))
+                    && string.IsNullOrWhiteSpace(personName))
                     continue;
 
                 string text;
@@ -358,12 +352,8 @@ public partial class EventPage : ContentPage
                 }
                 else
                 {
-                    // Single person entry
-                    text = string.IsNullOrWhiteSpace(personFirst)
-                        ? personLast
-                        : string.IsNullOrWhiteSpace(personLast)
-                            ? personFirst
-                            : $"{personFirst} {personLast}".Trim();
+                    // Single person entry - use Name (with fallback already applied for LESSON)
+                    text = personName;
                 }
 
                 var parts = new List<string>();
@@ -554,13 +544,11 @@ public partial class EventPage : ContentPage
                     }
                 }
 
-                RegistrationActionsRow.IsVisible = userRegistered && isRegistrationOpen;
-
                 // If the event already finished (end time in the past), hide all registration UI
+                var isPast = false;
                 try
                 {
                     // Compare full DateTime including time to accurately determine if event has passed
-                    var isPast = false;
                     if (until.HasValue)
                     {
                         var untilUtc = until.Value.ToUniversalTime();
@@ -574,28 +562,31 @@ public partial class EventPage : ContentPage
                         var nowUtc = DateTime.UtcNow;
                         isPast = sinceUtc.AddDays(1) < nowUtc;
                     }
+                }
+                catch { }
 
-                    if (isPast)
+                if (isPast)
+                {
+                    // Event is in the past - hide all registration buttons
+                    RegisterButton.IsVisible = false;
+                    RegistrationActionsRow.IsVisible = false;
+                }
+                else
+                {
+                    // Event is current or future
+                    if (userRegistered)
                     {
+                        // User is registered - show edit/delete actions if registration is open
                         RegisterButton.IsVisible = false;
-                        RegistrationActionsRow.IsVisible = false;
-                        EditRegistrationButton.IsVisible = false;
-                        DeleteRegistrationButton.IsVisible = false;
+                        RegistrationActionsRow.IsVisible = isRegistrationOpen;
                     }
                     else
                     {
-                        // Ensure register button remains visible only when event is not past AND registration is open
+                        // User is not registered - show register button if registration is open
                         RegisterButton.IsVisible = isRegistrationOpen;
-                        // Also hide registration action buttons when registration is closed
-                        if (!isRegistrationOpen)
-                        {
-                            RegistrationActionsRow.IsVisible = false;
-                            EditRegistrationButton.IsVisible = false;
-                            DeleteRegistrationButton.IsVisible = false;
-                        }
+                        RegistrationActionsRow.IsVisible = false;
                     }
                 }
-                catch { }
             }
             catch { }
         }

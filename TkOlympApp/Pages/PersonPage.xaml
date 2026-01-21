@@ -76,6 +76,17 @@
 
                 <!-- Address removed -->
 
+                <!-- Training groups / Cohorts -->
+                <Border x:Name="CohortsFrame" Padding="12" IsVisible="False">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="{svc:Translate Person_Cohorts_Label}" FontAttributes="Bold" />
+                        <StackLayout x:Name="CohortDots" Spacing="8" />
+                    </VerticalStackLayout>
+                </Border>
+
                 <!-- Active couples -->
                 <Border x:Name="ActiveCouplesFrame" Padding="12" Margin="0,0,0,0" IsVisible="False">
                     <Border.StrokeShape>

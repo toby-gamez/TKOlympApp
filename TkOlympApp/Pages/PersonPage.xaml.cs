@@ -69,7 +69,7 @@ namespace TkOlympApp.Pages
                 return;
             }
 
-            var query = "query MyQuery { person(id: \"" + _personId + "\") { bio birthDate createdAt cstsId email firstName prefixTitle suffixTitle gender isTrainer lastName phone wdsfId activeCouplesList { id man { firstName lastName } woman { firstName lastName } } } }";
+            var query = "query MyQuery { person(id: \"" + _personId + "\") { bio birthDate createdAt cstsId email firstName prefixTitle suffixTitle gender isTrainer lastName phone wdsfId activeCouplesList { id man { firstName lastName } woman { firstName lastName } } cohortMembershipsList { cohort { colorRgb id name } } } }";
 
                 var gqlReq = new { query };
                 var options = new JsonSerializerOptions(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = true };
@@ -148,6 +148,51 @@ namespace TkOlympApp.Pages
                     catch { }
                 }
                 ActiveCouplesFrame.IsVisible = _activeCouples.Count > 0;
+
+                // Render cohort color dots (training groups)
+                try
+                {
+                    CohortDots.Children.Clear();
+                    var cohortsList = person.CohortMembershipsList ?? new List<CohortMembership>();
+                    foreach (var membership in cohortsList)
+                    {
+                        try
+                        {
+                            var c = membership?.Cohort;
+                            if (c == null) continue;
+                            var name = c.Name ?? string.Empty;
+                            var colorBrush = CohortColorHelper.ParseColorBrush(c.ColorRgb) ?? new Microsoft.Maui.Controls.SolidColorBrush(Microsoft.Maui.Graphics.Colors.LightGray);
+
+                            var row = new Microsoft.Maui.Controls.Grid { VerticalOptions = Microsoft.Maui.Controls.LayoutOptions.Center, HorizontalOptions = Microsoft.Maui.Controls.LayoutOptions.Fill };
+                            row.ColumnDefinitions.Add(new Microsoft.Maui.Controls.ColumnDefinition { Width = Microsoft.Maui.GridLength.Star });
+                            row.ColumnDefinitions.Add(new Microsoft.Maui.Controls.ColumnDefinition { Width = Microsoft.Maui.GridLength.Auto });
+
+                            var nameLabel = new Microsoft.Maui.Controls.Label { Text = name, VerticalOptions = Microsoft.Maui.Controls.LayoutOptions.Center, HorizontalOptions = Microsoft.Maui.Controls.LayoutOptions.Start };
+                            row.Add(nameLabel);
+
+                            var dot = new Microsoft.Maui.Controls.Border
+                            {
+                                WidthRequest = 20,
+                                HeightRequest = 20,
+                                Padding = 0,
+                                Margin = new Microsoft.Maui.Thickness(0),
+                                HorizontalOptions = Microsoft.Maui.Controls.LayoutOptions.End,
+                                VerticalOptions = Microsoft.Maui.Controls.LayoutOptions.Center,
+                                Background = colorBrush,
+                                Stroke = null,
+                                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 10 }
+                            };
+                            row.Add(dot, 1, 0);
+
+                            CohortDots.Children.Add(row);
+                        }
+                        catch { }
+                    }
+
+                    CohortDots.IsVisible = CohortDots.Children.Count > 0;
+                    try { CohortsFrame.IsVisible = CohortDots.IsVisible; } catch { CohortsFrame.IsVisible = false; }
+                }
+                catch { try { CohortDots.IsVisible = false; CohortsFrame.IsVisible = false; } catch { } }
 
                 // Toggle visibility per-row
                 try { BioRow.IsVisible = !string.IsNullOrWhiteSpace(person.Bio); } catch { }
@@ -238,6 +283,7 @@ namespace TkOlympApp.Pages
             [JsonPropertyName("isTrainer")] public bool? IsTrainer { get; set; }
             [JsonPropertyName("lastName")] public string? LastName { get; set; }
             [JsonPropertyName("activeCouplesList")] public List<ActiveCouple>? ActiveCouplesList { get; set; }
+            [JsonPropertyName("cohortMembershipsList")] public List<CohortMembership>? CohortMembershipsList { get; set; }
             
             [JsonPropertyName("phone")] public string? Phone { get; set; }
             [JsonPropertyName("wdsfId")] public string? WdsfId { get; set; }
@@ -255,6 +301,18 @@ namespace TkOlympApp.Pages
         {
             [JsonPropertyName("firstName")] public string? FirstName { get; set; }
             [JsonPropertyName("lastName")] public string? LastName { get; set; }
+        }
+
+        private sealed class CohortMembership
+        {
+            [JsonPropertyName("cohort")] public Cohort? Cohort { get; set; }
+        }
+
+        private sealed class Cohort
+        {
+            [JsonPropertyName("id")] public string? Id { get; set; }
+            [JsonPropertyName("name")] public string? Name { get; set; }
+            [JsonPropertyName("colorRgb")] public string? ColorRgb { get; set; }
         }
 
         private sealed class ActiveCoupleDisplay

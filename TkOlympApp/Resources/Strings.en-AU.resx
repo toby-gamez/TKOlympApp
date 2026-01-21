@@ -277,6 +277,7 @@
     <data name="PlainText_Intro" xml:space="preserve"><value>Bro just copypaste it lol. fr</value></data>
     <data name="Person_Title" xml:space="preserve"><value>Character</value></data>
     <data name="Person_ActiveCouples_Label" xml:space="preserve"><value>Active Duos</value></data>
+    <data name="Person_Cohorts_Label" xml:space="preserve"><value>Squads FYI</value></data>
     <data name="NotFound_Person" xml:space="preserve"><value>Person ghosted us.</value></data>
     <data name="AboutApp_Description" xml:space="preserve"><value>App Sauce 🍝</value></data>
     <data name="Events_Title" xml:space="preserve"><value>Skibidi days</value></data>
