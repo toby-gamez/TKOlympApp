@@ -20,6 +20,7 @@ public partial class CalendarPage : ContentPage
     private DateTime _weekStart;
     private DateTime _weekEnd;
     private readonly List<TrainerDetailRow> _trainerDetailRows = new(); // for async updates
+    private bool _suppressReloadOnNextAppearing = false;
 
     public CalendarPage()
     {
@@ -62,7 +63,11 @@ public partial class CalendarPage : ContentPage
     {
         base.OnAppearing();
         try { Debug.WriteLine("CalendarPage: OnAppearing"); } catch { }
-
+        if (_suppressReloadOnNextAppearing)
+        {
+            _suppressReloadOnNextAppearing = false;
+            return;
+        }
         try
         {
             Dispatcher.Dispatch(async () =>
@@ -541,10 +546,11 @@ public partial class CalendarPage : ContentPage
             if (instance.Event?.Id is long eventId)
             {
                 // Pass eventInstanceId when available, otherwise just eventId
-                var uri = instance.Id > 0 
-                    ? $"EventPage?eventInstanceId={instance.Id}"
-                    : $"EventPage?id={eventId}";
-                await Shell.Current.GoToAsync(uri);
+                var page = new EventPage();
+                if (instance.Id > 0) page.EventInstanceId = instance.Id;
+                else page.EventId = eventId;
+                _suppressReloadOnNextAppearing = true;
+                await Navigation.PushAsync(page);
             }
         }
     }
@@ -561,10 +567,11 @@ public partial class CalendarPage : ContentPage
             {
                 if (row.Instance.IsCancelled) return;
                 // Pass eventInstanceId when available, otherwise just eventId
-                var uri = row.Instance.Id > 0 
-                    ? $"EventPage?eventInstanceId={row.Instance.Id}"
-                    : $"EventPage?id={eventId}";
-                await Shell.Current.GoToAsync(uri);
+                var page = new EventPage();
+                if (row.Instance.Id > 0) page.EventInstanceId = row.Instance.Id;
+                else page.EventId = eventId;
+                _suppressReloadOnNextAppearing = true;
+                await Navigation.PushAsync(page);
             }
         }
         catch { }

@@ -15,6 +15,7 @@ public partial class MainPage : ContentPage
 {
     private DayGroup? _currentDay;
     private bool _isLoading;
+    private bool _suppressReloadOnNextAppearing = false;
     public ObservableCollection<NoticeboardService.Announcement> RecentAnnouncements { get; } = new();
     public ObservableCollection<CampItem> UpcomingCamps { get; } = new();
 
@@ -43,6 +44,13 @@ public partial class MainPage : ContentPage
     {
         base.OnAppearing();
         try { Debug.WriteLine("MainPage: OnAppearing"); } catch { }
+
+        // Skip full initialization if it was suppressed (returning from child page)
+        if (_suppressReloadOnNextAppearing)
+        {
+            _suppressReloadOnNextAppearing = false;
+            return;
+        }
 
         // Initialization for notifications (moved from old calendar logic)
         try
@@ -153,7 +161,12 @@ public partial class MainPage : ContentPage
         {
             if (sender is Border border && border.BindingContext is EventService.EventInstance evt && evt.Event?.Id != null)
             {
-                await Shell.Current.GoToAsync($"EventPage?id={evt.Event.Id}");
+                if (evt.IsCancelled) return;
+                var page = new Pages.EventPage();
+                if (evt.Id > 0) page.EventInstanceId = evt.Id;
+                else page.EventId = evt.Event.Id;
+                _suppressReloadOnNextAppearing = true;
+                await Navigation.PushAsync(page);
             }
         }
         catch (Exception ex)
@@ -170,9 +183,14 @@ public partial class MainPage : ContentPage
             {
                 var inst = row.Instance;
                 var evt = inst?.Event;
+                if (inst?.IsCancelled ?? false) return;
                 if (evt?.Id != null)
                 {
-                    await Shell.Current.GoToAsync($"EventPage?id={evt.Id}");
+                    var page = new Pages.EventPage();
+                    if (inst?.Id > 0) page.EventInstanceId = inst.Id;
+                    else page.EventId = evt.Id;
+                    _suppressReloadOnNextAppearing = true;
+                    await Navigation.PushAsync(page);
                 }
             }
         }
@@ -288,7 +306,10 @@ public partial class MainPage : ContentPage
         {
             if (sender is Border border && border.BindingContext is CampItem camp)
             {
-                await Shell.Current.GoToAsync($"EventPage?id={camp.EventId}");
+                var page = new Pages.EventPage();
+                page.EventId = camp.EventId;
+                _suppressReloadOnNextAppearing = true;
+                await Navigation.PushAsync(page);
             }
         }
         catch (Exception ex)

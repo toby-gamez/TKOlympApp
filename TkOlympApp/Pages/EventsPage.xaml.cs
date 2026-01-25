@@ -19,6 +19,7 @@ public partial class EventsPage : ContentPage
     };
 
     private bool _isPlannedActive = true;
+    private bool _suppressReloadOnNextAppearing = false;
 
     public ObservableCollection<EventItem> Items { get; } = new();
     public ObservableCollection<EventItem> PlannedItems { get; } = new();
@@ -75,6 +76,11 @@ public partial class EventsPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
+        if (_suppressReloadOnNextAppearing)
+        {
+            _suppressReloadOnNextAppearing = false;
+            return;
+        }
         _ = RefreshEventsAsync();
     }
 
@@ -84,7 +90,7 @@ public partial class EventsPage : ContentPage
         {
             var query = new GraphQlRequest
             {
-                Query = "query MyQuery { eventInstancesList { event { id name location { id name } isVisible type } since until } }"
+                Query = "query MyQuery { eventInstancesList { id isCancelled event { id name location { id name } isVisible type } since until } }"
             };
 
             var json = JsonSerializer.Serialize(query, Options);
@@ -127,11 +133,13 @@ public partial class EventsPage : ContentPage
                 var item = new EventItem
                 {
                     Id = ev.Id,
+                    EventInstanceId = it.Id,
                     EventId = ev.Id,
                     EventName = ev.Name ?? "(unknown)",
                     LocationName = locationName,
                     Since = since,
                     Until = until
+                    ,IsCancelled = it.IsCancelled
                 };
 
                 // classify: occurred if until is set and before now
@@ -197,11 +205,16 @@ public partial class EventsPage : ContentPage
     {
         if (sender is Border b && b.BindingContext is EventItem it)
         {
-            try
-            {
-                await Shell.Current.GoToAsync($"{nameof(EventPage)}?id={it.EventId}");
-            }
-            catch { }
+                try
+                {
+                    if (it.IsCancelled) return;
+                    var page = new EventPage();
+                    if (it.EventInstanceId > 0) page.EventInstanceId = it.EventInstanceId;
+                    else page.EventId = it.EventId;
+                    _suppressReloadOnNextAppearing = true;
+                    await Navigation.PushAsync(page);
+                }
+                catch { }
         }
     }
 
@@ -226,7 +239,9 @@ public partial class EventsPage : ContentPage
 
     private sealed class EventInstanceDto
     {
+        [JsonPropertyName("id")] public long Id { get; set; }
         [JsonPropertyName("event")] public EventNode? Event { get; set; }
+        [JsonPropertyName("isCancelled")] public bool IsCancelled { get; set; }
         [JsonPropertyName("since")] public DateTime? Since { get; set; }
         [JsonPropertyName("until")] public DateTime? Until { get; set; }
     }
@@ -249,10 +264,12 @@ public partial class EventsPage : ContentPage
     public sealed class EventItem
     {
         public long Id { get; set; }
+        public long EventInstanceId { get; set; }
         public long EventId { get; set; }
         public string EventName { get; set; } = string.Empty;
         public string LocationName { get; set; } = string.Empty;
         public DateTime? Since { get; set; }
         public DateTime? Until { get; set; }
+        public bool IsCancelled { get; set; }
     }
 }
