@@ -31,14 +31,12 @@
                 <VerticalStackLayout BindableLayout.ItemsSource="{Binding VisibleItems}" Spacing="0">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate>
-                            <Border Padding="12" Margin="6">
-                                <Border.GestureRecognizers>
+                            <Grid Margin="6">
+                                <Grid.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnEventTapped" />
-                                </Border.GestureRecognizers>
-                                <Border.StrokeShape>
-                                    <RoundRectangle CornerRadius="8" />
-                                </Border.StrokeShape>
-                                <VerticalStackLayout Spacing="6">
+                                </Grid.GestureRecognizers>
+                                <BoxView Color="Transparent" />
+                                <VerticalStackLayout Spacing="6" Padding="12">
                                     <Label Text="{Binding EventName}" FontAttributes="Bold" />
                                     <Label Text="{Binding LocationName}"/>
                                     <Label FontSize="12" Style="{StaticResource MutedLabelStyle}">
@@ -53,7 +51,7 @@
                                         </Label.FormattedText>
                                     </Label>
                                 </VerticalStackLayout>
-                            </Border>
+                            </Grid>
                         </DataTemplate>
                     </BindableLayout.ItemTemplate>
                 </VerticalStackLayout>

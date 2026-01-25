@@ -12,12 +12,10 @@
                 <!-- Week Header -->
                 <local:EventRowTemplateSelector.WeekHeaderTemplate>
                     <DataTemplate x:DataType="local:WeekHeaderRow">
-                        <Border Stroke="{StaticResource RespPrimary}" StrokeThickness="2" Padding="8" Margin="6,12,6,0">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="6" />
-                            </Border.StrokeShape>
-                            <Label Text="{Binding WeekLabel}" FontAttributes="Bold" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
-                        </Border>
+                        <Grid Margin="6,12,6,0">
+                            <BoxView Color="Transparent" />
+                            <Label Text="{Binding WeekLabel}" FontAttributes="Bold" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" Padding="8" />
+                        </Grid>
                     </DataTemplate>
                 </local:EventRowTemplateSelector.WeekHeaderTemplate>
 
@@ -31,14 +29,12 @@
                 <!-- Single Event -->
                 <local:EventRowTemplateSelector.SingleEventTemplate>
                     <DataTemplate x:DataType="local:SingleEventRow">
-                        <Border Padding="12" Margin="6">
-                            <Border.GestureRecognizers>
+                        <Grid Margin="6">
+                            <Grid.GestureRecognizers>
                                 <TapGestureRecognizer Tapped="OnEventCardTapped" />
-                            </Border.GestureRecognizers>
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="8" />
-                            </Border.StrokeShape>
-                            <VerticalStackLayout Spacing="6">
+                            </Grid.GestureRecognizers>
+                            <BoxView Color="Transparent" />
+                            <VerticalStackLayout Spacing="6" Padding="12">
                                 <Grid ColumnDefinitions="*,Auto">
                                     <Label Text="{Binding EventName}" FontAttributes="Bold" Grid.Column="0">
                                         <Label.Triggers>
@@ -52,22 +48,20 @@
                                 <Label Text="{Binding LocationOrTrainers}" />
                                 <Label Text="{Binding TimeRange}" FontSize="12" Style="{StaticResource MutedLabelStyle}" />
                             </VerticalStackLayout>
-                        </Border>
+                        </Grid>
                     </DataTemplate>
                 </local:EventRowTemplateSelector.SingleEventTemplate>
 
                 <!-- Trainer Group Header -->
                 <local:EventRowTemplateSelector.TrainerGroupHeaderTemplate>
                     <DataTemplate x:DataType="local:TrainerGroupHeaderRow">
-                        <Border Padding="12,8" Margin="6,6,6,0">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="8" />
-                            </Border.StrokeShape>
-                            <Grid ColumnDefinitions="*,Auto">
+                        <Grid Margin="6,6,6,0">
+                            <BoxView Color="Transparent" />
+                            <Grid ColumnDefinitions="*,Auto" Padding="12,8">
                                 <Label Text="{Binding TrainerTitle}" FontAttributes="Bold" Grid.Column="0" />
                                 <Label Text="{svc:Translate EventType_Lesson}" FontSize="12" Style="{StaticResource MutedLabelStyle}" Grid.Column="1" HorizontalOptions="End" VerticalOptions="Center" />
                             </Grid>
-                        </Border>
+                        </Grid>
                     </DataTemplate>
                 </local:EventRowTemplateSelector.TrainerGroupHeaderTemplate>
 
@@ -78,6 +72,7 @@
                             <Grid.GestureRecognizers>
                                 <TapGestureRecognizer Tapped="OnGroupedRowTapped" />
                             </Grid.GestureRecognizers>
+                            <BoxView Color="Transparent" Grid.ColumnSpan="3" />
                             <Label Text="{Binding TimeRange}" Grid.Column="0">
                                 <Label.Triggers>
                                     <DataTrigger TargetType="Label" Binding="{Binding IsCancelled}" Value="True">

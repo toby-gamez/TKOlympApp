@@ -433,7 +433,7 @@ public partial class CalendarPage : ContentPage
                         if (label.BindingContext is DayHeaderRow dhr && dhr.Date != date)
                             break;
                     }
-                    if (next is Border border && border.BindingContext == null) // Week header
+                    if (next is VisualElement ve2 && ve2.BindingContext is WeekHeaderRow) // Week header
                         break;
                     insertIndex++;
                 }
@@ -871,27 +871,27 @@ public partial class CalendarPage : ContentPage
     }
 
     // View factory methods for static UI generation
-    private Border CreateWeekHeader(string weekLabel)
+    private View CreateWeekHeader(string weekLabel)
     {
-        var border = new Border
+        var grid = new Grid
         {
-            Stroke = (Brush)Application.Current!.Resources["RespPrimary"],
-            StrokeThickness = 2,
-            Padding = new Thickness(8),
             Margin = new Thickness(6, 12, 6, 0),
-            StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(6) }
+            BindingContext = new WeekHeaderRow(weekLabel)
         };
 
+        var box = new BoxView { Color = Colors.Transparent };
         var label = new Label
         {
             Text = weekLabel,
             FontAttributes = FontAttributes.Bold,
             HorizontalTextAlignment = TextAlignment.Center,
-            VerticalTextAlignment = TextAlignment.Center
+            VerticalTextAlignment = TextAlignment.Center,
+            Padding = new Thickness(8)
         };
 
-        border.Content = label;
-        return border;
+        grid.Add(box);
+        grid.Add(label);
+        return grid;
     }
 
     private Label CreateDayHeader(string dayLabel, DateTime date)
@@ -906,21 +906,20 @@ public partial class CalendarPage : ContentPage
         return label;
     }
 
-    private Border CreateSingleEventCard(EventService.EventInstance instance, string timeRange, string locationOrTrainers, string eventName, string eventTypeLabel)
+    private View CreateSingleEventCard(EventService.EventInstance instance, string timeRange, string locationOrTrainers, string eventName, string eventTypeLabel)
     {
-        var border = new Border
+        var grid = new Grid
         {
-            Padding = new Thickness(12),
             Margin = new Thickness(6),
-            StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(8) },
             BindingContext = instance
         };
 
         var tapGesture = new TapGestureRecognizer();
         tapGesture.Tapped += OnEventCardTapped;
-        border.GestureRecognizers.Add(tapGesture);
+        grid.GestureRecognizers.Add(tapGesture);
 
-        var stack = new VerticalStackLayout { Spacing = 6 };
+        var background = new BoxView { Color = Colors.Transparent };
+        var stack = new VerticalStackLayout { Spacing = 6, Padding = new Thickness(12) };
 
         // Title row
         var titleGrid = new Grid
@@ -992,21 +991,23 @@ public partial class CalendarPage : ContentPage
             Style = (Style)Application.Current!.Resources["MutedLabelStyle"]
         });
 
-        border.Content = stack;
-        return border;
+        grid.Add(background);
+        grid.Add(stack);
+        return grid;
     }
 
-    private Border CreateTrainerGroupHeader(string trainerTitle, List<EventService.EventTargetCohortLink>? cohorts = null)
+    private View CreateTrainerGroupHeader(string trainerTitle, List<EventService.EventTargetCohortLink>? cohorts = null)
     {
-        var border = new Border
+        var outer = new Grid
         {
-            Padding = new Thickness(12, 8),
-            Margin = new Thickness(6, 6, 6, 0),
-            StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(8) }
+            Margin = new Thickness(6, 6, 6, 0)
         };
+
+        var background = new BoxView { Color = Colors.Transparent };
 
         var grid = new Grid
         {
+            Padding = new Thickness(12, 8),
             ColumnDefinitions = new ColumnDefinitionCollection
             {
                 new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) },
@@ -1059,20 +1060,20 @@ public partial class CalendarPage : ContentPage
         }
 
         grid.Add(typeWithColorStack, 1);
-
-        border.Content = grid;
-        return border;
+        outer.Add(background);
+        outer.Add(grid);
+        return outer;
     }
 
-    private Border CreateTrainerDetailRow(TrainerDetailRow row)
+    private View CreateTrainerDetailRow(TrainerDetailRow row)
     {
-        var border = new Border
+        var outer = new Grid
         {
-            StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(8) },
             Margin = new Thickness(6, 3),
-            Padding = 0,
             BindingContext = row
         };
+
+        var background = new BoxView { Color = Colors.Transparent };
 
         var grid = new Grid
         {
@@ -1097,7 +1098,7 @@ public partial class CalendarPage : ContentPage
             timeLabel.TextDecorations = TextDecorations.Strikethrough;
         grid.Add(timeLabel, 0);
 
-        // Cohort color circle
+        // Cohort color circle as BoxView
         var cohortList = row.Instance?.Event?.EventTargetCohortsList;
         if (cohortList != null && cohortList.Count > 0)
         {
@@ -1105,13 +1106,13 @@ public partial class CalendarPage : ContentPage
             var colorBrush = TryParseColorBrush(firstCohort?.Cohort?.ColorRgb);
             if (colorBrush != null)
             {
-                var circle = new Border
+                var circle = new BoxView
                 {
                     WidthRequest = 14,
                     HeightRequest = 14,
+                    CornerRadius = 7,
                     Background = colorBrush,
-                    VerticalOptions = LayoutOptions.Center,
-                    StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(7) }
+                    VerticalOptions = LayoutOptions.Center
                 };
                 grid.Add(circle, 1);
             }
@@ -1150,8 +1151,9 @@ public partial class CalendarPage : ContentPage
             durationLabel.TextDecorations = TextDecorations.Strikethrough;
         grid.Add(durationLabel, 3);
 
-        border.Content = grid;
-        return border;
+        outer.Add(background);
+        outer.Add(grid);
+        return outer;
     }
 
     private Microsoft.Maui.Controls.Brush? TryParseColorBrush(string? colorRgb)

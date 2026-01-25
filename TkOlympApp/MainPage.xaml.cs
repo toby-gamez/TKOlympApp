@@ -159,7 +159,7 @@ public partial class MainPage : ContentPage
     {
         try
         {
-            if (sender is Border border && border.BindingContext is EventService.EventInstance evt && evt.Event?.Id != null)
+            if (sender is VisualElement ve && ve.BindingContext is EventService.EventInstance evt && evt.Event?.Id != null)
             {
                 if (evt.IsCancelled) return;
                 var page = new Pages.EventPage();
@@ -246,7 +246,7 @@ public partial class MainPage : ContentPage
     {
         try
         {
-            if (sender is Border border && border.BindingContext is NoticeboardService.Announcement announcement)
+            if (sender is VisualElement ve2 && ve2.BindingContext is NoticeboardService.Announcement announcement)
             {
                 await Shell.Current.GoToAsync($"NoticePage?id={announcement.Id}");
             }
@@ -304,7 +304,7 @@ public partial class MainPage : ContentPage
     {
         try
         {
-            if (sender is Border border && border.BindingContext is CampItem camp)
+            if (sender is VisualElement ve3 && ve3.BindingContext is CampItem camp)
             {
                 var page = new Pages.EventPage();
                 page.EventId = camp.EventId;

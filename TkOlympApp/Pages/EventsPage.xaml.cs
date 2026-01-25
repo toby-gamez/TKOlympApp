@@ -203,18 +203,18 @@ public partial class EventsPage : ContentPage
 
     private async void OnEventTapped(object? sender, EventArgs e)
     {
-        if (sender is Border b && b.BindingContext is EventItem it)
+        if (sender is VisualElement ve && ve.BindingContext is EventItem it)
         {
-                try
-                {
-                    if (it.IsCancelled) return;
-                    var page = new EventPage();
-                    if (it.EventInstanceId > 0) page.EventInstanceId = it.EventInstanceId;
-                    else page.EventId = it.EventId;
-                    _suppressReloadOnNextAppearing = true;
-                    await Navigation.PushAsync(page);
-                }
-                catch { }
+            try
+            {
+                if (it.IsCancelled) return;
+                var page = new EventPage();
+                if (it.EventInstanceId > 0) page.EventInstanceId = it.EventInstanceId;
+                else page.EventId = it.EventId;
+                _suppressReloadOnNextAppearing = true;
+                await Navigation.PushAsync(page);
+            }
+            catch { }
         }
     }
 

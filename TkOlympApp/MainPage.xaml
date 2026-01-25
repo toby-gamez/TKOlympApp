@@ -39,14 +39,12 @@
                         <VerticalStackLayout BindableLayout.ItemsSource="{Binding SingleEvents}">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Padding="12" Margin="6">
-                                        <Border.GestureRecognizers>
+                                    <Grid Margin="6">
+                                        <Grid.GestureRecognizers>
                                             <TapGestureRecognizer Tapped="OnEventCardTapped" />
-                                        </Border.GestureRecognizers>
-                                        <Border.StrokeShape>
-                                            <RoundRectangle CornerRadius="8" />
-                                        </Border.StrokeShape>
-                                        <VerticalStackLayout Spacing="6">
+                                        </Grid.GestureRecognizers>
+                                        <BoxView Color="Transparent" />
+                                        <VerticalStackLayout Spacing="6" Padding="12">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*" />
@@ -74,7 +72,7 @@
                                                 </Label.FormattedText>
                                             </Label>
                                         </VerticalStackLayout>
-                                    </Border>
+                                    </Grid>
                                 </DataTemplate>
                             </BindableLayout.ItemTemplate>
                         </VerticalStackLayout>
@@ -82,58 +80,56 @@
                         <!-- Grouped Trainers -->
                         <VerticalStackLayout BindableLayout.ItemsSource="{Binding GroupedTrainers}" Margin="0">
                             <BindableLayout.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Padding="12" Margin="6">
-                                        <Border.StrokeShape>
-                                            <RoundRectangle CornerRadius="8" />
-                                        </Border.StrokeShape>
-                                        <VerticalStackLayout Spacing="6">
-                                            <Grid ColumnDefinitions="*,Auto" Margin="0,2,0,2">
-                                                <Label Text="{Binding TrainerTitle}" FontAttributes="Bold" Grid.Column="0" />
-                                                <Label Text="{svc:Translate EventType_Lesson}" FontSize="12" Style="{StaticResource MutedLabelStyle}" Grid.Column="1" HorizontalOptions="End" VerticalOptions="Center" />
-                                            </Grid>
-                                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Rows}">
-                                                <BindableLayout.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <Grid ColumnDefinitions="120,*,Auto" Padding="6,4" ColumnSpacing="8">
-                                                            <Grid.GestureRecognizers>
-                                                                <TapGestureRecognizer Tapped="OnGroupedRowTapped" />
-                                                            </Grid.GestureRecognizers>
-                                                            <Label Text="{Binding TimeRange}" Grid.Column="0">
-                                                                <Label.Triggers>
-                                                                    <DataTrigger TargetType="Label" Binding="{Binding IsCancelled}" Value="True">
-                                                                        <Setter Property="TextDecorations" Value="Strikethrough" />
-                                                                    </DataTrigger>
-                                                                </Label.Triggers>
-                                                            </Label>
-                                                            <Label Text="{Binding FirstRegistrant}" Grid.Column="1">
-                                                                <Label.Triggers>
-                                                                    <DataTrigger TargetType="Label" Binding="{Binding IsFree}" Value="True">
-                                                                        <Setter Property="Text" Value="{svc:Translate Free}" />
-                                                                        <Setter Property="TextColor" Value="Green" />
-                                                                    </DataTrigger>
-                                                                    <DataTrigger TargetType="Label" Binding="{Binding IsHighlighted}" Value="True">
-                                                                        <Setter Property="FontAttributes" Value="Bold" />
-                                                                    </DataTrigger>
-                                                                    <DataTrigger TargetType="Label" Binding="{Binding IsCancelled}" Value="True">
-                                                                        <Setter Property="TextDecorations" Value="Strikethrough" />
-                                                                    </DataTrigger>
-                                                                </Label.Triggers>
-                                                            </Label>
-                                                            <Label Text="{Binding DurationText}" Grid.Column="2" HorizontalOptions="End">
-                                                                <Label.Triggers>
-                                                                    <DataTrigger TargetType="Label" Binding="{Binding IsCancelled}" Value="True">
-                                                                        <Setter Property="TextDecorations" Value="Strikethrough" />
-                                                                    </DataTrigger>
-                                                                </Label.Triggers>
-                                                            </Label>
-                                                        </Grid>
-                                                    </DataTemplate>
-                                                </BindableLayout.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="6">
+                                            <BoxView Color="Transparent" />
+                                            <VerticalStackLayout Spacing="6" Padding="12">
+                                                <Grid ColumnDefinitions="*,Auto" Margin="0,2,0,2">
+                                                    <Label Text="{Binding TrainerTitle}" FontAttributes="Bold" Grid.Column="0" />
+                                                    <Label Text="{svc:Translate EventType_Lesson}" FontSize="12" Style="{StaticResource MutedLabelStyle}" Grid.Column="1" HorizontalOptions="End" VerticalOptions="Center" />
+                                                </Grid>
+                                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Rows}">
+                                                    <BindableLayout.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Grid ColumnDefinitions="120,*,Auto" Padding="6,4" ColumnSpacing="8">
+                                                                <Grid.GestureRecognizers>
+                                                                    <TapGestureRecognizer Tapped="OnGroupedRowTapped" />
+                                                                </Grid.GestureRecognizers>
+                                                                <Label Text="{Binding TimeRange}" Grid.Column="0">
+                                                                    <Label.Triggers>
+                                                                        <DataTrigger TargetType="Label" Binding="{Binding IsCancelled}" Value="True">
+                                                                            <Setter Property="TextDecorations" Value="Strikethrough" />
+                                                                        </DataTrigger>
+                                                                    </Label.Triggers>
+                                                                </Label>
+                                                                <Label Text="{Binding FirstRegistrant}" Grid.Column="1">
+                                                                    <Label.Triggers>
+                                                                        <DataTrigger TargetType="Label" Binding="{Binding IsFree}" Value="True">
+                                                                            <Setter Property="Text" Value="{svc:Translate Free}" />
+                                                                            <Setter Property="TextColor" Value="Green" />
+                                                                        </DataTrigger>
+                                                                        <DataTrigger TargetType="Label" Binding="{Binding IsHighlighted}" Value="True">
+                                                                            <Setter Property="FontAttributes" Value="Bold" />
+                                                                        </DataTrigger>
+                                                                        <DataTrigger TargetType="Label" Binding="{Binding IsCancelled}" Value="True">
+                                                                            <Setter Property="TextDecorations" Value="Strikethrough" />
+                                                                        </DataTrigger>
+                                                                    </Label.Triggers>
+                                                                </Label>
+                                                                <Label Text="{Binding DurationText}" Grid.Column="2" HorizontalOptions="End">
+                                                                    <Label.Triggers>
+                                                                        <DataTrigger TargetType="Label" Binding="{Binding IsCancelled}" Value="True">
+                                                                            <Setter Property="TextDecorations" Value="Strikethrough" />
+                                                                        </DataTrigger>
+                                                                    </Label.Triggers>
+                                                                </Label>
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </BindableLayout.ItemTemplate>
+                                                </VerticalStackLayout>
                                             </VerticalStackLayout>
-                                        </VerticalStackLayout>
-                                    </Border>
-                                </DataTemplate>
+                                        </Grid>
+                                    </DataTemplate>
                             </BindableLayout.ItemTemplate>
                         </VerticalStackLayout>
                     </VerticalStackLayout>
@@ -146,31 +142,29 @@
                     <Label Text="{svc:Translate UpcomingCamps}" FontSize="18" FontAttributes="Bold" Margin="0,0,0,4" />
                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding UpcomingCamps}">
                         <BindableLayout.ItemTemplate>
-                            <DataTemplate>
-                                <Border Padding="12" Margin="6">
-                                    <Border.GestureRecognizers>
-                                        <TapGestureRecognizer Tapped="OnCampTapped" />
-                                    </Border.GestureRecognizers>
-                                    <Border.StrokeShape>
-                                        <RoundRectangle CornerRadius="8" />
-                                    </Border.StrokeShape>
-                                    <VerticalStackLayout Spacing="6">
-                                        <Label Text="{Binding EventName}" FontAttributes="Bold" />
-                                        <Label Text="{Binding LocationName}"/>
-                                        <Label FontSize="12" Style="{StaticResource MutedLabelStyle}">
-                                            <Label.FormattedText>
-                                                <FormattedString>
-                                                    <Span Text="{Binding Since, Converter={StaticResource FriendlyDateConverter}}" />
-                                                    <Span Text="  " />
-                                                    <Span Text="–" />
-                                                    <Span Text="  " />
-                                                    <Span Text="{Binding Until, Converter={StaticResource FriendlyDateConverter}}" />
-                                                </FormattedString>
-                                            </Label.FormattedText>
-                                        </Label>
-                                    </VerticalStackLayout>
-                                </Border>
-                            </DataTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="6">
+                                        <Grid.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnCampTapped" />
+                                        </Grid.GestureRecognizers>
+                                        <BoxView Color="Transparent" />
+                                        <VerticalStackLayout Spacing="6" Padding="12">
+                                            <Label Text="{Binding EventName}" FontAttributes="Bold" />
+                                            <Label Text="{Binding LocationName}"/>
+                                            <Label FontSize="12" Style="{StaticResource MutedLabelStyle}">
+                                                <Label.FormattedText>
+                                                    <FormattedString>
+                                                        <Span Text="{Binding Since, Converter={StaticResource FriendlyDateConverter}}" />
+                                                        <Span Text="  " />
+                                                        <Span Text="–" />
+                                                        <Span Text="  " />
+                                                        <Span Text="{Binding Until, Converter={StaticResource FriendlyDateConverter}}" />
+                                                    </FormattedString>
+                                                </Label.FormattedText>
+                                            </Label>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </DataTemplate>
                         </BindableLayout.ItemTemplate>
                     </VerticalStackLayout>
                 </VerticalStackLayout>
@@ -180,20 +174,18 @@
                     <Label Text="{svc:Translate Noticeboard}" FontSize="18" FontAttributes="Bold" Margin="0,0,0,4" />
                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding RecentAnnouncements}">
                         <BindableLayout.ItemTemplate>
-                            <DataTemplate>
-                                <Border Padding="12" Margin="6">
-                                    <Border.GestureRecognizers>
-                                        <TapGestureRecognizer Tapped="OnAnnouncementTapped" />
-                                    </Border.GestureRecognizers>
-                                    <Border.StrokeShape>
-                                        <RoundRectangle CornerRadius="8" />
-                                    </Border.StrokeShape>
-                                    <VerticalStackLayout Spacing="4">
-                                        <Label Text="{Binding Title}" FontAttributes="Bold" />
-                                        <Label Text="{Binding CreatedAt, StringFormat='{0:dd.MM.yyyy HH:mm}'}" FontSize="12" Style="{StaticResource MutedLabelStyle}" />
-                                    </VerticalStackLayout>
-                                </Border>
-                            </DataTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="6">
+                                        <Grid.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnAnnouncementTapped" />
+                                        </Grid.GestureRecognizers>
+                                        <BoxView Color="Transparent" />
+                                        <VerticalStackLayout Spacing="4" Padding="12">
+                                            <Label Text="{Binding Title}" FontAttributes="Bold" />
+                                            <Label Text="{Binding CreatedAt, StringFormat='{0:dd.MM.yyyy HH:mm}'}" FontSize="12" Style="{StaticResource MutedLabelStyle}" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </DataTemplate>
                         </BindableLayout.ItemTemplate>
                     </VerticalStackLayout>
                 </VerticalStackLayout>

@@ -210,7 +210,7 @@ public partial class NoticeboardPage : ContentPage
     {
         try
         {
-            if (sender is Border b && b.BindingContext is AnnouncementView av)
+            if (sender is VisualElement ve && ve.BindingContext is AnnouncementView av)
             {
                 // Navigate to detail page; use PushAsync so route registration isn't required
                 await Navigation.PushAsync(new NoticePage(av.Id));
