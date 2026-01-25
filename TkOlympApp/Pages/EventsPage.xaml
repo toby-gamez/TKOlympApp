@@ -35,7 +35,7 @@
                                 <Grid.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnEventTapped" />
                                 </Grid.GestureRecognizers>
-                                <BoxView Color="Transparent" />
+                                <BoxView Style="{StaticResource SelectableItemBackground}" />
                                 <VerticalStackLayout Spacing="6" Padding="12">
                                     <Label Text="{Binding EventName}" FontAttributes="Bold" />
                                     <Label Text="{Binding LocationName}"/>

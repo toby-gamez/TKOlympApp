@@ -38,12 +38,12 @@
                         <!-- Single Events -->
                         <VerticalStackLayout BindableLayout.ItemsSource="{Binding SingleEvents}">
                             <BindableLayout.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="6">
-                                        <Grid.GestureRecognizers>
-                                            <TapGestureRecognizer Tapped="OnEventCardTapped" />
-                                        </Grid.GestureRecognizers>
-                                        <BoxView Color="Transparent" />
+                                    <DataTemplate>
+                                        <Grid Margin="6">
+                                            <Grid.GestureRecognizers>
+                                                <TapGestureRecognizer Tapped="OnEventCardTapped" />
+                                            </Grid.GestureRecognizers>
+                                            <BoxView Style="{StaticResource SelectableItemBackground}" />
                                         <VerticalStackLayout Spacing="6" Padding="12">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
@@ -82,7 +82,7 @@
                             <BindableLayout.ItemTemplate>
                                     <DataTemplate>
                                         <Grid Margin="6">
-                                            <BoxView Color="Transparent" />
+                                            <BoxView Style="{StaticResource GroupHeaderBackground}" />
                                             <VerticalStackLayout Spacing="6" Padding="12">
                                                 <Grid ColumnDefinitions="*,Auto" Margin="0,2,0,2">
                                                     <Label Text="{Binding TrainerTitle}" FontAttributes="Bold" Grid.Column="0" />
@@ -147,7 +147,7 @@
                                         <Grid.GestureRecognizers>
                                             <TapGestureRecognizer Tapped="OnCampTapped" />
                                         </Grid.GestureRecognizers>
-                                        <BoxView Color="Transparent" />
+                                        <BoxView Style="{StaticResource SelectableItemBackground}" />
                                         <VerticalStackLayout Spacing="6" Padding="12">
                                             <Label Text="{Binding EventName}" FontAttributes="Bold" />
                                             <Label Text="{Binding LocationName}"/>
@@ -179,7 +179,7 @@
                                         <Grid.GestureRecognizers>
                                             <TapGestureRecognizer Tapped="OnAnnouncementTapped" />
                                         </Grid.GestureRecognizers>
-                                        <BoxView Color="Transparent" />
+                                        <BoxView Style="{StaticResource SelectableItemBackground}" />
                                         <VerticalStackLayout Spacing="4" Padding="12">
                                             <Label Text="{Binding Title}" FontAttributes="Bold" />
                                             <Label Text="{Binding CreatedAt, StringFormat='{0:dd.MM.yyyy HH:mm}'}" FontSize="12" Style="{StaticResource MutedLabelStyle}" />

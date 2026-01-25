@@ -879,7 +879,8 @@ public partial class CalendarPage : ContentPage
             BindingContext = new WeekHeaderRow(weekLabel)
         };
 
-        var box = new BoxView { Color = Colors.Transparent };
+        var box = new BoxView();
+        try { box.Style = (Style)Application.Current!.Resources["GroupHeaderBackground"]; } catch { box.Color = Colors.Transparent; }
         var label = new Label
         {
             Text = weekLabel,
@@ -918,7 +919,8 @@ public partial class CalendarPage : ContentPage
         tapGesture.Tapped += OnEventCardTapped;
         grid.GestureRecognizers.Add(tapGesture);
 
-        var background = new BoxView { Color = Colors.Transparent };
+        var background = new BoxView();
+        try { background.Style = (Style)Application.Current!.Resources["SelectableItemBackground"]; } catch { background.Color = Colors.Transparent; }
         var stack = new VerticalStackLayout { Spacing = 6, Padding = new Thickness(12) };
 
         // Title row
@@ -965,18 +967,16 @@ public partial class CalendarPage : ContentPage
             if (!string.IsNullOrWhiteSpace(colorRgb))
             {
                 var colorBrush = TryParseColorBrush(colorRgb);
-                if (colorBrush != null)
-                {
-                    var circle = new BoxView
+                    if (colorBrush != null)
                     {
-                        WidthRequest = 12,
-                        HeightRequest = 12,
-                        CornerRadius = 6,
-                        Background = colorBrush,
-                        VerticalOptions = LayoutOptions.Center
-                    };
-                    typeWithColorStack.Add(circle);
-                }
+                        var circle = new BoxView();
+                        try { circle.Style = (Style)Application.Current!.Resources["CohortCircle"]; } catch { circle.WidthRequest = 12; circle.HeightRequest = 12; circle.CornerRadius = 6; }
+                        if (colorBrush is SolidColorBrush scb)
+                            circle.Color = scb.Color;
+                        else
+                            circle.Background = colorBrush;
+                        typeWithColorStack.Add(circle);
+                    }
             }
         }
 
@@ -1003,7 +1003,8 @@ public partial class CalendarPage : ContentPage
             Margin = new Thickness(6, 6, 6, 0)
         };
 
-        var background = new BoxView { Color = Colors.Transparent };
+        var background = new BoxView();
+        try { background.Style = (Style)Application.Current!.Resources["GroupHeaderBackground"]; } catch { background.Color = Colors.Transparent; }
 
         var grid = new Grid
         {
@@ -1044,18 +1045,16 @@ public partial class CalendarPage : ContentPage
             if (!string.IsNullOrWhiteSpace(colorRgb))
             {
                 var colorBrush = TryParseColorBrush(colorRgb);
-                if (colorBrush != null)
-                {
-                    var circle = new BoxView
+                    if (colorBrush != null)
                     {
-                        WidthRequest = 12,
-                        HeightRequest = 12,
-                        CornerRadius = 6,
-                        Background = colorBrush,
-                        VerticalOptions = LayoutOptions.Center
-                    };
-                    typeWithColorStack.Add(circle);
-                }
+                        var circle = new BoxView();
+                        try { circle.Style = (Style)Application.Current!.Resources["CohortCircle"]; } catch { circle.WidthRequest = 12; circle.HeightRequest = 12; circle.CornerRadius = 6; }
+                        if (colorBrush is SolidColorBrush scb)
+                            circle.Color = scb.Color;
+                        else
+                            circle.Background = colorBrush;
+                        typeWithColorStack.Add(circle);
+                    }
             }
         }
 
@@ -1073,7 +1072,8 @@ public partial class CalendarPage : ContentPage
             BindingContext = row
         };
 
-        var background = new BoxView { Color = Colors.Transparent };
+        var background = new BoxView();
+        try { background.Style = (Style)Application.Current!.Resources["SelectableItemBackground"]; } catch { background.Color = Colors.Transparent; }
 
         var grid = new Grid
         {
@@ -1104,18 +1104,16 @@ public partial class CalendarPage : ContentPage
         {
             var firstCohort = cohortList[0];
             var colorBrush = TryParseColorBrush(firstCohort?.Cohort?.ColorRgb);
-            if (colorBrush != null)
-            {
-                var circle = new BoxView
+                if (colorBrush != null)
                 {
-                    WidthRequest = 14,
-                    HeightRequest = 14,
-                    CornerRadius = 7,
-                    Background = colorBrush,
-                    VerticalOptions = LayoutOptions.Center
-                };
-                grid.Add(circle, 1);
-            }
+                    var circle = new BoxView();
+                    try { circle.Style = (Style)Application.Current!.Resources["CohortCircleLarge"]; } catch { circle.WidthRequest = 14; circle.HeightRequest = 14; circle.CornerRadius = 7; }
+                    if (colorBrush is SolidColorBrush scb)
+                        circle.Color = scb.Color;
+                    else
+                        circle.Background = colorBrush;
+                    grid.Add(circle, 1);
+                }
         }
 
         var registrantLabel = new Label();
