@@ -128,9 +128,15 @@ public partial class RegistrationPage : ContentPage
             }
             catch { }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // ignore for now
+            try
+            {
+                var title = LocalizationService.Get("Registration_Load_Error_Title") ?? "Chyba při načítání";
+                var ok = LocalizationService.Get("Button_OK") ?? "OK";
+                await DisplayAlertAsync(title, ex.Message, ok);
+            }
+            catch { }
         }
     }
 
@@ -313,7 +319,16 @@ public partial class RegistrationPage : ContentPage
             }
             catch { }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            try
+            {
+                var title = LocalizationService.Get("Registration_Load_Error_Title") ?? "Chyba při načítání";
+                var ok = LocalizationService.Get("Button_OK") ?? "OK";
+                await DisplayAlertAsync(title, ex.Message, ok);
+            }
+            catch { }
+        }
     }
 
     private async void OnConfirmClicked(object? sender, EventArgs e)

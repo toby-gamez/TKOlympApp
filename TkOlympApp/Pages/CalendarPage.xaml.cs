@@ -545,10 +545,10 @@ public partial class CalendarPage : ContentPage
             if (instance.IsCancelled) return;
             if (instance.Event?.Id is long eventId)
             {
-                // Pass eventInstanceId when available, otherwise just eventId
+                // Always pass EventId and include EventInstanceId when present
                 var page = new EventPage();
+                if (eventId != 0) page.EventId = eventId;
                 if (instance.Id > 0) page.EventInstanceId = instance.Id;
-                else page.EventId = eventId;
                 _suppressReloadOnNextAppearing = true;
                 await Navigation.PushAsync(page);
             }
@@ -566,10 +566,10 @@ public partial class CalendarPage : ContentPage
             if (row?.Instance?.Event?.Id is long eventId)
             {
                 if (row.Instance.IsCancelled) return;
-                // Pass eventInstanceId when available, otherwise just eventId
+                // Always pass EventId and include EventInstanceId when present
                 var page = new EventPage();
+                if (eventId != 0) page.EventId = eventId;
                 if (row.Instance.Id > 0) page.EventInstanceId = row.Instance.Id;
-                else page.EventId = eventId;
                 _suppressReloadOnNextAppearing = true;
                 await Navigation.PushAsync(page);
             }

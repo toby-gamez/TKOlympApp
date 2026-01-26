@@ -271,13 +271,14 @@ public partial class EventPage : ContentPage
             
             var registered = ev.EventRegistrations?.TotalCount ?? 0;
             var capacity = ev.Capacity;
+            int? availableSpots = null;
             PublicLabel.IsVisible = ev.IsPublic;
             VisibleLabel.IsVisible = ev.IsVisible;
             if (capacity.HasValue)
             {
-                var available = Math.Max(0, capacity.Value - occupiedSpots);
+                availableSpots = Math.Max(0, capacity.Value - occupiedSpots);
                 var fmt = LocalizationService.Get("Event_Capacity_Format") ?? "Kapacita: {0} (Volno: {1})";
-                CapacityLabel.Text = string.Format(fmt, capacity.Value, available);
+                CapacityLabel.Text = string.Format(fmt, capacity.Value, availableSpots.Value);
             }
             else
             {
@@ -599,8 +600,14 @@ public partial class EventPage : ContentPage
                     }
                     else
                     {
-                        // User is not registered - show register button if registration is open
-                        RegisterButton.IsVisible = isRegistrationOpen;
+                        // User is not registered - show register button if registration is open AND
+                        // there are available spots OR capacity==0 with no registrations (special allow)
+                        var allowRegistration = isRegistrationOpen && (
+                            !capacity.HasValue || // unlimited
+                            (availableSpots.HasValue && availableSpots.Value > 0) || // free spots
+                            (capacity.HasValue && capacity.Value == 0 && registered == 0) // special case: capacity==0 and none registered
+                        );
+                        RegisterButton.IsVisible = allowRegistration;
                         RegistrationActionsRow.IsVisible = false;
                     }
                 }
@@ -629,8 +636,23 @@ public partial class EventPage : ContentPage
     {
         try
         {
-            if (EventId == 0) return;
-            await Shell.Current.GoToAsync($"{nameof(RegistrationPage)}?id={EventId}");
+            if (EventId == 0 && EventInstanceId == 0) return;
+            // Prefer including EventId for registration flows; also include EventInstanceId when present
+            if (EventId != 0)
+            {
+                if (EventInstanceId != 0)
+                {
+                    await Shell.Current.GoToAsync($"{nameof(RegistrationPage)}?id={EventId}&eventInstanceId={EventInstanceId}");
+                }
+                else
+                {
+                    await Shell.Current.GoToAsync($"{nameof(RegistrationPage)}?id={EventId}");
+                }
+            }
+            else
+            {
+                await Shell.Current.GoToAsync($"{nameof(RegistrationPage)}?eventInstanceId={EventInstanceId}");
+            }
         }
         catch { }
     }

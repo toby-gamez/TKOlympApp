@@ -209,8 +209,9 @@ public partial class EventsPage : ContentPage
             {
                 if (it.IsCancelled) return;
                 var page = new EventPage();
+                // Always pass EventId when available; include EventInstanceId as well when present
+                if (it.EventId > 0) page.EventId = it.EventId;
                 if (it.EventInstanceId > 0) page.EventInstanceId = it.EventInstanceId;
-                else page.EventId = it.EventId;
                 _suppressReloadOnNextAppearing = true;
                 await Navigation.PushAsync(page);
             }
