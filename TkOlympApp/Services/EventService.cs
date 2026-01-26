@@ -17,7 +17,7 @@ public static class EventService
     {
         var query = new GraphQlRequest
         {
-            Query = "query MyQuery($id: BigInt!) { eventInstance(id: $id) { id isCancelled since until event { id capacity createdAt description eventRegistrations { totalCount nodes { couple { id status man { name firstName lastName eventInstanceTrainersList { name } } woman { name firstName lastName eventInstanceTrainersList { name } } } eventLessonDemandsByRegistrationIdList { lessonCount trainer { id name } } person { id firstName lastName } } } isPublic isRegistrationOpen isVisible name type summary locationText eventTrainersList { id name updatedAt } updatedAt eventTargetCohortsList { cohortId cohort { id name colorRgb } } } } }",
+            Query = "query MyQuery($id: BigInt!) { eventInstance(id: $id) { id isCancelled since until event { id capacity createdAt description isPublic isRegistrationOpen isVisible name type summary locationText eventTrainersList { id name updatedAt } updatedAt eventTargetCohortsList { cohortId cohort { id name colorRgb } } eventRegistrations { totalCount nodes { couple { id status man { firstName lastName prefixTitle suffixTitle } woman { firstName lastName prefixTitle suffixTitle } } person { id prefixTitle suffixTitle lastName firstName } eventLessonDemandsByRegistrationIdList { id lessonCount trainer { id name } } } } } } }",
             Variables = new Dictionary<string, object> { { "id", instanceId } }
         };
 
@@ -75,8 +75,8 @@ public static class EventService
     {
             var query = new GraphQlRequest
         {
-            // Request person names and couple names (including first name) and instance trainers for registrations
-            Query = "query MyQuery($id: BigInt!) { event(id: $id) { capacity createdAt description eventRegistrations { totalCount nodes { couple { id status man { name firstName lastName eventInstanceTrainersList { name } } woman { name firstName lastName eventInstanceTrainersList { name } } } eventLessonDemandsByRegistrationIdList { lessonCount trainer { id name } } person { id firstName lastName } } } isPublic isRegistrationOpen isVisible __typename name type summary locationText eventTrainersList { id name updatedAt } updatedAt eventTargetCohortsList { cohortId cohort { id name colorRgb } } eventInstancesList { since until } } }",
+            // Request person names and couple names (including first name, title fields) and instance trainers for registrations
+            Query = "query MyQuery($id: BigInt!) { event(id: $id) { capacity createdAt description isPublic isRegistrationOpen isVisible __typename name type summary locationText eventTrainersList { id name updatedAt } updatedAt eventTargetCohortsList { cohortId cohort { id name colorRgb } } eventRegistrations { totalCount nodes { couple { id status man { firstName lastName prefixTitle suffixTitle eventInstanceTrainersList { name } } woman { firstName lastName prefixTitle suffixTitle eventInstanceTrainersList { name } } } eventLessonDemandsByRegistrationIdList { id lessonCount trainer { id name } } person { id prefixTitle suffixTitle lastName firstName } } } eventInstancesList { since until } } }",
             Variables = new Dictionary<string, object> { { "id", id } }
         };
 
@@ -145,7 +145,10 @@ public static class EventService
 
     public sealed record RegistrationPerson(
         [property: JsonPropertyName("name")] string? Name,
+        [property: JsonPropertyName("firstName")] string? FirstName,
         [property: JsonPropertyName("lastName")] string? LastName,
+        [property: JsonPropertyName("prefixTitle")] string? PrefixTitle,
+        [property: JsonPropertyName("suffixTitle")] string? SuffixTitle,
         [property: JsonPropertyName("eventInstanceTrainersList")] List<EventInstanceTrainer>? EventInstanceTrainersList
     );
 
@@ -154,6 +157,7 @@ public static class EventService
     );
 
     public sealed record EventLessonDemand(
+        [property: JsonPropertyName("id")] string? Id,
         [property: JsonPropertyName("lessonCount")] int LessonCount,
         [property: JsonPropertyName("trainer")] Trainer? Trainer
     );
