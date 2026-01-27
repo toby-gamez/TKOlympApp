@@ -25,7 +25,7 @@ jobs:
         run: dotnet restore TkOlympApp/TkOlympApp.csproj -p:TargetFramework=net10.0-android
 
       - name: Build APK
-        run: dotnet publish TkOlympApp/TkOlympApp.csproj -f net10.0-android -c Release /p:AndroidPackageFormat=apk /p:TargetFramework=net10.0-android -o ./artifacts/android
+        run: dotnet publish TkOlympApp/TkOlympApp.csproj -f net10.0-android -c Release /p:AndroidPackageFormat=apk /p:AndroidEnableAot=false /p:TargetFramework=net10.0-android -o ./artifacts/android
 
 
       - name: Upload APK
