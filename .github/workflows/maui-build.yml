@@ -15,11 +15,13 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
+          
+      - name: Restore workload
+        run: dotnet workload restore 
+        
       - name: Restore (Android only)
         run: dotnet restore TkOlympApp/TkOlympApp.csproj -p:TargetFramework=net10.0-android
 
-      - name: Restore workload
-        run: dotnet workload restore 
       - name: Build APK
         run: dotnet publish TkOlympApp.csproj -f net10.0-android -c Release /p:PublishTrimmed=true /p:AndroidPackageFormat=apk -o ./artifacts/android
 
