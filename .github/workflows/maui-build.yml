@@ -16,7 +16,7 @@ jobs:
           dotnet-version: "10.0.x"
 
       - name: Restore (Android only)
-        run: dotnet restore TkOlympApp.csproj
+        run: dotnet restore TkOlympApp/TkOlympApp.csproj
         
       - name: Restore workload
         run: dotnet workload restore 
