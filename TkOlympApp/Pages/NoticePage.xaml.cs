@@ -96,10 +96,15 @@ public partial class NoticePage : ContentPage
                 AuthorLabel.IsVisible = false;
             }
 
-            var formatted = HtmlHelpers.ToFormattedString(a.Body);
-            BodyLabel.FormattedText = formatted;
             _lastBodyHtml = a.Body;
-            BodyFrame.IsVisible = formatted?.Spans?.Count > 0;
+            // Render body as sequence of Views (labels, images)
+            var views = HtmlHelpers.ToViews(a.Body);
+            BodyContent.Children.Clear();
+            foreach (var v in views)
+            {
+                BodyContent.Children.Add(v);
+            }
+            BodyFrame.IsVisible = BodyContent.Children.Count > 0;
         }
         catch (Exception ex)
         {

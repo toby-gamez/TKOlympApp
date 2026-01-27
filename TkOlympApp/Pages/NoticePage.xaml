@@ -31,7 +31,7 @@
                         <Label Text="{svc:Translate Notice_Content}" FontAttributes="Bold" Grid.Column="0" VerticalOptions="Center" />
                         <Button x:Name="CopyBodyButton" Text="{mi:Material Icon=ContentCopy}" Clicked="OnCopyBodyClicked" Grid.Column="1" HorizontalOptions="End" BackgroundColor="Transparent" FontSize="12" TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" WidthRequest="22" MinimumWidthRequest="22" HeightRequest="22" MinimumHeightRequest="22" VerticalOptions="Center" Padding="4,0" />
                     </Grid>
-                    <Label x:Name="BodyLabel" />
+                    <StackLayout x:Name="BodyContent" Spacing="6" />
                 </VerticalStackLayout>
             </Border>
         </VerticalStackLayout>
