@@ -83,7 +83,7 @@ public static class EventNotificationService
                 if (eventStart <= now)
                     continue; // Skip past events
 
-                var eventName = eventInstance.Event?.Name ?? LocalizationService.Get("Event");
+                var eventName = GetEventDisplayName(eventInstance);
                 var locationText = eventInstance.Event?.LocationText;
                 var eventType = eventInstance.Event?.Type;
                 
@@ -149,6 +149,24 @@ public static class EventNotificationService
             return $"{timeStr} • {locationText}";
         }
         return timeStr;
+    }
+
+    private static string GetEventDisplayName(EventService.EventInstance eventInstance)
+    {
+        var evt = eventInstance.Event;
+        var defaultName = LocalizationService.Get("Event") ?? "Událost";
+
+        if (evt == null)
+            return defaultName;
+
+        if (!string.IsNullOrWhiteSpace(evt.Type) && string.Equals(evt.Type, "lesson", StringComparison.OrdinalIgnoreCase))
+        {
+            var trainerName = evt.EventTrainersList?.FirstOrDefault(t => !string.IsNullOrWhiteSpace(t?.Name))?.Name;
+            if (!string.IsNullOrWhiteSpace(trainerName))
+                return trainerName!;
+        }
+
+        return evt.Name ?? defaultName;
     }
 
     private static async Task<bool> ScheduleNotificationAsync(int notificationId, string title, string description, DateTime notifyTime, long eventId)
@@ -348,7 +366,7 @@ public static class EventNotificationService
                 if (!previousDict.TryGetValue(currentEvent.Id, out var previousEvent))
                     continue; // New event, not a change
 
-                var eventName = currentEvent.Event?.Name ?? LocalizationService.Get("Event");
+                var eventName = GetEventDisplayName(currentEvent);
                 
                 // Check for cancellation
                 if (currentEvent.IsCancelled && !previousEvent.IsCancelled)
