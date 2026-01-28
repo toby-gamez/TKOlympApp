@@ -121,6 +121,10 @@
                 <Button x:Name="TabAllButton" Text="{svc:Translate Tab_All}" Clicked="OnTabAllClicked" />
             </HorizontalStackLayout>
 
+            <HorizontalStackLayout Grid.Column="1" Padding="0" Spacing="8" VerticalOptions="Center" HorizontalOptions="Center">
+                <Button x:Name="ViewButton" Text="{svc:Translate View}" Clicked="OnOpenCalendarViewClicked" Style="{StaticResource ButtonSecondary}" />
+            </HorizontalStackLayout>
+
             <HorizontalStackLayout Grid.Column="2" Padding="0" Spacing="8" VerticalOptions="Center" HorizontalOptions="End">
                 <Button x:Name="PrevWeekButton" Text="◀" Clicked="OnPrevWeekClicked" Style="{StaticResource ButtonSecondary}"/>
                 <Button x:Name="TodayWeekButton" Text="{svc:Translate Today}" Clicked="OnTodayWeekClicked" />

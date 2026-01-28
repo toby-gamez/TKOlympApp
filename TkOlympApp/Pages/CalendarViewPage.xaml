@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TkOlympApp.Pages.CalendarViewPage"
+             Title="Calendar">
+
+    <Grid RowDefinitions="Auto,*" Padding="12" BackgroundColor="Transparent">
+        <!-- View mode controls -->
+        <HorizontalStackLayout Spacing="8" Grid.Row="0" HorizontalOptions="Center">
+            <Button x:Name="DayViewButton" Text="Day" Clicked="OnViewModeClicked" />
+            <Button x:Name="ThreeDayViewButton" Text="3-Day" Clicked="OnViewModeClicked" />
+            <Button x:Name="WeekViewButton" Text="Week" Clicked="OnViewModeClicked" />
+        </HorizontalStackLayout>
+
+        <!-- Scrollable hourly grid -->
+        <ScrollView Grid.Row="1">
+            <Grid x:Name="HoursGrid" ColumnSpacing="1" RowSpacing="1" BackgroundColor="Transparent">
+                <!-- Grid will be built in code-behind -->
+            </Grid>
+        </ScrollView>
+    </Grid>
+
+</ContentPage>

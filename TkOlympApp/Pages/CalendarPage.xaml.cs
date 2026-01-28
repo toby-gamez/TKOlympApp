@@ -697,6 +697,17 @@ public partial class CalendarPage : ContentPage
         await LoadEventsAsync();
     }
 
+    private async void OnOpenCalendarViewClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            var page = new CalendarViewPage();
+            _suppressReloadOnNextAppearing = true;
+            await Navigation.PushAsync(page);
+        }
+        catch { }
+    }
+
     private static new async Task DisplayAlertAsync(string? title, string? message, string? cancel)
     {
         try
