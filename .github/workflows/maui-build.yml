@@ -25,7 +25,6 @@ jobs:
         shell: pwsh
         run: |
           [IO.File]::WriteAllBytes("tkolymp.keystore", [Convert]::FromBase64String("${{ secrets.ANDROID_KEYSTORE_BASE64 }}"))
-
         
       - name: Build signed APK
         run: dotnet publish TkOlympApp/TkOlympApp.csproj -f net10.0-android -c Release -o ./artifacts/android /p:AndroidPackageFormat=apk /p:AndroidEnableAot=false /p:AndroidKeyStore=true /p:AndroidSigningKeyStore=tkolymp.keystore /p:AndroidSigningKeyAlias=${{ secrets.ANDROID_KEY_ALIAS }} /p:AndroidSigningKeyPass=${{ secrets.ANDROID_KEY_PASS }} /p:AndroidSigningStorePass=${{ secrets.ANDROID_KEYSTORE_PASS }}
