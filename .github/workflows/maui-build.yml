@@ -26,7 +26,24 @@ jobs:
           [IO.File]::WriteAllBytes("${{ github.workspace }}\tkolymp.keystore", [Convert]::FromBase64String("${{ secrets.ANDROID_KEYSTORE_BASE64 }}"))
       
       - name: Build signed APK
-        run: dotnet publish TkOlympApp/TkOlympApp.csproj -f net10.0-android -c Release -o ./artifacts/android /p:AndroidPackageFormat=apk /p:AndroidEnableAot=false /p:AndroidKeyStore=true /p:AndroidSigningKeyStore="${{ github.workspace }}\tkolymp.keystore" /p:AndroidSigningKeyAlias=${{ secrets.ANDROID_KEY_ALIAS }} /p:AndroidSigningKeyPass=${{ secrets.ANDROID_KEY_PASS }} /p:AndroidSigningStorePass=${{ secrets.ANDROID_KEYSTORE_PASS }}
+        shell: pwsh
+        env:
+          KEYSTORE_PATH: ${{ github.workspace }}\tkolymp.keystore
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASS }}
+          STORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+        run: |
+          dotnet publish TkOlympApp/TkOlympApp.csproj `
+            -f net10.0-android `
+            -c Release `
+            -o ./artifacts/android `
+            /p:AndroidPackageFormat=apk `
+            /p:AndroidEnableAot=false `
+            /p:AndroidKeyStore=true `
+            /p:AndroidSigningKeyStore="$env:KEYSTORE_PATH" `
+            /p:AndroidSigningKeyAlias="$env:KEY_ALIAS" `
+            /p:AndroidSigningKeyPass="$env:KEY_PASS" `
+            /p:AndroidSigningStorePass="$env:STORE_PASS"
       
       - name: Upload APK
         uses: actions/upload-artifact@v4
