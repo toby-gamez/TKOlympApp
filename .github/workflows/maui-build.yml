@@ -20,13 +20,12 @@ jobs:
           
       - name: Restore workload
         run: dotnet workload restore 
+
+      - name: Restore keystore
+        run: echo ${{ secrets.ANDROID_KEYSTORE_BASE64 }} | base64 -d > tkolymp.keystore
         
-      - name: Restore (Android only)
-        run: dotnet restore TkOlympApp/TkOlympApp.csproj -p:TargetFramework=net10.0-android
-
-      - name: Build APK
-        run: dotnet publish TkOlympApp/TkOlympApp.csproj -f net10.0-android -c Release /p:AndroidPackageFormat=apk /p:AndroidEnableAot=false /p:TargetFramework=net10.0-android -o ./artifacts/android
-
+      - name: Build signed APK
+        run: dotnet publish TkOlympApp/TkOlympApp.csproj -f net10.0-android -c Release -o ./artifacts/android /p:AndroidPackageFormat=apk /p:AndroidEnableAot=false /p:AndroidKeyStore=true /p:AndroidSigningKeyStore=tkolymp.keystore /p:AndroidSigningKeyAlias=${{ secrets.ANDROID_KEY_ALIAS }} /p:AndroidSigningKeyPass=${{ secrets.ANDROID_KEY_PASS }} /p:AndroidSigningStorePass=${{ secrets.ANDROID_KEYSTORE_PASS }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
