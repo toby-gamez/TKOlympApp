@@ -1,7 +1,7 @@
 name: Build MAUI
 on:
-  push:
-    branches: [main]
+  release:
+    types: [published]
 
 jobs:
   build-android:
