@@ -1,21 +1,37 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:svc="clr-namespace:TkOlympApp.Services"
              x:Class="TkOlympApp.Pages.CalendarViewPage"
-             Title="Calendar">
+             Title="{svc:Translate CalendarView}">
 
-    <Grid RowDefinitions="Auto,*" Padding="12" BackgroundColor="Transparent">
-        <!-- View mode controls -->
-        <HorizontalStackLayout Spacing="8" Grid.Row="0" HorizontalOptions="Center">
-            <Button x:Name="DayViewButton" Text="Day" Clicked="OnViewModeClicked" />
-            <Button x:Name="ThreeDayViewButton" Text="3-Day" Clicked="OnViewModeClicked" />
-            <Button x:Name="WeekViewButton" Text="Week" Clicked="OnViewModeClicked" />
-        </HorizontalStackLayout>
+    <Grid Padding="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
-        <!-- Scrollable hourly grid -->
-        <ScrollView Grid.Row="1">
-            <Grid x:Name="HoursGrid" ColumnSpacing="1" RowSpacing="0" BackgroundColor="Transparent">
-                <!-- Grid will be built in code-behind -->
+        <!-- Top controls: My/All and date navigation -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,8">
+            <HorizontalStackLayout Grid.Column="0" Spacing="8" VerticalOptions="Center">
+                <Button x:Name="TabMyButton" Text="{svc:Translate Tab_My}" Clicked="OnTabMineClicked" />
+                <Button x:Name="TabAllButton" Text="{svc:Translate Tab_All}" Clicked="OnTabAllClicked" />
+            </HorizontalStackLayout>
+
+            <Label x:Name="DateLabel" Grid.Column="1" HorizontalOptions="Center" VerticalOptions="Center" FontAttributes="Bold" />
+
+            <HorizontalStackLayout Grid.Column="2" Spacing="8" HorizontalOptions="End">
+                <Button x:Name="PrevDayButton" Text="◀" Clicked="OnPrevDayClicked" />
+                <Button x:Name="TodayButton" Text="{svc:Translate Today}" Clicked="OnTodayClicked" />
+                <Button x:Name="NextDayButton" Text="▶" Clicked="OnNextDayClicked" />
+            </HorizontalStackLayout>
+        </Grid>
+
+        <!-- Timeline: left time labels, right absolute layout with event blocks -->
+        <ScrollView Grid.Row="1" x:Name="MainScroll" Orientation="Vertical">
+            <Grid ColumnDefinitions="Auto,*">
+                <VerticalStackLayout x:Name="TimeLabelsStack" Padding="4" Spacing="0" Grid.Column="0" WidthRequest="56" />
+                <AbsoluteLayout x:Name="TimelineLayout" BackgroundColor="Transparent" Grid.Column="1" HorizontalOptions="Fill" VerticalOptions="Start" />
             </Grid>
         </ScrollView>
     </Grid>

@@ -271,13 +271,16 @@ public static class EventService
         var result = new List<EventInstance>(list.Count);
         foreach (var mi in list)
         {
-            var updatedAt = mi.UpdatedAt ?? DateTime.MinValue;
+            // Convert DateTimeOffset values from the API into local DateTime to avoid ambiguous kinds
+            DateTime? sinceLocal = mi.Since.HasValue ? DateTime.SpecifyKind(mi.Since.Value.ToLocalTime().DateTime, DateTimeKind.Local) : (DateTime?)null;
+            DateTime? untilLocal = mi.Until.HasValue ? DateTime.SpecifyKind(mi.Until.Value.ToLocalTime().DateTime, DateTimeKind.Local) : (DateTime?)null;
+            DateTime updatedAt = mi.UpdatedAt.HasValue ? DateTime.SpecifyKind(mi.UpdatedAt.Value.ToLocalTime().DateTime, DateTimeKind.Local) : DateTime.MinValue;
             result.Add(new EventInstance(
                 mi.Id,
                 mi.IsCancelled,
                 mi.LocationId,
-                mi.Since,
-                mi.Until,
+                sinceLocal,
+                untilLocal,
                 updatedAt,
                 mi.Tenant,
                 mi.Event
@@ -358,9 +361,9 @@ public static class EventService
         [JsonPropertyName("id")] public long Id { get; set; }
         [JsonPropertyName("isCancelled")] public bool IsCancelled { get; set; }
         [JsonPropertyName("locationId")] public long? LocationId { get; set; }
-        [JsonPropertyName("since")] public DateTime? Since { get; set; }
-        [JsonPropertyName("until")] public DateTime? Until { get; set; }
-        [JsonPropertyName("updatedAt")] public DateTime? UpdatedAt { get; set; }
+        [JsonPropertyName("since")] public DateTimeOffset? Since { get; set; }
+        [JsonPropertyName("until")] public DateTimeOffset? Until { get; set; }
+        [JsonPropertyName("updatedAt")] public DateTimeOffset? UpdatedAt { get; set; }
         [JsonPropertyName("tenant")] public Tenant? Tenant { get; set; }
         [JsonPropertyName("event")] public EventInfo? Event { get; set; }
     }
