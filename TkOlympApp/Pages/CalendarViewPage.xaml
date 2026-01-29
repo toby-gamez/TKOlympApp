@@ -14,7 +14,7 @@
 
         <!-- Scrollable hourly grid -->
         <ScrollView Grid.Row="1">
-            <Grid x:Name="HoursGrid" ColumnSpacing="1" RowSpacing="1" BackgroundColor="Transparent">
+            <Grid x:Name="HoursGrid" ColumnSpacing="1" RowSpacing="0" BackgroundColor="Transparent">
                 <!-- Grid will be built in code-behind -->
             </Grid>
         </ScrollView>

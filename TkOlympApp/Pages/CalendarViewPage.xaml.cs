@@ -14,6 +14,7 @@ public partial class CalendarViewPage : ContentPage
     private enum ViewMode { Day, ThreeDay, Week }
     private ViewMode _mode = ViewMode.Day;
     private readonly System.Collections.Generic.Dictionary<int, Grid> _dayContainers = new();
+    private readonly System.Collections.Generic.Dictionary<int, AbsoluteLayout> _dayEventLayers = new();
 
     public CalendarViewPage()
     {
@@ -58,6 +59,8 @@ public partial class CalendarViewPage : ContentPage
         HoursGrid.Children.Clear();
         HoursGrid.RowDefinitions.Clear();
         HoursGrid.ColumnDefinitions.Clear();
+        // clear previously stored day containers to avoid stale references
+        _dayContainers.Clear();
 
         // Left column for hour labels
         HoursGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(50, GridUnitType.Absolute) });
@@ -66,7 +69,10 @@ public partial class CalendarViewPage : ContentPage
         for (int c = 0; c < cols; c++)
             HoursGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
 
-        // 30-minute rows (48 rows for 24h)
+        // Header row for trainer names
+        HoursGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+        // 30-minute rows (48 rows for 24h) placed after header row
         for (int r = 0; r < 48; r++)
         {
             HoursGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(30) });
@@ -74,7 +80,7 @@ public partial class CalendarViewPage : ContentPage
             {
                 var hour = (r / 2).ToString("D2") + ":00";
                 var label = new Label { Text = hour, FontSize = 12, VerticalTextAlignment = TextAlignment.Start, Margin = new Thickness(4,2,0,0), Opacity = 0.8 };
-                HoursGrid.Add(label, 0, r);
+                HoursGrid.Add(label, 0, r + 1);
             }
         }
 
@@ -82,7 +88,7 @@ public partial class CalendarViewPage : ContentPage
         for (int r = 0; r < 48; r++)
         {
             var line = new BoxView { HeightRequest = 1, BackgroundColor = Colors.Transparent };
-            HoursGrid.Add(line, 1, r);
+            HoursGrid.Add(line, 1, r + 1);
             Grid.SetColumnSpan(line, HoursGrid.ColumnDefinitions.Count - 1);
         }
 
@@ -90,15 +96,22 @@ public partial class CalendarViewPage : ContentPage
         for (int d = 0; d < cols; d++)
         {
             var container = new Grid { BackgroundColor = Colors.Transparent };
-            // create 48 rows to match hours (30-min rows)
-            for (int r = 0; r < 48; r++)
-                container.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+                // container.RowSpacing = 0; // Removed to eliminate extra gaps
+            // container: row 0 = header, row 1 = body (events layer)
+            container.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            container.RowDefinitions.Add(new RowDefinition { Height = GridLength.Star });
             // start with single column; will expand when placing events
             container.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
 
             int colIndex = 1 + d;
-            HoursGrid.Add(container, colIndex, 0);
+            // place container starting at row 1 (below the global header row)
+            HoursGrid.Add(container, colIndex, 1);
             Grid.SetRowSpan(container, 48);
+            // add an AbsoluteLayout inside the container to render events precisely (row 1)
+            var eventsLayer = new AbsoluteLayout { BackgroundColor = Colors.Transparent };
+            container.Add(eventsLayer, 0, 1);
+            Grid.SetColumnSpan(eventsLayer, container.ColumnDefinitions.Count);
+            _dayEventLayers[d] = eventsLayer;
             _dayContainers[d] = container;
         }
     }
@@ -136,36 +149,49 @@ public partial class CalendarViewPage : ContentPage
                 intervals.Add((inst, startMin, endMin));
             }
 
-            // Assign clusters and columns
+            // Assign clusters and columns (group overlapping intervals into clusters,
+            // then assign columns inside each cluster so items in the same timeslot don't overlap)
             var assigned = new Dictionary<EventService.EventInstance, (int slot, int total)>();
-            var visited = new HashSet<EventService.EventInstance>();
 
-            for (int i = 0; i < intervals.Count; i++)
+            // create a sorted list of intervals with original indices
+            var indexed = intervals.Select((iv, idx) => new { iv.inst, iv.startMin, iv.endMin, idx })
+                                   .OrderBy(x => x.startMin)
+                                   .ToList();
+
+            // Build clusters: contiguous overlapping groups
+            var clusters = new List<List<int>>();
+            List<int>? current = null;
+            double currentMax = double.MinValue;
+            foreach (var item in indexed)
             {
-                var root = intervals[i].inst;
-                if (visited.Contains(root)) continue;
-                var clusterIdx = new List<int>();
-                var queue = new Queue<int>();
-                queue.Enqueue(i);
-                visited.Add(root);
-                while (queue.Count > 0)
+                if (current == null)
                 {
-                    var idx = queue.Dequeue();
-                    clusterIdx.Add(idx);
-                    for (int j = 0; j < intervals.Count; j++)
+                    current = new List<int> { item.idx };
+                    currentMax = item.endMin;
+                }
+                else
+                {
+                    if (item.startMin < currentMax)
                     {
-                        if (visited.Contains(intervals[j].inst)) continue;
-                        var a = intervals[idx];
-                        var b = intervals[j];
-                        if (!(a.endMin <= b.startMin || b.endMin <= a.startMin))
-                        {
-                            visited.Add(intervals[j].inst);
-                            queue.Enqueue(j);
-                        }
+                        // overlaps with current cluster
+                        current.Add(item.idx);
+                        if (item.endMin > currentMax) currentMax = item.endMin;
+                    }
+                    else
+                    {
+                        clusters.Add(current);
+                        current = new List<int> { item.idx };
+                        currentMax = item.endMin;
                     }
                 }
+            }
+            if (current != null) clusters.Add(current);
 
-                var clusterEvents = clusterIdx.Select(ix => intervals[ix]).OrderBy(x => x.startMin).ToList();
+            // For each cluster, assign columns greedily
+            foreach (var cluster in clusters)
+            {
+                // get cluster events ordered by start
+                var clusterEvents = cluster.Select(i => intervals[i]).OrderBy(x => x.startMin).ToList();
                 var columnEnd = new List<double>();
                 foreach (var ev in clusterEvents)
                 {
@@ -190,12 +216,77 @@ public partial class CalendarViewPage : ContentPage
             }
 
             if (!_dayContainers.TryGetValue(day, out var container)) continue;
-            // ensure container has enough columns for the maximum total
-            int maxCols = assigned.Values.Select(v => v.total).DefaultIfEmpty(1).Max();
-            if (container.ColumnDefinitions.Count < maxCols)
+
+            // Build trainer columns for this day: each distinct trainer gets its own column
+            var trainerLabels = list
+                .Select(i => GetTrainerLabel(i))
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            int trainerCount = trainerLabels.Count;
+            var trainerIndex = trainerLabels.Select((t, idx) => new { t, idx })
+                                           .ToDictionary(x => x.t, x => x.idx, StringComparer.OrdinalIgnoreCase);
+
+
+            // Precompute simple column assignment for each event so we create only needed columns
+            var columnAssignment = new Dictionary<EventService.EventInstance, int>();
+            foreach (var kvp2 in assigned)
             {
-                for (int cc = container.ColumnDefinitions.Count; cc < maxCols; cc++)
+                var inst2 = kvp2.Key;
+                bool isLesson2 = string.Equals(inst2.Event?.Type, "lesson", StringComparison.OrdinalIgnoreCase);
+                if (isLesson2)
+                {
+                    var tName2 = GetTrainerLabel(inst2);
+                    if (!string.IsNullOrWhiteSpace(tName2) && trainerIndex.TryGetValue(tName2, out var tIdx2))
+                        columnAssignment[inst2] = tIdx2;
+                    else
+                        columnAssignment[inst2] = trainerCount > 0 ? trainerCount - 1 : 0;
+                }
+                else
+                {
+                    // place non-lesson into last trainer column if exists, otherwise column 0
+                    columnAssignment[inst2] = trainerCount > 0 ? trainerCount - 1 : 0;
+                }
+            }
+
+            var usedCols = columnAssignment.Values.DefaultIfEmpty(0).Distinct().OrderBy(i => i).ToList();
+            int neededColumns = usedCols.Count > 0 ? usedCols.Max() + 1 : 1;
+            if (container.ColumnDefinitions.Count < neededColumns)
+            {
+                for (int cc = container.ColumnDefinitions.Count; cc < neededColumns; cc++)
                     container.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
+            }
+
+            // remove existing header labels (row 0) so we can refresh them
+            var existingHeaders = container.Children.Where(ch => Microsoft.Maui.Controls.Grid.GetRow((Microsoft.Maui.Controls.BindableObject)ch) == 0).ToList();
+            foreach (var h in existingHeaders) container.Children.Remove(h);
+
+            // Render trainer header labels inside the per-day container (row 0)
+            int headerCount = Math.Min(trainerCount, neededColumns);
+            for (int ti = 0; ti < headerCount; ti++)
+            {
+                try
+                {
+                    var lbl = new Label { Text = trainerLabels[ti], FontSize = 12, HorizontalTextAlignment = TextAlignment.Center, VerticalTextAlignment = TextAlignment.Center, Margin = new Thickness(4,4) };
+                    lbl.TextColor = Colors.Black;
+                    container.Add(lbl, ti, 0);
+                }
+                catch { }
+            }
+
+            // ensure we have an events layer for precise positioning and clear previous events
+            if (!_dayEventLayers.TryGetValue(day, out var eventsLayer))
+            {
+                eventsLayer = new AbsoluteLayout { BackgroundColor = Colors.Transparent };
+                container.Add(eventsLayer, 0, 1);
+                Grid.SetColumnSpan(eventsLayer, neededColumns);
+                _dayEventLayers[day] = eventsLayer;
+            }
+            else
+            {
+                eventsLayer.Children.Clear();
+                Grid.SetColumn(eventsLayer, 0);
+                Grid.SetColumnSpan(eventsLayer, neededColumns);
             }
 
             foreach (var kvp in assigned)
@@ -207,13 +298,31 @@ public partial class CalendarViewPage : ContentPage
                     var total = kvp.Value.total;
                     var since = inst.Since ?? inst.UpdatedAt;
                     var until = inst.Until ?? inst.Since?.AddHours(1) ?? inst.UpdatedAt.AddHours(1);
-                    var startRow = since.Hour * 2 + (since.Minute >= 30 ? 1 : 0);
-                    var durationMins = Math.Max(30, (until - since).TotalMinutes);
-                    int rowSpan = (int)Math.Ceiling(durationMins / 30.0);
+                    var startMin = (since.TimeOfDay.TotalMinutes);
+                    var durationMins = Math.Max(1, (until - since).TotalMinutes);
                     var bgBrush = GetBrushForType(inst.Event?.Type);
                     bool isLesson = string.Equals(inst.Event?.Type, "lesson", StringComparison.OrdinalIgnoreCase);
-                    string titleText = isLesson ? GetTrainerLabel(inst) : (inst.Event?.Name ?? string.Empty);
+                    // For lessons: prefer registration-based naming and append trainer to the title
                     string firstRegistrant = isLesson ? ComputeFirstRegistrantSimple(inst) : string.Empty;
+                    string trainerName = isLesson ? GetTrainerLabel(inst) : string.Empty;
+                    string titleText;
+                    if (isLesson)
+                    {
+                        if (!string.IsNullOrWhiteSpace(firstRegistrant))
+                            titleText = firstRegistrant + (string.IsNullOrWhiteSpace(trainerName) ? string.Empty : " • " + trainerName);
+                        else
+                            titleText = (!string.IsNullOrWhiteSpace(trainerName) ? trainerName : (inst.Event?.Name ?? string.Empty));
+                        // subtitle: show event name (if different from title)
+                        if (string.Equals(titleText, inst.Event?.Name ?? string.Empty, StringComparison.OrdinalIgnoreCase))
+                            firstRegistrant = string.Empty;
+                        else
+                            firstRegistrant = inst.Event?.Name ?? string.Empty;
+                    }
+                    else
+                    {
+                        titleText = inst.Event?.Name ?? string.Empty;
+                        firstRegistrant = string.Empty;
+                    }
 
                     var titleLabel = new Label { Text = titleText, FontAttributes = FontAttributes.Bold, FontSize = 14, LineBreakMode = LineBreakMode.TailTruncation };
                     titleLabel.TextColor = GetTextColorForType(inst.Event?.Type);
@@ -223,7 +332,8 @@ public partial class CalendarViewPage : ContentPage
                     timeLabel.TextColor = GetTextColorForType(inst.Event?.Type);
                     var stack = new VerticalStackLayout { Spacing = 2 };
                     stack.Add(titleLabel);
-                    if (!string.IsNullOrWhiteSpace(firstRegistrant)) stack.Add(subtitleLabel);
+                    // hide subtitle if there isn't enough vertical space (prioritize time and title)
+                    if (!string.IsNullOrWhiteSpace(firstRegistrant) && durationMins >= 40) stack.Add(subtitleLabel);
                     stack.Add(timeLabel);
 
                     var border = new Border
@@ -232,7 +342,9 @@ public partial class CalendarViewPage : ContentPage
                         Padding = new Thickness(6),
                         Stroke = null,
                         StrokeShape = new RoundRectangle { CornerRadius = 6 },
-                        Content = stack
+                        Content = stack,
+                        HorizontalOptions = LayoutOptions.Fill,
+                        VerticalOptions = LayoutOptions.Start
                     };
 
                     var tap = new TapGestureRecognizer();
@@ -252,10 +364,35 @@ public partial class CalendarViewPage : ContentPage
                     };
                     border.GestureRecognizers.Add(tap);
 
-                    Grid.SetColumn(border, slot);
-                    Grid.SetRow(border, startRow);
-                    Grid.SetRowSpan(border, Math.Max(1, rowSpan));
-                    container.Add(border);
+                    // Position precisely inside the eventsLayer (proportional to full day = 1440 minutes)
+                    double dayMinutes = 24.0 * 60.0;
+                    double yProp = startMin / dayMinutes;
+                    double hProp = Math.Max(0.01, durationMins / dayMinutes);
+
+                    double xProp, wProp;
+                    if (!isLesson)
+                    {
+                        // place non-lesson events into any existing column (choose last trainer column if present)
+                        int chosen = Math.Min(Math.Max(0, trainerCount - 1), Math.Max(0, neededColumns - 1));
+                        xProp = chosen / (double)Math.Max(1, neededColumns);
+                        wProp = 1.0 / Math.Max(1, neededColumns);
+                        // ensure we use full precise duration for vertical size (no artificial shrinking)
+                        hProp = Math.Max((durationMins / dayMinutes), 0.0005);
+                    }
+                    else
+                    {
+                        int actualSlot = 0;
+                        if (isLesson && !string.IsNullOrWhiteSpace(trainerName) && trainerIndex.TryGetValue(trainerName, out var tIdx))
+                            actualSlot = tIdx;
+                        else
+                            actualSlot = Math.Max(0, trainerCount) + Math.Max(0, slot);
+                        xProp = actualSlot / (double) Math.Max(1, neededColumns);
+                        wProp = 1.0 / Math.Max(1, neededColumns);
+                    }
+
+                    AbsoluteLayout.SetLayoutFlags(border, Microsoft.Maui.Layouts.AbsoluteLayoutFlags.All);
+                    AbsoluteLayout.SetLayoutBounds(border, new Rect(xProp, yProp, wProp, hProp));
+                    eventsLayer.Add(border);
                 }
                 catch { }
             }
@@ -298,7 +435,18 @@ public partial class CalendarViewPage : ContentPage
             if (trainers != null && trainers.Count > 0)
             {
                 var t = trainers[0];
-                if (t != null && !string.IsNullOrWhiteSpace(t.Name)) return t.Name;
+                if (t != null && !string.IsNullOrWhiteSpace(t.Name))
+                {
+                    // Format trainer as initial + lastname (no titles), e.g. "A. Novák"
+                    var parts = t.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length == 0) return t.Name;
+                    var last = parts[^1];
+                    // find a token to use as given name (skip tokens that look like titles ending with '.')
+                    string? first = parts.FirstOrDefault(p => !p.EndsWith('.') && p != last);
+                    if (string.IsNullOrWhiteSpace(first)) first = parts.First();
+                    var initial = !string.IsNullOrWhiteSpace(first) ? char.ToUpperInvariant(first[0]) + "." : string.Empty;
+                    return string.IsNullOrWhiteSpace(initial) ? last : initial + " " + last;
+                }
             }
             return inst.Event?.Name ?? string.Empty;
         }
@@ -322,7 +470,7 @@ public partial class CalendarViewPage : ContentPage
                 {
                     if (string.IsNullOrWhiteSpace(full)) return string.Empty;
                     var parts = full.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
-                    return parts.Length > 1 ? parts[parts.Length - 1] : full;
+                    return parts.Length > 1 ? parts[parts.Length - 1] : parts[0];
                 }
                 foreach (var node in regs)
                 {
@@ -353,7 +501,7 @@ public partial class CalendarViewPage : ContentPage
                     if (node?.Person != null)
                     {
                         var full = node.Person.Name ?? string.Empty;
-                        if (!string.IsNullOrWhiteSpace(full)) return full;
+                        if (!string.IsNullOrWhiteSpace(full)) return ExtractSurname(full);
                     }
                     if (node?.Couple != null)
                     {
@@ -392,9 +540,12 @@ public partial class CalendarViewPage : ContentPage
                 EventService.Person? p = c.Man ?? c.Woman;
                 if (p != null)
                 {
-                    if (!string.IsNullOrWhiteSpace(p.FirstName))
-                        return (p.FirstName + " " + (p.Name ?? p.LastName ?? string.Empty)).Trim();
-                    return ((p.Name ?? string.Empty) + (string.IsNullOrWhiteSpace(p.LastName) ? string.Empty : " " + p.LastName)).Trim();
+                    if (!string.IsNullOrWhiteSpace(p.LastName)) return p.LastName;
+                    if (!string.IsNullOrWhiteSpace(p.Name))
+                    {
+                        var parts = p.Name.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+                        if (parts.Length > 0) return parts[^1];
+                    }
                 }
             }
         }

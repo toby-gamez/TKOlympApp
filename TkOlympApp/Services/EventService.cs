@@ -242,7 +242,8 @@ public static class EventService
 
         var query = new GraphQlRequest
         {
-            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $first: Int, $offset: Int, $onlyType: EventType) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange, first: $first, offset: $offset, onlyType: $onlyType) { id event { id name type locationText eventTrainersList { name } eventTargetCohortsList { cohortId cohort { id name colorRgb } } } since until isCancelled } }",
+            // include registrations and tenant couples so UI can compute first registrant/trainer labels
+            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $first: Int, $offset: Int, $onlyType: EventType) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled since until updatedAt event { id description name type locationText isRegistrationOpen isPublic eventTrainersList { name } eventTargetCohortsList { cohortId cohort { id name colorRgb } } eventRegistrationsList { person { name } couple { man { lastName } woman { lastName } } } location { id name } } tenant { couplesList { man { firstName name lastName } woman { name lastName firstName } } } } }",
             Variables = variables
         };
 
