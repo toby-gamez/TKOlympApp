@@ -271,8 +271,8 @@
   <data name="EventType_Camp" xml:space="preserve"><value>trại huấn luyện</value></data>
   <data name="EventType_Lesson" xml:space="preserve"><value>bài học</value></data>
   <data name="EventType_Holiday" xml:space="preserve"><value>kỳ nghỉ</value></data>
-  <data name="EventType_Reservation" xml:space="preserve"><value>đặt chỗ</value></data>
-  <data name="EventType_Group" xml:space="preserve"><value>buổi tập nhóm</value></data>
+  <data name="EventType_Reservation" xml:space="preserve"><value>gợi ý</value></data>
+  <data name="EventType_Group" xml:space="preserve"><value>buổi học nhóm</value></data>
   <data name="Notification_EventInHour" xml:space="preserve"><value>Bạn có sự kiện trong 1 giờ</value></data>
   <data name="Notification_EventInMinutes" xml:space="preserve"><value>Bạn có sự kiện trong {0} phút</value></data>
   <data name="Notification_EventCancelled" xml:space="preserve"><value>Sự kiện đã bị hủy</value></data>

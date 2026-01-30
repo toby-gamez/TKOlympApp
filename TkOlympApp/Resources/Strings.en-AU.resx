@@ -286,8 +286,8 @@
   <data name="EventType_Camp" xml:space="preserve"><value>training camp sesh</value></data>
   <data name="EventType_Lesson" xml:space="preserve"><value>lesson fr fr</value></data>
   <data name="EventType_Holiday" xml:space="preserve"><value>vacay mode</value></data>
-  <data name="EventType_Reservation" xml:space="preserve"><value>reg ngl</value></data>
-  <data name="EventType_Group" xml:space="preserve"><value>group grind</value></data>
+    <data name="EventType_Reservation" xml:space="preserve"><value>offer</value></data>
+    <data name="EventType_Group" xml:space="preserve"><value>group lesson</value></data>
   <data name="Notification_EventInHour" xml:space="preserve"><value>Yo fam, u got a vibe check in 1 hour fr fr</value></data>
   <data name="Notification_EventInMinutes" xml:space="preserve"><value>Ayo bestie, event bussin in {0} mins no cap</value></data>
   <data name="Notification_EventCancelled" xml:space="preserve"><value>Event got yeeted bruh</value></data>

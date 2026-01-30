@@ -286,8 +286,8 @@
       <data name="EventType_Camp" xml:space="preserve"><value>treningsleir</value></data>
   <data name="EventType_Lesson" xml:space="preserve"><value>leksjon</value></data>
   <data name="EventType_Holiday" xml:space="preserve"><value>ferie</value></data>
-  <data name="EventType_Reservation" xml:space="preserve"><value>reservasjon</value></data>
-  <data name="EventType_Group" xml:space="preserve"><value>gruppetime</value></data>
+    <data name="EventType_Reservation" xml:space="preserve"><value>tilbud</value></data>
+    <data name="EventType_Group" xml:space="preserve"><value>gruppetrening</value></data>
   <data name="Notification_EventInHour" xml:space="preserve"><value>Du har en hendelse om 1 time</value></data>
   <data name="Notification_EventInMinutes" xml:space="preserve"><value>Du har en hendelse om {0} minutter</value></data>
   <data name="Notification_EventCancelled" xml:space="preserve"><value>Hendelse avlyst</value></data>

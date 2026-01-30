@@ -278,8 +278,8 @@
       <data name="EventType_Camp" xml:space="preserve"><value>sústredenie</value></data>
   <data name="EventType_Lesson" xml:space="preserve"><value>lekcia</value></data>
   <data name="EventType_Holiday" xml:space="preserve"><value>prázdniny</value></data>
-  <data name="EventType_Reservation" xml:space="preserve"><value>rezervácia</value></data>
-  <data name="EventType_Group" xml:space="preserve"><value>vedená hodina</value></data>
+  <data name="EventType_Reservation" xml:space="preserve"><value>ponuka</value></data>
+  <data name="EventType_Group" xml:space="preserve"><value>spoločná hodina</value></data>
   <data name="Notification_EventInHour" xml:space="preserve"><value>O hodinu máte udalosť</value></data>
   <data name="Notification_EventInMinutes" xml:space="preserve"><value>O {0} minút máte udalosť</value></data>
   <data name="Notification_EventCancelled" xml:space="preserve"><value>Udalosť zrušená</value></data>

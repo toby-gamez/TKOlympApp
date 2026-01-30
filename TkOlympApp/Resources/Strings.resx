@@ -336,8 +336,8 @@
   <data name="EventType_Camp" xml:space="preserve"><value>soustředění</value></data>
   <data name="EventType_Lesson" xml:space="preserve"><value>lekce</value></data>
   <data name="EventType_Holiday" xml:space="preserve"><value>prázdniny</value></data>
-  <data name="EventType_Reservation" xml:space="preserve"><value>rezervace</value></data>
-  <data name="EventType_Group" xml:space="preserve"><value>vedená hodina</value></data>
+  <data name="EventType_Reservation" xml:space="preserve"><value>nabídka</value></data>
+  <data name="EventType_Group" xml:space="preserve"><value>společná</value></data>
   <data name="Notification_EventInHour" xml:space="preserve"><value>Za hodinu máte událost</value></data>
   <data name="Notification_EventInMinutes" xml:space="preserve"><value>Za {0} minut máte událost</value></data>
   <data name="Notification_EventCancelled" xml:space="preserve"><value>Událost zrušena</value></data>
