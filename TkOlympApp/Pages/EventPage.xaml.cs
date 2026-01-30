@@ -194,7 +194,7 @@ public partial class EventPage : ContentPage
             }
             else
             {
-                var firstTrainer = ev.EventTrainersList?.FirstOrDefault()?.Name?.Trim();
+                var firstTrainer = EventService.GetTrainerDisplayName(ev.EventTrainersList?.FirstOrDefault())?.Trim();
                 if (!string.IsNullOrWhiteSpace(firstTrainer))
                     TitleLabel.Text = firstTrainer;
                 else
@@ -295,7 +295,7 @@ public partial class EventPage : ContentPage
             foreach (var t in ev.EventTrainersList ?? new List<TkOlympApp.Services.EventService.EventTrainer>())
             {
                 if (t == null) continue;
-                var name = t.Name?.Trim();
+                var name = EventService.GetTrainerDisplayName(t)?.Trim();
                 if (!string.IsNullOrWhiteSpace(name)) _trainers.Add(name);
             }
             // Don't show trainers list for LESSON type events

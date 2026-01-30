@@ -17,7 +17,7 @@ public static class EventService
     {
         var query = new GraphQlRequest
         {
-            Query = "query MyQuery($id: BigInt!) { eventInstance(id: $id) { id isCancelled since until event { id capacity createdAt description isPublic isRegistrationOpen isVisible name type summary locationText eventTrainersList { id name updatedAt } updatedAt eventTargetCohortsList { cohortId cohort { id name colorRgb } } eventRegistrations { totalCount nodes { couple { id status man { firstName lastName prefixTitle suffixTitle } woman { firstName lastName prefixTitle suffixTitle } } person { id prefixTitle suffixTitle lastName firstName } eventLessonDemandsByRegistrationIdList { id lessonCount trainer { id name } } } } } } }",
+            Query = "query MyQuery($id: BigInt!) { eventInstance(id: $id) { id isCancelled since until event { id capacity createdAt description isPublic isRegistrationOpen isVisible name type summary locationText eventTrainersList { id person {prefixTitle firstName lastName suffixTitle } updatedAt } updatedAt eventTargetCohortsList { cohortId cohort { id name colorRgb } } eventRegistrations { totalCount nodes { couple { id status man { firstName lastName prefixTitle suffixTitle } woman { firstName lastName prefixTitle suffixTitle } } person { id prefixTitle suffixTitle lastName firstName } eventLessonDemandsByRegistrationIdList { id lessonCount trainer { id name } } } } } } }",
             Variables = new Dictionary<string, object> { { "id", instanceId } }
         };
 
@@ -175,8 +175,54 @@ public static class EventService
     public sealed record EventTrainer(
         [property: JsonPropertyName("id")] string? Id,
         [property: JsonPropertyName("name")] string? Name,
-        [property: JsonPropertyName("updatedAt")] DateTime? UpdatedAt
+        [property: JsonPropertyName("updatedAt")] DateTime? UpdatedAt,
+        // New shape: some API responses return a nested `person` object or separate name parts
+        [property: JsonPropertyName("person")] Person? Person,
+        [property: JsonPropertyName("firstName")] string? FirstName,
+        [property: JsonPropertyName("lastName")] string? LastName,
+        [property: JsonPropertyName("prefixTitle")] string? PrefixTitle,
+        [property: JsonPropertyName("suffixTitle")] string? SuffixTitle
     );
+
+    public static string GetTrainerDisplayName(EventTrainer? t)
+    {
+        if (t == null) return string.Empty;
+        // Prefer structured person fields when available
+        try
+        {
+            if (t.Person != null)
+            {
+                var fn = t.Person.FirstName?.Trim();
+                var ln = t.Person.LastName?.Trim();
+                var combined = string.Join(' ', new[] { fn, ln }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                if (!string.IsNullOrWhiteSpace(combined)) return combined;
+            }
+
+            if (!string.IsNullOrWhiteSpace(t.FirstName) || !string.IsNullOrWhiteSpace(t.LastName))
+            {
+                var combined = string.Join(' ', new[] { t.FirstName?.Trim(), t.LastName?.Trim() }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                if (!string.IsNullOrWhiteSpace(combined)) return combined;
+            }
+
+            if (!string.IsNullOrWhiteSpace(t.Name)) return t.Name.Trim();
+        }
+        catch { }
+        return string.Empty;
+    }
+
+    public static string GetTrainerDisplayWithPrefix(EventTrainer? t)
+    {
+        if (t == null) return string.Empty;
+        try
+        {
+            var title = t.Person?.PrefixTitle ?? t.PrefixTitle;
+            var name = GetTrainerDisplayName(t);
+            if (string.IsNullOrWhiteSpace(name)) return string.Empty;
+            if (!string.IsNullOrWhiteSpace(title)) return (title.Trim() + " " + name).Trim();
+            return name;
+        }
+        catch { return GetTrainerDisplayName(t); }
+    }
     
 
     public static async Task<List<EventInstance>> GetMyEventInstancesForRangeAsync(
@@ -393,7 +439,9 @@ public static class EventService
         [property: JsonPropertyName("id")] string? Id,
         [property: JsonPropertyName("firstName")] string? FirstName,
         [property: JsonPropertyName("name")] string? Name,
-        [property: JsonPropertyName("lastName")] string? LastName
+        [property: JsonPropertyName("lastName")] string? LastName,
+        [property: JsonPropertyName("prefixTitle")] string? PrefixTitle,
+        [property: JsonPropertyName("suffixTitle")] string? SuffixTitle
     );
 
     public sealed record EventInfo(

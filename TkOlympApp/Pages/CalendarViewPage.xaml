@@ -30,7 +30,8 @@
         <!-- Timeline: left time labels, right absolute layout with event blocks -->
         <ScrollView Grid.Row="1" x:Name="MainScroll" Orientation="Vertical">
             <Grid ColumnDefinitions="Auto,*">
-                <VerticalStackLayout x:Name="TimeLabelsStack" Padding="4" Spacing="0" Grid.Column="0" WidthRequest="56" />
+                <!-- remove top padding so hour labels align with the hour lines -->
+                <VerticalStackLayout x:Name="TimeLabelsStack" Padding="4,0,4,0" Spacing="0" Grid.Column="0" WidthRequest="56" />
                 <AbsoluteLayout x:Name="TimelineLayout" BackgroundColor="Transparent" Grid.Column="1" HorizontalOptions="Fill" VerticalOptions="Start" />
             </Grid>
         </ScrollView>

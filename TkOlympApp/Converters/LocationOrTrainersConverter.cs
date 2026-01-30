@@ -17,7 +17,7 @@ namespace TkOlympApp.Converters
 
             if (evt.EventTrainersList != null && evt.EventTrainersList.Count > 0)
             {
-                var names = evt.EventTrainersList.Select(t => t.Name).Where(n => !string.IsNullOrWhiteSpace(n));
+                var names = evt.EventTrainersList.Select(t => EventService.GetTrainerDisplayName(t)).Where(n => !string.IsNullOrWhiteSpace(n));
                 return string.Join(", ", names);
             }
 

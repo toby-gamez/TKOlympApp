@@ -1,6 +1,8 @@
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
 using Microsoft.Maui.ApplicationModel;
+using System.Diagnostics;
+using Microsoft.Maui.Devices;
 using Microsoft.Maui.Layouts;
 using System;
 using System.Collections.Generic;
@@ -21,7 +23,48 @@ public partial class CalendarViewPage : ContentPage
     private readonly double _hourHeight = 60; // pixels per hour
     private CancellationTokenSource? _timerCts;
     private BoxView? _nowLine;
+    // If set (in dp), this value will be used as the exact gap between columns.
+    private double _columnGapDp = -1;
 
+    public void SetColumnGapDp(double gapDp)
+    {
+        _columnGapDp = gapDp;
+    }
+
+    public void SetColumnGapMm(double mm)
+    {
+        var gapDp = mm * 160.0 / 25.4;
+        _columnGapDp = gapDp;
+    }
+
+    private double GutterProportionFromDp(double gapDp)
+    {
+        try
+        {
+            var info = DeviceDisplay.MainDisplayInfo;
+            var screenWidthDp = info.Width / info.Density;
+            if (screenWidthDp <= 0) return 0.01;
+            var prop = gapDp / screenWidthDp;
+            var clamped = Math.Clamp(prop, 0.0, 0.5);
+            Debug.WriteLine($"CalendarView: gapDp={gapDp:F2}, screenWidthDp={screenWidthDp:F2}, prop={prop:F4}, clamped={clamped:F4}");
+            return clamped;
+        }
+        catch
+        {
+            return 0.01;
+        }
+    }
+
+    private class LayoutItem
+    {
+        public EventService.EventInstance Inst { get; set; } = null!;
+        public double Top { get; set; }
+        public double Height { get; set; }
+        public int RawStart { get; set; }
+        public int RawEnd { get; set; }
+        public int ColumnIndex { get; set; }
+        public int ColumnCount { get; set; }
+    }
     public CalendarViewPage()
     {
         InitializeComponent();
@@ -61,7 +104,7 @@ public partial class CalendarViewPage : ContentPage
             else
                 events = await EventService.GetEventInstancesForRangeListAsync(start, end);
 
-            RenderTimeline(events ?? new List<EventService.EventInstance>());
+            await RenderTimeline(events ?? new List<EventService.EventInstance>());
         }
         catch (Exception ex)
         {
@@ -73,7 +116,15 @@ public partial class CalendarViewPage : ContentPage
         }
     }
 
-    private void RenderTimeline(List<EventService.EventInstance> events)
+    private static string NormalizeName(string? s)
+    {
+        if (string.IsNullOrWhiteSpace(s)) return string.Empty;
+        var normalized = s.Normalize(System.Text.NormalizationForm.FormD);
+        var chars = normalized.Where(c => System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark).ToArray();
+        return new string(chars).ToLowerInvariant().Trim();
+    }
+
+    private async Task RenderTimeline(List<EventService.EventInstance> events)
     {
         TimelineLayout.Children.Clear();
         TimeLabelsStack.Children.Clear();
@@ -81,36 +132,169 @@ public partial class CalendarViewPage : ContentPage
         var totalHours = Math.Max(1, _endHour - _startHour);
         var totalHeight = totalHours * _hourHeight;
 
+        // offset everything by half an hour so the label text can be vertically centered
+        var halfHourOffset = _hourHeight / 2.0;
         for (int h = _startHour; h <= _endHour; h++)
         {
             var y = (h - _startHour) * _hourHeight;
-            var label = new Label { Text = h.ToString("D2") + ":00", FontSize = 12, HeightRequest = _hourHeight, VerticalTextAlignment = TextAlignment.Start };
+            var label = new Label { Text = h.ToString("D2") + ":00", FontSize = 12, HeightRequest = _hourHeight, VerticalTextAlignment = TextAlignment.Center };
             TimeLabelsStack.Children.Add(label);
 
             var line = new BoxView { HeightRequest = 1, BackgroundColor = Colors.LightGray };
-            AbsoluteLayout.SetLayoutBounds(line, new Rect(0, y, 1, 1));
+            AbsoluteLayout.SetLayoutBounds(line, new Rect(0, y + halfHourOffset, 1, 1));
             AbsoluteLayout.SetLayoutFlags(line, AbsoluteLayoutFlags.WidthProportional);
             TimelineLayout.Children.Add(line);
         }
 
-        foreach (var inst in events.OrderBy(e => e.Since))
+        // Prepare highlight names when showing "All" so we can mark my events
+        List<string> normalizedHighlights = new();
+        if (!_onlyMine)
         {
-            var since = inst.Since ?? inst.UpdatedAt;
-            var until = inst.Until ?? since.AddMinutes(30);
-            var startMinutes = (since.Hour * 60 + since.Minute) - (_startHour * 60);
-            var durationMinutes = Math.Max(15, (int)(until - since).TotalMinutes);
+            try
+            {
+                var highlightNames = new List<string>();
+                static void AddNameVariants(List<string> list, string? name)
+                {
+                    if (string.IsNullOrWhiteSpace(name)) return;
+                    var v = name.Trim();
+                    if (!list.Contains(v, StringComparer.OrdinalIgnoreCase)) list.Add(v);
+                    var parts = v.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length > 0)
+                    {
+                        var last = parts[^1];
+                        if (!list.Contains(last, StringComparer.OrdinalIgnoreCase)) list.Add(last);
+                    }
+                }
+                try
+                {
+                    var currentUser = await UserService.GetCurrentUserAsync();
+                    if (currentUser != null)
+                    {
+                        var full = ((currentUser.UJmeno ?? string.Empty) + " " + (currentUser.UPrijmeni ?? string.Empty)).Trim();
+                        AddNameVariants(highlightNames, full);
+                        AddNameVariants(highlightNames, currentUser.ULogin);
+                    }
+                }
+                catch { }
 
-            startMinutes = Math.Max(0, startMinutes);
-            var top = startMinutes / 60.0 * _hourHeight;
-            var height = durationMinutes / 60.0 * _hourHeight;
+                try
+                {
+                    var couples = await UserService.GetActiveCouplesFromUsersAsync();
+                    foreach (var c in couples)
+                    {
+                        AddNameVariants(highlightNames, c.ManName);
+                        AddNameVariants(highlightNames, c.WomanName);
+                        AddNameVariants(highlightNames, string.IsNullOrWhiteSpace(c.ManName) || string.IsNullOrWhiteSpace(c.WomanName) ? null : c.ManName + " - " + c.WomanName);
+                    }
+                }
+                catch { }
+
+                var distinct = highlightNames.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+                normalizedHighlights = distinct.Select(NormalizeName).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            }
+            catch { }
+        }
+
+        // Prepare layout items (compute raw start/end and pixel positions)
+        var items = events.OrderBy(e => e.Since ?? e.UpdatedAt)
+            .Select(e =>
+            {
+                var since = e.Since ?? e.UpdatedAt;
+                var until = e.Until ?? since.AddMinutes(30);
+                var rawStart = since.Hour * 60 + since.Minute;
+                var duration = Math.Max(15, (int)(until - since).TotalMinutes);
+                var rawEnd = rawStart + duration;
+                var startMinutes = rawStart - (_startHour * 60);
+                var top = startMinutes / 60.0 * _hourHeight;
+                var height = duration / 60.0 * _hourHeight;
+                return new LayoutItem { Inst = e, Top = top, Height = height, RawStart = rawStart, RawEnd = rawEnd };
+            })
+            .ToList();
+
+        // Group items into overlapping clusters (transitive overlap)
+        var groups = new List<List<LayoutItem>>();
+        List<LayoutItem>? current = null;
+        int currentMaxEnd = -1;
+        foreach (var it in items)
+        {
+            if (current == null)
+            {
+                current = new List<LayoutItem> { it };
+                currentMaxEnd = it.RawEnd;
+                groups.Add(current);
+                continue;
+            }
+            if (it.RawStart < currentMaxEnd)
+            {
+                current.Add(it);
+                if (it.RawEnd > currentMaxEnd) currentMaxEnd = it.RawEnd;
+            }
+            else
+            {
+                current = new List<LayoutItem> { it };
+                currentMaxEnd = it.RawEnd;
+                groups.Add(current);
+            }
+        }
+
+        // For each group, assign columns using greedy packing
+        foreach (var group in groups)
+        {
+            group.Sort((a, b) => a.RawStart.CompareTo(b.RawStart));
+            var colEnds = new List<int>();
+            foreach (var it in group)
+            {
+                int assigned = -1;
+                for (int c = 0; c < colEnds.Count; c++)
+                {
+                    if (it.RawStart >= colEnds[c])
+                    {
+                        assigned = c;
+                        colEnds[c] = it.RawEnd;
+                        break;
+                    }
+                }
+                if (assigned == -1)
+                {
+                    colEnds.Add(it.RawEnd);
+                    assigned = colEnds.Count - 1;
+                }
+                it.ColumnIndex = assigned;
+            }
+            var finalCols = colEnds.Count;
+            foreach (var it in group) it.ColumnCount = finalCols;
+        }
+
+        // Render items using column layout to avoid overlaps
+        foreach (var it in items)
+        {
+            var inst = it.Inst;
+            var top = it.Top;
+            var height = it.Height;
             if (top + height < 0 || top > totalHeight) continue;
+
+            // Choose background: use Secondary / SecondaryDark for lessons, fallback to LightBlue
+            Color bgColor = Colors.LightBlue;
+            if (string.Equals(inst.Event?.Type, "lesson", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    var theme = Application.Current?.RequestedTheme ?? AppTheme.Unspecified;
+                    var key = theme == AppTheme.Dark ? "SecondaryDark" : "Secondary";
+                    if (Application.Current?.Resources.TryGetValue(key, out var res) == true)
+                    {
+                        if (res is Color c) bgColor = c;
+                    }
+                }
+                catch { }
+            }
 
             var frame = new Frame
             {
                 CornerRadius = 6,
                 Padding = new Thickness(6),
                 HasShadow = false,
-                BackgroundColor = Colors.LightBlue,
+                BackgroundColor = bgColor,
                 BindingContext = inst
             };
             string titleText = inst.Event?.Name ?? string.Empty;
@@ -120,7 +304,7 @@ public partial class CalendarViewPage : ContentPage
                 {
                     var first = TkOlympApp.MainPage.GroupedEventRow.ComputeFirstRegistrantPublic(inst);
                     var left = !string.IsNullOrEmpty(first) ? first : inst.Event?.Name ?? LocalizationService.Get("Lesson_Short") ?? "Lekce";
-                    var trainerFull = inst.Event?.EventTrainersList?.FirstOrDefault()?.Name;
+                    var trainerFull = EventService.GetTrainerDisplayName(inst.Event?.EventTrainersList?.FirstOrDefault());
                     if (!string.IsNullOrWhiteSpace(trainerFull))
                     {
                         var trainerShort = FormatTrainerShort(trainerFull);
@@ -133,7 +317,21 @@ public partial class CalendarViewPage : ContentPage
                 }
                 catch { titleText = inst.Event?.Name ?? LocalizationService.Get("Lesson_Short") ?? "Lekce"; }
             }
-            var title = new Label { Text = titleText, FontAttributes = FontAttributes.Bold, FontSize = 12 };
+            // Decide whether to bold the title: always bold in "Mine" view; in "All" only bold if event matches current user
+            bool makeBold = _onlyMine;
+            if (!_onlyMine && normalizedHighlights.Count > 0)
+            {
+                try
+                {
+                    var first = TkOlympApp.MainPage.GroupedEventRow.ComputeFirstRegistrantPublic(inst);
+                    var frNorm = NormalizeName(first);
+                    var matched = !string.IsNullOrWhiteSpace(frNorm) && normalizedHighlights.Any(h => frNorm.Contains(h) || h.Contains(frNorm));
+                    if (matched) makeBold = true;
+                }
+                catch { }
+            }
+
+            var title = new Label { Text = titleText, FontAttributes = (makeBold ? FontAttributes.Bold : FontAttributes.None), FontSize = 12 };
             var time = new Label { Text = ((inst.Since.HasValue ? inst.Since.Value.ToString("HH:mm") : "--:--") + " – " + (inst.Until.HasValue ? inst.Until.Value.ToString("HH:mm") : "--:--")), FontSize = 11, TextColor = Colors.Gray };
             var stack = new VerticalStackLayout { Spacing = 2 };
             stack.Add(title);
@@ -152,15 +350,42 @@ public partial class CalendarViewPage : ContentPage
             };
             frame.GestureRecognizers.Add(tap);
 
-            AbsoluteLayout.SetLayoutBounds(frame, new Rect(0.02, top, 0.96, Math.Max(20, height)));
-            AbsoluteLayout.SetLayoutFlags(frame, AbsoluteLayoutFlags.WidthProportional);
+            // first column starts at the very left (no left margin); others get gutter spacing
+            const double baseLeft = 0.0; // no extra left offset for first column
+            const double marginRight = 0.03;
+            var gutter = _columnGapDp > 0 ? GutterProportionFromDp(_columnGapDp) : 0.01; // space between columns
+            var colCount = Math.Max(1, it.ColumnCount);
+            // Try to use actual layout width (dp). If not measured yet, fallback to screen width in dp.
+            double layoutWidthDp = TimelineLayout.Width;
+            if (layoutWidthDp <= 1.0)
+            {
+                var info = DeviceDisplay.MainDisplayInfo;
+                layoutWidthDp = info.Width / info.Density;
+            }
+
+            // gutter is in proportion when configured via _columnGapDp -> converted earlier
+            // but if _columnGapDp is set, prefer exact dp value; otherwise derive dp from proportional gutter
+            double gutterDp;
+            if (_columnGapDp > 0) gutterDp = _columnGapDp;
+            else gutterDp = gutter * layoutWidthDp; // default small gap
+
+            // margins in dp: baseLeft is 0, marginRight was proportion 0.03 -> convert to dp
+            double marginRightDp = marginRight * layoutWidthDp;
+
+            var totalGutterDp = gutterDp * (colCount - 1);
+            var availableDp = Math.Max(0.0, layoutWidthDp - /*left*/ 0.0 - marginRightDp - totalGutterDp);
+            var colWidthDp = availableDp / colCount;
+            var leftDp = /*left*/ 0.0 + it.ColumnIndex * (colWidthDp + gutterDp);
+
+            AbsoluteLayout.SetLayoutBounds(frame, new Rect(leftDp, top + halfHourOffset, Math.Max(20, colWidthDp), Math.Max(20, height)));
+            AbsoluteLayout.SetLayoutFlags(frame, AbsoluteLayoutFlags.None);
             TimelineLayout.Children.Add(frame);
         }
 
         _nowLine = new BoxView { HeightRequest = 2, BackgroundColor = Colors.Red, Opacity = 0.9 };
         TimelineLayout.Children.Add(_nowLine);
         UpdateNowLinePosition();
-        TimelineLayout.HeightRequest = totalHeight;
+        TimelineLayout.HeightRequest = totalHeight + halfHourOffset;
     }
 
     private static string FormatTrainerShort(string? fullName)
@@ -169,7 +394,19 @@ public partial class CalendarViewPage : ContentPage
         var parts = fullName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length == 1) return parts[0];
         var surname = parts[^1];
-        var given = parts[0];
+        // Skip common prefix/title tokens (e.g. "Mgr.", "Ing.") when determining first name
+        var titles = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Mgr.", "Ing.", "Bc.", "PhDr.", "MUDr.", "Mgr", "Ing", "PhDr", "Bc", "Dr.", "Dr"
+        };
+        string? given = null;
+        foreach (var p in parts)
+        {
+            if (titles.Contains(p) || (p.EndsWith('.') && p.Length <= 4)) continue;
+            given = p;
+            break;
+        }
+        if (string.IsNullOrEmpty(given)) given = parts[0];
         var initial = !string.IsNullOrEmpty(given) ? given[0].ToString() : string.Empty;
         return (!string.IsNullOrEmpty(initial) ? initial + ". " : string.Empty) + surname;
     }
@@ -180,11 +417,13 @@ public partial class CalendarViewPage : ContentPage
         var now = DateTime.Now;
         var minutes = (now.Hour * 60 + now.Minute) - (_startHour * 60) + now.Second / 60.0;
         var top = minutes / 60.0 * _hourHeight;
+        // keep in sync with the half-hour offset used when rendering hour lines/events
+        var halfHourOffset = _hourHeight / 2.0;
         var totalHours = Math.Max(1, _endHour - _startHour);
         var totalHeight = totalHours * _hourHeight;
         if (top < 0 || top > totalHeight) { _nowLine.IsVisible = false; return; }
         _nowLine.IsVisible = true;
-        AbsoluteLayout.SetLayoutBounds(_nowLine, new Rect(0, top, 1, 2));
+        AbsoluteLayout.SetLayoutBounds(_nowLine, new Rect(0, top + halfHourOffset, 1, 2));
         AbsoluteLayout.SetLayoutFlags(_nowLine, AbsoluteLayoutFlags.WidthProportional);
     }
 

@@ -352,14 +352,15 @@ public partial class MainPage : ContentPage
                 }
             }
 
-            var groups = groupableEvents.GroupBy(e => e.Event?.EventTrainersList?.FirstOrDefault()?.Name?.Trim() ?? string.Empty)
+            var groups = groupableEvents.GroupBy(e => EventService.GetTrainerDisplayName(e.Event?.EventTrainersList?.FirstOrDefault())?.Trim() ?? string.Empty)
                 .OrderBy(g => g.Min(x => x.Since ?? x.UpdatedAt));
 
             foreach (var g in groups)
             {
                 var ordered = g.OrderBy(i => i.Since ?? i.UpdatedAt).ToList();
                 var trainerName = g.Key;
-                var trainerTitle = string.IsNullOrWhiteSpace(trainerName) ? LocalizationService.Get("Lessons") ?? "Lekce" : trainerName;
+                var representative = ordered.FirstOrDefault()?.Event?.EventTrainersList?.FirstOrDefault();
+                var trainerTitle = string.IsNullOrWhiteSpace(trainerName) ? LocalizationService.Get("Lessons") ?? "Lekce" : EventService.GetTrainerDisplayWithPrefix(representative).Trim();
                 var gt = new GroupedTrainer(trainerTitle);
 
                 for (int i = 0; i < ordered.Count; i++)

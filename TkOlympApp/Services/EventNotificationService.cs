@@ -159,12 +159,12 @@ public static class EventNotificationService
         if (evt == null)
             return defaultName;
 
-        if (!string.IsNullOrWhiteSpace(evt.Type) && string.Equals(evt.Type, "lesson", StringComparison.OrdinalIgnoreCase))
-        {
-            var trainerName = evt.EventTrainersList?.FirstOrDefault(t => !string.IsNullOrWhiteSpace(t?.Name))?.Name;
-            if (!string.IsNullOrWhiteSpace(trainerName))
-                return trainerName!;
-        }
+            if (!string.IsNullOrWhiteSpace(evt.Type) && string.Equals(evt.Type, "lesson", StringComparison.OrdinalIgnoreCase))
+            {
+                var trainerName = EventService.GetTrainerDisplayName(evt.EventTrainersList?.FirstOrDefault());
+                if (!string.IsNullOrWhiteSpace(trainerName))
+                    return trainerName;
+            }
 
         return evt.Name ?? defaultName;
     }
@@ -412,7 +412,7 @@ public static class EventNotificationService
                 }
 
                 // Check for trainer change
-                var currentTrainers = JsonSerializer.Serialize(currentEvent.Event?.EventTrainersList?.Select(t => t.Name).OrderBy(n => n).ToList() ?? new List<string?>());
+                var currentTrainers = JsonSerializer.Serialize(currentEvent.Event?.EventTrainersList?.Select(t => EventService.GetTrainerDisplayName(t)).OrderBy(n => n).ToList() ?? new List<string?>());
                 if (currentTrainers != previousEvent.TrainersJson)
                 {
                     await SendImmediateNotificationAsync(
@@ -450,7 +450,7 @@ public static class EventNotificationService
                 LocationText = e.Event?.LocationText,
                 EventName = e.Event?.Name,
                 IsCancelled = e.IsCancelled,
-                TrainersJson = JsonSerializer.Serialize(e.Event?.EventTrainersList?.Select(t => t.Name).OrderBy(n => n).ToList() ?? new List<string?>())
+                TrainersJson = JsonSerializer.Serialize(e.Event?.EventTrainersList?.Select(t => EventService.GetTrainerDisplayName(t)).OrderBy(n => n).ToList() ?? new List<string?>())
             }).ToList();
 
             var json = JsonSerializer.Serialize(snapshots);

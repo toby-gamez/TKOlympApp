@@ -351,14 +351,15 @@ public partial class CalendarPage : ContentPage
                 }
 
                 // Add grouped trainers
-                var groups = groupableEvents.GroupBy(e => e.Event?.EventTrainersList?.FirstOrDefault()?.Name?.Trim() ?? string.Empty)
+                var groups = groupableEvents.GroupBy(e => EventService.GetTrainerDisplayName(e.Event?.EventTrainersList?.FirstOrDefault())?.Trim() ?? string.Empty)
                     .OrderBy(g => g.Min(x => x.Since ?? x.UpdatedAt));
 
                 foreach (var g in groups)
                 {
                     var ordered = g.OrderBy(i => i.Since ?? i.UpdatedAt).ToList();
                     var trainerName = g.Key;
-                    var trainerTitle = string.IsNullOrWhiteSpace(trainerName) ? LocalizationService.Get("Lessons") ?? "Lekce" : trainerName;
+                    var representative = ordered.FirstOrDefault()?.Event?.EventTrainersList?.FirstOrDefault();
+                    var trainerTitle = string.IsNullOrWhiteSpace(trainerName) ? LocalizationService.Get("Lessons") ?? "Lekce" : EventService.GetTrainerDisplayWithPrefix(representative).Trim();
                     var cohorts = ordered.FirstOrDefault()?.Event?.EventTargetCohortsList;
 
                     EventsStack.Children.Add(CreateTrainerGroupHeader(trainerTitle, cohorts));
@@ -468,16 +469,17 @@ public partial class CalendarPage : ContentPage
             }
             
             // Add grouped trainers
-            var groups = groupableEvents.GroupBy(e => e.Event?.EventTrainersList?.FirstOrDefault()?.Name?.Trim() ?? string.Empty)
+                var groups = groupableEvents.GroupBy(e => EventService.GetTrainerDisplayName(e.Event?.EventTrainersList?.FirstOrDefault())?.Trim() ?? string.Empty)
                 .OrderBy(g => g.Min(x => x.Since ?? x.UpdatedAt));
             
             foreach (var g in groups)
             {
                 var ordered = g.OrderBy(i => i.Since ?? i.UpdatedAt).ToList();
                 var trainerName = g.Key;
-                var trainerTitle = string.IsNullOrWhiteSpace(trainerName) ? LocalizationService.Get("Lessons") ?? "Lekce" : trainerName;
+                var representative = ordered.FirstOrDefault()?.Event?.EventTrainersList?.FirstOrDefault();
+                var trainerTitle = string.IsNullOrWhiteSpace(trainerName) ? LocalizationService.Get("Lessons") ?? "Lekce" : EventService.GetTrainerDisplayWithPrefix(representative).Trim();
                 var cohorts = ordered.FirstOrDefault()?.Event?.EventTargetCohortsList;
-                
+
                 EventsStack.Children.Insert(insertIndex++, CreateTrainerGroupHeader(trainerTitle, cohorts));
                 
                 for (int i = 0; i < ordered.Count; i++)
@@ -761,7 +763,7 @@ public partial class CalendarPage : ContentPage
                 return evt.LocationText;
 
             // Fallback to trainers
-            var trainers = evt.EventTrainersList?.Select(t => t.Name).Where(n => !string.IsNullOrWhiteSpace(n)).ToList() ?? new List<string?>();
+            var trainers = evt.EventTrainersList?.Select(t => EventService.GetTrainerDisplayName(t)).Where(n => !string.IsNullOrWhiteSpace(n)).ToList() ?? new List<string?>();
             if (trainers.Count > 0)
                 return string.Join(", ", trainers);
 

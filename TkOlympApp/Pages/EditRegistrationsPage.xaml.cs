@@ -364,11 +364,11 @@ public partial class EditRegistrationsPage : ContentPage
                 TrainerSelectionHeader.IsVisible = false;
                 return;
             }
-
             var options = new System.Collections.Generic.List<TrainerOption>();
-            foreach (var t in ev.EventTrainersList.OrderBy(x => (x?.Name ?? string.Empty).Trim()))
+            foreach (var t in ev.EventTrainersList.OrderBy(x => EventService.GetTrainerDisplayName(x)))
             {
-                options.Add(new TrainerOption((t?.Name ?? string.Empty).Trim(), 0, t?.Id));
+                var trainerName = EventService.GetTrainerDisplayName(t) ?? string.Empty;
+                options.Add(new TrainerOption(trainerName, 0, t?.Id));
             }
 
             TrainerSelectionCollection.ItemsSource = options;
