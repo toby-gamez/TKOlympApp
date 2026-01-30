@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Globalization;
 using Microsoft.Maui.Devices;
 using Microsoft.Maui.Layouts;
+using Microsoft.Maui.Controls.Shapes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -145,7 +146,7 @@ public partial class CalendarViewPage : ContentPage
         }
         catch (Exception ex)
         {
-            try { await DisplayAlert(LocalizationService.Get("Error_Loading_Title") ?? "Chyba", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+            try { await DisplayAlertAsync(LocalizationService.Get("Error_Loading_Title") ?? "Chyba", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
         }
         finally
         {
@@ -381,12 +382,11 @@ public partial class CalendarViewPage : ContentPage
                 catch { }
             }
 
-            var frame = new Frame
+            var frame = new Border
             {
-                CornerRadius = 6,
                 Padding = new Thickness(6),
-                HasShadow = false,
-                BackgroundColor = bgColor,
+                Background = new SolidColorBrush(bgColor),
+                StrokeShape = new RoundRectangle { CornerRadius = 6 },
                 BindingContext = inst
             };
             string titleText = inst.Event?.Name ?? string.Empty;

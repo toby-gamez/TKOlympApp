@@ -36,9 +36,9 @@ namespace TkOlympApp.Pages
             {
                 try
                 {
-                    if (Math.Abs(_currentScale - 1) > 0.1)
+                        if (Math.Abs(_currentScale - 1) > 0.1)
                     {
-                        await _image.ScaleTo(1, 200, Easing.SinOut);
+                        await _image.ScaleToAsync(1, 200, Easing.SinOut);
                         _image.TranslationX = 0;
                         _image.TranslationY = 0;
                         _currentScale = 1;
@@ -46,7 +46,7 @@ namespace TkOlympApp.Pages
                     }
                     else
                     {
-                        await _image.ScaleTo(2, 200, Easing.SinIn);
+                        await _image.ScaleToAsync(2, 200, Easing.SinIn);
                         _currentScale = 2;
                     }
                 }

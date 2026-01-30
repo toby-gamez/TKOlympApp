@@ -763,7 +763,7 @@ public partial class CalendarPage : ContentPage
                 return evt.LocationText;
 
             // Fallback to trainers
-            var trainers = evt.EventTrainersList?.Select(t => EventService.GetTrainerDisplayName(t)).Where(n => !string.IsNullOrWhiteSpace(n)).ToList() ?? new List<string?>();
+            var trainers = evt.EventTrainersList?.Select(t => EventService.GetTrainerDisplayName(t)).Where(n => !string.IsNullOrWhiteSpace(n)).ToList() ?? new List<string>();
             if (trainers.Count > 0)
                 return string.Join(", ", trainers);
 

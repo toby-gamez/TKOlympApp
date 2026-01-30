@@ -54,7 +54,7 @@ namespace TkOlympApp.Services
                     var off = toLeft ? -width : width;
 
                     // animate content off-screen
-                    await root.TranslateTo(off, 0, 200, Easing.SinIn);
+                    await root.TranslateToAsync(off, 0, 200, Easing.SinIn);
 
                     // perform navigation by swipe direction
                     var direction = toLeft ? SwipeDirection.Left : SwipeDirection.Right;
@@ -63,17 +63,17 @@ namespace TkOlympApp.Services
                     // after navigation, ensure incoming page content animates in
                     // set translation to opposite off-screen and animate to 0
                     try { root.TranslationX = -off; } catch { }
-                    await root.TranslateTo(0, 0, 200, Easing.SinOut);
+                    await root.TranslateToAsync(0, 0, 200, Easing.SinOut);
                 }
                 else
                 {
                     // snap back
-                    await root.TranslateTo(0, 0, 150, Easing.SinOut);
+                    await root.TranslateToAsync(0, 0, 150, Easing.SinOut);
                 }
             }
             catch
             {
-                try { await root.TranslateTo(0, 0, 150, Easing.SinOut); } catch { }
+                try { await root.TranslateToAsync(0, 0, 150, Easing.SinOut); } catch { }
             }
             finally
             {

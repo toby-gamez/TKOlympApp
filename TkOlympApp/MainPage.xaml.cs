@@ -159,12 +159,12 @@ public partial class MainPage : ContentPage
     {
         try
         {
-            if (sender is VisualElement ve && ve.BindingContext is EventService.EventInstance evt && evt.Event?.Id != null)
+            if (sender is VisualElement ve && ve.BindingContext is EventService.EventInstance evt && evt.Event != null)
             {
                 if (evt.IsCancelled) return;
                 var page = new Pages.EventPage();
                 // Always include EventId and also include EventInstanceId when present
-                if (evt.Event?.Id != null) page.EventId = evt.Event.Id;
+                if (evt.Event != null) page.EventId = evt.Event.Id;
                 if (evt.Id > 0) page.EventInstanceId = evt.Id;
                 _suppressReloadOnNextAppearing = true;
                 await Navigation.PushAsync(page);
@@ -185,10 +185,10 @@ public partial class MainPage : ContentPage
                 var inst = row.Instance;
                 var evt = inst?.Event;
                 if (inst?.IsCancelled ?? false) return;
-                if (evt?.Id != null)
+                if (evt != null)
                 {
                     var page = new Pages.EventPage();
-                    if (evt.Id != null) page.EventId = evt.Id;
+                    page.EventId = evt.Id;
                     if (inst?.Id > 0) page.EventInstanceId = inst.Id;
                     _suppressReloadOnNextAppearing = true;
                     await Navigation.PushAsync(page);

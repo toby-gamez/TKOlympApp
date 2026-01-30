@@ -6,11 +6,14 @@ using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Controls;
 using AndroidX.Activity;
 
+#pragma warning disable CA1416
+
 namespace TkOlympApp;
 
 [Activity(Theme = "@style/Maui.SplashTheme", MainLauncher = true, LaunchMode = LaunchMode.SingleTop,
     ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode |
                            ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
+[System.Runtime.Versioning.SupportedOSPlatform("android")]
 public class MainActivity : MauiAppCompatActivity
 {
     const int REQUEST_POST_NOTIFICATIONS = 1001;
@@ -130,3 +133,5 @@ public class MainActivity : MauiAppCompatActivity
         }
     }
 }
+
+#pragma warning restore CA1416

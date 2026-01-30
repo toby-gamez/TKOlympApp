@@ -23,7 +23,8 @@ namespace TkOlympApp.Services
                 if (idx < 0)
                 {
                     // try matching by suffix of fullname as a fallback
-                    idx = Array.FindIndex(Order, s => current.GetType().FullName?.EndsWith(s, StringComparison.OrdinalIgnoreCase) == true);
+                    var curFullName = current.GetType().FullName ?? string.Empty;
+                    idx = Array.FindIndex(Order, s => curFullName.EndsWith(s, StringComparison.OrdinalIgnoreCase));
                 }
                 if (idx < 0) return;
 
@@ -35,8 +36,8 @@ namespace TkOlympApp.Services
                 var tabBar = shell?.Items?.FirstOrDefault();
                 if (tabBar != null)
                 {
-                    var sections = tabBar.Items.ToList();
-                    if (nextIdx >= 0 && nextIdx < sections.Count)
+                    var sections = tabBar.Items?.ToList();
+                    if (shell != null && sections != null && nextIdx >= 0 && nextIdx < sections.Count)
                     {
                         shell.CurrentItem = sections[nextIdx];
                         return;
@@ -45,7 +46,7 @@ namespace TkOlympApp.Services
 
                 // Fallback: navigate by route name if available
                 var target = Order[nextIdx];
-                await Shell.Current.GoToAsync(target);
+                if (shell != null) await shell.GoToAsync(target);
             }
             catch
             {

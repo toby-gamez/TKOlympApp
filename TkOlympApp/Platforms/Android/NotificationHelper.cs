@@ -4,6 +4,7 @@ using AndroidX.Core.App;
 using Android.Graphics;
 namespace TkOlympApp.Platforms.AndroidHelpers;
 
+#pragma warning disable CA1416
 public static class NotificationHelper
 {
     const string CHANNEL_ID = "tkolymp_updates";
@@ -54,4 +55,5 @@ public static class NotificationHelper
         }
     }
     #pragma warning restore CS8602
+    #pragma warning restore CA1416
 }

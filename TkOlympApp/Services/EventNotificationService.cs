@@ -249,28 +249,30 @@ public static class EventNotificationService
             enabled = await LocalNotificationCenter.Current.AreNotificationsEnabled();
             
 #if ANDROID
-            // Check exact alarm permission (Android 12+)
-            if (Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.S)
-            {
-                try
+    #pragma warning disable CA1416
+                // Check exact alarm permission (Android 12+)
+                if (Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.S)
                 {
-                    var alarmManager = Android.App.AlarmManager.FromContext(Android.App.Application.Context);
-                    if (alarmManager != null && !alarmManager.CanScheduleExactAlarms())
+                    try
                     {
-                        Debug.WriteLine("EventNotificationService: App cannot schedule exact alarms - user needs to grant permission in settings");
-                        // Note: On Android 12+, user needs to manually enable exact alarms in Settings
-                        // We can't request this permission directly from code
+                        var alarmManager = Android.App.AlarmManager.FromContext(Android.App.Application.Context);
+                        if (alarmManager != null && !alarmManager.CanScheduleExactAlarms())
+                        {
+                            Debug.WriteLine("EventNotificationService: App cannot schedule exact alarms - user needs to grant permission in settings");
+                            // Note: On Android 12+, user needs to manually enable exact alarms in Settings
+                            // We can't request this permission directly from code
+                        }
+                        else
+                        {
+                            Debug.WriteLine("EventNotificationService: Exact alarm permission granted");
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        Debug.WriteLine("EventNotificationService: Exact alarm permission granted");
+                        Debug.WriteLine($"EventNotificationService: Error checking exact alarm permission: {ex.Message}");
                     }
                 }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"EventNotificationService: Error checking exact alarm permission: {ex.Message}");
-                }
-            }
+    #pragma warning restore CA1416
 #endif
             
             if (enabled)
@@ -318,8 +320,10 @@ public static class EventNotificationService
                 var alarmManager = Android.App.AlarmManager.FromContext(Android.App.Application.Context);
                 if (alarmManager != null)
                 {
+                    #pragma warning disable CA1416
                     var canScheduleExact = alarmManager.CanScheduleExactAlarms();
                     sb.AppendLine($"Can schedule exact alarms: {canScheduleExact}");
+                    #pragma warning restore CA1416
                 }
             }
 #endif
@@ -412,7 +416,7 @@ public static class EventNotificationService
                 }
 
                 // Check for trainer change
-                var currentTrainers = JsonSerializer.Serialize(currentEvent.Event?.EventTrainersList?.Select(t => EventService.GetTrainerDisplayName(t)).OrderBy(n => n).ToList() ?? new List<string?>());
+                var currentTrainers = JsonSerializer.Serialize(currentEvent.Event?.EventTrainersList?.Select(t => EventService.GetTrainerDisplayName(t)).OrderBy(n => n).ToList() ?? new List<string>());
                 if (currentTrainers != previousEvent.TrainersJson)
                 {
                     await SendImmediateNotificationAsync(
@@ -450,7 +454,7 @@ public static class EventNotificationService
                 LocationText = e.Event?.LocationText,
                 EventName = e.Event?.Name,
                 IsCancelled = e.IsCancelled,
-                TrainersJson = JsonSerializer.Serialize(e.Event?.EventTrainersList?.Select(t => EventService.GetTrainerDisplayName(t)).OrderBy(n => n).ToList() ?? new List<string?>())
+                TrainersJson = JsonSerializer.Serialize(e.Event?.EventTrainersList?.Select(t => EventService.GetTrainerDisplayName(t)).OrderBy(n => n).ToList() ?? new List<string>())
             }).ToList();
 
             var json = JsonSerializer.Serialize(snapshots);

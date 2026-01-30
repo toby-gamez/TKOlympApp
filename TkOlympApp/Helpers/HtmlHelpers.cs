@@ -9,6 +9,9 @@ using Microsoft.Maui.ApplicationModel;
 
 namespace TkOlympApp.Helpers;
 
+// Suppress nullable dereference warnings in this helper where MAUI types
+// may report nullable collections to the analyzer even though they are present at runtime.
+#pragma warning disable CS8602
 public static class HtmlHelpers
 {
     // Convert HTML to a FormattedString with basic styling: <b>/<strong>, <i>/<em>, <u>, <del>, <a>, <br>, <p>, <li>
@@ -101,7 +104,7 @@ public static class HtmlHelpers
                             {
                                 try { await Launcher.OpenAsync(new Uri(url)); } catch { }
                             };
-                            s.GestureRecognizers.Add(tap);
+                            if (s.GestureRecognizers != null) s.GestureRecognizers.Add(tap);
                         }
                     }
                 }
@@ -173,7 +176,7 @@ public static class HtmlHelpers
                             }
                             catch { }
                         };
-                        img.GestureRecognizers.Add(tap);
+                        if (img.GestureRecognizers != null) img.GestureRecognizers.Add(tap);
                         views.Add(img);
                     }
                     catch { }
@@ -224,7 +227,7 @@ public static class HtmlHelpers
                                         }
                                         catch { }
                                     };
-                                    img.GestureRecognizers.Add(tap);
+                                    if (img.GestureRecognizers != null) img.GestureRecognizers.Add(tap);
                                     views.Add(img);
                                 }
                                 catch { }
@@ -250,3 +253,4 @@ public static class HtmlHelpers
 
     private record TextDecorationState(bool Bold = false, bool Italic = false, bool Underline = false, bool Strike = false);
 }
+#pragma warning restore CS8602
