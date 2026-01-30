@@ -5,6 +5,12 @@
              x:Class="TkOlympApp.Pages.CalendarViewPage"
              Title="{svc:Translate CalendarView}">
 
+    <ContentPage.ToolbarItems>
+        <ToolbarItem x:Name="ViewDayAction" Text="{svc:Translate View_1Day}" Priority="0" Order="Primary" Clicked="OnViewDayClicked" />
+        <ToolbarItem x:Name="View3DayAction" Text="{svc:Translate View_3Day}" Priority="1" Order="Primary" Clicked="OnView3DayClicked" />
+        <ToolbarItem x:Name="ViewWeekAction" Text="{svc:Translate View_7Day}" Priority="2" Order="Primary" Clicked="OnViewWeekClicked" />
+    </ContentPage.ToolbarItems>
+
     <Grid Padding="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -18,12 +24,12 @@
                 <Button x:Name="TabAllButton" Text="{svc:Translate Tab_All}" Clicked="OnTabAllClicked" />
             </HorizontalStackLayout>
 
-            <Label x:Name="DateLabel" Grid.Column="1" HorizontalOptions="Center" VerticalOptions="Center" FontAttributes="Bold" />
+            <Label x:Name="DateLabel" Grid.Column="1" HorizontalOptions="Center" VerticalOptions="Center" HorizontalTextAlignment="Center" FontAttributes="Bold" />
 
-            <HorizontalStackLayout Grid.Column="2" Spacing="8" HorizontalOptions="End">
-                <Button x:Name="PrevDayButton" Text="◀" Clicked="OnPrevDayClicked" />
+                <HorizontalStackLayout Grid.Column="2" Spacing="8" HorizontalOptions="End">
+                <Button x:Name="PrevDayButton" Text="◀" Clicked="OnPrevDayClicked" Style="{StaticResource ButtonSecondary}" />
                 <Button x:Name="TodayButton" Text="{svc:Translate Today}" Clicked="OnTodayClicked" />
-                <Button x:Name="NextDayButton" Text="▶" Clicked="OnNextDayClicked" />
+                <Button x:Name="NextDayButton" Text="▶" Clicked="OnNextDayClicked" Style="{StaticResource ButtonSecondary}" />
             </HorizontalStackLayout>
         </Grid>
 
@@ -32,7 +38,9 @@
             <Grid ColumnDefinitions="Auto,*">
                 <!-- remove top padding so hour labels align with the hour lines -->
                 <VerticalStackLayout x:Name="TimeLabelsStack" Padding="4,0,4,0" Spacing="0" Grid.Column="0" WidthRequest="56" />
-                <AbsoluteLayout x:Name="TimelineLayout" BackgroundColor="Transparent" Grid.Column="1" HorizontalOptions="Fill" VerticalOptions="Start" />
+                <ScrollView Grid.Column="1" Orientation="Horizontal">
+                    <AbsoluteLayout x:Name="TimelineLayout" BackgroundColor="Transparent" HorizontalOptions="Start" VerticalOptions="Start" />
+                </ScrollView>
             </Grid>
         </ScrollView>
     </Grid>

@@ -2,6 +2,7 @@ using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
 using Microsoft.Maui.ApplicationModel;
 using System.Diagnostics;
+using System.Globalization;
 using Microsoft.Maui.Devices;
 using Microsoft.Maui.Layouts;
 using System;
@@ -17,6 +18,7 @@ public partial class CalendarViewPage : ContentPage
 {
     private bool _isLoading;
     private bool _onlyMine = true;
+    private int _daysVisible = 1; // 1 = day, 3 = three-day, 7 = week
     private DateTime _date;
     private readonly int _startHour = 6;
     private readonly int _endHour = 22;
@@ -70,6 +72,8 @@ public partial class CalendarViewPage : ContentPage
         InitializeComponent();
         _date = DateTime.Now.Date;
         UpdateDateLabel();
+        UpdateViewButtonsVisuals();
+        try { SetTopTabVisuals(_onlyMine); } catch { }
     }
 
     protected override void OnAppearing()
@@ -87,7 +91,40 @@ public partial class CalendarViewPage : ContentPage
 
     private void UpdateDateLabel()
     {
-        DateLabel.Text = _date.ToString("dddd, dd.MM.yyyy");
+        if (_daysVisible <= 1)
+        {
+            // Single day: show only weekday when the date is in the current week, otherwise show short date (no year)
+            var today = DateTime.Now.Date;
+            // determine week start (use Monday as first day of week according to current culture)
+            var diffToday = (int)CultureInfo.CurrentCulture.DateTimeFormat.FirstDayOfWeek;
+            var firstDayOfWeek = today.AddDays(-((int)today.DayOfWeek - (int)CultureInfo.CurrentCulture.DateTimeFormat.FirstDayOfWeek + 7) % 7);
+            var lastDayOfWeek = firstDayOfWeek.AddDays(6);
+            if (_date.Date >= firstDayOfWeek && _date.Date <= lastDayOfWeek)
+            {
+                var weekday = _date.ToString("dddd", CultureInfo.CurrentCulture);
+                try { weekday = weekday.ToLower(CultureInfo.CurrentCulture); } catch { }
+                DateLabel.Text = weekday;
+            }
+            else
+            {
+                DateLabel.Text = _date.ToString("d. M.", CultureInfo.CurrentCulture);
+            }
+        }
+        else
+        {
+            var start = _date.Date;
+            var end = start.AddDays(_daysVisible - 1);
+            if (_daysVisible == 7)
+            {
+                // Week view: show the date range (short, without year)
+                DateLabel.Text = start.ToString("d. M.", CultureInfo.CurrentCulture) + " – " + end.ToString("d. M.", CultureInfo.CurrentCulture);
+            }
+            else
+            {
+                // multi-day (1<days<=3): show short range without year, e.g. "30. 1. – 1. 2."
+                DateLabel.Text = start.ToString("d. M.", CultureInfo.CurrentCulture) + " – " + end.ToString("d. M.", CultureInfo.CurrentCulture);
+            }
+        }
     }
 
     private async Task LoadEventsAsync()
@@ -97,7 +134,7 @@ public partial class CalendarViewPage : ContentPage
         try
         {
             var start = _date.Date;
-            var end = start.AddDays(1);
+            var end = start.AddDays(_daysVisible);
             List<EventService.EventInstance> events;
             if (_onlyMine)
                 events = await EventService.GetMyEventInstancesForRangeAsync(start, end);
@@ -134,13 +171,18 @@ public partial class CalendarViewPage : ContentPage
 
         // offset everything by half an hour so the label text can be vertically centered
         var halfHourOffset = _hourHeight / 2.0;
+
+        // determine a single line color for hour/vertical separators that works in both themes
+        var theme = Application.Current?.RequestedTheme ?? AppTheme.Unspecified;
+        Color lineColor = theme == AppTheme.Dark ? Color.FromArgb("#444444") : Colors.LightGray;
+        double lineOpacity = 0.6;
         for (int h = _startHour; h <= _endHour; h++)
         {
             var y = (h - _startHour) * _hourHeight;
             var label = new Label { Text = h.ToString("D2") + ":00", FontSize = 12, HeightRequest = _hourHeight, VerticalTextAlignment = TextAlignment.Center };
             TimeLabelsStack.Children.Add(label);
 
-            var line = new BoxView { HeightRequest = 1, BackgroundColor = Colors.LightGray };
+            var line = new BoxView { HeightRequest = 1, BackgroundColor = lineColor, Opacity = lineOpacity };
             AbsoluteLayout.SetLayoutBounds(line, new Rect(0, y + halfHourOffset, 1, 1));
             AbsoluteLayout.SetLayoutFlags(line, AbsoluteLayoutFlags.WidthProportional);
             TimelineLayout.Children.Add(line);
@@ -196,18 +238,21 @@ public partial class CalendarViewPage : ContentPage
         }
 
         // Prepare layout items (compute raw start/end and pixel positions)
+        var startDate = _date.Date;
         var items = events.OrderBy(e => e.Since ?? e.UpdatedAt)
             .Select(e =>
             {
                 var since = e.Since ?? e.UpdatedAt;
                 var until = e.Until ?? since.AddMinutes(30);
+                // determine which day column this event belongs to
+                var dayIndex = (since.Date - startDate).Days;
                 var rawStart = since.Hour * 60 + since.Minute;
                 var duration = Math.Max(15, (int)(until - since).TotalMinutes);
                 var rawEnd = rawStart + duration;
                 var startMinutes = rawStart - (_startHour * 60);
                 var top = startMinutes / 60.0 * _hourHeight;
                 var height = duration / 60.0 * _hourHeight;
-                return new LayoutItem { Inst = e, Top = top, Height = height, RawStart = rawStart, RawEnd = rawEnd };
+                return new LayoutItem { Inst = e, Top = top, Height = height, RawStart = rawStart, RawEnd = rawEnd, ColumnIndex = dayIndex };
             })
             .ToList();
 
@@ -259,13 +304,55 @@ public partial class CalendarViewPage : ContentPage
                     colEnds.Add(it.RawEnd);
                     assigned = colEnds.Count - 1;
                 }
+                // If the item already carries a day index (in ColumnIndex), keep it as DayIndex in a temp field by reusing ColumnIndex for column packing
+                var prevDay = it.ColumnIndex; // day index set earlier
                 it.ColumnIndex = assigned;
+                // store day index in RawStart temporarily? Instead, use ColumnCount to store day index offset by columns later
+                // We'll keep day index separately in a local map when rendering
             }
             var finalCols = colEnds.Count;
             foreach (var it in group) it.ColumnCount = finalCols;
         }
 
         // Render items using column layout to avoid overlaps
+        // compute layout width once (use screen width as viewport reference)
+        var infoMain = DeviceDisplay.MainDisplayInfo;
+        double screenWidthDp = infoMain.Width / infoMain.Density;
+        double layoutWidthDp = TimelineLayout.Width;
+        if (layoutWidthDp <= 1.0) layoutWidthDp = screenWidthDp;
+
+        // day-level gap between day columns (dp)
+        double dayGapDp = 8.0;
+        var days = Math.Max(1, _daysVisible);
+
+        // compute gutter/margins and per-day width once (so we can set timeline width for horizontal scroll)
+        const double marginRightProp = 0.03;
+        var gutterPropGlobal = _columnGapDp > 0 ? GutterProportionFromDp(_columnGapDp) : 0.01;
+        double gutterDpGlobal = _columnGapDp > 0 ? _columnGapDp : gutterPropGlobal * screenWidthDp;
+        double marginRightDpGlobal = marginRightProp * screenWidthDp;
+
+        var totalDayGaps = dayGapDp * (days - 1);
+        // compute available viewport width for non-scrolling layouts (subtract label width and page padding)
+        double labelWidthDp = TimeLabelsStack?.WidthRequest > 0 ? TimeLabelsStack.WidthRequest : 56.0;
+        double pagePaddingDp = 24.0; // Grid Padding="12" on both sides
+        var availableViewportDp = Math.Max(120.0, screenWidthDp - labelWidthDp - pagePaddingDp);
+
+        double dayWidthDp;
+        if (days <= 3)
+        {
+            // Fit into viewport exactly (no horizontal scroll)
+            dayWidthDp = Math.Max(100.0, (availableViewportDp - totalDayGaps) / days);
+            // set timeline width to viewport so ScrollView won't scroll
+            try { TimelineLayout.WidthRequest = availableViewportDp; } catch { }
+        }
+        else
+        {
+            // For many days, allow horizontal scrolling by using a fixed per-day width
+            dayWidthDp = Math.Max(120.0, screenWidthDp / 3.0);
+            var totalContentWidthDp = days * dayWidthDp + totalDayGaps + marginRightDpGlobal;
+            try { TimelineLayout.WidthRequest = totalContentWidthDp; } catch { }
+        }
+
         foreach (var it in items)
         {
             var inst = it.Inst;
@@ -273,19 +360,24 @@ public partial class CalendarViewPage : ContentPage
             var height = it.Height;
             if (top + height < 0 || top > totalHeight) continue;
 
+            // determine day index for this event
+            var since = inst.Since ?? inst.UpdatedAt;
+            var dayIndex = (since.Date - startDate).Days;
+            if (dayIndex < 0 || dayIndex >= days) continue;
+
             // Choose background: use Secondary / SecondaryDark for lessons, fallback to LightBlue
             Color bgColor = Colors.LightBlue;
             if (string.Equals(inst.Event?.Type, "lesson", StringComparison.OrdinalIgnoreCase))
             {
-                try
-                {
-                    var theme = Application.Current?.RequestedTheme ?? AppTheme.Unspecified;
-                    var key = theme == AppTheme.Dark ? "SecondaryDark" : "Secondary";
-                    if (Application.Current?.Resources.TryGetValue(key, out var res) == true)
+                    try
                     {
-                        if (res is Color c) bgColor = c;
+                        var appTheme = Application.Current?.RequestedTheme ?? AppTheme.Unspecified;
+                        var key = appTheme == AppTheme.Dark ? "SecondaryDark" : "Secondary";
+                        if (Application.Current?.Resources.TryGetValue(key, out var res) == true)
+                        {
+                            if (res is Color c) bgColor = c;
+                        }
                     }
-                }
                 catch { }
             }
 
@@ -350,36 +442,31 @@ public partial class CalendarViewPage : ContentPage
             };
             frame.GestureRecognizers.Add(tap);
 
-            // first column starts at the very left (no left margin); others get gutter spacing
-            const double baseLeft = 0.0; // no extra left offset for first column
-            const double marginRight = 0.03;
-            var gutter = _columnGapDp > 0 ? GutterProportionFromDp(_columnGapDp) : 0.01; // space between columns
+            // Within this day, compute column widths for overlapping items
+            var gutterDp = gutterDpGlobal;
             var colCount = Math.Max(1, it.ColumnCount);
-            // Try to use actual layout width (dp). If not measured yet, fallback to screen width in dp.
-            double layoutWidthDp = TimelineLayout.Width;
-            if (layoutWidthDp <= 1.0)
-            {
-                var info = DeviceDisplay.MainDisplayInfo;
-                layoutWidthDp = info.Width / info.Density;
-            }
-
-            // gutter is in proportion when configured via _columnGapDp -> converted earlier
-            // but if _columnGapDp is set, prefer exact dp value; otherwise derive dp from proportional gutter
-            double gutterDp;
-            if (_columnGapDp > 0) gutterDp = _columnGapDp;
-            else gutterDp = gutter * layoutWidthDp; // default small gap
-
-            // margins in dp: baseLeft is 0, marginRight was proportion 0.03 -> convert to dp
-            double marginRightDp = marginRight * layoutWidthDp;
-
             var totalGutterDp = gutterDp * (colCount - 1);
-            var availableDp = Math.Max(0.0, layoutWidthDp - /*left*/ 0.0 - marginRightDp - totalGutterDp);
-            var colWidthDp = availableDp / colCount;
-            var leftDp = /*left*/ 0.0 + it.ColumnIndex * (colWidthDp + gutterDp);
+            var availableInnerDp = Math.Max(0.0, dayWidthDp - totalGutterDp);
+            var colWidthDp = availableInnerDp / colCount;
+            // left offset: day offset + column offset inside day
+            var leftDp = dayIndex * (dayWidthDp + dayGapDp) + it.ColumnIndex * (colWidthDp + gutterDp);
 
             AbsoluteLayout.SetLayoutBounds(frame, new Rect(leftDp, top + halfHourOffset, Math.Max(20, colWidthDp), Math.Max(20, height)));
             AbsoluteLayout.SetLayoutFlags(frame, AbsoluteLayoutFlags.None);
             TimelineLayout.Children.Add(frame);
+        }
+
+        // draw vertical separators on top so they are visible over events (only for 3-day and 7-day views)
+        if (days == 3 || days == 7)
+        {
+            for (int d = 1; d < days; d++)
+            {
+                var x = d * (dayWidthDp + dayGapDp);
+                var vlineTop = new BoxView { WidthRequest = 1, BackgroundColor = lineColor, Opacity = lineOpacity };
+                AbsoluteLayout.SetLayoutBounds(vlineTop, new Rect(x, 0, 1, totalHeight + halfHourOffset));
+                AbsoluteLayout.SetLayoutFlags(vlineTop, AbsoluteLayoutFlags.None);
+                TimelineLayout.Children.Add(vlineTop);
+            }
         }
 
         _nowLine = new BoxView { HeightRequest = 2, BackgroundColor = Colors.Red, Opacity = 0.9 };
@@ -448,21 +535,23 @@ public partial class CalendarViewPage : ContentPage
 
     private void OnPrevDayClicked(object? sender, EventArgs e)
     {
-        _date = _date.AddDays(-1);
+        _date = _date.AddDays(-_daysVisible);
         UpdateDateLabel();
         _ = LoadEventsAsync();
     }
 
     private void OnNextDayClicked(object? sender, EventArgs e)
     {
-        _date = _date.AddDays(1);
+        _date = _date.AddDays(_daysVisible);
         UpdateDateLabel();
         _ = LoadEventsAsync();
     }
 
     private void OnTodayClicked(object? sender, EventArgs e)
     {
-        _date = DateTime.Now.Date;
+        var today = DateTime.Now.Date;
+        if (_date == today) return;
+        _date = today;
         UpdateDateLabel();
         _ = LoadEventsAsync();
     }
@@ -470,13 +559,96 @@ public partial class CalendarViewPage : ContentPage
     private void OnTabMineClicked(object? sender, EventArgs e)
     {
         _onlyMine = true;
+        try { SetTopTabVisuals(true); } catch { }
         _ = LoadEventsAsync();
     }
 
     private void OnTabAllClicked(object? sender, EventArgs e)
     {
         _onlyMine = false;
+        try { SetTopTabVisuals(false); } catch { }
         _ = LoadEventsAsync();
+    }
+
+    private void SetTopTabVisuals(bool myActive)
+    {
+        try
+        {
+            var theme = Application.Current?.RequestedTheme ?? AppTheme.Unspecified;
+            if (theme == AppTheme.Light)
+            {
+                if (myActive)
+                {
+                    TabMyButton.BackgroundColor = Colors.Black;
+                    TabMyButton.TextColor = Colors.White;
+                    TabAllButton.BackgroundColor = Colors.Transparent;
+                    TabAllButton.TextColor = Colors.Black;
+                }
+                else
+                {
+                    TabAllButton.BackgroundColor = Colors.Black;
+                    TabAllButton.TextColor = Colors.White;
+                    TabMyButton.BackgroundColor = Colors.Transparent;
+                    TabMyButton.TextColor = Colors.Black;
+                }
+            }
+            else
+            {
+                if (myActive)
+                {
+                    TabMyButton.BackgroundColor = Colors.LightGray;
+                    TabMyButton.TextColor = Colors.Black;
+                    TabAllButton.BackgroundColor = Colors.Transparent;
+                    TabAllButton.TextColor = Colors.White;
+                }
+                else
+                {
+                    TabAllButton.BackgroundColor = Colors.LightGray;
+                    TabAllButton.TextColor = Colors.Black;
+                    TabMyButton.BackgroundColor = Colors.Transparent;
+                    TabMyButton.TextColor = Colors.White;
+                }
+            }
+        }
+        catch { }
+    }
+
+    private void OnViewDayClicked(object? sender, EventArgs e)
+    {
+        if (_daysVisible == 1) return;
+        _daysVisible = 1;
+        UpdateViewButtonsVisuals();
+        UpdateDateLabel();
+        _ = LoadEventsAsync();
+    }
+
+    private void OnView3DayClicked(object? sender, EventArgs e)
+    {
+        if (_daysVisible == 3) return;
+        _daysVisible = 3;
+        UpdateViewButtonsVisuals();
+        UpdateDateLabel();
+        _ = LoadEventsAsync();
+    }
+
+    private void OnViewWeekClicked(object? sender, EventArgs e)
+    {
+        if (_daysVisible == 7) return;
+        _daysVisible = 7;
+        UpdateViewButtonsVisuals();
+        UpdateDateLabel();
+        _ = LoadEventsAsync();
+    }
+
+    private void UpdateViewButtonsVisuals()
+    {
+        try
+        {
+            if (ViewDayAction != null) ViewDayAction.IsEnabled = (_daysVisible != 1);
+            if (View3DayAction != null) View3DayAction.IsEnabled = (_daysVisible != 3);
+            if (ViewWeekAction != null) ViewWeekAction.IsEnabled = (_daysVisible != 7);
+        }
+        catch { }
     }
 }
 

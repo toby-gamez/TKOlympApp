@@ -131,6 +131,10 @@
   <data name="Button_ChangePassword_Open" xml:space="preserve"><value>Změna hesla</value></data>
   <data name="Button_EditSelf" xml:space="preserve"><value>Upravit sebe</value></data>
   <data name="Today" xml:space="preserve"><value>Dnes</value></data>
+  <data name="CalendarView" xml:space="preserve"><value>Časová osa</value></data>
+  <data name="View_1Day" xml:space="preserve"><value>1d</value></data>
+  <data name="View_3Day" xml:space="preserve"><value>3d</value></data>
+  <data name="View_7Day" xml:space="preserve"><value>7d</value></data>
   <data name="Tomorrow" xml:space="preserve"><value>Zítra</value></data>
   <data name="Empty_MyEvents" xml:space="preserve"><value>Nemáte žádné události.</value></data>
   <data name="Empty_NoEvents" xml:space="preserve"><value>Nejsou žádné události.</value></data>
