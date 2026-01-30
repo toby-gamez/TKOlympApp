@@ -41,9 +41,9 @@ public static class NotificationHelper
         }
 
         var builder = new NotificationCompat.Builder(context!, CHANNEL_ID)
-                      .SetContentTitle(title ?? string.Empty)
-                      .SetContentText(message ?? string.Empty)
-                      .SetSmallIcon(Resource.Mipmap.appicon)
+                  .SetContentTitle(title ?? string.Empty)
+                  .SetContentText(message ?? string.Empty)
+                  .SetSmallIcon(Resource.Drawable.ic_notification)
                       .SetAutoCancel(true)
                       .SetContentIntent(pendingIntent)
                       .SetPriority((int)NotificationPriority.Default);
