@@ -3,8 +3,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:svc="clr-namespace:TkOlympApp.Services"
              xmlns:local="clr-namespace:TkOlympApp.Pages"
-             x:Class="TkOlympApp.Pages.CalendarPage"
-             Title="{svc:Translate Calendar}">
+            x:Class="TkOlympApp.Pages.CalendarPage"
+                     Title="{svc:Translate Calendar}">
+
+            <ContentPage.ToolbarItems>
+                <ToolbarItem IconImageSource="{AppThemeBinding Light=calendar_timeline.svg, Dark=calendar_timeline_white.svg}" Order="Primary" Priority="0" Clicked="OnOpenCalendarViewClicked" />
+            </ContentPage.ToolbarItems>
 
     <ContentPage.Resources>
         <ResourceDictionary>
@@ -121,9 +125,7 @@
                 <Button x:Name="TabAllButton" Text="{svc:Translate Tab_All}" Clicked="OnTabAllClicked" />
             </HorizontalStackLayout>
 
-            <HorizontalStackLayout Grid.Column="1" Padding="0" Spacing="8" VerticalOptions="Center" HorizontalOptions="Center">
-                <Button x:Name="ViewButton" Text="{svc:Translate View}" Clicked="OnOpenCalendarViewClicked" Style="{StaticResource ButtonSecondary}" />
-            </HorizontalStackLayout>
+            <HorizontalStackLayout Grid.Column="1" Padding="0" Spacing="8" VerticalOptions="Center" HorizontalOptions="Center" />
 
             <HorizontalStackLayout Grid.Column="2" Padding="0" Spacing="8" VerticalOptions="Center" HorizontalOptions="End">
                 <Button x:Name="PrevWeekButton" Text="◀" Clicked="OnPrevWeekClicked" Style="{StaticResource ButtonSecondary}"/>
