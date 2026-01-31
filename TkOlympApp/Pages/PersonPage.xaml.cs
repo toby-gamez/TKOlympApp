@@ -2,10 +2,14 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Concurrent;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.ApplicationModel;
 using TkOlympApp.Services;
 using TkOlympApp.Helpers;
 
@@ -17,7 +21,12 @@ namespace TkOlympApp.Pages
         private string? _personId;
         private bool _appeared;
         private bool _loadRequested;
+        private CancellationTokenSource? _cts;
         private readonly ObservableCollection<ActiveCoupleDisplay> _activeCouples = new();
+
+        private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = true };
+        private static readonly ConcurrentDictionary<string, (PersonDetail Person, DateTime FetchedAt)> _personCache = new();
+        private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(5);
 
         public string? PersonId
         {
@@ -36,50 +45,55 @@ namespace TkOlympApp.Pages
             ActiveCouplesCollection.ItemsSource = _activeCouples;
         }
 
-        protected override async void OnAppearing()
+        private async void OnRefresh(object? sender, EventArgs e)
         {
-            base.OnAppearing();
-            _appeared = true;
-            if (_loadRequested)
-                await LoadAsync();
-        }
-
-    private async void OnRefresh(object? sender, EventArgs e)
-    {
-        try
-        {
-            await LoadAsync();
-        }
-        finally
-        {
-            try { if (PageRefresh != null) PageRefresh.IsRefreshing = false; } catch { }
-        }
-    }
-
-    private async Task LoadAsync()
-    {
-        ErrorLabel.IsVisible = false;
-
-        try
-        {
-            if (string.IsNullOrWhiteSpace(_personId))
+            try
             {
-                ErrorLabel.IsVisible = true;
-                ErrorLabel.Text = "Missing personId";
-                return;
+                if (!string.IsNullOrWhiteSpace(_personId)) _personCache.TryRemove(_personId, out _);
+                await LoadAsync();
             }
+            finally
+            {
+                try { if (PageRefresh != null) PageRefresh.IsRefreshing = false; } catch { }
+            }
+        }
 
-            var query = "query MyQuery { person(id: \"" + _personId + "\") { bio birthDate createdAt cstsId email firstName prefixTitle suffixTitle gender isTrainer lastName phone wdsfId activeCouplesList { id man { firstName lastName } woman { firstName lastName } } cohortMembershipsList { cohort { colorRgb id name ordering isVisible } } } }";
+        private async Task LoadAsync()
+        {
+            ErrorLabel.IsVisible = false;
 
-                var gqlReq = new { query };
-                var options = new JsonSerializerOptions(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = true };
-                var json = JsonSerializer.Serialize(gqlReq, options);
+            try
+            {
+                // cancel any previous load
+                try { _cts?.Cancel(); } catch { }
+                _cts = new CancellationTokenSource();
+                var ct = _cts.Token;
+
+                if (string.IsNullOrWhiteSpace(_personId))
+                {
+                    ErrorLabel.IsVisible = true;
+                    ErrorLabel.Text = "Missing personId";
+                    return;
+                }
+
+                // return cached basic data if fresh
+                if (_personCache.TryGetValue(_personId!, out var cached) && DateTime.UtcNow - cached.FetchedAt < CacheTtl)
+                {
+                    ApplyBasicPerson(cached.Person);
+                    _ = LoadExtrasAsync(_personId!, ct);
+                    return;
+                }
+
+                // Primary (fast) query without nested lists
+                var primaryQuery = "query Primary { person(id: \"" + _personId + "\") { bio birthDate cstsId email firstName prefixTitle suffixTitle gender isTrainer lastName phone wdsfId } }";
+                var gqlReq = new { query = primaryQuery };
+                var json = JsonSerializer.Serialize(gqlReq, _jsonOptions);
                 using var content = new StringContent(json, Encoding.UTF8, "application/json");
-                using var resp = await AuthService.Http.PostAsync("", content);
+                using var resp = await AuthService.Http.PostAsync("", content, ct);
                 resp.EnsureSuccessStatusCode();
 
-                var body = await resp.Content.ReadAsStringAsync();
-                var parsed = JsonSerializer.Deserialize<GraphQlResp<PersonRespData>>(body, options);
+                var body = await resp.Content.ReadAsStringAsync(ct);
+                var parsed = JsonSerializer.Deserialize<GraphQlResp<PersonRespData>>(body, _jsonOptions);
                 var person = parsed?.Data?.Person;
                 if (person == null)
                 {
@@ -88,27 +102,48 @@ namespace TkOlympApp.Pages
                     return;
                 }
 
-                // Populate fields (include prefix/suffix titles if present)
-                static string FormatPrefixName(string? prefix, string? name)
-                {
-                    prefix = prefix?.Trim();
-                    name = name?.Trim();
-                    if (string.IsNullOrWhiteSpace(prefix) && string.IsNullOrWhiteSpace(name)) return "—";
-                    if (string.IsNullOrWhiteSpace(name)) return prefix ?? "—";
-                    if (string.IsNullOrWhiteSpace(prefix)) return name!;
-                    return prefix + " " + name;
-                }
+                _personCache[_personId!] = (person, DateTime.UtcNow);
+                ApplyBasicPerson(person);
 
-                static string FormatNameSuffix(string? name, string? suffix)
-                {
-                    name = name?.Trim();
-                    suffix = suffix?.Trim();
-                    if (string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(suffix)) return "—";
-                    if (string.IsNullOrWhiteSpace(name)) return suffix ?? "—";
-                    if (string.IsNullOrWhiteSpace(suffix)) return name!;
-                    return name + " " + suffix;
-                }
+                // load extras in background
+                _ = LoadExtrasAsync(_personId!, ct);
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                ErrorLabel.IsVisible = true;
+                ErrorLabel.Text = ex.Message;
+            }
+            finally
+            {
+                _loadRequested = false;
+            }
+        }
 
+        private void ApplyBasicPerson(PersonDetail person)
+        {
+            static string FormatPrefixName(string? prefix, string? name)
+            {
+                prefix = prefix?.Trim();
+                name = name?.Trim();
+                if (string.IsNullOrWhiteSpace(prefix) && string.IsNullOrWhiteSpace(name)) return "—";
+                if (string.IsNullOrWhiteSpace(name)) return prefix ?? "—";
+                if (string.IsNullOrWhiteSpace(prefix)) return name!;
+                return prefix + " " + name;
+            }
+
+            static string FormatNameSuffix(string? name, string? suffix)
+            {
+                name = name?.Trim();
+                suffix = suffix?.Trim();
+                if (string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(suffix)) return "—";
+                if (string.IsNullOrWhiteSpace(name)) return suffix ?? "—";
+                if (string.IsNullOrWhiteSpace(suffix)) return name!;
+                return name + " " + suffix;
+            }
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
                 NameValue.Text = FormatPrefixName(person.PrefixTitle, person.FirstName);
                 SurnameValue.Text = FormatNameSuffix(person.LastName, person.SuffixTitle);
                 BioValue.Text = NonEmpty(person.Bio?.Trim());
@@ -119,108 +154,132 @@ namespace TkOlympApp.Pages
                 WdsfIdValue.Text = NonEmpty(person.WdsfId?.Trim());
                 CstsIdValue.Text = NonEmpty(person.CstsId?.Trim());
 
-                // Active couples
-                _activeCouples.Clear();
-                foreach (var c in person.ActiveCouplesList ?? new List<ActiveCouple>())
-                {
-                    try
-                    {
-                        var manFirst = c.Man?.FirstName?.Trim() ?? string.Empty;
-                        var manLast = c.Man?.LastName?.Trim() ?? string.Empty;
-                        var womanFirst = c.Woman?.FirstName?.Trim() ?? string.Empty;
-                        var womanLast = c.Woman?.LastName?.Trim() ?? string.Empty;
-
-                        string man = string.IsNullOrWhiteSpace(manFirst) ? manLast : (string.IsNullOrWhiteSpace(manLast) ? manFirst : (manFirst + " " + manLast).Trim());
-                        string woman = string.IsNullOrWhiteSpace(womanFirst) ? womanLast : (string.IsNullOrWhiteSpace(womanLast) ? womanFirst : (womanFirst + " " + womanLast).Trim());
-
-                        string entry;
-                        if (!string.IsNullOrWhiteSpace(man) && !string.IsNullOrWhiteSpace(woman))
-                            entry = man + " – " + woman;
-                        else if (!string.IsNullOrWhiteSpace(man))
-                            entry = man;
-                        else if (!string.IsNullOrWhiteSpace(woman))
-                            entry = woman;
-                        else
-                            entry = "(–)";
-
-                        _activeCouples.Add(new ActiveCoupleDisplay { Id = c.Id, Text = entry });
-                    }
-                    catch { }
-                }
-                ActiveCouplesFrame.IsVisible = _activeCouples.Count > 0;
-
-                // Render cohort color dots (training groups)
-                try
-                {
-                    CohortDots.Children.Clear();
-                    var cohortsList = (person.CohortMembershipsList ?? new List<CohortMembership>())
-                        .Where(m => m?.Cohort?.IsVisible != false)
-                        .OrderBy(m => m?.Cohort?.Ordering ?? int.MaxValue)
-                        .ToList();
-                    foreach (var membership in cohortsList)
-                    {
-                        try
-                        {
-                            var c = membership?.Cohort;
-                            if (c == null) continue;
-                            var name = c.Name ?? string.Empty;
-                            var colorBrush = CohortColorHelper.ParseColorBrush(c.ColorRgb) ?? new Microsoft.Maui.Controls.SolidColorBrush(Microsoft.Maui.Graphics.Colors.LightGray);
-
-                            var row = new Microsoft.Maui.Controls.Grid { VerticalOptions = Microsoft.Maui.Controls.LayoutOptions.Center, HorizontalOptions = Microsoft.Maui.Controls.LayoutOptions.Fill };
-                            row.ColumnDefinitions.Add(new Microsoft.Maui.Controls.ColumnDefinition { Width = Microsoft.Maui.GridLength.Star });
-                            row.ColumnDefinitions.Add(new Microsoft.Maui.Controls.ColumnDefinition { Width = Microsoft.Maui.GridLength.Auto });
-
-                            var nameLabel = new Microsoft.Maui.Controls.Label { Text = name, VerticalOptions = Microsoft.Maui.Controls.LayoutOptions.Center, HorizontalOptions = Microsoft.Maui.Controls.LayoutOptions.Start };
-                            row.Add(nameLabel);
-
-                            var dot = new Microsoft.Maui.Controls.Border
-                            {
-                                WidthRequest = 20,
-                                HeightRequest = 20,
-                                Padding = 0,
-                                Margin = new Microsoft.Maui.Thickness(0),
-                                HorizontalOptions = Microsoft.Maui.Controls.LayoutOptions.End,
-                                VerticalOptions = Microsoft.Maui.Controls.LayoutOptions.Center,
-                                Background = colorBrush,
-                                Stroke = null,
-                                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 10 }
-                            };
-                            row.Add(dot, 1, 0);
-
-                            CohortDots.Children.Add(row);
-                        }
-                        catch { }
-                    }
-
-                    CohortDots.IsVisible = CohortDots.Children.Count > 0;
-                    try { CohortsFrame.IsVisible = CohortDots.IsVisible; } catch { CohortsFrame.IsVisible = false; }
-                }
-                catch { try { CohortDots.IsVisible = false; CohortsFrame.IsVisible = false; } catch { } }
-
-                // Toggle visibility per-row
                 try { BioRow.IsVisible = !string.IsNullOrWhiteSpace(person.Bio); } catch { }
                 try { BirthDateRow.IsVisible = !string.IsNullOrWhiteSpace(person.BirthDate); } catch { }
                 try { PhoneRow.IsVisible = !string.IsNullOrWhiteSpace(person.Phone); } catch { }
-                try { /* nationality removed */ } catch { }
                 try { GenderRow.IsVisible = !string.IsNullOrWhiteSpace(person.Gender); } catch { }
                 try { IsTrainerRow.IsVisible = person.IsTrainer.HasValue; } catch { }
                 try { WdsfRow.IsVisible = !string.IsNullOrWhiteSpace(person.WdsfId); } catch { }
                 try { CstsRow.IsVisible = !string.IsNullOrWhiteSpace(person.CstsId); } catch { }
-                try { /* national id removed */ } catch { }
 
                 try { ContactBorder.IsVisible = EmailRow.IsVisible || PhoneRow.IsVisible; } catch { }
                 try { PersonalBorder.IsVisible = BioRow.IsVisible || BirthDateRow.IsVisible || GenderRow.IsVisible || IsTrainerRow.IsVisible; } catch { }
                 try { IdsBorder.IsVisible = WdsfRow.IsVisible || CstsRow.IsVisible; } catch { }
-            }
-            catch (Exception ex)
+            });
+        }
+
+        private async Task LoadExtrasAsync(string personId, CancellationToken ct)
+        {
+            try
             {
-                ErrorLabel.IsVisible = true;
-                ErrorLabel.Text = ex.Message;
+                var extrasQuery = "query Extras { person(id: \"" + personId + "\") { activeCouplesList { id man { firstName lastName } woman { firstName lastName } } cohortMembershipsList { cohort { colorRgb id name ordering isVisible } } } }";
+                var gqlReq = new { query = extrasQuery };
+                var json = JsonSerializer.Serialize(gqlReq, _jsonOptions);
+                using var content = new StringContent(json, Encoding.UTF8, "application/json");
+                using var resp = await AuthService.Http.PostAsync("", content, ct);
+                resp.EnsureSuccessStatusCode();
+
+                var body = await resp.Content.ReadAsStringAsync(ct);
+                var parsed = JsonSerializer.Deserialize<GraphQlResp<PersonRespData>>(body, _jsonOptions);
+                var person = parsed?.Data?.Person;
+                if (person == null) return;
+
+                if (_personCache.TryGetValue(personId, out var existing))
+                {
+                    var merged = existing.Person;
+                    try { merged.ActiveCouplesList = person.ActiveCouplesList; } catch { }
+                    try { merged.CohortMembershipsList = person.CohortMembershipsList; } catch { }
+                    _personCache[personId] = (merged, DateTime.UtcNow);
+                }
+
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    try
+                    {
+                        _activeCouples.Clear();
+                        foreach (var c in person.ActiveCouplesList ?? new List<ActiveCouple>())
+                        {
+                            try
+                            {
+                                var manFirst = c.Man?.FirstName?.Trim() ?? string.Empty;
+                                var manLast = c.Man?.LastName?.Trim() ?? string.Empty;
+                                var womanFirst = c.Woman?.FirstName?.Trim() ?? string.Empty;
+                                var womanLast = c.Woman?.LastName?.Trim() ?? string.Empty;
+
+                                string man = string.IsNullOrWhiteSpace(manFirst) ? manLast : (string.IsNullOrWhiteSpace(manLast) ? manFirst : (manFirst + " " + manLast).Trim());
+                                string woman = string.IsNullOrWhiteSpace(womanFirst) ? womanLast : (string.IsNullOrWhiteSpace(womanLast) ? womanFirst : (womanFirst + " " + womanLast).Trim());
+
+                                string entry;
+                                if (!string.IsNullOrWhiteSpace(man) && !string.IsNullOrWhiteSpace(woman))
+                                    entry = man + " – " + woman;
+                                else if (!string.IsNullOrWhiteSpace(man))
+                                    entry = man;
+                                else if (!string.IsNullOrWhiteSpace(woman))
+                                    entry = woman;
+                                else
+                                    entry = "(–)";
+
+                                _activeCouples.Add(new ActiveCoupleDisplay { Id = c.Id, Text = entry });
+                            }
+                            catch { }
+                        }
+                        ActiveCouplesFrame.IsVisible = _activeCouples.Count > 0;
+                    }
+                    catch { }
+                });
+
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    try
+                    {
+                        CohortDots.Children.Clear();
+                        var cohortsList = (person.CohortMembershipsList ?? new List<CohortMembership>())
+                            .Where(m => m?.Cohort?.IsVisible != false)
+                            .OrderBy(m => m?.Cohort?.Ordering ?? int.MaxValue)
+                            .ToList();
+                        foreach (var membership in cohortsList)
+                        {
+                            try
+                            {
+                                var c = membership?.Cohort;
+                                if (c == null) continue;
+                                var name = c.Name ?? string.Empty;
+                                var colorBrush = CohortColorHelper.ParseColorBrush(c.ColorRgb) ?? new Microsoft.Maui.Controls.SolidColorBrush(Microsoft.Maui.Graphics.Colors.LightGray);
+
+                                var row = new Microsoft.Maui.Controls.Grid { VerticalOptions = Microsoft.Maui.Controls.LayoutOptions.Center, HorizontalOptions = Microsoft.Maui.Controls.LayoutOptions.Fill };
+                                row.ColumnDefinitions.Add(new Microsoft.Maui.Controls.ColumnDefinition { Width = Microsoft.Maui.GridLength.Star });
+                                row.ColumnDefinitions.Add(new Microsoft.Maui.Controls.ColumnDefinition { Width = Microsoft.Maui.GridLength.Auto });
+
+                                var nameLabel = new Microsoft.Maui.Controls.Label { Text = name, VerticalOptions = Microsoft.Maui.Controls.LayoutOptions.Center, HorizontalOptions = Microsoft.Maui.Controls.LayoutOptions.Start };
+                                row.Add(nameLabel);
+
+                                var dot = new Microsoft.Maui.Controls.Border
+                                {
+                                    WidthRequest = 20,
+                                    HeightRequest = 20,
+                                    Padding = 0,
+                                    Margin = new Microsoft.Maui.Thickness(0),
+                                    HorizontalOptions = Microsoft.Maui.Controls.LayoutOptions.End,
+                                    VerticalOptions = Microsoft.Maui.Controls.LayoutOptions.Center,
+                                    Background = colorBrush,
+                                    Stroke = null,
+                                    StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 10 }
+                                };
+                                row.Add(dot, 1, 0);
+
+                                CohortDots.Children.Add(row);
+                            }
+                            catch { }
+                        }
+
+                        CohortDots.IsVisible = CohortDots.Children.Count > 0;
+                        try { CohortsFrame.IsVisible = CohortDots.IsVisible; } catch { CohortsFrame.IsVisible = false; }
+                    }
+                    catch { try { CohortDots.IsVisible = false; CohortsFrame.IsVisible = false; } catch { } }
+                });
             }
-            finally
-            {
-                _loadRequested = false;
-            }
+            catch (OperationCanceledException) { }
+            catch { }
         }
 
         private async void OnActiveCoupleSelected(object? sender, SelectionChangedEventArgs e)
