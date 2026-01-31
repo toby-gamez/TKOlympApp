@@ -14,52 +14,19 @@ public static class NoticeboardService
 
     public static async Task<List<Announcement>> GetMyAnnouncementsAsync(bool? sticky = null, CancellationToken ct = default)
     {
-        var query = new GraphQlRequest
-        {
-            Query = "query MyQuery($sticky: Boolean) { myAnnouncements(sticky: $sticky) { nodes { body createdAt id isSticky isVisible title author { id uJmeno uPrijmeni } updatedAt } } }"
-        };
+        var query = "query MyQuery($sticky: Boolean) { myAnnouncements(sticky: $sticky) { nodes { body createdAt id isSticky isVisible title author { id uJmeno uPrijmeni } updatedAt } } }";
 
+        Dictionary<string, object>? variables = null;
         if (sticky.HasValue)
         {
-            query.Variables = new Dictionary<string, object> { { "sticky", sticky.Value } };
+            variables = new Dictionary<string, object> { { "sticky", sticky.Value } };
         }
 
-        var json = JsonSerializer.Serialize(query, Options);
-        using var content = new StringContent(json, Encoding.UTF8, "application/json");
-        using var resp = await AuthService.Http.PostAsync("", content, ct);
-        if (!resp.IsSuccessStatusCode)
-        {
-            var errorBody = await resp.Content.ReadAsStringAsync(ct);
-            throw new InvalidOperationException($"HTTP {(int)resp.StatusCode}: {errorBody}");
-        }
-
-        var body = await resp.Content.ReadAsStringAsync(ct);
-        var data = JsonSerializer.Deserialize<GraphQlResponse<MyAnnouncementsData>>(body, Options);
-        if (data?.Errors != null && data.Errors.Count > 0)
-        {
-            var msg = data.Errors[0].Message ?? LocalizationService.Get("GraphQL_UnknownError");
-            throw new InvalidOperationException(msg);
-        }
-
-        return data?.Data?.MyAnnouncements?.Nodes ?? new List<Announcement>();
+        var data = await GraphQlClient.PostAsync<MyAnnouncementsData>(query, variables, ct);
+        return data?.MyAnnouncements?.Nodes ?? new List<Announcement>();
     }
 
-    private sealed class GraphQlRequest
-    {
-        [JsonPropertyName("query")] public string Query { get; set; } = string.Empty;
-        [JsonPropertyName("variables")] public Dictionary<string, object>? Variables { get; set; }
-    }
-
-    private sealed class GraphQlResponse<T>
-    {
-        [JsonPropertyName("data")] public T? Data { get; set; }
-        [JsonPropertyName("errors")] public List<GraphQlError>? Errors { get; set; }
-    }
-
-    private sealed class GraphQlError
-    {
-        [JsonPropertyName("message")] public string? Message { get; set; }
-    }
+    
 
     private sealed class MyAnnouncementsData
     {
@@ -84,30 +51,11 @@ public static class NoticeboardService
 
     public static async Task<AnnouncementDetails?> GetAnnouncementAsync(long id, CancellationToken ct = default)
     {
-        var query = new GraphQlRequest
-        {
-            Query = "query MyQuery($id: BigInt!) { announcement(id: $id) { id title body createdAt updatedAt isVisible author { uJmeno uPrijmeni } } }",
-            Variables = new Dictionary<string, object> { { "id", id } }
-        };
+        var query = "query MyQuery($id: BigInt!) { announcement(id: $id) { id title body createdAt updatedAt isVisible author { uJmeno uPrijmeni } } }";
+        var variables = new Dictionary<string, object> { { "id", id } };
 
-        var json = JsonSerializer.Serialize(query, Options);
-        using var content = new StringContent(json, Encoding.UTF8, "application/json");
-        using var resp = await AuthService.Http.PostAsync("", content, ct);
-        if (!resp.IsSuccessStatusCode)
-        {
-            var errorBody = await resp.Content.ReadAsStringAsync(ct);
-            throw new InvalidOperationException($"HTTP {(int)resp.StatusCode}: {errorBody}");
-        }
-
-        var body = await resp.Content.ReadAsStringAsync(ct);
-        var data = JsonSerializer.Deserialize<GraphQlResponse<AnnouncementData>>(body, Options);
-        if (data?.Errors != null && data.Errors.Count > 0)
-        {
-            var msg = data.Errors[0].Message ?? LocalizationService.Get("GraphQL_UnknownError");
-            throw new InvalidOperationException(msg);
-        }
-
-        return data?.Data?.Announcement;
+        var data = await GraphQlClient.PostAsync<AnnouncementData>(query, variables, ct);
+        return data?.Announcement;
     }
 
     public static async Task<List<Announcement>> GetStickyAnnouncementsAsync(CancellationToken ct = default)

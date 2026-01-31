@@ -13,51 +13,18 @@ public static class TenantService
 
         public static async Task<(List<Location> Locations, List<TenantTrainer> Trainers)> GetLocationsAndTrainersAsync(CancellationToken ct = default)
         {
-            var query = new GraphQlRequest
-            {
-                Query = "query MyQuery { tenantLocationsList { name } tenantTrainersList { person { id firstName lastName prefixTitle suffixTitle } guestPrice45Min { amount currency } guestPayout45Min { amount currency } isVisible } }"
-            };
+            var query = "query MyQuery { tenantLocationsList { name } tenantTrainersList { person { id firstName lastName prefixTitle suffixTitle } guestPrice45Min { amount currency } guestPayout45Min { amount currency } isVisible } }";
 
-        var json = JsonSerializer.Serialize(query, Options);
-        using var content = new StringContent(json, Encoding.UTF8, "application/json");
-        using var resp = await AuthService.Http.PostAsync("", content, ct);
-        if (!resp.IsSuccessStatusCode)
-        {
-            var errorBody = await resp.Content.ReadAsStringAsync(ct);
-            throw new InvalidOperationException($"HTTP {(int)resp.StatusCode}: {errorBody}");
-        }
+            var data = await GraphQlClient.PostAsync<TenantData>(query, null, ct);
 
-        var body = await resp.Content.ReadAsStringAsync(ct);
-        var data = JsonSerializer.Deserialize<GraphQlResponse<TenantData>>(body, Options);
-        if (data?.Errors != null && data.Errors.Count > 0)
-        {
-            var msg = data.Errors[0].Message ?? LocalizationService.Get("GraphQL_UnknownError");
-            throw new InvalidOperationException(msg);
-        }
-
-        var locations = data?.Data?.TenantLocationsList ?? new List<Location>();
-        var trainers = (data?.Data?.TenantTrainersList ?? new List<TenantTrainer>())
-            .Where(t => t.IsVisible == true)
-            .ToList();
-        return (locations, trainers);
+            var locations = data?.TenantLocationsList ?? new List<Location>();
+            var trainers = (data?.TenantTrainersList ?? new List<TenantTrainer>())
+                .Where(t => t.IsVisible == true)
+                .ToList();
+            return (locations, trainers);
     }
 
-    private sealed class GraphQlRequest
-    {
-        [JsonPropertyName("query")] public string Query { get; set; } = string.Empty;
-        [JsonPropertyName("variables")] public Dictionary<string, object>? Variables { get; set; }
-    }
-
-    private sealed class GraphQlResponse<T>
-    {
-        [JsonPropertyName("data")] public T? Data { get; set; }
-        [JsonPropertyName("errors")] public List<GraphQlError>? Errors { get; set; }
-    }
-
-    private sealed class GraphQlError
-    {
-        [JsonPropertyName("message")] public string? Message { get; set; }
-    }
+    
 
     private sealed class TenantData
     {

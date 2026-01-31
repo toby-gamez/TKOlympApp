@@ -15,29 +15,11 @@ public static class EventService
     
     public static async Task<EventInstanceDetails?> GetEventInstanceAsync(long instanceId, CancellationToken ct = default)
     {
-        var query = new GraphQlRequest
-        {
-            Query = "query MyQuery($id: BigInt!) { eventInstance(id: $id) { id isCancelled since until event { id capacity createdAt description isPublic isRegistrationOpen isVisible name type summary locationText eventTrainersList { id person {prefixTitle firstName lastName suffixTitle } updatedAt } updatedAt eventTargetCohortsList { cohortId cohort { id name colorRgb } } eventRegistrations { totalCount nodes { couple { id status man { firstName lastName prefixTitle suffixTitle } woman { firstName lastName prefixTitle suffixTitle } } person { id prefixTitle suffixTitle lastName firstName } eventLessonDemandsByRegistrationIdList { id lessonCount trainer { id name } } } } } } }",
-            Variables = new Dictionary<string, object> { { "id", instanceId } }
-        };
+        var query = "query MyQuery($id: BigInt!) { eventInstance(id: $id) { id isCancelled since until event { id capacity createdAt description isPublic isRegistrationOpen isVisible name type summary locationText eventTrainersList { id person {prefixTitle firstName lastName suffixTitle } updatedAt } updatedAt eventTargetCohortsList { cohortId cohort { id name colorRgb } } eventRegistrations { totalCount nodes { couple { id status man { firstName lastName prefixTitle suffixTitle } woman { firstName lastName prefixTitle suffixTitle } } person { id prefixTitle suffixTitle lastName firstName } eventLessonDemandsByRegistrationIdList { id lessonCount trainer { id name } } } } } } }";
+        var variables = new Dictionary<string, object> { { "id", instanceId } };
 
-        var json = JsonSerializer.Serialize(query, Options);
-        using var content = new StringContent(json, Encoding.UTF8, "application/json");
-        using var resp = await AuthService.Http.PostAsync("", content, ct);
-        if (!resp.IsSuccessStatusCode)
-        {
-            var errorBody = await resp.Content.ReadAsStringAsync(ct);
-            throw new InvalidOperationException($"HTTP {(int)resp.StatusCode}: {errorBody}");
-        }
-
-        var body = await resp.Content.ReadAsStringAsync(ct);
-        var data = JsonSerializer.Deserialize<GraphQlResponse<EventInstanceData>>(body, Options);
-        if (data?.Errors != null && data.Errors.Count > 0)
-        {
-            var msg = data.Errors[0].Message ?? LocalizationService.Get("GraphQL_UnknownError");
-            throw new InvalidOperationException(msg);
-        }
-        return data?.Data?.EventInstance;
+        var data = await GraphQlClient.PostAsync<EventInstanceData>(query, variables, ct);
+        return data?.EventInstance;
     }
 
     private sealed class EventInstanceData
@@ -73,30 +55,11 @@ public static class EventService
     
     public static async Task<EventDetails?> GetEventAsync(long id, CancellationToken ct = default)
     {
-            var query = new GraphQlRequest
-        {
-            // Request person names and couple names (including first name, title fields) and instance trainers for registrations
-            Query = "query MyQuery($id: BigInt!) { event(id: $id) { capacity createdAt description isPublic isRegistrationOpen isVisible __typename name type summary locationText eventTrainersList { id name updatedAt } updatedAt eventTargetCohortsList { cohortId cohort { id name colorRgb } } eventRegistrations { totalCount nodes { couple { id status man { firstName lastName prefixTitle suffixTitle eventInstanceTrainersList { name } } woman { firstName lastName prefixTitle suffixTitle eventInstanceTrainersList { name } } } eventLessonDemandsByRegistrationIdList { id lessonCount trainer { id name } } person { id prefixTitle suffixTitle lastName firstName } } } eventInstancesList { since until } } }",
-            Variables = new Dictionary<string, object> { { "id", id } }
-        };
+        var query = "query MyQuery($id: BigInt!) { event(id: $id) { capacity createdAt description isPublic isRegistrationOpen isVisible __typename name type summary locationText eventTrainersList { id name updatedAt } updatedAt eventTargetCohortsList { cohortId cohort { id name colorRgb } } eventRegistrations { totalCount nodes { couple { id status man { firstName lastName prefixTitle suffixTitle eventInstanceTrainersList { name } } woman { firstName lastName prefixTitle suffixTitle eventInstanceTrainersList { name } } } eventLessonDemandsByRegistrationIdList { id lessonCount trainer { id name } } person { id prefixTitle suffixTitle lastName firstName } } } eventInstancesList { since until } } }";
+        var variables = new Dictionary<string, object> { { "id", id } };
 
-        var json = JsonSerializer.Serialize(query, Options);
-        using var content = new StringContent(json, Encoding.UTF8, "application/json");
-        using var resp = await AuthService.Http.PostAsync("", content, ct);
-        if (!resp.IsSuccessStatusCode)
-        {
-            var errorBody = await resp.Content.ReadAsStringAsync(ct);
-            throw new InvalidOperationException($"HTTP {(int)resp.StatusCode}: {errorBody}");
-        }
-
-        var body = await resp.Content.ReadAsStringAsync(ct);
-        var data = JsonSerializer.Deserialize<GraphQlResponse<EventData>>(body, Options);
-        if (data?.Errors != null && data.Errors.Count > 0)
-        {
-            var msg = data.Errors[0].Message ?? LocalizationService.Get("GraphQL_UnknownError");
-            throw new InvalidOperationException(msg);
-        }
-        return data?.Data?.Event;
+        var data = await GraphQlClient.PostAsync<EventData>(query, variables, ct);
+        return data?.Event;
     }
 
     private sealed class EventData
@@ -243,29 +206,10 @@ public static class EventService
         if (offset.HasValue) variables["offset"] = offset.Value;
         if (!string.IsNullOrEmpty(onlyType)) variables["onlyType"] = onlyType;
 
-            var query = new GraphQlRequest
-        {
-            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $first: Int, $offset: Int, $onlyType: EventType) { eventInstancesForRangeList(onlyMine: true, startRange: $startRange, endRange: $endRange, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled since until updatedAt event { id description name type locationText isRegistrationOpen isPublic eventTrainersList { name } eventTargetCohortsList { cohortId cohort { id name colorRgb } } eventRegistrationsList { person { name } couple { man { lastName } woman { lastName } } } location { id name } } tenant { couplesList { man { firstName name lastName } woman { name lastName firstName } } } } }",
-            Variables = variables
-        };
+        var query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $first: Int, $offset: Int, $onlyType: EventType) { eventInstancesForRangeList(onlyMine: true, startRange: $startRange, endRange: $endRange, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled since until updatedAt event { id description name type locationText isRegistrationOpen isPublic eventTrainersList { name } eventTargetCohortsList { cohortId cohort { id name colorRgb } } eventRegistrationsList { person { name } couple { man { lastName } woman { lastName } } } location { id name } } tenant { couplesList { man { firstName name lastName } woman { name lastName firstName } } } } }";
 
-        var json = JsonSerializer.Serialize(query, Options);
-        using var content = new StringContent(json, Encoding.UTF8, "application/json");
-        using var resp = await AuthService.Http.PostAsync("", content, ct);
-        if (!resp.IsSuccessStatusCode)
-        {
-            var errorBody = await resp.Content.ReadAsStringAsync(ct);
-            throw new InvalidOperationException($"HTTP {(int)resp.StatusCode}: {errorBody}");
-        }
-
-        var body = await resp.Content.ReadAsStringAsync(ct);
-        var data = JsonSerializer.Deserialize<GraphQlResponse<MyEventInstancesData>>(body, Options);
-        if (data?.Errors != null && data.Errors.Count > 0)
-        {
-            var msg = data.Errors[0].Message ?? LocalizationService.Get("GraphQL_UnknownError");
-            throw new InvalidOperationException(msg);
-        }
-        return data?.Data?.EventInstancesForRangeList ?? new List<EventInstance>();
+        var data = await GraphQlClient.PostAsync<MyEventInstancesData>(query, variables, ct);
+        return data?.EventInstancesForRangeList ?? new List<EventInstance>();
     }
 
     public static async Task<List<EventInstance>> GetEventInstancesForRangeListAsync(
@@ -286,33 +230,13 @@ public static class EventService
         if (offset.HasValue) variables["offset"] = offset.Value;
         if (!string.IsNullOrEmpty(onlyType)) variables["onlyType"] = onlyType;
 
-        var query = new GraphQlRequest
-        {
-            // include registrations and tenant couples so UI can compute first registrant/trainer labels
-            Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $first: Int, $offset: Int, $onlyType: EventType) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled since until updatedAt event { id description name type locationText isRegistrationOpen isPublic eventTrainersList { name } eventTargetCohortsList { cohortId cohort { id name colorRgb } } eventRegistrationsList { person { name } couple { man { lastName } woman { lastName } } } location { id name } } tenant { couplesList { man { firstName name lastName } woman { name lastName firstName } } } } }",
-            Variables = variables
-        };
+        var query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $first: Int, $offset: Int, $onlyType: EventType) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled since until updatedAt event { id description name type locationText isRegistrationOpen isPublic eventTrainersList { name } eventTargetCohortsList { cohortId cohort { id name colorRgb } } eventRegistrationsList { person { name } couple { man { lastName } woman { lastName } } } location { id name } } tenant { couplesList { man { firstName name lastName } woman { name lastName firstName } } } } }";
 
-        var json = JsonSerializer.Serialize(query, Options);
-        using var content = new StringContent(json, Encoding.UTF8, "application/json");
-        using var resp = await AuthService.Http.PostAsync("", content, ct);
-        if (!resp.IsSuccessStatusCode)
-        {
-            var errorBody = await resp.Content.ReadAsStringAsync(ct);
-            throw new InvalidOperationException($"HTTP {(int)resp.StatusCode}: {errorBody}");
-        }
-
-        var body = await resp.Content.ReadAsStringAsync(ct);
+        var (data, raw) = await GraphQlClient.PostWithRawAsync<EventInstancesForRangeData>(query, variables, ct);
         // Store raw JSON for debugging / UI display
-        LastEventInstancesForRangeRawJson = body;
-        var data = JsonSerializer.Deserialize<GraphQlResponse<EventInstancesForRangeData>>(body, Options);
-        if (data?.Errors != null && data.Errors.Count > 0)
-        {
-            var msg = data.Errors[0].Message ?? LocalizationService.Get("GraphQL_UnknownError");
-            throw new InvalidOperationException(msg);
-        }
-
-        var list = data?.Data?.EventInstancesForRangeList ?? new List<MinimalEventInstance>();
+        LastEventInstancesForRangeRawJson = raw;
+        
+        var list = data?.EventInstancesForRangeList ?? new List<MinimalEventInstance>();
         // Map minimal instances to the full EventInstance shape expected by the app
         var result = new List<EventInstance>(list.Count);
         foreach (var mi in list)
@@ -375,22 +299,7 @@ public static class EventService
         return allEvents;
     }
 
-    private sealed class GraphQlRequest
-    {
-        [JsonPropertyName("query")] public string Query { get; set; } = string.Empty;
-        [JsonPropertyName("variables")] public Dictionary<string, object>? Variables { get; set; }
-    }
-
-    private sealed class GraphQlResponse<T>
-    {
-        [JsonPropertyName("data")] public T? Data { get; set; }
-        [JsonPropertyName("errors")] public List<GraphQlError>? Errors { get; set; }
-    }
-
-    private sealed class GraphQlError
-    {
-        [JsonPropertyName("message")] public string? Message { get; set; }
-    }
+    
 
     private sealed class MyEventInstancesData
     {

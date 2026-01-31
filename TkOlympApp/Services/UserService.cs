@@ -90,29 +90,11 @@ public static class UserService
 
         public static async Task<CurrentUser?> GetCurrentUserAsync(CancellationToken ct = default)
     {
-        var query = new GraphQlRequest
-        {
-            Query = "query MyQuery($versionId: String!) { getCurrentUser(versionId: $versionId) { uEmail uJmeno uLogin createdAt id lastActiveAt lastLogin tenantId uPrijmeni updatedAt } }",
-            Variables = new Dictionary<string, object> { { "versionId", "" } }
-        };
+            var query = "query MyQuery($versionId: String!) { getCurrentUser(versionId: $versionId) { uEmail uJmeno uLogin createdAt id lastActiveAt lastLogin tenantId uPrijmeni updatedAt } }";
+            var variables = new Dictionary<string, object> { { "versionId", "" } };
 
-        var json = JsonSerializer.Serialize(query, Options);
-        using var content = new StringContent(json, Encoding.UTF8, "application/json");
-        using var resp = await AuthService.Http.PostAsync("", content, ct);
-        if (!resp.IsSuccessStatusCode)
-        {
-            var errorBody = await resp.Content.ReadAsStringAsync(ct);
-            throw new InvalidOperationException($"HTTP {(int)resp.StatusCode}: {errorBody}");
-        }
-
-        var body = await resp.Content.ReadAsStringAsync(ct);
-        var data = JsonSerializer.Deserialize<GraphQlResponse<CurrentUserData>>(body, Options);
-        if (data?.Errors != null && data.Errors.Count > 0)
-        {
-            var msg = data.Errors[0].Message ?? LocalizationService.Get("GraphQL_UnknownError");
-            throw new InvalidOperationException(msg);
-        }
-        return data?.Data?.GetCurrentUser;
+            var data = await GraphQlClient.PostAsync<CurrentUserData>(query, variables, ct);
+            return data?.GetCurrentUser;
     }
 
     private sealed class GraphQlRequest
@@ -156,9 +138,7 @@ public static class UserService
 
         public static async Task<List<CoupleInfo>> GetActiveCouplesFromUsersAsync(CancellationToken ct = default)
     {
-                var query = new GraphQlRequest
-                {
-                        Query = @"query von {
+                var query = @"query von {
     users {
         nodes {
             userProxiesList {
@@ -179,30 +159,14 @@ public static class UserService
             }
         }
     }
-}"
-                };
+}";
 
-                var json = JsonSerializer.Serialize(query, Options);
-                using var content = new StringContent(json, Encoding.UTF8, "application/json");
-                using var resp = await AuthService.Http.PostAsync("", content, ct);
-                if (!resp.IsSuccessStatusCode)
-                {
-                    var errorBody = await resp.Content.ReadAsStringAsync(ct);
-                    throw new InvalidOperationException($"HTTP {(int)resp.StatusCode}: {errorBody}");
-                }
-
-                var body = await resp.Content.ReadAsStringAsync(ct);
-                var data = JsonSerializer.Deserialize<GraphQlResponse<UsersData>>(body, Options);
-                if (data?.Errors != null && data.Errors.Count > 0)
-                {
-                    var msg = data.Errors[0].Message ?? LocalizationService.Get("GraphQL_UnknownError");
-                    throw new InvalidOperationException(msg);
-                }
+                var data = await GraphQlClient.PostAsync<UsersData>(query, null, ct);
 
                 var result = new List<CoupleInfo>();
-                if (data?.Data?.Users?.Nodes != null)
+                if (data?.Users?.Nodes != null)
                 {
-                        foreach (var node in data.Data.Users.Nodes)
+                    foreach (var node in data.Users.Nodes)
                         {
                                 if (node?.UserProxiesList == null) continue;
                                 foreach (var proxy in node.UserProxiesList)
@@ -231,9 +195,7 @@ public static class UserService
     
     public static async Task<List<CohortInfo>> GetCohortsFromUsersAsync(CancellationToken ct = default)
     {
-        var query = new GraphQlRequest
-        {
-            Query = @"query bon {
+        var query = @"query bon {
     users {
         nodes {
             userProxiesList {
@@ -249,30 +211,13 @@ public static class UserService
             }
         }
     }
-}"
-        };
+}";
 
-        var json = JsonSerializer.Serialize(query, Options);
-        using var content = new StringContent(json, Encoding.UTF8, "application/json");
-        using var resp = await AuthService.Http.PostAsync("", content, ct);
-        if (!resp.IsSuccessStatusCode)
-        {
-            var errorBody = await resp.Content.ReadAsStringAsync(ct);
-            throw new InvalidOperationException($"HTTP {(int)resp.StatusCode}: {errorBody}");
-        }
-
-        var body = await resp.Content.ReadAsStringAsync(ct);
-        var data = JsonSerializer.Deserialize<GraphQlResponse<UsersData>>(body, Options);
-        if (data?.Errors != null && data.Errors.Count > 0)
-        {
-            var msg = data.Errors[0].Message ?? LocalizationService.Get("GraphQL_UnknownError");
-            throw new InvalidOperationException(msg);
-        }
-
+        var data = await GraphQlClient.PostAsync<UsersData>(query, null, ct);
         var result = new List<CohortInfo>();
-        if (data?.Data?.Users?.Nodes != null)
+        if (data?.Users?.Nodes != null)
         {
-            foreach (var node in data.Data.Users.Nodes)
+            foreach (var node in data.Users.Nodes)
             {
                 if (node?.UserProxiesList == null) continue;
                 foreach (var proxy in node.UserProxiesList)

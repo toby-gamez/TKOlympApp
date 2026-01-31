@@ -18,37 +18,7 @@ public static class LeaderboardService
         Options.Converters.Add(new BigIntegerJsonConverter());
     }
 
-    private sealed class BigIntegerJsonConverter : JsonConverter<BigInteger>
-    {
-        public override BigInteger Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        {
-            // Support both JSON string and number tokens
-            string s;
-            if (reader.TokenType == JsonTokenType.String)
-            {
-                s = reader.GetString() ?? string.Empty;
-            }
-            else if (reader.TokenType == JsonTokenType.Number)
-            {
-                s = Encoding.UTF8.GetString(reader.ValueSpan);
-            }
-            else
-            {
-                throw new JsonException($"Unexpected token parsing BigInteger: {reader.TokenType}");
-            }
-
-            if (BigInteger.TryParse(s, out var value))
-                return value;
-
-            throw new JsonException($"Unable to parse BigInteger from '{s}'");
-        }
-
-        public override void Write(Utf8JsonWriter writer, BigInteger value, JsonSerializerOptions options)
-        {
-            // Write as string to avoid issues with extremely large numbers
-            writer.WriteStringValue(value.ToString());
-        }
-    }
+    
 
     public static async Task<List<ScoreboardDto>> GetScoreboardsAsync(BigInteger? cohortId = null, DateTime? since = null, DateTime? until = null, CancellationToken ct = default)
     {
@@ -62,9 +32,7 @@ public static class LeaderboardService
     /// </summary>
     public static async Task<(List<ScoreboardDto> Scoreboards, string RawBody)> GetScoreboardsWithRawAsync(BigInteger? cohortId = null, DateTime? since = null, DateTime? until = null, CancellationToken ct = default)
     {
-        var query = new GraphQlRequest
-        {
-            Query = @"query Scoreboard($cohortId: BigInt, $since: Date, $until: Date) {
+        var query = @"query Scoreboard($cohortId: BigInt, $since: Date, $until: Date) {
     getCurrentTenant {
         id
         cohortsList(condition: { isVisible: true }, orderBy: [NAME_ASC]) {
@@ -91,8 +59,7 @@ public static class LeaderboardService
             id
         }
     }
-}"
-        };
+}";
 
         // Variables: cohortId if provided, default since = yesterday, until = today (date-only yyyy-MM-dd)
         var variables = new Dictionary<string, object>();
@@ -103,44 +70,12 @@ public static class LeaderboardService
         var untilDate = until ?? DateTime.UtcNow.AddDays(-1);
         variables["since"] = sinceDate.ToString("yyyy-MM-dd");
         variables["until"] = untilDate.ToString("yyyy-MM-dd");
-        query.Variables = variables;
-
-        var json = JsonSerializer.Serialize(query, Options);
-        using var content = new StringContent(json, Encoding.UTF8, "application/json");
-        using var resp = await AuthService.Http.PostAsync("", content, ct);
-        if (!resp.IsSuccessStatusCode)
-        {
-            var errorBody = await resp.Content.ReadAsStringAsync(ct);
-            throw new InvalidOperationException($"HTTP {(int)resp.StatusCode}: {errorBody}");
-        }
-
-        var body = await resp.Content.ReadAsStringAsync(ct);
-        var data = JsonSerializer.Deserialize<GraphQlResponse<ScoreboardsData>>(body, Options);
-        if (data?.Errors != null && data.Errors.Count > 0)
-        {
-            var msg = data.Errors[0].Message ?? LocalizationService.Get("GraphQL_UnknownError");
-            throw new InvalidOperationException(msg);
-        }
-
-        return (data?.Data?.ScoreboardEntriesList ?? new List<ScoreboardDto>(), body);
+        query = query; // keep local variable
+        var (data, raw) = await GraphQlClient.PostWithRawAsync<ScoreboardsData>(query, variables, ct);
+        return (data?.ScoreboardEntriesList ?? new List<ScoreboardDto>(), raw);
     }
 
-    private sealed class GraphQlRequest
-    {
-        [JsonPropertyName("query")] public string Query { get; set; } = string.Empty;
-        [JsonPropertyName("variables")] public Dictionary<string, object>? Variables { get; set; }
-    }
-
-    private sealed class GraphQlResponse<T>
-    {
-        [JsonPropertyName("data")] public T? Data { get; set; }
-        [JsonPropertyName("errors")] public List<GraphQlError>? Errors { get; set; }
-    }
-
-    private sealed class GraphQlError
-    {
-        [JsonPropertyName("message")] public string? Message { get; set; }
-    }
+    
 
     private sealed class ScoreboardsData
     {

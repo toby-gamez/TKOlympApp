@@ -18,48 +18,30 @@ public static class PeopleService
 
     public static async Task<List<Person>> GetPeopleAsync(CancellationToken ct = default)
     {
-        var query = new GraphQlRequest
-        {
-            Query = @"query MyQuery {
-  people {
-    nodes {
-      id
-      firstName
-      lastName
-      birthDate
-      cohortMembershipsList {
-        cohort {
-          name
-          id
-          colorRgb
-          isVisible
+                var query = @"query MyQuery {
+    people {
+        nodes {
+            id
+            firstName
+            lastName
+            birthDate
+            cohortMembershipsList {
+                cohort {
+                    name
+                    id
+                    colorRgb
+                    isVisible
+                }
+            }
         }
-      }
     }
-  }
-}"
-        };
+}";
 
-        var json = JsonSerializer.Serialize(query, Options);
-        using var content = new StringContent(json, Encoding.UTF8, "application/json");
-        using var resp = await AuthService.Http.PostAsync("", content, ct);
-        resp.EnsureSuccessStatusCode();
-
-        var body = await resp.Content.ReadAsStringAsync(ct);
-        var data = JsonSerializer.Deserialize<GraphQlResponse<PeopleData>>(body, Options);
-        return data?.Data?.People?.Nodes ?? new List<Person>();
+                var data = await GraphQlClient.PostAsync<PeopleData>(query, null, ct);
+                return data?.People?.Nodes ?? new List<Person>();
     }
 
-    private sealed class GraphQlRequest
-    {
-        [JsonPropertyName("query")] public string Query { get; set; } = string.Empty;
-        [JsonPropertyName("variables")] public Dictionary<string, object>? Variables { get; set; }
-    }
-
-    private sealed class GraphQlResponse<T>
-    {
-        [JsonPropertyName("data")] public T? Data { get; set; }
-    }
+    
 
     private sealed class PeopleData
     {
