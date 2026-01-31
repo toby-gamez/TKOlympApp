@@ -100,6 +100,18 @@
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
                     <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnNotificationSettingsClicked" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout>
+                        <Label FontAttributes="Bold" Text="{svc:Translate Notifications_Settings}" />
+                        <Label Style="{StaticResource MutedLabelStyle}" Text="{svc:Translate Notifications_WhenNotUsingCalendar}" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Padding="12" Margin="6">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnPrivacyPolicyClicked" />
                     </Border.GestureRecognizers>
                     <VerticalStackLayout>

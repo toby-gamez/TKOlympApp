@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TkOlympApp.Pages.EventNotificationRuleEditPage"
+             xmlns:svc="clr-namespace:TkOlympApp.Services"
+             Title="{svc:Translate Notification_EditRule_Title}">
+
+    <Grid RowDefinitions="Auto,*">
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="12" Spacing="12">
+                <Label Text="{svc:Translate Notification_EditRule_Name}" />
+                <Entry x:Name="NameEntry" />
+
+                <Label Text="{svc:Translate Notification_EditRule_TimeBefore}" />
+                <Entry x:Name="MinutesEntry" Keyboard="Numeric" Placeholder="{svc:Translate Notification_SelectMinutes}" />
+
+                <Label Text="{svc:Translate Notification_EditRule_EventTypes}" />
+                <CollectionView x:Name="TypesCollection" SelectionMode="Multiple" ItemsLayout="VerticalList">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <HorizontalStackLayout Padding="6">
+                                <CheckBox IsChecked="{Binding Selected}" CheckedChanged="OnTypeCheckedChanged" />
+                                <Label Text="{Binding Label}" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <Label Text="{svc:Translate Notification_EditRule_Trainers}" />
+                <CollectionView x:Name="TrainersCollection" SelectionMode="Multiple" ItemsLayout="VerticalList">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <HorizontalStackLayout Padding="6">
+                                <CheckBox IsChecked="{Binding Selected}" CheckedChanged="OnTrainerCheckedChanged" />
+                                <Label Text="{Binding Label}" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <Button Text="{svc:Translate Button_Save}" Clicked="OnSaveClicked" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

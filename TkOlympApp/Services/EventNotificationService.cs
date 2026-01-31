@@ -7,6 +7,7 @@ using System.Text.Json;
 using Microsoft.Maui.Storage;
 using Plugin.LocalNotification;
 using Plugin.LocalNotification.AndroidOption;
+using TkOlympApp.Services;
 
 namespace TkOlympApp.Services;
 
@@ -74,6 +75,9 @@ public static class EventNotificationService
             var now = DateTime.Now;
             var notificationId = 1000; // Start from 1000 to avoid conflicts
 
+            // Load user-defined notification rules
+            var rules = NotificationSettingsService.GetAll();
+
             foreach (var eventInstance in events)
             {
                 if (eventInstance.Since == null || eventInstance.IsCancelled)
@@ -86,36 +90,83 @@ public static class EventNotificationService
                 var eventName = GetEventDisplayName(eventInstance);
                 var locationText = eventInstance.Event?.LocationText;
                 var eventType = eventInstance.Event?.Type;
+                // Collect trainer IDs as strings (person id from API)
+                string[]? trainerIds = null;
+                try
+                {
+                    var ids = eventInstance.Event?.EventTrainersList?.Select(t => t?.Id).Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
+                    if (ids != null && ids.Length > 0) trainerIds = ids;
+                }
+                catch { trainerIds = null; }
                 
                 // Format event description
                 var description = FormatEventDescription(eventStart, locationText);
 
-                // Schedule 1 hour before
-                var oneHourBefore = eventStart.AddHours(-1);
-                if (oneHourBefore > now)
+                // If user has defined rules, schedule according to them. Otherwise fallback to 1h and 5min.
+                if (rules != null && rules.Count > 0)
                 {
-                    var success = await ScheduleNotificationAsync(
-                        notificationId++,
-                        GetNotificationTitle(1, "hour"),
-                        $"{eventName}\n{description}",
-                        oneHourBefore,
-                        eventInstance.Id
-                    );
-                    if (success) scheduledCount++;
-                }
+                    foreach (var rule in rules)
+                    {
+                        try
+                        {
+                            if (!rule.Enabled) continue;
 
-                // Schedule 5 minutes before
-                var fiveMinBefore = eventStart.AddMinutes(-5);
-                if (fiveMinBefore > now)
+                            // match event type
+                            if (rule.EventTypes != null && rule.EventTypes.Count > 0)
+                            {
+                                if (string.IsNullOrEmpty(eventType)) continue;
+                                if (!rule.EventTypes.Exists(t => string.Equals(t, eventType, StringComparison.OrdinalIgnoreCase))) continue;
+                            }
+
+                            // match trainers
+                            if (rule.TrainerIds != null && rule.TrainerIds.Count > 0)
+                            {
+                                if (trainerIds == null || trainerIds.Length == 0) continue;
+                                var matched = trainerIds.Any(id => id != null && rule.TrainerIds.Contains(id));
+                                if (!matched) continue;
+                            }
+
+                            var notifyTime = eventStart - rule.TimeBefore;
+                            if (notifyTime <= now) continue;
+
+                            var title = rule.TimeBefore.TotalMinutes >= 60 && (rule.TimeBefore.TotalMinutes % 60) == 0
+                                ? GetNotificationTitle((int)rule.TimeBefore.TotalHours, "hour")
+                                : GetNotificationTitle((int)Math.Max(1, rule.TimeBefore.TotalMinutes), "minutes");
+
+                            var success = await ScheduleNotificationAsync(notificationId++, title, $"{eventName}\n{description}", notifyTime, eventInstance.Id);
+                            if (success) scheduledCount++;
+                        }
+                        catch { }
+                    }
+                }
+                else
                 {
-                    var success = await ScheduleNotificationAsync(
-                        notificationId++,
-                        GetNotificationTitle(5, "minutes"),
-                        $"{eventName}\n{description}",
-                        fiveMinBefore,
-                        eventInstance.Id
-                    );
-                    if (success) scheduledCount++;
+                    // Fallback: schedule 1 hour and 5 minutes before
+                    var oneHourBefore = eventStart.AddHours(-1);
+                    if (oneHourBefore > now)
+                    {
+                        var success = await ScheduleNotificationAsync(
+                            notificationId++,
+                            GetNotificationTitle(1, "hour"),
+                            $"{eventName}\n{description}",
+                            oneHourBefore,
+                            eventInstance.Id
+                        );
+                        if (success) scheduledCount++;
+                    }
+
+                    var fiveMinBefore = eventStart.AddMinutes(-5);
+                    if (fiveMinBefore > now)
+                    {
+                        var success = await ScheduleNotificationAsync(
+                            notificationId++,
+                            GetNotificationTitle(5, "minutes"),
+                            $"{eventName}\n{description}",
+                            fiveMinBefore,
+                            eventInstance.Id
+                        );
+                        if (success) scheduledCount++;
+                    }
                 }
             }
 
@@ -372,9 +423,19 @@ public static class EventNotificationService
 
                 var eventName = GetEventDisplayName(currentEvent);
                 
+                // Prepare trainer ids for rule matching
+                string[]? trainerIdsForMatch = null;
+                try
+                {
+                    var ids = currentEvent.Event?.EventTrainersList?.Select(t => t?.Id).Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
+                    if (ids != null && ids.Length > 0) trainerIdsForMatch = ids;
+                }
+                catch { trainerIdsForMatch = null; }
+
                 // Check for cancellation
                 if (currentEvent.IsCancelled && !previousEvent.IsCancelled)
                 {
+                    if (!NotificationSettingsService.ShouldNotify(currentEvent.Event?.Type, trainerIdsForMatch)) continue;
                     await SendImmediateNotificationAsync(
                         LocalizationService.Get("Notification_EventCancelled") ?? "Událost zrušena",
                         $"{eventName}\n{FormatEventDescription(currentEvent.Since.Value, currentEvent.Event?.LocationText)}",
@@ -390,6 +451,7 @@ public static class EventNotificationService
                 // Check for time change
                 if (currentEvent.Since != previousEvent.Since || currentEvent.Until != previousEvent.Until)
                 {
+                    if (!NotificationSettingsService.ShouldNotify(currentEvent.Event?.Type, trainerIdsForMatch)) continue;
                     var oldTime = previousEvent.Since?.ToString("HH:mm") ?? "?";
                     var newTime = currentEvent.Since?.ToString("HH:mm") ?? "?";
                     await SendImmediateNotificationAsync(
@@ -406,6 +468,7 @@ public static class EventNotificationService
                 var previousLocation = previousEvent.LocationText ?? "";
                 if (currentLocation != previousLocation)
                 {
+                    if (!NotificationSettingsService.ShouldNotify(currentEvent.Event?.Type, trainerIdsForMatch)) continue;
                     await SendImmediateNotificationAsync(
                         LocalizationService.Get("Notification_EventLocationChanged") ?? "Změna místa události",
                         $"{eventName}\n{currentLocation}\n{FormatEventDescription(currentEvent.Since.Value, null)}",
@@ -419,6 +482,7 @@ public static class EventNotificationService
                 var currentTrainers = JsonSerializer.Serialize(currentEvent.Event?.EventTrainersList?.Select(t => EventService.GetTrainerDisplayName(t)).OrderBy(n => n).ToList() ?? new List<string>());
                 if (currentTrainers != previousEvent.TrainersJson)
                 {
+                    if (!NotificationSettingsService.ShouldNotify(currentEvent.Event?.Type, trainerIdsForMatch)) continue;
                     await SendImmediateNotificationAsync(
                         LocalizationService.Get("Notification_EventDetailsChanged") ?? "Změna detailů události",
                         $"{eventName}\n{FormatEventDescription(currentEvent.Since.Value, currentEvent.Event?.LocationText)}",

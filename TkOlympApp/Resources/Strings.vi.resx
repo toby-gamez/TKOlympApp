@@ -283,4 +283,22 @@
   <data name="Notification_EventTimeChanged" xml:space="preserve"><value>Thời gian sự kiện đã thay đổi</value></data>
   <data name="Notification_EventLocationChanged" xml:space="preserve"><value>Địa điểm sự kiện đã thay đổi</value></data>
   <data name="Notification_EventDetailsChanged" xml:space="preserve"><value>Chi tiết sự kiện đã thay đổi</value></data>
+  <data name="Notifications" xml:space="preserve"><value>Thông báo</value></data>
+  <data name="Notifications_Intro" xml:space="preserve"><value>Thiết lập thông báo cho sự kiện và quy tắc tùy chỉnh.</value></data>
+  <data name="Notifications_Settings" xml:space="preserve"><value>Cài đặt thông báo</value></data>
+  <data name="Notifications_WhenNotUsingCalendar" xml:space="preserve"><value>Khi bạn không sử dụng lịch</value></data>
+  <data name="Button_Add" xml:space="preserve"><value>Thêm</value></data>
+  <data name="Edit" xml:space="preserve"><value>Chỉnh sửa</value></data>
+  <data name="Delete" xml:space="preserve"><value>Xóa</value></data>
+  <data name="Notification_DefaultRuleName" xml:space="preserve"><value>Quy tắc mặc định</value></data>
+  <data name="Notification_DefaultRuleName_Hour" xml:space="preserve"><value>1 giờ trước</value></data>
+  <data name="Notification_DefaultRuleName_5min" xml:space="preserve"><value>5 phút trước</value></data>
+  <data name="Notification_EditRule_Title" xml:space="preserve"><value>Chỉnh sửa quy tắc thông báo</value></data>
+  <data name="Notification_EditRule_Name" xml:space="preserve"><value>Tên</value></data>
+  <data name="Notification_EditRule_TimeBefore" xml:space="preserve"><value>Thông báo trước sự kiện (phút)</value></data>
+  <data name="Notification_SelectMinutes" xml:space="preserve"><value>Nhập số phút</value></data>
+  <data name="Notification_EditRule_EventTypes" xml:space="preserve"><value>Loại sự kiện</value></data>
+  <data name="Notification_EditRule_Trainers" xml:space="preserve"><value>Huấn luyện viên</value></data>
+  <data name="Notification_AllTypes" xml:space="preserve"><value>Tất cả loại</value></data>
+  <data name="Notification_AllTrainers" xml:space="preserve"><value>Tất cả huấn luyện viên</value></data>
 </root>

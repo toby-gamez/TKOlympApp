@@ -348,4 +348,22 @@
   <data name="Notification_EventTimeChanged" xml:space="preserve"><value>Změna času události</value></data>
   <data name="Notification_EventLocationChanged" xml:space="preserve"><value>Změna místa události</value></data>
   <data name="Notification_EventDetailsChanged" xml:space="preserve"><value>Změna detailů události</value></data>
+  <data name="Notifications" xml:space="preserve"><value>Notifikace</value></data>
+  <data name="Notifications_Intro" xml:space="preserve"><value>Nastavte upozornění na události a vlastní pravidla.</value></data>
+  <data name="Notifications_Settings" xml:space="preserve"><value>Nastavení notifikací</value></data>
+  <data name="Notifications_WhenNotUsingCalendar" xml:space="preserve"><value>Když nepoužíváte kalendář</value></data>
+  <data name="Button_Add" xml:space="preserve"><value>Přidat</value></data>
+  <data name="Edit" xml:space="preserve"><value>Upravit</value></data>
+  <data name="Delete" xml:space="preserve"><value>Smazat</value></data>
+  <data name="Notification_DefaultRuleName" xml:space="preserve"><value>Moje upozornění</value></data>
+  <data name="Notification_DefaultRuleName_Hour" xml:space="preserve"><value>1 hodinu předem</value></data>
+  <data name="Notification_DefaultRuleName_5min" xml:space="preserve"><value>5 minut předem</value></data>
+  <data name="Notification_EditRule_Title" xml:space="preserve"><value>Upravit pravidlo oznámení</value></data>
+  <data name="Notification_EditRule_Name" xml:space="preserve"><value>Název</value></data>
+  <data name="Notification_EditRule_TimeBefore" xml:space="preserve"><value>Upozornit před událostí (minuty)</value></data>
+  <data name="Notification_SelectMinutes" xml:space="preserve"><value>Zadejte minuty</value></data>
+  <data name="Notification_EditRule_EventTypes" xml:space="preserve"><value>Typy událostí</value></data>
+  <data name="Notification_EditRule_Trainers" xml:space="preserve"><value>Trenéři</value></data>
+  <data name="Notification_AllTypes" xml:space="preserve"><value>všechny typy</value></data>
+  <data name="Notification_AllTrainers" xml:space="preserve"><value>všichni trenéři</value></data>
 </root>

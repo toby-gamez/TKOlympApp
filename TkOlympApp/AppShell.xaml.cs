@@ -50,6 +50,8 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(nameof(Pages.CalendarViewPage), typeof(Pages.CalendarViewPage));
         Routing.RegisterRoute(nameof(LeaderboardPage), typeof(Pages.LeaderboardPage));
         Routing.RegisterRoute(nameof(NoticePage), typeof(NoticePage));
+        Routing.RegisterRoute(nameof(EventNotificationSettingsPage), typeof(Pages.EventNotificationSettingsPage));
+        Routing.RegisterRoute(nameof(EventNotificationRuleEditPage), typeof(Pages.EventNotificationRuleEditPage));
 
         Dispatcher.Dispatch(async () =>
         {

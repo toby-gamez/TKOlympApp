@@ -300,4 +300,22 @@
   <data name="Notification_EventTimeChanged" xml:space="preserve"><value>Час події змінено</value></data>
   <data name="Notification_EventLocationChanged" xml:space="preserve"><value>Місце події змінено</value></data>
   <data name="Notification_EventDetailsChanged" xml:space="preserve"><value>Деталі події змінено</value></data>
+  <data name="Notifications" xml:space="preserve"><value>Сповіщення</value></data>
+  <data name="Notifications_Intro" xml:space="preserve"><value>Налаштування сповіщень для подій і власних правил.</value></data>
+  <data name="Notifications_Settings" xml:space="preserve"><value>Налаштування сповіщень</value></data>
+  <data name="Notifications_WhenNotUsingCalendar" xml:space="preserve"><value>Якщо ви не користуєтеся календарем</value></data>
+  <data name="Button_Add" xml:space="preserve"><value>Додати</value></data>
+  <data name="Edit" xml:space="preserve"><value>Редагувати</value></data>
+  <data name="Delete" xml:space="preserve"><value>Видалити</value></data>
+  <data name="Notification_DefaultRuleName" xml:space="preserve"><value>Правило за замовчуванням</value></data>
+  <data name="Notification_DefaultRuleName_Hour" xml:space="preserve"><value>За 1 годину</value></data>
+  <data name="Notification_DefaultRuleName_5min" xml:space="preserve"><value>За 5 хвилин</value></data>
+  <data name="Notification_EditRule_Title" xml:space="preserve"><value>Редагувати правило сповіщень</value></data>
+  <data name="Notification_EditRule_Name" xml:space="preserve"><value>Назва</value></data>
+  <data name="Notification_EditRule_TimeBefore" xml:space="preserve"><value>Попередження перед подією (хвилин)</value></data>
+  <data name="Notification_SelectMinutes" xml:space="preserve"><value>Введіть кількість хвилин</value></data>
+  <data name="Notification_EditRule_EventTypes" xml:space="preserve"><value>Типи подій</value></data>
+  <data name="Notification_EditRule_Trainers" xml:space="preserve"><value>Тренери</value></data>
+  <data name="Notification_AllTypes" xml:space="preserve"><value>всі типи</value></data>
+  <data name="Notification_AllTrainers" xml:space="preserve"><value>всі тренери</value></data>
 </root>

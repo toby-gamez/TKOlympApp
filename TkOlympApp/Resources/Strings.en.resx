@@ -348,4 +348,22 @@
   <data name="Notification_EventTimeChanged" xml:space="preserve"><value>Event time changed</value></data>
   <data name="Notification_EventLocationChanged" xml:space="preserve"><value>Event location changed</value></data>
   <data name="Notification_EventDetailsChanged" xml:space="preserve"><value>Event details changed</value></data>
+    <data name="Notifications" xml:space="preserve"><value>Notifications</value></data>
+    <data name="Notifications_Intro" xml:space="preserve"><value>Configure event notifications and custom rules.</value></data>
+    <data name="Notifications_Settings" xml:space="preserve"><value>Notification settings</value></data>
+    <data name="Notifications_WhenNotUsingCalendar" xml:space="preserve"><value>When you don't use the calendar</value></data>
+    <data name="Button_Add" xml:space="preserve"><value>Add</value></data>
+    <data name="Edit" xml:space="preserve"><value>Edit</value></data>
+    <data name="Delete" xml:space="preserve"><value>Delete</value></data>
+    <data name="Notification_DefaultRuleName" xml:space="preserve"><value>My notification</value></data>
+    <data name="Notification_DefaultRuleName_Hour" xml:space="preserve"><value>1 hour before</value></data>
+    <data name="Notification_DefaultRuleName_5min" xml:space="preserve"><value>5 minutes before</value></data>
+    <data name="Notification_EditRule_Title" xml:space="preserve"><value>Edit notification rule</value></data>
+    <data name="Notification_EditRule_Name" xml:space="preserve"><value>Name</value></data>
+    <data name="Notification_EditRule_TimeBefore" xml:space="preserve"><value>Notify before event (minutes)</value></data>
+    <data name="Notification_SelectMinutes" xml:space="preserve"><value>Enter minutes</value></data>
+    <data name="Notification_EditRule_EventTypes" xml:space="preserve"><value>Event types</value></data>
+    <data name="Notification_EditRule_Trainers" xml:space="preserve"><value>Trainers</value></data>
+    <data name="Notification_AllTypes" xml:space="preserve"><value>all types</value></data>
+    <data name="Notification_AllTrainers" xml:space="preserve"><value>all trainers</value></data>
 </root>

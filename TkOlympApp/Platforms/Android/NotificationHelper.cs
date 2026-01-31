@@ -2,6 +2,7 @@ using Android.App;
 using Android.Content;
 using AndroidX.Core.App;
 using Android.Graphics;
+using TkOlympApp.Services;
 namespace TkOlympApp.Platforms.AndroidHelpers;
 
 #pragma warning disable CA1416
@@ -52,6 +53,18 @@ public static class NotificationHelper
         if (notification != null)
         {
             notificationManagerCompat.Notify(System.DateTime.Now.GetHashCode(), notification);
+        }
+    }
+
+    public static bool ShouldNotifyForEvent(string? eventType, string[]? trainerIds)
+    {
+        try
+        {
+            return NotificationSettingsService.ShouldNotify(eventType, trainerIds);
+        }
+        catch
+        {
+            return true;
         }
     }
     #pragma warning restore CS8602
