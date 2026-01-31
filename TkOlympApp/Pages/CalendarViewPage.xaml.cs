@@ -239,6 +239,8 @@ public partial class CalendarViewPage : ContentPage
         }
 
         // Prepare layout items (compute raw start/end and pixel positions)
+        // Filter out cancelled event instances so they are not shown in the calendar
+        events = events.Where(e => !(e.IsCancelled)).ToList();
         var startDate = _date.Date;
         var items = events.OrderBy(e => e.Since ?? e.UpdatedAt)
             .Select(e =>
