@@ -5,7 +5,7 @@ Architektura služeb
 Služby jsou statické helpery (singletony): AuthService (TkOlympApp/Services/AuthService.cs), EventService (TkOlympApp/Services/EventService.cs), UserService (TkOlympApp/Services/UserService.cs). To je jednoduché, ale ztěžuje testování a změnu na DI později.
 Autentizace / tokeny
 
-JWT ukládáno v SecureStorage a nastavováno do hlavičky HttpClientu (AuthService.InitializeAsync, AuthService.LoginAsync). Chybí refresh token / kontrola expirace a centralizované zpracování 401 (možné zůstat přihlášen s expirovaným tokenem). AuthService.cs
+JWT ukládáno v SecureStorage a nastavováno do hlavičky HttpClientu (AuthService.InitializeAsync, AuthService.LoginAsync). AuthService.cs
 HttpClient a hlavičky
 
 Statický HttpClient s BaseAddress a pevnou x-tenant-id: 1 — dobré pro reuse, ale Authorization header může přetrvávat mezi uživateli; ujistit se, že `AuthService.LogoutAsync` maže header a SecureStorage. AuthService.cs

@@ -34,6 +34,105 @@ public static class AuthService
         if (!string.IsNullOrWhiteSpace(jwt))
         {
             Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+            // Try refresh on startup if token is expired or near expiry
+            try
+            {
+                await TryRefreshIfNeededAsync();
+            }
+            catch
+            {
+                // If refresh fails, ensure we clear any invalid token
+                try { await LogoutAsync(); } catch { }
+            }
+        }
+    }
+
+    public static async Task<bool> TryRefreshIfNeededAsync(CancellationToken ct = default)
+    {
+        var jwt = await SecureStorage.GetAsync("jwt");
+        if (string.IsNullOrWhiteSpace(jwt))
+            return false;
+
+        // If not expired (within a small leeway), keep existing token
+        if (!IsJwtExpired(jwt))
+        {
+            Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+            return true;
+        }
+
+        try
+        {
+            var newJwt = await RefreshJwtAsync(ct);
+            return !string.IsNullOrWhiteSpace(newJwt);
+        }
+        catch
+        {
+            // On any failure, clear stored token to force re-login
+            try { await LogoutAsync(); } catch { }
+            return false;
+        }
+    }
+
+    public static async Task<string?> RefreshJwtAsync(CancellationToken ct = default)
+    {
+        var gql = new GraphQlRequest { Query = "query Refresh { refreshJwt }" };
+        var json = JsonSerializer.Serialize(gql);
+        using var content = new StringContent(json, Encoding.UTF8, "application/json");
+        using var resp = await Client.PostAsync("", content, ct);
+
+        // If the server returns 401/403 or other non-success, bubble up an error
+        resp.EnsureSuccessStatusCode();
+
+        var body = await resp.Content.ReadAsStringAsync(ct);
+        var options = new JsonSerializerOptions(JsonSerializerDefaults.Web)
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        var result = JsonSerializer.Deserialize<GraphQlResponse<RefreshJwtData>>(body, options);
+        var jwt = result?.Data?.RefreshJwt;
+
+        if (string.IsNullOrWhiteSpace(jwt))
+        {
+            var errMsg = result?.Errors?.FirstOrDefault()?.Message ?? "Obnovení tokenu selhalo.";
+            throw new InvalidOperationException(errMsg);
+        }
+
+        await SecureStorage.SetAsync("jwt", jwt);
+        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        return jwt;
+    }
+
+    private static bool IsJwtExpired(string jwt, int leewaySeconds = 60)
+    {
+        try
+        {
+            var parts = jwt.Split('.');
+            if (parts.Length < 2) return true;
+            var payload = parts[1];
+            // base64url -> base64
+            var padded = payload.Replace('-', '+').Replace('_', '/');
+            switch (padded.Length % 4)
+            {
+                case 2: padded += "=="; break;
+                case 3: padded += "="; break;
+                case 1: padded += "==="; break;
+            }
+            var bytes = Convert.FromBase64String(padded);
+            var json = Encoding.UTF8.GetString(bytes);
+            using var doc = JsonDocument.Parse(json);
+            if (doc.RootElement.TryGetProperty("exp", out var expEl) && expEl.ValueKind == JsonValueKind.Number)
+            {
+                var exp = expEl.GetInt64();
+                var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                return exp <= now + leewaySeconds;
+            }
+            // If no exp claim, consider expired
+            return true;
+        }
+        catch
+        {
+            return true;
         }
     }
 
@@ -152,6 +251,11 @@ public static class AuthService
     private sealed class LoginResult
     {
         [JsonPropertyName("jwt")] public string? Jwt { get; set; }
+    }
+
+    private sealed class RefreshJwtData
+    {
+        [JsonPropertyName("refreshJwt")] public string? RefreshJwt { get; set; }
     }
 
     private sealed class UserProxiesData
