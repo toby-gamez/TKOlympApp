@@ -1,4 +1,9 @@
 ﻿using Foundation;
+using UIKit;
+using System;
+using System.Threading.Tasks;
+using TkOlympApp.Services;
+
 
 namespace TkOlympApp;
 
@@ -6,4 +11,42 @@ namespace TkOlympApp;
 public class AppDelegate : MauiUIApplicationDelegate
 {
     protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
+
+    public override bool FinishedLaunching(UIApplication app, NSDictionary options)
+    {
+        try
+        {
+            // Enable background fetch with minimum interval
+            UIApplication.SharedApplication.SetMinimumBackgroundFetchInterval(UIApplication.BackgroundFetchIntervalMinimum);
+        }
+        catch { }
+        return base.FinishedLaunching(app, options);
+    }
+
+    public override void PerformFetch(UIApplication application, Action<UIBackgroundFetchResult> completionHandler)
+    {
+        // Run background fetch asynchronously and call completionHandler when done
+        Task.Run(async () =>
+        {
+            try
+            {
+                // Ensure auth initialized (loads JWT into HttpClient if present)
+                await AuthService.InitializeAsync();
+
+                // Fetch events for the next 2 days (same range used elsewhere)
+                var start = DateTime.Now;
+                var end = DateTime.Now.AddDays(2);
+                var events = await EventService.GetMyEventInstancesForRangeAsync(start, end);
+
+                // Let the notification service check for changes and send local notifications if needed
+                await EventNotificationService.CheckAndNotifyChangesAsync(events);
+
+                completionHandler(UIBackgroundFetchResult.NewData);
+            }
+            catch
+            {
+                completionHandler(UIBackgroundFetchResult.Failed);
+            }
+        });
+    }
 }
