@@ -10,21 +10,28 @@ using Microsoft.Maui.Storage;
 using TkOlympApp.Pages;
 using TkOlympApp.Helpers;
 using TkOlympApp.Services;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp;
 
 public partial class AppShell : Shell, IDisposable
 {
     private readonly ILogger _logger;
+    private readonly IServiceProvider _services;
+    private readonly IAuthService _authService;
+    private readonly INoticeboardService _noticeboardService;
     private CancellationTokenSource? _pollCts;
     private CancellationTokenSource? _startupCts;
     private long _lastSeenAnnouncementId;
     private long _lastSeenStickyId;
     private readonly TimeSpan _pollInterval = TimeSpan.FromMinutes(5);
     
-    public AppShell()
+    public AppShell(IServiceProvider services, IAuthService authService, INoticeboardService noticeboardService)
     {
         _logger = LoggerService.CreateLogger<AppShell>();
+        _services = services;
+        _authService = authService;
+        _noticeboardService = noticeboardService;
         
         InitializeComponent();
         // Workaround for URL-based XAML namespace resolution issues
@@ -34,31 +41,30 @@ public partial class AppShell : Shell, IDisposable
         CurrentItem = Items[0];
 
         // Register routes and navigate conditionally on startup
-        Routing.RegisterRoute(nameof(LoginPage), typeof(LoginPage));
-        Routing.RegisterRoute(nameof(FirstRunPage), typeof(FirstRunPage));
-        Routing.RegisterRoute(nameof(AboutMePage), typeof(AboutMePage));
-        Routing.RegisterRoute(nameof(CouplePage), typeof(Pages.CouplePage));
-        Routing.RegisterRoute(nameof(EventPage), typeof(EventPage));
-        Routing.RegisterRoute(nameof(Pages.EventsPage), typeof(Pages.EventsPage));
-        Routing.RegisterRoute(nameof(PlainTextPage), typeof(Pages.PlainTextPage));
-        Routing.RegisterRoute(nameof(RegistrationPage), typeof(RegistrationPage));
-        Routing.RegisterRoute(nameof(DeleteRegistrationsPage), typeof(DeleteRegistrationsPage));
-        Routing.RegisterRoute(nameof(EditRegistrationsPage), typeof(Pages.EditRegistrationsPage));
-        Routing.RegisterRoute(nameof(TrainersAndLocationsPage), typeof(TrainersAndLocationsPage));
-        Routing.RegisterRoute(nameof(CohortGroupsPage), typeof(CohortGroupsPage));
-        Routing.RegisterRoute(nameof(PeoplePage), typeof(PeoplePage));
-        Routing.RegisterRoute(nameof(LanguagePage), typeof(TkOlympApp.Pages.LanguagePage));
-        Routing.RegisterRoute(nameof(AboutAppPage), typeof(AboutAppPage));
-        Routing.RegisterRoute(nameof(PrivacyPolicyPage), typeof(PrivacyPolicyPage));
-        Routing.RegisterRoute(nameof(PersonPage), typeof(PersonPage));
-        Routing.RegisterRoute(nameof(EditRegistrationsPage), typeof(EditRegistrationsPage));
-        Routing.RegisterRoute(nameof(ChangePasswordPage), typeof(ChangePasswordPage));
-        Routing.RegisterRoute(nameof(Pages.CalendarPage), typeof(Pages.CalendarPage));
-        Routing.RegisterRoute(nameof(Pages.CalendarViewPage), typeof(Pages.CalendarViewPage));
-        Routing.RegisterRoute(nameof(LeaderboardPage), typeof(Pages.LeaderboardPage));
-        Routing.RegisterRoute(nameof(NoticePage), typeof(NoticePage));
-        Routing.RegisterRoute(nameof(EventNotificationSettingsPage), typeof(Pages.EventNotificationSettingsPage));
-        Routing.RegisterRoute(nameof(EventNotificationRuleEditPage), typeof(Pages.EventNotificationRuleEditPage));
+        Routing.RegisterRoute(nameof(LoginPage), new DiRouteFactory(_services, typeof(LoginPage)));
+        Routing.RegisterRoute(nameof(FirstRunPage), new DiRouteFactory(_services, typeof(FirstRunPage)));
+        Routing.RegisterRoute(nameof(AboutMePage), new DiRouteFactory(_services, typeof(AboutMePage)));
+        Routing.RegisterRoute(nameof(CouplePage), new DiRouteFactory(_services, typeof(Pages.CouplePage)));
+        Routing.RegisterRoute(nameof(EventPage), new DiRouteFactory(_services, typeof(EventPage)));
+        Routing.RegisterRoute(nameof(Pages.EventsPage), new DiRouteFactory(_services, typeof(Pages.EventsPage)));
+        Routing.RegisterRoute(nameof(PlainTextPage), new DiRouteFactory(_services, typeof(Pages.PlainTextPage)));
+        Routing.RegisterRoute(nameof(RegistrationPage), new DiRouteFactory(_services, typeof(RegistrationPage)));
+        Routing.RegisterRoute(nameof(DeleteRegistrationsPage), new DiRouteFactory(_services, typeof(DeleteRegistrationsPage)));
+        Routing.RegisterRoute(nameof(EditRegistrationsPage), new DiRouteFactory(_services, typeof(Pages.EditRegistrationsPage)));
+        Routing.RegisterRoute(nameof(TrainersAndLocationsPage), new DiRouteFactory(_services, typeof(TrainersAndLocationsPage)));
+        Routing.RegisterRoute(nameof(CohortGroupsPage), new DiRouteFactory(_services, typeof(CohortGroupsPage)));
+        Routing.RegisterRoute(nameof(PeoplePage), new DiRouteFactory(_services, typeof(PeoplePage)));
+        Routing.RegisterRoute(nameof(LanguagePage), new DiRouteFactory(_services, typeof(TkOlympApp.Pages.LanguagePage)));
+        Routing.RegisterRoute(nameof(AboutAppPage), new DiRouteFactory(_services, typeof(AboutAppPage)));
+        Routing.RegisterRoute(nameof(PrivacyPolicyPage), new DiRouteFactory(_services, typeof(PrivacyPolicyPage)));
+        Routing.RegisterRoute(nameof(PersonPage), new DiRouteFactory(_services, typeof(PersonPage)));
+        Routing.RegisterRoute(nameof(ChangePasswordPage), new DiRouteFactory(_services, typeof(ChangePasswordPage)));
+        Routing.RegisterRoute(nameof(Pages.CalendarPage), new DiRouteFactory(_services, typeof(Pages.CalendarPage)));
+        Routing.RegisterRoute(nameof(Pages.CalendarViewPage), new DiRouteFactory(_services, typeof(Pages.CalendarViewPage)));
+        Routing.RegisterRoute(nameof(LeaderboardPage), new DiRouteFactory(_services, typeof(Pages.LeaderboardPage)));
+        Routing.RegisterRoute(nameof(NoticePage), new DiRouteFactory(_services, typeof(NoticePage)));
+        Routing.RegisterRoute(nameof(EventNotificationSettingsPage), new DiRouteFactory(_services, typeof(Pages.EventNotificationSettingsPage)));
+        Routing.RegisterRoute(nameof(EventNotificationRuleEditPage), new DiRouteFactory(_services, typeof(Pages.EventNotificationRuleEditPage)));
 
         _logger.LogDebug("AppShell initialized, starting authentication check");
         _startupCts = new CancellationTokenSource();
@@ -87,8 +93,8 @@ public partial class AppShell : Shell, IDisposable
                     _logger.LogWarning(ex, "Failed to check first-run status");
                 }
 
-                await AuthService.InitializeAsync(_startupCts.Token);
-                var hasToken = await AuthService.HasTokenAsync(_startupCts.Token);
+                await _authService.InitializeAsync(_startupCts.Token);
+                var hasToken = await _authService.HasTokenAsync(_startupCts.Token);
                 
                 if (!hasToken)
                 {
@@ -208,7 +214,7 @@ public partial class AppShell : Shell, IDisposable
             try
             {
                 _logger.LogDebug("Polling for new announcements");
-                var announcements = await NoticeboardService.GetMyAnnouncementsAsync(ct: ct);
+                var announcements = await _noticeboardService.GetMyAnnouncementsAsync(ct: ct);
                 var newest = announcements?.OrderByDescending(a => a.CreatedAt).FirstOrDefault();
                 if (newest != null && newest.Id > _lastSeenAnnouncementId)
                 {
@@ -221,7 +227,7 @@ public partial class AppShell : Shell, IDisposable
                     Preferences.Set("lastSeenAnnouncementId", _lastSeenAnnouncementId);
                 }
 
-                var sticky = await NoticeboardService.GetStickyAnnouncementsAsync(ct);
+                var sticky = await _noticeboardService.GetStickyAnnouncementsAsync(ct);
                 var newestSticky = sticky?.OrderByDescending(s => s.CreatedAt).FirstOrDefault();
                 if (newestSticky != null && newestSticky.Id > _lastSeenStickyId)
                 {

@@ -436,9 +436,8 @@ public partial class CalendarViewPage : ContentPage
             tap.Tapped += async (s, e) => {
                 if (frame.BindingContext is EventService.EventInstance ev && ev.Event?.Id is long id)
                 {
-                    var page = new EventPage();
-                    if (id != 0) page.EventId = id;
-                    await Navigation.PushAsync(page);
+                    if (id != 0)
+                        await Shell.Current.GoToAsync($"{nameof(EventPage)}?id={id}");
                 }
             };
             frame.GestureRecognizers.Add(tap);

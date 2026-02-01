@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.DependencyInjection;
 using TkOlympApp.Services;
 using TkOlympApp.Helpers;
 
@@ -10,8 +11,11 @@ namespace TkOlympApp.Pages;
 
 public partial class AboutMePage : ContentPage
 {
-    public AboutMePage()
+    private readonly IServiceProvider _services;
+
+    public AboutMePage(IServiceProvider services)
     {
+        _services = services;
         InitializeComponent();
     }
 
@@ -316,7 +320,8 @@ public partial class AboutMePage : ContentPage
     {
         try
         {
-            await Shell.Current.Navigation.PushModalAsync(new ChangePasswordPage());
+            var page = _services.GetRequiredService<ChangePasswordPage>();
+            await Shell.Current.Navigation.PushModalAsync(page);
         }
         catch (Exception ex)
         {
@@ -331,7 +336,8 @@ public partial class AboutMePage : ContentPage
     {
         try
         {
-            await Shell.Current.Navigation.PushModalAsync(new EditSelfPage());
+            var page = _services.GetRequiredService<EditSelfPage>();
+            await Shell.Current.Navigation.PushModalAsync(page);
         }
         catch (Exception ex)
         {

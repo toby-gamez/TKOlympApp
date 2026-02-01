@@ -241,10 +241,11 @@ public partial class EventsPage : ContentPage
             try
             {
                 if (it.IsCancelled) return;
-                var page = new EventPage();
-                if (it.EventId > 0) page.EventId = it.EventId;
-                _suppressReloadOnNextAppearing = true;
-                await Navigation.PushAsync(page);
+                if (it.EventId > 0)
+                {
+                    _suppressReloadOnNextAppearing = true;
+                    await Shell.Current.GoToAsync($"{nameof(EventPage)}?id={it.EventId}");
+                }
             }
             catch { }
         }

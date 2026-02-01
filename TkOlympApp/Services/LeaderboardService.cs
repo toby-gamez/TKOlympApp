@@ -2,11 +2,34 @@ using System.Text;
 using System.Numerics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Maui.Controls;
+using Microsoft.Extensions.DependencyInjection;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Services;
 
 public static class LeaderboardService
 {
+    private static ILeaderboardService? _instance;
+
+    private static ILeaderboardService Instance
+    {
+        get
+        {
+            if (_instance != null) return _instance;
+            var services = Application.Current?.Handler?.MauiContext?.Services;
+            if (services == null)
+                throw new InvalidOperationException("MauiContext.Services not available. Ensure Application is initialized.");
+            _instance = services.GetRequiredService<ILeaderboardService>();
+            return _instance;
+        }
+    }
+
+    internal static void SetInstance(ILeaderboardService instance)
+    {
+        _instance = instance ?? throw new ArgumentNullException(nameof(instance));
+    }
+
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web)
     {
         PropertyNameCaseInsensitive = true
@@ -22,8 +45,7 @@ public static class LeaderboardService
 
     public static async Task<List<ScoreboardDto>> GetScoreboardsAsync(BigInteger? cohortId = null, DateTime? since = null, DateTime? until = null, CancellationToken ct = default)
     {
-        var (list, _) = await GetScoreboardsWithRawAsync(cohortId, since, until, ct);
-        return list;
+        return await Instance.GetScoreboardsAsync(cohortId, since, until, ct);
     }
 
     /// <summary>
@@ -32,47 +54,7 @@ public static class LeaderboardService
     /// </summary>
     public static async Task<(List<ScoreboardDto> Scoreboards, string RawBody)> GetScoreboardsWithRawAsync(BigInteger? cohortId = null, DateTime? since = null, DateTime? until = null, CancellationToken ct = default)
     {
-        var query = @"query Scoreboard($cohortId: BigInt, $since: Date, $until: Date) {
-    getCurrentTenant {
-        id
-        cohortsList(condition: { isVisible: true }, orderBy: [NAME_ASC]) {
-            id
-            name
-        }
-    }
-    scoreboardEntriesList(cohortId: $cohortId, since: $since, until: $until) {
-        totalScore
-        lessonTotalScore
-        groupTotalScore
-        eventTotalScore
-        manualTotalScore
-        ranking
-        personId
-        cohortId
-        cohort {
-            id
-            name
-        }
-        person {
-            firstName
-            lastName
-            id
-        }
-    }
-}";
-
-        // Variables: cohortId if provided, default since = yesterday, until = today (date-only yyyy-MM-dd)
-        var variables = new Dictionary<string, object>();
-        if (cohortId.HasValue)
-            variables["cohortId"] = cohortId.Value;
-
-        var sinceDate = since ?? new DateTime(2025, 9, 1, 0, 0, 0, DateTimeKind.Utc);
-        var untilDate = until ?? DateTime.UtcNow.AddDays(-1);
-        variables["since"] = sinceDate.ToString("yyyy-MM-dd");
-        variables["until"] = untilDate.ToString("yyyy-MM-dd");
-        query = query; // keep local variable
-        var (data, raw) = await GraphQlClient.PostWithRawAsync<ScoreboardsData>(query, variables, ct);
-        return (data?.ScoreboardEntriesList ?? new List<ScoreboardDto>(), raw);
+        return await Instance.GetScoreboardsWithRawAsync(cohortId, since, until, ct);
     }
 
     

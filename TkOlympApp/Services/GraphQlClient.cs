@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using TkOlympApp.Exceptions;
 using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Services;
@@ -43,53 +44,91 @@ public class GraphQlClientImplementation : IGraphQlClient
 
     public async Task<T> PostAsync<T>(string query, Dictionary<string, object>? variables = null, CancellationToken ct = default)
     {
-        var req = new GraphQlRequest { Query = query, Variables = variables };
-        var json = JsonSerializer.Serialize(req, _options);
-        using var content = new StringContent(json, Encoding.UTF8, "application/json");
-        using var resp = await _httpClient.PostAsync("", content, ct);
-        
-        if (!resp.IsSuccessStatusCode)
+        try
         {
-            // For error responses, read as string for better error message
-            var body = await resp.Content.ReadAsStringAsync(ct);
-            throw new InvalidOperationException($"HTTP {(int)resp.StatusCode}: {body}");
-        }
+            var req = new GraphQlRequest { Query = query, Variables = variables };
+            var json = JsonSerializer.Serialize(req, _options);
+            using var content = new StringContent(json, Encoding.UTF8, "application/json");
+            using var resp = await _httpClient.PostAsync("", content, ct);
 
-        // Use async stream deserialization to avoid blocking UI thread on large responses
-        await using var stream = await resp.Content.ReadAsStreamAsync(ct);
-        var data = await JsonSerializer.DeserializeAsync<GraphQlResponse<T>>(stream, _options, ct);
-        
-        if (data?.Errors != null && data.Errors.Count > 0)
+            if (!resp.IsSuccessStatusCode)
+            {
+                var body = await resp.Content.ReadAsStringAsync(ct);
+                throw new ServiceException(
+                        $"HTTP {(int)resp.StatusCode}",
+                        isTransient: (int)resp.StatusCode >= 500,
+                        httpStatusCode: (int)resp.StatusCode)
+                    .WithContext("Body", body);
+            }
+
+            await using var stream = await resp.Content.ReadAsStreamAsync(ct);
+            var data = await JsonSerializer.DeserializeAsync<GraphQlResponse<T>>(stream, _options, ct);
+
+            if (data?.Errors != null && data.Errors.Count > 0)
+            {
+                var errors = data.Errors
+                    .Select(e => e.Message)
+                    .Where(m => !string.IsNullOrWhiteSpace(m))
+                    .Cast<string>()
+                    .ToList();
+                var msg = errors.FirstOrDefault() ?? LocalizationService.Get("GraphQL_UnknownError") ?? "GraphQL error";
+                throw new GraphQLException(msg, errors);
+            }
+
+            if (data == null) return default!;
+            return data.Data;
+        }
+        catch (OperationCanceledException)
         {
-            var msg = data.Errors[0].Message ?? LocalizationService.Get("GraphQL_UnknownError");
-            throw new InvalidOperationException(msg);
+            throw;
         }
-
-        if (data == null) return default!;
-        return data.Data;
+        catch (HttpRequestException ex)
+        {
+            throw new ServiceException("Network error", ex, isTransient: true);
+        }
     }
 
     public async Task<(T Data, string Raw)> PostWithRawAsync<T>(string query, Dictionary<string, object>? variables = null, CancellationToken ct = default)
     {
-        var req = new GraphQlRequest { Query = query, Variables = variables };
-        var json = JsonSerializer.Serialize(req, _options);
-        using var content = new StringContent(json, Encoding.UTF8, "application/json");
-        using var resp = await _httpClient.PostAsync("", content, ct);
-        var body = await resp.Content.ReadAsStringAsync(ct);
-        if (!resp.IsSuccessStatusCode)
+        try
         {
-            throw new InvalidOperationException($"HTTP {(int)resp.StatusCode}: {body}");
-        }
+            var req = new GraphQlRequest { Query = query, Variables = variables };
+            var json = JsonSerializer.Serialize(req, _options);
+            using var content = new StringContent(json, Encoding.UTF8, "application/json");
+            using var resp = await _httpClient.PostAsync("", content, ct);
+            var body = await resp.Content.ReadAsStringAsync(ct);
+            if (!resp.IsSuccessStatusCode)
+            {
+                throw new ServiceException(
+                        $"HTTP {(int)resp.StatusCode}",
+                        isTransient: (int)resp.StatusCode >= 500,
+                        httpStatusCode: (int)resp.StatusCode)
+                    .WithContext("Body", body);
+            }
 
-        var data = JsonSerializer.Deserialize<GraphQlResponse<T>>(body, _options);
-        if (data?.Errors != null && data.Errors.Count > 0)
+            var data = JsonSerializer.Deserialize<GraphQlResponse<T>>(body, _options);
+            if (data?.Errors != null && data.Errors.Count > 0)
+            {
+                var errors = data.Errors
+                    .Select(e => e.Message)
+                    .Where(m => !string.IsNullOrWhiteSpace(m))
+                    .Cast<string>()
+                    .ToList();
+                var msg = errors.FirstOrDefault() ?? LocalizationService.Get("GraphQL_UnknownError") ?? "GraphQL error";
+                throw new GraphQLException(msg, errors, rawResponse: body);
+            }
+
+            if (data == null) return (default!, body);
+            return (data.Data, body);
+        }
+        catch (OperationCanceledException)
         {
-            var msg = data.Errors[0].Message ?? LocalizationService.Get("GraphQL_UnknownError");
-            throw new InvalidOperationException(msg);
+            throw;
         }
-
-        if (data == null) return (default!, body);
-        return (data.Data, body);
+        catch (HttpRequestException ex)
+        {
+            throw new ServiceException("Network error", ex, isTransient: true);
+        }
     }
 }
 

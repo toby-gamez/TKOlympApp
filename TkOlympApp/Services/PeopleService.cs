@@ -6,11 +6,34 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Maui.Controls;
+using Microsoft.Extensions.DependencyInjection;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Services;
 
 public static class PeopleService
 {
+    private static IPeopleService? _instance;
+
+    private static IPeopleService Instance
+    {
+        get
+        {
+            if (_instance != null) return _instance;
+            var services = Application.Current?.Handler?.MauiContext?.Services;
+            if (services == null)
+                throw new InvalidOperationException("MauiContext.Services not available. Ensure Application is initialized.");
+            _instance = services.GetRequiredService<IPeopleService>();
+            return _instance;
+        }
+    }
+
+    internal static void SetInstance(IPeopleService instance)
+    {
+        _instance = instance ?? throw new ArgumentNullException(nameof(instance));
+    }
+
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web)
     {
         PropertyNameCaseInsensitive = true
@@ -18,27 +41,7 @@ public static class PeopleService
 
     public static async Task<List<Person>> GetPeopleAsync(CancellationToken ct = default)
     {
-                var query = @"query MyQuery {
-    people {
-        nodes {
-            id
-            firstName
-            lastName
-            birthDate
-            cohortMembershipsList {
-                cohort {
-                    name
-                    id
-                    colorRgb
-                    isVisible
-                }
-            }
-        }
-    }
-}";
-
-                var data = await GraphQlClient.PostAsync<PeopleData>(query, null, ct);
-                return data?.People?.Nodes ?? new List<Person>();
+        return await Instance.GetPeopleAsync(ct);
     }
 
     

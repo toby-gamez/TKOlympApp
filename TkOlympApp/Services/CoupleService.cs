@@ -1,6 +1,9 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Maui.Controls;
+using Microsoft.Extensions.DependencyInjection;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Services;
 
@@ -8,11 +11,27 @@ public static class CoupleService
 {
     public static async Task<CoupleRecord?> GetCoupleAsync(string id, CancellationToken ct = default)
     {
-        var query = "query MyQuery($id: BigInt!) { couple(id: $id) { createdAt id man { id firstName lastName phone } woman { id firstName lastName phone } } }";
-        var variables = new Dictionary<string, object> { { "id", id } };
+        return await Instance.GetCoupleAsync(id, ct);
+    }
 
-        var data = await GraphQlClient.PostAsync<CoupleData>(query, variables, ct);
-        return data?.Couple;
+    private static ICoupleService? _instance;
+
+    private static ICoupleService Instance
+    {
+        get
+        {
+            if (_instance != null) return _instance;
+            var services = Application.Current?.Handler?.MauiContext?.Services;
+            if (services == null)
+                throw new InvalidOperationException("MauiContext.Services not available. Ensure Application is initialized.");
+            _instance = services.GetRequiredService<ICoupleService>();
+            return _instance;
+        }
+    }
+
+    internal static void SetInstance(ICoupleService instance)
+    {
+        _instance = instance ?? throw new ArgumentNullException(nameof(instance));
     }
 
     

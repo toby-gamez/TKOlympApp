@@ -238,8 +238,7 @@ public partial class NoticeboardPage : ContentPage
         {
             if (sender is VisualElement ve && ve.BindingContext is AnnouncementView av)
             {
-                // Navigate to detail page; use PushAsync so route registration isn't required
-                await Navigation.PushAsync(new NoticePage(av.Id));
+                await Shell.Current.GoToAsync($"{nameof(NoticePage)}?id={av.Id}");
             }
         }
         catch (Exception ex)

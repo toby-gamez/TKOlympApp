@@ -1,12 +1,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Maui.Controls;
+using Microsoft.Extensions.DependencyInjection;
 using TkOlympApp.Services;
 
 namespace TkOlympApp.Pages;
 
 public partial class LanguagePage : ContentPage
 {
+    private readonly IServiceProvider _services;
+
     class LangItem
     {
         public string Code { get; init; } = "";
@@ -15,8 +18,9 @@ public partial class LanguagePage : ContentPage
         public bool IsCurrent { get; set; }
     }
 
-    public LanguagePage()
+    public LanguagePage(IServiceProvider services)
     {
+        _services = services ?? throw new ArgumentNullException(nameof(services));
         InitializeComponent();
 
         var stored = LocalizationService.GetStoredLanguage() ?? LocalizationService.DetermineDefaultLanguage();
@@ -51,7 +55,7 @@ public partial class LanguagePage : ContentPage
                 {
                     var win = Application.Current?.Windows?.FirstOrDefault();
                     if (win != null)
-                        win.Page = new AppShell();
+                        win.Page = _services.GetRequiredService<AppShell>();
                     else
                         try { await Shell.Current.GoToAsync(".."); } catch { /* ignore */ }
                 }

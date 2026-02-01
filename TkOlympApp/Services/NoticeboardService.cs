@@ -2,11 +2,34 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
+using Microsoft.Maui.Controls;
+using Microsoft.Extensions.DependencyInjection;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Services;
 
 public static class NoticeboardService
 {
+    private static INoticeboardService? _instance;
+
+    private static INoticeboardService Instance
+    {
+        get
+        {
+            if (_instance != null) return _instance;
+            var services = Application.Current?.Handler?.MauiContext?.Services;
+            if (services == null)
+                throw new InvalidOperationException("MauiContext.Services not available. Ensure Application is initialized.");
+            _instance = services.GetRequiredService<INoticeboardService>();
+            return _instance;
+        }
+    }
+
+    internal static void SetInstance(INoticeboardService instance)
+    {
+        _instance = instance ?? throw new ArgumentNullException(nameof(instance));
+    }
+
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web)
     {
         PropertyNameCaseInsensitive = true
@@ -14,16 +37,7 @@ public static class NoticeboardService
 
     public static async Task<List<Announcement>> GetMyAnnouncementsAsync(bool? sticky = null, CancellationToken ct = default)
     {
-        var query = "query MyQuery($sticky: Boolean) { myAnnouncements(sticky: $sticky) { nodes { body createdAt id isSticky isVisible title author { id uJmeno uPrijmeni } updatedAt } } }";
-
-        Dictionary<string, object>? variables = null;
-        if (sticky.HasValue)
-        {
-            variables = new Dictionary<string, object> { { "sticky", sticky.Value } };
-        }
-
-        var data = await GraphQlClient.PostAsync<MyAnnouncementsData>(query, variables, ct);
-        return data?.MyAnnouncements?.Nodes ?? new List<Announcement>();
+        return await Instance.GetMyAnnouncementsAsync(sticky, ct);
     }
 
     
@@ -51,16 +65,12 @@ public static class NoticeboardService
 
     public static async Task<AnnouncementDetails?> GetAnnouncementAsync(long id, CancellationToken ct = default)
     {
-        var query = "query MyQuery($id: BigInt!) { announcement(id: $id) { id title body createdAt updatedAt isVisible author { uJmeno uPrijmeni } } }";
-        var variables = new Dictionary<string, object> { { "id", id } };
-
-        var data = await GraphQlClient.PostAsync<AnnouncementData>(query, variables, ct);
-        return data?.Announcement;
+        return await Instance.GetAnnouncementAsync(id, ct);
     }
 
     public static async Task<List<Announcement>> GetStickyAnnouncementsAsync(CancellationToken ct = default)
     {
-        return await GetMyAnnouncementsAsync(sticky: true, ct);
+        return await Instance.GetStickyAnnouncementsAsync(ct);
     }
 
 

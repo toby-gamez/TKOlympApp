@@ -5,6 +5,7 @@ using System.Windows.Input;
 using System.Diagnostics;
 using System;
 using Microsoft.Maui.ApplicationModel;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace TkOlympApp.Pages;
 
@@ -43,15 +44,23 @@ public partial class PlainTextPage : ContentPage
     {
         try
         {
-            var page = new PlainTextPage();
             // Remove surrounding double quotes if present, and show the plain text
             var t = text ?? string.Empty;
             if (t.Length >= 2 && t.StartsWith("\"") && t.EndsWith("\""))
                 t = t.Substring(1, t.Length - 2);
-            page.PlainText = t;
             // keep fallback copy for OnAppearing if needed
             try { TkOlympApp.Services.PlainTextService.LastText = t; } catch { }
-            await Shell.Current.Navigation.PushAsync(page);
+
+            // Prefer Shell routing (page created via DI); avoid passing very long text in URI.
+            const int maxQueryLength = 1500;
+            if (!string.IsNullOrEmpty(t) && t.Length <= maxQueryLength)
+            {
+                await Shell.Current.GoToAsync($"{nameof(PlainTextPage)}?text={Uri.EscapeDataString(t)}");
+            }
+            else
+            {
+                await Shell.Current.GoToAsync(nameof(PlainTextPage));
+            }
         }
         catch (Exception ex)
         {

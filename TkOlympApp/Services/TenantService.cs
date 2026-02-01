@@ -1,11 +1,34 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Maui.Controls;
+using Microsoft.Extensions.DependencyInjection;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Services;
 
 public static class TenantService
 {
+    private static ITenantService? _instance;
+
+    private static ITenantService Instance
+    {
+        get
+        {
+            if (_instance != null) return _instance;
+            var services = Application.Current?.Handler?.MauiContext?.Services;
+            if (services == null)
+                throw new InvalidOperationException("MauiContext.Services not available. Ensure Application is initialized.");
+            _instance = services.GetRequiredService<ITenantService>();
+            return _instance;
+        }
+    }
+
+    internal static void SetInstance(ITenantService instance)
+    {
+        _instance = instance ?? throw new ArgumentNullException(nameof(instance));
+    }
+
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web)
     {
         PropertyNameCaseInsensitive = true
@@ -13,15 +36,7 @@ public static class TenantService
 
         public static async Task<(List<Location> Locations, List<TenantTrainer> Trainers)> GetLocationsAndTrainersAsync(CancellationToken ct = default)
         {
-            var query = "query MyQuery { tenantLocationsList { name } tenantTrainersList { person { id firstName lastName prefixTitle suffixTitle } guestPrice45Min { amount currency } guestPayout45Min { amount currency } isVisible } }";
-
-            var data = await GraphQlClient.PostAsync<TenantData>(query, null, ct);
-
-            var locations = data?.TenantLocationsList ?? new List<Location>();
-            var trainers = (data?.TenantTrainersList ?? new List<TenantTrainer>())
-                .Where(t => t.IsVisible == true)
-                .ToList();
-            return (locations, trainers);
+            return await Instance.GetLocationsAndTrainersAsync(ct);
     }
 
     

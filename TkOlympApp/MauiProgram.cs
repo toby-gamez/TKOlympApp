@@ -9,6 +9,7 @@ using Plugin.LocalNotification;
 using TkOlympApp.Helpers;
 using TkOlympApp.Services;
 using TkOlympApp.Services.Abstractions;
+using TkOlympApp.Pages;
 using Microsoft.Maui.Storage;
 
 namespace TkOlympApp;
@@ -74,13 +75,43 @@ public static class MauiProgram
         })
         .AddHttpMessageHandler<AuthDelegatingHandler>();
 
-        // Services are already registered by AddHttpClient above (as Transient)
-        // No need to re-register them - that would create new instances without proper HttpClient!
-        // TODO: Refactor EventService to instance-based
-        // builder.Services.AddTransient<IEventService, EventService>();
+        // Instance-based (DI) services
+        builder.Services.AddTransient<IEventService, EventServiceImplementation>();
+        builder.Services.AddSingleton<IUserService, UserServiceImplementation>();
+        builder.Services.AddTransient<INoticeboardService, NoticeboardServiceImplementation>();
+        builder.Services.AddTransient<IPeopleService, PeopleServiceImplementation>();
+        builder.Services.AddTransient<ICohortService, CohortServiceImplementation>();
+        builder.Services.AddTransient<ICoupleService, CoupleServiceImplementation>();
+        builder.Services.AddTransient<ITenantService, TenantServiceImplementation>();
+        builder.Services.AddTransient<ILeaderboardService, LeaderboardServiceImplementation>();
 
         // Register Pages for DI
         builder.Services.AddTransient<AppShell>();
+        builder.Services.AddTransient<LoginPage>();
+        builder.Services.AddTransient<FirstRunPage>();
+        builder.Services.AddTransient<AboutMePage>();
+        builder.Services.AddTransient<CouplePage>();
+        builder.Services.AddTransient<EventPage>();
+        builder.Services.AddTransient<EventsPage>();
+        builder.Services.AddTransient<PlainTextPage>();
+        builder.Services.AddTransient<RegistrationPage>();
+        builder.Services.AddTransient<DeleteRegistrationsPage>();
+        builder.Services.AddTransient<EditRegistrationsPage>();
+        builder.Services.AddTransient<TrainersAndLocationsPage>();
+        builder.Services.AddTransient<CohortGroupsPage>();
+        builder.Services.AddTransient<PeoplePage>();
+        builder.Services.AddTransient<LanguagePage>();
+        builder.Services.AddTransient<AboutAppPage>();
+        builder.Services.AddTransient<PrivacyPolicyPage>();
+        builder.Services.AddTransient<PersonPage>();
+        builder.Services.AddTransient<ChangePasswordPage>();
+        builder.Services.AddTransient<CalendarPage>();
+        builder.Services.AddTransient<CalendarViewPage>();
+        builder.Services.AddTransient<LeaderboardPage>();
+        builder.Services.AddTransient<NoticePage>();
+        builder.Services.AddTransient<NoticeboardPage>();
+        builder.Services.AddTransient<EventNotificationSettingsPage>();
+        builder.Services.AddTransient<EventNotificationRuleEditPage>();
 
         // Initialize notification manager singleton so platform code can forward intents
         NotificationManagerService.EnsureInitialized();
@@ -99,8 +130,22 @@ public static class MauiProgram
         // This is safe now because AuthDelegatingHandler no longer depends on IAuthService.
         var authService = app.Services.GetRequiredService<IAuthService>();
         var graphQlClient = app.Services.GetRequiredService<IGraphQlClient>();
+        var noticeboardService = app.Services.GetRequiredService<INoticeboardService>();
+        var peopleService = app.Services.GetRequiredService<IPeopleService>();
+        var cohortService = app.Services.GetRequiredService<ICohortService>();
+        var coupleService = app.Services.GetRequiredService<ICoupleService>();
+        var tenantService = app.Services.GetRequiredService<ITenantService>();
+        var leaderboardService = app.Services.GetRequiredService<ILeaderboardService>();
+        var userService = app.Services.GetRequiredService<IUserService>();
         AuthService.SetInstance(authService);
         GraphQlClient.SetInstance(graphQlClient);
+        NoticeboardService.SetInstance(noticeboardService);
+        PeopleService.SetInstance(peopleService);
+        CohortService.SetInstance(cohortService);
+        CoupleService.SetInstance(coupleService);
+        TenantService.SetInstance(tenantService);
+        LeaderboardService.SetInstance(leaderboardService);
+        UserService.SetInstance(userService);
 
         return app;
     }

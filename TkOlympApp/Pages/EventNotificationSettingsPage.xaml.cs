@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using Microsoft.Maui.Controls;
+using Microsoft.Extensions.DependencyInjection;
 using TkOlympApp.Services;
 
 namespace TkOlympApp.Pages;
@@ -136,7 +137,8 @@ public partial class EventNotificationSettingsPage : ContentPage
                 System.Diagnostics.Debug.WriteLine($"OnAddClicked: Shell.GoToAsync failed: {ex}");
                 try
                 {
-                    var page = new EventNotificationRuleEditPage();
+                    var page = Application.Current?.Handler?.MauiContext?.Services.GetRequiredService<EventNotificationRuleEditPage>();
+                    if (page == null) throw new InvalidOperationException("EventNotificationRuleEditPage could not be resolved from DI");
                     page.BindingContext = item;
                     await Shell.Current.Navigation.PushAsync(page);
                 }

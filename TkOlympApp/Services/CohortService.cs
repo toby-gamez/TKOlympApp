@@ -1,11 +1,34 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Maui.Controls;
+using Microsoft.Extensions.DependencyInjection;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Services;
 
 public static class CohortService
 {
+    private static ICohortService? _instance;
+
+    private static ICohortService Instance
+    {
+        get
+        {
+            if (_instance != null) return _instance;
+            var services = Application.Current?.Handler?.MauiContext?.Services;
+            if (services == null)
+                throw new InvalidOperationException("MauiContext.Services not available. Ensure Application is initialized.");
+            _instance = services.GetRequiredService<ICohortService>();
+            return _instance;
+        }
+    }
+
+    internal static void SetInstance(ICohortService instance)
+    {
+        _instance = instance ?? throw new ArgumentNullException(nameof(instance));
+    }
+
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web)
     {
         PropertyNameCaseInsensitive = true
@@ -13,23 +36,7 @@ public static class CohortService
 
     public static async Task<List<CohortGroup>> GetCohortGroupsAsync(CancellationToken ct = default)
     {
-        var query = @"query Query {
-    getCurrentTenant {
-        id
-        cohortsList(condition: { isVisible: true }, orderBy: [NAME_ASC]) {
-            colorRgb
-            name
-            description
-            location
-        }
-    }
-}";
-
-        var data = await GraphQlClient.PostAsync<CohortGroupsData>(query, null, ct);
-
-        // API now returns cohortsList under getCurrentTenant; map it into the existing CohortGroup shape
-        var cohorts = data?.GetCurrentTenant?.CohortsList ?? new List<CohortItem>();
-        return new List<CohortGroup> { new CohortGroup(cohorts) };
+        return await Instance.GetCohortGroupsAsync(ct);
     }
 
     

@@ -16,7 +16,8 @@ public interface IGraphQlClient
     /// <param name="variables">Optional dictionary of query variables.</param>
     /// <param name="ct">Cancellation token to allow request cancellation.</param>
     /// <returns>The deserialized response data.</returns>
-    /// <exception cref="InvalidOperationException">Thrown when the request fails or GraphQL returns errors.</exception>
+    /// <exception cref="TkOlympApp.Exceptions.ServiceException">Thrown for HTTP/network failures.</exception>
+    /// <exception cref="TkOlympApp.Exceptions.GraphQLException">Thrown when GraphQL returns errors.</exception>
     Task<T> PostAsync<T>(string query, Dictionary<string, object>? variables = null, CancellationToken ct = default);
 
     /// <summary>
@@ -29,6 +30,7 @@ public interface IGraphQlClient
     /// <param name="variables">Optional dictionary of query variables.</param>
     /// <param name="ct">Cancellation token to allow request cancellation.</param>
     /// <returns>A tuple containing the deserialized data and raw JSON response.</returns>
-    /// <exception cref="InvalidOperationException">Thrown when the request fails or GraphQL returns errors.</exception>
+    /// <exception cref="TkOlympApp.Exceptions.ServiceException">Thrown for HTTP/network failures.</exception>
+    /// <exception cref="TkOlympApp.Exceptions.GraphQLException">Thrown when GraphQL returns errors.</exception>
     Task<(T Data, string Raw)> PostWithRawAsync<T>(string query, Dictionary<string, object>? variables = null, CancellationToken ct = default);
 }

@@ -664,10 +664,11 @@ public partial class CalendarPage : ContentPage
             if (instance.IsCancelled) return;
             if (instance.Event?.Id is long eventId)
             {
-                var page = new EventPage();
-                if (eventId != 0) page.EventId = eventId;
-                _suppressReloadOnNextAppearing = true;
-                await Navigation.PushAsync(page);
+                if (eventId != 0)
+                {
+                    _suppressReloadOnNextAppearing = true;
+                    await Shell.Current.GoToAsync($"{nameof(EventPage)}?id={eventId}");
+                }
             }
         }
     }
@@ -683,10 +684,11 @@ public partial class CalendarPage : ContentPage
             if (row?.Instance?.Event?.Id is long eventId)
             {
                 if (row.Instance.IsCancelled) return;
-                var page = new EventPage();
-                if (eventId != 0) page.EventId = eventId;
-                _suppressReloadOnNextAppearing = true;
-                await Navigation.PushAsync(page);
+                if (eventId != 0)
+                {
+                    _suppressReloadOnNextAppearing = true;
+                    await Shell.Current.GoToAsync($"{nameof(EventPage)}?id={eventId}");
+                }
             }
         }
         catch (Exception ex)
@@ -943,9 +945,8 @@ public partial class CalendarPage : ContentPage
     {
         try
         {
-            var page = new CalendarViewPage();
             _suppressReloadOnNextAppearing = true;
-            await Navigation.PushAsync(page);
+            await Shell.Current.GoToAsync(nameof(CalendarViewPage));
         }
         catch { }
     }
