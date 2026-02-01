@@ -78,4 +78,56 @@ public class PhoneHelpersTests
         // Assert
         result.Should().Be(expected);
     }
+
+    [Theory]
+    [InlineData("+420123456789", "420 123 456 789")] // Czech prefix
+    [InlineData("+1234567890", "123 456 789 0")] // US number
+    [InlineData("+44 20 1234 5678", "442 012 345 678")] // UK number with spaces
+    public void Format_InternationalFormats_ExtractsDigits(string input, string expected)
+    {
+        // Act
+        var result = TkOlympApp.Helpers.PhoneHelpers.Format(input);
+
+        // Assert
+        result.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData("123-456-789", "123 456 789")]
+    [InlineData("123.456.789", "123 456 789")]
+    [InlineData("123/456/789", "123 456 789")]
+    [InlineData("(123) 456 789", "123 456 789")]
+    public void Format_VariousSeparators_NormalizesToSpaces(string input, string expected)
+    {
+        // Act
+        var result = TkOlympApp.Helpers.PhoneHelpers.Format(input);
+
+        // Assert
+        result.Should().Be(expected);
+    }
+
+    [Fact]
+    public void Format_MixedWithLetters_ExtractsOnlyDigits()
+    {
+        // Arrange
+        var input = "Call 1-800-FLOWERS (1-800-356-9377)";
+
+        // Act
+        var result = TkOlympApp.Helpers.PhoneHelpers.Format(input);
+
+        // Assert - extracts ALL digits (both representations)
+        result.Should().Be("180 018 003 569 377");
+    }
+
+    [Theory]
+    [InlineData("000", "000")]
+    [InlineData("0000000000", "000 000 000 0")]
+    public void Format_AllZeros_FormatsCorrectly(string input, string expected)
+    {
+        // Act
+        var result = TkOlympApp.Helpers.PhoneHelpers.Format(input);
+
+        // Assert
+        result.Should().Be(expected);
+    }
 }

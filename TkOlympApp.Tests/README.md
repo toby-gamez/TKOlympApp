@@ -16,30 +16,43 @@ Testování .NET MAUI aplikací je náročnější než běžných .NET projekt�
 
 ## Současný stav
 
-✅ **Implementované testy (132 testů celkem):**
-- `PhoneHelpersTests` (17 testů) - formátování telefonních čísel
-- `PostalCodeHelpersTests` (10 testů) - formátování PSČ
+✅ **Implementované testy (217 testů celkem):**
+- `PhoneHelpersTests` (26 testů) - formátování telefonních čísel, edge cases, mezinárodní formáty
+- `PostalCodeHelpersTests` (19 testů) - formátování PSČ, edge cases, různé separátory
 - `DateHelpersTests` (11 testů) - formátování dat a času
 - `NationalityHelperTests` (36 testů) - mapování kódů zemí, lokalizované přídavné jméno
 - `CohortColorHelperTests` (58 testů) - parsování barev z JSON, RGB/hex formáty
+- `CohortColorConverterTests` (4 testy) - MAUI converter pro cohort barvy
+- `CohortHasColorConverterTests` (4 testy) - MAUI converter pro cohort color detection
+- `FriendlyDateConverterTests` (6 testů) - MAUI converter pro friendly date formátování
+- `EventTypeToLabelConverterTests` (9 testů) - MAUI converter pro event type labels
+- `HelperIntegrationTests` (22 testů) - integrační testy napříč helpers
+- `ConverterIntegrationTests` (22 testů) - integrační testy converterů
 
 📦 **Testovací infrastruktura:**
-- Source linking pro pure helper metody (PhoneHelpers, PostalCodeHelpers, DateHelpers, NationalityHelper, CohortColorHelper)
+- Source linking pro pure helper metody a converters
 - Mock LocalizationService pro DateHelpers testy
-- Microsoft.Maui.Controls pro testování MAUI-dependentních metod (CohortColorHelper)
+- Microsoft.Maui.Controls pro testování MAUI-dependentních metod
 - FluentAssertions pro expresivní asserty
+- Komplexní edge case coverage včetně null handling, whitespace, invalid inputs
 
 ## Pokrytí
 
 | Soubor | Testů | Status | Poznámka |
 |--------|-------|--------|----------|
-| PhoneHelpers | 17 | ✅ | Kompletní pokrytí |
-| PostalCodeHelpers | 10 | ✅ | Kompletní pokrytí |
+| PhoneHelpers | 26 | ✅ | Kompletní pokrytí včetně edge cases |
+| PostalCodeHelpers | 19 | ✅ | Kompletní pokrytí včetně edge cases |
 | DateHelpers | 11 | ✅ | Bez testů pro "dnes"/"zítra" (vyžadují time provider) |
 | NationalityHelper | 36 | ✅ | Pokrývá všechny metody a lokalizace |
 | CohortColorHelper | 58 | ✅ | Kompletní pokrytí včetně JSON parsing |
+| CohortColorConverter | 4 | ✅ | Kompletní converter testy |
+| CohortHasColorConverter | 4 | ✅ | Kompletní converter testy |
+| FriendlyDateConverter | 6 | ✅ | Kompletní converter testy |
+| EventTypeToLabelConverter | 9 | ✅ | Kompletní converter testy |
+| Integration Tests | 44 | ✅ | Cross-helper a cross-converter testy |
 | HtmlHelpers | 0 | ⏳ | Vyžaduje rozsáhlejší MAUI mock |
 | FirstRunHelper | 0 | ⏳ | Závisí na SecureStorage |
+| Services | 0 | ⏳ | Vyžaduje HttpClient mockování |
 
 ## Spuštění testů
 

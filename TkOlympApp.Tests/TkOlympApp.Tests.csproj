@@ -33,6 +33,11 @@
     <Compile Include="..\TkOlympApp\Helpers\PostalCodeHelpers.cs" Link="LinkedSources\PostalCodeHelpers.cs" />
     <Compile Include="..\TkOlympApp\Helpers\NationalityHelper.cs" Link="LinkedSources\NationalityHelper.cs" />
     <Compile Include="..\TkOlympApp\Helpers\CohortColorHelper.cs" Link="LinkedSources\CohortColorHelper.cs" />
+    <!-- Link converters for testing -->
+    <Compile Include="..\TkOlympApp\Converters\CohortColorConverter.cs" Link="LinkedSources\CohortColorConverter.cs" />
+    <Compile Include="..\TkOlympApp\Converters\CohortHasColorConverter.cs" Link="LinkedSources\CohortHasColorConverter.cs" />
+    <Compile Include="..\TkOlympApp\Converters\FriendlyDateConverter.cs" Link="LinkedSources\FriendlyDateConverter.cs" />
+    <Compile Include="..\TkOlympApp\Converters\EventTypeToLabelConverter.cs" Link="LinkedSources\EventTypeToLabelConverter.cs" />
     <!-- Note: We create a mock LocalizationService for testing DateHelpers -->
   </ItemGroup>
 
