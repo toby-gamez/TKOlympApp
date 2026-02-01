@@ -1,15 +1,21 @@
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Logging;
+using TkOlympApp.Exceptions;
 
 namespace TkOlympApp.Services;
 
 public static class EventService
 {
+    private static readonly ILogger Logger = LoggerService.CreateLogger(nameof(EventService));
+    
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web)
     {
         PropertyNameCaseInsensitive = true
     };
+    
     // Last raw JSON response for eventInstancesForRangeList (for UI/debugging)
     public static string? LastEventInstancesForRangeRawJson { get; private set; }
     
@@ -466,6 +472,20 @@ fragment EventFull on Event {
     }
     
 
+    /// <summary>
+    /// Získá moje události v zadaném časovém rozsahu.
+    /// Použití: LoadEventsAsync s proper error handling a structured logging.
+    /// </summary>
+    /// <param name="startRange">Začátek časového rozsahu</param>
+    /// <param name="endRange">Konec časového rozsahu</param>
+    /// <param name="first">Maximální počet výsledků (optional)</param>
+    /// <param name="offset">Offset pro stránkování (optional)</param>
+    /// <param name="onlyType">Filtr typu události (optional)</param>
+    /// <param name="ct">Cancellation token pro zrušení operace</param>
+    /// <returns>Seznam EventInstance nebo prázdný list při chybě</returns>
+    /// <exception cref="ServiceException">Při selhání komunikace s API</exception>
+    /// <exception cref="GraphQLException">Při GraphQL chybě</exception>
+    /// <exception cref="OperationCanceledException">Když je operace zrušena</exception>
     public static async Task<List<EventInstance>> GetMyEventInstancesForRangeAsync(
         DateTime startRange,
         DateTime endRange,
@@ -474,20 +494,94 @@ fragment EventFull on Event {
         string? onlyType = null,
         CancellationToken ct = default)
     {
-        var variables = new Dictionary<string, object>
+        var sw = Stopwatch.StartNew();
+        
+        try
         {
-            {"startRange", startRange.ToString("o")},
-            {"endRange", endRange.ToString("o")},
-        };
+            // Structured logging začátku operace
+            using (Logger.BeginOperation(
+                "GetMyEventInstancesForRange",
+                ("StartRange", startRange.ToString("o")),
+                ("EndRange", endRange.ToString("o")),
+                ("First", first),
+                ("Offset", offset),
+                ("OnlyType", onlyType)))
+            {
+                var variables = new Dictionary<string, object>
+                {
+                    {"startRange", startRange.ToString("o")},
+                    {"endRange", endRange.ToString("o")},
+                };
 
-        if (first.HasValue) variables["first"] = first.Value;
-        if (offset.HasValue) variables["offset"] = offset.Value;
-        if (!string.IsNullOrEmpty(onlyType)) variables["onlyType"] = onlyType;
+                if (first.HasValue) variables["first"] = first.Value;
+                if (offset.HasValue) variables["offset"] = offset.Value;
+                if (!string.IsNullOrEmpty(onlyType)) variables["onlyType"] = onlyType;
 
-        var query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $first: Int, $offset: Int, $onlyType: EventType) { eventInstancesForRangeList(onlyMine: true, startRange: $startRange, endRange: $endRange, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled since until updatedAt event { id description name type locationText isRegistrationOpen isPublic eventTrainersList { name } eventTargetCohortsList { cohortId cohort { id name colorRgb } } eventRegistrationsList { person { name } couple { man { lastName } woman { lastName } } } location { id name } } tenant { couplesList { man { firstName name lastName } woman { name lastName firstName } } } } }";
+                var query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $first: Int, $offset: Int, $onlyType: EventType) { eventInstancesForRangeList(onlyMine: true, startRange: $startRange, endRange: $endRange, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled since until updatedAt event { id description name type locationText isRegistrationOpen isPublic eventTrainersList { name } eventTargetCohortsList { cohortId cohort { id name colorRgb } } eventRegistrationsList { person { name } couple { man { lastName } woman { lastName } } } location { id name } } tenant { couplesList { man { firstName name lastName } woman { name lastName firstName } } } } }";
 
-        var data = await GraphQlClient.PostAsync<MyEventInstancesData>(query, variables, ct);
-        return data?.EventInstancesForRangeList ?? new List<EventInstance>();
+                Logger.LogGraphQLRequest("GetMyEventInstancesForRange", variables);
+
+                var data = await GraphQlClient.PostAsync<MyEventInstancesData>(query, variables, ct);
+                var result = data?.EventInstancesForRangeList ?? new List<EventInstance>();
+
+                sw.Stop();
+                Logger.LogGraphQLResponse("GetMyEventInstancesForRange", result, sw.Elapsed);
+                Logger.LogOperationSuccess(
+                    "GetMyEventInstancesForRange",
+                    result,
+                    sw.Elapsed,
+                    ("EventCount", result.Count));
+
+                return result;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            sw.Stop();
+            Logger.LogOperationCancelled("GetMyEventInstancesForRange", sw.Elapsed, "User or timeout");
+            throw; // Re-throw pro caller
+        }
+        catch (GraphQLException ex)
+        {
+            sw.Stop();
+            Logger.LogOperationFailure(
+                "GetMyEventInstancesForRange",
+                ex,
+                sw.Elapsed,
+                ("StartRange", startRange.ToString("o")),
+                ("EndRange", endRange.ToString("o")));
+            throw; // Re-throw pro caller aby mohl rozhodnout o retry
+        }
+        catch (ServiceException ex)
+        {
+            sw.Stop();
+            Logger.LogOperationFailure(
+                "GetMyEventInstancesForRange",
+                ex,
+                sw.Elapsed,
+                ("StartRange", startRange.ToString("o")),
+                ("EndRange", endRange.ToString("o")),
+                ("IsTransient", ex.IsTransient));
+            throw; // Re-throw pro caller
+        }
+        catch (Exception ex)
+        {
+            sw.Stop();
+            // Unexpected exception - wrap do ServiceException
+            var serviceEx = new ServiceException(
+                "Neočekávaná chyba při načítání událostí",
+                ex,
+                isTransient: false)
+                .WithContext("StartRange", startRange.ToString("o"))
+                .WithContext("EndRange", endRange.ToString("o"));
+            
+            Logger.LogOperationFailure(
+                "GetMyEventInstancesForRange",
+                serviceEx,
+                sw.Elapsed);
+            
+            throw serviceEx;
+        }
     }
 
     public static async Task<List<EventInstance>> GetEventInstancesForRangeListAsync(

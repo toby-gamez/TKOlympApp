@@ -38,6 +38,13 @@
     <Compile Include="..\TkOlympApp\Converters\CohortHasColorConverter.cs" Link="LinkedSources\CohortHasColorConverter.cs" />
     <Compile Include="..\TkOlympApp\Converters\FriendlyDateConverter.cs" Link="LinkedSources\FriendlyDateConverter.cs" />
     <Compile Include="..\TkOlympApp\Converters\EventTypeToLabelConverter.cs" Link="LinkedSources\EventTypeToLabelConverter.cs" />
+    <!-- Link exceptions for testing -->
+    <Compile Include="..\TkOlympApp\Exceptions\ServiceException.cs" Link="LinkedSources\ServiceException.cs" />
+    <Compile Include="..\TkOlympApp\Exceptions\GraphQLException.cs" Link="LinkedSources\GraphQLException.cs" />
+    <Compile Include="..\TkOlympApp\Exceptions\AuthenticationException.cs" Link="LinkedSources\AuthenticationException.cs" />
+    <!-- Link logging services for testing -->
+    <Compile Include="..\TkOlympApp\Services\LoggerService.cs" Link="LinkedSources\LoggerService.cs" />
+    <Compile Include="..\TkOlympApp\Services\LoggerExtensions.cs" Link="LinkedSources\LoggerExtensions.cs" />
     <!-- Note: We create a mock LocalizationService for testing DateHelpers -->
   </ItemGroup>
 
