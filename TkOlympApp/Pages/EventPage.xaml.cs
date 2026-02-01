@@ -10,12 +10,14 @@ using TkOlympApp.Converters;
 using Microsoft.Maui.Graphics;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.Shapes;
+using Microsoft.Extensions.Logging;
 
 namespace TkOlympApp.Pages;
 
 [QueryProperty(nameof(EventId), "id")]
 public partial class EventPage : ContentPage
 {
+    private readonly ILogger<EventPage> _logger;
     private long _eventId;
     private bool _appeared;
     private bool _loadRequested;
@@ -50,6 +52,7 @@ public partial class EventPage : ContentPage
 
     public EventPage()
     {
+        _logger = LoggerService.CreateLogger<EventPage>();
         InitializeComponent();
         RegistrationsCollection.ItemsSource = _registrations;
         TrainersCollection.ItemsSource = _trainers;
@@ -137,10 +140,11 @@ public partial class EventPage : ContentPage
         if (EventId == 0) return;
         try
         {
-            Debug.WriteLine($"EventPage: Loading event {EventId}");
+            _logger.LogInformation("Loading event details for EventId: {EventId}", EventId);
             var ev = await EventService.GetEventAsync(EventId);
             if (ev == null)
             {
+                _logger.LogWarning("Event {EventId} not found", EventId);
                 await DisplayAlertAsync(LocalizationService.Get("NotFound_Title"), LocalizationService.Get("NotFound_Event"), LocalizationService.Get("Button_OK"));
                 return;
             }
@@ -154,7 +158,9 @@ public partial class EventPage : ContentPage
                 since = firstInstance.Since;
                 until = firstInstance.Until;
             }
-            Debug.WriteLine($"EventPage: Loaded event - since={since?.ToString("o") ?? "(null)"}, until={until?.ToString("o") ?? "(null)"}");
+            _logger.LogDebug("Event loaded - Since: {Since}, Until: {Until}", 
+                since?.ToString("o") ?? "(null)", 
+                until?.ToString("o") ?? "(null)");
 
             // Use explicit naming: prefer event name, otherwise fall back to localized "Lesson" prefix or short form
             if (!string.IsNullOrWhiteSpace(ev.Name))
@@ -574,7 +580,11 @@ public partial class EventPage : ContentPage
         }
         catch (Exception ex)
         {
-            await DisplayAlertAsync(LocalizationService.Get("Error_Loading_Title"), ex.Message, LocalizationService.Get("Button_OK"));
+            _logger.LogError(ex, "Failed to load event - EventId: {EventId}", EventId);
+            await DisplayAlertAsync(
+                LocalizationService.Get("Error_Loading_Title") ?? "Error",
+                ex.Message,
+                LocalizationService.Get("Button_OK") ?? "OK");
         }
     }
 

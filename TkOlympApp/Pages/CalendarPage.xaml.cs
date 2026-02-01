@@ -10,11 +10,13 @@ using System.Globalization;
 using System.Linq;
 using TkOlympApp.Services;
 using Microsoft.Maui.Graphics;
+using Microsoft.Extensions.Logging;
 
 namespace TkOlympApp.Pages;
 
 public partial class CalendarPage : ContentPage
 {
+    private readonly ILogger<CalendarPage> _logger;
     private bool _isLoading;
     private bool _onlyMine = true;
     private DateTime _weekStart;
@@ -24,13 +26,16 @@ public partial class CalendarPage : ContentPage
 
     public CalendarPage()
     {
+        _logger = LoggerService.CreateLogger<CalendarPage>();
+        
         try
         {
+            _logger.LogTrace("CalendarPage constructor started");
             InitializeComponent();
         }
         catch (Exception ex)
         {
-            try { Debug.WriteLine($"CalendarPage: InitializeComponent failed: {ex}"); } catch { }
+            _logger.LogError(ex, "CalendarPage InitializeComponent failed");
             Content = new Microsoft.Maui.Controls.StackLayout
             {
                 Children =
@@ -46,15 +51,22 @@ public partial class CalendarPage : ContentPage
         {
             SetTopTabVisuals(_onlyMine);
         }
-        catch
+        catch (Exception ex)
         {
-            // ignore if buttons not available on some platforms
+            _logger.LogWarning(ex, "SetTopTabVisuals failed during initialization - buttons may not be available on this platform");
         }
 
         // initialize week range to rolling 7-day window (today + 7 days)
         _weekStart = DateTime.Now.Date;
         _weekEnd = _weekStart.AddDays(6);
-        try { UpdateWeekLabel(); } catch { }
+        try 
+        { 
+            UpdateWeekLabel(); 
+        } 
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "UpdateWeekLabel failed during initialization");
+        }
 
         UpdateEmptyView();
     }
@@ -62,7 +74,7 @@ public partial class CalendarPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        try { Debug.WriteLine("CalendarPage: OnAppearing"); } catch { }
+        _logger.LogTrace("CalendarPage OnAppearing");
         
         // Subscribe to events
         if (TabMyButton != null)
@@ -87,12 +99,23 @@ public partial class CalendarPage : ContentPage
         {
             Dispatcher.Dispatch(async () =>
             {
-                try { await LoadEventsAsync(); } catch { }
+                try 
+                { 
+                    await LoadEventsAsync(); 
+                } 
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "LoadEventsAsync failed in OnAppearing");
+                    await DisplayAlertAsync(
+                        LocalizationService.Get("Error_Loading_Title") ?? "Error",
+                        ex.Message,
+                        LocalizationService.Get("Button_OK") ?? "OK");
+                }
             });
         }
-        catch
+        catch (Exception ex)
         {
-            // fallback if dispatch isn't available
+            _logger.LogWarning(ex, "Dispatcher.Dispatch failed, using fallback");
             _ = LoadEventsAsync();
         }
     }
@@ -126,27 +149,54 @@ public partial class CalendarPage : ContentPage
 
     private async Task LoadEventsAsync()
     {
-        try { Debug.WriteLine("CalendarPage: LoadEventsAsync start"); } catch { }
+        _logger.LogDebug("LoadEventsAsync started - Mode: {Mode}, WeekStart: {WeekStart}, WeekEnd: {WeekEnd}", 
+            _onlyMine ? "Mine" : "All", _weekStart, _weekEnd);
 
         // Ensure the RefreshView shows a refresh indicator when we start programmatically
-        try { if (EventsRefresh != null && !EventsRefresh.IsRefreshing) EventsRefresh.IsRefreshing = true; } catch { }
+        try 
+        { 
+            if (EventsRefresh != null && !EventsRefresh.IsRefreshing) 
+                EventsRefresh.IsRefreshing = true; 
+        } 
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to set RefreshView.IsRefreshing");
+        }
 
         if (_isLoading)
         {
+            _logger.LogDebug("LoadEventsAsync skipped - load already in progress");
             // If a load is already in progress, ensure RefreshView isn't left spinning.
-            try { EventsRefresh?.IsRefreshing = false; } catch { }
+            try 
+            { 
+                EventsRefresh?.IsRefreshing = false; 
+            } 
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to reset RefreshView.IsRefreshing");
+            }
             return;
         }
         UpdateEmptyView();
         _isLoading = true;
-        try { EventsScroll.IsVisible = false; } catch { }
+        try 
+        { 
+            EventsScroll.IsVisible = false; 
+        } 
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to hide EventsScroll");
+        }
         try
         {
             // use selected week range (Monday..Sunday)
             var start = _weekStart.Date;
             // extend end by one day to be inclusive across timezones
             var end = _weekEnd.Date.AddDays(1);
-            try { Debug.WriteLine($"LoadEventsAsync: DateTime.Now={DateTime.Now:o}, start={start:o}, end={end:o}"); } catch { }
+            _logger.LogInformation("Fetching events: Start={Start:o}, End={End:o}, OnlyMine={OnlyMine}", 
+                start, end, _onlyMine);
+            
+            using var perfLog = LoggerService.LogPerformance<CalendarPage>("LoadEvents" + (_onlyMine ? "Mine" : "All"));
             
             List<EventService.EventInstance> events;
             if (_onlyMine)
@@ -158,6 +208,9 @@ public partial class CalendarPage : ContentPage
                 // Load all events at once (fastest approach - single request)
                 events = await EventService.GetEventInstancesForRangeListAsync(start, end);
             }
+            
+            _logger.LogInformation("Fetched {Count} events for week {WeekStart} - {WeekEnd}", 
+                events.Count, _weekStart.ToShortDateString(), _weekEnd.ToShortDateString());
             
             // Clear previous views and tracking list
             EventsStack.Children.Clear();
@@ -196,7 +249,10 @@ public partial class CalendarPage : ContentPage
                             AddNameVariants(highlightNames, currentUser.ULogin);
                         }
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to fetch current user for highlighting");
+                    }
 
                     try
                     {
@@ -208,11 +264,14 @@ public partial class CalendarPage : ContentPage
                             AddNameVariants(highlightNames, string.IsNullOrWhiteSpace(c.ManName) || string.IsNullOrWhiteSpace(c.WomanName) ? null : c.ManName + " - " + c.WomanName);
                         }
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to fetch active couples for highlighting");
+                    }
 
                     var distinct = highlightNames.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
                     normalizedHighlights = distinct.Select(NormalizeName).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-                    try { System.Diagnostics.Debug.WriteLine("Highlight names: " + string.Join(",", distinct)); } catch { }
+                    _logger.LogDebug("Highlight names for calendar: {Names}", string.Join(", ", distinct));
                     
                     foreach (var row in _trainerDetailRows)
                     {
@@ -227,7 +286,10 @@ public partial class CalendarPage : ContentPage
                         row.IsHighlighted = matched;
                     }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to process highlighting logic");
+                }
             }
 
             // background fetch for missing first-registrant names using GetEventAsync
@@ -235,6 +297,7 @@ public partial class CalendarPage : ContentPage
             {
                 try
                 {
+                    _logger.LogTrace("Starting background fetch for {Count} trainer detail rows", _trainerDetailRows.Count);
                     foreach (var row in _trainerDetailRows)
                     {
                         var inst = row.Instance;
@@ -263,7 +326,10 @@ public partial class CalendarPage : ContentPage
                                         }
                                     }
                                 }
-                                catch { }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogWarning(ex, "Failed to extract registrant name from event {EventId}", id);
+                                }
                                 // Ensure we set the FirstRegistrant (may be empty) and mark row as loaded so triggers apply after fetch
                                 Dispatcher?.Dispatch(() => {
                                     row.FirstRegistrant = name;
@@ -273,40 +339,57 @@ public partial class CalendarPage : ContentPage
                                         var frNorm = NormalizeName(row.FirstRegistrant);
                                         var matched = !string.IsNullOrWhiteSpace(frNorm) && normalizedHighlights.Any(h => frNorm.Contains(h) || h.Contains(frNorm));
                                         row.IsHighlighted = matched;
-                                        System.Diagnostics.Debug.WriteLine("Row firstRegistrant='" + row.FirstRegistrant + "' normalized='" + frNorm + "' matched=" + matched);
+                                        _logger.LogTrace("Row updated: FirstRegistrant={FirstRegistrant}, Normalized={Normalized}, Matched={Matched}",
+                                            row.FirstRegistrant, frNorm, matched);
                                     }
-                                    catch { }
+                                    catch (Exception ex)
+                                    {
+                                        _logger.LogWarning(ex, "Failed to update highlight status for row");
+                                    }
                                 });
                             }
-                            catch
+                            catch (Exception ex)
                             {
+                                _logger.LogWarning(ex, "Failed to fetch event details for event {EventId}", evt.Id);
                                 // On any error, still mark row as loaded so UI doesn't stay in unknown state
                                 Dispatcher?.Dispatch(() => { row.IsLoaded = true; });
                             }
                         }
                     }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Background fetch failed unexpectedly");
+                }
             });
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "LoadEventsAsync failed");
             await DisplayAlertAsync(LocalizationService.Get("Error_Loading_Title"), ex.Message, LocalizationService.Get("Button_OK"));
         }
         finally
         {
-            try { EventsScroll.IsVisible = true; } catch { }
+            try 
+            { 
+                EventsScroll.IsVisible = true; 
+            } 
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to show EventsScroll");
+            }
             try
             {
                 if (EventsRefresh != null)
                     EventsRefresh.IsRefreshing = false;
             }
-            catch
+            catch (Exception ex)
             {
-                // ignore UI update failures
+                _logger.LogWarning(ex, "Failed to stop RefreshView spinner");
             }
             _isLoading = false;
             UpdateEmptyView();
+            _logger.LogDebug("LoadEventsAsync completed");
         }
     }
 
@@ -606,7 +689,14 @@ public partial class CalendarPage : ContentPage
                 await Navigation.PushAsync(page);
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "OnEventCardTapped failed");
+            await DisplayAlertAsync(
+                LocalizationService.Get("Error_Title") ?? "Error",
+                ex.Message,
+                LocalizationService.Get("Button_OK") ?? "OK");
+        }
     }
 
     private void SetTopTabVisuals(bool myActive)
@@ -649,22 +739,40 @@ public partial class CalendarPage : ContentPage
                 }
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "SetTopTabVisuals failed - tab buttons may not be styled correctly");
+        }
     }
 
     private async void OnTabMineClicked(object? sender, EventArgs e)
     {
         try
         {
+            _logger.LogTrace("Tab 'Mine' clicked");
             _onlyMine = true;
-            try { SetTopTabVisuals(true); } catch { }
+            try 
+            { 
+                SetTopTabVisuals(true); 
+            } 
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "SetTopTabVisuals failed in OnTabMineClicked");
+            }
             UpdateEmptyView();
             await LoadEventsAsync();
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"OnTabMineClicked error: {ex}");
-            try { await DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+            _logger.LogError(ex, "OnTabMineClicked failed");
+            try 
+            { 
+                await DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); 
+            } 
+            catch (Exception displayEx)
+            {
+                _logger.LogError(displayEx, "Failed to display error alert");
+            }
         }
     }
 
@@ -672,30 +780,45 @@ public partial class CalendarPage : ContentPage
     {
         try
         {
+            _logger.LogTrace("Tab 'All' clicked");
             _onlyMine = false;
-            try { SetTopTabVisuals(false); } catch { }
+            try 
+            { 
+                SetTopTabVisuals(false); 
+            } 
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "SetTopTabVisuals failed in OnTabAllClicked");
+            }
             UpdateEmptyView();
             await LoadEventsAsync();
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"OnTabAllClicked error: {ex}");
-            try { await DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+            _logger.LogError(ex, "OnTabAllClicked failed");
+            try 
+            { 
+                await DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); 
+            } 
+            catch (Exception displayEx)
+            {
+                _logger.LogError(displayEx, "Failed to display error alert");
+            }
         }
     }
 
     private async void OnEventsRefresh(object? sender, EventArgs e)
     {
-        try { Debug.WriteLine("CalendarPage: OnEventsRefresh invoked"); } catch { }
+        _logger.LogTrace("Events refresh triggered");
         await LoadEventsAsync();
         try
         {
             if (EventsRefresh != null)
                 EventsRefresh.IsRefreshing = false;
         }
-        catch
+        catch (Exception ex)
         {
-            // ignore
+            _logger.LogWarning(ex, "Failed to stop RefreshView after manual refresh");
         }
     }
 
@@ -718,13 +841,29 @@ public partial class CalendarPage : ContentPage
         {
             _weekStart = _weekStart.AddDays(-7);
             _weekEnd = _weekStart.AddDays(6);
-            try { UpdateWeekLabel(); } catch { }
+            _logger.LogDebug("Week navigation: Previous week selected - {WeekStart} to {WeekEnd}", 
+                _weekStart.ToShortDateString(), _weekEnd.ToShortDateString());
+            try 
+            { 
+                UpdateWeekLabel(); 
+            } 
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "UpdateWeekLabel failed in OnPrevWeekClicked");
+            }
             await LoadEventsAsync();
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"OnPrevWeekClicked error: {ex}");
-            try { await DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+            _logger.LogError(ex, "OnPrevWeekClicked failed");
+            try 
+            { 
+                await DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); 
+            } 
+            catch (Exception displayEx)
+            {
+                _logger.LogError(displayEx, "Failed to display error alert");
+            }
         }
     }
 
@@ -734,13 +873,29 @@ public partial class CalendarPage : ContentPage
         {
             _weekStart = _weekStart.AddDays(7);
             _weekEnd = _weekStart.AddDays(6);
-            try { UpdateWeekLabel(); } catch { }
+            _logger.LogDebug("Week navigation: Next week selected - {WeekStart} to {WeekEnd}", 
+                _weekStart.ToShortDateString(), _weekEnd.ToShortDateString());
+            try 
+            { 
+                UpdateWeekLabel(); 
+            } 
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "UpdateWeekLabel failed in OnNextWeekClicked");
+            }
             await LoadEventsAsync();
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"OnNextWeekClicked error: {ex}");
-            try { await DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+            _logger.LogError(ex, "OnNextWeekClicked failed");
+            try 
+            { 
+                await DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); 
+            } 
+            catch (Exception displayEx)
+            {
+                _logger.LogError(displayEx, "Failed to display error alert");
+            }
         }
     }
 
@@ -752,20 +907,35 @@ public partial class CalendarPage : ContentPage
             // If already on today's week, don't reload
             if (_weekStart == today)
             {
-                try { Debug.WriteLine($"OnTodayWeekClicked: Already on today's week, skipping reload"); } catch { }
+                _logger.LogDebug("Today button clicked but already on today's week - skipping reload");
                 return;
             }
             
             _weekStart = today;
             _weekEnd = _weekStart.AddDays(6);
-            try { Debug.WriteLine($"OnTodayWeekClicked: DateTime.Now={DateTime.Now:o}, weekStart={_weekStart:o}, weekEnd={_weekEnd:o}"); } catch { }
-            try { UpdateWeekLabel(); } catch { }
+            _logger.LogDebug("Week navigation: Today clicked - resetting to current week {WeekStart} to {WeekEnd}", 
+                _weekStart.ToShortDateString(), _weekEnd.ToShortDateString());
+            try 
+            { 
+                UpdateWeekLabel(); 
+            } 
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "UpdateWeekLabel failed in OnTodayWeekClicked");
+            }
             await LoadEventsAsync();
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"OnTodayWeekClicked error: {ex}");
-            try { await DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+            _logger.LogError(ex, "OnTodayWeekClicked failed");
+            try 
+            { 
+                await DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); 
+            } 
+            catch (Exception displayEx)
+            {
+                _logger.LogError(displayEx, "Failed to display error alert");
+            }
         }
     }
 

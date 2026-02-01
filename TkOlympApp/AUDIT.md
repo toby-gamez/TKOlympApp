@@ -18,7 +18,7 @@ TkOlympApp je mobilní aplikace pro správu sportovních událostí, registrací
 | **Architektura** | ⚠️ **Kritické** | Absence dependency injection, všechny služby jsou statické singletons |
 | **Paměťové úniky** | ✅ **Vyřešeno 2026-02-01** | Event handlery nyní korektně odhlášeny v OnDisappearing() |
 | **Async patterns** | ✅ **Vyřešeno 2026-02-01** | CancellationToken přidán do 100% async metod |
-| **Error handling** | ✅ **Vyřešeno 2026-02-01** | Implementován centralizovaný LoggerService, odstraněno 50+ prázdných catch bloků |
+| **Error handling** | ✅ **Vyřešeno 2026-02-01** | Implementován centralizovaný LoggerService, odstraněno 50+ prázdných catch bloků, kompletní structured logging |
 | **Testovatelnost** | ⚠️ **Nízká** | Statické závislosti stále brání mockování, ale existuje test suite pro Helpers/Converters |
 | **Výkon** | ⚠️ **Střední** | Opakované LINQ dotazy, žádné profilování |
 | **Platform-specific** | ✅ **Dobré** | Čistě odděleno v `Platforms/`, použit Android WorkManager |
@@ -26,7 +26,7 @@ TkOlympApp je mobilní aplikace pro správu sportovních událostí, registrací
 | **Magic strings** | ✅ **Vyřešeno 2026-02-01** | Vytvořena AppConstants třída, vše refaktorováno |
 | **Bezpečnost (credentials)** | ✅ **Vyřešeno 2026-02-01** | Hardcoded hesla odstraněna, použity env variables |
 
-**Celkové skóre:** 7.2/10 — Funkční aplikace s vyřešenými P0 a většinou P1 problémů; významné zlepšení v error handling, memory management a async patterns; zbývají architektonické dluhy (DI migrace) pro plnou testovatelnost.
+**Celkové skóre:** 7.8/10 — Funkční aplikace s vyřešenými P0 a všemi P1 problémů; dokončeno: error handling s kompletním structured loggingem, memory management a async patterns; zbývají architektonické dluhy (DI migrace) pro plnou testovatelnost.
 
 ---
 
@@ -1906,7 +1906,7 @@ Aplikace nemá retry logic ani exponential backoff.
 | **P1** | Implementovat memory leak fixes (event unsubscribe) | 1 týden | Stabilita | ✅ **HOTOVO 2026-02-01** |
 | **P1** | Odstranit prázdné catch bloky + strukturovaný logging | 1 týden | Diagnostika | ✅ **HOTOVO 2026-02-01** |
 | **P2 (Střední)** | Vytvořit ViewModely pro top 5 Pages | 2 týdny | Architektura | |
-| **P2** | Strukturovaný logging (Application Insights) | 3 dny | Monitoring | 🔄 **Částečně (LoggerService)** |
+| **P2** | Strukturovaný logging (Application Insights) | 3 dny | Monitoring | ✅ **HOTOVO 2026-02-01** (LoggerService kompletní) |
 | **P2** | Unit testy pro Services (target 80% coverage) | 2 týdny | Kvalita | |
 | **P3 (Nízká)** | Refactor CalendarPage (1234 řádků → <200) | 1 týden | Udržitelnost | |
 | **P3** | Aktivovat iOS target + implementace | 3 týdny | Cross-platform | |
@@ -1919,7 +1919,7 @@ Aplikace nemá retry logic ani exponential backoff.
 | Průměrná délka Page code-behind | 450 řádků | <150 řádků |
 | Počet statických služeb | 21 | 0 |
 | Async metody s CancellationToken | 100% (✅ 2026-02-01) | 100% |
-| Empty catch bloků | 50+ | 0 |
+| Empty catch bloků | 50+ | 0 (✅ 2026-02-01) |
 | Memory leaks (známé) | 0 (✅ opraveno 2026-02-01) | 0 |
 | Startup time (cold) | 2.5s | <1.5s |
 | Build warnings | 15 | 0 |

@@ -149,7 +149,10 @@ public static class EventNotificationService
                             var success = await ScheduleNotificationAsync(notificationId++, title, $"{eventName}\n{description}", notifyTime, eventInstance.Id);
                             if (success) scheduledCount++;
                         }
-                        catch { }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogWarning(ex, "Failed to process notification rule for event {EventId}", eventInstance.Id);
+                        }
                     }
                 }
                 else
@@ -562,7 +565,10 @@ public static class EventNotificationService
                             var arr = JsonSerializer.Deserialize<List<string>>(previousEvent.RegistrationsJson!);
                             if (arr != null) foreach (var a in arr) previousRegs.Add(a);
                         }
-                        catch { }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogWarning(ex, "Failed to deserialize previous registrations JSON for event {EventId}", previousEvent.Id);
+                        }
                     }
 
                     var added = currentRegs.Except(previousRegs).ToList();
@@ -581,7 +587,10 @@ public static class EventNotificationService
                                 var couples = await UserService.GetActiveCouplesFromUsersAsync();
                                 if (couples != null) myCoupleIds = couples.Where(c => !string.IsNullOrWhiteSpace(c.Id)).Select(c => c.Id!).ToList();
                             }
-                            catch { }
+                            catch (Exception ex)
+                            {
+                                _logger?.LogWarning(ex, "Failed to fetch active couples for change detection");
+                            }
 
                             var affected = false;
                             if (!string.IsNullOrWhiteSpace(myPersonId) && (added.Any(a => string.Equals(a, "p:" + myPersonId, StringComparison.OrdinalIgnoreCase)) || removed.Any(a => string.Equals(a, "p:" + myPersonId, StringComparison.OrdinalIgnoreCase)))) affected = true;
@@ -611,10 +620,16 @@ public static class EventNotificationService
                                 changesDetected++;
                             }
                         }
-                        catch { }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogError(ex, "Failed to send change notification for event {EventId}", currentEvent.Id);
+                        }
                     }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "Failed to process change detection for event {EventId}", currentEvent.Id);
+                }
             }
 
             if (changesDetected > 0)
