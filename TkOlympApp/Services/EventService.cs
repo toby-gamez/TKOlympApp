@@ -13,14 +13,87 @@ public static class EventService
     // Last raw JSON response for eventInstancesForRangeList (for UI/debugging)
     public static string? LastEventInstancesForRangeRawJson { get; private set; }
     
-    public static async Task<EventInstanceDetails?> GetEventInstanceAsync(long instanceId, CancellationToken ct = default)
-    {
-        var query = "query MyQuery($id: BigInt!) { eventInstance(id: $id) { id isCancelled since until event { id capacity createdAt description isPublic isRegistrationOpen isVisible name type summary locationText eventTrainersList { id person {prefixTitle firstName lastName suffixTitle } updatedAt } updatedAt eventTargetCohortsList { cohortId cohort { id name colorRgb } } eventRegistrations { totalCount nodes { couple { id status man { firstName lastName prefixTitle suffixTitle } woman { firstName lastName prefixTitle suffixTitle } } person { id prefixTitle suffixTitle lastName firstName } eventLessonDemandsByRegistrationIdList { id lessonCount trainer { id name } } } } } } }";
-        var variables = new Dictionary<string, object> { { "id", instanceId } };
-
-        var data = await GraphQlClient.PostAsync<EventInstanceData>(query, variables, ct);
-        return data?.EventInstance;
+                public static async Task<EventInstanceDetails?> GetEventInstanceAsync(long instanceId, CancellationToken ct = default)
+                {
+                        var query = @"query MQuery($id: BigInt!) {
+    eventInstance(id: $id) {
+        id
+        isCancelled
+        since
+        until
+        event {
+            id
+            capacity
+            createdAt
+            description
+            isPublic
+            isRegistrationOpen
+            isVisible
+            name
+            type
+            summary
+            locationText
+            eventTrainersList {
+                id
+                person {
+                    prefixTitle
+                    firstName
+                    lastName
+                    suffixTitle
+                }
+                updatedAt
+            }
+            updatedAt
+            eventTargetCohortsList {
+                cohortId
+                cohort {
+                    id
+                    name
+                    colorRgb
+                }
+            }
+            eventRegistrationsList {
+                couple {
+                        id
+                        status
+                        man {
+                            firstName
+                            lastName
+                            prefixTitle
+                            suffixTitle
+                        }
+                        woman {
+                            firstName
+                            lastName
+                            prefixTitle
+                            suffixTitle
+                        }
+                    }
+                    person {
+                        id
+                        prefixTitle
+                        suffixTitle
+                        lastName
+                        firstName
+                    }
+                    eventLessonDemandsByRegistrationIdList {
+                        id
+                        lessonCount
+                        trainer {
+                            id
+                            name
+                        }
+                    }
+                }
+            }
+        }
     }
+}";
+                        var variables = new Dictionary<string, object> { { "id", instanceId } };
+
+                        var data = await GraphQlClient.PostAsync<EventInstanceData>(query, variables, ct);
+                        return data?.EventInstance;
+                }
 
     private sealed class EventInstanceData
     {

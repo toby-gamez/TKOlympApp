@@ -1,4 +1,5 @@
 using System.Net.Http;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Linq;
@@ -11,19 +12,31 @@ namespace TkOlympApp.Services;
 public static class AuthService
 {
     private static readonly HttpClient Client;
+    // Bare client without the auth delegating handler - used for internal refresh requests
+    private static readonly HttpClient BareClient;
 
     static AuthService()
     {
-        Client = new HttpClient
+        // Handler that will intercept 401/403 and attempt token refresh + retry
+        var authHandler = new AuthDelegatingHandler();
+        authHandler.InnerHandler = new HttpClientHandler();
+
+        Client = new HttpClient(authHandler)
         {
             BaseAddress = new Uri("https://api.rozpisovnik.cz/graphql")
         };
         Client.DefaultRequestHeaders.Add("x-tenant-id", "1");
-        // Ensure no legacy x-tenant header is present
         if (Client.DefaultRequestHeaders.Contains("x-tenant"))
         {
             Client.DefaultRequestHeaders.Remove("x-tenant");
         }
+
+        // Bare client without the delegating handler to avoid recursion when refreshing tokens
+        BareClient = new HttpClient(new HttpClientHandler())
+        {
+            BaseAddress = new Uri("https://api.rozpisovnik.cz/graphql")
+        };
+        BareClient.DefaultRequestHeaders.Add("x-tenant-id", "1");
     }
 
     public static HttpClient Http => Client;
@@ -78,7 +91,7 @@ public static class AuthService
         var gql = new GraphQlRequest { Query = "query Refresh { refreshJwt }" };
         var json = JsonSerializer.Serialize(gql);
         using var content = new StringContent(json, Encoding.UTF8, "application/json");
-        using var resp = await Client.PostAsync("", content, ct);
+        using var resp = await BareClient.PostAsync("", content, ct);
 
         // If the server returns 401/403 or other non-success, bubble up an error
         resp.EnsureSuccessStatusCode();
@@ -101,6 +114,77 @@ public static class AuthService
         await SecureStorage.SetAsync("jwt", jwt);
         Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
         return jwt;
+    }
+
+    // Delegating handler that intercepts 401/403 and attempts a token refresh + one retry
+    private class AuthDelegatingHandler : DelegatingHandler
+    {
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            // Send original request
+            var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+
+            if (response.StatusCode != HttpStatusCode.Unauthorized && response.StatusCode != HttpStatusCode.Forbidden)
+                return response;
+
+            // Attempt to refresh token
+            var refreshed = false;
+            try
+            {
+                refreshed = await AuthService.TryRefreshIfNeededAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch
+            {
+                refreshed = false;
+            }
+
+            if (!refreshed)
+            {
+                try { await AuthService.LogoutAsync().ConfigureAwait(false); } catch { }
+                return response;
+            }
+
+            // Clone request for retry since HttpRequestMessage can only be sent once
+            var retry = await CloneHttpRequestMessageAsync(request).ConfigureAwait(false);
+            // Ensure Authorization header is set from the refreshed token
+            var jwt = await SecureStorage.GetAsync("jwt").ConfigureAwait(false);
+            if (!string.IsNullOrWhiteSpace(jwt))
+            {
+                retry.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+            }
+
+            var retryResponse = await base.SendAsync(retry, cancellationToken).ConfigureAwait(false);
+            if (retryResponse.StatusCode == HttpStatusCode.Unauthorized || retryResponse.StatusCode == HttpStatusCode.Forbidden)
+            {
+                try { await AuthService.LogoutAsync().ConfigureAwait(false); } catch { }
+            }
+
+            return retryResponse;
+        }
+
+        private static async Task<HttpRequestMessage> CloneHttpRequestMessageAsync(HttpRequestMessage req)
+        {
+            var clone = new HttpRequestMessage(req.Method, req.RequestUri)
+            {
+                Version = req.Version
+            };
+
+            // Copy headers
+            foreach (var header in req.Headers)
+                clone.Headers.TryAddWithoutValidation(header.Key, header.Value);
+
+            // Copy content (if any)
+            if (req.Content != null)
+            {
+                var bytes = await req.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+                var contentClone = new ByteArrayContent(bytes);
+                foreach (var h in req.Content.Headers)
+                    contentClone.Headers.TryAddWithoutValidation(h.Key, h.Value);
+                clone.Content = contentClone;
+            }
+
+            return clone;
+        }
     }
 
     private static bool IsJwtExpired(string jwt, int leewaySeconds = 60)

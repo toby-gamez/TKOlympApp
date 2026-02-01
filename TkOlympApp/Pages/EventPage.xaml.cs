@@ -600,14 +600,9 @@ public partial class EventPage : ContentPage
                     }
                     else
                     {
-                        // User is not registered - show register button if registration is open AND
-                        // there are available spots OR capacity==0 with no registrations (special allow)
-                        var allowRegistration = isRegistrationOpen && (
-                            !capacity.HasValue || // unlimited
-                            (availableSpots.HasValue && availableSpots.Value > 0) || // free spots
-                            (capacity.HasValue && capacity.Value == 0 && registered == 0) // special case: capacity==0 and none registered
-                        );
-                        RegisterButton.IsVisible = allowRegistration;
+                            // User is not registered - show register button if registration is open (ignore capacity)
+                            var allowRegistration = isRegistrationOpen;
+                            RegisterButton.IsVisible = allowRegistration;
                         RegistrationActionsRow.IsVisible = false;
                     }
                 }

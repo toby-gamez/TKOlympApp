@@ -162,7 +162,8 @@ public partial class EditRegistrationsPage : ContentPage
             var endRange = DateTime.Now.Date.AddYears(1).ToString("o");
             var queryObj = new
             {
-                query = "query($startRange: Datetime!, $endRange: Datetime!) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange) { id event { id name eventRegistrationsList { id person { firstName lastName } couple { id man { firstName lastName } woman { firstName lastName } } } } } }",
+                // Request person id as well so we can match registrations by id instead of fragile name matching
+                query = "query($startRange: Datetime!, $endRange: Datetime!) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange) { id event { id name eventRegistrationsList { id person { id firstName lastName } couple { id man { firstName lastName } woman { firstName lastName } } } } } }",
                 variables = new { startRange = startRange, endRange = endRange }
             };
 
@@ -237,13 +238,24 @@ public partial class EditRegistrationsPage : ContentPage
                                 }
                             }
 
-                            // Check person name match if not matched by couple id
-                            if (!isMine && !string.IsNullOrWhiteSpace(myFull) && reg.TryGetProperty("person", out var personEl) && personEl.ValueKind != JsonValueKind.Null)
+                            // Prefer matching by person id (when available), fall back to name match only if id missing
+                            if (!isMine && reg.TryGetProperty("person", out var personEl) && personEl.ValueKind != JsonValueKind.Null)
                             {
-                                var pf = personEl.TryGetProperty("firstName", out var pff) ? pff.GetString() ?? string.Empty : string.Empty;
-                                var pl = personEl.TryGetProperty("lastName", out var pll) ? pll.GetString() ?? string.Empty : string.Empty;
-                                var pFull = string.IsNullOrWhiteSpace(pf) ? pl : (string.IsNullOrWhiteSpace(pl) ? pf : (pf + " " + pl).Trim());
-                                if (!string.IsNullOrWhiteSpace(pFull) && string.Equals(pFull, myFull, StringComparison.OrdinalIgnoreCase)) isMine = true;
+                                // Try id match first
+                                if (!string.IsNullOrWhiteSpace(myPersonId) && personEl.TryGetProperty("id", out var pidEl))
+                                {
+                                    var pid = pidEl.GetRawText().Trim('"');
+                                    if (!string.IsNullOrWhiteSpace(pid) && string.Equals(pid, myPersonId, StringComparison.OrdinalIgnoreCase)) isMine = true;
+                                }
+
+                                // If still not matched, fall back to name matching (legacy)
+                                if (!isMine && !string.IsNullOrWhiteSpace(myFull))
+                                {
+                                    var pf = personEl.TryGetProperty("firstName", out var pff) ? pff.GetString() ?? string.Empty : string.Empty;
+                                    var pl = personEl.TryGetProperty("lastName", out var pll) ? pll.GetString() ?? string.Empty : string.Empty;
+                                    var pFull = string.IsNullOrWhiteSpace(pf) ? pl : (string.IsNullOrWhiteSpace(pl) ? pf : (pf + " " + pl).Trim());
+                                    if (!string.IsNullOrWhiteSpace(pFull) && string.Equals(pFull, myFull, StringComparison.OrdinalIgnoreCase)) isMine = true;
+                                }
                             }
 
                             if (!isMine) continue;
