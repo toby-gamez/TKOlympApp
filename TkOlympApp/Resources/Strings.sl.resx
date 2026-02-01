@@ -345,4 +345,26 @@
   <data name="Notification_EditRule_Trainers" xml:space="preserve"><value>Trenerji</value></data>
   <data name="Notification_AllTypes" xml:space="preserve"><value>vse vrste</value></data>
   <data name="Notification_AllTrainers" xml:space="preserve"><value>vsi trenerji</value></data>
+  <data name="Privacy_S1_Body" xml:space="preserve">
+    <value>• Avtentikacijski žeton (JWT): shranjen lokalno v varnem shranjevanju naprave za avtorizacijo API klicev (glej AuthService).
+
+• Podatki iz API-ja: dogodki, instance, obvestila, informacije o uporabnikih/skupinah in lestvice — pridobljeni dinamično iz GraphQL API-ja glede na vaš račun.
+
+• Izbirni podatki: če izpolnite podatke profila ali spremenite nastavitve, bodo uporabljeni za izboljšanje uporabniške izkušnje.</value>
+  </data>
+  <data name="Error_Loading_User" xml:space="preserve"><value>Uporabnika ni bilo mogoče naložiti.</value></data>
+  <data name="Error_MissingPersonId" xml:space="preserve"><value>ID osebe ni na voljo.</value></data>
+  <data name="Error_Saving" xml:space="preserve"><value>Napaka pri shranjevanju.</value></data>
+  <data name="Save_Success_Title" xml:space="preserve"><value>Končano</value></data>
+  <data name="Save_Success_Message" xml:space="preserve"><value>Podatki so bili shranjeni.</value></data>
+  <data name="ChangePassword_Length_Format" xml:space="preserve"><value>Dolžina: {0}/8</value></data>
+  <data name="ChangePassword_Length_OK_Format" xml:space="preserve"><value>Dolžina: {0}/8 (OK)</value></data>
+  <data name="ChangePassword_Match_OK" xml:space="preserve"><value>Gesli se ujemata</value></data>
+  <data name="ChangePassword_Match_MISMATCH" xml:space="preserve"><value>Gesli se ne ujemata</value></data>
+  <data name="ChangePassword_Match_None" xml:space="preserve"><value>Gesli: -</value></data>
+  <data name="ChangePassword_EnterNew" xml:space="preserve"><value>Vnesite novo geslo.</value></data>
+  <data name="ChangePassword_Error_Mismatch" xml:space="preserve"><value>Gesli se ne ujemata.</value></data>
+  <data name="ChangePassword_Failure" xml:space="preserve"><value>Napaka pri spremembi gesla.</value></data>
+  <data name="ChangePassword_Success_Title" xml:space="preserve"><value>Končano</value></data>
+  <data name="ChangePassword_Success_LoggedOut_Message" xml:space="preserve"><value>Geslo je bilo uspešno spremenjeno. Izvedena je bila samodejna odjava.</value></data>
 </root>

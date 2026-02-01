@@ -301,4 +301,67 @@
   <data name="Notification_EditRule_Trainers" xml:space="preserve"><value>Huấn luyện viên</value></data>
   <data name="Notification_AllTypes" xml:space="preserve"><value>Tất cả loại</value></data>
   <data name="Notification_AllTrainers" xml:space="preserve"><value>Tất cả huấn luyện viên</value></data>
+  <data name="Page_EditSelf_Title" xml:space="preserve"><value>Chỉnh sửa hồ sơ</value></data>
+  <data name="EditSelf_PersonalInfo" xml:space="preserve"><value>Thông tin cá nhân</value></data>
+  <data name="Label_FirstName" xml:space="preserve"><value>Tên:</value></data>
+  <data name="Placeholder_FirstName" xml:space="preserve"><value>Tên</value></data>
+  <data name="Label_LastName" xml:space="preserve"><value>Họ:</value></data>
+  <data name="Placeholder_LastName" xml:space="preserve"><value>Họ</value></data>
+  <data name="Label_PrefixTitle" xml:space="preserve"><value>Danh xưng trước tên:</value></data>
+  <data name="Placeholder_PrefixTitle" xml:space="preserve"><value>Danh xưng trước tên</value></data>
+  <data name="Label_SuffixTitle" xml:space="preserve"><value>Danh xưng sau tên:</value></data>
+  <data name="Placeholder_SuffixTitle" xml:space="preserve"><value>Danh xưng sau tên</value></data>
+  <data name="Label_Gender" xml:space="preserve"><value>Giới tính:</value></data>
+  <data name="Gender_Other" xml:space="preserve"><value>Khác</value></data>
+  <data name="Gender_Male" xml:space="preserve"><value>Nam</value></data>
+  <data name="Gender_Female" xml:space="preserve"><value>Nữ</value></data>
+  <data name="Label_BirthDate" xml:space="preserve"><value>Ngày sinh:</value></data>
+  <data name="EditSelf_Contact" xml:space="preserve"><value>Liên hệ</value></data>
+  <data name="Label_Email" xml:space="preserve"><value>Email:</value></data>
+  <data name="Placeholder_Email" xml:space="preserve"><value>Email</value></data>
+  <data name="Label_Phone" xml:space="preserve"><value>Điện thoại:</value></data>
+  <data name="Placeholder_Phone" xml:space="preserve"><value>Điện thoại</value></data>
+  <data name="Label_Nationality" xml:space="preserve"><value>Quốc tịch:</value></data>
+  <data name="EditSelf_Identifiers" xml:space="preserve"><value>Định danh</value></data>
+  <data name="Label_WdsfId" xml:space="preserve"><value>WDSF ID:</value></data>
+  <data name="Placeholder_WdsfId" xml:space="preserve"><value>WDSF ID</value></data>
+  <data name="Label_CstsId" xml:space="preserve"><value>ČSTS IDT:</value></data>
+  <data name="Placeholder_CstsId" xml:space="preserve"><value>ČSTS IDT</value></data>
+  <data name="Label_NationalId" xml:space="preserve"><value>Số CMND/CCCD:</value></data>
+  <data name="Placeholder_NationalId" xml:space="preserve"><value>Số CMND/CCCD</value></data>
+  <data name="EditSelf_Address" xml:space="preserve"><value>Địa chỉ</value></data>
+  <data name="Label_Street" xml:space="preserve"><value>Đường:</value></data>
+  <data name="Placeholder_Street" xml:space="preserve"><value>Đường</value></data>
+  <data name="Label_City" xml:space="preserve"><value>Thành phố:</value></data>
+  <data name="Placeholder_City" xml:space="preserve"><value>Thành phố</value></data>
+  <data name="Label_PostalCode" xml:space="preserve"><value>Mã bưu chính:</value></data>
+  <data name="Placeholder_PostalCode" xml:space="preserve"><value>Mã bưu chính</value></data>
+  <data name="Label_Region" xml:space="preserve"><value>Tỉnh/Khu vực:</value></data>
+  <data name="Placeholder_Region" xml:space="preserve"><value>Tỉnh/Khu vực</value></data>
+  <data name="Label_District" xml:space="preserve"><value>Quận/Huyện:</value></data>
+  <data name="Placeholder_District" xml:space="preserve"><value>Quận/Huyện</value></data>
+  <data name="Label_ConscriptionNumber" xml:space="preserve"><value>Số nhà:</value></data>
+  <data name="Placeholder_ConscriptionNumber" xml:space="preserve"><value>Số nhà</value></data>
+  <data name="Label_OrientationNumber" xml:space="preserve"><value>Số định hướng:</value></data>
+  <data name="Placeholder_OrientationNumber" xml:space="preserve"><value>Số định hướng</value></data>
+  <data name="Label_Bio" xml:space="preserve"><value>Tiểu sử</value></data>
+  <data name="Error_OperationFailed_Message" xml:space="preserve"><value>Thao tác thất bại.</value></data>
+  <data name="ChangePassword_Title" xml:space="preserve"><value>Thay đổi mật khẩu</value></data>
+  <data name="Notification_NewAnnouncement_Title" xml:space="preserve"><value>Bài viết mới</value></data>
+  <data name="Notification_NewAnnouncement_Message" xml:space="preserve"><value>Bài viết mới</value></data>
+  <data name="Error_Loading_User" xml:space="preserve"><value>Không thể tải người dùng.</value></data>
+  <data name="Error_MissingPersonId" xml:space="preserve"><value>ID người dùng không khả dụng.</value></data>
+  <data name="Error_Saving" xml:space="preserve"><value>Lỗi khi lưu.</value></data>
+  <data name="Save_Success_Title" xml:space="preserve"><value>Xong</value></data>
+  <data name="Save_Success_Message" xml:space="preserve"><value>Dữ liệu đã được lưu.</value></data>
+  <data name="ChangePassword_Length_Format" xml:space="preserve"><value>Độ dài: {0}/8</value></data>
+  <data name="ChangePassword_Length_OK_Format" xml:space="preserve"><value>Độ dài: {0}/8 (OK)</value></data>
+  <data name="ChangePassword_Match_OK" xml:space="preserve"><value>Mật khẩu khớp</value></data>
+  <data name="ChangePassword_Match_MISMATCH" xml:space="preserve"><value>Mật khẩu không khớp</value></data>
+  <data name="ChangePassword_Match_None" xml:space="preserve"><value>Mật khẩu: -</value></data>
+  <data name="ChangePassword_EnterNew" xml:space="preserve"><value>Nhập mật khẩu mới.</value></data>
+  <data name="ChangePassword_Error_Mismatch" xml:space="preserve"><value>Mật khẩu không khớp.</value></data>
+  <data name="ChangePassword_Failure" xml:space="preserve"><value>Lỗi khi thay đổi mật khẩu.</value></data>
+  <data name="ChangePassword_Success_Title" xml:space="preserve"><value>Xong</value></data>
+  <data name="ChangePassword_Success_LoggedOut_Message" xml:space="preserve"><value>Đổi mật khẩu thành công. Đã tự động đăng xuất.</value></data>
 </root>

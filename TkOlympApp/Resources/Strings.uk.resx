@@ -321,4 +321,52 @@
   <data name="Notification_EditRule_Trainers" xml:space="preserve"><value>Тренери</value></data>
   <data name="Notification_AllTypes" xml:space="preserve"><value>всі типи</value></data>
   <data name="Notification_AllTrainers" xml:space="preserve"><value>всі тренери</value></data>
+  <data name="Page_EditSelf_Title" xml:space="preserve"><value>Редагувати профіль</value></data>
+  <data name="EditSelf_PersonalInfo" xml:space="preserve"><value>Особиста інформація</value></data>
+  <data name="Label_FirstName" xml:space="preserve"><value>Ім'я:</value></data>
+  <data name="Placeholder_FirstName" xml:space="preserve"><value>Ім'я</value></data>
+  <data name="Label_LastName" xml:space="preserve"><value>Прізвище:</value></data>
+  <data name="Placeholder_LastName" xml:space="preserve"><value>Прізвище</value></data>
+  <data name="Label_PrefixTitle" xml:space="preserve"><value>Титул перед ім'ям:</value></data>
+  <data name="Placeholder_PrefixTitle" xml:space="preserve"><value>Титул перед ім'ям</value></data>
+  <data name="Label_SuffixTitle" xml:space="preserve"><value>Титул після імені:</value></data>
+  <data name="Placeholder_SuffixTitle" xml:space="preserve"><value>Титул після імені</value></data>
+  <data name="Label_Gender" xml:space="preserve"><value>Стать:</value></data>
+  <data name="Gender_Other" xml:space="preserve"><value>Інше</value></data>
+  <data name="Gender_Male" xml:space="preserve"><value>Чоловік</value></data>
+  <data name="Gender_Female" xml:space="preserve"><value>Жінка</value></data>
+  <data name="Label_BirthDate" xml:space="preserve"><value>Дата народження:</value></data>
+  <data name="EditSelf_Contact" xml:space="preserve"><value>Контактні дані</value></data>
+  <data name="Label_Email" xml:space="preserve"><value>Email:</value></data>
+  <data name="Placeholder_Email" xml:space="preserve"><value>Email</value></data>
+  <data name="Label_Phone" xml:space="preserve"><value>Телефон:</value></data>
+  <data name="Placeholder_Phone" xml:space="preserve"><value>Телефон</value></data>
+  <data name="Label_Nationality" xml:space="preserve"><value>Національність:</value></data>
+  <data name="EditSelf_Identifiers" xml:space="preserve"><value>Ідентифікатори</value></data>
+  <data name="Label_WdsfId" xml:space="preserve"><value>WDSF ID:</value></data>
+  <data name="Placeholder_WdsfId" xml:space="preserve"><value>WDSF ID</value></data>
+  <data name="Label_CstsId" xml:space="preserve"><value>ČSTS IDT:</value></data>
+  <data name="Placeholder_CstsId" xml:space="preserve"><value>ČSTS IDT</value></data>
+  <data name="Label_NationalId" xml:space="preserve"><value>Національний ідентифікаційний номер:</value></data>
+  <data name="Placeholder_NationalId" xml:space="preserve"><value>Національний ідентифікаційний номер</value></data>
+  <data name="EditSelf_Address" xml:space="preserve"><value>Адреса</value></data>
+  <data name="Label_Street" xml:space="preserve"><value>Вулиця:</value></data>
+  <data name="Placeholder_Street" xml:space="preserve"><value>Вулиця</value></data>
+  <data name="Label_City" xml:space="preserve"><value>Місто:</value></data>
+  <data name="Placeholder_City" xml:space="preserve"><value>Місто</value></data>
+  <data name="Label_PostalCode" xml:space="preserve"><value>Поштовий індекс:</value></data>
+  <data name="Placeholder_PostalCode" xml:space="preserve"><value>Поштовий індекс</value></data>
+  <data name="Label_Region" xml:space="preserve"><value>Регіон:</value></data>
+  <data name="Placeholder_Region" xml:space="preserve"><value>Регіон</value></data>
+  <data name="Label_District" xml:space="preserve"><value>Район:</value></data>
+  <data name="Placeholder_District" xml:space="preserve"><value>Район</value></data>
+  <data name="Label_ConscriptionNumber" xml:space="preserve"><value>Номер будинку:</value></data>
+  <data name="Placeholder_ConscriptionNumber" xml:space="preserve"><value>Номер будинку</value></data>
+  <data name="Label_OrientationNumber" xml:space="preserve"><value>Орієнтаційний номер:</value></data>
+  <data name="Placeholder_OrientationNumber" xml:space="preserve"><value>Орієнтаційний номер</value></data>
+  <data name="Label_Bio" xml:space="preserve"><value>Біографія</value></data>
+  <data name="Error_OperationFailed_Message" xml:space="preserve"><value>Операція не вдалася.</value></data>
+  <data name="ChangePassword_Title" xml:space="preserve"><value>Зміна пароля</value></data>
+  <data name="Notification_NewAnnouncement_Title" xml:space="preserve"><value>Нова публікація</value></data>
+  <data name="Notification_NewAnnouncement_Message" xml:space="preserve"><value>Нова публікація</value></data>
 </root>

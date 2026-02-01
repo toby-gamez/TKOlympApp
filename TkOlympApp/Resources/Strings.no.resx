@@ -316,4 +316,52 @@
     <data name="Notification_EditRule_Trainers" xml:space="preserve"><value>Trenere</value></data>
     <data name="Notification_AllTypes" xml:space="preserve"><value>alle typer</value></data>
     <data name="Notification_AllTrainers" xml:space="preserve"><value>alle trenere</value></data>
+    <data name="Page_EditSelf_Title" xml:space="preserve"><value>Rediger profil</value></data>
+    <data name="EditSelf_PersonalInfo" xml:space="preserve"><value>Personopplysninger</value></data>
+    <data name="Label_FirstName" xml:space="preserve"><value>Fornavn:</value></data>
+    <data name="Placeholder_FirstName" xml:space="preserve"><value>Fornavn</value></data>
+    <data name="Label_LastName" xml:space="preserve"><value>Etternavn:</value></data>
+    <data name="Placeholder_LastName" xml:space="preserve"><value>Etternavn</value></data>
+    <data name="Label_PrefixTitle" xml:space="preserve"><value>Tittel før navn:</value></data>
+    <data name="Placeholder_PrefixTitle" xml:space="preserve"><value>Tittel før navn</value></data>
+    <data name="Label_SuffixTitle" xml:space="preserve"><value>Tittel etter navn:</value></data>
+    <data name="Placeholder_SuffixTitle" xml:space="preserve"><value>Tittel etter navn</value></data>
+    <data name="Label_Gender" xml:space="preserve"><value>Kjønn:</value></data>
+    <data name="Gender_Other" xml:space="preserve"><value>Annet</value></data>
+    <data name="Gender_Male" xml:space="preserve"><value>Mann</value></data>
+    <data name="Gender_Female" xml:space="preserve"><value>Kvinne</value></data>
+    <data name="Label_BirthDate" xml:space="preserve"><value>Fødselsdato:</value></data>
+    <data name="EditSelf_Contact" xml:space="preserve"><value>Kontakt</value></data>
+    <data name="Label_Email" xml:space="preserve"><value>E-post:</value></data>
+    <data name="Placeholder_Email" xml:space="preserve"><value>E-post</value></data>
+    <data name="Label_Phone" xml:space="preserve"><value>Telefon:</value></data>
+    <data name="Placeholder_Phone" xml:space="preserve"><value>Telefon</value></data>
+    <data name="Label_Nationality" xml:space="preserve"><value>Nasjonalitet:</value></data>
+    <data name="EditSelf_Identifiers" xml:space="preserve"><value>Identifikatorer</value></data>
+    <data name="Label_WdsfId" xml:space="preserve"><value>WDSF ID:</value></data>
+    <data name="Placeholder_WdsfId" xml:space="preserve"><value>WDSF ID</value></data>
+    <data name="Label_CstsId" xml:space="preserve"><value>ČSTS IDT:</value></data>
+    <data name="Placeholder_CstsId" xml:space="preserve"><value>ČSTS IDT</value></data>
+    <data name="Label_NationalId" xml:space="preserve"><value>Personnummer:</value></data>
+    <data name="Placeholder_NationalId" xml:space="preserve"><value>Personnummer</value></data>
+    <data name="EditSelf_Address" xml:space="preserve"><value>Adresse</value></data>
+    <data name="Label_Street" xml:space="preserve"><value>Gate:</value></data>
+    <data name="Placeholder_Street" xml:space="preserve"><value>Gate</value></data>
+    <data name="Label_City" xml:space="preserve"><value>By:</value></data>
+    <data name="Placeholder_City" xml:space="preserve"><value>By</value></data>
+    <data name="Label_PostalCode" xml:space="preserve"><value>Postnummer:</value></data>
+    <data name="Placeholder_PostalCode" xml:space="preserve"><value>Postnummer</value></data>
+    <data name="Label_Region" xml:space="preserve"><value>Region:</value></data>
+    <data name="Placeholder_Region" xml:space="preserve"><value>Region</value></data>
+    <data name="Label_District" xml:space="preserve"><value>Bydel:</value></data>
+    <data name="Placeholder_District" xml:space="preserve"><value>Bydel</value></data>
+    <data name="Label_ConscriptionNumber" xml:space="preserve"><value>Husnummer:</value></data>
+    <data name="Placeholder_ConscriptionNumber" xml:space="preserve"><value>Husnummer</value></data>
+    <data name="Label_OrientationNumber" xml:space="preserve"><value>Husnummer (tillegg):</value></data>
+    <data name="Placeholder_OrientationNumber" xml:space="preserve"><value>Husnummer (tillegg)</value></data>
+    <data name="Label_Bio" xml:space="preserve"><value>Bio</value></data>
+    <data name="Error_OperationFailed_Message" xml:space="preserve"><value>Operasjonen mislyktes.</value></data>
+    <data name="ChangePassword_Title" xml:space="preserve"><value>Endre passord</value></data>
+    <data name="Notification_NewAnnouncement_Title" xml:space="preserve"><value>Ny nyhet</value></data>
+    <data name="Notification_NewAnnouncement_Message" xml:space="preserve"><value>Ny nyhet</value></data>
 </root>
