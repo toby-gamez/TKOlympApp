@@ -39,13 +39,18 @@ public static class GraphQlClient
         var json = JsonSerializer.Serialize(req, Options);
         using var content = new StringContent(json, Encoding.UTF8, "application/json");
         using var resp = await AuthService.Http.PostAsync("", content, ct);
-        var body = await resp.Content.ReadAsStringAsync(ct);
+        
         if (!resp.IsSuccessStatusCode)
         {
+            // For error responses, read as string for better error message
+            var body = await resp.Content.ReadAsStringAsync(ct);
             throw new InvalidOperationException($"HTTP {(int)resp.StatusCode}: {body}");
         }
 
-        var data = JsonSerializer.Deserialize<GraphQlResponse<T>>(body, Options);
+        // Use async stream deserialization to avoid blocking UI thread on large responses
+        await using var stream = await resp.Content.ReadAsStreamAsync(ct);
+        var data = await JsonSerializer.DeserializeAsync<GraphQlResponse<T>>(stream, Options, ct);
+        
         if (data?.Errors != null && data.Errors.Count > 0)
         {
             var msg = data.Errors[0].Message ?? LocalizationService.Get("GraphQL_UnknownError");
@@ -57,6 +62,7 @@ public static class GraphQlClient
     }
 
     // Returns parsed data together with raw response body for debugging purposes
+    // Note: This method still reads full body for debugging - use PostAsync for better performance
     public static async Task<(T Data, string Raw)> PostWithRawAsync<T>(string query, Dictionary<string, object>? variables = null, CancellationToken ct = default)
     {
         var req = new GraphQlRequest { Query = query, Variables = variables };

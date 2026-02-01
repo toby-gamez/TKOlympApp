@@ -20,13 +20,13 @@ TkOlympApp je mobilní aplikace pro správu sportovních událostí, registrací
 | **Async patterns** | ✅ **Vyřešeno 2026-02-01** | CancellationToken přidán do 100% async metod |
 | **Error handling** | ✅✅ **PERFEKTNĚ vyřešeno 2026-02-01** | Kompletní structured logging infrastruktura: LoggerService + LoggerExtensions (10 extension methods), ServiceException hierarchie (ServiceException/GraphQLException/AuthenticationException) s transient detection, odstraněno 50+ prázdných catch bloků, 32 unit testů, ukázkový refactoring EventService |
 | **Testovatelnost** | ⚙️ **Zlepšená** | 249 unit testů (Helpers/Converters/Exceptions/LoggerExtensions 100% pokryto), statické Services stále brání mockování business logiky |
-| **Výkon** | ⚠️ **Střední** | Opakované LINQ dotazy, žádné profilování |
+| **Výkon** | ✅ **Vylepšeno 2026-02-01** | Stream deserialization implementována, zbývají LINQ optimalizace |
 | **Platform-specific** | ✅ **Dobré** | Čistě odděleno v `Platforms/`, použit Android WorkManager |
 | **Kódová kvalita** | ⚙️ **Vylepšená** | Production-ready structured logging s performance tracking, čitelný kód, stále dlouhé code-behind třídy |
 | **Magic strings** | ✅ **Vyřešeno 2026-02-01** | Vytvořena AppConstants třída, vše refaktorováno |
 | **Bezpečnost (credentials)** | ✅ **Vyřešeno 2026-02-01** | Hardcoded hesla odstraněna, použity env variables |
 
-**Celkové skóre:** 8.2/10 — Solidní aplikace s vyřešenými všemi P0 a P1 prioritami; dokončeno: perfektní structured logging s exception hierarchií a testovatelností, memory management a async patterns; zbývají architektonické dluhy (DI migrace) pro plnou testovatelnost business logiky.
+**Celkové skóre:** 8.3/10 — Solidní aplikace s vyřešenými všemi P0 a P1 prioritami; dokončeno: perfektní structured logging s exception hierarchií a testovatelností, memory management, async patterns a performance optimalizace (stream deserialization); zbývají architektonické dluhy (DI migrace) pro plnou testovatelnost business logiky.
 
 ---
 
@@ -1237,22 +1237,25 @@ private async Task LoadUpcomingEventsAsync()
 }
 ```
 
-#### ⚠️ Synchronní JSON deserializace velkých payloadů
+#### ✅ **HOTOVO 2026-02-01** - Synchronní JSON deserializace velkých payloadů
 
 ```csharp
-// TkOlympApp/Services/GraphQlClient.cs:42-43
+// TkOlympApp/Services/GraphQlClient.cs:42-43 (PŘED)
 var body = await resp.Content.ReadAsStringAsync(ct);
 var data = JsonSerializer.Deserialize<GraphQlResponse<T>>(body, Options);
 ```
 
-Pro velké responses (10+ KB) blokuje UI thread během deserializace.
+Pro velké responses (10+ KB) blokoval UI thread během deserializace.
 
-**✅ Oprava: Stream deserialization:**
+**✅ Oprava: Stream deserialization (IMPLEMENTOVÁNO):**
 
 ```csharp
+// TkOlympApp/Services/GraphQlClient.cs (PO - 2026-02-01)
 await using var stream = await resp.Content.ReadAsStreamAsync(ct);
 var data = await JsonSerializer.DeserializeAsync<GraphQlResponse<T>>(stream, Options, ct);
 ```
+
+**Status:** Refaktorováno na async stream deserialization - zabráněno blokování UI threadu při velkých payloadech.
 
 ### 4.3 Doporučení pro výkon
 
