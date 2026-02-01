@@ -302,7 +302,7 @@ public partial class PeoplePage : ContentPage
             var cakeIcon = new Label
             {
                 Text = "\ue7e9", // Material Icons Cake
-                FontFamily = "MaterialRegular",
+                FontFamily = "MaterialIcons",
                 FontSize = 26
             };
             try
