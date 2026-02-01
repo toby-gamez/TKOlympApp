@@ -6,7 +6,7 @@
 ## Použité technologie
 - Platforma: .NET MAUI (multi-target: Android, iOS, v budoucnu - Mac OS a Windows)
 - Jazyk: C# + XAML
-- Síť: GraphQL dotazy přes `HttpClient` (statické služby v `TkOlympApp/Services/`)
+- Síť: GraphQL dotazy přes `HttpClient` (instance-based služby přes DI v `TkOlympApp/Services/`)
 - Serializace: `System.Text.Json` s `JsonSerializerDefaults.Web`
 
 ## Hlavní funkce
@@ -20,15 +20,64 @@
 - `TkOlympApp/MauiProgram.cs` – konfigurace aplikace a registrace fontů/ikon.
 - `TkOlympApp/AppShell.xaml.cs` – routing a navigace (Shell + URI query parameters).
 - `TkOlympApp/Pages/` – stránky aplikace (např. `MainPage`, `EventPage`, `LeaderboardPage`, `NoticeboardPage`, `LoginPage`).
-- `TkOlympApp/Services/` – statické služby pro síťovou komunikaci a business logiku (`AuthService`, `EventService`, `NoticeboardService`, `LeaderboardService`, `UserService`).
+- `TkOlympApp/Services/` – instance-based služby pro síťovou komunikaci a business logiku (typicky `I*Service` + `*Implementation`, např. `AuthServiceImplementation`, `EventServiceImplementation`).
 - `TkOlympApp/Helpers/` – pomocné třídy (např. `HtmlHelpers`, `DateHelpers`).
 - `TkOlympApp/Converters/` – XAML konvertory pro vazbu dat.
 
 ## Důležité konvence
-- Služby jsou implementovány jako statické helper třídy (není zde DI container). Pokud se přidá DI, dělej to konzistentně napříč projektem.
+- Aplikace používá Dependency Injection (DI) přes `MauiProgram.CreateMauiApp()` (`builder.Services`). Nové služby přidávej jako instance-based (`I*Service` + `*Implementation`) a registruj do DI.
 - GraphQL dotazy a odpovědní DTO často definovány jako interní privátní třídy/recordy uvnitř konkrétní service třídy.
 - `JsonSerializerOptions(JsonSerializerDefaults.Web)` se používá pro konzistentní (de)serializaci.
 - Uživatelské texty a chybová hlášení držíme v češtině.
+
+## Dependency Injection (DI)
+
+### Kde se DI konfiguruje
+
+- Registrace probíhá v `TkOlympApp/MauiProgram.cs` pomocí `builder.Services`.
+- HTTP komunikace používá `IHttpClientFactory` + typed clients (např. `IAuthService`, `IGraphQlClient`).
+- Pages jsou registrované v DI (`AddTransient<SomePage>()`) – umožní to constructor injection.
+
+### Jak přidat novou službu
+
+1. Přidej rozhraní do `TkOlympApp/Services/Abstractions/` (např. `IFooService`).
+2. Implementaci dej do `TkOlympApp/Services/` (např. `FooServiceImplementation`).
+3. Zaregistruj do DI v `TkOlympApp/MauiProgram.cs`.
+
+Příklad registrace:
+
+```csharp
+builder.Services.AddTransient<IFooService, FooServiceImplementation>();
+```
+
+### Jak udělat Page DI-friendly (constructor injection)
+
+- Page zaregistruj do DI:
+
+```csharp
+builder.Services.AddTransient<FooPage>();
+```
+
+- V code-behind přidej konstruktor se závislostmi:
+
+```csharp
+public partial class FooPage : ContentPage
+{
+	private readonly IFooService _foo;
+
+	public FooPage(IFooService foo)
+	{
+		InitializeComponent();
+		_foo = foo;
+	}
+}
+```
+
+### Shell routing + DI
+
+Shell navigace běží přes routy (např. `EventPage?id=123`). Pokud chceš routovanou page vytvářet přes DI (kvůli constructor injection), registruj ji do DI a použij route factory, který resolvuje page z containeru (v projektu je připravený helper `DiRouteFactory`).
+
+Pozn.: Query parametry pro routy řeš standardně přes `[QueryProperty]` nebo zpracování `IQueryAttributable` v page.
 
 Rychlý start (CLI)
 1. Build (Debug):
