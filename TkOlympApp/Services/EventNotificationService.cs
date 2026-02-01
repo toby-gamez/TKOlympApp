@@ -31,6 +31,7 @@ public static class EventNotificationService
         public string? EventName { get; set; }
         public bool IsCancelled { get; set; }
         public string? TrainersJson { get; set; }
+        public string? RegistrationsJson { get; set; }
     }
 
     /// <summary>
@@ -345,6 +346,35 @@ public static class EventNotificationService
     }
 
     /// <summary>
+    /// Notify user about a registration or unregistration for a specific event.
+    /// Uses localized titles when available and falls back to simple Czech messages.
+    /// </summary>
+    public static async Task NotifyRegistrationAsync(long eventId, bool registered)
+    {
+        try
+        {
+            // Fetch event details to build a meaningful message
+            var ev = await EventService.GetEventAsync(eventId);
+            var eventName = ev?.Name ?? LocalizationService.Get("Event") ?? "Událost";
+            var since = ev?.Since;
+
+            var title = registered
+                ? LocalizationService.Get("Notification_Registration_Confirmed") ?? "Registrace potvrzena"
+                : LocalizationService.Get("Notification_Registration_Cancelled") ?? "Registrace zrušena";
+
+            var description = since != null
+                ? $"{eventName}\n{FormatEventDescription(since.Value, ev?.LocationText)}"
+                : eventName;
+
+            await SendImmediateNotificationAsync(title, description, eventId);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"EventNotificationService: Failed to notify registration change: {ex.Message}");
+        }
+    }
+
+    /// <summary>
     /// Get diagnostics info about notification system state
     /// </summary>
     public static async Task<string> GetDiagnosticsAsync()
@@ -490,6 +520,89 @@ public static class EventNotificationService
                     );
                     changesDetected++;
                 }
+
+                // Check for registration changes (add/remove)
+                try
+                {
+                    var currentRegs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    if (currentEvent.Event?.EventRegistrationsList != null)
+                    {
+                        foreach (var rn in currentEvent.Event.EventRegistrationsList)
+                        {
+                            if (rn == null) continue;
+                            // Use display names for snapshot/compare since instance-level query does not include IDs
+                            if (rn.Person != null && !string.IsNullOrWhiteSpace(rn.Person.Name)) currentRegs.Add("p:" + rn.Person.Name.Trim());
+                            else if (rn.Couple != null)
+                            {
+                                var man = rn.Couple.Man?.LastName?.Trim() ?? string.Empty;
+                                var woman = rn.Couple.Woman?.LastName?.Trim() ?? string.Empty;
+                                var key = (man + " " + woman).Trim();
+                                if (!string.IsNullOrWhiteSpace(key)) currentRegs.Add("c:" + key);
+                            }
+                        }
+                    }
+
+                    var previousRegs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    if (!string.IsNullOrWhiteSpace(previousEvent.RegistrationsJson))
+                    {
+                        try
+                        {
+                            var arr = JsonSerializer.Deserialize<List<string>>(previousEvent.RegistrationsJson!);
+                            if (arr != null) foreach (var a in arr) previousRegs.Add(a);
+                        }
+                        catch { }
+                    }
+
+                    var added = currentRegs.Except(previousRegs).ToList();
+                    var removed = previousRegs.Except(currentRegs).ToList();
+
+                    if (added.Count > 0 || removed.Count > 0)
+                    {
+                        // Check if current user is affected
+                        try
+                        {
+                            await UserService.InitializeAsync();
+                            var myPersonId = UserService.CurrentPersonId;
+                            var myCoupleIds = new List<string>();
+                            try
+                            {
+                                var couples = await UserService.GetActiveCouplesFromUsersAsync();
+                                if (couples != null) myCoupleIds = couples.Where(c => !string.IsNullOrWhiteSpace(c.Id)).Select(c => c.Id!).ToList();
+                            }
+                            catch { }
+
+                            var affected = false;
+                            if (!string.IsNullOrWhiteSpace(myPersonId) && (added.Any(a => string.Equals(a, "p:" + myPersonId, StringComparison.OrdinalIgnoreCase)) || removed.Any(a => string.Equals(a, "p:" + myPersonId, StringComparison.OrdinalIgnoreCase)))) affected = true;
+                            if (!affected && myCoupleIds.Count > 0)
+                            {
+                                foreach (var cid in myCoupleIds)
+                                {
+                                    if (added.Any(a => string.Equals(a, "c:" + cid, StringComparison.OrdinalIgnoreCase)) || removed.Any(a => string.Equals(a, "c:" + cid, StringComparison.OrdinalIgnoreCase)))
+                                    {
+                                        affected = true; break;
+                                    }
+                                }
+                            }
+
+                            if (affected)
+                            {
+                                // Compose message: if added contains my id => registered, if removed contains my id => unregistered
+                                var registeredNow = !string.IsNullOrWhiteSpace(myPersonId) && added.Any(a => string.Equals(a, "p:" + myPersonId, StringComparison.OrdinalIgnoreCase));
+                                if (!registeredNow && myCoupleIds.Count > 0) registeredNow = myCoupleIds.Any(cid => added.Any(a => string.Equals(a, "c:" + cid, StringComparison.OrdinalIgnoreCase)));
+
+                                var title = registeredNow
+                                    ? LocalizationService.Get("Notification_Registration_YouWereRegistered") ?? "Byl(a) jste přihlášen(a)"
+                                    : LocalizationService.Get("Notification_Registration_YouWereUnregistered") ?? "Byla zrušena vaše registrace";
+
+                                var description = $"{eventName}\n{FormatEventDescription(currentEvent.Since.Value, currentEvent.Event?.LocationText)}";
+                                await SendImmediateNotificationAsync(title, description, currentEvent.Id);
+                                changesDetected++;
+                            }
+                        }
+                        catch { }
+                    }
+                }
+                catch { }
             }
 
             if (changesDetected > 0)
@@ -518,7 +631,22 @@ public static class EventNotificationService
                 LocationText = e.Event?.LocationText,
                 EventName = e.Event?.Name,
                 IsCancelled = e.IsCancelled,
-                TrainersJson = JsonSerializer.Serialize(e.Event?.EventTrainersList?.Select(t => EventService.GetTrainerDisplayName(t)).OrderBy(n => n).ToList() ?? new List<string>())
+                TrainersJson = JsonSerializer.Serialize(e.Event?.EventTrainersList?.Select(t => EventService.GetTrainerDisplayName(t)).OrderBy(n => n).ToList() ?? new List<string>()),
+                RegistrationsJson = JsonSerializer.Serialize(
+                    (e.Event?.EventRegistrationsList?.Select(rn =>
+                        {
+                            if (rn == null) return null;
+                            if (rn.Person != null && !string.IsNullOrWhiteSpace(rn.Person.Name)) return "p:" + rn.Person.Name.Trim();
+                            if (rn.Couple != null)
+                            {
+                                var man = rn.Couple.Man?.LastName?.Trim() ?? string.Empty;
+                                var woman = rn.Couple.Woman?.LastName?.Trim() ?? string.Empty;
+                                var key = (man + " " + woman).Trim();
+                                if (!string.IsNullOrWhiteSpace(key)) return "c:" + key;
+                            }
+                            return null;
+                        }).Where(s => s != null).Cast<string>().ToList()) ?? new List<string>()
+                )
             }).ToList();
 
             var json = JsonSerializer.Serialize(snapshots);
