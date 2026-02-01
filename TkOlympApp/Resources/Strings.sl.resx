@@ -107,6 +107,9 @@
     <data name="NotFound_Event" xml:space="preserve"><value>Dogodek ni bil najden.</value></data>
     <data name="NotFound_Notice" xml:space="preserve"><value>Obvestilo ni bilo najdeno.</value></data>
     <data name="Error_Title" xml:space="preserve"><value>Napaka</value></data>
+    <data name="PlainText_Empty_Title" xml:space="preserve"><value>Prazno besedilo</value></data>
+    <data name="PlainText_Empty_Body" xml:space="preserve"><value>Ni besedila za prikaz</value></data>
+    <data name="Lessons_Count" xml:space="preserve"><value>lekcij</value></data>
     <data name="Login_Error_Missing" xml:space="preserve"><value>Prosim, izpolnite ime in geslo.</value></data>
     <data name="Login_Failed_Title" xml:space="preserve"><value>Prijava ni uspela</value></data>
     <data name="Button_OK" xml:space="preserve"><value>V redu</value></data>

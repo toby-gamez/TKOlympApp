@@ -116,7 +116,7 @@ public static class EventService
         [property: JsonPropertyName("description")] string? Description,
         [property: JsonPropertyName("eventRegistrations")] EventRegistrations? EventRegistrations,
         [property: JsonPropertyName("isPublic")] bool IsPublic,
-        [property: JsonPropertyName("isRegistrationOpen")] bool IsRegistrationOpen,
+        [property: JsonPropertyName("isRegistrationOpen")] bool? IsRegistrationOpen,
         [property: JsonPropertyName("isVisible")] bool IsVisible,
         [property: JsonPropertyName("name")] string? Name,
         [property: JsonPropertyName("type")] string? Type,
@@ -128,7 +128,201 @@ public static class EventService
     
     public static async Task<EventDetails?> GetEventAsync(long id, CancellationToken ct = default)
     {
-        var query = "query MyQuery($id: BigInt!) { event(id: $id) { capacity createdAt description isPublic isRegistrationOpen isVisible __typename name type summary locationText eventTrainersList { id name updatedAt } updatedAt eventTargetCohortsList { cohortId cohort { id name colorRgb } } eventRegistrations { totalCount nodes { couple { id status man { firstName lastName prefixTitle suffixTitle eventInstanceTrainersList { name } } woman { firstName lastName prefixTitle suffixTitle eventInstanceTrainersList { name } } } eventLessonDemandsByRegistrationIdList { id lessonCount trainer { id name } } person { id prefixTitle suffixTitle lastName firstName } } } eventInstancesList { since until } } }";
+                var query = @"query Event($id: BigInt!) {
+    event(id: $id) {
+        ...EventFull
+        __typename
+    }
+}
+
+fragment EventInstance on EventInstance {
+    id
+    since
+    until
+    isCancelled
+    __typename
+}
+
+fragment Couple on Couple {
+    id
+    status
+    since
+    until
+    woman {
+        id
+        name
+        firstName
+        lastName
+        __typename
+    }
+    man {
+        id
+        name
+        firstName
+        lastName
+        __typename
+    }
+    __typename
+}
+
+fragment EventRegistration on EventRegistration {
+    id
+    note
+    eventId
+    personId
+    person {
+        id
+        name
+        firstName
+        lastName
+        __typename
+    }
+    coupleId
+    couple {
+        ...Couple
+        __typename
+    }
+    eventLessonDemandsByRegistrationIdList {
+        id
+        lessonCount
+        trainerId
+        __typename
+    }
+    createdAt
+    __typename
+}
+
+fragment Event on Event {
+    id
+    type
+    summary
+    description
+    name
+    capacity
+    remainingPersonSpots
+    remainingLessons
+    location {
+        id
+        name
+        __typename
+    }
+    locationText
+    isLocked
+    isVisible
+    isPublic
+    enableNotes
+    eventTrainersList {
+        id
+        name
+        personId
+        lessonsOffered
+        lessonsRemaining
+        __typename
+    }
+    eventInstancesList(orderBy: SINCE_ASC) {
+        ...EventInstance
+        __typename
+    }
+    eventTargetCohortsList {
+        id
+        cohort {
+            id
+            name
+            colorRgb
+            __typename
+        }
+        __typename
+    }
+    myRegistrationsList {
+        ...EventRegistration
+        __typename
+    }
+    eventRegistrations(first: 3) {
+        totalCount
+        nodes {
+            ...EventRegistration
+            __typename
+        }
+        __typename
+    }
+    __typename
+}
+
+fragment EventExternalRegistration on EventExternalRegistration {
+    id
+    birthDate
+    nationality
+    note
+    phone
+    prefixTitle
+    suffixTitle
+    taxIdentificationNumber
+    updatedAt
+    createdAt
+    email
+    eventId
+    firstName
+    lastName
+    __typename
+}
+
+fragment EventRegistrations on Event {
+    id
+    eventRegistrationsList {
+        ...EventRegistration
+        __typename
+    }
+    eventExternalRegistrationsList {
+        ...EventExternalRegistration
+        __typename
+    }
+    __typename
+}
+
+fragment EventAttendanceSummary on Event {
+    id
+    eventInstancesList(orderBy: SINCE_ASC) {
+        ...EventInstance
+        attendanceSummaryList {
+            count
+            status
+            __typename
+        }
+        __typename
+    }
+    __typename
+}
+
+fragment EventInstanceWithTrainer on EventInstance {
+    ...EventInstance
+    trainersList {
+        id
+        personId
+        person {
+            id
+            name
+            __typename
+        }
+        __typename
+    }
+    __typename
+}
+
+fragment EventFull on Event {
+    ...Event
+    ...EventRegistrations
+    ...EventAttendanceSummary
+    eventInstancesList(orderBy: SINCE_ASC) {
+        ...EventInstanceWithTrainer
+        eventInstanceTrainersByInstanceIdList {
+            id
+            personId
+            __typename
+        }
+        __typename
+    }
+    __typename
+}";
         var variables = new Dictionary<string, object> { { "id", id } };
 
         var data = await GraphQlClient.PostAsync<EventData>(query, variables, ct);
@@ -149,7 +343,7 @@ public static class EventService
         [property: JsonPropertyName("description")] string? Description,
         [property: JsonPropertyName("eventRegistrations")] EventRegistrations? EventRegistrations,
         [property: JsonPropertyName("isPublic")] bool IsPublic,
-        [property: JsonPropertyName("isRegistrationOpen")] bool IsRegistrationOpen,
+        [property: JsonPropertyName("isRegistrationOpen")] bool? IsRegistrationOpen,
         [property: JsonPropertyName("isVisible")] bool IsVisible,
         [property: JsonPropertyName("name")] string? Name,
         [property: JsonPropertyName("type")] string? Type,
@@ -157,7 +351,14 @@ public static class EventService
         [property: JsonPropertyName("locationText")] string? LocationText,
         [property: JsonPropertyName("eventTrainersList")] List<EventTrainer>? EventTrainersList,
         [property: JsonPropertyName("eventTargetCohortsList")] List<EventTargetCohortLink>? EventTargetCohortsList,
-        [property: JsonPropertyName("eventInstancesList")] List<EventInstanceShort>? EventInstancesList
+        [property: JsonPropertyName("eventInstancesList")] List<EventInstanceShort>? EventInstancesList,
+        [property: JsonPropertyName("remainingPersonSpots")] int? RemainingPersonSpots,
+        [property: JsonPropertyName("remainingLessons")] int? RemainingLessons,
+        [property: JsonPropertyName("location")] Location? Location,
+        [property: JsonPropertyName("isLocked")] bool? IsLocked,
+        [property: JsonPropertyName("enableNotes")] bool? EnableNotes,
+        [property: JsonPropertyName("myRegistrationsList")] List<EventRegistrationNode>? MyRegistrationsList,
+        [property: JsonPropertyName("eventRegistrationsList")] List<EventRegistrationNode>? EventRegistrationsList
     );
 
     public sealed record EventRegistrations(
@@ -166,45 +367,46 @@ public static class EventService
     );
 
     public sealed record EventRegistrationNode(
+        [property: JsonPropertyName("id")] long Id,
+        [property: JsonPropertyName("note")] string? Note,
+        [property: JsonPropertyName("eventId")] long EventId,
+        [property: JsonPropertyName("personId")] long? PersonId,
+        [property: JsonPropertyName("person")] Person? Person,
+        [property: JsonPropertyName("coupleId")] long? CoupleId,
         [property: JsonPropertyName("couple")] RegistrationCouple? Couple,
         [property: JsonPropertyName("eventLessonDemandsByRegistrationIdList")] List<EventLessonDemand>? EventLessonDemandsByRegistrationIdList,
-        [property: JsonPropertyName("person")] Person? Person
+        [property: JsonPropertyName("createdAt")] DateTime? CreatedAt
     );
 
     public sealed record RegistrationCouple(
-        [property: JsonPropertyName("active")] bool Active,
         [property: JsonPropertyName("id")] string? Id,
+        [property: JsonPropertyName("status")] string? Status,
+        [property: JsonPropertyName("since")] DateTime? Since,
+        [property: JsonPropertyName("until")] DateTime? Until,
         [property: JsonPropertyName("man")] RegistrationPerson? Man,
-        [property: JsonPropertyName("woman")] RegistrationPerson? Woman,
-        [property: JsonPropertyName("status")] string? Status
+        [property: JsonPropertyName("woman")] RegistrationPerson? Woman
     );
 
     public sealed record RegistrationPerson(
+        [property: JsonPropertyName("id")] long? Id,
         [property: JsonPropertyName("name")] string? Name,
         [property: JsonPropertyName("firstName")] string? FirstName,
         [property: JsonPropertyName("lastName")] string? LastName,
         [property: JsonPropertyName("prefixTitle")] string? PrefixTitle,
-        [property: JsonPropertyName("suffixTitle")] string? SuffixTitle,
-        [property: JsonPropertyName("eventInstanceTrainersList")] List<EventInstanceTrainer>? EventInstanceTrainersList
-    );
-
-    public sealed record EventInstanceTrainer(
-        [property: JsonPropertyName("name")] string? Name
+        [property: JsonPropertyName("suffixTitle")] string? SuffixTitle
     );
 
     public sealed record EventLessonDemand(
         [property: JsonPropertyName("id")] string? Id,
         [property: JsonPropertyName("lessonCount")] int LessonCount,
-        [property: JsonPropertyName("trainer")] Trainer? Trainer
-    );
-
-    public sealed record Trainer(
-        [property: JsonPropertyName("name")] string? Name
+        [property: JsonPropertyName("trainerId")] long? TrainerId
     );
 
     public sealed record EventInstanceShort(
+        [property: JsonPropertyName("id")] long? Id,
         [property: JsonPropertyName("since")] DateTime? Since,
-        [property: JsonPropertyName("until")] DateTime? Until
+        [property: JsonPropertyName("until")] DateTime? Until,
+        [property: JsonPropertyName("isCancelled")] bool IsCancelled
     );
 
     // Trainers at the event level
@@ -217,7 +419,10 @@ public static class EventService
         [property: JsonPropertyName("firstName")] string? FirstName,
         [property: JsonPropertyName("lastName")] string? LastName,
         [property: JsonPropertyName("prefixTitle")] string? PrefixTitle,
-        [property: JsonPropertyName("suffixTitle")] string? SuffixTitle
+        [property: JsonPropertyName("suffixTitle")] string? SuffixTitle,
+        [property: JsonPropertyName("personId")] long? PersonId,
+        [property: JsonPropertyName("lessonsOffered")] int? LessonsOffered,
+        [property: JsonPropertyName("lessonsRemaining")] int? LessonsRemaining
     );
 
     public static string GetTrainerDisplayName(EventTrainer? t)
@@ -434,7 +639,7 @@ public static class EventService
         [property: JsonPropertyName("locationText")] string? LocationText,
         [property: JsonPropertyName("since")] DateTime? Since,
         [property: JsonPropertyName("until")] DateTime? Until,
-        [property: JsonPropertyName("isRegistrationOpen")] bool IsRegistrationOpen,
+        [property: JsonPropertyName("isRegistrationOpen")] bool? IsRegistrationOpen,
         [property: JsonPropertyName("isPublic")] bool IsPublic,
         [property: JsonPropertyName("guestPrice")] Money? GuestPrice,
         [property: JsonPropertyName("eventTrainersList")] List<EventTrainer>? EventTrainersList,

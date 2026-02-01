@@ -438,7 +438,6 @@ public partial class CalendarViewPage : ContentPage
                 {
                     var page = new EventPage();
                     if (id != 0) page.EventId = id;
-                    if (ev.Id > 0) page.EventInstanceId = ev.Id;
                     await Navigation.PushAsync(page);
                 }
             };

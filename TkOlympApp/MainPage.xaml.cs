@@ -163,9 +163,7 @@ public partial class MainPage : ContentPage
             {
                 if (evt.IsCancelled) return;
                 var page = new Pages.EventPage();
-                // Always include EventId and also include EventInstanceId when present
                 if (evt.Event != null) page.EventId = evt.Event.Id;
-                if (evt.Id > 0) page.EventInstanceId = evt.Id;
                 _suppressReloadOnNextAppearing = true;
                 await Navigation.PushAsync(page);
             }
@@ -189,7 +187,6 @@ public partial class MainPage : ContentPage
                 {
                     var page = new Pages.EventPage();
                     page.EventId = evt.Id;
-                    if (inst?.Id > 0) page.EventInstanceId = inst.Id;
                     _suppressReloadOnNextAppearing = true;
                     await Navigation.PushAsync(page);
                 }

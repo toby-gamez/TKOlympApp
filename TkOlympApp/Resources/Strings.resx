@@ -103,6 +103,9 @@
   <data name="NotFound_Event" xml:space="preserve"><value>Událost nebyla nalezena.</value></data>
   <data name="NotFound_Notice" xml:space="preserve"><value>Oznámení nebylo nalezeno.</value></data>
   <data name="Error_Title" xml:space="preserve"><value>Chyba</value></data>
+  <data name="PlainText_Empty_Title" xml:space="preserve"><value>Prázdný text</value></data>
+  <data name="PlainText_Empty_Body" xml:space="preserve"><value>Žádný text ke zobrazení</value></data>
+  <data name="Lessons_Count" xml:space="preserve"><value>lekcí</value></data>
   <data name="Login_Error_Missing" xml:space="preserve"><value>Vyplňte prosím jméno i heslo.</value></data>
   <data name="Login_Failed_Title" xml:space="preserve"><value>Přihlášení selhalo</value></data>
   <data name="Button_OK" xml:space="preserve"><value>OK</value></data>

@@ -14,11 +14,9 @@ using Microsoft.Maui.Controls.Shapes;
 namespace TkOlympApp.Pages;
 
 [QueryProperty(nameof(EventId), "id")]
-[QueryProperty(nameof(EventInstanceId), "eventInstanceId")]
 public partial class EventPage : ContentPage
 {
     private long _eventId;
-    private long _eventInstanceId;
     private bool _appeared;
     private bool _loadRequested;
     private string? _lastDescriptionHtml;
@@ -30,17 +28,6 @@ public partial class EventPage : ContentPage
         set
         {
             _eventId = value;
-            _loadRequested = true;
-            if (_appeared) _ = LoadAsync();
-        }
-    }
-
-    public long EventInstanceId
-    {
-        get => _eventInstanceId;
-        set
-        {
-            _eventInstanceId = value;
             _loadRequested = true;
             if (_appeared) _ = LoadAsync();
         }
@@ -109,76 +96,27 @@ public partial class EventPage : ContentPage
 
     private async Task LoadAsync()
     {
-        if (EventId == 0 && EventInstanceId == 0) return;
+        if (EventId == 0) return;
         try
         {
-            EventService.EventDetails? ev = null;
-            DateTime? since = null;
-            DateTime? until = null;
-
-            // Prefer loading from EventInstance (has specific since/until)
-            if (EventInstanceId > 0)
-            {
-                try
-                {
-                    Debug.WriteLine($"EventPage: Loading event instance {EventInstanceId}");
-                    var instance = await EventService.GetEventInstanceAsync(EventInstanceId);
-                    if (instance != null)
-                    {
-                        since = instance.Since;
-                        until = instance.Until;
-                        
-                        // Convert EventDetailsFromInstance to EventDetails
-                        if (instance.Event != null)
-                        {
-                            var instanceEvent = instance.Event;
-                            ev = new EventService.EventDetails(
-                                Capacity: instanceEvent.Capacity,
-                                CreatedAt: instanceEvent.CreatedAt,
-                                UpdatedAt: instanceEvent.UpdatedAt,
-                                Since: since,  // Use instance-level since/until
-                                Until: until,
-                                Description: instanceEvent.Description,
-                                EventRegistrations: instanceEvent.EventRegistrations,
-                                IsPublic: instanceEvent.IsPublic,
-                                IsRegistrationOpen: instanceEvent.IsRegistrationOpen,
-                                IsVisible: instanceEvent.IsVisible,
-                                Name: instanceEvent.Name,
-                                Type: instanceEvent.Type,
-                                Summary: instanceEvent.Summary,
-                                LocationText: instanceEvent.LocationText,
-                                EventTrainersList: instanceEvent.EventTrainersList,
-                                EventTargetCohortsList: instanceEvent.EventTargetCohortsList,
-                                EventInstancesList: null // Not needed when viewing specific instance
-                            );
-                        }
-                        Debug.WriteLine($"EventPage: Loaded instance - since={since?.ToString("o") ?? "(null)"}, until={until?.ToString("o") ?? "(null)"}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"EventPage: Failed to load event instance: {ex.Message}");
-                }
-            }
-
-            // Fallback to loading by EventId
-            if (ev == null && EventId > 0)
-            {
-                Debug.WriteLine($"EventPage: Loading event {EventId}");
-                ev = await EventService.GetEventAsync(EventId);
-                if (ev != null)
-                {
-                    since = ev.Since;
-                    until = ev.Until;
-                    Debug.WriteLine($"EventPage: Loaded event - since={since?.ToString("o") ?? "(null)"}, until={until?.ToString("o") ?? "(null)"}");
-                }
-            }
-
+            Debug.WriteLine($"EventPage: Loading event {EventId}");
+            var ev = await EventService.GetEventAsync(EventId);
             if (ev == null)
             {
                 await DisplayAlertAsync(LocalizationService.Get("NotFound_Title"), LocalizationService.Get("NotFound_Event"), LocalizationService.Get("Button_OK"));
                 return;
             }
+
+            // Get since/until from eventInstancesList (new GraphQL query structure)
+            DateTime? since = null;
+            DateTime? until = null;
+            if (ev.EventInstancesList != null && ev.EventInstancesList.Count > 0)
+            {
+                var firstInstance = ev.EventInstancesList[0];
+                since = firstInstance.Since;
+                until = firstInstance.Until;
+            }
+            Debug.WriteLine($"EventPage: Loaded event - since={since?.ToString("o") ?? "(null)"}, until={until?.ToString("o") ?? "(null)"}");
 
             // Use explicit naming: prefer event name, otherwise fall back to localized "Lesson" prefix or short form
             if (!string.IsNullOrWhiteSpace(ev.Name))
@@ -250,7 +188,8 @@ public partial class EventPage : ContentPage
                 UpdatedAtLabel.Text = string.Empty;
                 UpdatedAtLabel.IsVisible = false;
             }
-            var isRegistrationOpen = ev.IsRegistrationOpen;
+            // If isRegistrationOpen is null, treat as open (true)
+            var isRegistrationOpen = ev.IsRegistrationOpen ?? true;
             RegistrationOpenLabel.IsVisible = isRegistrationOpen;
             
             // Count actual occupied spots: couples = 2, singles = 1
@@ -375,23 +314,10 @@ public partial class EventPage : ContentPage
                 }
 
                 var parts = new List<string>();
-                if (n.Couple?.Active == false) parts.Add(LocalizationService.Get("Couple_Inactive") ?? "Neaktivní");
+                // Note: Active field removed from new API structure
 
-                // Collect instance trainers for couple (person entries may not have these)
+                // Initialize trainerParts as empty (EventInstanceTrainersList no longer exists in new API)
                 var trainerParts = new List<string>();
-                var trainers = n.Couple?.Man?.EventInstanceTrainersList;
-                if (trainers != null && trainers.Count > 0)
-                {
-                    foreach (var t in trainers)
-                    {
-                        if (t == null) continue;
-                        var tn = (t.Name ?? string.Empty).Trim();
-                        if (!string.IsNullOrWhiteSpace(tn))
-                        {
-                            trainerParts.Add(tn);
-                        }
-                    }
-                }
 
                 // Lesson demands attached to this registration
                 var demands = n.EventLessonDemandsByRegistrationIdList;
@@ -402,11 +328,10 @@ public partial class EventPage : ContentPage
                     {
                         if (d == null) continue;
                         var cnt = d.LessonCount;
-                        var tname = d.Trainer?.Name?.Trim();
-                        if (!string.IsNullOrWhiteSpace(tname))
-                            demandParts.Add($"{cnt}× {tname}");
-                        else
-                            demandParts.Add($"{cnt} lekcí");
+                        // Note: API now returns trainerId (long) instead of Trainer object
+                        // Would need to lookup trainer name separately if needed
+                        var lessonsText = LocalizationService.Get("Lessons_Count") ?? "lekcí";
+                        demandParts.Add($"{cnt} {lessonsText}");
                     }
                     if (demandParts.Count > 0)
                         parts.Add(string.Join(", ", demandParts));
@@ -631,23 +556,8 @@ public partial class EventPage : ContentPage
     {
         try
         {
-            if (EventId == 0 && EventInstanceId == 0) return;
-            // Prefer including EventId for registration flows; also include EventInstanceId when present
-            if (EventId != 0)
-            {
-                if (EventInstanceId != 0)
-                {
-                    await Shell.Current.GoToAsync($"{nameof(RegistrationPage)}?id={EventId}&eventInstanceId={EventInstanceId}");
-                }
-                else
-                {
-                    await Shell.Current.GoToAsync($"{nameof(RegistrationPage)}?id={EventId}");
-                }
-            }
-            else
-            {
-                await Shell.Current.GoToAsync($"{nameof(RegistrationPage)}?eventInstanceId={EventInstanceId}");
-            }
+            if (EventId == 0) return;
+            await Shell.Current.GoToAsync($"{nameof(RegistrationPage)}?id={EventId}");
         }
         catch { }
     }

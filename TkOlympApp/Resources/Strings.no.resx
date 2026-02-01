@@ -106,8 +106,8 @@
     <data name="NotFound_Title" xml:space="preserve"><value>Ikke funnet</value></data>
     <data name="NotFound_Event" xml:space="preserve"><value>Hendelsen ble ikke funnet.</value></data>
     <data name="NotFound_Notice" xml:space="preserve"><value>Kunngjøringen ble ikke funnet.</value></data>
-    <data name="Error_Title" xml:space="preserve"><value>Feil</value></data>
-    <data name="Login_Error_Missing" xml:space="preserve"><value>Vennligst fyll inn både brukernavn og passord.</value></data>
+    <data name="Error_Title" xml:space="preserve"><value>Feil</value></data>  <data name="PlainText_Empty_Title" xml:space="preserve"><value>Tom tekst</value></data>
+  <data name="PlainText_Empty_Body" xml:space="preserve"><value>Ingen tekst å vise</value></data>    <data name="Lessons_Count" xml:space="preserve"><value>leksjoner</value></data>    <data name="Login_Error_Missing" xml:space="preserve"><value>Vennligst fyll inn både brukernavn og passord.</value></data>
     <data name="Login_Failed_Title" xml:space="preserve"><value>Innlogging mislyktes</value></data>
     <data name="Button_OK" xml:space="preserve"><value>OK</value></data>
     <data name="Tab_My" xml:space="preserve"><value>Mine</value></data>
