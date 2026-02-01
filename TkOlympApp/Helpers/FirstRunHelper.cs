@@ -4,13 +4,12 @@ namespace TkOlympApp.Helpers;
 
 public static class FirstRunHelper
 {
-    private const string Key = "has_seen_first_run";
 
     public static bool HasSeen()
     {
         try
         {
-            return Preferences.Get(Key, false);
+            return Preferences.Get(AppConstants.FirstRunSeenKey, false);
         }
         catch
         {
@@ -22,7 +21,7 @@ public static class FirstRunHelper
     {
         try
         {
-            Preferences.Set(Key, true);
+            Preferences.Set(AppConstants.FirstRunSeenKey, true);
         }
         catch
         {

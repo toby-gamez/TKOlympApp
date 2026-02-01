@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Maui.Storage;
+using TkOlympApp.Helpers;
 
 namespace TkOlympApp.Services;
 
@@ -23,9 +24,9 @@ public static class AuthService
 
         Client = new HttpClient(authHandler)
         {
-            BaseAddress = new Uri("https://api.rozpisovnik.cz/graphql")
+            BaseAddress = new Uri(AppConstants.BaseApiUrl)
         };
-        Client.DefaultRequestHeaders.Add("x-tenant-id", "1");
+        Client.DefaultRequestHeaders.Add(AppConstants.TenantHeader, AppConstants.TenantId);
         if (Client.DefaultRequestHeaders.Contains("x-tenant"))
         {
             Client.DefaultRequestHeaders.Remove("x-tenant");
@@ -34,16 +35,16 @@ public static class AuthService
         // Bare client without the delegating handler to avoid recursion when refreshing tokens
         BareClient = new HttpClient(new HttpClientHandler())
         {
-            BaseAddress = new Uri("https://api.rozpisovnik.cz/graphql")
+            BaseAddress = new Uri(AppConstants.BaseApiUrl)
         };
-        BareClient.DefaultRequestHeaders.Add("x-tenant-id", "1");
+        BareClient.DefaultRequestHeaders.Add(AppConstants.TenantHeader, AppConstants.TenantId);
     }
 
     public static HttpClient Http => Client;
 
     public static async Task InitializeAsync()
     {
-        var jwt = await SecureStorage.GetAsync("jwt");
+        var jwt = await SecureStorage.GetAsync(AppConstants.JwtStorageKey);
         if (!string.IsNullOrWhiteSpace(jwt))
         {
             Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
@@ -62,7 +63,7 @@ public static class AuthService
 
     public static async Task<bool> TryRefreshIfNeededAsync(CancellationToken ct = default)
     {
-        var jwt = await SecureStorage.GetAsync("jwt");
+        var jwt = await SecureStorage.GetAsync(AppConstants.JwtStorageKey);
         if (string.IsNullOrWhiteSpace(jwt))
             return false;
 
@@ -111,7 +112,7 @@ public static class AuthService
             throw new InvalidOperationException(errMsg);
         }
 
-        await SecureStorage.SetAsync("jwt", jwt);
+        await SecureStorage.SetAsync(AppConstants.JwtStorageKey, jwt);
         Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
         return jwt;
     }
@@ -147,7 +148,7 @@ public static class AuthService
             // Clone request for retry since HttpRequestMessage can only be sent once
             var retry = await CloneHttpRequestMessageAsync(request).ConfigureAwait(false);
             // Ensure Authorization header is set from the refreshed token
-            var jwt = await SecureStorage.GetAsync("jwt").ConfigureAwait(false);
+            var jwt = await SecureStorage.GetAsync(AppConstants.JwtStorageKey).ConfigureAwait(false);
             if (!string.IsNullOrWhiteSpace(jwt))
             {
                 retry.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
@@ -222,7 +223,7 @@ public static class AuthService
 
     public static async Task<bool> HasTokenAsync()
     {
-        var jwt = await SecureStorage.GetAsync("jwt");
+        var jwt = await SecureStorage.GetAsync(AppConstants.JwtStorageKey);
         return !string.IsNullOrWhiteSpace(jwt);
     }
 
@@ -261,7 +262,7 @@ public static class AuthService
         }
 
         // Persist and set default auth header for future requests
-        await SecureStorage.SetAsync("jwt", jwt);
+        await SecureStorage.SetAsync(AppConstants.JwtStorageKey, jwt);
         Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
         // After login, try to fetch the user's person id (userProxiesList.person.id) and persist it
         try
@@ -293,7 +294,7 @@ public static class AuthService
         try
         {
             // Persist empty token (best-effort) and clear auth header
-            try { await SecureStorage.SetAsync("jwt", string.Empty); } catch { }
+            try { await SecureStorage.SetAsync(AppConstants.JwtStorageKey, string.Empty); } catch { }
             Client.DefaultRequestHeaders.Authorization = null;
 
             // Clear persisted person id as well

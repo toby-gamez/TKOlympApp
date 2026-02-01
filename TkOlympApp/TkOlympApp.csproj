@@ -91,13 +91,14 @@
         <PackageReference Include="Indiko.Maui.Controls.SelectableLabel" Version="1.1.2" />
     </ItemGroup>
 
-        <!--     <PropertyGroup>
-        <AndroidKeyStore>true</AndroidKeyStore>
-        <AndroidSigningKeyStore>tkolymp.keystore</AndroidSigningKeyStore>
-        <AndroidSigningKeyAlias>TkOlymp</AndroidSigningKeyAlias>
-        <AndroidSigningKeyPass>Tgr45*$d</AndroidSigningKeyPass>
-        <AndroidSigningStorePass>Tgr45*$d</AndroidSigningStorePass>
-    </PropertyGroup> -->
+        <!-- Release signing configuration: Set environment variables ANDROID_SIGNING_KEY_PASS and ANDROID_SIGNING_STORE_PASS in CI/CD -->
+        <PropertyGroup Condition="'$(Configuration)'=='Release' and $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android' and '$(ANDROID_SIGNING_KEY_PASS)' != ''">
+            <AndroidKeyStore>true</AndroidKeyStore>
+            <AndroidSigningKeyStore>tkolymp.keystore</AndroidSigningKeyStore>
+            <AndroidSigningKeyAlias>TkOlymp</AndroidSigningKeyAlias>
+            <AndroidSigningKeyPass>$(ANDROID_SIGNING_KEY_PASS)</AndroidSigningKeyPass>
+            <AndroidSigningStorePass>$(ANDROID_SIGNING_STORE_PASS)</AndroidSigningStorePass>
+        </PropertyGroup>
 
         <!-- Enable ProGuard/R8 for Release builds only. Conservative rules are provided in
                  Platforms/Android/proguard.cfg to avoid runtime crashes when enabling shrink/obfuscation. -->

@@ -23,8 +23,10 @@ TkOlympApp je mobilní aplikace pro správu sportovních událostí, registrací
 | **Výkon** | ⚠️ **Střední** | Opakované LINQ dotazy, žádné profilování |
 | **Platform-specific** | ✅ **Dobré** | Čistě odděleno v `Platforms/`, použit Android WorkManager |
 | **Kódová kvalita** | ⚙️ **Průměrná** | Čitelný kód, ale dlouhé code-behind třídy (1200+ řádků) |
+| **Magic strings** | ✅ **Vyřešeno 2026-02-01** | Vytvořena AppConstants třída, vše refaktorováno |
+| **Bezpečnost (credentials)** | ✅ **Vyřešeno 2026-02-01** | Hardcoded hesla odstraněna, použity env variables |
 
-**Celkové skóre:** 4.5/10 — Funkční aplikace, ale s vážnými technickými dluhy bránícími škálovatelnosti.
+**Celkové skóre:** 5.0/10 — Funkční aplikace s částečně vyřešenými P0 problémy, stále vážné technické dluhy bránící škálovatelnosti.
 
 ---
 
@@ -343,13 +345,17 @@ Client.DefaultRequestHeaders.Add("x-tenant-id", "1");
 // TkOlympApp/Services/AuthService.cs:47
 var jwt = await SecureStorage.GetAsync("jwt");
 
-// ✅ Mělo by být:
+// ✅ ✅ ✅ HOTOVO (2026-02-01):
+// Vytvořena TkOlympApp/Helpers/AppConstants.cs
+// Všechny magic strings refaktorovány (AuthService, LocalizationService, FirstRunHelper, App.xaml.cs)
 public static class AppConstants
 {
     public const string TenantHeader = "x-tenant-id";
     public const string TenantId = "1";
     public const string JwtStorageKey = "jwt";
     public const string BaseApiUrl = "https://api.rozpisovnik.cz/graphql";
+    public const string AppLanguageKey = "app_language";
+    public const string FirstRunSeenKey = "first_run_seen";
 }
 ```
 
@@ -1716,7 +1722,7 @@ jobs:
 
 ```csharp
 // TkOlympApp/Services/AuthService.cs:47
-var jwt = await SecureStorage.GetAsync("jwt");
+var jwt = await SecureStorage.GetAsync(AppConstants.JwtStorageKey);
 ```
 
 ✅ Používá platform-native úložiště:
@@ -1739,8 +1745,8 @@ var jwt = await SecureStorage.GetAsync("jwt");
 
 **✅ Oprava:**
 
-1. Odstranit z .csproj
-2. Použít environment variables v CI/CD:
+1. Odstranit z .csproj ✅ HOTOVO
+2. Použít environment variables v CI/CD: ✅ HOTOVO
    ```xml
    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
        <AndroidKeyStore>true</AndroidKeyStore>
@@ -1890,10 +1896,11 @@ Aplikace nemá retry logic ani exponential backoff.
 
 ### 8.1 Prioritizované akce
 
-| Priorita | Akce | Odhadované úsilí | Dopad |
-|----------|------|------------------|-------|
-| **P0 (Kritické)** | Odstranit hardcoded credentials z .csproj | 1 hodina | Bezpečnost |
-| **P0** | Implementovat global exception handling + crash reporting | 1 den | Diagnostika |
+| Priorita | Akce | Odhadované úsilí | Dopad | Status |
+|----------|------|------------------|-------|--------|
+| **P0 (Kritické)** | Odstranit hardcoded credentials z .csproj | 1 hodina | Bezpečnost | ✅ **HOTOVO 2026-02-01** |
+| **P0** | Vytvořit AppConstants třídu a refaktorovat magic strings | 2 hodiny | Udržitelnost | ✅ **HOTOVO 2026-02-01** |
+| **P0** | Implementovat global exception handling + crash reporting | 1 den | Diagnostika | ⏸️ Sentry odstraněn, čeká na DSN |
 | **P1 (Vysoká)** | Migrace na DI + extrakce rozhraní | 4 týdny | Testovatelnost |
 | **P1** | Přidat CancellationToken do všech async metod | 1 týden | Výkon |
 | **P1** | Implementovat memory leak fixes (event unsubscribe) | 1 týden | Stabilita |

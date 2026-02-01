@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Maui;
+﻿using Microsoft.Maui;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Storage;
 using System.Threading.Tasks;
@@ -16,7 +15,7 @@ public partial class App : Application
         // Apply language early so AppShell and initial pages use correct culture
         try
         {
-            var stored = Preferences.Get("app_language", (string?)null);
+            var stored = Preferences.Get(AppConstants.AppLanguageKey, (string?)null);
             var lang = stored ?? LocalizationService.DetermineDefaultLanguage();
             LocalizationService.ApplyLanguage(lang);
         }

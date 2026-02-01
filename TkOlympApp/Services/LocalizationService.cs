@@ -2,17 +2,17 @@ using System;
 using System.Globalization;
 using System.Resources;
 using Microsoft.Maui.Storage;
+using TkOlympApp.Helpers;
 
 namespace TkOlympApp.Services;
 
 public static class LocalizationService
 {
-    const string PrefKey = "app_language";
     static readonly ResourceManager RM = new ResourceManager("TkOlympApp.Resources.Strings", typeof(LocalizationService).Assembly);
 
     public static readonly string[] Supported = new[] { "cs", "en", "vi", "uk", "no", "sk", "sl", "brainrot" };
 
-    public static string? GetStoredLanguage() => Preferences.Get(PrefKey, (string?)null);
+    public static string? GetStoredLanguage() => Preferences.Get(AppConstants.AppLanguageKey, (string?)null);
 
     public static string DetermineDefaultLanguage()
     {
@@ -39,7 +39,7 @@ public static class LocalizationService
 
             CultureInfo.DefaultThreadCurrentCulture = culture;
             CultureInfo.DefaultThreadCurrentUICulture = culture;
-            Preferences.Set(PrefKey, lang);
+            Preferences.Set(AppConstants.AppLanguageKey, lang);
         }
 
     public static string Get(string key)
