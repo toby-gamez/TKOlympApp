@@ -1,5 +1,5 @@
 using Microsoft.Maui.Controls;
-using System.Diagnostics;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
@@ -13,6 +13,7 @@ namespace TkOlympApp;
 
 public partial class MainPage : ContentPage
 {
+    private readonly ILogger _logger;
     private DayGroup? _currentDay;
     private bool _isLoading;
     private bool _suppressReloadOnNextAppearing = false;
@@ -21,6 +22,8 @@ public partial class MainPage : ContentPage
 
     public MainPage()
     {
+        _logger = LoggerService.CreateLogger<MainPage>();
+        
         try
         {
             InitializeComponent();
@@ -28,7 +31,7 @@ public partial class MainPage : ContentPage
         }
         catch (Exception ex)
         {
-            try { Debug.WriteLine($"MainPage: InitializeComponent failed: {ex}"); } catch { }
+            _logger.LogCritical(ex, "Failed to initialize MainPage XAML");
             Content = new Microsoft.Maui.Controls.StackLayout
             {
                 Children =
@@ -36,14 +39,13 @@ public partial class MainPage : ContentPage
                     new Microsoft.Maui.Controls.Label { Text = LocalizationService.Get("Error_Loading_Prefix") + ex.Message }
                 }
             };
-            return;
         }
     }
 
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        try { Debug.WriteLine("MainPage: OnAppearing"); } catch { }
+        _logger.LogDebug("MainPage appearing");
 
         // Subscribe to events
         if (MainRefreshView != null)
@@ -53,6 +55,7 @@ public partial class MainPage : ContentPage
         if (_suppressReloadOnNextAppearing)
         {
             _suppressReloadOnNextAppearing = false;
+            _logger.LogDebug("Skipping reload (returning from child page)");
             return;
         }
 
@@ -77,22 +80,43 @@ public partial class MainPage : ContentPage
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"MainPage: Failed to schedule notifications: {ex}");
+                    _logger.LogWarning(ex, "Failed to schedule event notifications");
                 }
 
                 // Load upcoming events for display
-                try { await LoadUpcomingEventsAsync(); } catch { }
+                try 
+                { 
+                    await LoadUpcomingEventsAsync(); 
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to load upcoming events during OnAppearing");
+                }
                 
                 // Load recent announcements
-                try { await LoadRecentAnnouncementsAsync(); } catch { }
+                try 
+                { 
+                    await LoadRecentAnnouncementsAsync(); 
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to load recent announcements during OnAppearing");
+                }
                 
                 // Load upcoming camps
-                try { await LoadUpcomingCampsAsync(); } catch { }
+                try 
+                { 
+                    await LoadUpcomingCampsAsync(); 
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to load upcoming camps during OnAppearing");
+                }
             });
         }
-        catch
+        catch (Exception ex)
         {
-            // fallback if dispatch isn't available
+            _logger.LogError(ex, "Failed to dispatch initialization tasks");
         }
     }
 
@@ -103,14 +127,23 @@ public partial class MainPage : ContentPage
             MainRefreshView.Refreshing -= OnRefresh;
 
         base.OnDisappearing();
+        _logger.LogDebug("MainPage disappeared");
     }
 
     private async Task LoadUpcomingEventsAsync()
     {
         if (_isLoading) return;
         _isLoading = true;
-        try { Loading.IsVisible = true; } catch { }
-        try { Loading.IsRunning = true; } catch { }
+        
+        try 
+        { 
+            Loading.IsVisible = true;
+            Loading.IsRunning = true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to set loading indicator visibility");
+        }
 
         try
         {
@@ -118,6 +151,7 @@ public partial class MainPage : ContentPage
             var start = now.Date;
             var end = now.Date.AddDays(14); // Načte tréninky na 14 dní dopředu
 
+            _logger.LogInformation("Loading upcoming events from {Start} to {End}", start, end);
             var events = await EventService.GetMyEventInstancesForRangeAsync(start, end);
             
             // Seskupíme eventy podle dne
@@ -147,24 +181,50 @@ public partial class MainPage : ContentPage
                 }
 
                 _currentDay = new DayGroup(dayLabel, firstDate, dayEvents);
+                _logger.LogDebug("Loaded {EventCount} events for {Date}", dayEvents.Count, firstDate);
+            }
+            else
+            {
+                _logger.LogInformation("No upcoming events found");
             }
 
             // Bind day to UI
-            try { DayContent.BindingContext = _currentDay; } catch { }
-            try { EmptyLabel.IsVisible = _currentDay == null; } catch { }
-            try { DayContent.IsVisible = _currentDay != null; } catch { }
+            try 
+            { 
+                DayContent.BindingContext = _currentDay;
+                EmptyLabel.IsVisible = _currentDay == null;
+                DayContent.IsVisible = _currentDay != null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to update UI bindings");
+            }
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"MainPage: Failed to load upcoming events: {ex}");
-            try { EmptyLabel.IsVisible = true; } catch { }
-            try { DayContent.IsVisible = false; } catch { }
+            _logger.LogError(ex, "Failed to load upcoming events");
+            try 
+            { 
+                EmptyLabel.IsVisible = true;
+                DayContent.IsVisible = false;
+            }
+            catch (Exception uiEx)
+            {
+                _logger.LogWarning(uiEx, "Failed to update UI after error");
+            }
         }
         finally
         {
             _isLoading = false;
-            try { Loading.IsVisible = false; } catch { }
-            try { Loading.IsRunning = false; } catch { }
+            try 
+            { 
+                Loading.IsVisible = false;
+                Loading.IsRunning = false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to hide loading indicator");
+            }
         }
     }
 
@@ -175,6 +235,8 @@ public partial class MainPage : ContentPage
             if (sender is VisualElement ve && ve.BindingContext is EventService.EventInstance evt && evt.Event != null)
             {
                 if (evt.IsCancelled) return;
+                
+                _logger.LogDebug("Navigating to event {EventId}", evt.Event.Id);
                 var page = new Pages.EventPage();
                 if (evt.Event != null) page.EventId = evt.Event.Id;
                 _suppressReloadOnNextAppearing = true;
@@ -183,7 +245,11 @@ public partial class MainPage : ContentPage
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"MainPage: Navigation failed: {ex}");
+            _logger.LogError(ex, "Failed to navigate to event page");
+            await DisplayAlert(
+                LocalizationService.Get("Error") ?? "Error", 
+                LocalizationService.Get("Navigation_Error") ?? "Cannot open event details", 
+                "OK");
         }
     }
 
@@ -198,6 +264,7 @@ public partial class MainPage : ContentPage
                 if (inst?.IsCancelled ?? false) return;
                 if (evt != null)
                 {
+                    _logger.LogDebug("Navigating to grouped event {EventId}", evt.Id);
                     var page = new Pages.EventPage();
                     page.EventId = evt.Id;
                     _suppressReloadOnNextAppearing = true;
@@ -207,21 +274,38 @@ public partial class MainPage : ContentPage
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"MainPage: Navigation from grouped row failed: {ex}");
+            _logger.LogError(ex, "Failed to navigate from grouped row");
+            await DisplayAlert(
+                LocalizationService.Get("Error") ?? "Error", 
+                LocalizationService.Get("Navigation_Error") ?? "Cannot open event details", 
+                "OK");
         }
     }
 
     private async void OnRefresh(object? sender, EventArgs e)
     {
+        _logger.LogDebug("Refreshing MainPage content");
         try
         {
             await LoadUpcomingEventsAsync();
             await LoadRecentAnnouncementsAsync();
             await LoadUpcomingCampsAsync();
         }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to refresh content");
+        }
         finally
         {
-            try { if (sender is RefreshView rv) rv.IsRefreshing = false; } catch { }
+            try 
+            { 
+                if (sender is RefreshView rv) 
+                    rv.IsRefreshing = false; 
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to reset refresh indicator");
+            }
         }
     }
 
@@ -229,6 +313,7 @@ public partial class MainPage : ContentPage
     {
         try
         {
+            _logger.LogDebug("Loading recent announcements");
             var announcements = await NoticeboardService.GetMyAnnouncementsAsync();
             RecentAnnouncements.Clear();
             
@@ -243,13 +328,29 @@ public partial class MainPage : ContentPage
                 RecentAnnouncements.Add(announcement);
             }
             
+            _logger.LogInformation("Loaded {Count} recent announcements", recent.Count);
+            
             // Nastav viditelnost sekce
-            try { RecentAnnouncementsSection.IsVisible = RecentAnnouncements.Count > 0; } catch { }
+            try 
+            { 
+                RecentAnnouncementsSection.IsVisible = RecentAnnouncements.Count > 0; 
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to update announcements section visibility");
+            }
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"MainPage: Failed to load recent announcements: {ex}");
-            try { RecentAnnouncementsSection.IsVisible = false; } catch { }
+            _logger.LogError(ex, "Failed to load recent announcements");
+            try 
+            { 
+                RecentAnnouncementsSection.IsVisible = false; 
+            }
+            catch (Exception uiEx)
+            {
+                _logger.LogWarning(uiEx, "Failed to hide announcements section after error");
+            }
         }
     }
 
@@ -259,12 +360,17 @@ public partial class MainPage : ContentPage
         {
             if (sender is VisualElement ve2 && ve2.BindingContext is NoticeboardService.Announcement announcement)
             {
+                _logger.LogDebug("Navigating to announcement {AnnouncementId}", announcement.Id);
                 await Shell.Current.GoToAsync($"NoticePage?id={announcement.Id}");
             }
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"MainPage: Navigation to notice failed: {ex}");
+            _logger.LogError(ex, "Failed to navigate to announcement");
+            await DisplayAlert(
+                LocalizationService.Get("Error") ?? "Error", 
+                LocalizationService.Get("Navigation_Error") ?? "Cannot open announcement", 
+                "OK");
         }
     }
 
@@ -272,6 +378,7 @@ public partial class MainPage : ContentPage
     {
         try
         {
+            _logger.LogDebug("Loading upcoming camps");
             var now = DateTime.Now;
             var pastStart = now.Date.AddYears(-1); // Načte soustředění rok zpět
             var futureEnd = now.Date.AddYears(1); // Načte soustředění na rok dopředu
@@ -301,13 +408,29 @@ public partial class MainPage : ContentPage
                 });
             }
 
+            _logger.LogInformation("Loaded {Count} upcoming camps", camps.Count);
+
             // Nastav viditelnost sekce
-            try { UpcomingCampsSection.IsVisible = UpcomingCamps.Count > 0; } catch { }
+            try 
+            { 
+                UpcomingCampsSection.IsVisible = UpcomingCamps.Count > 0; 
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to update camps section visibility");
+            }
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"MainPage: Failed to load upcoming camps: {ex}");
-            try { UpcomingCampsSection.IsVisible = false; } catch { }
+            _logger.LogError(ex, "Failed to load upcoming camps");
+            try 
+            { 
+                UpcomingCampsSection.IsVisible = false; 
+            }
+            catch (Exception uiEx)
+            {
+                _logger.LogWarning(uiEx, "Failed to hide camps section after error");
+            }
         }
     }
 
@@ -317,6 +440,7 @@ public partial class MainPage : ContentPage
         {
             if (sender is VisualElement ve3 && ve3.BindingContext is CampItem camp)
             {
+                _logger.LogDebug("Navigating to camp event {EventId}", camp.EventId);
                 var page = new Pages.EventPage();
                 page.EventId = camp.EventId;
                 _suppressReloadOnNextAppearing = true;
@@ -325,7 +449,11 @@ public partial class MainPage : ContentPage
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"MainPage: Navigation to camp failed: {ex}");
+            _logger.LogError(ex, "Failed to navigate to camp");
+            await DisplayAlert(
+                LocalizationService.Get("Error") ?? "Error", 
+                LocalizationService.Get("Navigation_Error") ?? "Cannot open camp details", 
+                "OK");
         }
     }
 

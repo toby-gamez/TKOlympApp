@@ -6,12 +6,14 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Maui.Storage;
+using Microsoft.Extensions.Logging;
 using TkOlympApp.Helpers;
 
 namespace TkOlympApp.Services;
 
 public static class AuthService
 {
+    private static readonly ILogger _logger = LoggerService.CreateLogger("AuthService");
     private static readonly HttpClient Client;
     // Bare client without the auth delegating handler - used for internal refresh requests
     private static readonly HttpClient BareClient;
@@ -38,26 +40,42 @@ public static class AuthService
             BaseAddress = new Uri(AppConstants.BaseApiUrl)
         };
         BareClient.DefaultRequestHeaders.Add(AppConstants.TenantHeader, AppConstants.TenantId);
+        
+        _logger.LogDebug("AuthService initialized with base URL: {BaseUrl}", AppConstants.BaseApiUrl);
     }
 
     public static HttpClient Http => Client;
 
     public static async Task InitializeAsync(CancellationToken ct = default)
     {
+        _logger.LogDebug("Initializing AuthService");
         var jwt = await SecureStorage.GetAsync(AppConstants.JwtStorageKey);
         if (!string.IsNullOrWhiteSpace(jwt))
         {
+            _logger.LogInformation("Found existing JWT token, attempting refresh");
             Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
             // Try refresh on startup if token is expired or near expiry
             try
             {
                 await TryRefreshIfNeededAsync(ct);
             }
-            catch
+            catch (Exception ex)
             {
                 // If refresh fails, ensure we clear any invalid token
-                try { await LogoutAsync(); } catch { }
+                _logger.LogWarning(ex, "Token refresh failed during initialization, forcing logout");
+                try 
+                { 
+                    await LogoutAsync(); 
+                }
+                catch (Exception logoutEx)
+                {
+                    _logger.LogError(logoutEx, "Logout failed during cleanup");
+                }
             }
+        }
+        else
+        {
+            _logger.LogDebug("No existing JWT token found");
         }
     }
 
@@ -65,24 +83,46 @@ public static class AuthService
     {
         var jwt = await SecureStorage.GetAsync(AppConstants.JwtStorageKey);
         if (string.IsNullOrWhiteSpace(jwt))
+        {
+            _logger.LogDebug("No JWT token to refresh");
             return false;
+        }
 
         // If not expired (within a small leeway), keep existing token
         if (!IsJwtExpired(jwt))
         {
+            _logger.LogDebug("JWT token is still valid, no refresh needed");
             Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
             return true;
         }
 
+        _logger.LogInformation("JWT token expired or near expiry, attempting refresh");
         try
         {
             var newJwt = await RefreshJwtAsync(ct);
-            return !string.IsNullOrWhiteSpace(newJwt);
+            var success = !string.IsNullOrWhiteSpace(newJwt);
+            if (success)
+            {
+                _logger.LogInformation("JWT token refreshed successfully");
+            }
+            else
+            {
+                _logger.LogWarning("JWT token refresh returned empty token");
+            }
+            return success;
         }
-        catch
+        catch (Exception ex)
         {
             // On any failure, clear stored token to force re-login
-            try { await LogoutAsync(); } catch { }
+            _logger.LogError(ex, "JWT token refresh failed, clearing stored credentials");
+            try 
+            { 
+                await LogoutAsync(); 
+            }
+            catch (Exception logoutEx)
+            {
+                _logger.LogError(logoutEx, "Logout failed during refresh error cleanup");
+            }
             return false;
         }
     }
@@ -128,22 +168,35 @@ public static class AuthService
             if (response.StatusCode != HttpStatusCode.Unauthorized && response.StatusCode != HttpStatusCode.Forbidden)
                 return response;
 
+            _logger.LogWarning("Received {StatusCode} response, attempting token refresh", response.StatusCode);
+
             // Attempt to refresh token
             var refreshed = false;
             try
             {
                 refreshed = await AuthService.TryRefreshIfNeededAsync(cancellationToken).ConfigureAwait(false);
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Token refresh attempt failed in delegating handler");
                 refreshed = false;
             }
 
             if (!refreshed)
             {
-                try { await AuthService.LogoutAsync().ConfigureAwait(false); } catch { }
+                _logger.LogWarning("Token refresh unsuccessful, logging out");
+                try 
+                { 
+                    await AuthService.LogoutAsync().ConfigureAwait(false); 
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Logout failed in delegating handler");
+                }
                 return response;
             }
+
+            _logger.LogInformation("Token refreshed, retrying original request");
 
             // Clone request for retry since HttpRequestMessage can only be sent once
             var retry = await CloneHttpRequestMessageAsync(request).ConfigureAwait(false);
@@ -157,7 +210,15 @@ public static class AuthService
             var retryResponse = await base.SendAsync(retry, cancellationToken).ConfigureAwait(false);
             if (retryResponse.StatusCode == HttpStatusCode.Unauthorized || retryResponse.StatusCode == HttpStatusCode.Forbidden)
             {
-                try { await AuthService.LogoutAsync().ConfigureAwait(false); } catch { }
+                _logger.LogError("Retry after token refresh still returned {StatusCode}, forcing logout", retryResponse.StatusCode);
+                try 
+                { 
+                    await AuthService.LogoutAsync().ConfigureAwait(false); 
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Logout failed after retry failure");
+                }
             }
 
             return retryResponse;
@@ -229,6 +290,8 @@ public static class AuthService
 
     public static async Task<string?> LoginAsync(string login, string passwd, CancellationToken ct = default)
     {
+        _logger.LogInformation("Attempting login for user: {Login}", login);
+        
         // GraphQL payload using variables
         var gql = new GraphQlRequest
         {
@@ -258,15 +321,20 @@ public static class AuthService
         {
             // Try extract first error message if available
             var errMsg = result?.Errors?.FirstOrDefault()?.Message ?? "Neplatné přihlašovací údaje.";
+            _logger.LogWarning("Login failed for user {Login}: {Error}", login, errMsg);
             throw new InvalidOperationException(errMsg);
         }
+
+        _logger.LogInformation("Login successful for user: {Login}", login);
 
         // Persist and set default auth header for future requests
         await SecureStorage.SetAsync(AppConstants.JwtStorageKey, jwt);
         Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+        
         // After login, try to fetch the user's person id (userProxiesList.person.id) and persist it
         try
         {
+            _logger.LogDebug("Fetching user person ID");
             var gqlReq2 = new GraphQlRequest { Query = "query { userProxiesList { person { id } } }" };
             var json2 = JsonSerializer.Serialize(gqlReq2);
             using var content2 = new StringContent(json2, Encoding.UTF8, "application/json");
@@ -280,29 +348,53 @@ public static class AuthService
             if (!string.IsNullOrWhiteSpace(id))
             {
                 await UserService.SetCurrentPersonIdAsync(id);
+                _logger.LogDebug("User person ID set: {PersonId}", id);
+            }
+            else
+            {
+                _logger.LogWarning("No person ID found for user");
             }
         }
-        catch
+        catch (Exception ex)
         {
             // non-critical: ignore failures fetching/persisting person id
+            _logger.LogWarning(ex, "Failed to fetch or persist user person ID (non-critical)");
         }
         return jwt;
     }
 
     public static async Task LogoutAsync(CancellationToken ct = default)
     {
+        _logger.LogInformation("Logging out user");
         try
         {
             // Persist empty token (best-effort) and clear auth header
-            try { await SecureStorage.SetAsync(AppConstants.JwtStorageKey, string.Empty); } catch { }
+            try 
+            { 
+                await SecureStorage.SetAsync(AppConstants.JwtStorageKey, string.Empty); 
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to clear JWT token from secure storage");
+            }
+            
             Client.DefaultRequestHeaders.Authorization = null;
 
             // Clear persisted person id as well
-            try { await UserService.SetCurrentPersonIdAsync(null, ct); } catch { }
+            try 
+            { 
+                await UserService.SetCurrentPersonIdAsync(null, ct); 
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to clear person ID");
+            }
+            
+            _logger.LogInformation("Logout completed successfully");
         }
-        catch
+        catch (Exception ex)
         {
-            // ignore
+            _logger.LogError(ex, "Unexpected error during logout");
         }
     }
 

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Maui.Controls;
+using Microsoft.Extensions.Logging;
 using MauiIcons.Core;
 using System.Linq;
 using System.Threading;
@@ -14,13 +15,17 @@ namespace TkOlympApp;
 
 public partial class AppShell : Shell, IDisposable
 {
+    private readonly ILogger _logger;
     private CancellationTokenSource? _pollCts;
     private CancellationTokenSource? _startupCts;
     private long _lastSeenAnnouncementId;
     private long _lastSeenStickyId;
     private readonly TimeSpan _pollInterval = TimeSpan.FromMinutes(5);
+    
     public AppShell()
     {
+        _logger = LoggerService.CreateLogger<AppShell>();
+        
         InitializeComponent();
         // Workaround for URL-based XAML namespace resolution issues
         _ = new MauiIcon();
@@ -55,6 +60,7 @@ public partial class AppShell : Shell, IDisposable
         Routing.RegisterRoute(nameof(EventNotificationSettingsPage), typeof(Pages.EventNotificationSettingsPage));
         Routing.RegisterRoute(nameof(EventNotificationRuleEditPage), typeof(Pages.EventNotificationRuleEditPage));
 
+        _logger.LogDebug("AppShell initialized, starting authentication check");
         _startupCts = new CancellationTokenSource();
         Dispatcher.Dispatch(async () =>
         {
@@ -65,15 +71,28 @@ public partial class AppShell : Shell, IDisposable
                 {
                     if (!FirstRunHelper.HasSeen())
                     {
-                        try { await GoToAsync(nameof(FirstRunPage)); } catch { }
+                        _logger.LogInformation("First run detected, showing FirstRunPage");
+                        try 
+                        { 
+                            await GoToAsync(nameof(FirstRunPage)); 
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Failed to navigate to FirstRunPage");
+                        }
                     }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to check first-run status");
+                }
 
                 await AuthService.InitializeAsync(_startupCts.Token);
                 var hasToken = await AuthService.HasTokenAsync(_startupCts.Token);
+                
                 if (!hasToken)
                 {
+                    _logger.LogInformation("No valid token found, navigating to LoginPage");
                     // Show login without resetting Shell root to avoid route issues
                     // But do not override the FirstRunPage if it is currently shown
                     var current = Shell.Current?.CurrentPage;
@@ -84,6 +103,7 @@ public partial class AppShell : Shell, IDisposable
                 }
                 else
                 {
+                    _logger.LogInformation("User authenticated, initializing notifications");
                     // Request notification permissions after successful authentication
                     try
                     {
@@ -92,14 +112,17 @@ public partial class AppShell : Shell, IDisposable
                         // Initialize background change detection (checks every 1 hour)
                         EventNotificationService.InitializeBackgroundChangeDetection();
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to initialize notification permissions");
+                    }
 
                     // CurrentItem is already set to MainPage in constructor, no need to navigate
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Ignore navigation errors during startup
+                _logger.LogError(ex, "Unexpected error during AppShell startup");
             }
         });
 
@@ -116,19 +139,21 @@ public partial class AppShell : Shell, IDisposable
                     {
                         try
                         {
+                            _logger.LogDebug("Notification received, navigating to NoticeBoardPage");
                             await Shell.Current.GoToAsync(nameof(NoticeboardPage));
                         }
-                        catch
+                        catch (Exception ex)
                         {
-                            // best-effort navigation
+                            _logger.LogWarning(ex, "Failed to navigate to NoticeboardPage from notification");
                         }
                     });
                 };
+                _logger.LogDebug("Subscribed to notification manager events");
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // ignore subscription errors
+            _logger.LogWarning(ex, "Failed to subscribe to notification manager");
         }
         
         // Start client-side polling for new announcements
@@ -138,12 +163,14 @@ public partial class AppShell : Shell, IDisposable
     protected override void OnAppearing()
     {
         base.OnAppearing();
+        _logger.LogDebug("AppShell appearing");
         StartAnnouncementPolling();
     }
 
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
+        _logger.LogDebug("AppShell disappearing");
         StopAnnouncementPolling();
     }
 
@@ -151,6 +178,7 @@ public partial class AppShell : Shell, IDisposable
     {
         if (_pollCts != null) return;
         _pollCts = new CancellationTokenSource();
+        _logger.LogInformation("Starting announcement polling (interval: {Interval})", _pollInterval);
         _ = Task.Run(() => PollLoopAsync(_pollCts.Token));
     }
 
@@ -160,23 +188,31 @@ public partial class AppShell : Shell, IDisposable
         {
             _pollCts?.Cancel();
             _pollCts = null;
+            _logger.LogInformation("Announcement polling stopped");
         }
-        catch { }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error stopping announcement polling");
+        }
     }
 
     private async Task PollLoopAsync(CancellationToken ct)
     {
         _lastSeenAnnouncementId = Preferences.Get("lastSeenAnnouncementId", 0L);
         _lastSeenStickyId = Preferences.Get("lastSeenStickyId", 0L);
+        _logger.LogDebug("Poll loop started (last seen: announcement={AnnouncementId}, sticky={StickyId})", 
+                        _lastSeenAnnouncementId, _lastSeenStickyId);
 
         while (!ct.IsCancellationRequested)
         {
             try
             {
+                _logger.LogDebug("Polling for new announcements");
                 var announcements = await NoticeboardService.GetMyAnnouncementsAsync(ct: ct);
                 var newest = announcements?.OrderByDescending(a => a.CreatedAt).FirstOrDefault();
                 if (newest != null && newest.Id > _lastSeenAnnouncementId)
                 {
+                    _logger.LogInformation("New announcement detected: {AnnouncementId}", newest.Id);
                     NotificationManagerService.EnsureInitialized();
                     var title = LocalizationService.Get("Notification_NewAnnouncement_Title") ?? "Nová aktualita";
                     var message = newest.Title ?? LocalizationService.Get("Notification_NewAnnouncement_Message") ?? "Nová aktualita";
@@ -189,6 +225,7 @@ public partial class AppShell : Shell, IDisposable
                 var newestSticky = sticky?.OrderByDescending(s => s.CreatedAt).FirstOrDefault();
                 if (newestSticky != null && newestSticky.Id > _lastSeenStickyId)
                 {
+                    _logger.LogInformation("New sticky announcement detected: {StickyId}", newestSticky.Id);
                     NotificationManagerService.EnsureInitialized();
                     var titleSticky = LocalizationService.Get("Notification_NewAnnouncement_Title") ?? "Nová aktualita";
                     var messageSticky = newestSticky.Title ?? LocalizationService.Get("Notification_NewAnnouncement_Message") ?? "Nová aktualita";
@@ -197,17 +234,28 @@ public partial class AppShell : Shell, IDisposable
                     Preferences.Set("lastSeenStickyId", _lastSeenStickyId);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // ignore transient errors
+                _logger.LogWarning(ex, "Error polling for announcements");
             }
 
-            try { await Task.Delay(_pollInterval, ct); } catch (TaskCanceledException) { break; }
+            try 
+            { 
+                await Task.Delay(_pollInterval, ct); 
+            } 
+            catch (TaskCanceledException) 
+            { 
+                _logger.LogDebug("Poll loop cancelled");
+                break; 
+            }
         }
+        
+        _logger.LogDebug("Poll loop exited");
     }
 
     public void Dispose()
     {
+        _logger.LogDebug("Disposing AppShell");
         StopAnnouncementPolling();
         _startupCts?.Cancel();
         _startupCts?.Dispose();

@@ -37,8 +37,11 @@ public static class MauiProgram
 
         var app = builder.Build();
         
-        // Initialize services with logger
+        // Initialize centralized logger service
         var loggerFactory = app.Services.GetRequiredService<ILoggerFactory>();
+        TkOlympApp.Services.LoggerService.Initialize(loggerFactory);
+        
+        // Initialize services with logger
         var logger = loggerFactory.CreateLogger<App>();
         TkOlympApp.Services.EventNotificationService.Initialize(logger);
 
