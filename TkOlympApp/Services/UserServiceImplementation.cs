@@ -1,7 +1,7 @@
 using Microsoft.Maui.Storage;
 using System.Text.Json.Serialization;
+using TkOlympApp.Models.Users;
 using TkOlympApp.Services.Abstractions;
-using static TkOlympApp.Services.UserService;
 
 namespace TkOlympApp.Services;
 

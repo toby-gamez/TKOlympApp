@@ -1,19 +1,22 @@
 using Microsoft.Maui.Controls;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using TkOlympApp.Services;
 using System;
 using System.Linq;
 using System.Collections.Generic;
 using Microsoft.Maui.Controls.Shapes;
 using Microsoft.Maui.Graphics;
 using MauiIcons.Material;
+using TkOlympApp.Models.People;
+using TkOlympApp.Services;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Pages;
 
 public partial class PeoplePage : ContentPage
 {
-    private List<PeopleService.Person> _allPeople = new();
+    private readonly IPeopleService _peopleService;
+    private List<Person> _allPeople = new();
     private bool _isLoading;
     private enum SortMode { Alphabetical = 0, UpcomingBirthday = 1 }
     private SortMode _sortMode = SortMode.Alphabetical;
@@ -27,8 +30,9 @@ public partial class PeoplePage : ContentPage
         public bool IsChecked { get; set; } = true;
     }
 
-    public PeoplePage()
+    public PeoplePage(IPeopleService peopleService)
     {
+        _peopleService = peopleService ?? throw new ArgumentNullException(nameof(peopleService));
         InitializeComponent();
         try
         {
@@ -54,8 +58,8 @@ public partial class PeoplePage : ContentPage
         PeopleStack.IsVisible = false;
         try
         {
-            var list = await PeopleService.GetPeopleAsync();
-            _allPeople = list ?? new List<PeopleService.Person>();
+            var list = await _peopleService.GetPeopleAsync();
+            _allPeople = list ?? new List<Person>();
             BuildCohortFilterData();
             ApplySortAndFilter();
         }
@@ -211,7 +215,7 @@ public partial class PeoplePage : ContentPage
         }
 
         // Sort
-        IEnumerable<PeopleService.Person> ordered;
+        IEnumerable<Person> ordered;
         if (_sortMode == SortMode.Alphabetical)
         {
             ordered = filtered.OrderBy(p => p.FullName, StringComparer.CurrentCultureIgnoreCase);
@@ -229,7 +233,7 @@ public partial class PeoplePage : ContentPage
         }
     }
 
-    private View CreatePersonCard(PeopleService.Person person)
+    private View CreatePersonCard(Person person)
     {
         var border = new Border
         {
@@ -389,7 +393,7 @@ public partial class PeoplePage : ContentPage
     }
 
     // Returns int.MaxValue if no valid birth date (so they appear last)
-    private int GetDaysUntilNextBirthday(PeopleService.Person p, DateTime today)
+    private int GetDaysUntilNextBirthday(Person p, DateTime today)
     {
         if (string.IsNullOrWhiteSpace(p.BirthDate)) return int.MaxValue;
         if (!DateTime.TryParse(p.BirthDate, out var bd)) return int.MaxValue;

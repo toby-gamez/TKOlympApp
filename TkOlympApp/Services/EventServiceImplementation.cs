@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
+using TkOlympApp.Models.Events;
 using TkOlympApp.Exceptions;
 using TkOlympApp.Services.Abstractions;
-using static TkOlympApp.Services.EventService;
 
 namespace TkOlympApp.Services;
 

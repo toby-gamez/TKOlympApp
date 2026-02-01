@@ -4,18 +4,22 @@ using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Devices;
 using Microsoft.Maui.ApplicationModel;
+using TkOlympApp.Models.Tenants;
 using TkOlympApp.Services;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Pages;
 
 public partial class TrainersAndLocationsPage : ContentPage
 {
+    private readonly ITenantService _tenantService;
     private bool _loaded;
 
     private sealed record TrainerDisplay(string Name, string Price, string? PersonId);
 
-    public TrainersAndLocationsPage()
+    public TrainersAndLocationsPage(ITenantService tenantService)
     {
+        _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
         InitializeComponent();
     }
 
@@ -45,7 +49,7 @@ public partial class TrainersAndLocationsPage : ContentPage
     {
         try
         {
-            var (locations, trainers) = await TenantService.GetLocationsAndTrainersAsync();
+            var (locations, trainers) = await _tenantService.GetLocationsAndTrainersAsync();
             var locList = locations
                 .Select(l => l.Name?.Trim())
                 .Where(name => !string.IsNullOrEmpty(name) && !string.Equals(name, "ZRUŠENO", StringComparison.OrdinalIgnoreCase))
@@ -58,7 +62,7 @@ public partial class TrainersAndLocationsPage : ContentPage
                     var name = string.Join(' ', new[] { p?.PrefixTitle?.Trim(), p?.FirstName?.Trim(), p?.LastName?.Trim(), p?.SuffixTitle?.Trim() }
                         .Where(s => !string.IsNullOrWhiteSpace(s)));
 
-                    static string FormatPrice(TenantService.Price? price)
+                    static string FormatPrice(Price? price)
                     {
                         if (price == null || price.Amount == null) return string.Empty;
                         var amt = price.Amount.Value;

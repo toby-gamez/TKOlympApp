@@ -12,11 +12,16 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TkOlympApp.Services;
+using TkOlympApp.Services.Abstractions;
+using TkOlympApp.Models.Events;
+using TkOlympApp.Helpers;
 
 namespace TkOlympApp.Pages;
 
 public partial class CalendarViewPage : ContentPage
 {
+    private readonly IEventService _eventService;
+    private readonly IUserService _userService;
     private bool _isLoading;
     private bool _onlyMine = true;
     private int _daysVisible = 1; // 1 = day, 3 = three-day, 7 = week
@@ -60,7 +65,7 @@ public partial class CalendarViewPage : ContentPage
 
     private class LayoutItem
     {
-        public EventService.EventInstance Inst { get; set; } = null!;
+        public EventInstance Inst { get; set; } = null!;
         public double Top { get; set; }
         public double Height { get; set; }
         public int RawStart { get; set; }
@@ -68,8 +73,10 @@ public partial class CalendarViewPage : ContentPage
         public int ColumnIndex { get; set; }
         public int ColumnCount { get; set; }
     }
-    public CalendarViewPage()
+    public CalendarViewPage(IEventService eventService, IUserService userService)
     {
+        _eventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
+        _userService = userService ?? throw new ArgumentNullException(nameof(userService));
         InitializeComponent();
         _date = DateTime.Now.Date;
         UpdateDateLabel();
@@ -136,13 +143,13 @@ public partial class CalendarViewPage : ContentPage
         {
             var start = _date.Date;
             var end = start.AddDays(_daysVisible);
-            List<EventService.EventInstance> events;
+            List<EventInstance> events;
             if (_onlyMine)
-                events = await EventService.GetMyEventInstancesForRangeAsync(start, end);
+                events = await _eventService.GetMyEventInstancesForRangeAsync(start, end);
             else
-                events = await EventService.GetEventInstancesForRangeListAsync(start, end);
+                events = await _eventService.GetEventInstancesForRangeListAsync(start, end);
 
-            await RenderTimeline(events ?? new List<EventService.EventInstance>());
+            await RenderTimeline(events ?? new List<EventInstance>());
         }
         catch (Exception ex)
         {
@@ -162,7 +169,7 @@ public partial class CalendarViewPage : ContentPage
         return new string(chars).ToLowerInvariant().Trim();
     }
 
-    private async Task RenderTimeline(List<EventService.EventInstance> events)
+    private async Task RenderTimeline(List<EventInstance> events)
     {
         TimelineLayout.Children.Clear();
         TimeLabelsStack.Children.Clear();
@@ -210,7 +217,7 @@ public partial class CalendarViewPage : ContentPage
                 }
                 try
                 {
-                    var currentUser = await UserService.GetCurrentUserAsync();
+                    var currentUser = await _userService.GetCurrentUserAsync();
                     if (currentUser != null)
                     {
                         var full = ((currentUser.UJmeno ?? string.Empty) + " " + (currentUser.UPrijmeni ?? string.Empty)).Trim();
@@ -222,7 +229,7 @@ public partial class CalendarViewPage : ContentPage
 
                 try
                 {
-                    var couples = await UserService.GetActiveCouplesFromUsersAsync();
+                    var couples = await _userService.GetActiveCouplesFromUsersAsync();
                     foreach (var c in couples)
                     {
                         AddNameVariants(highlightNames, c.ManName);
@@ -398,7 +405,7 @@ public partial class CalendarViewPage : ContentPage
                 {
                     var first = TkOlympApp.MainPage.GroupedEventRow.ComputeFirstRegistrantPublic(inst);
                     var left = !string.IsNullOrEmpty(first) ? first : inst.Event?.Name ?? LocalizationService.Get("Lesson_Short") ?? "Lekce";
-                    var trainerFull = EventService.GetTrainerDisplayName(inst.Event?.EventTrainersList?.FirstOrDefault());
+                    var trainerFull = EventTrainerDisplayHelper.GetTrainerDisplayName(inst.Event?.EventTrainersList?.FirstOrDefault());
                     if (!string.IsNullOrWhiteSpace(trainerFull))
                     {
                         var trainerShort = FormatTrainerShort(trainerFull);
@@ -434,7 +441,7 @@ public partial class CalendarViewPage : ContentPage
 
             var tap = new TapGestureRecognizer();
             tap.Tapped += async (s, e) => {
-                if (frame.BindingContext is EventService.EventInstance ev && ev.Event?.Id is long id)
+                if (frame.BindingContext is EventInstance ev && ev.Event?.Id is long id)
                 {
                     if (id != 0)
                         await Shell.Current.GoToAsync($"{nameof(EventPage)}?id={id}");

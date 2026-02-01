@@ -7,6 +7,9 @@ using System.Diagnostics;
 using TkOlympApp.Services;
 using TkOlympApp.Helpers;
 using TkOlympApp.Converters;
+using TkOlympApp.Models.Events;
+using TkOlympApp.Models.Users;
+using TkOlympApp.Services.Abstractions;
 using Microsoft.Maui.Graphics;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.Shapes;
@@ -18,6 +21,8 @@ namespace TkOlympApp.Pages;
 public partial class EventPage : ContentPage
 {
     private readonly ILogger<EventPage> _logger;
+    private readonly IEventService _eventService;
+    private readonly IUserService _userService;
     private long _eventId;
     private bool _appeared;
     private bool _loadRequested;
@@ -50,9 +55,11 @@ public partial class EventPage : ContentPage
     private readonly ObservableCollection<RegistrationRow> _registrations = new();
     private readonly ObservableCollection<string> _trainers = new();
 
-    public EventPage()
+    public EventPage(IEventService eventService, IUserService userService)
     {
         _logger = LoggerService.CreateLogger<EventPage>();
+        _eventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
+        _userService = userService ?? throw new ArgumentNullException(nameof(userService));
         InitializeComponent();
         RegistrationsCollection.ItemsSource = _registrations;
         TrainersCollection.ItemsSource = _trainers;
@@ -141,7 +148,7 @@ public partial class EventPage : ContentPage
         try
         {
             _logger.LogInformation("Loading event details for EventId: {EventId}", EventId);
-            var ev = await EventService.GetEventAsync(EventId);
+            var ev = await _eventService.GetEventAsync(EventId);
             if (ev == null)
             {
                 _logger.LogWarning("Event {EventId} not found", EventId);
@@ -176,7 +183,7 @@ public partial class EventPage : ContentPage
             }
             else
             {
-                var firstTrainer = EventService.GetTrainerDisplayName(ev.EventTrainersList?.FirstOrDefault())?.Trim();
+                var firstTrainer = EventTrainerDisplayHelper.GetTrainerDisplayName(ev.EventTrainersList?.FirstOrDefault())?.Trim();
                 if (!string.IsNullOrWhiteSpace(firstTrainer))
                     TitleLabel.Text = firstTrainer;
                 else
@@ -238,7 +245,7 @@ public partial class EventPage : ContentPage
             
             // Count actual occupied spots: couples = 2, singles = 1
             var occupiedSpots = 0;
-            foreach (var n in ev.EventRegistrations?.Nodes ?? new List<EventService.EventRegistrationNode>())
+            foreach (var n in ev.EventRegistrations?.Nodes ?? new List<EventRegistrationNode>())
             {
                 if (n.Couple != null)
                 {
@@ -275,10 +282,10 @@ public partial class EventPage : ContentPage
 
             // Trainers (event level)
             _trainers.Clear();
-            foreach (var t in ev.EventTrainersList ?? new List<TkOlympApp.Services.EventService.EventTrainer>())
+            foreach (var t in ev.EventTrainersList ?? new List<EventTrainer>())
             {
                 if (t == null) continue;
-                var name = EventService.GetTrainerDisplayName(t)?.Trim();
+                var name = EventTrainerDisplayHelper.GetTrainerDisplayName(t)?.Trim();
                 if (!string.IsNullOrWhiteSpace(name)) _trainers.Add(name);
             }
             // Don't show trainers list for LESSON type events
@@ -306,22 +313,22 @@ public partial class EventPage : ContentPage
 
             // Fetch current user and their couples for highlighting
             var myFull = string.Empty;
-            var myCouples = new List<UserService.CoupleInfo>();
+            var myCouples = new List<CoupleInfo>();
             try
             {
-                await UserService.InitializeAsync();
-                var me = await UserService.GetCurrentUserAsync();
+                await _userService.InitializeAsync();
+                var me = await _userService.GetCurrentUserAsync();
                 var myFirst = me?.UJmeno?.Trim() ?? string.Empty;
                 var myLast = me?.UPrijmeni?.Trim() ?? string.Empty;
                 myFull = string.IsNullOrWhiteSpace(myFirst) ? myLast : string.IsNullOrWhiteSpace(myLast) ? myFirst : (myFirst + " " + myLast).Trim();
-                myCouples = await UserService.GetActiveCouplesFromUsersAsync();
+                myCouples = await _userService.GetActiveCouplesFromUsersAsync();
             }
             catch { }
 
             _registrations.Clear();
             var seen = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
             
-            foreach (var n in ev.EventRegistrations?.Nodes ?? new List<EventService.EventRegistrationNode>())
+            foreach (var n in ev.EventRegistrations?.Nodes ?? new List<EventRegistrationNode>())
             {
                 var man = n.Couple?.Man?.Name?.Trim() ?? string.Empty;
                 var woman = n.Couple?.Woman?.Name?.Trim() ?? string.Empty;
@@ -438,7 +445,7 @@ public partial class EventPage : ContentPage
             try
             {
                 CohortDots.Children.Clear();
-                var list = ev.EventTargetCohortsList ?? new System.Collections.Generic.List<EventService.EventTargetCohortLink>();
+                var list = ev.EventTargetCohortsList ?? new System.Collections.Generic.List<EventTargetCohortLink>();
                 foreach (var link in list)
                 {
                     try
@@ -484,7 +491,7 @@ public partial class EventPage : ContentPage
             {
                 bool userRegistered = false;
 
-                foreach (var node in ev.EventRegistrations?.Nodes ?? new List<EventService.EventRegistrationNode>())
+                foreach (var node in ev.EventRegistrations?.Nodes ?? new List<EventRegistrationNode>())
                 {
                     if (node == null) continue;
                     // Check person-based registration (match by first/last name)

@@ -7,6 +7,10 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using TkOlympApp.Helpers;
+using TkOlympApp.Models.Events;
+using TkOlympApp.Models.Noticeboard;
+using TkOlympApp.Services.Abstractions;
 using TkOlympApp.Services;
 
 namespace TkOlympApp;
@@ -14,15 +18,21 @@ namespace TkOlympApp;
 public partial class MainPage : ContentPage
 {
     private readonly ILogger _logger;
+    private readonly IEventService _eventService;
+    private readonly INoticeboardService _noticeboardService;
+    private readonly IEventNotificationService _eventNotificationService;
     private DayGroup? _currentDay;
     private bool _isLoading;
     private bool _suppressReloadOnNextAppearing = false;
-    public ObservableCollection<NoticeboardService.Announcement> RecentAnnouncements { get; } = new();
+    public ObservableCollection<Announcement> RecentAnnouncements { get; } = new();
     public ObservableCollection<CampItem> UpcomingCamps { get; } = new();
 
-    public MainPage()
+    public MainPage(IEventService eventService, INoticeboardService noticeboardService, IEventNotificationService eventNotificationService)
     {
         _logger = LoggerService.CreateLogger<MainPage>();
+        _eventService = eventService;
+        _noticeboardService = noticeboardService;
+        _eventNotificationService = eventNotificationService;
         
         try
         {
@@ -70,13 +80,13 @@ public partial class MainPage : ContentPage
                     // Load events 2 days ahead for notifications
                     var notifStart = DateTime.Now.Date;
                     var notifEnd = DateTime.Now.Date.AddDays(2).AddHours(23).AddMinutes(59);
-                    var notifEvents = await EventService.GetMyEventInstancesForRangeAsync(notifStart, notifEnd);
+                    var notifEvents = await _eventService.GetMyEventInstancesForRangeAsync(notifStart, notifEnd);
 
                     // Check for changes and cancellations first
-                    await EventNotificationService.CheckAndNotifyChangesAsync(notifEvents);
+                    await _eventNotificationService.CheckAndNotifyChangesAsync(notifEvents);
 
                     // Then schedule upcoming notifications
-                    await EventNotificationService.ScheduleNotificationsForEventsAsync(notifEvents);
+                    await _eventNotificationService.ScheduleNotificationsForEventsAsync(notifEvents);
                 }
                 catch (Exception ex)
                 {
@@ -152,7 +162,7 @@ public partial class MainPage : ContentPage
             var end = now.Date.AddDays(14); // Načte tréninky na 14 dní dopředu
 
             _logger.LogInformation("Loading upcoming events from {Start} to {End}", start, end);
-            var events = await EventService.GetMyEventInstancesForRangeAsync(start, end);
+            var events = await _eventService.GetMyEventInstancesForRangeAsync(start, end);
             
             // Seskupíme eventy podle dne
             var groupsByDate = events
@@ -232,15 +242,13 @@ public partial class MainPage : ContentPage
     {
         try
         {
-            if (sender is VisualElement ve && ve.BindingContext is EventService.EventInstance evt && evt.Event != null)
+            if (sender is VisualElement ve && ve.BindingContext is EventInstance evt && evt.Event != null)
             {
                 if (evt.IsCancelled) return;
                 
                 _logger.LogDebug("Navigating to event {EventId}", evt.Event.Id);
-                var page = new Pages.EventPage();
-                if (evt.Event != null) page.EventId = evt.Event.Id;
                 _suppressReloadOnNextAppearing = true;
-                await Navigation.PushAsync(page);
+                await Shell.Current.GoToAsync($"EventPage?id={evt.Event.Id}");
             }
         }
         catch (Exception ex)
@@ -265,10 +273,8 @@ public partial class MainPage : ContentPage
                 if (evt != null)
                 {
                     _logger.LogDebug("Navigating to grouped event {EventId}", evt.Id);
-                    var page = new Pages.EventPage();
-                    page.EventId = evt.Id;
                     _suppressReloadOnNextAppearing = true;
-                    await Navigation.PushAsync(page);
+                    await Shell.Current.GoToAsync($"EventPage?id={evt.Id}");
                 }
             }
         }
@@ -314,7 +320,7 @@ public partial class MainPage : ContentPage
         try
         {
             _logger.LogDebug("Loading recent announcements");
-            var announcements = await NoticeboardService.GetMyAnnouncementsAsync();
+            var announcements = await _noticeboardService.GetMyAnnouncementsAsync();
             RecentAnnouncements.Clear();
             
             // Vezmi 2 nejnovější (seřazené sestupně podle CreatedAt)
@@ -358,7 +364,7 @@ public partial class MainPage : ContentPage
     {
         try
         {
-            if (sender is VisualElement ve2 && ve2.BindingContext is NoticeboardService.Announcement announcement)
+            if (sender is VisualElement ve2 && ve2.BindingContext is Announcement announcement)
             {
                 _logger.LogDebug("Navigating to announcement {AnnouncementId}", announcement.Id);
                 await Shell.Current.GoToAsync($"NoticePage?id={announcement.Id}");
@@ -383,7 +389,7 @@ public partial class MainPage : ContentPage
             var pastStart = now.Date.AddYears(-1); // Načte soustředění rok zpět
             var futureEnd = now.Date.AddYears(1); // Načte soustředění na rok dopředu
 
-            var events = await EventService.GetMyEventInstancesForRangeAsync(pastStart, futureEnd);
+            var events = await _eventService.GetMyEventInstancesForRangeAsync(pastStart, futureEnd);
             
             // Filtrujeme pouze CAMP eventy a seřadíme podle absolutní vzdálenosti od dnešního dne
             var camps = events
@@ -441,10 +447,8 @@ public partial class MainPage : ContentPage
             if (sender is VisualElement ve3 && ve3.BindingContext is CampItem camp)
             {
                 _logger.LogDebug("Navigating to camp event {EventId}", camp.EventId);
-                var page = new Pages.EventPage();
-                page.EventId = camp.EventId;
                 _suppressReloadOnNextAppearing = true;
-                await Navigation.PushAsync(page);
+                await Shell.Current.GoToAsync($"EventPage?id={camp.EventId}");
             }
         }
         catch (Exception ex)
@@ -463,17 +467,17 @@ public partial class MainPage : ContentPage
         public string DayLabel { get; }
         public DateTime Date { get; }
         public ObservableCollection<GroupedTrainer> GroupedTrainers { get; }
-        public ObservableCollection<EventService.EventInstance> SingleEvents { get; }
+        public ObservableCollection<EventInstance> SingleEvents { get; }
 
-        public DayGroup(string dayLabel, DateTime date, IEnumerable<EventService.EventInstance> events)
+        public DayGroup(string dayLabel, DateTime date, IEnumerable<EventInstance> events)
         {
             DayLabel = dayLabel;
             Date = date;
             GroupedTrainers = new ObservableCollection<GroupedTrainer>();
-            SingleEvents = new ObservableCollection<EventService.EventInstance>();
+            SingleEvents = new ObservableCollection<EventInstance>();
 
-            var groupableEvents = new List<EventService.EventInstance>();
-            var singleEventsList = new List<EventService.EventInstance>();
+            var groupableEvents = new List<EventInstance>();
+            var singleEventsList = new List<EventInstance>();
 
             foreach (var evt in events)
             {
@@ -490,7 +494,7 @@ public partial class MainPage : ContentPage
                 }
             }
 
-            var groups = groupableEvents.GroupBy(e => EventService.GetTrainerDisplayName(e.Event?.EventTrainersList?.FirstOrDefault())?.Trim() ?? string.Empty)
+            var groups = groupableEvents.GroupBy(e => EventTrainerDisplayHelper.GetTrainerDisplayName(e.Event?.EventTrainersList?.FirstOrDefault())?.Trim() ?? string.Empty)
                 .OrderBy(g => g.Min(x => x.Since ?? x.UpdatedAt));
 
             foreach (var g in groups)
@@ -498,7 +502,7 @@ public partial class MainPage : ContentPage
                 var ordered = g.OrderBy(i => i.Since ?? i.UpdatedAt).ToList();
                 var trainerName = g.Key;
                 var representative = ordered.FirstOrDefault()?.Event?.EventTrainersList?.FirstOrDefault();
-                var trainerTitle = string.IsNullOrWhiteSpace(trainerName) ? LocalizationService.Get("Lessons") ?? "Lekce" : EventService.GetTrainerDisplayWithPrefix(representative).Trim();
+                var trainerTitle = string.IsNullOrWhiteSpace(trainerName) ? LocalizationService.Get("Lessons") ?? "Lekce" : EventTrainerDisplayHelper.GetTrainerDisplayWithPrefix(representative).Trim();
                 var gt = new GroupedTrainer(trainerTitle);
 
                 for (int i = 0; i < ordered.Count; i++)
@@ -532,7 +536,7 @@ public partial class MainPage : ContentPage
 
     public sealed class GroupedEventRow : INotifyPropertyChanged
     {
-        public EventService.EventInstance Instance { get; }
+        public EventInstance Instance { get; }
         public string TimeRange { get; }
         public bool IsCancelled => Instance?.IsCancelled ?? false;
         private string _firstRegistrant;
@@ -580,7 +584,7 @@ public partial class MainPage : ContentPage
         }
         public string DurationText { get; }
 
-        public GroupedEventRow(EventService.EventInstance instance, string firstRegistrantOverride = "")
+        public GroupedEventRow(EventInstance instance, string firstRegistrantOverride = "")
         {
             Instance = instance;
             var since = instance.Since;
@@ -593,9 +597,9 @@ public partial class MainPage : ContentPage
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        public static string ComputeFirstRegistrantPublic(EventService.EventInstance inst) => ComputeFirstRegistrant(inst);
+        public static string ComputeFirstRegistrantPublic(EventInstance inst) => ComputeFirstRegistrant(inst);
 
-        private static string ComputeFirstRegistrant(EventService.EventInstance inst)
+        private static string ComputeFirstRegistrant(EventInstance inst)
         {
             try
             {
@@ -676,7 +680,7 @@ public partial class MainPage : ContentPage
                 if (tenant?.CouplesList != null && tenant.CouplesList.Count > 0)
                 {
                     var c = tenant.CouplesList[0];
-                    EventService.Person? p = c.Man ?? c.Woman;
+                    Person? p = c.Man ?? c.Woman;
                     if (p != null)
                     {
                         if (!string.IsNullOrWhiteSpace(p.FirstName))
@@ -689,7 +693,7 @@ public partial class MainPage : ContentPage
             return string.Empty;
         }
 
-        private static string ComputeDuration(EventService.EventInstance inst)
+        private static string ComputeDuration(EventInstance inst)
         {
             try
             {

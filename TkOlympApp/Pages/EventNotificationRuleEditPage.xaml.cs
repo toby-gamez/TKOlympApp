@@ -4,12 +4,14 @@ using System.Linq;
 using Microsoft.Maui.Controls;
 using TkOlympApp.Services;
 using System.ComponentModel;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Pages;
 
 [QueryProperty(nameof(SettingId), "id")]
 public partial class EventNotificationRuleEditPage : ContentPage
 {
+    private readonly ITenantService _tenantService;
     public string? SettingId { get; set; }
 
     class TypeItem : INotifyPropertyChanged
@@ -54,8 +56,9 @@ public partial class EventNotificationRuleEditPage : ContentPage
     List<TypeItem> _types = new();
     List<TrainerItem> _trainers = new();
 
-    public EventNotificationRuleEditPage()
+    public EventNotificationRuleEditPage(ITenantService tenantService)
     {
+        _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
         try
         {
             InitializeComponent();
@@ -94,7 +97,7 @@ public partial class EventNotificationRuleEditPage : ContentPage
             // Load trainers from TenantService
                 try
                 {
-                    var (locations, trainers) = await TenantService.GetLocationsAndTrainersAsync();
+                    var (locations, trainers) = await _tenantService.GetLocationsAndTrainersAsync();
                     _trainers = trainers?
                         .Select(t => new TrainerItem
                         {

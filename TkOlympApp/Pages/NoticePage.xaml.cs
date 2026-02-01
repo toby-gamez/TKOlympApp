@@ -3,14 +3,16 @@ using System;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using TkOlympApp.Services;
 using TkOlympApp.Helpers;
+using TkOlympApp.Services;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Pages;
 
 [QueryProperty(nameof(AnnouncementId), "id")]
 public partial class NoticePage : ContentPage
 {
+    private readonly INoticeboardService _noticeboardService;
     private long _announcementId;
     private bool _appeared;
     private string? _lastBodyHtml;
@@ -25,15 +27,10 @@ public partial class NoticePage : ContentPage
         }
     }
 
-    public NoticePage()
+    public NoticePage(INoticeboardService noticeboardService)
     {
+        _noticeboardService = noticeboardService;
         InitializeComponent();
-    }
-
-    public NoticePage(long id) : this()
-    {
-        AnnouncementId = id;
-        Dispatcher.Dispatch(async () => await LoadAsync());
     }
 
     protected override void OnAppearing()
@@ -67,7 +64,7 @@ public partial class NoticePage : ContentPage
         if (AnnouncementId == 0) return;
         try
         {
-            var a = await NoticeboardService.GetAnnouncementAsync(AnnouncementId);
+            var a = await _noticeboardService.GetAnnouncementAsync(AnnouncementId);
             if (a == null)
             {
                 await DisplayAlertAsync(LocalizationService.Get("NotFound_Title"), LocalizationService.Get("NotFound_Notice"), LocalizationService.Get("Button_OK"));

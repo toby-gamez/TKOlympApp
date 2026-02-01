@@ -4,17 +4,20 @@ using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.Shapes;
 using Microsoft.Maui.Graphics;
-
+using TkOlympApp.Models.Cohorts;
 using TkOlympApp.Services;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Pages;
 
 public partial class CohortGroupsPage : ContentPage
 {
+    private readonly ICohortService _cohortService;
     private bool _loaded;
 
-    public CohortGroupsPage()
+    public CohortGroupsPage(ICohortService cohortService)
     {
+        _cohortService = cohortService ?? throw new ArgumentNullException(nameof(cohortService));
         InitializeComponent();
     }
 
@@ -46,9 +49,9 @@ public partial class CohortGroupsPage : ContentPage
     {
         try
         {
-            var groups = await CohortService.GetCohortGroupsAsync();
+            var groups = await _cohortService.GetCohortGroupsAsync();
             var cohorts = groups
-                .SelectMany(g => g.CohortsList ?? new System.Collections.Generic.List<CohortService.CohortItem>())
+                .SelectMany(g => g.CohortsList ?? new System.Collections.Generic.List<CohortItem>())
                 .Where(ci => ci != null && !string.IsNullOrWhiteSpace(ci.Name))
                 .ToList();
 

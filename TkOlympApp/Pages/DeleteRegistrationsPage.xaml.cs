@@ -7,12 +7,16 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using TkOlympApp.Services;
+using TkOlympApp.Models.Users;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Pages;
 
 [QueryProperty(nameof(EventId), "eventId")]
 public partial class DeleteRegistrationsPage : ContentPage
 {
+    private readonly IAuthService _authService;
+    private readonly IUserService _userService;
     private readonly ObservableCollection<RegGroup> _groups = new();
     private RegItem? _selected;
     private RegGroup? _selectedGroup;
@@ -29,8 +33,10 @@ public partial class DeleteRegistrationsPage : ContentPage
         }
     }
 
-    public DeleteRegistrationsPage()
+    public DeleteRegistrationsPage(IAuthService authService, IUserService userService)
     {
+        _authService = authService;
+        _userService = userService ?? throw new ArgumentNullException(nameof(userService));
         try
         {
             InitializeComponent();
@@ -134,10 +140,10 @@ public partial class DeleteRegistrationsPage : ContentPage
         try
         {
             // Determine current user's identifiers (personId and couple ids)
-            await UserService.InitializeAsync();
-            var myPersonId = UserService.CurrentPersonId;
-            var myCouples = new System.Collections.Generic.List<UserService.CoupleInfo>();
-            try { myCouples = await UserService.GetActiveCouplesFromUsersAsync(); } catch { }
+            await _userService.InitializeAsync();
+            var myPersonId = _userService.CurrentPersonId;
+            var myCouples = new System.Collections.Generic.List<CoupleInfo>();
+            try { myCouples = await _userService.GetActiveCouplesFromUsersAsync(); } catch { }
             var myCoupleIds = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var c in myCouples)
             {
@@ -155,7 +161,7 @@ public partial class DeleteRegistrationsPage : ContentPage
 
             var json = JsonSerializer.Serialize(queryObj);
             using var content = new StringContent(json, Encoding.UTF8, "application/json");
-            using var resp = await AuthService.Http.PostAsync("", content);
+            using var resp = await _authService.Http.PostAsync("", content);
             var body = await resp.Content.ReadAsStringAsync();
             if (!resp.IsSuccessStatusCode)
             {
@@ -168,7 +174,7 @@ public partial class DeleteRegistrationsPage : ContentPage
             if (!data.TryGetProperty("eventInstancesForRangeList", out var instances) || instances.ValueKind != JsonValueKind.Array) return;
 
             // Get current user's name for person matching
-            var me = await UserService.GetCurrentUserAsync();
+            var me = await _userService.GetCurrentUserAsync();
             var myFirst = me?.UJmeno?.Trim() ?? string.Empty;
             var myLast = me?.UPrijmeni?.Trim() ?? string.Empty;
             var myFull = string.IsNullOrWhiteSpace(myFirst) ? myLast : string.IsNullOrWhiteSpace(myLast) ? myFirst : (myFirst + " " + myLast).Trim();
@@ -328,7 +334,7 @@ public partial class DeleteRegistrationsPage : ContentPage
 
                 var json = JsonSerializer.Serialize(gql);
                 using var content = new StringContent(json, Encoding.UTF8, "application/json");
-                using var resp = await AuthService.Http.PostAsync("", content);
+                using var resp = await _authService.Http.PostAsync("", content);
                 var body = await resp.Content.ReadAsStringAsync();
                 if (!resp.IsSuccessStatusCode)
                 {

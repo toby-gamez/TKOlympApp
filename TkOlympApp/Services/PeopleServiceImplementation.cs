@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
+using TkOlympApp.Models.People;
 using TkOlympApp.Services.Abstractions;
-using static TkOlympApp.Services.PeopleService;
 
 namespace TkOlympApp.Services;
 

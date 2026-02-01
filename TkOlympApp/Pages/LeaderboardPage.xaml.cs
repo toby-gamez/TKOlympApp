@@ -2,15 +2,20 @@ using System.Collections.ObjectModel;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
 using TkOlympApp.Services;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Pages;
 
 public partial class LeaderboardPage : ContentPage
 {
+    private readonly ILeaderboardService _leaderboardService;
+    private readonly IUserService _userService;
     private readonly ObservableCollection<LeaderboardRow> _rows = new();
 
-    public LeaderboardPage()
+    public LeaderboardPage(ILeaderboardService leaderboardService, IUserService userService)
     {
+        _leaderboardService = leaderboardService ?? throw new ArgumentNullException(nameof(leaderboardService));
+        _userService = userService ?? throw new ArgumentNullException(nameof(userService));
         try
         {
             InitializeComponent();
@@ -61,13 +66,13 @@ public partial class LeaderboardPage : ContentPage
             LoadingIndicator.IsRunning = true;
             ScoreboardCollection.IsVisible = false;
 
-            var list = await LeaderboardService.GetScoreboardsAsync();
+            var list = await _leaderboardService.GetScoreboardsAsync();
 
             // Get current user for highlighting
             string? currentFullName = null;
             try
             {
-                var current = await UserService.GetCurrentUserAsync();
+                var current = await _userService.GetCurrentUserAsync();
                 if (current != null)
                 {
                     var parts = new[] { current.UJmeno ?? string.Empty, current.UPrijmeni ?? string.Empty };

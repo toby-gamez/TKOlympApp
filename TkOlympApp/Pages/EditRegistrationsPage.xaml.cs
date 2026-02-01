@@ -8,17 +8,24 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using TkOlympApp.Services;
+using TkOlympApp.Helpers;
+using TkOlympApp.Models.Events;
+using TkOlympApp.Models.Users;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Pages;
 
 [QueryProperty(nameof(EventId), "eventId")]
 public partial class EditRegistrationsPage : ContentPage
 {
+    private readonly IAuthService _authService;
+    private readonly IEventService _eventService;
+    private readonly IUserService _userService;
     private readonly ObservableCollection<RegGroup> _groups = new();
     private RegItem? _selected;
     private RegGroup? _selectedGroup;
     private long _eventId;
-    private EventService.EventDetails? _currentEvent;
+    private EventDetails? _currentEvent;
 
     public long EventId
     {
@@ -30,8 +37,11 @@ public partial class EditRegistrationsPage : ContentPage
         }
     }
 
-    public EditRegistrationsPage()
+    public EditRegistrationsPage(IAuthService authService, IEventService eventService, IUserService userService)
     {
+        _authService = authService;
+        _eventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
+        _userService = userService ?? throw new ArgumentNullException(nameof(userService));
         try
         {
             InitializeComponent();
@@ -185,7 +195,7 @@ public partial class EditRegistrationsPage : ContentPage
             // Load event details (trainers)
             try
             {
-                _currentEvent = await EventService.GetEventAsync(EventId);
+                _currentEvent = await _eventService.GetEventAsync(EventId);
             }
             catch { _currentEvent = null; }
 
@@ -201,7 +211,7 @@ public partial class EditRegistrationsPage : ContentPage
 
             var json = JsonSerializer.Serialize(queryObj);
             using var content = new StringContent(json, Encoding.UTF8, "application/json");
-            using var resp = await AuthService.Http.PostAsync("", content);
+            using var resp = await _authService.Http.PostAsync("", content);
             var body = await resp.Content.ReadAsStringAsync();
             if (!resp.IsSuccessStatusCode)
             {
@@ -214,17 +224,17 @@ public partial class EditRegistrationsPage : ContentPage
             if (!data.TryGetProperty("eventInstancesForRangeList", out var instances) || instances.ValueKind != JsonValueKind.Array) return;
 
             // Determine current user's identifiers to filter registrations to only "my" registrations
-            await UserService.InitializeAsync();
+            await _userService.InitializeAsync();
             var myPersonId = string.Empty;
-            try { myPersonId = UserService.CurrentPersonId ?? string.Empty; } catch { myPersonId = string.Empty; }
-            var myCouples = new System.Collections.Generic.List<UserService.CoupleInfo>();
-            try { myCouples = await UserService.GetActiveCouplesFromUsersAsync(); } catch { }
+            try { myPersonId = _userService.CurrentPersonId ?? string.Empty; } catch { myPersonId = string.Empty; }
+            var myCouples = new System.Collections.Generic.List<CoupleInfo>();
+            try { myCouples = await _userService.GetActiveCouplesFromUsersAsync(); } catch { }
             var myCoupleIds = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var c in myCouples)
             {
                 if (!string.IsNullOrWhiteSpace(c.Id)) myCoupleIds.Add(c.Id!);
             }
-            var me = await UserService.GetCurrentUserAsync();
+            var me = await _userService.GetCurrentUserAsync();
             var myFirst = me?.UJmeno?.Trim() ?? string.Empty;
             var myLast = me?.UPrijmeni?.Trim() ?? string.Empty;
             var myFull = string.IsNullOrWhiteSpace(myFirst) ? myLast : string.IsNullOrWhiteSpace(myLast) ? myFirst : (myFirst + " " + myLast).Trim();
@@ -400,7 +410,7 @@ public partial class EditRegistrationsPage : ContentPage
         try
         {
             if (EventId == 0) return;
-            var ev = _currentEvent ?? await EventService.GetEventAsync(EventId);
+            var ev = _currentEvent ?? await _eventService.GetEventAsync(EventId);
             _currentEvent = ev;
             if (ev == null || ev.EventTrainersList == null || ev.EventTrainersList.Count == 0)
             {
@@ -409,9 +419,9 @@ public partial class EditRegistrationsPage : ContentPage
                 return;
             }
             var options = new System.Collections.Generic.List<TrainerOption>();
-            foreach (var t in ev.EventTrainersList.OrderBy(x => EventService.GetTrainerDisplayName(x)))
+            foreach (var t in ev.EventTrainersList.OrderBy(x => EventTrainerDisplayHelper.GetTrainerDisplayName(x)))
             {
-                var trainerName = EventService.GetTrainerDisplayName(t) ?? string.Empty;
+                var trainerName = EventTrainerDisplayHelper.GetTrainerDisplayName(t) ?? string.Empty;
                 options.Add(new TrainerOption(trainerName, 0, t?.Id));
             }
 
@@ -432,7 +442,7 @@ public partial class EditRegistrationsPage : ContentPage
 
                     var json2 = JsonSerializer.Serialize(gql);
                     using var content2 = new StringContent(json2, Encoding.UTF8, "application/json");
-                    using var resp2 = await AuthService.Http.PostAsync("", content2);
+                    using var resp2 = await _authService.Http.PostAsync("", content2);
                     var body2 = await resp2.Content.ReadAsStringAsync();
                     if (resp2.IsSuccessStatusCode)
                     {
@@ -559,7 +569,7 @@ public partial class EditRegistrationsPage : ContentPage
 
                 var json = JsonSerializer.Serialize(gql);
                 using var content = new StringContent(json, Encoding.UTF8, "application/json");
-                using var resp = await AuthService.Http.PostAsync("", content);
+                using var resp = await _authService.Http.PostAsync("", content);
                 var body = await resp.Content.ReadAsStringAsync();
                 if (!resp.IsSuccessStatusCode)
                 {

@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
+using TkOlympApp.Models.Couples;
 using TkOlympApp.Services.Abstractions;
-using static TkOlympApp.Services.CoupleService;
 
 namespace TkOlympApp.Services;
 

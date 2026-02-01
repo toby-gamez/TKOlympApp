@@ -6,17 +6,24 @@ using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.Shapes;
 using Microsoft.Maui.Graphics;
-using TkOlympApp.Services;
 using TkOlympApp.Helpers;
+using TkOlympApp.Models.Noticeboard;
+using TkOlympApp.Services;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Pages;
 
 public partial class NoticeboardPage : ContentPage
 {
+    private readonly INoticeboardService _noticeboardService;
+    private readonly INoticeboardNotificationService _noticeboardNotificationService;
     private bool _isAktualityActive = true;
 
-    public NoticeboardPage()
+    public NoticeboardPage(INoticeboardService noticeboardService, INoticeboardNotificationService noticeboardNotificationService)
     {
+        _noticeboardService = noticeboardService;
+        _noticeboardNotificationService = noticeboardNotificationService;
+
         InitializeComponent();
         // default to Aktuality tab
         SetTabVisuals(true);
@@ -125,7 +132,7 @@ public partial class NoticeboardPage : ContentPage
     {
         try
         {
-            var list = await NoticeboardService.GetMyAnnouncementsAsync();
+            var list = await _noticeboardService.GetMyAnnouncementsAsync();
             var views = new List<AnnouncementView>();
             if (list != null && list.Count > 0)
             {
@@ -151,7 +158,7 @@ public partial class NoticeboardPage : ContentPage
             AnnouncementsCollection.ItemsSource = views;
             
             // Check for changes and send notifications
-            await NoticeboardNotificationService.CheckAndNotifyChangesAsync(list!);
+            await _noticeboardNotificationService.CheckAndNotifyChangesAsync(list);
         }
         catch (Exception ex)
         {
@@ -186,7 +193,7 @@ public partial class NoticeboardPage : ContentPage
         SetTabVisuals(false);
         try
         {
-            var list = await NoticeboardService.GetStickyAnnouncementsAsync();
+            var list = await _noticeboardService.GetStickyAnnouncementsAsync();
             var views = new List<AnnouncementView>();
             if (list != null && list.Count > 0)
             {

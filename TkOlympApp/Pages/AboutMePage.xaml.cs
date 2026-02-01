@@ -6,16 +6,21 @@ using System.Text.Json.Serialization;
 using Microsoft.Extensions.DependencyInjection;
 using TkOlympApp.Services;
 using TkOlympApp.Helpers;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Pages;
 
 public partial class AboutMePage : ContentPage
 {
     private readonly IServiceProvider _services;
+    private readonly IAuthService _authService;
+    private readonly IUserService _userService;
 
-    public AboutMePage(IServiceProvider services)
+    public AboutMePage(IServiceProvider services, IAuthService authService, IUserService userService)
     {
         _services = services;
+        _authService = authService;
+        _userService = userService ?? throw new ArgumentNullException(nameof(userService));
         InitializeComponent();
     }
 
@@ -68,7 +73,7 @@ public partial class AboutMePage : ContentPage
         ErrorLabel.IsVisible = false;
         try
         {
-            var user = await UserService.GetCurrentUserAsync();
+            var user = await _userService.GetCurrentUserAsync();
             if (user == null)
             {
                 ErrorLabel.IsVisible = true;
@@ -104,7 +109,7 @@ public partial class AboutMePage : ContentPage
 
                 var json = JsonSerializer.Serialize(gqlReq, options);
                 using var content = new StringContent(json, Encoding.UTF8, "application/json");
-                using var resp = await AuthService.Http.PostAsync("", content);
+                using var resp = await _authService.Http.PostAsync("", content);
                 
                 var body = await resp.Content.ReadAsStringAsync();
                 
@@ -128,7 +133,7 @@ public partial class AboutMePage : ContentPage
                 // Treat this proxy id as my personId globally
                 try
                 {
-                    UserService.SetCurrentPersonId(proxyId);
+                    _userService.SetCurrentPersonId(proxyId);
                 }
                 catch
                 {
@@ -144,7 +149,7 @@ public partial class AboutMePage : ContentPage
                         var gqlReqP = new { query };
                         var jsonP = JsonSerializer.Serialize(gqlReqP, options);
                         using var contentP = new StringContent(jsonP, Encoding.UTF8, "application/json");
-                        using var respP = await AuthService.Http.PostAsync("", contentP);
+                        using var respP = await _authService.Http.PostAsync("", contentP);
                         
                         var bodyP = await respP.Content.ReadAsStringAsync();
                         
@@ -302,7 +307,7 @@ public partial class AboutMePage : ContentPage
     {
         try
         {
-            await AuthService.LogoutAsync();
+            await _authService.LogoutAsync();
 
             try { await Shell.Current.GoToAsync(nameof(LoginPage)); } catch { try { await Shell.Current.GoToAsync($"//{nameof(LoginPage)}"); } catch { } }
         }

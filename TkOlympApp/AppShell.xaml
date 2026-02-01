@@ -12,33 +12,33 @@
 
     <TabBar>
         <ShellContent
+            x:Name="OverviewShellContent"
             Title="{svc:Translate Overview}"
             Icon="{mi:Material Icon=Dashboard}"
-            ContentTemplate="{DataTemplate local:MainPage}"
             Route="Přehled" />
 
         <ShellContent
+            x:Name="CalendarShellContent"
             Title="{svc:Translate Calendar}"
             Icon="{mi:Material Icon=CalendarMonth}"
-            ContentTemplate="{DataTemplate pages:CalendarPage}"
             Route="Kalendář" />
 
         <ShellContent
+            x:Name="NoticeboardShellContent"
             Title="{svc:Translate Noticeboard}"
             Icon="{mi:Material Icon=Article}"
-            ContentTemplate="{DataTemplate pages:NoticeboardPage}"
             Route="Nástěnka" />
 
         <ShellContent
+            x:Name="EventsShellContent"
             Title="{svc:Translate Events_Title}"
             Icon="{mi:Material Icon=Event}"
-            ContentTemplate="{DataTemplate pages:EventsPage}"
             Route="Akce" />
 
         <ShellContent
+            x:Name="OtherShellContent"
             Title="{svc:Translate Other}"
             Icon="{mi:Material Icon=MoreHoriz}"
-            ContentTemplate="{DataTemplate pages:OtherPage}"
             Route="Ostatní" />
     </TabBar>
 

@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
+using TkOlympApp.Models.Noticeboard;
 using TkOlympApp.Services.Abstractions;
-using static TkOlympApp.Services.NoticeboardService;
 
 namespace TkOlympApp.Services;
 

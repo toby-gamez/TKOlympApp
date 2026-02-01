@@ -2,7 +2,8 @@
 using UIKit;
 using System;
 using System.Threading.Tasks;
-using TkOlympApp.Services;
+using Microsoft.Extensions.DependencyInjection;
+using TkOlympApp.Services.Abstractions;
 
 
 namespace TkOlympApp;
@@ -30,16 +31,28 @@ public class AppDelegate : MauiUIApplicationDelegate
         {
             try
             {
+                var services = Services;
+                var authService = services.GetRequiredService<IAuthService>();
+                var eventService = services.GetRequiredService<IEventService>();
+                var eventNotificationService = services.GetRequiredService<IEventNotificationService>();
+
                 // Ensure auth initialized (loads JWT into HttpClient if present)
-                await AuthService.InitializeAsync();
+                await authService.InitializeAsync();
+
+                var hasToken = await authService.HasTokenAsync();
+                if (!hasToken)
+                {
+                    completionHandler(UIBackgroundFetchResult.NoData);
+                    return;
+                }
 
                 // Fetch events for the next 2 days (same range used elsewhere)
                 var start = DateTime.Now;
                 var end = DateTime.Now.AddDays(2);
-                var events = await EventService.GetMyEventInstancesForRangeAsync(start, end);
+                var events = await eventService.GetMyEventInstancesForRangeAsync(start, end);
 
                 // Let the notification service check for changes and send local notifications if needed
-                await EventNotificationService.CheckAndNotifyChangesAsync(events);
+                await eventNotificationService.CheckAndNotifyChangesAsync(events);
 
                 completionHandler(UIBackgroundFetchResult.NewData);
             }

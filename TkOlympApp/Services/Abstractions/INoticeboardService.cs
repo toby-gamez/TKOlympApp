@@ -1,4 +1,4 @@
-using static TkOlympApp.Services.NoticeboardService;
+using TkOlympApp.Models.Noticeboard;
 
 namespace TkOlympApp.Services.Abstractions;
 
@@ -8,3 +8,4 @@ public interface INoticeboardService
     Task<AnnouncementDetails?> GetAnnouncementAsync(long id, CancellationToken ct = default);
     Task<List<Announcement>> GetStickyAnnouncementsAsync(CancellationToken ct = default);
 }
+

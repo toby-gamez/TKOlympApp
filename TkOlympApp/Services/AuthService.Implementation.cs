@@ -21,6 +21,7 @@ public class AuthServiceImplementation : IAuthService
     private readonly HttpClient _bareClient;
     private readonly ISecureStorage _secureStorage;
     private readonly ILogger<AuthServiceImplementation> _logger;
+    private readonly IUserService _userService;
 
     public HttpClient Http => _httpClient;
 
@@ -28,10 +29,12 @@ public class AuthServiceImplementation : IAuthService
         HttpClient httpClient,
         IHttpClientFactory httpClientFactory,
         ISecureStorage secureStorage,
+        IUserService userService,
         ILogger<AuthServiceImplementation> logger)
     {
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         _secureStorage = secureStorage ?? throw new ArgumentNullException(nameof(secureStorage));
+        _userService = userService ?? throw new ArgumentNullException(nameof(userService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         
         // Create bare client without auth handler for token refresh (avoid recursion)
@@ -178,7 +181,7 @@ public class AuthServiceImplementation : IAuthService
             var id = parsed?.Data?.UserProxiesList?.FirstOrDefault()?.Person?.Id;
             if (!string.IsNullOrWhiteSpace(id))
             {
-                await UserService.SetCurrentPersonIdAsync(id);
+                await _userService.SetCurrentPersonIdAsync(id, ct);
                 _logger.LogDebug("User person ID set: {PersonId}", id);
             }
             else _logger.LogWarning("No person ID found for user");
@@ -200,7 +203,7 @@ public class AuthServiceImplementation : IAuthService
             
             _httpClient.DefaultRequestHeaders.Authorization = null;
 
-            try { await UserService.SetCurrentPersonIdAsync(null, ct); }
+            try { await _userService.SetCurrentPersonIdAsync(null, ct); }
             catch (Exception ex) { _logger.LogWarning(ex, "Failed to clear person ID"); }
             
             _logger.LogInformation("Logout completed successfully");

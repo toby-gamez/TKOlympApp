@@ -2,14 +2,16 @@ using Microsoft.Maui.Controls;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using TkOlympApp.Services;
 using TkOlympApp.Helpers;
+using TkOlympApp.Services;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Pages;
 
 [QueryProperty(nameof(CoupleId), "id")]
 public partial class CouplePage : ContentPage
 {
+    private readonly ICoupleService _coupleService;
     private string? _coupleId;
     private string? _manId;
     private string? _womanId;
@@ -27,8 +29,9 @@ public partial class CouplePage : ContentPage
         }
     }
 
-    public CouplePage()
+    public CouplePage(ICoupleService coupleService)
     {
+        _coupleService = coupleService ?? throw new ArgumentNullException(nameof(coupleService));
         InitializeComponent();
     }
 
@@ -78,7 +81,7 @@ public partial class CouplePage : ContentPage
                     return;
                 }
 
-                var couple = await CoupleService.GetCoupleAsync(CoupleId, ct);
+                var couple = await _coupleService.GetCoupleAsync(CoupleId, ct);
                 if (couple == null)
                 {
                     ErrorLabel.IsVisible = true;

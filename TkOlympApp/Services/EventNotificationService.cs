@@ -7,31 +7,37 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Storage;
 using Plugin.LocalNotification;
 using Plugin.LocalNotification.AndroidOption;
-using TkOlympApp.Services;
+using TkOlympApp.Helpers;
+using TkOlympApp.Models.Events;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Services;
 
-public static class EventNotificationService
+public sealed class EventNotificationService : IEventNotificationService
 {
-    private static readonly HashSet<int> _scheduledNotificationIds = new();
-    private static DateTime _lastScheduledTime = DateTime.MinValue;
-    private static bool _channelInitialized = false;
-    private static ILogger? _logger;
+    private readonly HashSet<int> _scheduledNotificationIds = new();
+    private DateTime _lastScheduledTime = DateTime.MinValue;
+    private bool _channelInitialized = false;
+    private readonly ILogger<EventNotificationService> _logger;
+    private readonly IEventService _eventService;
+    private readonly IUserService _userService;
+    private readonly ISecureStorage _secureStorage;
 
     private const string ChannelId = "tkolymp_events";
     private const string ChannelName = "Události a lekce";
     private const string ChannelDescription = "Upozornění na nadcházející události, lekce a tréninky";
     private const string EventsSnapshotKey = "events_snapshot_v1";
 
-    /// <summary>
-    /// Initialize the service with a logger instance
-    /// </summary>
-    public static void Initialize(ILogger<App>? logger = null)
+    public EventNotificationService(
+        ILogger<EventNotificationService> logger,
+        IEventService eventService,
+        IUserService userService,
+        ISecureStorage secureStorage)
     {
-        if (logger != null)
-        {
-            _logger = logger;
-        }
+        _logger = logger;
+        _eventService = eventService;
+        _userService = userService;
+        _secureStorage = secureStorage;
     }
 
     private class EventSnapshot
@@ -49,7 +55,7 @@ public static class EventNotificationService
     /// <summary>
     /// Initialize notification channel (Android)
     /// </summary>
-    private static void EnsureChannelInitialized()
+    private void EnsureChannelInitialized()
     {
         if (_channelInitialized) return;
         
@@ -69,7 +75,7 @@ public static class EventNotificationService
     /// <summary>
     /// Schedules notifications for upcoming events (1 hour and 5 minutes before)
     /// </summary>
-    public static async Task ScheduleNotificationsForEventsAsync(List<EventService.EventInstance> events, CancellationToken ct = default)
+    public async Task ScheduleNotificationsForEventsAsync(List<EventInstance> events, CancellationToken ct = default)
     {
         try
         {
@@ -218,7 +224,7 @@ public static class EventNotificationService
         return timeStr;
     }
 
-    private static string GetEventDisplayName(EventService.EventInstance eventInstance)
+    private static string GetEventDisplayName(EventInstance eventInstance)
     {
         var evt = eventInstance.Event;
         var defaultName = LocalizationService.Get("Event") ?? "Událost";
@@ -228,7 +234,7 @@ public static class EventNotificationService
 
             if (!string.IsNullOrWhiteSpace(evt.Type) && string.Equals(evt.Type, "lesson", StringComparison.OrdinalIgnoreCase))
             {
-                var trainerName = EventService.GetTrainerDisplayName(evt.EventTrainersList?.FirstOrDefault());
+                var trainerName = EventTrainerDisplayHelper.GetTrainerDisplayName(evt.EventTrainersList?.FirstOrDefault());
                 if (!string.IsNullOrWhiteSpace(trainerName))
                     return trainerName;
             }
@@ -236,7 +242,7 @@ public static class EventNotificationService
         return evt.Name ?? defaultName;
     }
 
-    private static async Task<bool> ScheduleNotificationAsync(int notificationId, string title, string description, DateTime notifyTime, long eventId)
+    private async Task<bool> ScheduleNotificationAsync(int notificationId, string title, string description, DateTime notifyTime, long eventId)
     {
         try
         {
@@ -278,7 +284,7 @@ public static class EventNotificationService
         }
     }
 
-    private static Task ClearAllScheduledNotificationsAsync(CancellationToken ct = default)
+    private Task ClearAllScheduledNotificationsAsync(CancellationToken ct = default)
     {
         try
         {
@@ -299,7 +305,7 @@ public static class EventNotificationService
     /// <summary>
     /// Request notification permissions (call on app startup or first use)
     /// </summary>
-    public static async Task<bool> RequestNotificationPermissionAsync(CancellationToken ct = default)
+    public async Task<bool> RequestNotificationPermissionAsync(CancellationToken ct = default)
     {
         try
         {
@@ -364,12 +370,12 @@ public static class EventNotificationService
     /// Notify user about a registration or unregistration for a specific event.
     /// Uses localized titles when available and falls back to simple Czech messages.
     /// </summary>
-    public static async Task NotifyRegistrationAsync(long eventId, bool registered, CancellationToken ct = default)
+    public async Task NotifyRegistrationAsync(long eventId, bool registered, CancellationToken ct = default)
     {
         try
         {
             // Fetch event details to build a meaningful message
-            var ev = await EventService.GetEventAsync(eventId);
+            var ev = await _eventService.GetEventAsync(eventId, ct);
             var eventName = ev?.Name ?? LocalizationService.Get("Event") ?? "Událost";
             var since = ev?.Since;
 
@@ -392,7 +398,7 @@ public static class EventNotificationService
     /// <summary>
     /// Get diagnostics info about notification system state
     /// </summary>
-    public static async Task<string> GetDiagnosticsAsync(CancellationToken ct = default)
+    public async Task<string> GetDiagnosticsAsync(CancellationToken ct = default)
     {
         var sb = new System.Text.StringBuilder();
         sb.AppendLine("=== Event Notification Service Diagnostics ===");
@@ -435,12 +441,12 @@ public static class EventNotificationService
     /// <summary>
     /// Check for changes in events and send immediate notifications for modifications and cancellations
     /// </summary>
-    public static async Task CheckAndNotifyChangesAsync(List<EventService.EventInstance> currentEvents, CancellationToken ct = default)
+    public async Task CheckAndNotifyChangesAsync(List<EventInstance> currentEvents, CancellationToken ct = default)
     {
         try
         {
             // Load previous snapshot
-            var previousSnapshotJson = await SecureStorage.GetAsync(EventsSnapshotKey);
+            var previousSnapshotJson = await _secureStorage.GetAsync(EventsSnapshotKey);
             if (string.IsNullOrEmpty(previousSnapshotJson))
             {
                 // First run, save current state and exit
@@ -524,7 +530,7 @@ public static class EventNotificationService
                 }
 
                 // Check for trainer change
-                var currentTrainers = JsonSerializer.Serialize(currentEvent.Event?.EventTrainersList?.Select(t => EventService.GetTrainerDisplayName(t)).OrderBy(n => n).ToList() ?? new List<string>());
+                var currentTrainers = JsonSerializer.Serialize(currentEvent.Event?.EventTrainersList?.Select(t => EventTrainerDisplayHelper.GetTrainerDisplayName(t)).OrderBy(n => n).ToList() ?? new List<string>());
                 if (currentTrainers != previousEvent.TrainersJson)
                 {
                     if (!NotificationSettingsService.ShouldNotify(currentEvent.Event?.Type, trainerIdsForMatch)) continue;
@@ -579,12 +585,12 @@ public static class EventNotificationService
                         // Check if current user is affected
                         try
                         {
-                            await UserService.InitializeAsync();
-                            var myPersonId = UserService.CurrentPersonId;
+                            await _userService.InitializeAsync(ct);
+                            var myPersonId = _userService.CurrentPersonId;
                             var myCoupleIds = new List<string>();
                             try
                             {
-                                var couples = await UserService.GetActiveCouplesFromUsersAsync();
+                                var couples = await _userService.GetActiveCouplesFromUsersAsync(ct);
                                 if (couples != null) myCoupleIds = couples.Where(c => !string.IsNullOrWhiteSpace(c.Id)).Select(c => c.Id!).ToList();
                             }
                             catch (Exception ex)
@@ -646,7 +652,7 @@ public static class EventNotificationService
         }
     }
 
-    private static async Task SaveEventsSnapshotAsync(List<EventService.EventInstance> events)
+    private async Task SaveEventsSnapshotAsync(List<EventInstance> events)
     {
         try
         {
@@ -658,7 +664,7 @@ public static class EventNotificationService
                 LocationText = e.Event?.LocationText,
                 EventName = e.Event?.Name,
                 IsCancelled = e.IsCancelled,
-                TrainersJson = JsonSerializer.Serialize(e.Event?.EventTrainersList?.Select(t => EventService.GetTrainerDisplayName(t)).OrderBy(n => n).ToList() ?? new List<string>()),
+                TrainersJson = JsonSerializer.Serialize(e.Event?.EventTrainersList?.Select(t => EventTrainerDisplayHelper.GetTrainerDisplayName(t)).OrderBy(n => n).ToList() ?? new List<string>()),
                 RegistrationsJson = JsonSerializer.Serialize(
                     (e.Event?.EventRegistrationsList?.Select(rn =>
                         {
@@ -677,7 +683,7 @@ public static class EventNotificationService
             }).ToList();
 
             var json = JsonSerializer.Serialize(snapshots);
-            await SecureStorage.SetAsync(EventsSnapshotKey, json);
+            await _secureStorage.SetAsync(EventsSnapshotKey, json);
         }
         catch (Exception ex)
         {
@@ -685,7 +691,7 @@ public static class EventNotificationService
         }
     }
 
-    private static async Task SendImmediateNotificationAsync(string title, string description, long eventId)
+    private async Task SendImmediateNotificationAsync(string title, string description, long eventId)
     {
         try
         {
@@ -723,7 +729,7 @@ public static class EventNotificationService
     /// <summary>
     /// Initialize background worker for periodic change detection (Android only)
     /// </summary>
-    public static void InitializeBackgroundChangeDetection()
+    public void InitializeBackgroundChangeDetection()
     {
 #if ANDROID
         try

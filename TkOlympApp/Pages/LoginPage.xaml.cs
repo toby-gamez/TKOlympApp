@@ -1,12 +1,16 @@
 using Microsoft.Maui.Controls;
 using TkOlympApp.Services;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Pages;
 
 public partial class LoginPage : ContentPage
 {
-    public LoginPage()
+    private readonly IAuthService _authService;
+
+    public LoginPage(IAuthService authService)
     {
+        _authService = authService;
         InitializeComponent();
         Shell.SetTabBarIsVisible(this, false);
     }
@@ -53,7 +57,7 @@ public partial class LoginPage : ContentPage
         try
         {
             // Attempt GraphQL login; throws if credentials invalid
-            await AuthService.LoginAsync(username, password);
+            await _authService.LoginAsync(username, password);
 
             // Navigate to the first tab (Přehled/MainPage) defined in AppShell
             await Shell.Current.GoToAsync("//Přehled");

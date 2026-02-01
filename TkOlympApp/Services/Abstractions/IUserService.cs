@@ -1,4 +1,4 @@
-using static TkOlympApp.Services.UserService;
+using TkOlympApp.Models.Users;
 
 namespace TkOlympApp.Services.Abstractions;
 
@@ -19,3 +19,4 @@ public interface IUserService
     Task<List<CoupleInfo>> GetActiveCouplesFromUsersAsync(CancellationToken ct = default);
     Task<List<CohortInfo>> GetCohortsFromUsersAsync(CancellationToken ct = default);
 }
+

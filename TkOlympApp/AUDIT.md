@@ -15,18 +15,18 @@ TkOlympApp je mobilní aplikace pro správu sportovních událostí, registrací
 
 | Kategorie | Hodnocení | Popis |
 |-----------|-----------|-------|
-| **Architektura** | ⚠️ **Kritické** | Absence dependency injection, všechny služby jsou statické singletons |
+| **Architektura** | ✅ **Vyřešeno 2026-02-01** | DI migrace dokončena: instance-based `I*Service` + typed `HttpClient`, Shell routy a root pages vytvářeny přes DI. Odstraněny compatibility wrappery a `ServiceProviderAccessor`. |
 | **Paměťové úniky** | ✅ **Vyřešeno 2026-02-01** | Event handlery nyní korektně odhlášeny v OnDisappearing() |
 | **Async patterns** | ✅ **Vyřešeno 2026-02-01** | CancellationToken přidán do 100% async metod |
 | **Error handling** | ✅✅ **PERFEKTNĚ vyřešeno 2026-02-01** | Kompletní structured logging infrastruktura: LoggerService + LoggerExtensions (10 extension methods), ServiceException hierarchie (ServiceException/GraphQLException/AuthenticationException) s transient detection, odstraněno 50+ prázdných catch bloků, 32 unit testů, ukázkový refactoring EventService |
-| **Testovatelnost** | ⚙️ **Zlepšená** | 249 unit testů (Helpers/Converters/Exceptions/LoggerExtensions 100% pokryto), statické Services stále brání mockování business logiky |
+| **Testovatelnost** | ⚙️ **Zlepšená** | 249 unit testů (Helpers/Converters/Exceptions/LoggerExtensions 100% pokryto); business logika ve službách je nyní mockovatelná přes `I*Service`. Zbývá hlavně zkracování dlouhých code-behind tříd / MVVM. |
 | **Výkon** | ✅ **Vylepšeno 2026-02-01** | Stream deserialization implementována, zbývají LINQ optimalizace |
 | **Platform-specific** | ✅ **Dobré** | Čistě odděleno v `Platforms/`, použit Android WorkManager |
 | **Kódová kvalita** | ⚙️ **Vylepšená** | Production-ready structured logging s performance tracking, čitelný kód, stále dlouhé code-behind třídy |
 | **Magic strings** | ✅ **Vyřešeno 2026-02-01** | Vytvořena AppConstants třída, vše refaktorováno |
 | **Bezpečnost (credentials)** | ✅ **Vyřešeno 2026-02-01** | Hardcoded hesla odstraněna, použity env variables |
 
-**Celkové skóre:** 8.3/10 — Solidní aplikace s vyřešenými všemi P0 a P1 prioritami; dokončeno: perfektní structured logging s exception hierarchií a testovatelností, memory management, async patterns a performance optimalizace (stream deserialization); zbývají architektonické dluhy (DI migrace) pro plnou testovatelnost business logiky.
+**Celkové skóre:** 8.3/10 — Solidní aplikace s vyřešenými všemi P0 a P1 prioritami; dokončeno: structured logging s exception hierarchií, memory management, async patterns, performance optimalizace (stream deserialization) a dokončená DI migrace. Zbývá primárně MVVM refactoring a zkracování dlouhých code-behind tříd.
 
 ---
 
@@ -39,7 +39,7 @@ TkOlympApp je mobilní aplikace pro správu sportovních událostí, registrací
 ```
 TkOlympApp/
 ├── Pages/              ← 27 XAML pages s code-behind (200–1200 řádků)
-├── Services/           ← 21 statických služeb (AuthService, EventService...)
+├── Services/           ← Instance-based služby registrované v DI (`I*Service` + `*Implementation`)
 ├── Helpers/            ← 7 utility tříd (pure functions, OK)
 ├── Converters/         ← 7 XAML value converters (OK)
 └── Platforms/          ← Android/iOS/Windows specifika (správně odděleno)
@@ -47,26 +47,16 @@ TkOlympApp/
 
 **Problémy:**
 
-#### ❌ Statické služby — nulová testovatelnost
+#### ✅ DI služby — testovatelnost výrazně lepší (2026-02-01)
 
-Všech 21 služeb v `Services/` je implementováno jako `public static class`:
+Historicky byly služby implementovány jako `public static class` ("static hell"). Tento stav už byl odstraněn: síťová/business logika je v instance-based `I*Service` implementacích a volá se přes constructor injection.
 
 ```csharp
-// TkOlympApp/Services/AuthService.cs:12
-public static class AuthService
+// (ilustrační) instance-based služba – volaná přes IEventService
+public sealed class EventServiceImplementation : IEventService
 {
-    private static readonly HttpClient Client;
-    public static HttpClient Http => Client;
-    public static async Task<string?> LoginAsync(...) { ... }
-}
-
-// TkOlympApp/Services/EventService.cs:7
-public static class EventService
-{
-    public static async Task<List<EventInstance>> GetMyEventInstancesForRangeAsync(...) 
-    {
-        var resp = await AuthService.Http.PostAsync(...); // Hard dependency
-    }
+    private readonly IGraphQlClient _graphQlClient;
+    public EventServiceImplementation(IGraphQlClient graphQlClient) => _graphQlClient = graphQlClient;
 }
 ```
 
@@ -250,9 +240,9 @@ public partial class CalendarPage : ContentPage
 
 ### 2.1 Async/Await patterns
 
-#### ❌ Chybějící CancellationToken propagace
+#### ✅ CancellationToken propagace (hotovo 2026-02-01)
 
-**90% async metod nepřijímá `CancellationToken`:**
+Stav 2026-02-01: CancellationToken je propagován napříč službami (a tam, kde to dává smysl, i z UI). Níže je historický příklad problému a jeho opravy.
 
 ```csharp
 // TkOlympApp/Services/EventService.cs:469 (PŘED)
@@ -271,7 +261,7 @@ public static async Task<List<EventInstance>> GetMyEventInstancesForRangeAsync(
 }
 ```
 
-**Dopad:** Při navigaci pryč z obrazovky zůstávají HTTP requesty běžet → plýtvání baterií.
+**Poznámka:** V aktuálním kódu už není `AuthService.Http` (static wrapper odstraněn); služby používají typed HttpClient / `IGraphQlClient`.
 
 #### ⚠️ Fire-and-forget async v event handlerech
 
@@ -306,14 +296,14 @@ private async void OnEventCardTapped(object? sender, TappedEventArgs e)
 HttpContent a responses jsou správně disposovány:
 
 ```csharp
-// TkOlympApp/Services/GraphQlClient.cs:40-41
+// TkOlympApp/Services/GraphQlClient.cs (po DI): HttpClient je injektovaný
 using var content = new StringContent(json, Encoding.UTF8, "application/json");
-using var resp = await AuthService.Http.PostAsync("", content, ct);
+using var resp = await _httpClient.PostAsync("", content, ct);
 ```
 
-**Zhodnocení async patterns: 5/10**
-- ✅ Dobré: Konsistentní async/await, žádné `.Result`/`.Wait()`
-- ❌ Špatné: Žádné CancellationTokeny, chybí error handling v event handlerech
+**Zhodnocení async patterns: 8/10**
+- ✅ Dobré: Konsistentní async/await, žádné `.Result`/`.Wait()`, CancellationToken propagace
+- ⚙️ Zbývá: postupně omezovat `async void` event handlery přes MVVM/Commandy (lepší testovatelnost a error handling)
 
 ### 2.2 Naming & konzistence
 
@@ -615,28 +605,17 @@ public App(ILogger<App> logger)
 
 ## 3. Dependency Injection & konfigurace
 
-### 3.1 Současný stav: Static Hell
+### 3.1 Historie: Static Hell (vyřešeno)
 
-**Všech 21 služeb je static:**
+**Historicky byly služby implementovány jako static ("static hell").**
+
+**Stav 2026-02-01:** ✅ DI migrace dokončena. Odstraněny compatibility static wrappery a `ServiceProviderAccessor`; Pages a Shell routování vytváří stránky přes DI a služby jsou instance-based (`I*Service` + implementace).
 
 ```csharp
-// TkOlympApp/Services/AuthService.cs:12-42
+// Historický příklad (již odstraněno): static wrapper se sdíleným HttpClientem
 public static class AuthService
 {
-    private static readonly HttpClient Client;
-    private static readonly HttpClient BareClient;
-    
-    static AuthService()
-    {
-        var authHandler = new AuthDelegatingHandler();
-        Client = new HttpClient(authHandler)
-        {
-            BaseAddress = new Uri("https://api.rozpisovnik.cz/graphql")
-        };
-        Client.DefaultRequestHeaders.Add("x-tenant-id", "1");
-    }
-    
-    public static HttpClient Http => Client;
+    public static HttpClient Http => throw new NotSupportedException();
 }
 ```
 
@@ -665,34 +644,28 @@ public static class AuthService
    - URL hardcoded v konstruktoru
    - Nelze přepnout mezi dev/staging/prod bez rekompilace
 
-### 3.2 Současné DI použití
+### 3.2 Současné DI použití (stav 2026-02-01) ✅
 
-**MauiProgram.cs: Pouze logging:**
+- `MauiProgram.cs` používá `AddHttpClient` a registruje typed klienty `IAuthService` a `IGraphQlClient` (včetně `AuthDelegatingHandler`).
+- V DI jsou registrovány instance-based implementace pro více služeb (`IUserService`, `INoticeboardService`, `IPeopleService`, `ICohortService`, `ICoupleService`, `ITenantService`, `ILeaderboardService`, `IEventService`).
+- Pages jsou registrovány v DI a Shell routování vytváří pages přes DI díky `DiRouteFactory`.
+- Shell TabBar root pages (Overview/Calendar/Noticeboard/Events/Other) jsou nyní vytvářeny přes DI (ContentTemplate je nastaven v `AppShell.xaml.cs`, ne přes XAML type activation).
+- Navigace byla vyčištěna: odstraněny výskyty přímého `new SomePage()` ve prospěch `Shell.Current.GoToAsync(...)` nebo resolve přes DI.
 
-```csharp
-// TkOlympApp/MauiProgram.cs:16-36
-var builder = MauiApp.CreateBuilder();
-builder
-    .UseMauiApp<App>()
-    .UseLocalNotification()
-    .UseMaterialMauiIcons()
-    .ConfigureFonts(fonts => { ... });
+**Konkrétní dokončené kroky (2026-02-01):**
 
-#if DEBUG
-builder.Logging.AddDebug();
-#endif
+- **DI pro Shell root pages:** v `AppShell.xaml` jsou `ShellContent` pojmenované (`x:Name`) a jejich `ContentTemplate` se nastavuje v `AppShell.xaml.cs` přes `services.GetRequiredService<TPage>()`.
+- **Oprava pádu po startu:** po přepnutí root pages na DI bylo nutné registrovat chybějící root pages v kontejneru (`MainPage`, `OtherPage`) v `MauiProgram.cs`.
+- **Migrace Pages ze static na DI:** následující stránky už nepoužívají `AuthService.*` / `AuthService.Http`, ale injektovaný `IAuthService`:
+    - `LoginPage`, `OtherPage`, `EventsPage`, `RegistrationPage`, `DeleteRegistrationsPage`, `EditRegistrationsPage`, `AboutMePage`, `ChangePasswordPage`, `EditSelfPage`, `PersonPage`.
+- **Migrace MainPage na DI:** `MainPage` načítá data přes injektovaný `IEventService` a `INoticeboardService` (místo `EventService.*` / `NoticeboardService.*`).
+- **Build ověřen:** `dotnet build TkOlympApp.sln -c Debug` je bez chyb (Android target `net10.0-android`).
 
-var app = builder.Build();
-var loggerFactory = app.Services.GetRequiredService<ILoggerFactory>();
-var logger = loggerFactory.CreateLogger<App>();
-TkOlympApp.Services.EventNotificationService.Initialize(logger); // ❌ Still static!
-```
-
-**Žádné služby registrovány v DI containeru.**
+Poznámka: compatibility wrapper vrstva už v kódu není.
 
 ### 3.3 Doporučená migrace na DI
 
-#### Fáze 1: Definovat rozhraní (1 týden)
+#### Fáze 1: Definovat rozhraní (1 týden) ✅ Hotovo (2026-02-01)
 
 ```csharp
 // Services/Abstractions/IAuthService.cs
@@ -725,7 +698,9 @@ public interface IGraphQlClient
 }
 ```
 
-#### Fáze 2: Refaktorovat implementace (2 týdny)
+#### Fáze 2: Refaktorovat implementace (2 týdny) ✅ Hotovo (2026-02-01)
+
+Poznámka: instance-based implementace existují pro všechny používané služby; call sites byly migrovány a wrappery odstraněny.
 
 ```csharp
 // Services/Implementations/AuthService.cs
@@ -853,7 +828,7 @@ public class GraphQlClient : IGraphQlClient
 }
 ```
 
-#### Fáze 3: Registrace v DI (1 den)
+#### Fáze 3: Registrace v DI (1 den) ✅ Hotovo (2026-02-01)
 
 ```csharp
 // MauiProgram.cs
@@ -885,7 +860,7 @@ public static MauiApp CreateMauiApp()
     builder.Services.AddSingleton<IPreferences>(Preferences.Default);
 
     // HTTP Clients
-    builder.Services.AddHttpClient<IGraphQlClient, GraphQlClient>(client =>
+    builder.Services.AddHttpClient<IGraphQlClient, GraphQlClientImplementation>(client =>
     {
         client.BaseAddress = new Uri(AppConstants.BaseApiUrl);
         client.DefaultRequestHeaders.Add(AppConstants.TenantHeader, AppConstants.TenantId);
@@ -894,7 +869,7 @@ public static MauiApp CreateMauiApp()
     .AddPolicyHandler(GetRetryPolicy())
     .AddPolicyHandler(GetCircuitBreakerPolicy());
 
-    builder.Services.AddHttpClient<IAuthService, AuthService>(client =>
+    builder.Services.AddHttpClient<IAuthService, AuthServiceImplementation>(client =>
     {
         client.BaseAddress = new Uri(AppConstants.BaseApiUrl);
         client.DefaultRequestHeaders.Add(AppConstants.TenantHeader, AppConstants.TenantId);
@@ -903,9 +878,9 @@ public static MauiApp CreateMauiApp()
     .AddHttpMessageHandler<AuthDelegatingHandler>();
 
     // Services
-    builder.Services.AddSingleton<IAuthService, AuthService>();
-    builder.Services.AddSingleton<IGraphQlClient, GraphQlClient>();
-    builder.Services.AddTransient<IEventService, EventService>();
+    builder.Services.AddSingleton<IAuthService, AuthServiceImplementation>();
+    builder.Services.AddSingleton<IGraphQlClient, GraphQlClientImplementation>();
+    builder.Services.AddTransient<IEventService, EventServiceImplementation>();
     builder.Services.AddTransient<INoticeboardService, NoticeboardService>();
     builder.Services.AddTransient<IUserService, UserService>();
     builder.Services.AddTransient<IEventNotificationService, EventNotificationService>();
@@ -960,7 +935,9 @@ static IAsyncPolicy<HttpResponseMessage> GetCircuitBreakerPolicy() =>
             });
 ```
 
-#### Fáze 4: Update AppShell & App (1 den)
+#### Fáze 4: Update AppShell & App (1 den) ✅ Hotovo (2026-02-01)
+
+Poznámka: Routy jsou registrovány přes `DiRouteFactory` (pages se vytváří z DI) a ve zbývajících místech byla odstraněna přímá instanciace pages (`new ...Page()`).
 
 ```csharp
 // AppShell.xaml.cs
@@ -1469,13 +1446,13 @@ TkOlympApp.Tests/
 **Pokrytí testů:**
 - ✅ Helpers: 100% (pure functions, snadné testovat)
 - ✅ Converters: 100% (také pure functions)
-- ❌ Services: 0% (statické, nelze mockovat)
+- ⚙️ Services: nízké (zatím) — DI umožňuje mockování přes `I*Service`, ale testy služeb je potřeba doplnit
 - ❌ Pages: 0% (business logika v code-behind)
 - ❌ ViewModels: 0% (neexistují)
 
-**Celkové pokrytí: ~5% kódu**
+**Celkové pokrytí:** vysoké pro Helpers/Converters/Exceptions/LoggerExtensions; nízké pro Services/Pages (další krok: přidat unit testy pro instance-based služby).
 
-### 6.2 Proč nelze testovat Services
+### 6.2 Historie: proč dříve nešlo testovat Services
 
 ```csharp
 // Attempt to test EventService
@@ -1494,7 +1471,9 @@ public async Task GetMyEventInstances_ReturnsNonEmptyList()
 }
 ```
 
-Nelze injektovat mock HttpClient protože `AuthService.Http` je static property.
+Dříve nešlo injektovat mock HttpClient, protože síťová vrstva byla dostupná přes static `AuthService.Http` a static service metody.
+
+**Stav 2026-02-01:** služby jsou instance-based a registrované v DI (`I*Service` + implementace), takže je možné je testovat s mock `IGraphQlClient`/HttpMessageHandler.
 
 ### 6.3 Doporučená testovací strategie
 
@@ -2015,7 +1994,7 @@ Aplikace nemá retry logic ani exponential backoff.
 | **P0 (Kritické)** | Odstranit hardcoded credentials z .csproj | 1 hodina | Bezpečnost | ✅ **HOTOVO 2026-02-01** |
 | **P0** | Vytvořit AppConstants třídu a refaktorovat magic strings | 2 hodiny | Udržitelnost | ✅ **HOTOVO 2026-02-01** |
 | **P0** | Implementovat global exception handling + crash reporting | 1 den | Diagnostika | ⏸️ Sentry odstraněn, čeká na DSN |
-| **P1 (Vysoká)** | Migrace na DI + extrakce rozhraní | 4 týdny | Testovatelnost | |
+| **P1 (Vysoká)** | Migrace na DI + extrakce rozhraní | 4 týdny | Testovatelnost | ✅ **HOTOVO 2026-02-01** |
 | **P1** | Přidat CancellationToken do všech async metod | 1 týden | Výkon | ✅ **HOTOVO 2026-02-01** |
 | **P1** | Implementovat memory leak fixes (event unsubscribe) | 1 týden | Stabilita | ✅ **HOTOVO 2026-02-01** |
 | **P1** | Odstranit prázdné catch bloky + strukturovaný logging | 1 týden | Diagnostika | ✅✅ **PERFEKTNĚ HOTOVO 2026-02-01** (ServiceException hierarchie + LoggerExtensions + 32 unit testů) |
@@ -2049,8 +2028,9 @@ Aplikace nemá retry logic ani exponential backoff.
 
 **Fáze 2 (Q2 2026): Dependency Injection**
 - ✅ Extrahovat rozhraní služeb
-- ✅ Registrace v DI container
-- ✅ Refactor Pages na ViewModels
+- ✅ Registrace v DI container (typed HttpClient + handler)
+- ✅ Migrace Pages + Shell routování na DI (constructor injection, DI route factory)
+- ⏳ ViewModels/MVVM (další krok, mimo DI migraci)
 
 **Fáze 3 (Q3 2026): Clean Architecture**
 - ✅ Separace Domain/Application/Infrastructure layers
@@ -2081,13 +2061,13 @@ Aplikace nemá retry logic ani exponential backoff.
 - ✅ Empty catch bloky kompletně eliminovány
 
 **Zbývající architektonické dluhy:**
-- ⚠️ Nulová testovatelnost business logiky kvůli static services (vyžaduje DI migraci)
 - ⚠️ Dlouhé code-behind třídy (vyžaduje MVVM refactoring)
+- ⚙️ Doplnit unit testy pro instance-based služby (DI už to umožňuje)
 
 **Doporučení:**
-1. **Short-term (1 měsíc):** Opravit security issues, přidat logging + crash reporting
-2. **Mid-term (3 měsíce):** Kompletní migrace na DI + ViewModels
-3. **Long-term (6 měsíců):** Clean Architecture + 80% test coverage
+1. **Short-term (1 měsíc):** Crash reporting (Sentry DSN), zredukovat build warnings, přidat pár klíčových service testů
+2. **Mid-term (3 měsíce):** MVVM/ViewModels pro top Pages + přesun business logiky z code-behind
+3. **Long-term (6 měsíců):** Clean-ish architecture evoluce + vyšší pokrytí testy (zejména Services)
 
 **ROI migrace:**
 - **Před:** 2 dny na debug production issue (žádné logy)

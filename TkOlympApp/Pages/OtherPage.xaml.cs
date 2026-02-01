@@ -1,13 +1,17 @@
 using Microsoft.Maui.Controls;
 using TkOlympApp.Services;
 using TkOlympApp.Pages;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Pages;
 
 public partial class OtherPage : ContentPage
 {
-    public OtherPage()
+    private readonly IAuthService _authService;
+
+    public OtherPage(IAuthService authService)
     {
+        _authService = authService;
         InitializeComponent();
     }
 
@@ -15,7 +19,7 @@ public partial class OtherPage : ContentPage
     {
         try
         {
-            await AuthService.LogoutAsync();
+            await _authService.LogoutAsync();
 
             // Navigate to login route instead of setting Application.MainPage (obsolete setter)
             await Shell.Current.GoToAsync($"//{nameof(LoginPage)}");

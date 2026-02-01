@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
 using TkOlympApp.Services;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Pages;
 
@@ -20,14 +21,16 @@ public partial class EventsPage : ContentPage
 
     private bool _isPlannedActive = true;
     private bool _suppressReloadOnNextAppearing = false;
+    private readonly IAuthService _authService;
 
     public ObservableCollection<EventItem> Items { get; } = new();
     public ObservableCollection<EventItem> PlannedItems { get; } = new();
     public ObservableCollection<EventItem> OccurredItems { get; } = new();
     public ObservableCollection<EventItem> VisibleItems { get; } = new();
 
-    public EventsPage()
+    public EventsPage(IAuthService authService)
     {
+        _authService = authService;
         InitializeComponent();
         BindingContext = this;
         SetTabVisuals(true);
@@ -128,7 +131,7 @@ public partial class EventsPage : ContentPage
 
             var json = JsonSerializer.Serialize(query, Options);
             using var content = new StringContent(json, Encoding.UTF8, "application/json");
-            using var resp = await AuthService.Http.PostAsync("", content, ct);
+            using var resp = await _authService.Http.PostAsync("", content, ct);
             if (!resp.IsSuccessStatusCode)
             {
                 var bodyErr = await resp.Content.ReadAsStringAsync(ct);

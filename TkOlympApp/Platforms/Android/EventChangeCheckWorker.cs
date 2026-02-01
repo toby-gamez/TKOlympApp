@@ -1,8 +1,10 @@
 using Android.Content;
 using AndroidX.Work;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Maui;
 using System;
 using System.Threading.Tasks;
-using TkOlympApp.Services;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Platforms.Android;
 
@@ -25,23 +27,33 @@ public class EventChangeCheckWorker : Worker
                 try
                 {
                     // Check if user is authenticated
-                    var hasToken = await AuthService.HasTokenAsync();
+                    var services = IPlatformApplication.Current?.Services;
+                    if (services == null)
+                    {
+                        System.Diagnostics.Debug.WriteLine("EventChangeCheckWorker: Services not available, skipping");
+                        return;
+                    }
+                    var authService = services.GetRequiredService<IAuthService>();
+                    var hasToken = await authService.HasTokenAsync();
                     if (!hasToken)
                     {
                         System.Diagnostics.Debug.WriteLine("EventChangeCheckWorker: No auth token, skipping");
                         return;
                     }
 
+                    var eventService = services.GetRequiredService<IEventService>();
+                    var eventNotificationService = services.GetRequiredService<IEventNotificationService>();
+
                     // Load events for next 2 days
                     var start = DateTime.Now.Date;
                     var end = DateTime.Now.Date.AddDays(2).AddHours(23).AddMinutes(59);
-                    var events = await EventService.GetMyEventInstancesForRangeAsync(start, end);
+                    var events = await eventService.GetMyEventInstancesForRangeAsync(start, end);
 
                     // Check for changes and send notifications
-                    await EventNotificationService.CheckAndNotifyChangesAsync(events);
+                    await eventNotificationService.CheckAndNotifyChangesAsync(events);
 
                     // Also reschedule upcoming notifications
-                    await EventNotificationService.ScheduleNotificationsForEventsAsync(events);
+                    await eventNotificationService.ScheduleNotificationsForEventsAsync(events);
 
                     System.Diagnostics.Debug.WriteLine($"EventChangeCheckWorker: Completed check for {events.Count} events");
                 }

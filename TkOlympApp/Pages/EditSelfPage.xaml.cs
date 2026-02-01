@@ -4,16 +4,21 @@ using System.Text.Json.Serialization;
 using Microsoft.Maui.Controls;
 using TkOlympApp.Services;
 using TkOlympApp.Helpers;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Pages;
 
 public partial class EditSelfPage : ContentPage
 {
+    private readonly IAuthService _authService;
+    private readonly IUserService _userService;
     private string? _personId;
     private bool _birthDateSet = false;
 
-    public EditSelfPage()
+    public EditSelfPage(IAuthService authService, IUserService userService)
     {
+        _authService = authService;
+        _userService = userService ?? throw new ArgumentNullException(nameof(userService));
         InitializeComponent();
     }
 
@@ -29,7 +34,7 @@ public partial class EditSelfPage : ContentPage
         
         if (string.IsNullOrWhiteSpace(_personId))
         {
-            _personId = UserService.CurrentPersonId;
+            _personId = _userService.CurrentPersonId;
         }
         await LoadAsync();
     }
@@ -124,7 +129,7 @@ public partial class EditSelfPage : ContentPage
             var options = new JsonSerializerOptions(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = true };
             var json = JsonSerializer.Serialize(gqlReq, options);
             using var content = new StringContent(json, Encoding.UTF8, "application/json");
-            using var resp = await AuthService.Http.PostAsync("", content);
+            using var resp = await _authService.Http.PostAsync("", content);
             resp.EnsureSuccessStatusCode();
 
             var body = await resp.Content.ReadAsStringAsync();
@@ -278,7 +283,7 @@ public partial class EditSelfPage : ContentPage
             var patchBody = parts.Count == 0 ? string.Empty : "{ " + string.Join(", ", parts) + " }";
 
             // Ensure we have person id from service if not already set
-            if (string.IsNullOrWhiteSpace(_personId)) _personId = UserService.CurrentPersonId;
+            if (string.IsNullOrWhiteSpace(_personId)) _personId = _userService.CurrentPersonId;
 
             if (string.IsNullOrWhiteSpace(_personId))
             {
@@ -295,7 +300,7 @@ public partial class EditSelfPage : ContentPage
             var options = new JsonSerializerOptions(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = true };
             var json = JsonSerializer.Serialize(gqlReq, options);
             using var content = new StringContent(json, Encoding.UTF8, "application/json");
-            using var resp = await AuthService.Http.PostAsync("", content);
+            using var resp = await _authService.Http.PostAsync("", content);
 
             var body = await resp.Content.ReadAsStringAsync();
             var parsed = JsonSerializer.Deserialize<GraphQlResp<object>>(body, options);

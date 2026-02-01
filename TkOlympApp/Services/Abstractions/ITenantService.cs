@@ -1,5 +1,5 @@
-using TenantLocation = TkOlympApp.Services.TenantService.Location;
-using TenantTrainer = TkOlympApp.Services.TenantService.TenantTrainer;
+using TenantLocation = TkOlympApp.Models.Tenants.Location;
+using TenantTrainer = TkOlympApp.Models.Tenants.TenantTrainer;
 
 namespace TkOlympApp.Services.Abstractions;
 

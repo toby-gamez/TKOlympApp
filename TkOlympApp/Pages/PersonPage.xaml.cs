@@ -12,12 +12,14 @@ using Microsoft.Maui.Controls;
 using Microsoft.Maui.ApplicationModel;
 using TkOlympApp.Services;
 using TkOlympApp.Helpers;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Pages
 {
     [QueryProperty(nameof(PersonId), "personId")]
     public partial class PersonPage : ContentPage
     {
+        private readonly IAuthService _authService;
         private string? _personId;
         private bool _appeared;
         private bool _loadRequested;
@@ -39,8 +41,9 @@ namespace TkOlympApp.Pages
             }
         }
 
-        public PersonPage()
+        public PersonPage(IAuthService authService)
         {
+            _authService = authService;
             InitializeComponent();
             ActiveCouplesCollection.ItemsSource = _activeCouples;
         }
@@ -118,7 +121,7 @@ namespace TkOlympApp.Pages
                 var gqlReq = new { query = primaryQuery };
                 var json = JsonSerializer.Serialize(gqlReq, _jsonOptions);
                 using var content = new StringContent(json, Encoding.UTF8, "application/json");
-                using var resp = await AuthService.Http.PostAsync("", content, ct);
+                using var resp = await _authService.Http.PostAsync("", content, ct);
                 resp.EnsureSuccessStatusCode();
 
                 var body = await resp.Content.ReadAsStringAsync(ct);
@@ -205,7 +208,7 @@ namespace TkOlympApp.Pages
                 var gqlReq = new { query = extrasQuery };
                 var json = JsonSerializer.Serialize(gqlReq, _jsonOptions);
                 using var content = new StringContent(json, Encoding.UTF8, "application/json");
-                using var resp = await AuthService.Http.PostAsync("", content, ct);
+                using var resp = await _authService.Http.PostAsync("", content, ct);
                 resp.EnsureSuccessStatusCode();
 
                 var body = await resp.Content.ReadAsStringAsync(ct);

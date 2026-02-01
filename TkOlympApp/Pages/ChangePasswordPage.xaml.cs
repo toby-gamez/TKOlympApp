@@ -4,13 +4,17 @@ using System.Text.Json.Serialization;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
 using TkOlympApp.Services;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Pages;
 
 public partial class ChangePasswordPage : ContentPage
 {
-    public ChangePasswordPage()
+    private readonly IAuthService _authService;
+
+    public ChangePasswordPage(IAuthService authService)
     {
+        _authService = authService;
         InitializeComponent();
     }
 
@@ -149,7 +153,7 @@ public partial class ChangePasswordPage : ContentPage
             var options = new JsonSerializerOptions(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = true };
             var json = JsonSerializer.Serialize(gqlReq, options);
             using var content = new StringContent(json, Encoding.UTF8, "application/json");
-            using var resp = await AuthService.Http.PostAsync("", content);
+            using var resp = await _authService.Http.PostAsync("", content);
 
             var body = await resp.Content.ReadAsStringAsync();
             var parsed = JsonSerializer.Deserialize<GraphQlRespWithErrors<ChangePasswordData>>(body, options);
@@ -172,7 +176,7 @@ public partial class ChangePasswordPage : ContentPage
             try { await Shell.Current.Navigation.PopModalAsync(); } catch { }
             try
             {
-                await AuthService.LogoutAsync();
+                await _authService.LogoutAsync();
                 // Navigate to login page (relative route used during startup)
                 try { await Shell.Current.GoToAsync(nameof(LoginPage)); } catch { try { await Shell.Current.GoToAsync($"//{nameof(LoginPage)}"); } catch { } }
             }

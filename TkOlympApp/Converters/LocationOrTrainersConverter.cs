@@ -2,7 +2,8 @@ using System;
 using System.Globalization;
 using System.Linq;
 using Microsoft.Maui.Controls;
-using TkOlympApp.Services;
+using TkOlympApp.Helpers;
+using TkOlympApp.Models.Events;
 
 namespace TkOlympApp.Converters
 {
@@ -10,14 +11,14 @@ namespace TkOlympApp.Converters
     {
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            if (value is not EventService.EventInfo evt) return string.Empty;
+            if (value is not EventInfo evt) return string.Empty;
 
             if (!string.IsNullOrWhiteSpace(evt.LocationText))
                 return evt.LocationText ?? string.Empty;
 
             if (evt.EventTrainersList != null && evt.EventTrainersList.Count > 0)
             {
-                var names = evt.EventTrainersList.Select(t => EventService.GetTrainerDisplayName(t)).Where(n => !string.IsNullOrWhiteSpace(n));
+                var names = evt.EventTrainersList.Select(EventTrainerDisplayHelper.GetTrainerDisplayName).Where(n => !string.IsNullOrWhiteSpace(n));
                 return string.Join(", ", names);
             }
 
@@ -30,3 +31,4 @@ namespace TkOlympApp.Converters
         }
     }
 }
+

@@ -3,11 +3,13 @@ using System.Collections.ObjectModel;
 using Microsoft.Maui.Controls;
 using Microsoft.Extensions.DependencyInjection;
 using TkOlympApp.Services;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Pages;
 
 public partial class EventNotificationSettingsPage : ContentPage
 {
+    private readonly ITenantService _tenantService;
     class RuleViewModel
     {
         public EventNotificationSetting Setting { get; }
@@ -27,8 +29,9 @@ public partial class EventNotificationSettingsPage : ContentPage
 
     ObservableCollection<RuleViewModel> _items = new();
 
-    public EventNotificationSettingsPage()
+    public EventNotificationSettingsPage(ITenantService tenantService)
     {
+        _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
         InitializeComponent();
     }
 
@@ -46,7 +49,7 @@ public partial class EventNotificationSettingsPage : ContentPage
         Dictionary<string, string> trainerNames = new();
         try
         {
-            var (locations, trainers) = await TenantService.GetLocationsAndTrainersAsync();
+            var (locations, trainers) = await _tenantService.GetLocationsAndTrainersAsync();
             foreach (var t in trainers)
             {
                 var id = t.Person?.Id;

@@ -5,14 +5,20 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Storage;
 using Plugin.LocalNotification;
 using Plugin.LocalNotification.AndroidOption;
+using TkOlympApp.Models.Noticeboard;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Services;
 
-public static class NoticeboardNotificationService
+public sealed class NoticeboardNotificationService : INoticeboardNotificationService
 {
+    private readonly ISecureStorage _secureStorage;
+    private readonly ILogger<NoticeboardNotificationService> _logger;
+
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web)
     {
         PropertyNameCaseInsensitive = true
@@ -25,12 +31,18 @@ public static class NoticeboardNotificationService
     private const string LastCheckKey = "noticeboard_last_check";
     private const string LastAnnouncementsKey = "noticeboard_last_announcements";
     
-    private static bool _channelInitialized = false;
+    private bool _channelInitialized = false;
+
+    public NoticeboardNotificationService(ISecureStorage secureStorage, ILogger<NoticeboardNotificationService> logger)
+    {
+        _secureStorage = secureStorage;
+        _logger = logger;
+    }
 
     /// <summary>
     /// Initialize notification channel (Android)
     /// </summary>
-    private static void EnsureChannelInitialized()
+    private void EnsureChannelInitialized()
     {
         if (_channelInitialized) return;
         
@@ -39,32 +51,32 @@ public static class NoticeboardNotificationService
             // Plugin.LocalNotification handles channel creation automatically via AndroidOptions
             // We just need to use consistent ChannelId in notification requests
             _channelInitialized = true;
-            Debug.WriteLine($"NoticeboardNotificationService: Using notification channel '{ChannelId}'");
+            _logger.LogInformation("NoticeboardNotificationService: Using notification channel '{ChannelId}'", ChannelId);
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"NoticeboardNotificationService: Error in channel initialization: {ex}");
+            _logger.LogWarning(ex, "NoticeboardNotificationService: Error in channel initialization");
         }
     }
 
     /// <summary>
     /// Check for new or updated announcements and show notifications
     /// </summary>
-    public static async Task CheckAndNotifyChangesAsync(List<NoticeboardService.Announcement> currentAnnouncements, CancellationToken ct = default)
+    public async Task CheckAndNotifyChangesAsync(List<Announcement> currentAnnouncements, CancellationToken ct = default)
     {
         try
         {
             EnsureChannelInitialized();
             
-            Debug.WriteLine("NoticeboardNotificationService: Starting check for new announcements");
+            _logger.LogDebug("NoticeboardNotificationService: Starting check for new announcements");
             
             // Load last known state
             var lastCheckTimestamp = await LoadLastCheckTimestampAsync();
             var lastAnnouncements = await LoadLastAnnouncementsAsync();
             
             // Find new and updated announcements
-            var newAnnouncements = new List<NoticeboardService.Announcement>();
-            var updatedAnnouncements = new List<NoticeboardService.Announcement>();
+            var newAnnouncements = new List<Announcement>();
+            var updatedAnnouncements = new List<Announcement>();
             
             foreach (var announcement in currentAnnouncements)
             {
@@ -91,14 +103,14 @@ public static class NoticeboardNotificationService
             // Show notifications for new announcements
             if (newAnnouncements.Count > 0)
             {
-                Debug.WriteLine($"NoticeboardNotificationService: Found {newAnnouncements.Count} new announcement(s)");
+                _logger.LogInformation("NoticeboardNotificationService: Found {Count} new announcement(s)", newAnnouncements.Count);
                 await ShowNewAnnouncementsNotificationAsync(newAnnouncements);
             }
             
             // Show notifications for updated announcements
             if (updatedAnnouncements.Count > 0)
             {
-                Debug.WriteLine($"NoticeboardNotificationService: Found {updatedAnnouncements.Count} updated announcement(s)");
+                _logger.LogInformation("NoticeboardNotificationService: Found {Count} updated announcement(s)", updatedAnnouncements.Count);
                 await ShowUpdatedAnnouncementsNotificationAsync(updatedAnnouncements);
             }
             
@@ -106,15 +118,15 @@ public static class NoticeboardNotificationService
             await SaveLastCheckTimestampAsync(DateTime.Now);
             await SaveLastAnnouncementsAsync(currentAnnouncements);
             
-            Debug.WriteLine("NoticeboardNotificationService: Check completed successfully");
+            _logger.LogDebug("NoticeboardNotificationService: Check completed successfully");
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"NoticeboardNotificationService: Error checking for new announcements: {ex}");
+            _logger.LogWarning(ex, "NoticeboardNotificationService: Error checking for new announcements");
         }
     }
 
-    private static async Task ShowNewAnnouncementsNotificationAsync(List<NoticeboardService.Announcement> announcements)
+    private async Task ShowNewAnnouncementsNotificationAsync(List<Announcement> announcements)
     {
         try
         {
@@ -146,15 +158,15 @@ public static class NoticeboardNotificationService
             };
 
             await LocalNotificationCenter.Current.Show(request);
-            Debug.WriteLine($"NoticeboardNotificationService: Notification shown for {count} new announcement(s)");
+            _logger.LogInformation("NoticeboardNotificationService: Notification shown for {Count} new announcement(s)", count);
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"NoticeboardNotificationService: Error showing notification: {ex}");
+            _logger.LogWarning(ex, "NoticeboardNotificationService: Error showing notification");
         }
     }
 
-    private static async Task ShowUpdatedAnnouncementsNotificationAsync(List<NoticeboardService.Announcement> announcements)
+    private async Task ShowUpdatedAnnouncementsNotificationAsync(List<Announcement> announcements)
     {
         try
         {
@@ -186,11 +198,11 @@ public static class NoticeboardNotificationService
             };
 
             await LocalNotificationCenter.Current.Show(request);
-            Debug.WriteLine($"NoticeboardNotificationService: Notification shown for {count} updated announcement(s)");
+            _logger.LogInformation("NoticeboardNotificationService: Notification shown for {Count} updated announcement(s)", count);
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"NoticeboardNotificationService: Error showing notification: {ex}");
+            _logger.LogWarning(ex, "NoticeboardNotificationService: Error showing notification");
         }
     }
 
@@ -203,11 +215,11 @@ public static class NoticeboardNotificationService
 
     #region Storage helpers
 
-    private static async Task<DateTime> LoadLastCheckTimestampAsync()
+    private async Task<DateTime> LoadLastCheckTimestampAsync()
     {
         try
         {
-            var value = await SecureStorage.GetAsync(LastCheckKey);
+            var value = await _secureStorage.GetAsync(LastCheckKey);
             if (string.IsNullOrWhiteSpace(value))
                 return DateTime.MinValue;
             
@@ -218,51 +230,51 @@ public static class NoticeboardNotificationService
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"NoticeboardNotificationService: Error loading last check timestamp: {ex}");
+            _logger.LogWarning(ex, "NoticeboardNotificationService: Error loading last check timestamp");
             return DateTime.MinValue;
         }
     }
 
-    private static async Task SaveLastCheckTimestampAsync(DateTime timestamp)
+    private async Task SaveLastCheckTimestampAsync(DateTime timestamp)
     {
         try
         {
-            await SecureStorage.SetAsync(LastCheckKey, timestamp.ToString("O"));
+            await _secureStorage.SetAsync(LastCheckKey, timestamp.ToString("O"));
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"NoticeboardNotificationService: Error saving last check timestamp: {ex}");
+            _logger.LogWarning(ex, "NoticeboardNotificationService: Error saving last check timestamp");
         }
     }
 
-    private static async Task<List<NoticeboardService.Announcement>> LoadLastAnnouncementsAsync()
+    private async Task<List<Announcement>> LoadLastAnnouncementsAsync()
     {
         try
         {
-            var json = await SecureStorage.GetAsync(LastAnnouncementsKey);
+            var json = await _secureStorage.GetAsync(LastAnnouncementsKey);
             if (string.IsNullOrWhiteSpace(json))
-                return new List<NoticeboardService.Announcement>();
+                return new List<Announcement>();
             
-            var announcements = JsonSerializer.Deserialize<List<NoticeboardService.Announcement>>(json, Options);
-            return announcements ?? new List<NoticeboardService.Announcement>();
+            var announcements = JsonSerializer.Deserialize<List<Announcement>>(json, Options);
+            return announcements ?? new List<Announcement>();
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"NoticeboardNotificationService: Error loading last announcements: {ex}");
-            return new List<NoticeboardService.Announcement>();
+            _logger.LogWarning(ex, "NoticeboardNotificationService: Error loading last announcements");
+            return new List<Announcement>();
         }
     }
 
-    private static async Task SaveLastAnnouncementsAsync(List<NoticeboardService.Announcement> announcements)
+    private async Task SaveLastAnnouncementsAsync(List<Announcement> announcements)
     {
         try
         {
             var json = JsonSerializer.Serialize(announcements, Options);
-            await SecureStorage.SetAsync(LastAnnouncementsKey, json);
+            await _secureStorage.SetAsync(LastAnnouncementsKey, json);
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"NoticeboardNotificationService: Error saving last announcements: {ex}");
+            _logger.LogWarning(ex, "NoticeboardNotificationService: Error saving last announcements");
         }
     }
 

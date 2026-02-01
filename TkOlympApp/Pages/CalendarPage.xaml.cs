@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 using System.Globalization;
 using System.Linq;
 using TkOlympApp.Services;
+using TkOlympApp.Services.Abstractions;
+using TkOlympApp.Models.Events;
+using TkOlympApp.Helpers;
 using Microsoft.Maui.Graphics;
 using Microsoft.Extensions.Logging;
 
@@ -17,6 +20,8 @@ namespace TkOlympApp.Pages;
 public partial class CalendarPage : ContentPage
 {
     private readonly ILogger<CalendarPage> _logger;
+    private readonly IEventService _eventService;
+    private readonly IUserService _userService;
     private bool _isLoading;
     private bool _onlyMine = true;
     private DateTime _weekStart;
@@ -24,9 +29,11 @@ public partial class CalendarPage : ContentPage
     private readonly List<TrainerDetailRow> _trainerDetailRows = new(); // for async updates
     private bool _suppressReloadOnNextAppearing = false;
 
-    public CalendarPage()
+    public CalendarPage(IEventService eventService, IUserService userService)
     {
         _logger = LoggerService.CreateLogger<CalendarPage>();
+        _eventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
+        _userService = userService ?? throw new ArgumentNullException(nameof(userService));
         
         try
         {
@@ -198,15 +205,15 @@ public partial class CalendarPage : ContentPage
             
             using var perfLog = LoggerService.LogPerformance<CalendarPage>("LoadEvents" + (_onlyMine ? "Mine" : "All"));
             
-            List<EventService.EventInstance> events;
+            List<EventInstance> events;
             if (_onlyMine)
             {
-                events = await EventService.GetMyEventInstancesForRangeAsync(start, end);
+                events = await _eventService.GetMyEventInstancesForRangeAsync(start, end);
             }
             else
             {
                 // Load all events at once (fastest approach - single request)
-                events = await EventService.GetEventInstancesForRangeListAsync(start, end);
+                events = await _eventService.GetEventInstancesForRangeListAsync(start, end);
             }
             
             _logger.LogInformation("Fetched {Count} events for week {WeekStart} - {WeekEnd}", 
@@ -241,7 +248,7 @@ public partial class CalendarPage : ContentPage
                     }
                     try
                     {
-                        var currentUser = await UserService.GetCurrentUserAsync();
+                        var currentUser = await _userService.GetCurrentUserAsync();
                         if (currentUser != null)
                         {
                             var full = ((currentUser.UJmeno ?? string.Empty) + " " + (currentUser.UPrijmeni ?? string.Empty)).Trim();
@@ -256,7 +263,7 @@ public partial class CalendarPage : ContentPage
 
                     try
                     {
-                        var couples = await UserService.GetActiveCouplesFromUsersAsync();
+                        var couples = await _userService.GetActiveCouplesFromUsersAsync();
                         foreach (var c in couples)
                         {
                             AddNameVariants(highlightNames, c.ManName);
@@ -307,7 +314,7 @@ public partial class CalendarPage : ContentPage
                             try
                             {
                                 var id = evt.Id;
-                                var details = await EventService.GetEventAsync(id);
+                                var details = await _eventService.GetEventAsync(id);
                                 string name = string.Empty;
                                 try
                                 {
@@ -393,7 +400,7 @@ public partial class CalendarPage : ContentPage
         }
     }
 
-    private void RenderEvents(List<EventService.EventInstance> events)
+    private void RenderEvents(List<EventInstance> events)
     {
         // Clear existing UI
         EventsStack.Children.Clear();
@@ -436,8 +443,8 @@ public partial class CalendarPage : ContentPage
                 EventsStack.Children.Add(CreateDayHeader(dayLabel, date));
 
                 // Separate events into groupable (lesson with exactly one trainer) and single events
-                var groupableEvents = new List<EventService.EventInstance>();
-                var singleEventsList = new List<EventService.EventInstance>();
+                var groupableEvents = new List<EventInstance>();
+                var singleEventsList = new List<EventInstance>();
 
                 foreach (var evt in dayEvents)
                 {
@@ -468,7 +475,7 @@ public partial class CalendarPage : ContentPage
                 }
 
                 // Add grouped trainers
-                var groups = groupableEvents.GroupBy(e => EventService.GetTrainerDisplayName(e.Event?.EventTrainersList?.FirstOrDefault())?.Trim() ?? string.Empty)
+                var groups = groupableEvents.GroupBy(e => EventTrainerDisplayHelper.GetTrainerDisplayName(e.Event?.EventTrainersList?.FirstOrDefault())?.Trim() ?? string.Empty)
                     .OrderBy(g => g.Min(x => x.Since ?? x.UpdatedAt));
 
                 foreach (var g in groups)
@@ -476,7 +483,7 @@ public partial class CalendarPage : ContentPage
                     var ordered = g.OrderBy(i => i.Since ?? i.UpdatedAt).ToList();
                     var trainerName = g.Key;
                     var representative = ordered.FirstOrDefault()?.Event?.EventTrainersList?.FirstOrDefault();
-                    var trainerTitle = string.IsNullOrWhiteSpace(trainerName) ? LocalizationService.Get("Lessons") ?? "Lekce" : EventService.GetTrainerDisplayWithPrefix(representative).Trim();
+                    var trainerTitle = string.IsNullOrWhiteSpace(trainerName) ? LocalizationService.Get("Lessons") ?? "Lekce" : EventTrainerDisplayHelper.GetTrainerDisplayWithPrefix(representative).Trim();
                     var cohorts = ordered.FirstOrDefault()?.Event?.EventTargetCohortsList;
 
                     EventsStack.Children.Add(CreateTrainerGroupHeader(trainerTitle, cohorts));
@@ -496,7 +503,7 @@ public partial class CalendarPage : ContentPage
         }
     }
 
-    private void AppendEvents(List<EventService.EventInstance> newBatch, List<EventService.EventInstance> allEvents)
+    private void AppendEvents(List<EventInstance> newBatch, List<EventInstance> allEvents)
     {
         // Efficiently append only the new events to existing UI structure
         // instead of rebuilding everything
@@ -558,8 +565,8 @@ public partial class CalendarPage : ContentPage
             }
             
             // Add new events for this day
-            var groupableEvents = new List<EventService.EventInstance>();
-            var singleEventsList = new List<EventService.EventInstance>();
+            var groupableEvents = new List<EventInstance>();
+            var singleEventsList = new List<EventInstance>();
             
             foreach (var evt in newDayEvents)
             {
@@ -586,7 +593,7 @@ public partial class CalendarPage : ContentPage
             }
             
             // Add grouped trainers
-                var groups = groupableEvents.GroupBy(e => EventService.GetTrainerDisplayName(e.Event?.EventTrainersList?.FirstOrDefault())?.Trim() ?? string.Empty)
+                var groups = groupableEvents.GroupBy(e => EventTrainerDisplayHelper.GetTrainerDisplayName(e.Event?.EventTrainersList?.FirstOrDefault())?.Trim() ?? string.Empty)
                 .OrderBy(g => g.Min(x => x.Since ?? x.UpdatedAt));
             
             foreach (var g in groups)
@@ -594,7 +601,7 @@ public partial class CalendarPage : ContentPage
                 var ordered = g.OrderBy(i => i.Since ?? i.UpdatedAt).ToList();
                 var trainerName = g.Key;
                 var representative = ordered.FirstOrDefault()?.Event?.EventTrainersList?.FirstOrDefault();
-                var trainerTitle = string.IsNullOrWhiteSpace(trainerName) ? LocalizationService.Get("Lessons") ?? "Lekce" : EventService.GetTrainerDisplayWithPrefix(representative).Trim();
+                var trainerTitle = string.IsNullOrWhiteSpace(trainerName) ? LocalizationService.Get("Lessons") ?? "Lekce" : EventTrainerDisplayHelper.GetTrainerDisplayWithPrefix(representative).Trim();
                 var cohorts = ordered.FirstOrDefault()?.Event?.EventTargetCohortsList;
 
                 EventsStack.Children.Insert(insertIndex++, CreateTrainerGroupHeader(trainerTitle, cohorts));
@@ -659,7 +666,7 @@ public partial class CalendarPage : ContentPage
 
     private async void OnEventCardTapped(object? sender, TappedEventArgs e)
     {
-        if (sender is VisualElement ve && ve.BindingContext is EventService.EventInstance instance)
+        if (sender is VisualElement ve && ve.BindingContext is EventInstance instance)
         {
             if (instance.IsCancelled) return;
             if (instance.Event?.Id is long eventId)
@@ -963,7 +970,7 @@ public partial class CalendarPage : ContentPage
     }
 
     // Helper methods for computing display strings (replacing converter logic)
-    private static string ComputeEventName(EventService.EventInstance inst)
+    private static string ComputeEventName(EventInstance inst)
     {
         try
         {
@@ -992,7 +999,7 @@ public partial class CalendarPage : ContentPage
         catch { return string.Empty; }
     }
 
-    private static string ComputeLocationOrTrainers(EventService.EventInstance inst)
+    private static string ComputeLocationOrTrainers(EventInstance inst)
     {
         try
         {
@@ -1004,7 +1011,7 @@ public partial class CalendarPage : ContentPage
                 return evt.LocationText;
 
             // Fallback to trainers
-            var trainers = evt.EventTrainersList?.Select(t => EventService.GetTrainerDisplayName(t)).Where(n => !string.IsNullOrWhiteSpace(n)).ToList() ?? new List<string>();
+            var trainers = evt.EventTrainersList?.Select(EventTrainerDisplayHelper.GetTrainerDisplayName).Where(n => !string.IsNullOrWhiteSpace(n)).ToList() ?? new List<string>();
             if (trainers.Count > 0)
                 return string.Join(", ", trainers);
 
@@ -1013,7 +1020,7 @@ public partial class CalendarPage : ContentPage
         catch { return string.Empty; }
     }
 
-    private static string ComputeFirstRegistrant(EventService.EventInstance inst)
+    private static string ComputeFirstRegistrant(EventInstance inst)
     {
         try
         {
@@ -1097,7 +1104,7 @@ public partial class CalendarPage : ContentPage
             if (tenant?.CouplesList != null && tenant.CouplesList.Count > 0)
             {
                 var c = tenant.CouplesList[0];
-                EventService.Person? p = c.Man ?? c.Woman;
+                Person? p = c.Man ?? c.Woman;
                 if (p != null)
                 {
                     if (!string.IsNullOrWhiteSpace(p.FirstName))
@@ -1110,7 +1117,7 @@ public partial class CalendarPage : ContentPage
         return string.Empty;
     }
 
-    private static string ComputeDuration(EventService.EventInstance inst)
+    private static string ComputeDuration(EventInstance inst)
     {
         try
         {
@@ -1161,7 +1168,7 @@ public partial class CalendarPage : ContentPage
         return label;
     }
 
-    private View CreateSingleEventCard(EventService.EventInstance instance, string timeRange, string locationOrTrainers, string eventName, string eventTypeLabel)
+    private View CreateSingleEventCard(EventInstance instance, string timeRange, string locationOrTrainers, string eventName, string eventTypeLabel)
     {
         var grid = new Grid
         {
@@ -1250,7 +1257,7 @@ public partial class CalendarPage : ContentPage
         return grid;
     }
 
-    private View CreateTrainerGroupHeader(string trainerTitle, List<EventService.EventTargetCohortLink>? cohorts = null)
+    private View CreateTrainerGroupHeader(string trainerTitle, List<EventTargetCohortLink>? cohorts = null)
     {
         var outer = new Grid
         {

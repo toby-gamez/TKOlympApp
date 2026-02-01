@@ -11,6 +11,7 @@ using TkOlympApp.Pages;
 using TkOlympApp.Helpers;
 using TkOlympApp.Services;
 using TkOlympApp.Services.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace TkOlympApp;
 
@@ -20,22 +21,32 @@ public partial class AppShell : Shell, IDisposable
     private readonly IServiceProvider _services;
     private readonly IAuthService _authService;
     private readonly INoticeboardService _noticeboardService;
+    private readonly IEventNotificationService _eventNotificationService;
     private CancellationTokenSource? _pollCts;
     private CancellationTokenSource? _startupCts;
     private long _lastSeenAnnouncementId;
     private long _lastSeenStickyId;
     private readonly TimeSpan _pollInterval = TimeSpan.FromMinutes(5);
     
-    public AppShell(IServiceProvider services, IAuthService authService, INoticeboardService noticeboardService)
+    public AppShell(IServiceProvider services, IAuthService authService, INoticeboardService noticeboardService, IEventNotificationService eventNotificationService)
     {
         _logger = LoggerService.CreateLogger<AppShell>();
         _services = services;
         _authService = authService;
         _noticeboardService = noticeboardService;
+        _eventNotificationService = eventNotificationService;
         
         InitializeComponent();
         // Workaround for URL-based XAML namespace resolution issues
         _ = new MauiIcon();
+
+        // Ensure tab/root pages are created via DI (not via XAML type activation).
+        // This allows constructor injection and removes the parameterless-ctor requirement.
+        OverviewShellContent.ContentTemplate = new DataTemplate(() => _services.GetRequiredService<MainPage>());
+        CalendarShellContent.ContentTemplate = new DataTemplate(() => _services.GetRequiredService<CalendarPage>());
+        NoticeboardShellContent.ContentTemplate = new DataTemplate(() => _services.GetRequiredService<NoticeboardPage>());
+        EventsShellContent.ContentTemplate = new DataTemplate(() => _services.GetRequiredService<TkOlympApp.Pages.EventsPage>());
+        OtherShellContent.ContentTemplate = new DataTemplate(() => _services.GetRequiredService<OtherPage>());
         
         // Set default route to MainPage (Overview) to prevent navigation flash
         CurrentItem = Items[0];
@@ -113,10 +124,10 @@ public partial class AppShell : Shell, IDisposable
                     // Request notification permissions after successful authentication
                     try
                     {
-                        await EventNotificationService.RequestNotificationPermissionAsync(_startupCts.Token);
+                        await _eventNotificationService.RequestNotificationPermissionAsync(_startupCts.Token);
                         
                         // Initialize background change detection (checks every 1 hour)
-                        EventNotificationService.InitializeBackgroundChangeDetection();
+                        _eventNotificationService.InitializeBackgroundChangeDetection();
                     }
                     catch (Exception ex)
                     {

@@ -1,7 +1,7 @@
 using System.Numerics;
 using System.Text.Json.Serialization;
+using TkOlympApp.Models.Leaderboards;
 using TkOlympApp.Services.Abstractions;
-using static TkOlympApp.Services.LeaderboardService;
 
 namespace TkOlympApp.Services;
 

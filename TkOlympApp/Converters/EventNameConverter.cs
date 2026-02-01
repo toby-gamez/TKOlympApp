@@ -2,6 +2,8 @@ using System;
 using System.Globalization;
 using System.Linq;
 using Microsoft.Maui.Controls;
+using TkOlympApp.Helpers;
+using TkOlympApp.Models.Events;
 using TkOlympApp.Services;
 
 namespace TkOlympApp.Converters;
@@ -10,7 +12,7 @@ public class EventNameConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is EventService.EventInfo ev)
+        if (value is EventInfo ev)
         {
             var name = ev.Name?.Trim();
             if (!string.IsNullOrWhiteSpace(name)) return name;
@@ -18,7 +20,7 @@ public class EventNameConverter : IValueConverter
             var trainers = ev.EventTrainersList;
             if (trainers != null && trainers.Count > 0)
             {
-                var first = trainers.FirstOrDefault()?.Name?.Trim();
+                var first = EventTrainerDisplayHelper.GetTrainerDisplayName(trainers.FirstOrDefault())?.Trim();
                 if (!string.IsNullOrWhiteSpace(first)) return (LocalizationService.Get("Lesson_Prefix") ?? "Lekce: ") + first;
             }
 

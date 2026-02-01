@@ -1,4 +1,4 @@
-using static TkOlympApp.Services.EventService;
+using TkOlympApp.Models.Events;
 
 namespace TkOlympApp.Services.Abstractions;
 
@@ -93,3 +93,4 @@ public interface IEventService
         string? onlyType = null,
         CancellationToken ct = default);
 }
+

@@ -11,16 +11,21 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Net.Http;
 using System.ComponentModel;
+using TkOlympApp.Models.Events;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.Pages;
 
 [QueryProperty(nameof(EventId), "id")]
 public partial class RegistrationPage : ContentPage
 {
+    private readonly IAuthService _authService;
+    private readonly IEventService _eventService;
+    private readonly IUserService _userService;
     private long _eventId;
     private RegistrationOption? _selectedOption;
     private bool _trainerReservationNotAllowed = false;
-    private EventService.EventDetails? _currentEvent;
+    private EventDetails? _currentEvent;
     
 
     public long EventId
@@ -33,8 +38,11 @@ public partial class RegistrationPage : ContentPage
         }
     }
 
-    public RegistrationPage()
+    public RegistrationPage(IAuthService authService, IEventService eventService, IUserService userService)
     {
+        _authService = authService;
+        _eventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
+        _userService = userService ?? throw new ArgumentNullException(nameof(userService));
         try
         {
             InitializeComponent();
@@ -113,7 +121,7 @@ public partial class RegistrationPage : ContentPage
         try
         {
             if (EventId == 0) return;
-            var ev = await EventService.GetEventAsync(EventId);
+            var ev = await _eventService.GetEventAsync(EventId);
             _currentEvent = ev;
             if (ev == null)
             {
@@ -166,8 +174,8 @@ public partial class RegistrationPage : ContentPage
     {
         try
         {
-            try { await UserService.InitializeAsync(); } catch { }
-            var me = await UserService.GetCurrentUserAsync();
+            try { await _userService.InitializeAsync(); } catch { }
+            var me = await _userService.GetCurrentUserAsync();
             if (me == null)
             {
                 CurrentUserLabel.Text = string.Empty;
@@ -179,7 +187,7 @@ public partial class RegistrationPage : ContentPage
             var surname = string.IsNullOrWhiteSpace(me.UPrijmeni) ? string.Empty : me.UPrijmeni;
             var displayName = string.IsNullOrWhiteSpace(surname) ? name : $"{name} {surname}";
             string? pidDisplay = null;
-            try { pidDisplay = UserService.CurrentPersonId; } catch { pidDisplay = null; }
+            try { pidDisplay = _userService.CurrentPersonId; } catch { pidDisplay = null; }
             if (string.IsNullOrWhiteSpace(pidDisplay)) pidDisplay = "není";
             displayName = $"{displayName} ({pidDisplay})";
             CurrentUserLabel.Text = displayName;
@@ -188,7 +196,7 @@ public partial class RegistrationPage : ContentPage
             try
             {
                 string? selectedPersonId = null;
-                try { selectedPersonId = UserService.CurrentPersonId; } catch { selectedPersonId = null; }
+                try { selectedPersonId = _userService.CurrentPersonId; } catch { selectedPersonId = null; }
                 // Do NOT fallback to me.Id — show 'není' when proxy id not present
                 if (string.IsNullOrWhiteSpace(selectedPersonId))
                 {
@@ -207,7 +215,7 @@ public partial class RegistrationPage : ContentPage
             // Load couples (global list for now) and show under user info
             try
             {
-                var couples = await UserService.GetActiveCouplesFromUsersAsync();
+                var couples = await _userService.GetActiveCouplesFromUsersAsync();
                 // Build selection: self + optional couples
                 var options = new List<RegistrationOption>();
                 // Determine already-registered persons/couples by querying event instances (same approach as EditRegistrationsPage)
@@ -225,7 +233,7 @@ public partial class RegistrationPage : ContentPage
 
                     var json = JsonSerializer.Serialize(queryObj);
                     using var content = new StringContent(json, Encoding.UTF8, "application/json");
-                    using var resp = await AuthService.Http.PostAsync("", content);
+                    using var resp = await _authService.Http.PostAsync("", content);
                     if (resp.IsSuccessStatusCode)
                     {
                         var body = await resp.Content.ReadAsStringAsync();
@@ -290,7 +298,7 @@ public partial class RegistrationPage : ContentPage
                 catch { }
                 // Use proxy/person id only — do not add 'self' option when CurrentPersonId is missing
                 string? myPersonIdOption = null;
-                try { myPersonIdOption = UserService.CurrentPersonId; } catch { myPersonIdOption = null; }
+                try { myPersonIdOption = _userService.CurrentPersonId; } catch { myPersonIdOption = null; }
                 if (!string.IsNullOrWhiteSpace(myPersonIdOption))
                 {
                     var mePrefix = LocalizationService.Get("Registration_My_Prefix") ?? "Já: ";
@@ -590,7 +598,7 @@ public partial class RegistrationPage : ContentPage
         // Do not show raw GraphQL/mutation payload in UI (MutationPreview hidden)
 
         using var content = new StringContent(json, Encoding.UTF8, "application/json");
-        using var resp = await AuthService.Http.PostAsync("", content);
+        using var resp = await _authService.Http.PostAsync("", content);
         var body = await resp.Content.ReadAsStringAsync();
 
         try

@@ -49,7 +49,7 @@ public static class MauiProgram
             client.DefaultRequestHeaders.Add(AppConstants.TenantHeader, AppConstants.TenantId);
             client.Timeout = TimeSpan.FromSeconds(AppConstants.DefaultTimeoutSeconds);
         })
-        // Most services call GraphQlClient.* (typed client). They require the same auth behavior as legacy AuthService.Http.
+        // Most services call IGraphQlClient (typed client). They require the same auth behavior as IAuthService.Http.
         .AddHttpMessageHandler<AuthDelegatingHandler>();
 
         // Bare client for auth refresh (no delegating handler to avoid recursion)
@@ -85,8 +85,13 @@ public static class MauiProgram
         builder.Services.AddTransient<ITenantService, TenantServiceImplementation>();
         builder.Services.AddTransient<ILeaderboardService, LeaderboardServiceImplementation>();
 
+        // Notification services
+        builder.Services.AddSingleton<IEventNotificationService, EventNotificationService>();
+        builder.Services.AddSingleton<INoticeboardNotificationService, NoticeboardNotificationService>();
+
         // Register Pages for DI
         builder.Services.AddTransient<AppShell>();
+        builder.Services.AddTransient<MainPage>();
         builder.Services.AddTransient<LoginPage>();
         builder.Services.AddTransient<FirstRunPage>();
         builder.Services.AddTransient<AboutMePage>();
@@ -110,6 +115,7 @@ public static class MauiProgram
         builder.Services.AddTransient<LeaderboardPage>();
         builder.Services.AddTransient<NoticePage>();
         builder.Services.AddTransient<NoticeboardPage>();
+        builder.Services.AddTransient<OtherPage>();
         builder.Services.AddTransient<EventNotificationSettingsPage>();
         builder.Services.AddTransient<EventNotificationRuleEditPage>();
 
@@ -122,31 +128,6 @@ public static class MauiProgram
         var loggerFactory = app.Services.GetRequiredService<ILoggerFactory>();
         LoggerService.Initialize(loggerFactory);
         
-        // Initialize services with logger
-        var logger = loggerFactory.CreateLogger<App>();
-        EventNotificationService.Initialize(logger);
-
-        // Initialize static wrappers with DI instances (for backward compatibility).
-        // This is safe now because AuthDelegatingHandler no longer depends on IAuthService.
-        var authService = app.Services.GetRequiredService<IAuthService>();
-        var graphQlClient = app.Services.GetRequiredService<IGraphQlClient>();
-        var noticeboardService = app.Services.GetRequiredService<INoticeboardService>();
-        var peopleService = app.Services.GetRequiredService<IPeopleService>();
-        var cohortService = app.Services.GetRequiredService<ICohortService>();
-        var coupleService = app.Services.GetRequiredService<ICoupleService>();
-        var tenantService = app.Services.GetRequiredService<ITenantService>();
-        var leaderboardService = app.Services.GetRequiredService<ILeaderboardService>();
-        var userService = app.Services.GetRequiredService<IUserService>();
-        AuthService.SetInstance(authService);
-        GraphQlClient.SetInstance(graphQlClient);
-        NoticeboardService.SetInstance(noticeboardService);
-        PeopleService.SetInstance(peopleService);
-        CohortService.SetInstance(cohortService);
-        CoupleService.SetInstance(coupleService);
-        TenantService.SetInstance(tenantService);
-        LeaderboardService.SetInstance(leaderboardService);
-        UserService.SetInstance(userService);
-
         return app;
     }
 }

@@ -1,6 +1,6 @@
 using System;
 using System.ComponentModel;
-using TkOlympApp.Services;
+using TkOlympApp.Models.Events;
 
 namespace TkOlympApp.Pages;
 
@@ -29,16 +29,16 @@ public sealed class DayHeaderRow : EventRow
 
 public sealed class SingleEventRow : EventRow
 {
-    public EventService.EventInstance Instance { get; }
+    public EventInstance Instance { get; }
     public string TimeRange { get; }
     public string LocationOrTrainers { get; }
     public string EventName { get; }
     public string EventTypeLabel { get; }
     public bool IsCancelled { get; }
-    public List<EventService.EventTargetCohortLink>? EventTargetCohortsList { get; }
+    public List<EventTargetCohortLink>? EventTargetCohortsList { get; }
 
     public SingleEventRow(
-        EventService.EventInstance instance,
+        EventInstance instance,
         string timeRange,
         string locationOrTrainers,
         string eventName,
@@ -58,8 +58,8 @@ public sealed class SingleEventRow : EventRow
 public sealed class TrainerGroupHeaderRow : EventRow
 {
     public string TrainerTitle { get; }
-    public List<EventService.EventTargetCohortLink>? EventTargetCohortsList { get; }
-    public TrainerGroupHeaderRow(string trainerTitle, List<EventService.EventTargetCohortLink>? eventTargetCohortsList = null)
+    public List<EventTargetCohortLink>? EventTargetCohortsList { get; }
+    public TrainerGroupHeaderRow(string trainerTitle, List<EventTargetCohortLink>? eventTargetCohortsList = null)
     {
         TrainerTitle = trainerTitle;
         EventTargetCohortsList = eventTargetCohortsList;
@@ -68,7 +68,7 @@ public sealed class TrainerGroupHeaderRow : EventRow
 
 public sealed class TrainerDetailRow : EventRow, INotifyPropertyChanged
 {
-    public EventService.EventInstance Instance { get; }
+    public EventInstance Instance { get; }
     public string TimeRange { get; }
     public bool IsCancelled => Instance?.IsCancelled ?? false;
     public string DurationText { get; }
@@ -120,7 +120,7 @@ public sealed class TrainerDetailRow : EventRow, INotifyPropertyChanged
         }
     }
 
-    public TrainerDetailRow(EventService.EventInstance instance, string firstRegistrant, string durationText)
+    public TrainerDetailRow(EventInstance instance, string firstRegistrant, string durationText)
     {
         Instance = instance;
         var since = instance.Since;
