@@ -26,4 +26,21 @@
   <!-- Tests should focus on non-MAUI logic extracted to shared libraries in the future -->
   <!-- For now, this project serves as a test infrastructure placeholder -->
 
+  <ItemGroup>
+    <!-- Link source files from main project for testing pure helper methods -->
+    <Compile Include="..\TkOlympApp\Helpers\DateHelpers.cs" Link="LinkedSources\DateHelpers.cs" />
+    <Compile Include="..\TkOlympApp\Helpers\PhoneHelpers.cs" Link="LinkedSources\PhoneHelpers.cs" />
+    <Compile Include="..\TkOlympApp\Helpers\PostalCodeHelpers.cs" Link="LinkedSources\PostalCodeHelpers.cs" />
+    <Compile Include="..\TkOlympApp\Helpers\NationalityHelper.cs" Link="LinkedSources\NationalityHelper.cs" />
+    <Compile Include="..\TkOlympApp\Helpers\CohortColorHelper.cs" Link="LinkedSources\CohortColorHelper.cs" />
+    <!-- Note: We create a mock LocalizationService for testing DateHelpers -->
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- MAUI dependencies for CohortColorHelper testing -->
+    <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.0" />
+  </ItemGroup>
+
 </Project>
+
+
