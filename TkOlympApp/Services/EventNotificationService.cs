@@ -707,7 +707,7 @@ public static class EventNotificationService
                 .Build();
 
             var workRequest = AndroidX.Work.PeriodicWorkRequest.Builder
-                .From<Platforms.Android.EventChangeCheckWorker>(TimeSpan.FromHours(1))
+                .From<Platforms.Android.EventChangeCheckWorker>(TimeSpan.FromMinutes(30))
                 .SetConstraints(constraints)
                 .SetBackoffCriteria(AndroidX.Work.BackoffPolicy.Exponential!, TimeSpan.FromMinutes(15))
                 .Build();

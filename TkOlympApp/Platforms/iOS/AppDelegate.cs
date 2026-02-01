@@ -16,8 +16,8 @@ public class AppDelegate : MauiUIApplicationDelegate
     {
         try
         {
-            // Enable background fetch with minimum interval
-            UIApplication.SharedApplication.SetMinimumBackgroundFetchInterval(UIApplication.BackgroundFetchIntervalMinimum);
+            // Request background fetch approximately every 30 minutes (system may adjust)
+            UIApplication.SharedApplication.SetMinimumBackgroundFetchInterval(1800); // seconds
         }
         catch { }
         return base.FinishedLaunching(app, options);
