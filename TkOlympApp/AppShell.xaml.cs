@@ -15,6 +15,7 @@ namespace TkOlympApp;
 public partial class AppShell : Shell, IDisposable
 {
     private CancellationTokenSource? _pollCts;
+    private CancellationTokenSource? _startupCts;
     private long _lastSeenAnnouncementId;
     private long _lastSeenStickyId;
     private readonly TimeSpan _pollInterval = TimeSpan.FromMinutes(5);
@@ -54,6 +55,7 @@ public partial class AppShell : Shell, IDisposable
         Routing.RegisterRoute(nameof(EventNotificationSettingsPage), typeof(Pages.EventNotificationSettingsPage));
         Routing.RegisterRoute(nameof(EventNotificationRuleEditPage), typeof(Pages.EventNotificationRuleEditPage));
 
+        _startupCts = new CancellationTokenSource();
         Dispatcher.Dispatch(async () =>
         {
             try
@@ -68,8 +70,8 @@ public partial class AppShell : Shell, IDisposable
                 }
                 catch { }
 
-                await AuthService.InitializeAsync();
-                var hasToken = await AuthService.HasTokenAsync();
+                await AuthService.InitializeAsync(_startupCts.Token);
+                var hasToken = await AuthService.HasTokenAsync(_startupCts.Token);
                 if (!hasToken)
                 {
                     // Show login without resetting Shell root to avoid route issues
@@ -85,7 +87,7 @@ public partial class AppShell : Shell, IDisposable
                     // Request notification permissions after successful authentication
                     try
                     {
-                        await EventNotificationService.RequestNotificationPermissionAsync();
+                        await EventNotificationService.RequestNotificationPermissionAsync(_startupCts.Token);
                         
                         // Initialize background change detection (checks every 1 hour)
                         EventNotificationService.InitializeBackgroundChangeDetection();
@@ -207,6 +209,9 @@ public partial class AppShell : Shell, IDisposable
     public void Dispose()
     {
         StopAnnouncementPolling();
+        _startupCts?.Cancel();
+        _startupCts?.Dispose();
+        _startupCts = null;
         _pollCts?.Dispose();
         _pollCts = null;
     }

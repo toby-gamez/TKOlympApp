@@ -26,7 +26,7 @@ public static class UserService
         _ = SetCurrentPersonIdAsync(personId);
     }
 
-    public static async Task SetCurrentPersonIdAsync(string? personId)
+    public static async Task SetCurrentPersonIdAsync(string? personId, CancellationToken ct = default)
     {
         CurrentPersonId = personId;
         try
@@ -52,7 +52,7 @@ public static class UserService
         _ = SetCurrentCohortIdAsync(cohortId);
     }
 
-    public static async Task SetCurrentCohortIdAsync(string? cohortId)
+    public static async Task SetCurrentCohortIdAsync(string? cohortId, CancellationToken ct = default)
     {
         CurrentCohortId = cohortId;
         try

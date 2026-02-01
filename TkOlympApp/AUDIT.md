@@ -1902,7 +1902,7 @@ Aplikace nemá retry logic ani exponential backoff.
 | **P0** | Vytvořit AppConstants třídu a refaktorovat magic strings | 2 hodiny | Udržitelnost | ✅ **HOTOVO 2026-02-01** |
 | **P0** | Implementovat global exception handling + crash reporting | 1 den | Diagnostika | ⏸️ Sentry odstraněn, čeká na DSN |
 | **P1 (Vysoká)** | Migrace na DI + extrakce rozhraní | 4 týdny | Testovatelnost | |
-| **P1** | Přidat CancellationToken do všech async metod | 1 týden | Výkon | |
+| **P1** | Přidat CancellationToken do všech async metod | 1 týden | Výkon | ✅ **HOTOVO 2026-02-01** |
 | **P1** | Implementovat memory leak fixes (event unsubscribe) | 1 týden | Stabilita | ✅ **HOTOVO 2026-02-01** |
 | **P2 (Střední)** | Vytvořit ViewModely pro top 5 Pages | 2 týdny | Architektura |
 | **P2** | Strukturovaný logging (Application Insights) | 3 dny | Monitoring |
@@ -1917,7 +1917,7 @@ Aplikace nemá retry logic ani exponential backoff.
 | Unit test coverage | 5% | 80% |
 | Průměrná délka Page code-behind | 450 řádků | <150 řádků |
 | Počet statických služeb | 21 | 0 |
-| Async metody s CancellationToken | 10% | 100% |
+| Async metody s CancellationToken | 100% (✅ 2026-02-01) | 100% |
 | Empty catch bloků | 50+ | 0 |
 | Memory leaks (známé) | 0 (✅ opraveno 2026-02-01) | 0 |
 | Startup time (cold) | 2.5s | <1.5s |

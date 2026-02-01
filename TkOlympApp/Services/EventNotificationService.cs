@@ -69,7 +69,7 @@ public static class EventNotificationService
     /// <summary>
     /// Schedules notifications for upcoming events (1 hour and 5 minutes before)
     /// </summary>
-    public static async Task ScheduleNotificationsForEventsAsync(List<EventService.EventInstance> events)
+    public static async Task ScheduleNotificationsForEventsAsync(List<EventService.EventInstance> events, CancellationToken ct = default)
     {
         try
         {
@@ -79,7 +79,7 @@ public static class EventNotificationService
             // Clear old notifications if we're rescheduling (avoid duplicates)
             if ((DateTime.Now - _lastScheduledTime).TotalMinutes > 5)
             {
-                await ClearAllScheduledNotificationsAsync();
+                await ClearAllScheduledNotificationsAsync(ct);
             }
 
             _lastScheduledTime = DateTime.Now;
@@ -275,7 +275,7 @@ public static class EventNotificationService
         }
     }
 
-    private static Task ClearAllScheduledNotificationsAsync()
+    private static Task ClearAllScheduledNotificationsAsync(CancellationToken ct = default)
     {
         try
         {
@@ -296,7 +296,7 @@ public static class EventNotificationService
     /// <summary>
     /// Request notification permissions (call on app startup or first use)
     /// </summary>
-    public static async Task<bool> RequestNotificationPermissionAsync()
+    public static async Task<bool> RequestNotificationPermissionAsync(CancellationToken ct = default)
     {
         try
         {
@@ -361,7 +361,7 @@ public static class EventNotificationService
     /// Notify user about a registration or unregistration for a specific event.
     /// Uses localized titles when available and falls back to simple Czech messages.
     /// </summary>
-    public static async Task NotifyRegistrationAsync(long eventId, bool registered)
+    public static async Task NotifyRegistrationAsync(long eventId, bool registered, CancellationToken ct = default)
     {
         try
         {
@@ -389,7 +389,7 @@ public static class EventNotificationService
     /// <summary>
     /// Get diagnostics info about notification system state
     /// </summary>
-    public static async Task<string> GetDiagnosticsAsync()
+    public static async Task<string> GetDiagnosticsAsync(CancellationToken ct = default)
     {
         var sb = new System.Text.StringBuilder();
         sb.AppendLine("=== Event Notification Service Diagnostics ===");
@@ -432,7 +432,7 @@ public static class EventNotificationService
     /// <summary>
     /// Check for changes in events and send immediate notifications for modifications and cancellations
     /// </summary>
-    public static async Task CheckAndNotifyChangesAsync(List<EventService.EventInstance> currentEvents)
+    public static async Task CheckAndNotifyChangesAsync(List<EventService.EventInstance> currentEvents, CancellationToken ct = default)
     {
         try
         {

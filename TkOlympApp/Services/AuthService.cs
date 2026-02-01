@@ -42,7 +42,7 @@ public static class AuthService
 
     public static HttpClient Http => Client;
 
-    public static async Task InitializeAsync()
+    public static async Task InitializeAsync(CancellationToken ct = default)
     {
         var jwt = await SecureStorage.GetAsync(AppConstants.JwtStorageKey);
         if (!string.IsNullOrWhiteSpace(jwt))
@@ -51,7 +51,7 @@ public static class AuthService
             // Try refresh on startup if token is expired or near expiry
             try
             {
-                await TryRefreshIfNeededAsync();
+                await TryRefreshIfNeededAsync(ct);
             }
             catch
             {
@@ -221,7 +221,7 @@ public static class AuthService
         }
     }
 
-    public static async Task<bool> HasTokenAsync()
+    public static async Task<bool> HasTokenAsync(CancellationToken ct = default)
     {
         var jwt = await SecureStorage.GetAsync(AppConstants.JwtStorageKey);
         return !string.IsNullOrWhiteSpace(jwt);
@@ -289,7 +289,7 @@ public static class AuthService
         return jwt;
     }
 
-    public static async Task LogoutAsync()
+    public static async Task LogoutAsync(CancellationToken ct = default)
     {
         try
         {
@@ -298,7 +298,7 @@ public static class AuthService
             Client.DefaultRequestHeaders.Authorization = null;
 
             // Clear persisted person id as well
-            try { await UserService.SetCurrentPersonIdAsync(null); } catch { }
+            try { await UserService.SetCurrentPersonIdAsync(null, ct); } catch { }
         }
         catch
         {

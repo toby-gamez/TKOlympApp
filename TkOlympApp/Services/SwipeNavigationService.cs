@@ -10,7 +10,7 @@ namespace TkOlympApp.Services
         // Desired swipe order
         private static readonly string[] Order = new[] { "MainPage", "CalendarPage", "NoticeboardPage", "EventsPage", "OtherPage" };
 
-        public static async Task NavigateAdjacentAsync(SwipeDirection direction)
+        public static async Task NavigateAdjacentAsync(SwipeDirection direction, CancellationToken ct = default)
         {
             try
             {
