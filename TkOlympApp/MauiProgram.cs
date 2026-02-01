@@ -32,9 +32,16 @@ public static class MauiProgram
         builder.Logging.AddDebug();
 #endif
 
-    // Initialize notification manager singleton so platform code can forward intents
-    TkOlympApp.Services.NotificationManagerService.EnsureInitialized();
+        // Initialize notification manager singleton so platform code can forward intents
+        TkOlympApp.Services.NotificationManagerService.EnsureInitialized();
 
-    return builder.Build();
+        var app = builder.Build();
+        
+        // Initialize services with logger
+        var loggerFactory = app.Services.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreateLogger<App>();
+        TkOlympApp.Services.EventNotificationService.Initialize(logger);
+
+        return app;
     }
 }

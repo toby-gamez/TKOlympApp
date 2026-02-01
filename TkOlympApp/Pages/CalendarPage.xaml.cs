@@ -620,18 +620,34 @@ public partial class CalendarPage : ContentPage
 
     private async void OnTabMineClicked(object? sender, EventArgs e)
     {
-        _onlyMine = true;
-        try { SetTopTabVisuals(true); } catch { }
-        UpdateEmptyView();
-        await LoadEventsAsync();
+        try
+        {
+            _onlyMine = true;
+            try { SetTopTabVisuals(true); } catch { }
+            UpdateEmptyView();
+            await LoadEventsAsync();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"OnTabMineClicked error: {ex}");
+            try { await DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+        }
     }
 
     private async void OnTabAllClicked(object? sender, EventArgs e)
     {
-        _onlyMine = false;
-        try { SetTopTabVisuals(false); } catch { }
-        UpdateEmptyView();
-        await LoadEventsAsync();
+        try
+        {
+            _onlyMine = false;
+            try { SetTopTabVisuals(false); } catch { }
+            UpdateEmptyView();
+            await LoadEventsAsync();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"OnTabAllClicked error: {ex}");
+            try { await DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+        }
     }
 
     private async void OnEventsRefresh(object? sender, EventArgs e)
@@ -664,35 +680,59 @@ public partial class CalendarPage : ContentPage
 
     private async void OnPrevWeekClicked(object? sender, EventArgs e)
     {
-        _weekStart = _weekStart.AddDays(-7);
-        _weekEnd = _weekStart.AddDays(6);
-        try { UpdateWeekLabel(); } catch { }
-        await LoadEventsAsync();
+        try
+        {
+            _weekStart = _weekStart.AddDays(-7);
+            _weekEnd = _weekStart.AddDays(6);
+            try { UpdateWeekLabel(); } catch { }
+            await LoadEventsAsync();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"OnPrevWeekClicked error: {ex}");
+            try { await DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+        }
     }
 
     private async void OnNextWeekClicked(object? sender, EventArgs e)
     {
-        _weekStart = _weekStart.AddDays(7);
-        _weekEnd = _weekStart.AddDays(6);
-        try { UpdateWeekLabel(); } catch { }
-        await LoadEventsAsync();
+        try
+        {
+            _weekStart = _weekStart.AddDays(7);
+            _weekEnd = _weekStart.AddDays(6);
+            try { UpdateWeekLabel(); } catch { }
+            await LoadEventsAsync();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"OnNextWeekClicked error: {ex}");
+            try { await DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+        }
     }
 
     private async void OnTodayWeekClicked(object? sender, EventArgs e)
     {
-        var today = DateTime.Now.Date;
-        // If already on today's week, don't reload
-        if (_weekStart == today)
+        try
         {
-            try { Debug.WriteLine($"OnTodayWeekClicked: Already on today's week, skipping reload"); } catch { }
-            return;
+            var today = DateTime.Now.Date;
+            // If already on today's week, don't reload
+            if (_weekStart == today)
+            {
+                try { Debug.WriteLine($"OnTodayWeekClicked: Already on today's week, skipping reload"); } catch { }
+                return;
+            }
+            
+            _weekStart = today;
+            _weekEnd = _weekStart.AddDays(6);
+            try { Debug.WriteLine($"OnTodayWeekClicked: DateTime.Now={DateTime.Now:o}, weekStart={_weekStart:o}, weekEnd={_weekEnd:o}"); } catch { }
+            try { UpdateWeekLabel(); } catch { }
+            await LoadEventsAsync();
         }
-        
-        _weekStart = today;
-        _weekEnd = _weekStart.AddDays(6);
-        try { Debug.WriteLine($"OnTodayWeekClicked: DateTime.Now={DateTime.Now:o}, weekStart={_weekStart:o}, weekEnd={_weekEnd:o}"); } catch { }
-        try { UpdateWeekLabel(); } catch { }
-        await LoadEventsAsync();
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"OnTodayWeekClicked error: {ex}");
+            try { await DisplayAlert(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+        }
     }
 
     private async void OnOpenCalendarViewClicked(object? sender, EventArgs e)

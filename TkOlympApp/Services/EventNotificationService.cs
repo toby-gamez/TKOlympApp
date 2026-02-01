@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Storage;
 using Plugin.LocalNotification;
 using Plugin.LocalNotification.AndroidOption;
@@ -16,11 +16,23 @@ public static class EventNotificationService
     private static readonly HashSet<int> _scheduledNotificationIds = new();
     private static DateTime _lastScheduledTime = DateTime.MinValue;
     private static bool _channelInitialized = false;
+    private static ILogger? _logger;
 
     private const string ChannelId = "tkolymp_events";
     private const string ChannelName = "Události a lekce";
     private const string ChannelDescription = "Upozornění na nadcházející události, lekce a tréninky";
     private const string EventsSnapshotKey = "events_snapshot_v1";
+
+    /// <summary>
+    /// Initialize the service with a logger instance
+    /// </summary>
+    public static void Initialize(ILogger<App>? logger = null)
+    {
+        if (logger != null)
+        {
+            _logger = logger;
+        }
+    }
 
     private class EventSnapshot
     {
@@ -46,11 +58,11 @@ public static class EventNotificationService
             // Plugin.LocalNotification handles channel creation automatically via AndroidOptions
             // We just need to use consistent ChannelId in notification requests
             _channelInitialized = true;
-            Debug.WriteLine($"EventNotificationService: Using notification channel '{ChannelId}'");
+            _logger?.LogInformation("Using notification channel '{ChannelId}'", ChannelId);
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"EventNotificationService: Error in channel initialization: {ex}");
+            _logger?.LogError(ex, "Error in channel initialization");
         }
     }
 
@@ -171,11 +183,11 @@ public static class EventNotificationService
                 }
             }
 
-            Debug.WriteLine($"EventNotificationService: Successfully scheduled {scheduledCount} notifications for {events.Count} events");
+            _logger?.LogInformation("Successfully scheduled {ScheduledCount} notifications for {EventCount} events", scheduledCount, events.Count);
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"EventNotificationService: Error scheduling notifications: {ex}");
+            _logger?.LogError(ex, "Error scheduling notifications");
         }
     }
 
@@ -253,12 +265,12 @@ public static class EventNotificationService
             _scheduledNotificationIds.Add(notificationId);
 
             var timeUntil = notifyTime - DateTime.Now;
-            Debug.WriteLine($"EventNotificationService: ✓ Scheduled notification {notificationId} for {notifyTime:yyyy-MM-dd HH:mm} (in {timeUntil.TotalMinutes:F0} min)");
+            _logger?.LogInformation("✓ Scheduled notification {NotificationId} for {NotifyTime} (in {Minutes:F0} min)", notificationId, notifyTime.ToString("yyyy-MM-dd HH:mm"), timeUntil.TotalMinutes);
             return true;
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"EventNotificationService: ✗ Failed to schedule notification {notificationId}: {ex.Message}");
+            _logger?.LogWarning(ex, "✗ Failed to schedule notification {NotificationId}", notificationId);
             return false;
         }
     }
@@ -272,11 +284,11 @@ public static class EventNotificationService
                 LocalNotificationCenter.Current.Cancel(id);
             }
             _scheduledNotificationIds.Clear();
-            Debug.WriteLine("EventNotificationService: Cleared all scheduled notifications");
+            _logger?.LogInformation("Cleared all scheduled notifications");
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"EventNotificationService: Error clearing notifications: {ex}");
+            _logger?.LogError(ex, "Error clearing notifications");
         }
         return Task.CompletedTask;
     }
@@ -295,7 +307,7 @@ public static class EventNotificationService
             if (!enabled)
             {
                 var result = await LocalNotificationCenter.Current.RequestNotificationPermission();
-                Debug.WriteLine($"EventNotificationService: Notification permission request result: {result}");
+                _logger?.LogInformation("Notification permission request result: {Result}", result);
             }
             
             enabled = await LocalNotificationCenter.Current.AreNotificationsEnabled();
@@ -310,18 +322,18 @@ public static class EventNotificationService
                         var alarmManager = Android.App.AlarmManager.FromContext(Android.App.Application.Context);
                         if (alarmManager != null && !alarmManager.CanScheduleExactAlarms())
                         {
-                            Debug.WriteLine("EventNotificationService: App cannot schedule exact alarms - user needs to grant permission in settings");
+                            _logger?.LogWarning("App cannot schedule exact alarms - user needs to grant permission in settings");
                             // Note: On Android 12+, user needs to manually enable exact alarms in Settings
                             // We can't request this permission directly from code
                         }
                         else
                         {
-                            Debug.WriteLine("EventNotificationService: Exact alarm permission granted");
+                            _logger?.LogInformation("Exact alarm permission granted");
                         }
                     }
                     catch (Exception ex)
                     {
-                        Debug.WriteLine($"EventNotificationService: Error checking exact alarm permission: {ex.Message}");
+                        _logger?.LogWarning(ex, "Error checking exact alarm permission");
                     }
                 }
     #pragma warning restore CA1416
@@ -329,18 +341,18 @@ public static class EventNotificationService
             
             if (enabled)
             {
-                Debug.WriteLine("EventNotificationService: ✓ Notifications enabled and ready");
+                _logger?.LogInformation("✓ Notifications enabled and ready");
             }
             else
             {
-                Debug.WriteLine("EventNotificationService: ✗ Notifications not enabled");
+                _logger?.LogWarning("✗ Notifications not enabled");
             }
             
             return enabled;
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"EventNotificationService: Error requesting permission: {ex}");
+            _logger?.LogError(ex, "Error requesting permission");
             return false;
         }
     }
@@ -370,7 +382,7 @@ public static class EventNotificationService
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"EventNotificationService: Failed to notify registration change: {ex.Message}");
+            _logger?.LogWarning(ex, "Failed to notify registration change");
         }
     }
 
@@ -607,7 +619,7 @@ public static class EventNotificationService
 
             if (changesDetected > 0)
             {
-                Debug.WriteLine($"EventNotificationService: Detected and notified {changesDetected} event change(s)");
+                _logger?.LogInformation("Detected and notified {ChangesDetected} event change(s)", changesDetected);
             }
 
             // Save current snapshot for next comparison
@@ -615,7 +627,7 @@ public static class EventNotificationService
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"EventNotificationService: Error checking for changes: {ex}");
+            _logger?.LogError(ex, "Error checking for changes");
         }
     }
 
@@ -654,7 +666,7 @@ public static class EventNotificationService
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"EventNotificationService: Error saving snapshot: {ex}");
+            _logger?.LogError(ex, "Error saving snapshot");
         }
     }
 
@@ -685,11 +697,11 @@ public static class EventNotificationService
             };
 
             await LocalNotificationCenter.Current.Show(notification);
-            Debug.WriteLine($"EventNotificationService: Sent immediate notification: {title}");
+            _logger?.LogInformation("Sent immediate notification: {Title}", title);
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"EventNotificationService: Failed to send immediate notification: {ex.Message}");
+            _logger?.LogWarning(ex, "Failed to send immediate notification");
         }
     }
 
@@ -720,11 +732,11 @@ public static class EventNotificationService
                     workRequest
                 );
 
-            Debug.WriteLine("EventNotificationService: Background change detection initialized (runs every 1 hour)");
+            _logger?.LogInformation("Background change detection initialized (runs every 1 hour)");
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"EventNotificationService: Failed to initialize background worker: {ex}");
+            _logger?.LogError(ex, "Failed to initialize background worker");
         }
 #endif
     }
