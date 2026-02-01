@@ -28,7 +28,14 @@ public partial class App : Application
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        var win = new Window(new AppShell());
+        // Resolve AppShell from DI container
+        var appShell = Handler?.MauiContext?.Services.GetRequiredService<AppShell>();
+        if (appShell == null)
+        {
+            throw new InvalidOperationException("AppShell could not be resolved from DI container");
+        }
+
+        var win = new Window(appShell);
 
         try
         {

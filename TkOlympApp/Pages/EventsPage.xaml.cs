@@ -110,9 +110,20 @@ public partial class EventsPage : ContentPage
     {
         try
         {
+            // NOTE: eventInstancesList is unbounded and can be very slow.
+            // Use a bounded range query to keep responses under the default timeout.
+            var startRange = DateTime.Now.AddMonths(-12);
+            var endRange = DateTime.Now.AddMonths(12);
+
             var query = new GraphQlRequest
             {
-                Query = "query MyQuery { eventInstancesList { id isCancelled event { id name location { id name } isVisible type } since until } }"
+                Query = "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $onlyType: EventType) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange, onlyType: $onlyType) { id isCancelled event { id name location { id name } isVisible type } since until } }",
+                Variables = new Dictionary<string, object>
+                {
+                    {"startRange", startRange.ToString("o")},
+                    {"endRange", endRange.ToString("o")},
+                    {"onlyType", "CAMP"}
+                }
             };
 
             var json = JsonSerializer.Serialize(query, Options);
@@ -255,7 +266,7 @@ public partial class EventsPage : ContentPage
 
     private sealed class EventInstancesData
     {
-        [JsonPropertyName("eventInstancesList")] public List<EventInstanceDto>? EventInstancesList { get; set; }
+        [JsonPropertyName("eventInstancesForRangeList")] public List<EventInstanceDto>? EventInstancesList { get; set; }
     }
 
     private sealed class EventInstanceDto
