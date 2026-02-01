@@ -11,6 +11,24 @@ public partial class LoginPage : ContentPage
         Shell.SetTabBarIsVisible(this, false);
     }
 
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        
+        // Subscribe to events
+        if (LoginButton != null)
+            LoginButton.Clicked += OnLoginClicked;
+    }
+
+    protected override void OnDisappearing()
+    {
+        // Unsubscribe from events to prevent memory leaks
+        if (LoginButton != null)
+            LoginButton.Clicked -= OnLoginClicked;
+        
+        base.OnDisappearing();
+    }
+
     private void OnUsernameBorderTapped(object? sender, EventArgs e)
     {
         UsernameEntry?.Focus();

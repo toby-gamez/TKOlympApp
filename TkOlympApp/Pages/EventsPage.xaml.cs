@@ -76,12 +76,34 @@ public partial class EventsPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
+        
+        // Subscribe to events
+        if (TabPlannedButton != null)
+            TabPlannedButton.Clicked += OnTabPlannedClicked;
+        if (TabOccurredButton != null)
+            TabOccurredButton.Clicked += OnTabOccurredClicked;
+        if (EventsRefresh != null)
+            EventsRefresh.Refreshing += OnRefresh;
+        
         if (_suppressReloadOnNextAppearing)
         {
             _suppressReloadOnNextAppearing = false;
             return;
         }
         _ = RefreshEventsAsync();
+    }
+
+    protected override void OnDisappearing()
+    {
+        // Unsubscribe from events to prevent memory leaks
+        if (TabPlannedButton != null)
+            TabPlannedButton.Clicked -= OnTabPlannedClicked;
+        if (TabOccurredButton != null)
+            TabOccurredButton.Clicked -= OnTabOccurredClicked;
+        if (EventsRefresh != null)
+            EventsRefresh.Refreshing -= OnRefresh;
+        
+        base.OnDisappearing();
     }
 
     private async Task RefreshEventsAsync(CancellationToken ct = default)

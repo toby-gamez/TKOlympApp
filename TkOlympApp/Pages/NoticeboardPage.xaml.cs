@@ -23,6 +23,32 @@ public partial class NoticeboardPage : ContentPage
         Dispatcher.Dispatch(async () => await LoadAnnouncementsAsync());
     }
 
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        
+        // Subscribe to events
+        if (TabAktualityButton != null)
+            TabAktualityButton.Clicked += OnTabAktualityClicked;
+        if (TabStalaButton != null)
+            TabStalaButton.Clicked += OnTabStalaClicked;
+        if (AnnouncementsRefresh != null)
+            AnnouncementsRefresh.Refreshing += OnAnnouncementsRefresh;
+    }
+
+    protected override void OnDisappearing()
+    {
+        // Unsubscribe from events to prevent memory leaks
+        if (TabAktualityButton != null)
+            TabAktualityButton.Clicked -= OnTabAktualityClicked;
+        if (TabStalaButton != null)
+            TabStalaButton.Clicked -= OnTabStalaClicked;
+        if (AnnouncementsRefresh != null)
+            AnnouncementsRefresh.Refreshing -= OnAnnouncementsRefresh;
+        
+        base.OnDisappearing();
+    }
+
     private void SetTabVisuals(bool aktivniAktuality)
     {
         _isAktualityActive = aktivniAktuality;

@@ -18,7 +18,33 @@ public partial class AboutMePage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        
+        // Subscribe to events
+        if (PageRefresh != null)
+            PageRefresh.Refreshing += OnRefresh;
+        if (ChangePasswordButton != null)
+            ChangePasswordButton.Clicked += OnChangePasswordClicked;
+        if (EditSelfButton != null)
+            EditSelfButton.Clicked += OnEditSelfClicked;
+        if (LogoutButton != null)
+            LogoutButton.Clicked += OnLogoutClicked;
+        
         await LoadAsync();
+    }
+
+    protected override void OnDisappearing()
+    {
+        // Unsubscribe from events to prevent memory leaks
+        if (PageRefresh != null)
+            PageRefresh.Refreshing -= OnRefresh;
+        if (ChangePasswordButton != null)
+            ChangePasswordButton.Clicked -= OnChangePasswordClicked;
+        if (EditSelfButton != null)
+            EditSelfButton.Clicked -= OnEditSelfClicked;
+        if (LogoutButton != null)
+            LogoutButton.Clicked -= OnLogoutClicked;
+        
+        base.OnDisappearing();
     }
 
     private async void OnRefresh(object? sender, EventArgs e)

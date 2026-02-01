@@ -58,7 +58,29 @@ public partial class DeleteRegistrationsPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        
+        // Subscribe to events
+        if (PageRefresh != null)
+            PageRefresh.Refreshing += OnRefresh;
+        if (RegistrationsCollection != null)
+            RegistrationsCollection.SelectionChanged += OnSelectionChanged;
+        if (DeleteButton != null)
+            DeleteButton.Clicked += OnDeleteClicked;
+        
         await LoadAsync();
+    }
+
+    protected override void OnDisappearing()
+    {
+        // Unsubscribe from events to prevent memory leaks
+        if (PageRefresh != null)
+            PageRefresh.Refreshing -= OnRefresh;
+        if (RegistrationsCollection != null)
+            RegistrationsCollection.SelectionChanged -= OnSelectionChanged;
+        if (DeleteButton != null)
+            DeleteButton.Clicked -= OnDeleteClicked;
+        
+        base.OnDisappearing();
     }
 
     private async void OnRefresh(object? sender, EventArgs e)

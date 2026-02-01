@@ -3,6 +3,7 @@ using MauiIcons.Core;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Storage;
 using TkOlympApp.Pages;
@@ -11,7 +12,7 @@ using TkOlympApp.Services;
 
 namespace TkOlympApp;
 
-public partial class AppShell : Shell
+public partial class AppShell : Shell, IDisposable
 {
     private CancellationTokenSource? _pollCts;
     private long _lastSeenAnnouncementId;
@@ -201,5 +202,12 @@ public partial class AppShell : Shell
 
             try { await Task.Delay(_pollInterval, ct); } catch (TaskCanceledException) { break; }
         }
+    }
+
+    public void Dispose()
+    {
+        StopAnnouncementPolling();
+        _pollCts?.Dispose();
+        _pollCts = null;
     }
 }

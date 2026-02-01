@@ -176,7 +176,7 @@
                             Clicked="OnEditSelfClicked" />
                     </Grid>
 
-                    <Button
+                    <Button x:Name="LogoutButton"
                         Text="{svc:Translate Other_Button_Logout}"
                         Clicked="OnLogoutClicked" />
                 </VerticalStackLayout>

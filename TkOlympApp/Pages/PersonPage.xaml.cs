@@ -45,6 +45,35 @@ namespace TkOlympApp.Pages
             ActiveCouplesCollection.ItemsSource = _activeCouples;
         }
 
+        protected override async void OnAppearing()
+        {
+            base.OnAppearing();
+            
+            // Subscribe to events
+            if (PageRefresh != null)
+                PageRefresh.Refreshing += OnRefresh;
+            if (ActiveCouplesCollection != null)
+                ActiveCouplesCollection.SelectionChanged += OnActiveCoupleSelected;
+            
+            _appeared = true;
+            if (_loadRequested)
+                await LoadAsync();
+        }
+
+        protected override void OnDisappearing()
+        {
+            // Unsubscribe from events to prevent memory leaks
+            if (PageRefresh != null)
+                PageRefresh.Refreshing -= OnRefresh;
+            if (ActiveCouplesCollection != null)
+                ActiveCouplesCollection.SelectionChanged -= OnActiveCoupleSelected;
+            
+            // Cancel any ongoing loads
+            try { _cts?.Cancel(); } catch { }
+            
+            base.OnDisappearing();
+        }
+
         private async void OnRefresh(object? sender, EventArgs e)
         {
             try

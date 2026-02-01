@@ -27,7 +27,7 @@
                 <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" />
             </HorizontalStackLayout>
 
-        <RefreshView Grid.Row="1" Refreshing="OnRefresh">
+        <RefreshView x:Name="MainRefreshView" Grid.Row="1" Refreshing="OnRefresh">
             <ScrollView>
                 <VerticalStackLayout Spacing="8">
                     <Grid>

@@ -63,6 +63,21 @@ public partial class CalendarPage : ContentPage
     {
         base.OnAppearing();
         try { Debug.WriteLine("CalendarPage: OnAppearing"); } catch { }
+        
+        // Subscribe to events
+        if (TabMyButton != null)
+            TabMyButton.Clicked += OnTabMineClicked;
+        if (TabAllButton != null)
+            TabAllButton.Clicked += OnTabAllClicked;
+        if (PrevWeekButton != null)
+            PrevWeekButton.Clicked += OnPrevWeekClicked;
+        if (NextWeekButton != null)
+            NextWeekButton.Clicked += OnNextWeekClicked;
+        if (TodayWeekButton != null)
+            TodayWeekButton.Clicked += OnTodayWeekClicked;
+        if (EventsRefresh != null)
+            EventsRefresh.Refreshing += OnEventsRefresh;
+        
         if (_suppressReloadOnNextAppearing)
         {
             _suppressReloadOnNextAppearing = false;
@@ -80,6 +95,25 @@ public partial class CalendarPage : ContentPage
             // fallback if dispatch isn't available
             _ = LoadEventsAsync();
         }
+    }
+
+    protected override void OnDisappearing()
+    {
+        // Unsubscribe from events to prevent memory leaks
+        if (TabMyButton != null)
+            TabMyButton.Clicked -= OnTabMineClicked;
+        if (TabAllButton != null)
+            TabAllButton.Clicked -= OnTabAllClicked;
+        if (PrevWeekButton != null)
+            PrevWeekButton.Clicked -= OnPrevWeekClicked;
+        if (NextWeekButton != null)
+            NextWeekButton.Clicked -= OnNextWeekClicked;
+        if (TodayWeekButton != null)
+            TodayWeekButton.Clicked -= OnTodayWeekClicked;
+        if (EventsRefresh != null)
+            EventsRefresh.Refreshing -= OnEventsRefresh;
+        
+        base.OnDisappearing();
     }
 
     private static string NormalizeName(string? s)

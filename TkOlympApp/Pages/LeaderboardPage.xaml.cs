@@ -29,6 +29,11 @@ public partial class LeaderboardPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        
+        // Subscribe to events
+        if (LeaderboardRefresh != null)
+            LeaderboardRefresh.Refreshing += OnLeaderboardRefresh;
+        
         try
         {
             await LoadAsync();
@@ -37,6 +42,15 @@ public partial class LeaderboardPage : ContentPage
         {
             await DisplayAlertAsync(LocalizationService.Get("Error_Title"), ex.Message, LocalizationService.Get("Button_OK"));
         }
+    }
+
+    protected override void OnDisappearing()
+    {
+        // Unsubscribe from events to prevent memory leaks
+        if (LeaderboardRefresh != null)
+            LeaderboardRefresh.Refreshing -= OnLeaderboardRefresh;
+        
+        base.OnDisappearing();
     }
 
     private async Task LoadAsync()

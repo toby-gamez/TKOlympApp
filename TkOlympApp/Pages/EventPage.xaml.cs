@@ -89,9 +89,47 @@ public partial class EventPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        
+        // Subscribe to events
+        if (RefreshViewControl != null)
+            RefreshViewControl.Refreshing += OnRefresh;
+        if (RegisterButton != null)
+            RegisterButton.Clicked += OnRegisterButtonClicked;
+        if (EditRegistrationButton != null)
+            EditRegistrationButton.Clicked += OnEditRegistrationClicked;
+        if (DeleteRegistrationButton != null)
+            DeleteRegistrationButton.Clicked += OnDeleteRegistrationsClicked;
+        if (CopyDescriptionButton != null)
+            CopyDescriptionButton.Clicked += OnCopyDescriptionClicked;
+        if (CopySummaryButton != null)
+            CopySummaryButton.Clicked += OnCopySummaryClicked;
+        if (RegistrationsCollection != null)
+            RegistrationsCollection.SelectionChanged += OnRegistrationSelected;
+        
         _appeared = true;
         if (_loadRequested)
             await LoadAsync();
+    }
+
+    protected override void OnDisappearing()
+    {
+        // Unsubscribe from events to prevent memory leaks
+        if (RefreshViewControl != null)
+            RefreshViewControl.Refreshing -= OnRefresh;
+        if (RegisterButton != null)
+            RegisterButton.Clicked -= OnRegisterButtonClicked;
+        if (EditRegistrationButton != null)
+            EditRegistrationButton.Clicked -= OnEditRegistrationClicked;
+        if (DeleteRegistrationButton != null)
+            DeleteRegistrationButton.Clicked -= OnDeleteRegistrationsClicked;
+        if (CopyDescriptionButton != null)
+            CopyDescriptionButton.Clicked -= OnCopyDescriptionClicked;
+        if (CopySummaryButton != null)
+            CopySummaryButton.Clicked -= OnCopySummaryClicked;
+        if (RegistrationsCollection != null)
+            RegistrationsCollection.SelectionChanged -= OnRegistrationSelected;
+        
+        base.OnDisappearing();
     }
 
     private async Task LoadAsync()

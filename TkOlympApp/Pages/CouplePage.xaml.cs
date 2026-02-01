@@ -35,9 +35,23 @@ public partial class CouplePage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        
+        // Subscribe to events
+        if (PageRefresh != null)
+            PageRefresh.Refreshing += OnRefresh;
+        
         _appeared = true;
         if (_loadRequested)
             await LoadAsync();
+    }
+
+    protected override void OnDisappearing()
+    {
+        // Unsubscribe from events to prevent memory leaks
+        if (PageRefresh != null)
+            PageRefresh.Refreshing -= OnRefresh;
+        
+        base.OnDisappearing();
     }
 
     private async void OnRefresh(object? sender, EventArgs e)

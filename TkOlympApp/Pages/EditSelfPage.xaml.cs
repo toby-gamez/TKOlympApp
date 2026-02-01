@@ -20,11 +20,29 @@ public partial class EditSelfPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        
+        // Subscribe to events
+        if (SaveButton != null)
+            SaveButton.Clicked += OnSaveClicked;
+        if (CancelButton != null)
+            CancelButton.Clicked += OnCancelClicked;
+        
         if (string.IsNullOrWhiteSpace(_personId))
         {
             _personId = UserService.CurrentPersonId;
         }
         await LoadAsync();
+    }
+
+    protected override void OnDisappearing()
+    {
+        // Unsubscribe from events to prevent memory leaks
+        if (SaveButton != null)
+            SaveButton.Clicked -= OnSaveClicked;
+        if (CancelButton != null)
+            CancelButton.Clicked -= OnCancelClicked;
+        
+        base.OnDisappearing();
     }
 
     private sealed class GraphQlResp<T>

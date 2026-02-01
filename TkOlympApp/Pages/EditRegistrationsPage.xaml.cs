@@ -56,6 +56,38 @@ public partial class EditRegistrationsPage : ContentPage
         catch { }
     }
 
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        
+        // Subscribe to events
+        if (PageRefresh != null)
+            PageRefresh.Refreshing += OnRefresh;
+        if (RegistrationsCollection != null)
+        {
+            RegistrationsCollection.SelectionChanged += OnSelectionChanged;
+            RegistrationsCollection.RemainingItemsThresholdReached += OnRegistrationsRemainingThresholdReached;
+        }
+        if (ConfirmButton != null)
+            ConfirmButton.Clicked += OnConfirmClicked;
+    }
+
+    protected override void OnDisappearing()
+    {
+        // Unsubscribe from events to prevent memory leaks
+        if (PageRefresh != null)
+            PageRefresh.Refreshing -= OnRefresh;
+        if (RegistrationsCollection != null)
+        {
+            RegistrationsCollection.SelectionChanged -= OnSelectionChanged;
+            RegistrationsCollection.RemainingItemsThresholdReached -= OnRegistrationsRemainingThresholdReached;
+        }
+        if (ConfirmButton != null)
+            ConfirmButton.Clicked -= OnConfirmClicked;
+        
+        base.OnDisappearing();
+    }
+
     private async void OnRefresh(object? sender, EventArgs e)
     {
         await LoadAsync();

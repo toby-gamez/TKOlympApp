@@ -53,6 +53,28 @@ public partial class RegistrationPage : ContentPage
         }
     }
 
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        
+        // Subscribe to events
+        if (SelectionCollection != null)
+            SelectionCollection.SelectionChanged += OnSelectionChanged;
+        if (ConfirmButton != null)
+            ConfirmButton.Clicked += OnConfirmClicked;
+    }
+
+    protected override void OnDisappearing()
+    {
+        // Unsubscribe from events to prevent memory leaks
+        if (SelectionCollection != null)
+            SelectionCollection.SelectionChanged -= OnSelectionChanged;
+        if (ConfirmButton != null)
+            ConfirmButton.Clicked -= OnConfirmClicked;
+        
+        base.OnDisappearing();
+    }
+
     private sealed record RegistrationOption(string DisplayText, string Kind, string? Id);
     private sealed class TrainerOption : INotifyPropertyChanged
     {

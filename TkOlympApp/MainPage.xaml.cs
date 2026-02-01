@@ -45,6 +45,10 @@ public partial class MainPage : ContentPage
         base.OnAppearing();
         try { Debug.WriteLine("MainPage: OnAppearing"); } catch { }
 
+        // Subscribe to events
+        if (MainRefreshView != null)
+            MainRefreshView.Refreshing += OnRefresh;
+
         // Skip full initialization if it was suppressed (returning from child page)
         if (_suppressReloadOnNextAppearing)
         {
@@ -90,6 +94,15 @@ public partial class MainPage : ContentPage
         {
             // fallback if dispatch isn't available
         }
+    }
+
+    protected override void OnDisappearing()
+    {
+        // Unsubscribe from events to prevent memory leaks
+        if (MainRefreshView != null)
+            MainRefreshView.Refreshing -= OnRefresh;
+
+        base.OnDisappearing();
     }
 
     private async Task LoadUpcomingEventsAsync()

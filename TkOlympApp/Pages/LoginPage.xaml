@@ -60,7 +60,7 @@
                      </Border.GestureRecognizers>
               </Border>
 
-              <Button Text="{svc:Translate Login_Button_Login}"
+              <Button x:Name="LoginButton" Text="{svc:Translate Login_Button_Login}"
                             Clicked="OnLoginClicked"/>
        </VerticalStackLayout>
 

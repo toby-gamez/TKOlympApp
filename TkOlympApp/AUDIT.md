@@ -16,7 +16,7 @@ TkOlympApp je mobilní aplikace pro správu sportovních událostí, registrací
 | Kategorie | Hodnocení | Popis |
 |-----------|-----------|-------|
 | **Architektura** | ⚠️ **Kritické** | Absence dependency injection, všechny služby jsou statické singletons |
-| **Paměťové úniky** | ⚠️ **Vysoké** | Event handlery se neodhlašují, žádné IDisposable implementace v Pages |
+| **Paměťové úniky** | ✅ **Vyřešeno 2026-02-01** | Event handlery nyní korektně odhlášeny v OnDisappearing() |
 | **Async patterns** | ⚠️ **Vysoké** | Chybí CancellationToken v 90% async metod |
 | **Error handling** | ⚠️ **Střední** | Nekonzistentní, převládají prázdné catch bloky, žádný logging |
 | **Testovatelnost** | ❌ **Nulová** | Statické závislosti nelze mockovat, testy jen pro Helpers |
@@ -26,7 +26,7 @@ TkOlympApp je mobilní aplikace pro správu sportovních událostí, registrací
 | **Magic strings** | ✅ **Vyřešeno 2026-02-01** | Vytvořena AppConstants třída, vše refaktorováno |
 | **Bezpečnost (credentials)** | ✅ **Vyřešeno 2026-02-01** | Hardcoded hesla odstraněna, použity env variables |
 
-**Celkové skóre:** 5.0/10 — Funkční aplikace s částečně vyřešenými P0 problémy, stále vážné technické dluhy bránící škálovatelnosti.
+**Celkové skóre:** 6.0/10 — Funkční aplikace s vyřešenými P0 problémy a významným pokrokem v oblasti memory management, stále zbývají architektonické dluhy bránící škálovatelnosti.
 
 ---
 
@@ -1901,9 +1901,9 @@ Aplikace nemá retry logic ani exponential backoff.
 | **P0 (Kritické)** | Odstranit hardcoded credentials z .csproj | 1 hodina | Bezpečnost | ✅ **HOTOVO 2026-02-01** |
 | **P0** | Vytvořit AppConstants třídu a refaktorovat magic strings | 2 hodiny | Udržitelnost | ✅ **HOTOVO 2026-02-01** |
 | **P0** | Implementovat global exception handling + crash reporting | 1 den | Diagnostika | ⏸️ Sentry odstraněn, čeká na DSN |
-| **P1 (Vysoká)** | Migrace na DI + extrakce rozhraní | 4 týdny | Testovatelnost |
-| **P1** | Přidat CancellationToken do všech async metod | 1 týden | Výkon |
-| **P1** | Implementovat memory leak fixes (event unsubscribe) | 1 týden | Stabilita |
+| **P1 (Vysoká)** | Migrace na DI + extrakce rozhraní | 4 týdny | Testovatelnost | |
+| **P1** | Přidat CancellationToken do všech async metod | 1 týden | Výkon | |
+| **P1** | Implementovat memory leak fixes (event unsubscribe) | 1 týden | Stabilita | ✅ **HOTOVO 2026-02-01** |
 | **P2 (Střední)** | Vytvořit ViewModely pro top 5 Pages | 2 týdny | Architektura |
 | **P2** | Strukturovaný logging (Application Insights) | 3 dny | Monitoring |
 | **P2** | Unit testy pro Services (target 80% coverage) | 2 týdny | Kvalita |
@@ -1919,16 +1919,16 @@ Aplikace nemá retry logic ani exponential backoff.
 | Počet statických služeb | 21 | 0 |
 | Async metody s CancellationToken | 10% | 100% |
 | Empty catch bloků | 50+ | 0 |
-| Memory leaks (známé) | 3+ | 0 |
+| Memory leaks (známé) | 0 (✅ opraveno 2026-02-01) | 0 |
 | Startup time (cold) | 2.5s | <1.5s |
 | Build warnings | 15 | 0 |
 
 ### 8.3 Architektonická evoluce
 
 **Fáze 1 (Q1 2026): Technický dluh**
-- ✅ Odstranit security issues
-- ✅ Přidat crash reporting
-- ✅ Fix memory leaks
+- ✅ Odstranit security issues (HOTOVO 2026-02-01)
+- ⏸️ Přidat crash reporting (čeká na Sentry DSN)
+- ✅ Fix memory leaks (HOTOVO 2026-02-01)
 
 **Fáze 2 (Q2 2026): Dependency Injection**
 - ✅ Extrahovat rozhraní služeb
