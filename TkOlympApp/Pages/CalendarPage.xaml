@@ -3,112 +3,23 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:svc="clr-namespace:TkOlympApp.Services"
              xmlns:local="clr-namespace:TkOlympApp.Pages"
-            x:Class="TkOlympApp.Pages.CalendarPage"
-                     Title="{svc:Translate Calendar}">
+             xmlns:vm="clr-namespace:TkOlympApp.ViewModels"
+             x:Class="TkOlympApp.Pages.CalendarPage"
+             x:DataType="vm:CalendarViewModel"
+             Title="{svc:Translate Calendar}">
 
-            <ContentPage.ToolbarItems>
-                <ToolbarItem IconImageSource="{AppThemeBinding Light=calendar_timeline.svg, Dark=calendar_timeline_white.svg}" Order="Primary" Priority="0" Clicked="OnOpenCalendarViewClicked" />
-            </ContentPage.ToolbarItems>
+    <ContentPage.ToolbarItems>
+        <ToolbarItem IconImageSource="{AppThemeBinding Light=calendar_timeline.svg, Dark=calendar_timeline_white.svg}"
+                     Order="Primary"
+                     Priority="0"
+                     Command="{Binding OpenCalendarViewCommand}" />
+    </ContentPage.ToolbarItems>
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <local:EventRowTemplateSelector x:Key="EventRowTemplateSelector">
-                <!-- Week Header -->
-                <local:EventRowTemplateSelector.WeekHeaderTemplate>
-                    <DataTemplate x:DataType="local:WeekHeaderRow">
-                        <Grid Margin="6,12,6,0">
-                            <BoxView Style="{StaticResource GroupHeaderBackground}" />
-                            <Label Text="{Binding WeekLabel}" FontAttributes="Bold" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" Padding="8" />
-                        </Grid>
-                    </DataTemplate>
-                </local:EventRowTemplateSelector.WeekHeaderTemplate>
-
-                <!-- Day Header -->
-                <local:EventRowTemplateSelector.DayHeaderTemplate>
-                    <DataTemplate x:DataType="local:DayHeaderRow">
-                        <Label Text="{Binding DayLabel}" FontAttributes="Bold" Margin="6,8,6,4" />
-                    </DataTemplate>
-                </local:EventRowTemplateSelector.DayHeaderTemplate>
-
-                <!-- Single Event -->
-                <local:EventRowTemplateSelector.SingleEventTemplate>
-                    <DataTemplate x:DataType="local:SingleEventRow">
-                        <Grid Margin="6">
-                            <Grid.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnEventCardTapped" />
-                            </Grid.GestureRecognizers>
-                            <BoxView Style="{StaticResource SelectableItemBackground}" />
-                            <VerticalStackLayout Spacing="6" Padding="12">
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <Label Text="{Binding EventName}" FontAttributes="Bold" Grid.Column="0">
-                                        <Label.Triggers>
-                                            <DataTrigger TargetType="Label" Binding="{Binding IsCancelled}" Value="True">
-                                                <Setter Property="TextDecorations" Value="Strikethrough" />
-                                            </DataTrigger>
-                                        </Label.Triggers>
-                                    </Label>
-                                    <Label Text="{Binding EventTypeLabel}" FontSize="12" Style="{StaticResource MutedLabelStyle}" Grid.Column="1" HorizontalOptions="End" VerticalOptions="Center" />
-                                </Grid>
-                                <Label Text="{Binding LocationOrTrainers}" />
-                                <Label Text="{Binding TimeRange}" FontSize="12" Style="{StaticResource MutedLabelStyle}" />
-                            </VerticalStackLayout>
-                        </Grid>
-                    </DataTemplate>
-                </local:EventRowTemplateSelector.SingleEventTemplate>
-
-                <!-- Trainer Group Header -->
-                <local:EventRowTemplateSelector.TrainerGroupHeaderTemplate>
-                    <DataTemplate x:DataType="local:TrainerGroupHeaderRow">
-                        <Grid Margin="6,6,6,0">
-                            <BoxView Style="{StaticResource GroupHeaderBackground}" />
-                            <Grid ColumnDefinitions="*,Auto" Padding="12,8">
-                                <Label Text="{Binding TrainerTitle}" FontAttributes="Bold" Grid.Column="0" />
-                                <Label Text="{svc:Translate EventType_Lesson}" FontSize="12" Style="{StaticResource MutedLabelStyle}" Grid.Column="1" HorizontalOptions="End" VerticalOptions="Center" />
-                            </Grid>
-                        </Grid>
-                    </DataTemplate>
-                </local:EventRowTemplateSelector.TrainerGroupHeaderTemplate>
-
-                <!-- Trainer Detail Row -->
-                <local:EventRowTemplateSelector.TrainerDetailTemplate>
-                    <DataTemplate x:DataType="local:TrainerDetailRow">
-                        <Grid ColumnDefinitions="120,*,Auto" Padding="12,4,12,4" Margin="6,0" ColumnSpacing="8">
-                            <Grid.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnGroupedRowTapped" />
-                            </Grid.GestureRecognizers>
-                            <BoxView Style="{StaticResource SelectableItemBackground}" Grid.ColumnSpan="3" />
-                            <Label Text="{Binding TimeRange}" Grid.Column="0">
-                                <Label.Triggers>
-                                    <DataTrigger TargetType="Label" Binding="{Binding IsCancelled}" Value="True">
-                                        <Setter Property="TextDecorations" Value="Strikethrough" />
-                                    </DataTrigger>
-                                </Label.Triggers>
-                            </Label>
-                            <Label Text="{Binding FirstRegistrant}" Grid.Column="1">
-                                <Label.Triggers>
-                                    <DataTrigger TargetType="Label" Binding="{Binding IsFree}" Value="True">
-                                        <Setter Property="Text" Value="{svc:Translate Free}" />
-                                        <Setter Property="TextColor" Value="Green" />
-                                    </DataTrigger>
-                                    <DataTrigger TargetType="Label" Binding="{Binding IsHighlighted}" Value="True">
-                                        <Setter Property="FontAttributes" Value="Bold" />
-                                    </DataTrigger>
-                                    <DataTrigger TargetType="Label" Binding="{Binding IsCancelled}" Value="True">
-                                        <Setter Property="TextDecorations" Value="Strikethrough" />
-                                    </DataTrigger>
-                                </Label.Triggers>
-                            </Label>
-                            <Label Text="{Binding DurationText}" Grid.Column="2" HorizontalOptions="End">
-                                <Label.Triggers>
-                                    <DataTrigger TargetType="Label" Binding="{Binding IsCancelled}" Value="True">
-                                        <Setter Property="TextDecorations" Value="Strikethrough" />
-                                    </DataTrigger>
-                                </Label.Triggers>
-                            </Label>
-                        </Grid>
-                    </DataTemplate>
-                </local:EventRowTemplateSelector.TrainerDetailTemplate>
-            </local:EventRowTemplateSelector>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Resources/DataTemplates/CalendarDataTemplates.xaml" />
+            </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -121,25 +32,75 @@
         <!-- Top row: My/All on the left, week navigation on the right -->
         <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Padding="0" Margin="0,0,0,5">
             <HorizontalStackLayout Grid.Column="0" Padding="0" Spacing="8" VerticalOptions="Center">
-                <Button x:Name="TabMyButton" Text="{svc:Translate Tab_My}" Clicked="OnTabMineClicked" />
-                <Button x:Name="TabAllButton" Text="{svc:Translate Tab_All}" Clicked="OnTabAllClicked" />
+                <Button Text="{svc:Translate Tab_My}"
+                        Command="{Binding SwitchToMyEventsCommand}">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button"
+                                   Binding="{Binding MyTabActive}"
+                                   Value="True">
+                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=Black, Dark=LightGray}" />
+                            <Setter Property="TextColor" Value="{AppThemeBinding Light=White, Dark=Black}" />
+                        </DataTrigger>
+                        <DataTrigger TargetType="Button"
+                                   Binding="{Binding MyTabActive}"
+                                   Value="False">
+                            <Setter Property="BackgroundColor" Value="Transparent" />
+                            <Setter Property="TextColor" Value="{AppThemeBinding Light=Black, Dark=White}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Button Text="{svc:Translate Tab_All}"
+                        Command="{Binding SwitchToAllEventsCommand}">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button"
+                                   Binding="{Binding AllTabActive}"
+                                   Value="True">
+                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=Black, Dark=LightGray}" />
+                            <Setter Property="TextColor" Value="{AppThemeBinding Light=White, Dark=Black}" />
+                        </DataTrigger>
+                        <DataTrigger TargetType="Button"
+                                   Binding="{Binding AllTabActive}"
+                                   Value="False">
+                            <Setter Property="BackgroundColor" Value="Transparent" />
+                            <Setter Property="TextColor" Value="{AppThemeBinding Light=Black, Dark=White}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
             </HorizontalStackLayout>
 
-            <HorizontalStackLayout Grid.Column="1" Padding="0" Spacing="8" VerticalOptions="Center" HorizontalOptions="Center" />
-
             <HorizontalStackLayout Grid.Column="2" Padding="0" Spacing="8" VerticalOptions="Center" HorizontalOptions="End">
-                <Button x:Name="PrevWeekButton" Text="◀" Clicked="OnPrevWeekClicked" Style="{StaticResource ButtonSecondary}"/>
-                <Button x:Name="TodayWeekButton" Text="{svc:Translate Today}" Clicked="OnTodayWeekClicked" />
-                <Button x:Name="NextWeekButton" Text="▶" Clicked="OnNextWeekClicked" Style="{StaticResource ButtonSecondary}"/>
+                <Button Text="◀"
+                        Command="{Binding PreviousWeekCommand}"
+                        Style="{StaticResource ButtonSecondary}" />
+                <Button Text="{svc:Translate Today}"
+                        Command="{Binding TodayCommand}" />
+                <Button Text="▶"
+                        Command="{Binding NextWeekCommand}"
+                        Style="{StaticResource ButtonSecondary}" />
             </HorizontalStackLayout>
         </Grid>
 
-        <RefreshView x:Name="EventsRefresh" Refreshing="OnEventsRefresh" Grid.Row="1">
+        <RefreshView IsRefreshing="{Binding IsRefreshing}"
+                     Command="{Binding RefreshCommand}"
+                     Grid.Row="1">
             <Grid>
-                <ScrollView x:Name="EventsScroll">
-                    <VerticalStackLayout x:Name="EventsStack" Padding="0" Spacing="0" />
-                </ScrollView>
-                <Label x:Name="EmptyLabel" IsVisible="False" VerticalOptions="CenterAndExpand" HorizontalOptions="Center" />
+                <CollectionView ItemsSource="{Binding EventRows}"
+                                ItemTemplate="{StaticResource CalendarTemplateSelector}"
+                                SelectionMode="None">
+                    <CollectionView.ItemsLayout>
+                        <LinearItemsLayout Orientation="Vertical" ItemSpacing="0" />
+                    </CollectionView.ItemsLayout>
+                    
+                    <!-- Tap handling for navigation -->
+                    <CollectionView.Behaviors>
+                        <local:CalendarItemTappedBehavior />
+                    </CollectionView.Behaviors>
+                </CollectionView>
+
+                <Label Text="{Binding EmptyText}"
+                       IsVisible="{Binding ShowEmpty}"
+                       VerticalOptions="CenterAndExpand"
+                       HorizontalOptions="Center" />
             </Grid>
         </RefreshView>
     </Grid>

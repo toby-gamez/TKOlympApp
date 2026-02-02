@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using Microsoft.Maui.Controls;
 using TkOlympApp.Models.Events;
 
 namespace TkOlympApp.Pages;
@@ -133,3 +134,29 @@ public sealed class TrainerDetailRow : EventRow, INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 }
+
+/// <summary>
+/// DataTemplateSelector for calendar rows - selects appropriate template based on row type.
+/// </summary>
+public sealed class CalendarTemplateSelector : DataTemplateSelector
+{
+    public DataTemplate? WeekHeaderTemplate { get; set; }
+    public DataTemplate? DayHeaderTemplate { get; set; }
+    public DataTemplate? SingleEventTemplate { get; set; }
+    public DataTemplate? TrainerGroupHeaderTemplate { get; set; }
+    public DataTemplate? TrainerDetailTemplate { get; set; }
+
+    protected override DataTemplate? OnSelectTemplate(object item, BindableObject container)
+    {
+        return item switch
+        {
+            WeekHeaderRow => WeekHeaderTemplate,
+            DayHeaderRow => DayHeaderTemplate,
+            SingleEventRow => SingleEventTemplate,
+            TrainerGroupHeaderRow => TrainerGroupHeaderTemplate,
+            TrainerDetailRow => TrainerDetailTemplate,
+            _ => null
+        };
+    }
+}
+
