@@ -4,6 +4,7 @@
              xmlns:converters="clr-namespace:TkOlympApp.Converters"
              xmlns:svc="clr-namespace:TkOlympApp.Services"
              x:Class="TkOlympApp.Pages.EventsPage"
+             x:Name="Root"
              Title="{svc:Translate Events_Title}">
 
     <ContentPage.Resources>
@@ -22,18 +23,28 @@
         </Grid.RowDefinitions>
 
         <HorizontalStackLayout Grid.Row="0" Spacing="8" VerticalOptions="Center" HorizontalOptions="Start" Margin="0,0,0,5">
-            <Button x:Name="TabPlannedButton" Text="{svc:Translate Planned}" Clicked="OnTabPlannedClicked" />
-            <Button x:Name="TabOccurredButton" Text="{svc:Translate Occurred}" Clicked="OnTabOccurredClicked" />
+            <Button
+                Text="{svc:Translate Planned}"
+                Command="{Binding ShowPlannedCommand}"
+                BackgroundColor="{Binding TabPlannedBackgroundColor}"
+                TextColor="{Binding TabPlannedTextColor}" />
+            <Button
+                Text="{svc:Translate Occurred}"
+                Command="{Binding ShowOccurredCommand}"
+                BackgroundColor="{Binding TabOccurredBackgroundColor}"
+                TextColor="{Binding TabOccurredTextColor}" />
         </HorizontalStackLayout>
 
-        <RefreshView x:Name="EventsRefresh" Refreshing="OnRefresh" Grid.Row="1">
+        <RefreshView Grid.Row="1" Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}">
             <ScrollView>
                 <VerticalStackLayout BindableLayout.ItemsSource="{Binding VisibleItems}" Spacing="0">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate>
                             <Grid Margin="6">
                                 <Grid.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnEventTapped" />
+                                    <TapGestureRecognizer
+                                        Command="{Binding BindingContext.OpenEventCommand, Source={x:Reference Root}}"
+                                        CommandParameter="{Binding .}" />
                                 </Grid.GestureRecognizers>
                                 <BoxView Style="{StaticResource SelectableItemBackground}" />
                                 <VerticalStackLayout Spacing="6" Padding="12">
