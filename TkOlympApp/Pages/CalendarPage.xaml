@@ -2,7 +2,6 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:svc="clr-namespace:TkOlympApp.Services"
-             xmlns:local="clr-namespace:TkOlympApp.Pages"
              xmlns:vm="clr-namespace:TkOlympApp.ViewModels"
              x:Class="TkOlympApp.Pages.CalendarPage"
              x:DataType="vm:CalendarViewModel"
@@ -84,18 +83,12 @@
                      Command="{Binding RefreshCommand}"
                      Grid.Row="1">
             <Grid>
-                <CollectionView ItemsSource="{Binding EventRows}"
-                                ItemTemplate="{StaticResource CalendarTemplateSelector}"
-                                SelectionMode="None">
-                    <CollectionView.ItemsLayout>
-                        <LinearItemsLayout Orientation="Vertical" ItemSpacing="0" />
-                    </CollectionView.ItemsLayout>
-                    
-                    <!-- Tap handling for navigation -->
-                    <CollectionView.Behaviors>
-                        <local:CalendarItemTappedBehavior />
-                    </CollectionView.Behaviors>
-                </CollectionView>
+                <!-- Static tree (no virtualization): BindableLayout renders all rows eagerly -->
+                <ScrollView>
+                    <VerticalStackLayout Spacing="0"
+                                         BindableLayout.ItemsSource="{Binding EventRows}"
+                                         BindableLayout.ItemTemplateSelector="{StaticResource CalendarTemplateSelector}" />
+                </ScrollView>
 
                 <Label Text="{Binding EmptyText}"
                        IsVisible="{Binding ShowEmpty}"

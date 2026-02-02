@@ -27,6 +27,10 @@
     <!-- Single Event Card Template -->
     <DataTemplate x:Key="CalendarSingleEventTemplate" x:DataType="pages:SingleEventRow">
         <Grid Margin="6">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.NavigateToEventCommand}"
+                                      CommandParameter="{Binding Instance}" />
+            </Grid.GestureRecognizers>
             <BoxView Style="{StaticResource SelectableItemBackground}" />
             <VerticalStackLayout Spacing="6" Padding="12">
                 <!-- Title row with event type and cohort dot -->
@@ -53,10 +57,10 @@
                                VerticalOptions="Center" />
 
                         <!-- Cohort color circle -->
-                        <BoxView x:Name="CohortCircle"
-                                 Style="{StaticResource CohortCircle}"
-                                 IsVisible="{Binding EventTargetCohortsList, Converter={conv:CohortHasColorConverter}}"
-                                 Background="{Binding EventTargetCohortsList, Converter={conv:CohortColorConverter}}" />
+                        <Border x:Name="CohortCircle"
+                            Style="{StaticResource CohortCircleBorder}"
+                            IsVisible="{Binding EventTargetCohortsList, Converter={conv:CohortHasColorConverter}}"
+                            Stroke="{Binding EventTargetCohortsList, Converter={conv:CohortColorConverter}}" />
                     </HorizontalStackLayout>
                 </Grid>
 
@@ -87,9 +91,9 @@
                            VerticalOptions="Center" />
 
                     <!-- Cohort color circle -->
-                    <BoxView Style="{StaticResource CohortCircle}"
-                             IsVisible="{Binding EventTargetCohortsList, Converter={conv:CohortHasColorConverter}}"
-                             Background="{Binding EventTargetCohortsList, Converter={conv:CohortColorConverter}}" />
+                    <Border Style="{StaticResource CohortCircleBorder}"
+                            IsVisible="{Binding EventTargetCohortsList, Converter={conv:CohortHasColorConverter}}"
+                            Stroke="{Binding EventTargetCohortsList, Converter={conv:CohortColorConverter}}" />
                 </HorizontalStackLayout>
             </Grid>
         </Grid>
@@ -98,6 +102,10 @@
     <!-- Trainer Detail Row Template -->
     <DataTemplate x:Key="CalendarTrainerDetailTemplate" x:DataType="pages:TrainerDetailRow">
         <Grid Margin="6,3">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.NavigateToEventFromTrainerRowCommand}"
+                                      CommandParameter="{Binding .}" />
+            </Grid.GestureRecognizers>
             <BoxView Style="{StaticResource SelectableItemBackground}" />
             <Grid ColumnDefinitions="120,Auto,*,Auto"
                   Padding="12,8"
@@ -115,10 +123,10 @@
                 </Label>
 
                 <!-- Cohort color circle -->
-                <BoxView Style="{StaticResource CohortCircleLarge}"
-                         Grid.Column="1"
-                         IsVisible="{Binding Instance.Event.EventTargetCohortsList, Converter={conv:CohortHasColorConverter}}"
-                         Background="{Binding Instance.Event.EventTargetCohortsList, Converter={conv:CohortColorConverter}}" />
+                <Border Style="{StaticResource CohortCircleBorderLarge}"
+                    Grid.Column="1"
+                    IsVisible="{Binding Instance.Event.EventTargetCohortsList, Converter={conv:CohortHasColorConverter}}"
+                    Stroke="{Binding Instance.Event.EventTargetCohortsList, Converter={conv:CohortColorConverter}}" />
 
                 <!-- Registrant name -->
                 <Label Text="{Binding FirstRegistrant}"

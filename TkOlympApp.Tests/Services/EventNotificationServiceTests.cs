@@ -381,7 +381,6 @@ public class EventNotificationServiceTests
             since,
             since?.AddHours(2),
             DateTime.Now,
-            null,
             eventInfo);
     }
 }

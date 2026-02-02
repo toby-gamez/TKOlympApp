@@ -337,7 +337,7 @@ fragment EventFull on Event {
                 if (!string.IsNullOrEmpty(onlyType)) variables["onlyType"] = onlyType;
 
                 var query =
-                    "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $first: Int, $offset: Int, $onlyType: EventType) { eventInstancesForRangeList(onlyMine: true, startRange: $startRange, endRange: $endRange, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled since until updatedAt event { id description name type locationText isRegistrationOpen isPublic eventTrainersList { name } eventTargetCohortsList { cohortId cohort { id name colorRgb } } eventRegistrationsList { person { name } couple { man { lastName } woman { lastName } } } location { id name } } tenant { couplesList { man { firstName name lastName } woman { name lastName firstName } } } } }";
+                    "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $first: Int, $offset: Int, $onlyType: EventType) { eventInstancesForRangeList(onlyMine: true, startRange: $startRange, endRange: $endRange, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled since until updatedAt event { id description name type locationText isRegistrationOpen isPublic eventTrainersList { name } eventTargetCohortsList { cohortId cohort { id name colorRgb } } eventRegistrationsList { person { name } couple { man { lastName } woman { lastName } } } location { id name } } } }";
 
                 _logger.LogGraphQLRequest("GetMyEventInstancesForRange", variables);
 
@@ -422,7 +422,7 @@ fragment EventFull on Event {
         if (!string.IsNullOrEmpty(onlyType)) variables["onlyType"] = onlyType;
 
         var query =
-            "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $first: Int, $offset: Int, $onlyType: EventType) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled since until updatedAt event { id description name type locationText isRegistrationOpen isPublic eventTrainersList { name } eventTargetCohortsList { cohortId cohort { id name colorRgb } } eventRegistrationsList { person { name } couple { man { lastName } woman { lastName } } } location { id name } } tenant { couplesList { man { firstName name lastName } woman { name lastName firstName } } } } }";
+            "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $first: Int, $offset: Int, $onlyType: EventType) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled since until updatedAt event { id description name type locationText isRegistrationOpen isPublic eventTrainersList { name } eventTargetCohortsList { cohortId cohort { id name colorRgb } } eventRegistrationsList { person { name } couple { man { lastName } woman { lastName } } } location { id name } } } }";
 
         var (data, raw) = await _graphQlClient.PostWithRawAsync<EventInstancesForRangeData>(query, variables, ct);
         LastEventInstancesForRangeRawJson = raw;
@@ -448,7 +448,6 @@ fragment EventFull on Event {
                 sinceLocal,
                 untilLocal,
                 updatedAt,
-                mi.Tenant,
                 mi.Event));
         }
 
@@ -517,7 +516,6 @@ fragment EventFull on Event {
         [JsonPropertyName("since")] public DateTimeOffset? Since { get; set; }
         [JsonPropertyName("until")] public DateTimeOffset? Until { get; set; }
         [JsonPropertyName("updatedAt")] public DateTimeOffset? UpdatedAt { get; set; }
-        [JsonPropertyName("tenant")] public Tenant? Tenant { get; set; }
         [JsonPropertyName("event")] public EventInfo? Event { get; set; }
     }
 }

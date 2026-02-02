@@ -12,6 +12,7 @@ using TkOlympApp.Models.Events;
 using TkOlympApp.Pages;
 using TkOlympApp.Services;
 using TkOlympApp.Services.Abstractions;
+using Microsoft.Maui.ApplicationModel;
 
 namespace TkOlympApp.ViewModels;
 
@@ -56,7 +57,8 @@ public partial class CalendarViewModel : ViewModelBase
     /// Flat list of all calendar rows (week headers, day headers, events, trainer groups).
     /// Bound to CollectionView for high-performance rendering.
     /// </summary>
-    public ObservableCollection<EventRow> EventRows { get; } = new();
+    [ObservableProperty]
+    private ObservableCollection<EventRow> _eventRows = new();
 
     public CalendarViewModel(
         IEventService eventService,
@@ -85,7 +87,7 @@ public partial class CalendarViewModel : ViewModelBase
             return;
         }
 
-        await LoadEventsAsync();
+        await LoadEventsAsync(preferAllTabWhileLoading: true);
     }
 
     [RelayCommand]
@@ -95,7 +97,7 @@ public partial class CalendarViewModel : ViewModelBase
         IsRefreshing = true;
         try
         {
-            await LoadEventsAsync();
+            await LoadEventsAsync(preferAllTabWhileLoading: true);
         }
         finally
         {
@@ -111,7 +113,7 @@ public partial class CalendarViewModel : ViewModelBase
         MyTabActive = true;
         AllTabActive = false;
         UpdateEmptyText();
-        await LoadEventsAsync();
+        await LoadEventsAsync(preferAllTabWhileLoading: false);
     }
 
     [RelayCommand]
@@ -122,7 +124,7 @@ public partial class CalendarViewModel : ViewModelBase
         MyTabActive = false;
         AllTabActive = true;
         UpdateEmptyText();
-        await LoadEventsAsync();
+        await LoadEventsAsync(preferAllTabWhileLoading: false);
     }
 
     [RelayCommand]
@@ -132,7 +134,7 @@ public partial class CalendarViewModel : ViewModelBase
         WeekEnd = WeekStart.AddDays(6);
         _logger.LogDebug("Week navigation: Previous week - {WeekStart} to {WeekEnd}",
             WeekStart.ToShortDateString(), WeekEnd.ToShortDateString());
-        await LoadEventsAsync();
+        await LoadEventsAsync(preferAllTabWhileLoading: true);
     }
 
     [RelayCommand]
@@ -142,7 +144,7 @@ public partial class CalendarViewModel : ViewModelBase
         WeekEnd = WeekStart.AddDays(6);
         _logger.LogDebug("Week navigation: Next week - {WeekStart} to {WeekEnd}",
             WeekStart.ToShortDateString(), WeekEnd.ToShortDateString());
-        await LoadEventsAsync();
+        await LoadEventsAsync(preferAllTabWhileLoading: true);
     }
 
     [RelayCommand]
@@ -161,7 +163,7 @@ public partial class CalendarViewModel : ViewModelBase
         WeekEnd = WeekStart.AddDays(6);
         _logger.LogDebug("Week navigation: Today - resetting to current week {WeekStart} to {WeekEnd}",
             WeekStart.ToShortDateString(), WeekEnd.ToShortDateString());
-        await LoadEventsAsync();
+        await LoadEventsAsync(preferAllTabWhileLoading: true);
     }
 
     [RelayCommand]
@@ -205,10 +207,10 @@ public partial class CalendarViewModel : ViewModelBase
     public async Task RefreshEventsAsync()
     {
         IsRefreshing = true;
-        await LoadEventsAsync();
+        await LoadEventsAsync(preferAllTabWhileLoading: true);
     }
 
-    private async Task LoadEventsAsync()
+    private async Task LoadEventsAsync(bool preferAllTabWhileLoading)
     {
         _logger.LogDebug("LoadEventsAsync started - Mode: {Mode}, WeekStart: {WeekStart}, WeekEnd: {WeekEnd}",
             OnlyMine ? "Mine" : "All", WeekStart, WeekEnd);
@@ -220,7 +222,24 @@ public partial class CalendarViewModel : ViewModelBase
         }
 
         IsBusy = true;
+
+        // UX: when loading (especially week navigation / initial load), jump to "All" and clear content
+        // so the UI stays responsive and doesn't show stale rows.
+        if (preferAllTabWhileLoading && OnlyMine)
+        {
+            OnlyMine = false;
+            MyTabActive = false;
+            AllTabActive = true;
+        }
+
+        ShowEmpty = false;
+        EmptyText = string.Empty;
+        EventRows = new ObservableCollection<EventRow>();
+        _trainerDetailRows.Clear();
         UpdateEmptyText();
+
+        // Let the UI render the cleared state before heavy work starts
+        await Task.Yield();
 
         try
         {
@@ -246,12 +265,17 @@ public partial class CalendarViewModel : ViewModelBase
             _logger.LogInformation("Fetched {Count} events for week {WeekStart} - {WeekEnd}",
                 events.Count, WeekStart.ToShortDateString(), WeekEnd.ToShortDateString());
 
-            // Clear and rebuild
-            EventRows.Clear();
-            _trainerDetailRows.Clear();
+            // Build rows off the UI thread, then swap in one shot to avoid per-row layout churn
+            var weekStart = WeekStart;
+            var weekEnd = WeekEnd;
+            var (rows, trainerRows) = await Task.Run(() => BuildRows(events, weekStart, weekEnd));
 
-            // Render all events into flat row list
-            RenderEvents(events);
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                EventRows = new ObservableCollection<EventRow>(rows);
+                _trainerDetailRows.Clear();
+                _trainerDetailRows.AddRange(trainerRows);
+            });
 
             // Highlight rows in "All" view when registrant matches current user or couples
             List<string> normalizedHighlights = new();
@@ -278,25 +302,31 @@ public partial class CalendarViewModel : ViewModelBase
         }
     }
 
-    private void RenderEvents(List<EventInstance> events)
+    private static (List<EventRow> Rows, List<TrainerDetailRow> TrainerRows) BuildRows(
+        List<EventInstance> events,
+        DateTime weekStart,
+        DateTime weekEnd)
     {
+        var rows = new List<EventRow>(capacity: Math.Max(64, events.Count));
+        var trainerRows = new List<TrainerDetailRow>();
+
         // Group events by day (date only)
         var groupsByDate = events
             .GroupBy(e => e.Since.HasValue ? e.Since.Value.Date : e.UpdatedAt.Date)
             .ToDictionary(g => g.Key, g => g.OrderBy(ev => ev.Since).ToList());
 
         // Single week header for current rolling window
-        var weekLabel = CalendarHelpers.FormatWeekLabel(WeekStart, WeekEnd);
-        EventRows.Add(new WeekHeaderRow(weekLabel));
+        var weekLabel = CalendarHelpers.FormatWeekLabel(weekStart, weekEnd);
+        rows.Add(new WeekHeaderRow(weekLabel));
 
         foreach (var date in groupsByDate.Keys.OrderBy(d => d))
         {
-            if (!groupsByDate.TryGetValue(date, out var dayEvents) || dayEvents.Count == 0) 
+            if (!groupsByDate.TryGetValue(date, out var dayEvents) || dayEvents.Count == 0)
                 continue;
 
             // Day header
             var dayLabel = CalendarHelpers.FormatDayLabel(date);
-            EventRows.Add(new DayHeaderRow(dayLabel, date));
+            rows.Add(new DayHeaderRow(dayLabel, date));
 
             // Separate events into groupable (lesson with exactly one trainer) and single events
             var groupableEvents = new List<EventInstance>();
@@ -321,7 +351,7 @@ public partial class CalendarViewModel : ViewModelBase
                 var eventName = CalendarHelpers.ComputeEventName(evt);
                 var eventTypeLabel = CalendarHelpers.ComputeEventTypeLabel(evt.Event?.Type);
 
-                EventRows.Add(new SingleEventRow(evt, timeRange, locationOrTrainers, eventName, 
+                rows.Add(new SingleEventRow(evt, timeRange, locationOrTrainers, eventName,
                     eventTypeLabel, evt.IsCancelled));
             }
 
@@ -341,7 +371,7 @@ public partial class CalendarViewModel : ViewModelBase
                     : EventTrainerDisplayHelper.GetTrainerDisplayWithPrefix(representative).Trim();
                 var cohorts = ordered.FirstOrDefault()?.Event?.EventTargetCohortsList;
 
-                EventRows.Add(new TrainerGroupHeaderRow(trainerTitle, cohorts));
+                rows.Add(new TrainerGroupHeaderRow(trainerTitle, cohorts));
 
                 for (int i = 0; i < ordered.Count; i++)
                 {
@@ -349,12 +379,13 @@ public partial class CalendarViewModel : ViewModelBase
                     var firstRegistrant = i == 0 ? CalendarHelpers.ComputeFirstRegistrant(inst) : string.Empty;
                     var durationText = CalendarHelpers.ComputeDuration(inst);
                     var detailRow = new TrainerDetailRow(inst, firstRegistrant, durationText);
-                    _trainerDetailRows.Add(detailRow);
-
-                    EventRows.Add(detailRow);
+                    trainerRows.Add(detailRow);
+                    rows.Add(detailRow);
                 }
             }
         }
+
+        return (rows, trainerRows);
     }
 
     private async Task<List<string>> BuildHighlightListAsync()

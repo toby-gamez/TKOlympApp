@@ -675,19 +675,6 @@ public partial class MainPage : ContentPage
                         }
                     }
                 }
-
-                var tenant = inst.Tenant;
-                if (tenant?.CouplesList != null && tenant.CouplesList.Count > 0)
-                {
-                    var c = tenant.CouplesList[0];
-                    Person? p = c.Man ?? c.Woman;
-                    if (p != null)
-                    {
-                        if (!string.IsNullOrWhiteSpace(p.FirstName))
-                            return (p.FirstName + " " + (p.Name ?? p.LastName ?? string.Empty)).Trim();
-                        return ((p.Name ?? string.Empty) + (string.IsNullOrWhiteSpace(p.LastName) ? string.Empty : " " + p.LastName)).Trim();
-                    }
-                }
             }
             catch { }
             return string.Empty;

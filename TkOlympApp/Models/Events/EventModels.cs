@@ -124,18 +124,7 @@ public sealed record EventInstance(
     [property: JsonPropertyName("since")] DateTime? Since,
     [property: JsonPropertyName("until")] DateTime? Until,
     [property: JsonPropertyName("updatedAt")] DateTime UpdatedAt,
-    [property: JsonPropertyName("tenant")] Tenant? Tenant,
     [property: JsonPropertyName("event")] EventInfo? Event
-);
-
-public sealed record Tenant(
-    [property: JsonPropertyName("couplesList")] List<Couple> CouplesList
-);
-
-public sealed record Couple(
-    [property: JsonPropertyName("active")] bool Active,
-    [property: JsonPropertyName("man")] Person? Man,
-    [property: JsonPropertyName("woman")] Person? Woman
 );
 
 public sealed record Person(
