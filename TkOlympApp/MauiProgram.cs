@@ -11,6 +11,9 @@ using TkOlympApp.Services;
 using TkOlympApp.Services.Abstractions;
 using TkOlympApp.Pages;
 using Microsoft.Maui.Storage;
+using Polly;
+using Polly.Extensions.Http;
+using TkOlympApp.Exceptions;
 
 namespace TkOlympApp;
 
@@ -41,6 +44,53 @@ public static class MauiProgram
         builder.Services.AddSingleton<ISecureStorage>(SecureStorage.Default);
         builder.Services.AddSingleton<IPreferences>(Preferences.Default);
 
+        // Polly retry policy: exponential backoff pro transient failures (HTTP 5xx, timeouts)
+        // Note: Logger fallback používá Debug.WriteLine pokud není inicializováno
+        var retryPolicy = HttpPolicyExtensions
+            .HandleTransientHttpError() // HTTP 5xx nebo network failures
+            .Or<TimeoutException>()
+            .WaitAndRetryAsync(
+                retryCount: 3,
+                sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), // 2s, 4s, 8s
+                onRetry: (outcome, timespan, retryCount, context) =>
+                {
+                    var logger = LoggerService.CreateLogger("Polly.RetryPolicy");
+                    logger.LogRetryAttempt(
+                        attemptNumber: retryCount,
+                        maxAttempts: 3,
+                        delay: timespan,
+                        exception: outcome.Exception ?? new Exception(outcome.Result?.ReasonPhrase ?? "Unknown"),
+                        operationName: context.OperationKey
+                    );
+                });
+
+        // Polly circuit breaker: otevře circuit po 5 consecutive failures za 30s
+        var circuitBreakerPolicy = HttpPolicyExtensions
+            .HandleTransientHttpError()
+            .Or<TimeoutException>()
+            .CircuitBreakerAsync(
+                handledEventsAllowedBeforeBreaking: 5,
+                durationOfBreak: TimeSpan.FromSeconds(30),
+                onBreak: (outcome, duration, context) =>
+                {
+                    var logger = LoggerService.CreateLogger("Polly.CircuitBreaker");
+                    logger.LogCircuitBreakerOpen(
+                        consecutiveFailures: 5,
+                        breakDuration: duration,
+                        operationName: context.OperationKey
+                    );
+                },
+                onReset: context =>
+                {
+                    var logger = LoggerService.CreateLogger("Polly.CircuitBreaker");
+                    logger.LogCircuitBreakerClosed(operationName: context.OperationKey);
+                },
+                onHalfOpen: () =>
+                {
+                    var logger = LoggerService.CreateLogger("Polly.CircuitBreaker");
+                    logger.LogCircuitBreakerHalfOpen();
+                });
+
         // Register HTTP clients with IHttpClientFactory
         // AddHttpClient automatically registers the typed client as Transient
         builder.Services.AddHttpClient<IGraphQlClient, GraphQlClientImplementation>(client =>
@@ -50,7 +100,9 @@ public static class MauiProgram
             client.Timeout = TimeSpan.FromSeconds(AppConstants.DefaultTimeoutSeconds);
         })
         // Most services call IGraphQlClient (typed client). They require the same auth behavior as IAuthService.Http.
-        .AddHttpMessageHandler<AuthDelegatingHandler>();
+        .AddHttpMessageHandler<AuthDelegatingHandler>()
+        .AddPolicyHandler(retryPolicy)
+        .AddPolicyHandler(circuitBreakerPolicy);
 
         // Bare client for auth refresh (no delegating handler to avoid recursion)
         builder.Services.AddHttpClient("AuthService.Bare", client =>
@@ -76,6 +128,7 @@ public static class MauiProgram
         .AddHttpMessageHandler<AuthDelegatingHandler>();
 
         // Instance-based (DI) services
+        builder.Services.AddSingleton<INavigationService, NavigationServiceImplementation>();
         builder.Services.AddTransient<IEventService, EventServiceImplementation>();
         builder.Services.AddSingleton<IUserService, UserServiceImplementation>();
         builder.Services.AddTransient<INoticeboardService, NoticeboardServiceImplementation>();
@@ -84,6 +137,11 @@ public static class MauiProgram
         builder.Services.AddTransient<ICoupleService, CoupleServiceImplementation>();
         builder.Services.AddTransient<ITenantService, TenantServiceImplementation>();
         builder.Services.AddTransient<ILeaderboardService, LeaderboardServiceImplementation>();
+
+        // Register ViewModels
+        builder.Services.AddTransient<TkOlympApp.ViewModels.RegistrationViewModel>();
+        builder.Services.AddTransient<TkOlympApp.ViewModels.EventViewModel>();
+        builder.Services.AddTransient<TkOlympApp.ViewModels.EditRegistrationsViewModel>();
 
         // Notification services
         builder.Services.AddSingleton<IEventNotificationService, EventNotificationService>();

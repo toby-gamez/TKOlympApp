@@ -369,4 +369,7 @@
   <data name="ChangePassword_Title" xml:space="preserve"><value>Зміна пароля</value></data>
   <data name="Notification_NewAnnouncement_Title" xml:space="preserve"><value>Нова публікація</value></data>
   <data name="Notification_NewAnnouncement_Message" xml:space="preserve"><value>Нова публікація</value></data>
+  <data name="Auth_RefreshFailed" xml:space="preserve"><value>Не вдалося оновити токен.</value></data>
+  <data name="Auth_InvalidCredentials" xml:space="preserve"><value>Невірні облікові дані.</value></data>
+  <data name="Error_SaveFailed" xml:space="preserve"><value>Збереження не вдалося.</value></data>
 </root>

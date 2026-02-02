@@ -287,6 +287,118 @@ public static class LoggerExtensions
     }
 
     /// <summary>
+    /// Loguje retry pokus s exponential backoff kontextem.
+    /// </summary>
+    public static void LogRetryAttempt(
+        this ILogger logger,
+        int attemptNumber,
+        int maxAttempts,
+        TimeSpan delay,
+        Exception exception,
+        string? operationName = null)
+    {
+        var state = new List<KeyValuePair<string, object?>>
+        {
+            new("AttemptNumber", attemptNumber),
+            new("MaxAttempts", maxAttempts),
+            new("DelayMs", delay.TotalMilliseconds),
+            new("ExceptionType", exception.GetType().Name),
+            new("ExceptionMessage", exception.Message)
+        };
+
+        if (!string.IsNullOrEmpty(operationName))
+            state.Add(new("Operation", operationName));
+
+        // Rozpoznání transient vs. permanent failures
+        var isTransient = exception is ServiceException se && se.IsTransient;
+        state.Add(new("IsTransient", isTransient));
+
+        logger.Log(
+            LogLevel.Warning,
+            new EventId(5000, "RetryAttempt"),
+            state,
+            exception,
+            (_, e) => $"Retry pokus {attemptNumber}/{maxAttempts} za {delay.TotalMilliseconds:F0}ms{(operationName != null ? $" ({operationName})" : "")}: {e?.Message}"
+        );
+    }
+
+    /// <summary>
+    /// Loguje otevření circuit breakeru po opakovaných selháních.
+    /// </summary>
+    public static void LogCircuitBreakerOpen(
+        this ILogger logger,
+        int consecutiveFailures,
+        TimeSpan breakDuration,
+        string? operationName = null)
+    {
+        var state = new List<KeyValuePair<string, object?>>
+        {
+            new("ConsecutiveFailures", consecutiveFailures),
+            new("BreakDurationSeconds", breakDuration.TotalSeconds),
+            new("CircuitState", "Open")
+        };
+
+        if (!string.IsNullOrEmpty(operationName))
+            state.Add(new("Operation", operationName));
+
+        logger.Log(
+            LogLevel.Error,
+            new EventId(5001, "CircuitBreakerOpen"),
+            state,
+            null,
+            (_, __) => $"Circuit breaker otevřen po {consecutiveFailures} selháních{(operationName != null ? $" ({operationName})" : "")} - pauza {breakDuration.TotalSeconds}s"
+        );
+    }
+
+    /// <summary>
+    /// Loguje uzavření circuit breakeru (návrat k normálnímu stavu).
+    /// </summary>
+    public static void LogCircuitBreakerClosed(
+        this ILogger logger,
+        string? operationName = null)
+    {
+        var state = new List<KeyValuePair<string, object?>>
+        {
+            new("CircuitState", "Closed")
+        };
+
+        if (!string.IsNullOrEmpty(operationName))
+            state.Add(new("Operation", operationName));
+
+        logger.Log(
+            LogLevel.Information,
+            new EventId(5002, "CircuitBreakerClosed"),
+            state,
+            null,
+            (_, __) => $"Circuit breaker uzavřen{(operationName != null ? $" ({operationName})" : "")} - obnovena normální komunikace"
+        );
+    }
+
+    /// <summary>
+    /// Loguje half-open stav circuit breakeru (testovací pokus po přerušení).
+    /// </summary>
+    public static void LogCircuitBreakerHalfOpen(
+        this ILogger logger,
+        string? operationName = null)
+    {
+        var state = new List<KeyValuePair<string, object?>>
+        {
+            new("CircuitState", "HalfOpen")
+        };
+
+        if (!string.IsNullOrEmpty(operationName))
+            state.Add(new("Operation", operationName));
+
+        logger.Log(
+            LogLevel.Information,
+            new EventId(5003, "CircuitBreakerHalfOpen"),
+            state,
+            null,
+            (_, __) => $"Circuit breaker half-open{(operationName != null ? $" ({operationName})" : "")} - testovací pokus"
+        );
+    }
+
+    /// <summary>
     /// Vnitřní třída pro automatické měření času operace s pomocí 'using' statement.
     /// </summary>
     private class OperationScope : IDisposable

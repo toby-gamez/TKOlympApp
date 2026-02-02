@@ -368,4 +368,7 @@
     <data name="Notification_NewAnnouncement_Title" xml:space="preserve"><value>New post (tea)</value></data>
     <data name="Notification_NewAnnouncement_Message" xml:space="preserve"><value>New post (tea)</value></data>
     <data name="Event_Registrations_Label" xml:space="preserve"><value>Yeet it</value></data>
+    <data name="Auth_RefreshFailed" xml:space="preserve"><value>Token expired (Sadge)</value></data>
+    <data name="Auth_InvalidCredentials" xml:space="preserve"><value>Wrong password (Skill Issue)</value></data>
+    <data name="Error_SaveFailed" xml:space="preserve"><value>Save failed (major L)</value></data>
 </root>

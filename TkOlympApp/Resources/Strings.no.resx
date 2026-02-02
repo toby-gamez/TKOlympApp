@@ -364,4 +364,7 @@
     <data name="ChangePassword_Title" xml:space="preserve"><value>Endre passord</value></data>
     <data name="Notification_NewAnnouncement_Title" xml:space="preserve"><value>Ny nyhet</value></data>
     <data name="Notification_NewAnnouncement_Message" xml:space="preserve"><value>Ny nyhet</value></data>
+    <data name="Auth_RefreshFailed" xml:space="preserve"><value>Token-fornyelse mislyktes.</value></data>
+    <data name="Auth_InvalidCredentials" xml:space="preserve"><value>Ugyldige påloggingsopplysninger.</value></data>
+    <data name="Error_SaveFailed" xml:space="preserve"><value>Lagring mislyktes.</value></data>
 </root>

@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Storage;
 using TkOlympApp.Helpers;
 using TkOlympApp.Services.Abstractions;
+using TkOlympApp.Exceptions;
 
 namespace TkOlympApp.Services;
 
@@ -119,8 +120,9 @@ public class AuthServiceImplementation : IAuthService
 
         if (string.IsNullOrWhiteSpace(jwt))
         {
-            var errMsg = result?.Errors?.FirstOrDefault()?.Message ?? "Obnovení tokenu selhalo.";
-            throw new InvalidOperationException(errMsg);
+            var errors = result?.Errors?.Select(e => e.Message ?? "").ToList() ?? new List<string>();
+            var errMsg = errors.FirstOrDefault() ?? LocalizationService.Get("Auth_RefreshFailed") ?? "Obnovení tokenu selhalo.";
+            throw new GraphQLException(errMsg, errors, body);
         }
 
         await _secureStorage.SetAsync(AppConstants.JwtStorageKey, jwt);
@@ -156,9 +158,10 @@ public class AuthServiceImplementation : IAuthService
 
         if (string.IsNullOrWhiteSpace(jwt))
         {
-            var errMsg = result?.Errors?.FirstOrDefault()?.Message ?? "Neplatné přihlašovací údaje.";
+            var errors = result?.Errors?.Select(e => e.Message ?? "").ToList() ?? new List<string>();
+            var errMsg = errors.FirstOrDefault() ?? LocalizationService.Get("Auth_InvalidCredentials") ?? "Neplatné přihlašovací údaje.";
             _logger.LogWarning("Login failed for user {Login}: {Error}", login, errMsg);
-            throw new InvalidOperationException(errMsg);
+            throw new GraphQLException(errMsg, errors, body);
         }
 
         _logger.LogInformation("Login successful for user: {Login}", login);
@@ -317,6 +320,15 @@ public class AuthDelegatingHandler : DelegatingHandler
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
+        var requestId = Guid.NewGuid().ToString("N")[..8];
+        using var scope = _logger.BeginScope(new Dictionary<string, object?>
+        {
+            ["RequestId"] = requestId,
+            ["TenantId"] = AppConstants.TenantId,
+            ["RequestMethod"] = request.Method.ToString(),
+            ["RequestUri"] = request.RequestUri?.PathAndQuery
+        });
+
         // Ensure we send the JWT on the first attempt.
         // Without this, legacy callers that use AuthService.Http may hit 401 first and pay an extra round-trip (and sometimes time out).
         if (request.Headers.Authorization == null)

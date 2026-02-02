@@ -367,4 +367,7 @@
   <data name="ChangePassword_Failure" xml:space="preserve"><value>Napaka pri spremembi gesla.</value></data>
   <data name="ChangePassword_Success_Title" xml:space="preserve"><value>Končano</value></data>
   <data name="ChangePassword_Success_LoggedOut_Message" xml:space="preserve"><value>Geslo je bilo uspešno spremenjeno. Izvedena je bila samodejna odjava.</value></data>
+  <data name="Auth_RefreshFailed" xml:space="preserve"><value>Osvežitev žetona ni uspela.</value></data>
+  <data name="Auth_InvalidCredentials" xml:space="preserve"><value>Neveljavne prijavne podatke.</value></data>
+  <data name="Error_SaveFailed" xml:space="preserve"><value>Shranjevanje ni uspelo.</value></data>
 </root>

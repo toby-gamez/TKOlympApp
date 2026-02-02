@@ -369,4 +369,7 @@
   <data name="Notification_EditRule_Trainers" xml:space="preserve"><value>Trenéři</value></data>
   <data name="Notification_AllTypes" xml:space="preserve"><value>všechny typy</value></data>
   <data name="Notification_AllTrainers" xml:space="preserve"><value>všichni trenéři</value></data>
+  <data name="Auth_RefreshFailed" xml:space="preserve"><value>Obnovení tokenu selhalo.</value></data>
+  <data name="Auth_InvalidCredentials" xml:space="preserve"><value>Neplatné přihlašovací údaje.</value></data>
+  <data name="Error_SaveFailed" xml:space="preserve"><value>Uložení selhalo.</value></data>
 </root>

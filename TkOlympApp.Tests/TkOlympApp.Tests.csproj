@@ -8,6 +8,13 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!-- Code coverage threshold enforcement -->
+    <Threshold>80</Threshold>
+    <ThresholdType>line</ThresholdType>
+    <ThresholdStat>total</ThresholdStat>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
     <PackageReference Include="xunit" Version="2.9.2" />
@@ -20,6 +27,9 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="FluentAssertions" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="10.0.2" />
+    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="Polly" Version="7.2.4" />
   </ItemGroup>
 
   <!-- Note: Direct project reference to MAUI project is not compatible with net10.0 -->
@@ -45,6 +55,34 @@
     <!-- Link logging services for testing -->
     <Compile Include="..\TkOlympApp\Services\LoggerService.cs" Link="LinkedSources\LoggerService.cs" />
     <Compile Include="..\TkOlympApp\Services\LoggerExtensions.cs" Link="LinkedSources\LoggerExtensions.cs" />
+    <!-- Link service abstractions for testing -->
+    <Compile Include="..\TkOlympApp\Services\Abstractions\IAuthService.cs" Link="LinkedSources\IAuthService.cs" />
+    <Compile Include="..\TkOlympApp\Services\Abstractions\IGraphQlClient.cs" Link="LinkedSources\IGraphQlClient.cs" />
+    <Compile Include="..\TkOlympApp\Services\Abstractions\IUserService.cs" Link="LinkedSources\IUserService.cs" />
+    <Compile Include="..\TkOlympApp\Services\Abstractions\IEventService.cs" Link="LinkedSources\IEventService.cs" />
+    <Compile Include="..\TkOlympApp\Services\Abstractions\ILeaderboardService.cs" Link="LinkedSources\ILeaderboardService.cs" />
+    <Compile Include="..\TkOlympApp\Services\Abstractions\ICoupleService.cs" Link="LinkedSources\ICoupleService.cs" />
+    <Compile Include="..\TkOlympApp\Services\Abstractions\ICohortService.cs" Link="LinkedSources\ICohortService.cs" />
+    <Compile Include="..\TkOlympApp\Services\Abstractions\IPeopleService.cs" Link="LinkedSources\IPeopleService.cs" />
+    <Compile Include="..\TkOlympApp\Services\Abstractions\INoticeboardService.cs" Link="LinkedSources\INoticeboardService.cs" />
+    <Compile Include="..\TkOlympApp\Services\Abstractions\IEventNotificationService.cs" Link="LinkedSources\IEventNotificationService.cs" />
+    <!-- Link service implementations for testing -->
+    <Compile Include="..\TkOlympApp\Services\GraphQlClient.cs" Link="LinkedSources\GraphQlClient.cs" />
+    <Compile Include="..\TkOlympApp\Services\BigIntegerJsonConverter.cs" Link="LinkedSources\BigIntegerJsonConverter.cs" />
+    <Compile Include="..\TkOlympApp\Services\AuthService.Implementation.cs" Link="LinkedSources\AuthService.Implementation.cs" />
+    <Compile Include="..\TkOlympApp\Services\EventServiceImplementation.cs" Link="LinkedSources\EventServiceImplementation.cs" />
+    <Compile Include="..\TkOlympApp\Services\UserServiceImplementation.cs" Link="LinkedSources\UserServiceImplementation.cs" />
+    <Compile Include="..\TkOlympApp\Services\LeaderboardServiceImplementation.cs" Link="LinkedSources\LeaderboardServiceImplementation.cs" />
+    <Compile Include="..\TkOlympApp\Services\CoupleServiceImplementation.cs" Link="LinkedSources\CoupleServiceImplementation.cs" />
+    <Compile Include="..\TkOlympApp\Services\CohortServiceImplementation.cs" Link="LinkedSources\CohortServiceImplementation.cs" />
+    <Compile Include="..\TkOlympApp\Services\PeopleServiceImplementation.cs" Link="LinkedSources\PeopleServiceImplementation.cs" />
+    <Compile Include="..\TkOlympApp\Services\NoticeboardServiceImplementation.cs" Link="LinkedSources\NoticeboardServiceImplementation.cs" />
+    <!-- Note: EventNotificationService has MAUI dependencies (Plugin.LocalNotification) and cannot be directly tested -->
+    <!-- Note: LocalizationService is mocked for testing - do not link real implementation -->
+    <!-- Link helper classes -->
+    <Compile Include="..\TkOlympApp\Helpers\AppConstants.cs" Link="LinkedSources\AppConstants.cs" />
+    <!-- Link models for testing -->
+    <Compile Include="..\TkOlympApp\Models\**\*.cs" Link="LinkedSources\Models\%(RecursiveDir)%(Filename)%(Extension)" />
     <!-- Note: We create a mock LocalizationService for testing DateHelpers -->
   </ItemGroup>
 

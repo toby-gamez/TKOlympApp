@@ -2,13 +2,15 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:svc="clr-namespace:TkOlympApp.Services"
+             xmlns:vm="clr-namespace:TkOlympApp.ViewModels"
              x:Class="TkOlympApp.Pages.RegistrationPage"
+             x:DataType="vm:RegistrationViewModel"
              Title="{svc:Translate RegistrationPage_Title}">
 
     <Grid>
         <ScrollView>
             <VerticalStackLayout Padding="20" Spacing="12">
-            <Label x:Name="TitleLabel" FontAttributes="Bold" FontSize="20" Text="{svc:Translate RegistrationPage_Title}" />
+            <Label x:Name="TitleLabel" FontAttributes="Bold" FontSize="20" Text="{Binding TitleText}" />
 
             <Border Padding="12" Margin="8,6">
                 <Border.StrokeShape>
@@ -16,13 +18,13 @@
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="6">
                     <Label Text="{svc:Translate Registration_Info_Label}" FontAttributes="Bold" />
-                    <Label x:Name="EventInfoLabel" />
+                    <Label x:Name="EventInfoLabel" Text="{Binding EventInfoText}" />
                     <Label Text="{svc:Translate Registration_Note}" FontAttributes="Italic" />
                 </VerticalStackLayout>
             </Border>
 
             <Label Text="{svc:Translate Registration_MyDetails_Label}" FontAttributes="Bold" />
-            <Label x:Name="CurrentUserLabel" FontSize="14" Style="{StaticResource MutedLabelStyle}" />
+            <Label x:Name="CurrentUserLabel" FontSize="14" Style="{StaticResource MutedLabelStyle}" Text="{Binding CurrentUserText}" IsVisible="{Binding CurrentUserVisible}" />
 
             <!-- Debug IDs -->
 
@@ -31,17 +33,17 @@
             <Label x:Name="EventNameDisplayLabel" FontAttributes="Bold" FontSize="14" IsVisible="False" />
 
             <Label Text="{svc:Translate Label_EventId}" FontAttributes="Bold" IsVisible="False" />
-            <Label x:Name="EventIdLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}" IsVisible="False" />
+            <Label x:Name="EventIdLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}" IsVisible="False" Text="{Binding EventIdText}" />
 
             <Label Text="{svc:Translate Label_PersonId}" FontAttributes="Bold" IsVisible="False" />
-            <Label x:Name="PersonIdLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}" IsVisible="False" />
+            <Label x:Name="PersonIdLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}" IsVisible="False" Text="{Binding PersonIdText}" />
 
             <Label Text="{svc:Translate Label_CoupleId}" FontAttributes="Bold" IsVisible="False" />
-            <Label x:Name="CoupleIdLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}" IsVisible="False" />
+            <Label x:Name="CoupleIdLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}" IsVisible="False" Text="{Binding CoupleIdText}" />
             <Label Text="{svc:Translate Registration_Whom_Label}" FontAttributes="Bold" x:Name="SelectionHeader" />
-            <CollectionView x:Name="SelectionCollection" SelectionMode="Single" SelectionChanged="OnSelectionChanged">
+            <CollectionView x:Name="SelectionCollection" SelectionMode="Single" ItemsSource="{Binding SelectionOptions}" SelectedItem="{Binding SelectedOption}">
                 <CollectionView.ItemTemplate>
-                    <DataTemplate>
+                    <DataTemplate x:DataType="vm:RegistrationOption">
                         <Border Style="{StaticResource SelectableItemContainer}">
                             <Label Text="{Binding DisplayText}" />
                         </Border>
@@ -50,10 +52,10 @@
             </CollectionView>
 
             <!-- Trainer selection: shown when a registration target is selected and trainer reservations are allowed -->
-            <Label x:Name="TrainerSelectionHeader" Text="{svc:Translate Registration_Trainer_Label}" FontAttributes="Bold" IsVisible="False" />
-            <CollectionView x:Name="TrainerSelectionCollection" SelectionMode="None" IsVisible="False">
+            <Label x:Name="TrainerSelectionHeader" Text="{svc:Translate Registration_Trainer_Label}" FontAttributes="Bold" IsVisible="{Binding TrainerSelectionHeaderVisible}" />
+            <CollectionView x:Name="TrainerSelectionCollection" SelectionMode="None" IsVisible="{Binding TrainerSelectionVisible}" ItemsSource="{Binding TrainerOptions}">
                 <CollectionView.ItemTemplate>
-                    <DataTemplate>
+                    <DataTemplate x:DataType="vm:TrainerOption">
                         <Border Style="{StaticResource SelectableItemContainer}">
                             <Grid ColumnDefinitions="*,Auto" VerticalOptions="Center" Padding="6">
                                 <Label Grid.Column="0" Text="{Binding Name}" VerticalOptions="Center" />
@@ -68,14 +70,14 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
-            <Button x:Name="ConfirmButton" Text="{svc:Translate Registration_Button_Text}" IsEnabled="False" HorizontalOptions="Fill" Clicked="OnConfirmClicked" />
+            <Button x:Name="ConfirmButton" Text="{svc:Translate Registration_Button_Text}" IsEnabled="{Binding ConfirmEnabled}" HorizontalOptions="Fill" Command="{Binding ConfirmCommand}" />
             <Label Text="{svc:Translate Label_GraphQL}" FontAttributes="Bold" Margin="0,8,0,0" IsVisible="False" />
                 <Editor x:Name="MutationPreview" IsReadOnly="True" AutoSize="TextChanges" HeightRequest="140" Margin="0,4,0,0" IsVisible="False" />
             </VerticalStackLayout>
         </ScrollView>
 
         <!-- Fullscreen success overlay (hidden by default) -->
-        <Grid x:Name="SuccessOverlay" IsVisible="False" BackgroundColor="#AA000000" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand">
+        <Grid x:Name="SuccessOverlay" IsVisible="{Binding SuccessOverlayVisible}" BackgroundColor="#AA000000" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand">
             <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="12" Padding="24">
                 <!-- Check inside a green circular border so it always renders -->
                 <Border BackgroundColor="#2e7d32" WidthRequest="160" HeightRequest="160" HorizontalOptions="Center" VerticalOptions="Center">
@@ -84,7 +86,7 @@
                     </Border.StrokeShape>
                     <Label x:Name="SuccessIcon" Text="✔" FontSize="96" TextColor="White" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" HorizontalOptions="Center" VerticalOptions="Center" />
                 </Border>
-                <Label x:Name="SuccessText" Text="Registrace odeslána" TextColor="#c8e6c9" FontAttributes="Bold" FontSize="20" HorizontalTextAlignment="Center" />
+                <Label x:Name="SuccessText" Text="{Binding SuccessText}" TextColor="#c8e6c9" FontAttributes="Bold" FontSize="20" HorizontalTextAlignment="Center" />
             </VerticalStackLayout>
         </Grid>
     </Grid>

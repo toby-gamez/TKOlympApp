@@ -367,4 +367,7 @@
     <data name="Notification_EditRule_Trainers" xml:space="preserve"><value>Trainers</value></data>
     <data name="Notification_AllTypes" xml:space="preserve"><value>all types</value></data>
     <data name="Notification_AllTrainers" xml:space="preserve"><value>all trainers</value></data>
+    <data name="Auth_RefreshFailed" xml:space="preserve"><value>Token refresh failed.</value></data>
+    <data name="Auth_InvalidCredentials" xml:space="preserve"><value>Invalid credentials.</value></data>
+    <data name="Error_SaveFailed" xml:space="preserve"><value>Save failed.</value></data>
 </root>

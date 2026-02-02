@@ -81,6 +81,14 @@ public partial class AppShell : Shell, IDisposable
         _startupCts = new CancellationTokenSource();
         Dispatcher.Dispatch(async () =>
         {
+            var startupOperationId = Guid.NewGuid().ToString("N")[..8];
+            using var scope = _logger.BeginScope(new Dictionary<string, object?>
+            {
+                ["OperationId"] = startupOperationId,
+                ["TenantId"] = AppConstants.TenantId,
+                ["Phase"] = "Startup"
+            });
+
             try
             {
                 // Show first-run page if needed before further startup navigation

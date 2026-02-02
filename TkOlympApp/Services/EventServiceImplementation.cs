@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using TkOlympApp.Models.Events;
 using TkOlympApp.Exceptions;
 using TkOlympApp.Services.Abstractions;
+using EventInstance = TkOlympApp.Models.Events.EventInstance;
 
 namespace TkOlympApp.Services;
 
