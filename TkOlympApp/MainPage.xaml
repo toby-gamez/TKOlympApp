@@ -4,6 +4,7 @@
              xmlns:converters="clr-namespace:TkOlympApp.Converters"
              xmlns:svc="clr-namespace:TkOlympApp.Services"
              x:Class="TkOlympApp.MainPage"
+             x:Name="MainPageRoot"
              Title="{svc:Translate Overview}">
 
     <ContentPage.Resources>
@@ -24,14 +25,14 @@
         </Grid.RowDefinitions>
             <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                 <Label Text="{svc:Translate UpcomingEvents}" FontSize="18" FontAttributes="Bold" />
-                <ActivityIndicator x:Name="Loading" IsVisible="False" IsRunning="False" />
+                <ActivityIndicator IsVisible="{Binding IsLoading}" IsRunning="{Binding IsLoading}" />
             </HorizontalStackLayout>
 
-        <RefreshView x:Name="MainRefreshView" Grid.Row="1" Refreshing="OnRefresh">
+        <RefreshView x:Name="MainRefreshView" Grid.Row="1" IsRefreshing="{Binding IsRefreshing}" Command="{Binding RefreshCommand}">
             <ScrollView>
                 <VerticalStackLayout Spacing="8">
                     <Grid>
-                        <VerticalStackLayout x:Name="DayContent" Spacing="8">
+                        <VerticalStackLayout x:Name="DayContent" Spacing="8" BindingContext="{Binding CurrentDay}" IsVisible="{Binding BindingContext.HasUpcomingEvents, Source={x:Reference MainPageRoot}}">
                             <!-- Day Label -->
                             <Label Text="{Binding DayLabel}" FontAttributes="Bold" Margin="0,2,0,2" FontSize="15" />
 
@@ -134,11 +135,11 @@
                         </VerticalStackLayout>
                     </VerticalStackLayout>
                     
-                    <Label x:Name="EmptyLabel" Text="{svc:Translate NoUpcomingEvents}" IsVisible="False" VerticalOptions="CenterAndExpand" HorizontalOptions="Center" Style="{StaticResource MutedLabelStyle}" />
+                    <Label x:Name="EmptyLabel" Text="{svc:Translate NoUpcomingEvents}" IsVisible="{Binding IsEventsEmpty}" VerticalOptions="CenterAndExpand" HorizontalOptions="Center" Style="{StaticResource MutedLabelStyle}" />
                 </Grid>
                 
                 <!-- Upcoming Camps Section -->
-                <VerticalStackLayout x:Name="UpcomingCampsSection" Spacing="6" Margin="0,8,0,0">
+                <VerticalStackLayout x:Name="UpcomingCampsSection" Spacing="6" Margin="0,8,0,0" IsVisible="{Binding HasUpcomingCamps}">
                     <Label Text="{svc:Translate UpcomingCamps}" FontSize="18" FontAttributes="Bold" Margin="0,0,0,4" />
                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding UpcomingCamps}">
                         <BindableLayout.ItemTemplate>
@@ -170,7 +171,7 @@
                 </VerticalStackLayout>
                 
                 <!-- Recent Announcements Section -->
-                <VerticalStackLayout x:Name="RecentAnnouncementsSection" Spacing="6" Margin="0,8,0,0">
+                <VerticalStackLayout x:Name="RecentAnnouncementsSection" Spacing="6" Margin="0,8,0,0" IsVisible="{Binding HasRecentAnnouncements}">
                     <Label Text="{svc:Translate Noticeboard}" FontSize="18" FontAttributes="Bold" Margin="0,0,0,4" />
                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding RecentAnnouncements}">
                         <BindableLayout.ItemTemplate>

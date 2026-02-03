@@ -499,7 +499,7 @@ public partial class CalendarViewViewModel : ViewModelBase
             {
                 try
                 {
-                    var first = TkOlympApp.MainPage.GroupedEventRow.ComputeFirstRegistrantPublic(inst);
+                    var first = TkOlympApp.ViewModels.MainPageViewModel.GroupedEventRow.ComputeFirstRegistrantPublic(inst);
                     var left = !string.IsNullOrEmpty(first) ? first : inst.Event?.Name ?? LocalizationService.Get("Lesson_Short") ?? "Lekce";
                     var trainerFull = EventTrainerDisplayHelper.GetTrainerDisplayName(inst.Event?.EventTrainersList?.FirstOrDefault());
                     if (!string.IsNullOrWhiteSpace(trainerFull))
@@ -520,7 +520,7 @@ public partial class CalendarViewViewModel : ViewModelBase
             {
                 try
                 {
-                    var first = TkOlympApp.MainPage.GroupedEventRow.ComputeFirstRegistrantPublic(inst);
+                    var first = TkOlympApp.ViewModels.MainPageViewModel.GroupedEventRow.ComputeFirstRegistrantPublic(inst);
                     var frNorm = NormalizeName(first);
                     var matched = !string.IsNullOrWhiteSpace(frNorm) && normalizedHighlights.Any(h => frNorm.Contains(h) || h.Contains(frNorm));
                     if (matched) makeBold = true;

@@ -147,6 +147,7 @@ public static class MauiProgram
         builder.Services.AddTransient<TkOlympApp.ViewModels.CalendarViewModel>();
         builder.Services.AddTransient<TkOlympApp.ViewModels.CalendarViewViewModel>();
         builder.Services.AddTransient<TkOlympApp.ViewModels.EventsViewModel>();
+        builder.Services.AddTransient<TkOlympApp.ViewModels.MainPageViewModel>();
 
         // Notification services
         builder.Services.AddTransient<IEventNotificationService, EventNotificationService>();

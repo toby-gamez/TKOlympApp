@@ -2,9 +2,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using TkOlympApp.Helpers;
 using TkOlympApp.Models.Events;
 using TkOlympApp.Models.Users;
@@ -15,7 +12,6 @@ namespace TkOlympApp.ViewModels;
 
 public partial class RegistrationViewModel : ViewModelBase
 {
-    private readonly IAuthService _authService;
     private readonly IEventService _eventService;
     private readonly IUserService _userService;
     private readonly INavigationService _navigationService;
@@ -69,12 +65,10 @@ public partial class RegistrationViewModel : ViewModelBase
     public ObservableCollection<TrainerOption> TrainerOptions { get; } = new();
 
     public RegistrationViewModel(
-        IAuthService authService,
         IEventService eventService,
         IUserService userService,
         INavigationService navigationService)
     {
-        _authService = authService ?? throw new ArgumentNullException(nameof(authService));
         _eventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
         _userService = userService ?? throw new ArgumentNullException(nameof(userService));
         _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
@@ -229,67 +223,12 @@ public partial class RegistrationViewModel : ViewModelBase
                 PersonIdText = "není";
                 try
                 {
-                    var startRange = DateTime.Now.Date.AddYears(-1).ToString("o");
-                    var endRange = DateTime.Now.Date.AddYears(1).ToString("o");
-                    var queryObj = new
-                    {
-                        query = "query($startRange: Datetime!, $endRange: Datetime!) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange) { id event { id name eventRegistrationsList { id person { firstName lastName } couple { id man { firstName lastName } woman { firstName lastName } } } } } }",
-                        variables = new { startRange = startRange, endRange = endRange }
-                    };
+                    var startRange = DateTime.Now.Date.AddYears(-1);
+                    var endRange = DateTime.Now.Date.AddYears(1);
+                    var scan = await _eventService.GetEventRegistrationScanAsync(startRange, endRange, EventId);
 
-                    var json = JsonSerializer.Serialize(queryObj);
-                    using var content = new StringContent(json, Encoding.UTF8, "application/json");
-                    using var resp = await _authService.Http.PostAsync("", content);
-                    if (resp.IsSuccessStatusCode)
-                    {
-                        var body = await resp.Content.ReadAsStringAsync();
-                        using var doc = JsonDocument.Parse(body);
-                        if (doc.RootElement.TryGetProperty("data", out var data) && 
-                            data.TryGetProperty("eventInstancesForRangeList", out var instances) && 
-                            instances.ValueKind == JsonValueKind.Array)
-                        {
-                            foreach (var inst in instances.EnumerateArray())
-                            {
-                                if (!inst.TryGetProperty("event", out var ev) || ev.ValueKind == JsonValueKind.Null) continue;
-
-                                // Filter to current EventId
-                                if (ev.TryGetProperty("id", out var evIdEl))
-                                {
-                                    long parsedEvId = 0;
-                                    if (evIdEl.ValueKind == JsonValueKind.Number && evIdEl.TryGetInt64(out var n)) 
-                                        parsedEvId = n;
-                                    else 
-                                        parsedEvId = long.TryParse(evIdEl.GetRawText().Trim('"'), out var t) ? t : 0;
-                                    if (parsedEvId != 0 && parsedEvId != EventId) continue;
-                                }
-
-                                if (!ev.TryGetProperty("eventRegistrationsList", out var regs) || regs.ValueKind != JsonValueKind.Array) 
-                                    continue;
-
-                                foreach (var reg in regs.EnumerateArray())
-                                {
-                                    // Collect couple id if present
-                                    if (reg.TryGetProperty("couple", out var coupleEl) && coupleEl.ValueKind != JsonValueKind.Null)
-                                    {
-                                        if (coupleEl.TryGetProperty("id", out var cidEl))
-                                        {
-                                            var cid = cidEl.GetRawText().Trim('"');
-                                            if (!string.IsNullOrWhiteSpace(cid)) registeredCoupleIds.Add(cid);
-                                        }
-                                    }
-
-                                    // Collect person full name if present
-                                    if (reg.TryGetProperty("person", out var personEl) && personEl.ValueKind != JsonValueKind.Null)
-                                    {
-                                        var pf = personEl.TryGetProperty("firstName", out var pff) ? pff.GetString() ?? string.Empty : string.Empty;
-                                        var pl = personEl.TryGetProperty("lastName", out var pll) ? pll.GetString() ?? string.Empty : string.Empty;
-                                        var pFull = string.IsNullOrWhiteSpace(pf) ? pl : (string.IsNullOrWhiteSpace(pl) ? pf : (pf + " " + pl).Trim());
-                                        if (!string.IsNullOrWhiteSpace(pFull)) registeredPersonNames.Add(pFull);
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    registeredCoupleIds = new HashSet<string>(scan.RegisteredCoupleIds ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
+                    registeredPersonNames = new HashSet<string>(scan.RegisteredPersonNames ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
                 }
                 catch (Exception ex)
                 {
@@ -417,32 +356,9 @@ public partial class RegistrationViewModel : ViewModelBase
 
     private async Task<bool> CreateRegistrationAsync(string? personId, string? coupleId)
     {
-        var options = new JsonSerializerOptions(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = true };
-
-        var reg = new Dictionary<string, object>();
-        if (!string.IsNullOrWhiteSpace(personId))
+        var lessons = new List<EventRegistrationLessonRequest>();
+        if (!_trainerReservationNotAllowed)
         {
-            reg["personId"] = personId!;
-        }
-        else if (!string.IsNullOrWhiteSpace(coupleId))
-        {
-            if (long.TryParse(coupleId, out var cid))
-                reg["coupleId"] = cid.ToString();
-            else
-                throw new InvalidOperationException(LocalizationService.Get("Registration_IdNumeric") ?? "CoupleId must be numeric.");
-        }
-        else
-        {
-            throw new InvalidOperationException(LocalizationService.Get("Registration_NoSelection") ?? "No selection provided.");
-        }
-
-        if (_trainerReservationNotAllowed)
-        {
-            reg["lessons"] = new List<Dictionary<string, object>>();
-        }
-        else
-        {
-            var lessonsList = new List<Dictionary<string, object>>();
             foreach (var t in TrainerOptions)
             {
                 if (t != null && t.Count > 0)
@@ -451,57 +367,13 @@ public partial class RegistrationViewModel : ViewModelBase
                     {
                         throw new InvalidOperationException($"Missing trainerId for trainer: {t.Name}");
                     }
-                    lessonsList.Add(new Dictionary<string, object>
-                    {
-                        ["trainerId"] = t.Id!,
-                        ["lessonCount"] = t.Count
-                    });
+                    lessons.Add(new EventRegistrationLessonRequest(t.Id!, t.Count));
                 }
             }
-            if (lessonsList.Count > 0)
-                reg["lessons"] = lessonsList;
         }
 
-        var clientMutationId = Guid.NewGuid().ToString();
-        var variables = new Dictionary<string, object>
-        {
-            ["input"] = new Dictionary<string, object>
-            {
-                ["registrations"] = new List<Dictionary<string, object>> { reg },
-                ["clientMutationId"] = clientMutationId
-            }
-        };
-
-        var gql = new Dictionary<string, object>
-        {
-            ["query"] = "mutation RegisterToEvent($input: RegisterToEventManyInput!) { registerToEventMany(input: $input) { eventRegistrations { id } } }",
-            ["variables"] = variables
-        };
-
-        var json = JsonSerializer.Serialize(gql, options);
-        using var content = new StringContent(json, Encoding.UTF8, "application/json");
-        using var resp = await _authService.Http.PostAsync("", content);
-        var body = await resp.Content.ReadAsStringAsync();
-
-        try
-        {
-            var data = JsonSerializer.Deserialize<GraphQlResponse<RegisterToEventManyData>>(body, options);
-            if (data?.Errors != null && data.Errors.Count > 0)
-            {
-                var msg = data.Errors[0].Message ?? LocalizationService.Get("GraphQL_UnknownError");
-                throw new InvalidOperationException(msg);
-            }
-            return data?.Data?.RegisterToEventMany?.EventRegistrations != null &&
-                   data.Data.RegisterToEventMany.EventRegistrations.Count > 0;
-        }
-        catch (JsonException)
-        {
-            if (!resp.IsSuccessStatusCode)
-            {
-                throw new InvalidOperationException($"HTTP {(int)resp.StatusCode}: {body}");
-            }
-            return resp.IsSuccessStatusCode;
-        }
+        var request = new EventRegistrationRequest(personId, coupleId, lessons);
+        return await _eventService.RegisterToEventManyAsync(request);
     }
 
     // Nested classes
@@ -539,30 +411,4 @@ public partial class RegistrationViewModel : ViewModelBase
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
-    // GraphQL response types
-    private sealed class GraphQlResponse<T>
-    {
-        [JsonPropertyName("data")] public T? Data { get; set; }
-        [JsonPropertyName("errors")] public List<GraphQlError>? Errors { get; set; }
-    }
-
-    private sealed class GraphQlError
-    {
-        [JsonPropertyName("message")] public string? Message { get; set; }
-    }
-
-    private sealed class RegisterToEventManyData
-    {
-        [JsonPropertyName("registerToEventMany")] public RegisterToEventManyPayload? RegisterToEventMany { get; set; }
-    }
-
-    private sealed class RegisterToEventManyPayload
-    {
-        [JsonPropertyName("eventRegistrations")] public List<EventRegistrationResult>? EventRegistrations { get; set; }
-    }
-
-    private sealed class EventRegistrationResult
-    {
-        [JsonPropertyName("id")] public string? Id { get; set; }
-    }
 }

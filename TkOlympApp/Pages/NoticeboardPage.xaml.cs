@@ -166,12 +166,32 @@ public partial class NoticeboardPage : ContentPage
         catch (BrokenCircuitException bce)
         {
             LoggerService.SafeLogWarning<NoticeboardPage>("Circuit open when loading announcements: {0}", new object[] { bce.Message });
-            try { await _notifier.ShowAsync(LocalizationService.Get("Service_Unavailable_Title") ?? "Service unavailable", LocalizationService.Get("Service_Unavailable_Message") ?? "The service is temporarily unavailable. Please try again later.", LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+            try
+            {
+                await _notifier.ShowAsync(
+                    LocalizationService.Get("Service_Unavailable_Title") ?? "Service unavailable",
+                    LocalizationService.Get("Service_Unavailable_Message") ?? "The service is temporarily unavailable. Please try again later.",
+                    LocalizationService.Get("Button_OK") ?? "OK");
+            }
+            catch (Exception notifyEx)
+            {
+                LoggerService.SafeLogWarning<NoticeboardPage>("Failed to show service unavailable: {0}", new object[] { notifyEx.Message });
+            }
         }
         catch (Exception ex)
         {
             LoggerService.SafeLogError<NoticeboardPage>(ex, "Failed to load announcements: {0}", new object[] { ex.Message });
-            try { await _notifier.ShowAsync(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+            try
+            {
+                await _notifier.ShowAsync(
+                    LocalizationService.Get("Error_Title") ?? "Error",
+                    ex.Message,
+                    LocalizationService.Get("Button_OK") ?? "OK");
+            }
+            catch (Exception notifyEx)
+            {
+                LoggerService.SafeLogWarning<NoticeboardPage>("Failed to show error: {0}", new object[] { notifyEx.Message });
+            }
         }
         finally
         {
@@ -180,9 +200,9 @@ public partial class NoticeboardPage : ContentPage
                 if (AnnouncementsRefresh != null)
                     AnnouncementsRefresh.IsRefreshing = false;
             }
-            catch
+            catch (Exception refreshEx)
             {
-                // ignore
+                LoggerService.SafeLogWarning<NoticeboardPage>("Failed to stop refresh: {0}", new object[] { refreshEx.Message });
             }
         }
     }
@@ -233,12 +253,32 @@ public partial class NoticeboardPage : ContentPage
         catch (BrokenCircuitException bce)
         {
             LoggerService.SafeLogWarning<NoticeboardPage>("Circuit open when loading sticky announcements: {0}", new object[] { bce.Message });
-            try { await _notifier.ShowAsync(LocalizationService.Get("Service_Unavailable_Title") ?? "Service unavailable", LocalizationService.Get("Service_Unavailable_Message") ?? "The service is temporarily unavailable. Please try again later.", LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+            try
+            {
+                await _notifier.ShowAsync(
+                    LocalizationService.Get("Service_Unavailable_Title") ?? "Service unavailable",
+                    LocalizationService.Get("Service_Unavailable_Message") ?? "The service is temporarily unavailable. Please try again later.",
+                    LocalizationService.Get("Button_OK") ?? "OK");
+            }
+            catch (Exception notifyEx)
+            {
+                LoggerService.SafeLogWarning<NoticeboardPage>("Failed to show service unavailable: {0}", new object[] { notifyEx.Message });
+            }
         }
         catch (Exception ex)
         {
             LoggerService.SafeLogError<NoticeboardPage>(ex, "Failed to load sticky announcements: {0}", new object[] { ex.Message });
-            try { await _notifier.ShowAsync(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+            try
+            {
+                await _notifier.ShowAsync(
+                    LocalizationService.Get("Error_Title") ?? "Error",
+                    ex.Message,
+                    LocalizationService.Get("Button_OK") ?? "OK");
+            }
+            catch (Exception notifyEx)
+            {
+                LoggerService.SafeLogWarning<NoticeboardPage>("Failed to show error: {0}", new object[] { notifyEx.Message });
+            }
         }
         finally
         {
@@ -247,9 +287,9 @@ public partial class NoticeboardPage : ContentPage
                 if (AnnouncementsRefresh != null)
                     AnnouncementsRefresh.IsRefreshing = false;
             }
-            catch
+            catch (Exception refreshEx)
             {
-                // ignore
+                LoggerService.SafeLogWarning<NoticeboardPage>("Failed to stop refresh: {0}", new object[] { refreshEx.Message });
             }
         }
     }
@@ -281,9 +321,9 @@ public partial class NoticeboardPage : ContentPage
             if (AnnouncementsRefresh != null)
                 AnnouncementsRefresh.IsRefreshing = false;
         }
-        catch
+        catch (Exception refreshEx)
         {
-            // ignore
+            LoggerService.SafeLogWarning<NoticeboardPage>("Failed to stop refresh: {0}", new object[] { refreshEx.Message });
         }
     }
 }

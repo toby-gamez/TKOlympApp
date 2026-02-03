@@ -92,5 +92,20 @@ public interface IEventService
         DateTime endRange,
         string? onlyType = null,
         CancellationToken ct = default);
+
+    /// <summary>
+    /// Retrieves a scan of registrations for a specific event within a time range.
+    /// Used to detect already-registered persons/couples.
+    /// </summary>
+    Task<EventRegistrationScanResult> GetEventRegistrationScanAsync(
+        DateTime startRange,
+        DateTime endRange,
+        long eventId,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Registers a person or couple to an event with optional lesson demands.
+    /// </summary>
+    Task<bool> RegisterToEventManyAsync(EventRegistrationRequest request, CancellationToken ct = default);
 }
 

@@ -3,6 +3,7 @@ using System.Net;
 using System.Threading.Tasks;
 using FluentAssertions;
 using TkOlympApp.Exceptions;
+using TkOlympApp.Models.Events;
 using TkOlympApp.Services;
 using TkOlympApp.Tests.Mocks;
 using Xunit;
@@ -141,5 +142,62 @@ public sealed class EventServiceImplementationTests
         result[0].Until.Should().Be(expectedUntil);
         result[0].Since!.Value.Kind.Should().Be(DateTimeKind.Local);
         result[0].Until!.Value.Kind.Should().Be(DateTimeKind.Local);
+    }
+
+    [Fact]
+    public async Task GetEventRegistrationScanAsync_returnsRegisteredNamesAndCouples()
+    {
+        var body = """
+                   {
+                     "data": {
+                       "eventInstancesForRangeList": [
+                         {
+                           "event": {
+                             "id": 42,
+                             "eventRegistrationsList": [
+                               { "person": { "firstName": "Ada", "lastName": "Lovelace" }, "couple": null },
+                               { "person": null, "couple": { "id": "100", "man": { "firstName": "Alan", "lastName": "Turing" }, "woman": { "firstName": "Grace", "lastName": "Hopper" } } }
+                             ]
+                           }
+                         }
+                       ]
+                     }
+                   }
+                   """;
+
+        var handler = MockHelpers.CreateMockHttpMessageHandler(HttpStatusCode.OK, body);
+        var http = MockHelpers.CreateMockHttpClient(handler);
+        var gql = new GraphQlClientImplementation(http);
+        var sut = new EventServiceImplementation(gql);
+
+        var result = await sut.GetEventRegistrationScanAsync(DateTime.UtcNow.AddDays(-1), DateTime.UtcNow.AddDays(1), 42);
+
+        result.RegisteredPersonNames.Should().Contain("Ada Lovelace");
+        result.RegisteredCoupleIds.Should().Contain("100");
+    }
+
+    [Fact]
+    public async Task RegisterToEventManyAsync_returnsTrue_whenRegistrationCreated()
+    {
+        var body = """
+                   {
+                     "data": {
+                       "registerToEventMany": {
+                         "eventRegistrations": [ { "id": "1" } ]
+                       }
+                     }
+                   }
+                   """;
+
+        var handler = MockHelpers.CreateMockHttpMessageHandler(HttpStatusCode.OK, body);
+        var http = MockHelpers.CreateMockHttpClient(handler);
+        var gql = new GraphQlClientImplementation(http);
+        var sut = new EventServiceImplementation(gql);
+
+        var request = new EventRegistrationRequest("123", null, new List<EventRegistrationLessonRequest>());
+
+        var result = await sut.RegisterToEventManyAsync(request);
+
+        result.Should().BeTrue();
     }
 }

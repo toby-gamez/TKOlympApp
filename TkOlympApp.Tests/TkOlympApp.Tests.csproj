@@ -72,6 +72,7 @@
     <Compile Include="..\TkOlympApp\Services\Abstractions\IPeopleService.cs" Link="LinkedSources\IPeopleService.cs" />
     <Compile Include="..\TkOlympApp\Services\Abstractions\INoticeboardService.cs" Link="LinkedSources\INoticeboardService.cs" />
     <Compile Include="..\TkOlympApp\Services\Abstractions\IEventNotificationService.cs" Link="LinkedSources\IEventNotificationService.cs" />
+    <Compile Include="..\TkOlympApp\Services\Abstractions\IUserNotifier.cs" Link="LinkedSources\IUserNotifier.cs" />
     <!-- Link service implementations for testing -->
     <Compile Include="..\TkOlympApp\Services\GraphQlClient.cs" Link="LinkedSources\GraphQlClient.cs" />
     <Compile Include="..\TkOlympApp\Services\BigIntegerJsonConverter.cs" Link="LinkedSources\BigIntegerJsonConverter.cs" />
@@ -87,6 +88,9 @@
     <!-- Note: LocalizationService is mocked for testing - do not link real implementation -->
     <!-- Link helper classes -->
     <Compile Include="..\TkOlympApp\Helpers\AppConstants.cs" Link="LinkedSources\AppConstants.cs" />
+    <Compile Include="..\TkOlympApp\Helpers\EventTrainerDisplayHelper.cs" Link="LinkedSources\EventTrainerDisplayHelper.cs" />
+    <!-- Link ViewModels for testing -->
+    <Compile Include="..\TkOlympApp\ViewModels\MainPageViewModel.cs" Link="LinkedSources\ViewModels\MainPageViewModel.cs" />
     <!-- Link models for testing -->
     <Compile Include="..\TkOlympApp\Models\**\*.cs" Link="LinkedSources\Models\%(RecursiveDir)%(Filename)%(Extension)" />
     <!-- Note: We create a mock LocalizationService for testing DateHelpers -->

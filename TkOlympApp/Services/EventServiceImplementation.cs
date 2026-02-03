@@ -488,6 +488,106 @@ fragment EventFull on Event {
         return allEvents;
     }
 
+    public async Task<EventRegistrationScanResult> GetEventRegistrationScanAsync(
+        DateTime startRange,
+        DateTime endRange,
+        long eventId,
+        CancellationToken ct = default)
+    {
+        var variables = new Dictionary<string, object>
+        {
+            { "startRange", startRange.ToString("o") },
+            { "endRange", endRange.ToString("o") }
+        };
+
+        var query =
+            "query($startRange: Datetime!, $endRange: Datetime!) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange) { event { id eventRegistrationsList { person { firstName lastName } couple { id man { firstName lastName } woman { firstName lastName } } } } } }";
+
+        var data = await _graphQlClient.PostAsync<EventRegistrationScanData>(query, variables, ct);
+        var instances = data?.EventInstancesForRangeList ?? new List<EventRegistrationScanInstance>();
+
+        var registeredCoupleIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var registeredPersonNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var inst in instances)
+        {
+            var ev = inst.Event;
+            if (ev == null || ev.Id == null) continue;
+            if (eventId != 0 && ev.Id.Value != eventId) continue;
+
+            var regs = ev.EventRegistrationsList ?? new List<EventRegistrationScanItem>();
+            foreach (var reg in regs)
+            {
+                if (reg.Couple?.Id != null)
+                {
+                    registeredCoupleIds.Add(reg.Couple.Id);
+                }
+
+                var fullName = BuildFullName(reg.Person?.FirstName, reg.Person?.LastName);
+                if (!string.IsNullOrWhiteSpace(fullName))
+                {
+                    registeredPersonNames.Add(fullName);
+                }
+            }
+        }
+
+        return new EventRegistrationScanResult(registeredCoupleIds, registeredPersonNames);
+    }
+
+    public async Task<bool> RegisterToEventManyAsync(EventRegistrationRequest request, CancellationToken ct = default)
+    {
+        if (request == null) throw new ArgumentNullException(nameof(request));
+
+        var reg = new Dictionary<string, object>();
+        if (!string.IsNullOrWhiteSpace(request.PersonId))
+        {
+            reg["personId"] = request.PersonId!;
+        }
+        else if (!string.IsNullOrWhiteSpace(request.CoupleId))
+        {
+            if (!long.TryParse(request.CoupleId, out var _))
+                throw new InvalidOperationException(LocalizationService.Get("Registration_IdNumeric") ?? "CoupleId must be numeric.");
+            reg["coupleId"] = request.CoupleId!;
+        }
+        else
+        {
+            throw new InvalidOperationException(LocalizationService.Get("Registration_NoSelection") ?? "No selection provided.");
+        }
+
+        if (request.Lessons != null && request.Lessons.Count > 0)
+        {
+            var lessonsList = request.Lessons
+                .Where(l => !string.IsNullOrWhiteSpace(l.TrainerId) && l.LessonCount > 0)
+                .Select(l => new Dictionary<string, object>
+                {
+                    ["trainerId"] = l.TrainerId,
+                    ["lessonCount"] = l.LessonCount
+                })
+                .ToList();
+            if (lessonsList.Count > 0)
+                reg["lessons"] = lessonsList;
+        }
+        else
+        {
+            reg["lessons"] = new List<Dictionary<string, object>>();
+        }
+
+        var variables = new Dictionary<string, object>
+        {
+            ["input"] = new Dictionary<string, object>
+            {
+                ["registrations"] = new List<Dictionary<string, object>> { reg },
+                ["clientMutationId"] = Guid.NewGuid().ToString()
+            }
+        };
+
+        var query = "mutation RegisterToEvent($input: RegisterToEventManyInput!) { registerToEventMany(input: $input) { eventRegistrations { id } } }";
+
+        var data = await _graphQlClient.PostAsync<RegisterToEventManyData>(query, variables, ct);
+        return data?.RegisterToEventMany?.EventRegistrations != null &&
+               data.RegisterToEventMany.EventRegistrations.Count > 0;
+    }
+
     private sealed class EventInstanceData
     {
         [JsonPropertyName("eventInstance")] public EventInstanceDetails? EventInstance { get; set; }
@@ -506,6 +606,65 @@ fragment EventFull on Event {
     private sealed class EventInstancesForRangeData
     {
         [JsonPropertyName("eventInstancesForRangeList")] public List<MinimalEventInstance>? EventInstancesForRangeList { get; set; }
+    }
+
+    private sealed class EventRegistrationScanData
+    {
+        [JsonPropertyName("eventInstancesForRangeList")] public List<EventRegistrationScanInstance>? EventInstancesForRangeList { get; set; }
+    }
+
+    private sealed class EventRegistrationScanInstance
+    {
+        [JsonPropertyName("event")] public EventRegistrationScanEvent? Event { get; set; }
+    }
+
+    private sealed class EventRegistrationScanEvent
+    {
+        [JsonPropertyName("id")] public long? Id { get; set; }
+        [JsonPropertyName("eventRegistrationsList")] public List<EventRegistrationScanItem>? EventRegistrationsList { get; set; }
+    }
+
+    private sealed class EventRegistrationScanItem
+    {
+        [JsonPropertyName("person")] public EventRegistrationScanPerson? Person { get; set; }
+        [JsonPropertyName("couple")] public EventRegistrationScanCouple? Couple { get; set; }
+    }
+
+    private sealed class EventRegistrationScanCouple
+    {
+        [JsonPropertyName("id")] public string? Id { get; set; }
+        [JsonPropertyName("man")] public EventRegistrationScanPerson? Man { get; set; }
+        [JsonPropertyName("woman")] public EventRegistrationScanPerson? Woman { get; set; }
+    }
+
+    private sealed class EventRegistrationScanPerson
+    {
+        [JsonPropertyName("firstName")] public string? FirstName { get; set; }
+        [JsonPropertyName("lastName")] public string? LastName { get; set; }
+    }
+
+    private sealed class RegisterToEventManyData
+    {
+        [JsonPropertyName("registerToEventMany")] public RegisterToEventManyPayload? RegisterToEventMany { get; set; }
+    }
+
+    private sealed class RegisterToEventManyPayload
+    {
+        [JsonPropertyName("eventRegistrations")] public List<EventRegistrationResult>? EventRegistrations { get; set; }
+    }
+
+    private sealed class EventRegistrationResult
+    {
+        [JsonPropertyName("id")] public string? Id { get; set; }
+    }
+
+    private static string BuildFullName(string? first, string? last)
+    {
+        var f = first?.Trim() ?? string.Empty;
+        var l = last?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(f)) return l;
+        if (string.IsNullOrWhiteSpace(l)) return f;
+        return $"{f} {l}".Trim();
     }
 
     private sealed class MinimalEventInstance
