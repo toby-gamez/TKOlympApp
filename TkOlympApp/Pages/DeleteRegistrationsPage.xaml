@@ -27,7 +27,7 @@
                                 ItemsSource="{Binding Groups}"
                                 SelectedItem="{Binding SelectedItem}">
                 <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="viewModels:DeleteRegistrationsViewModel.RegItem">
+                    <DataTemplate x:DataType="viewModels:DeleteRegistrationsRegItem">
                         <Border Style="{StaticResource SelectableItemContainer}">
                             <VerticalStackLayout Padding="12" Spacing="4">
                                 <Label Text="{Binding Text}" FontAttributes="Bold" />

@@ -25,7 +25,7 @@
                         ItemsLayout="VerticalList"
                         ItemsSource="{Binding Items}">
             <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="viewModels:EventNotificationSettingsViewModel.RuleItem">
+                <DataTemplate x:DataType="viewModels:EventNotificationSettingsRuleItem">
                     <Border Padding="10" Margin="6">
                         <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
                             <Label Grid.Column="0" Grid.Row="0" Text="{Binding Name}" FontAttributes="Bold" />

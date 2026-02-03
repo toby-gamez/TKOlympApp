@@ -15,10 +15,10 @@ public partial class LanguageViewModel : ViewModelBase
     private readonly IServiceProvider _services;
     private readonly IUserNotifier _notifier;
 
-    public ObservableCollection<LangItem> Languages { get; } = new();
+    public ObservableCollection<LanguageItem> Languages { get; } = new();
 
     [ObservableProperty]
-    private LangItem? _selectedLanguage;
+    private LanguageItem? _selectedLanguage;
 
     public LanguageViewModel(IServiceProvider services, IUserNotifier notifier)
     {
@@ -27,7 +27,7 @@ public partial class LanguageViewModel : ViewModelBase
         LoadLanguages();
     }
 
-    partial void OnSelectedLanguageChanged(LangItem? value)
+    partial void OnSelectedLanguageChanged(LanguageItem? value)
     {
         if (value == null) return;
         _ = ApplyLanguageAsync(value);
@@ -38,17 +38,17 @@ public partial class LanguageViewModel : ViewModelBase
         Languages.Clear();
         var stored = LocalizationService.GetStoredLanguage() ?? LocalizationService.DetermineDefaultLanguage();
 
-        Languages.Add(new LangItem { Code = "cs", Name = LocalizationService.Get("Language_Czech") ?? "Čeština", Flag = "🇨🇿", IsCurrent = stored == "cs" });
-        Languages.Add(new LangItem { Code = "en", Name = LocalizationService.Get("Language_English") ?? "English", Flag = "🇬🇧", IsCurrent = stored == "en" });
-        Languages.Add(new LangItem { Code = "uk", Name = LocalizationService.Get("Language_Ukrainian") ?? "Українська", Flag = "🇺🇦", IsCurrent = stored == "uk" });
-        Languages.Add(new LangItem { Code = "vi", Name = LocalizationService.Get("Language_Vietnamese") ?? "Tiếng Việt", Flag = "🇻🇳", IsCurrent = stored == "vi" });
-        Languages.Add(new LangItem { Code = "no", Name = LocalizationService.Get("Language_Norwegian") ?? "Norsk", Flag = "🇳🇴", IsCurrent = stored == "no" });
-        Languages.Add(new LangItem { Code = "sk", Name = LocalizationService.Get("Language_Slovak") ?? "Slovenčina", Flag = "🇸🇰", IsCurrent = stored == "sk" });
-        Languages.Add(new LangItem { Code = "sl", Name = LocalizationService.Get("Language_Slovenian") ?? "Slovenščina", Flag = "🇸🇮", IsCurrent = stored == "sl" });
-        Languages.Add(new LangItem { Code = "en-AU", Name = LocalizationService.Get("Language_en-AU") ?? "Brainrot", Flag = "🧠", IsCurrent = stored == "en-AU" });
+        Languages.Add(new LanguageItem { Code = "cs", Name = LocalizationService.Get("Language_Czech") ?? "Čeština", Flag = "🇨🇿", IsCurrent = stored == "cs" });
+        Languages.Add(new LanguageItem { Code = "en", Name = LocalizationService.Get("Language_English") ?? "English", Flag = "🇬🇧", IsCurrent = stored == "en" });
+        Languages.Add(new LanguageItem { Code = "uk", Name = LocalizationService.Get("Language_Ukrainian") ?? "Українська", Flag = "🇺🇦", IsCurrent = stored == "uk" });
+        Languages.Add(new LanguageItem { Code = "vi", Name = LocalizationService.Get("Language_Vietnamese") ?? "Tiếng Việt", Flag = "🇻🇳", IsCurrent = stored == "vi" });
+        Languages.Add(new LanguageItem { Code = "no", Name = LocalizationService.Get("Language_Norwegian") ?? "Norsk", Flag = "🇳🇴", IsCurrent = stored == "no" });
+        Languages.Add(new LanguageItem { Code = "sk", Name = LocalizationService.Get("Language_Slovak") ?? "Slovenčina", Flag = "🇸🇰", IsCurrent = stored == "sk" });
+        Languages.Add(new LanguageItem { Code = "sl", Name = LocalizationService.Get("Language_Slovenian") ?? "Slovenščina", Flag = "🇸🇮", IsCurrent = stored == "sl" });
+        Languages.Add(new LanguageItem { Code = "en-AU", Name = LocalizationService.Get("Language_en-AU") ?? "Brainrot", Flag = "🧠", IsCurrent = stored == "en-AU" });
     }
 
-    private async Task ApplyLanguageAsync(LangItem item)
+    private async Task ApplyLanguageAsync(LanguageItem item)
     {
         try
         {
@@ -92,13 +92,4 @@ public partial class LanguageViewModel : ViewModelBase
         }
     }
 
-    public sealed partial class LangItem : ObservableObject
-    {
-        public string Code { get; init; } = string.Empty;
-        public string Name { get; init; } = string.Empty;
-        public string Flag { get; init; } = string.Empty;
-
-        [ObservableProperty]
-        private bool _isCurrent;
-    }
 }

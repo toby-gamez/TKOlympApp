@@ -16,7 +16,7 @@ public partial class EventNotificationSettingsViewModel : ViewModelBase
     private readonly INavigationService _navigationService;
     private readonly IUserNotifier _notifier;
 
-    public ObservableCollection<RuleItem> Items { get; } = new();
+    public ObservableCollection<EventNotificationSettingsRuleItem> Items { get; } = new();
 
     public EventNotificationSettingsViewModel(ITenantService tenantService, INavigationService navigationService, IUserNotifier notifier)
     {
@@ -69,7 +69,7 @@ public partial class EventNotificationSettingsViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private async Task EditAsync(RuleItem? item)
+    private async Task EditAsync(EventNotificationSettingsRuleItem? item)
     {
         try
         {
@@ -97,7 +97,7 @@ public partial class EventNotificationSettingsViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void Delete(RuleItem? item)
+    private void Delete(EventNotificationSettingsRuleItem? item)
     {
         try
         {
@@ -167,41 +167,8 @@ public partial class EventNotificationSettingsViewModel : ViewModelBase
                 displayTrainers = string.Join(", ", names);
             }
 
-            var item = new RuleItem(s, displayTypes, displayTrainers);
+            var item = new EventNotificationSettingsRuleItem(s, displayTypes, displayTrainers);
             Items.Add(item);
-        }
-    }
-
-    public partial class RuleItem : ObservableObject
-    {
-        public RuleItem(EventNotificationSetting setting, string displayTypes, string displayTrainers)
-        {
-            Setting = setting;
-            DisplayTypes = displayTypes;
-            DisplayTrainers = displayTrainers;
-            _isEnabled = setting.Enabled;
-        }
-
-        public EventNotificationSetting Setting { get; private set; }
-        public string Name => Setting.Name ?? string.Empty;
-        public string DisplayTimeBefore => (int)Setting.TimeBefore.TotalMinutes + " min";
-        public string DisplayTypes { get; }
-        public string DisplayTrainers { get; }
-
-        [ObservableProperty]
-        private bool _isEnabled;
-
-        partial void OnIsEnabledChanged(bool value)
-        {
-            try
-            {
-                Setting = Setting with { Enabled = value };
-                NotificationSettingsService.AddOrUpdate(Setting);
-            }
-            catch (Exception ex)
-            {
-                LoggerService.SafeLogWarning<EventNotificationSettingsViewModel>("Failed to update setting: {0}", new object[] { ex.Message });
-            }
         }
     }
 }

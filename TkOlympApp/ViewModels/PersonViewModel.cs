@@ -29,8 +29,8 @@ public partial class PersonViewModel : ViewModelBase
     private bool _loadRequested;
     private CancellationTokenSource? _cts;
 
-    public ObservableCollection<ActiveCoupleDisplay> ActiveCouples { get; } = new();
-    public ObservableCollection<CohortItem> Cohorts { get; } = new();
+    public ObservableCollection<PersonActiveCoupleDisplay> ActiveCouples { get; } = new();
+    public ObservableCollection<PersonCohortItem> Cohorts { get; } = new();
 
     [ObservableProperty]
     private string? _personId;
@@ -120,7 +120,7 @@ public partial class PersonViewModel : ViewModelBase
     private bool _activeCouplesVisible;
 
     [ObservableProperty]
-    private ActiveCoupleDisplay? _selectedActiveCouple;
+    private PersonActiveCoupleDisplay? _selectedActiveCouple;
 
     public PersonViewModel(IPeopleService peopleService, INavigationService navigationService)
     {
@@ -137,7 +137,7 @@ public partial class PersonViewModel : ViewModelBase
         }
     }
 
-    partial void OnSelectedActiveCoupleChanged(ActiveCoupleDisplay? value)
+    partial void OnSelectedActiveCoupleChanged(PersonActiveCoupleDisplay? value)
     {
         if (value == null) return;
         _ = OpenActiveCoupleAsync(value);
@@ -315,7 +315,7 @@ public partial class PersonViewModel : ViewModelBase
             else if (!string.IsNullOrWhiteSpace(woman)) entry = woman;
             else entry = "(–)";
 
-            ActiveCouples.Add(new ActiveCoupleDisplay { Id = c.Id, Text = entry });
+            ActiveCouples.Add(new PersonActiveCoupleDisplay { Id = c.Id, Text = entry });
         }
 
         ActiveCouplesVisible = ActiveCouples.Count > 0;
@@ -337,13 +337,13 @@ public partial class PersonViewModel : ViewModelBase
             var colorBrush = CohortColorHelper.ParseColorBrush(c.ColorRgb)
                              ?? new SolidColorBrush(Colors.LightGray);
 
-            Cohorts.Add(new CohortItem { Name = name, Color = colorBrush });
+            Cohorts.Add(new PersonCohortItem { Name = name, Color = colorBrush });
         }
 
         CohortsVisible = Cohorts.Count > 0;
     }
 
-    private async Task OpenActiveCoupleAsync(ActiveCoupleDisplay item)
+    private async Task OpenActiveCoupleAsync(PersonActiveCoupleDisplay item)
     {
         try
         {
@@ -409,15 +409,4 @@ public partial class PersonViewModel : ViewModelBase
         return name + " " + suffix;
     }
 
-    public sealed class ActiveCoupleDisplay
-    {
-        public string? Id { get; set; }
-        public string Text { get; set; } = string.Empty;
-    }
-
-    public sealed class CohortItem
-    {
-        public string Name { get; set; } = string.Empty;
-        public Brush Color { get; set; } = new SolidColorBrush(Colors.LightGray);
-    }
 }

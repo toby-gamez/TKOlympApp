@@ -18,8 +18,8 @@ public partial class EventNotificationRuleEditViewModel : ViewModelBase
 
     private EventNotificationSetting? _setting;
 
-    public ObservableCollection<TypeItem> Types { get; } = new();
-    public ObservableCollection<TrainerItem> Trainers { get; } = new();
+    public ObservableCollection<EventNotificationRuleTypeItem> Types { get; } = new();
+    public ObservableCollection<EventNotificationRuleTrainerItem> Trainers { get; } = new();
 
     [ObservableProperty]
     private string _name = string.Empty;
@@ -48,22 +48,22 @@ public partial class EventNotificationRuleEditViewModel : ViewModelBase
         try
         {
             Types.Clear();
-            Types.Add(new TypeItem("CAMP", LocalizationService.Get("EventType_Camp") ?? "soustředění"));
-            Types.Add(new TypeItem("LESSON", LocalizationService.Get("EventType_Lesson") ?? "lekce"));
-            Types.Add(new TypeItem("HOLIDAY", LocalizationService.Get("EventType_Holiday") ?? "prázdniny"));
-            Types.Add(new TypeItem("RESERVATION", LocalizationService.Get("EventType_Reservation") ?? "rezervace"));
-            Types.Add(new TypeItem("GROUP", LocalizationService.Get("EventType_Group") ?? "vedená"));
+            Types.Add(new EventNotificationRuleTypeItem("CAMP", LocalizationService.Get("EventType_Camp") ?? "soustředění"));
+            Types.Add(new EventNotificationRuleTypeItem("LESSON", LocalizationService.Get("EventType_Lesson") ?? "lekce"));
+            Types.Add(new EventNotificationRuleTypeItem("HOLIDAY", LocalizationService.Get("EventType_Holiday") ?? "prázdniny"));
+            Types.Add(new EventNotificationRuleTypeItem("RESERVATION", LocalizationService.Get("EventType_Reservation") ?? "rezervace"));
+            Types.Add(new EventNotificationRuleTypeItem("GROUP", LocalizationService.Get("EventType_Group") ?? "vedená"));
 
             Trainers.Clear();
             try
             {
                 var (_, trainers) = await _tenantService.GetLocationsAndTrainersAsync();
                 var list = trainers?
-                    .Select(t => new TrainerItem(
+                    .Select(t => new EventNotificationRuleTrainerItem(
                         t.Person?.Id ?? string.Empty,
                         string.Join(' ', new[] { t.Person?.FirstName, t.Person?.LastName }.Where(s => !string.IsNullOrWhiteSpace(s)))))
                     .Where(tr => !string.IsNullOrWhiteSpace(tr.Id) && !string.IsNullOrWhiteSpace(tr.Label))
-                    .ToList() ?? new System.Collections.Generic.List<TrainerItem>();
+                    .ToList() ?? new System.Collections.Generic.List<EventNotificationRuleTrainerItem>();
 
                 foreach (var t in list) Trainers.Add(t);
             }
@@ -155,33 +155,4 @@ public partial class EventNotificationRuleEditViewModel : ViewModelBase
         }
     }
 
-    public sealed partial class TypeItem : ObservableObject
-    {
-        public TypeItem(string code, string label)
-        {
-            Code = code;
-            Label = label;
-        }
-
-        public string Code { get; }
-        public string Label { get; }
-
-        [ObservableProperty]
-        private bool _selected;
-    }
-
-    public sealed partial class TrainerItem : ObservableObject
-    {
-        public TrainerItem(string id, string label)
-        {
-            Id = id;
-            Label = label;
-        }
-
-        public string Id { get; }
-        public string Label { get; }
-
-        [ObservableProperty]
-        private bool _selected;
-    }
 }

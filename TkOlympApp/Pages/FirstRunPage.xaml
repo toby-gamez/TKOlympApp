@@ -22,7 +22,7 @@
                           ItemsSource="{Binding Slides}"
                           Position="{Binding CarouselPosition, Mode=TwoWay}">
                 <CarouselView.ItemTemplate>
-                    <DataTemplate x:DataType="viewModels:FirstRunViewModel.SlideItem">
+                    <DataTemplate x:DataType="viewModels:FirstRunSlideItem">
                         <VerticalStackLayout Spacing="8" Padding="8" HorizontalOptions="FillAndExpand">
                             <Border Padding="0" StrokeThickness="1" HorizontalOptions="Center" VerticalOptions="Center" StrokeShape="{RoundRectangle CornerRadius=8}">
                                 <Image Source="{Binding Image}" Aspect="AspectFit" HeightRequest="380" HorizontalOptions="Center" />

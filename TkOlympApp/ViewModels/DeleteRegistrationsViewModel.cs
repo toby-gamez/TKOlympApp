@@ -18,12 +18,12 @@ public partial class DeleteRegistrationsViewModel : ViewModelBase
     private readonly IUserService _userService;
     private readonly IUserNotifier _notifier;
 
-    private RegGroup? _selectedGroup;
+    private DeleteRegistrationsRegGroup? _selectedGroup;
 
-    public ObservableCollection<RegGroup> Groups { get; } = new();
+    public ObservableCollection<DeleteRegistrationsRegGroup> Groups { get; } = new();
 
     [ObservableProperty]
-    private RegItem? _selectedItem;
+    private DeleteRegistrationsRegItem? _selectedItem;
 
     [ObservableProperty]
     private bool _isRefreshing;
@@ -52,7 +52,7 @@ public partial class DeleteRegistrationsViewModel : ViewModelBase
         _ = LoadAsync();
     }
 
-    partial void OnSelectedItemChanged(RegItem? value)
+    partial void OnSelectedItemChanged(DeleteRegistrationsRegItem? value)
     {
         if (value != null)
         {
@@ -239,12 +239,12 @@ public partial class DeleteRegistrationsViewModel : ViewModelBase
                             : (manName + womanName);
                     }
 
-                    var item = new RegItem { Id = regId, Text = string.IsNullOrWhiteSpace(display) ? regId : display, Secondary = evtName };
+                    var item = new DeleteRegistrationsRegItem { Id = regId, Text = string.IsNullOrWhiteSpace(display) ? regId : display, Secondary = evtName };
                     var groupKey = string.IsNullOrWhiteSpace(item.Text) ? "" : item.Text;
                     var grp = Groups.FirstOrDefault(g => string.Equals(g.Key, groupKey, StringComparison.OrdinalIgnoreCase));
                     if (grp == null)
                     {
-                        grp = new RegGroup(groupKey);
+                        grp = new DeleteRegistrationsRegGroup(groupKey);
                         Groups.Add(grp);
                     }
                     grp.AddToGroup(item);
@@ -272,34 +272,4 @@ public partial class DeleteRegistrationsViewModel : ViewModelBase
         }
     }
 
-    public sealed class RegItem
-    {
-        public string Id { get; set; } = string.Empty;
-        public string Text { get; set; } = string.Empty;
-        public string Secondary { get; set; } = string.Empty;
-    }
-
-    public sealed class RegGroup : ObservableCollection<RegItem>
-    {
-        private readonly System.Collections.Generic.List<RegItem> _all = new();
-        public string Key { get; }
-
-        public RegGroup(string key)
-        {
-            Key = key;
-        }
-
-        public void AddToGroup(RegItem item)
-        {
-            _all.Add(item);
-            if (Count == 0)
-            {
-                base.Add(item);
-            }
-        }
-
-        public System.Collections.Generic.IEnumerable<string> GetAllIds() => _all.Select(i => i.Id);
-
-        public string FirstSecondary => _all.FirstOrDefault()?.Secondary ?? string.Empty;
-    }
 }

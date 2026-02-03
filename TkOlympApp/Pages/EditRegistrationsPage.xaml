@@ -19,7 +19,7 @@
                 </CollectionView.Header>
 
                 <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="vm:RegItem">
+                    <DataTemplate x:DataType="vm:EditRegistrationsRegItem">
                         <Border Style="{StaticResource SelectableItemContainer}" Margin="16,4">
                             <VerticalStackLayout Padding="12" Spacing="4">
                                 <Label Text="{Binding Text}" FontAttributes="Bold" />
@@ -34,7 +34,7 @@
                         <Label x:Name="TrainerSelectionHeader" Text="{svc:Translate EditRegistrations_Trainers_Label}" FontAttributes="Bold" IsVisible="{Binding TrainerSelectionHeaderVisible}" />
                         <CollectionView x:Name="TrainerSelectionCollection" SelectionMode="None" IsVisible="{Binding TrainerSelectionVisible}" ItemsSource="{Binding TrainerOptions}">
                             <CollectionView.ItemTemplate>
-                                <DataTemplate x:DataType="vm:TrainerOption">
+                                <DataTemplate x:DataType="vm:EditRegistrationsTrainerOption">
                                     <Border Style="{StaticResource SelectableItemContainer}">
                                         <Grid ColumnDefinitions="*,Auto" VerticalOptions="Center" Padding="6">
                                             <Label Grid.Column="0" Text="{Binding Name}" VerticalOptions="Center" />

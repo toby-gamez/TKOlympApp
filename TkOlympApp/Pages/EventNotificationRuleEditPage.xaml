@@ -23,7 +23,7 @@
                 <Label Text="{svc:Translate Notification_EditRule_EventTypes}" />
                 <CollectionView SelectionMode="Multiple" ItemsLayout="VerticalList" ItemsSource="{Binding Types}">
                     <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="viewModels:EventNotificationRuleEditViewModel.TypeItem">
+                        <DataTemplate x:DataType="viewModels:EventNotificationRuleTypeItem">
                             <HorizontalStackLayout Padding="6">
                                 <CheckBox IsChecked="{Binding Selected}" />
                                 <Label Text="{Binding Label}" VerticalOptions="Center" />
@@ -35,7 +35,7 @@
                 <Label Text="{svc:Translate Notification_EditRule_Trainers}" />
                 <CollectionView SelectionMode="Multiple" ItemsLayout="VerticalList" ItemsSource="{Binding Trainers}">
                     <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="viewModels:EventNotificationRuleEditViewModel.TrainerItem">
+                        <DataTemplate x:DataType="viewModels:EventNotificationRuleTrainerItem">
                             <HorizontalStackLayout Padding="6">
                                 <CheckBox IsChecked="{Binding Selected}" />
                                 <Label Text="{Binding Label}" VerticalOptions="Center" />

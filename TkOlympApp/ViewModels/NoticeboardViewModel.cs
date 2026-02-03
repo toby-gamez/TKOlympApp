@@ -24,7 +24,7 @@ public partial class NoticeboardViewModel : ViewModelBase
     private readonly IUserNotifier _notifier;
     private readonly INavigationService _navigationService;
 
-    public ObservableCollection<AnnouncementItem> Announcements { get; } = new();
+    public ObservableCollection<NoticeboardAnnouncementItem> Announcements { get; } = new();
 
     [ObservableProperty]
     private bool _isAktualityActive = true;
@@ -45,7 +45,7 @@ public partial class NoticeboardViewModel : ViewModelBase
     private Color _tabStalaTextColor = Colors.Black;
 
     [ObservableProperty]
-    private AnnouncementItem? _selectedAnnouncement;
+    private NoticeboardAnnouncementItem? _selectedAnnouncement;
 
     public NoticeboardViewModel(
         INoticeboardService noticeboardService,
@@ -68,7 +68,7 @@ public partial class NoticeboardViewModel : ViewModelBase
         await LoadCurrentTabAsync();
     }
 
-    partial void OnSelectedAnnouncementChanged(AnnouncementItem? value)
+    partial void OnSelectedAnnouncementChanged(NoticeboardAnnouncementItem? value)
     {
         if (value == null) return;
         _ = OpenAnnouncementAsync(value);
@@ -165,13 +165,13 @@ public partial class NoticeboardViewModel : ViewModelBase
         {
             IsRefreshing = true;
             var list = await _noticeboardService.GetMyAnnouncementsAsync();
-            var views = new List<AnnouncementItem>();
+            var views = new List<NoticeboardAnnouncementItem>();
             if (list != null && list.Count > 0)
             {
                 foreach (var a in list.OrderByDescending(x => x.CreatedAt))
                 {
                     var plain = HtmlToPlainText(a.Body ?? string.Empty) ?? string.Empty;
-                    views.Add(new AnnouncementItem
+                    views.Add(new NoticeboardAnnouncementItem
                     {
                         Id = a.Id,
                         Title = a.Title ?? string.Empty,
@@ -184,7 +184,7 @@ public partial class NoticeboardViewModel : ViewModelBase
             }
             else
             {
-                views.Add(new AnnouncementItem { Title = "Žádné oznámení.", PlainBody = string.Empty, CreatedAtText = string.Empty });
+                views.Add(new NoticeboardAnnouncementItem { Title = "Žádné oznámení.", PlainBody = string.Empty, CreatedAtText = string.Empty });
             }
 
             Announcements.Clear();
@@ -219,7 +219,7 @@ public partial class NoticeboardViewModel : ViewModelBase
         {
             IsRefreshing = true;
             var list = await _noticeboardService.GetStickyAnnouncementsAsync();
-            var views = new List<AnnouncementItem>();
+            var views = new List<NoticeboardAnnouncementItem>();
             if (list != null && list.Count > 0)
             {
                 foreach (var a in list.OrderByDescending(x => x.CreatedAt))
@@ -230,7 +230,7 @@ public partial class NoticeboardViewModel : ViewModelBase
                         ? a.Title
                         : (!string.IsNullOrWhiteSpace(titleFromBody) ? titleFromBody : "Stálé oznámení");
 
-                    views.Add(new AnnouncementItem
+                    views.Add(new NoticeboardAnnouncementItem
                     {
                         Id = a.Id,
                         Title = title,
@@ -243,7 +243,7 @@ public partial class NoticeboardViewModel : ViewModelBase
             }
             else
             {
-                views.Add(new AnnouncementItem { Title = "Žádné stálé oznámení.", PlainBody = string.Empty, CreatedAtText = string.Empty });
+                views.Add(new NoticeboardAnnouncementItem { Title = "Žádné stálé oznámení.", PlainBody = string.Empty, CreatedAtText = string.Empty });
             }
 
             Announcements.Clear();
@@ -270,7 +270,7 @@ public partial class NoticeboardViewModel : ViewModelBase
         }
     }
 
-    private async Task OpenAnnouncementAsync(AnnouncementItem item)
+    private async Task OpenAnnouncementAsync(NoticeboardAnnouncementItem item)
     {
         try
         {
@@ -298,13 +298,4 @@ public partial class NoticeboardViewModel : ViewModelBase
         }
     }
 
-    public sealed record AnnouncementItem
-    {
-        public long Id { get; init; }
-        public string Title { get; init; } = string.Empty;
-        public string PlainBody { get; init; } = string.Empty;
-        public string CreatedAtText { get; init; } = string.Empty;
-        public bool IsSticky { get; init; }
-        public bool IsVisible { get; init; } = true;
-    }
 }

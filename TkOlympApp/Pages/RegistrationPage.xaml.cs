@@ -52,7 +52,7 @@ public partial class RegistrationPage : ContentPage
     {
         try
         {
-            if (sender is Button b && b.BindingContext is RegistrationViewModel.TrainerOption to)
+            if (sender is Button b && b.BindingContext is RegistrationTrainerOption to)
             {
                 if (to.Count < 10) to.Count = to.Count + 1;
             }
@@ -67,7 +67,7 @@ public partial class RegistrationPage : ContentPage
     {
         try
         {
-            if (sender is Button b && b.BindingContext is RegistrationViewModel.TrainerOption to)
+            if (sender is Button b && b.BindingContext is RegistrationTrainerOption to)
             {
                 if (to.Count > 0) to.Count = to.Count - 1;
             }

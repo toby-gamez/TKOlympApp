@@ -92,7 +92,7 @@
                         <Label Text="{svc:Translate Person_Cohorts_Label}" FontAttributes="Bold" />
                         <StackLayout Spacing="8" BindableLayout.ItemsSource="{Binding Cohorts}">
                             <BindableLayout.ItemTemplate>
-                                <DataTemplate x:DataType="viewModels:PersonViewModel.CohortItem">
+                                <DataTemplate x:DataType="viewModels:PersonCohortItem">
                                     <Grid VerticalOptions="Center" HorizontalOptions="Fill">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
@@ -135,7 +135,7 @@
                                         ItemsSource="{Binding ActiveCouples}"
                                         SelectedItem="{Binding SelectedActiveCouple}">
                             <CollectionView.ItemTemplate>
-                                <DataTemplate x:DataType="viewModels:PersonViewModel.ActiveCoupleDisplay">
+                                <DataTemplate x:DataType="viewModels:PersonActiveCoupleDisplay">
                                     <HorizontalStackLayout Padding="8" Spacing="8">
                                         <Label Text="{Binding Text}" />
                                     </HorizontalStackLayout>

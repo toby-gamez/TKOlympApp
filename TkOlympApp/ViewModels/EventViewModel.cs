@@ -121,7 +121,7 @@ public partial class EventViewModel : ViewModelBase
         }
     }
 
-    public ObservableCollection<RegistrationRow> Registrations { get; } = new();
+    public ObservableCollection<EventRegistrationRow> Registrations { get; } = new();
     public ObservableCollection<string> Trainers { get; } = new();
     public ObservableCollection<View> CohortDots { get; } = new();
 
@@ -450,7 +450,7 @@ public partial class EventViewModel : ViewModelBase
                         }
                     }
 
-                    Registrations.Add(new RegistrationRow
+                    Registrations.Add(new EventRegistrationRow
                     {
                         Text = text ?? string.Empty,
                         Secondary = secondary,
@@ -679,7 +679,7 @@ public partial class EventViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private async Task RegistrationSelectedAsync(RegistrationRow? selected)
+    private async Task RegistrationSelectedAsync(EventRegistrationRow? selected)
     {
         if (selected == null) return;
 
@@ -752,16 +752,4 @@ public partial class EventViewModel : ViewModelBase
         return null;
     }
 
-    // Nested class
-    public class RegistrationRow
-    {
-        public string Text { get; set; } = string.Empty;
-        public string? Secondary { get; set; }
-        public List<string> Trainers { get; set; } = new();
-        public bool HasTrainers => Trainers != null && Trainers.Count > 0;
-        public bool HasSecondary => !string.IsNullOrWhiteSpace(Secondary);
-        public string? CoupleId { get; set; }
-        public string? PersonId { get; set; }
-        public bool IsCurrentUserOrCouple { get; set; }
-    }
 }

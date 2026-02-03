@@ -16,7 +16,7 @@
                                 ItemsSource="{Binding Groups}"
                                 SelectionMode="None">
                     <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="viewModels:CohortGroupsViewModel.CohortGroupItem">
+                        <DataTemplate x:DataType="viewModels:CohortGroupItem">
                             <Border Padding="12">
                                 <Border.StrokeShape>
                                     <RoundRectangle CornerRadius="8" />

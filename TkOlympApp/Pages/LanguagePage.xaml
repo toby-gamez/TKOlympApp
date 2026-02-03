@@ -11,7 +11,7 @@
                     ItemsSource="{Binding Languages}"
                     SelectedItem="{Binding SelectedLanguage}">
         <CollectionView.ItemTemplate>
-            <DataTemplate x:DataType="viewModels:LanguageViewModel.LangItem">
+            <DataTemplate x:DataType="viewModels:LanguageItem">
                 <Grid Padding="12" ColumnDefinitions="Auto,*,Auto">
                     <Label Text="{Binding Flag}" FontSize="28" VerticalOptions="Center" />
                     <Label Grid.Column="1" Text="{Binding Name}" VerticalOptions="Center" Margin="12,0" />

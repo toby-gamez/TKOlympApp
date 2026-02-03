@@ -22,7 +22,7 @@
                                     ItemsSource="{Binding Rows}"
                                     IsVisible="{Binding IsListVisible}">
                     <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="viewModels:LeaderboardViewModel.LeaderboardRow">
+                        <DataTemplate x:DataType="viewModels:LeaderboardRow">
                             <Grid Padding="8" ColumnDefinitions="40, *, 80" RowDefinitions="Auto" BackgroundColor="{Binding BackgroundColor}">
                                 <Label Text="{Binding RankingDisplay}" Grid.Column="0" VerticalOptions="Center" HorizontalOptions="Center" TextColor="{Binding TextColor}">
                                     <Label.Triggers>

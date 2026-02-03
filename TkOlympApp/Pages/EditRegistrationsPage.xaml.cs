@@ -51,7 +51,7 @@ public partial class EditRegistrationsPage : ContentPage
     private void OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         var sel = e.CurrentSelection?.FirstOrDefault();
-        _viewModel.OnSelectionChanged(sel as EditRegistrationsViewModel.RegItem);
+        _viewModel.OnSelectionChanged(sel as EditRegistrationsRegItem);
     }
 
     private void OnRegistrationsRemainingThresholdReached(object? sender, EventArgs e)
@@ -64,7 +64,7 @@ public partial class EditRegistrationsPage : ContentPage
     {
         try
         {
-            if (sender is Button b && b.BindingContext is EditRegistrationsViewModel.TrainerOption to)
+            if (sender is Button b && b.BindingContext is EditRegistrationsTrainerOption to)
             {
                 if (to.Count < 100) to.Count = to.Count + 1;
             }
@@ -79,7 +79,7 @@ public partial class EditRegistrationsPage : ContentPage
     {
         try
         {
-            if (sender is Button b && b.BindingContext is EditRegistrationsViewModel.TrainerOption to)
+            if (sender is Button b && b.BindingContext is EditRegistrationsTrainerOption to)
             {
                 if (to.Count > 0) to.Count = to.Count - 1;
             }

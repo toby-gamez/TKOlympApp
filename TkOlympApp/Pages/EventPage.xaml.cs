@@ -44,7 +44,7 @@ public partial class EventPage : ContentPage
         try
         {
             if (e.CurrentSelection == null || e.CurrentSelection.Count == 0) return;
-            var selected = e.CurrentSelection.FirstOrDefault() as EventViewModel.RegistrationRow;
+            var selected = e.CurrentSelection.FirstOrDefault() as EventRegistrationRow;
             if (selected == null) return;
             
             // Clear selection for UX

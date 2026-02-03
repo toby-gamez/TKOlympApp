@@ -62,7 +62,7 @@ public partial class RegistrationViewModel : ViewModelBase
     private bool _trainerReservationNotAllowed = false;
 
     public ObservableCollection<RegistrationOption> SelectionOptions { get; } = new();
-    public ObservableCollection<TrainerOption> TrainerOptions { get; } = new();
+    public ObservableCollection<RegistrationTrainerOption> TrainerOptions { get; } = new();
 
     public RegistrationViewModel(
         IEventService eventService,
@@ -308,7 +308,7 @@ public partial class RegistrationViewModel : ViewModelBase
                 foreach (var t in ev.EventTrainersList.OrderBy(x => (x?.Name ?? string.Empty).Trim()))
                 {
                     var name = (t?.Name ?? string.Empty).Trim();
-                    TrainerOptions.Add(new TrainerOption(name, name, 0, t?.Id));
+                    TrainerOptions.Add(new RegistrationTrainerOption(name, name, 0, t?.Id));
                 }
             }
 
@@ -374,41 +374,6 @@ public partial class RegistrationViewModel : ViewModelBase
 
         var request = new EventRegistrationRequest(personId, coupleId, lessons);
         return await _eventService.RegisterToEventManyAsync(request);
-    }
-
-    // Nested classes
-    public sealed record RegistrationOption(string DisplayText, string Kind, string? Id);
-
-    public sealed class TrainerOption : INotifyPropertyChanged
-    {
-        private int _count;
-        public string DisplayText { get; set; }
-        public string Name { get; set; }
-        public string? Id { get; set; }
-        public int Count
-        {
-            get => _count;
-            set
-            {
-                if (_count != value)
-                {
-                    _count = value;
-                    OnPropertyChanged(nameof(Count));
-                }
-            }
-        }
-
-        public TrainerOption(string displayText, string name, int count, string? id)
-        {
-            DisplayText = displayText;
-            Name = name;
-            _count = count;
-            Id = id;
-        }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-        private void OnPropertyChanged(string propertyName) => 
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
 }

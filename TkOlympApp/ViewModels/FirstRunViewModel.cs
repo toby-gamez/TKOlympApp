@@ -14,7 +14,7 @@ public partial class FirstRunViewModel : ViewModelBase
     private readonly INavigationService _navigationService;
     private readonly IUserNotifier _notifier;
 
-    public ObservableCollection<SlideItem> Slides { get; } = new();
+    public ObservableCollection<FirstRunSlideItem> Slides { get; } = new();
 
     [ObservableProperty]
     private string _titleText = string.Empty;
@@ -26,7 +26,7 @@ public partial class FirstRunViewModel : ViewModelBase
     private int _carouselPosition;
 
     [ObservableProperty]
-    private SlideItem? _selectedSlide;
+    private FirstRunSlideItem? _selectedSlide;
 
     [ObservableProperty]
     private string _currentButtonText = string.Empty;
@@ -48,14 +48,14 @@ public partial class FirstRunViewModel : ViewModelBase
         var continueText = LocalizationService.Get("Button_Continue") ?? "Continue";
 
         Slides.Clear();
-        Slides.Add(new SlideItem("onboarding1.png", LocalizationService.Get("FirstRun_Slide1_Caption") ?? string.Empty, nextText));
-        Slides.Add(new SlideItem("onboarding2.png", LocalizationService.Get("FirstRun_Slide2_Caption") ?? string.Empty, nextText));
-        Slides.Add(new SlideItem("onboarding3.png", LocalizationService.Get("FirstRun_Slide3_Caption") ?? string.Empty, nextText));
-        Slides.Add(new SlideItem("onboarding4.png", LocalizationService.Get("FirstRun_Slide4_Caption") ?? string.Empty, nextText));
-        Slides.Add(new SlideItem("onboarding5.png", LocalizationService.Get("FirstRun_Slide5_Caption") ?? string.Empty, nextText));
-        Slides.Add(new SlideItem("onboarding6.png", LocalizationService.Get("FirstRun_Slide6_Caption") ?? string.Empty, nextText));
-        Slides.Add(new SlideItem("onboarding7.png", LocalizationService.Get("FirstRun_Slide7_Caption") ?? string.Empty, nextText));
-        Slides.Add(new SlideItem("onboarding8.png", LocalizationService.Get("FirstRun_Slide8_Caption") ?? string.Empty, continueText));
+        Slides.Add(new FirstRunSlideItem("onboarding1.png", LocalizationService.Get("FirstRun_Slide1_Caption") ?? string.Empty, nextText));
+        Slides.Add(new FirstRunSlideItem("onboarding2.png", LocalizationService.Get("FirstRun_Slide2_Caption") ?? string.Empty, nextText));
+        Slides.Add(new FirstRunSlideItem("onboarding3.png", LocalizationService.Get("FirstRun_Slide3_Caption") ?? string.Empty, nextText));
+        Slides.Add(new FirstRunSlideItem("onboarding4.png", LocalizationService.Get("FirstRun_Slide4_Caption") ?? string.Empty, nextText));
+        Slides.Add(new FirstRunSlideItem("onboarding5.png", LocalizationService.Get("FirstRun_Slide5_Caption") ?? string.Empty, nextText));
+        Slides.Add(new FirstRunSlideItem("onboarding6.png", LocalizationService.Get("FirstRun_Slide6_Caption") ?? string.Empty, nextText));
+        Slides.Add(new FirstRunSlideItem("onboarding7.png", LocalizationService.Get("FirstRun_Slide7_Caption") ?? string.Empty, nextText));
+        Slides.Add(new FirstRunSlideItem("onboarding8.png", LocalizationService.Get("FirstRun_Slide8_Caption") ?? string.Empty, continueText));
 
         SelectedSlide = Slides.Count > 0 ? Slides[0] : null;
         CurrentButtonText = SelectedSlide?.ButtonText ?? nextText;
@@ -69,7 +69,7 @@ public partial class FirstRunViewModel : ViewModelBase
         }
     }
 
-    partial void OnSelectedSlideChanged(SlideItem? value)
+    partial void OnSelectedSlideChanged(FirstRunSlideItem? value)
     {
         CurrentButtonText = value?.ButtonText ?? (LocalizationService.Get("Button_Next") ?? "Next");
     }
@@ -109,5 +109,4 @@ public partial class FirstRunViewModel : ViewModelBase
         }
     }
 
-    public sealed record SlideItem(string Image, string Caption, string ButtonText);
 }

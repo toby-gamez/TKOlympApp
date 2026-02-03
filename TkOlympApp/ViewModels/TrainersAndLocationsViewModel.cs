@@ -20,7 +20,7 @@ public partial class TrainersAndLocationsViewModel : ViewModelBase
     private bool _loaded;
 
     public ObservableCollection<string> Locations { get; } = new();
-    public ObservableCollection<TrainerItem> Trainers { get; } = new();
+    public ObservableCollection<TrainersAndLocationsTrainerItem> Trainers { get; } = new();
 
     [ObservableProperty]
     private bool _isRefreshing;
@@ -77,7 +77,7 @@ public partial class TrainersAndLocationsViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private async Task OpenTrainerAsync(TrainerItem? trainer)
+    private async Task OpenTrainerAsync(TrainersAndLocationsTrainerItem? trainer)
     {
         try
         {
@@ -114,7 +114,7 @@ public partial class TrainersAndLocationsViewModel : ViewModelBase
                     var priceStr = FormatPrice(t.GuestPrice45Min);
                     if (string.IsNullOrWhiteSpace(priceStr)) priceStr = FormatPrice(t.GuestPayout45Min);
 
-                    return new TrainerItem(name, priceStr, p?.Id);
+                    return new TrainersAndLocationsTrainerItem(name, priceStr, p?.Id);
                 })
                 .Where(td => !string.IsNullOrWhiteSpace(td.Name))
                 .ToList();
@@ -175,5 +175,4 @@ public partial class TrainersAndLocationsViewModel : ViewModelBase
         return formatted + (LocalizationService.Get("Price_PerCouple45") ?? " / pár, 45'");
     }
 
-    public sealed record TrainerItem(string Name, string Price, string? PersonId);
 }

@@ -31,7 +31,7 @@
                             SelectedItem="{Binding SelectedPerson}"
                             Margin="12,6">
                 <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="viewModels:PeopleViewModel.PersonItem">
+                    <DataTemplate x:DataType="viewModels:PeoplePersonItem">
                         <Border StrokeThickness="{Binding StrokeThickness}"
                                 Stroke="{Binding StrokeBrush}"
                                 Padding="12"
@@ -57,7 +57,7 @@
 
                                     <HorizontalStackLayout BindableLayout.ItemsSource="{Binding CohortDots}" Spacing="4">
                                         <BindableLayout.ItemTemplate>
-                                            <DataTemplate x:DataType="viewModels:PeopleViewModel.CohortDot">
+                                            <DataTemplate x:DataType="viewModels:PeopleCohortDot">
                                                 <Border Background="{Binding Color}"
                                                         Padding="0"
                                                         WidthRequest="20"

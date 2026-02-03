@@ -21,8 +21,8 @@ public partial class EditRegistrationsViewModel : ViewModelBase
     private readonly INavigationService _navigationService;
     private readonly IUserNotifier _notifier;
     private EventDetails? _currentEvent;
-    private RegItem? _selected;
-    private RegGroup? _selectedGroup;
+    private EditRegistrationsRegItem? _selected;
+    private EditRegistrationsRegGroup? _selectedGroup;
 
     [ObservableProperty]
     private long _eventId;
@@ -45,8 +45,8 @@ public partial class EditRegistrationsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isRefreshing = false;
 
-    public ObservableCollection<RegGroup> Groups { get; } = new();
-    public ObservableCollection<TrainerOption> TrainerOptions { get; } = new();
+    public ObservableCollection<EditRegistrationsRegGroup> Groups { get; } = new();
+    public ObservableCollection<EditRegistrationsTrainerOption> TrainerOptions { get; } = new();
 
     public EditRegistrationsViewModel(
         IEventService eventService,
@@ -85,7 +85,7 @@ public partial class EditRegistrationsViewModel : ViewModelBase
         IsRefreshing = false;
     }
 
-    public void OnSelectionChanged(RegItem? selected)
+    public void OnSelectionChanged(EditRegistrationsRegItem? selected)
     {
         _selected = selected;
         if (_selected != null)
@@ -253,12 +253,12 @@ public partial class EditRegistrationsViewModel : ViewModelBase
                             : (manName + womanName);
                     }
 
-                    var item = new RegItem { Id = regId, Text = string.IsNullOrWhiteSpace(display) ? regId : display, Secondary = evtName };
+                    var item = new EditRegistrationsRegItem { Id = regId, Text = string.IsNullOrWhiteSpace(display) ? regId : display, Secondary = evtName };
                     var groupKey = string.IsNullOrWhiteSpace(item.Text) ? string.Empty : item.Text;
                     var grp = Groups.FirstOrDefault(g => string.Equals(g.Key, groupKey, StringComparison.OrdinalIgnoreCase));
                     if (grp == null)
                     {
-                        grp = new RegGroup(groupKey);
+                        grp = new EditRegistrationsRegGroup(groupKey);
                         Groups.Add(grp);
                     }
                     grp.AddToGroup(item);
@@ -295,7 +295,7 @@ public partial class EditRegistrationsViewModel : ViewModelBase
             foreach (var t in ev.EventTrainersList.OrderBy(x => EventTrainerDisplayHelper.GetTrainerDisplayName(x)))
             {
                 var trainerName = EventTrainerDisplayHelper.GetTrainerDisplayName(t) ?? string.Empty;
-                TrainerOptions.Add(new TrainerOption(trainerName, 0, t?.Id));
+                TrainerOptions.Add(new EditRegistrationsTrainerOption(trainerName, 0, t?.Id));
             }
 
             TrainerSelectionHeaderVisible = true;
@@ -317,7 +317,7 @@ public partial class EditRegistrationsViewModel : ViewModelBase
                             var cnt = d.LessonCount;
                             var demandTrainerId = d.TrainerId?.ToString();
 
-                            TrainerOption? match = null;
+                            EditRegistrationsTrainerOption? match = null;
                             if (!string.IsNullOrWhiteSpace(demandTrainerId))
                             {
                                 match = TrainerOptions.FirstOrDefault(o =>
@@ -349,7 +349,7 @@ public partial class EditRegistrationsViewModel : ViewModelBase
         if (_selected == null) return;
 
         // Collect trainer demands
-        var trainers = new List<TrainerOption>();
+        var trainers = new List<EditRegistrationsTrainerOption>();
         foreach (var t in TrainerOptions)
         {
             if (t != null && (t.Count > 0 || t.OriginalCount > 0))
@@ -410,84 +410,4 @@ public partial class EditRegistrationsViewModel : ViewModelBase
     }
 
     // Nested classes
-    public sealed class RegItem
-    {
-        public string Id { get; set; } = string.Empty;
-        public string Text { get; set; } = string.Empty;
-        public string Secondary { get; set; } = string.Empty;
-    }
-
-    public sealed class RegGroup : ObservableCollection<RegItem>
-    {
-        private readonly List<RegItem> _all = new();
-        public string Key { get; }
-        public int AllCount => _all.Count;
-
-        public RegGroup(string key)
-        {
-            Key = key;
-        }
-
-        public void AddToGroup(RegItem item)
-        {
-            _all.Add(item);
-            if (this.Count == 0)
-            {
-                base.Add(item);
-            }
-        }
-
-        public void RefreshVisible()
-        {
-            this.Clear();
-            var first = _all.FirstOrDefault();
-            if (first != null) base.Add(first);
-        }
-
-        public void RevealMore(int maxToAdd)
-        {
-            if (maxToAdd <= 0) return;
-            int added = 0;
-            int start = this.Count;
-            for (int i = start; i < _all.Count && added < maxToAdd; i++)
-            {
-                base.Add(_all[i]);
-                added++;
-            }
-        }
-
-        public IEnumerable<string> GetAllIds() => _all.Select(i => i.Id);
-
-        public string FirstSecondary => _all.FirstOrDefault()?.Secondary ?? string.Empty;
-    }
-
-    public sealed class TrainerOption : INotifyPropertyChanged
-    {
-        private int _count;
-        public string Name { get; set; }
-        public string? Id { get; set; }
-        public int OriginalCount { get; set; }
-        public int Count
-        {
-            get => _count;
-            set
-            {
-                if (_count != value)
-                {
-                    _count = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
-                }
-            }
-        }
-
-        public TrainerOption(string name, int count, string? id)
-        {
-            Name = name;
-            _count = count;
-            OriginalCount = count;
-            Id = id;
-        }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-    }
 }

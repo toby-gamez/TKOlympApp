@@ -28,7 +28,7 @@ public partial class PeopleViewModel : ViewModelBase
     private SortMode _sortMode = SortMode.Alphabetical;
     private readonly List<CohortFilter> _cohortFilters = new();
 
-    public ObservableCollection<PersonItem> People { get; } = new();
+    public ObservableCollection<PeoplePersonItem> People { get; } = new();
     public ObservableCollection<string> SortOptions { get; } = new();
 
     [ObservableProperty]
@@ -41,7 +41,7 @@ public partial class PeopleViewModel : ViewModelBase
     private int _selectedSortIndex;
 
     [ObservableProperty]
-    private PersonItem? _selectedPerson;
+    private PeoplePersonItem? _selectedPerson;
 
     public PeopleViewModel(IPeopleService peopleService, INavigationService navigationService, IUserNotifier notifier)
     {
@@ -66,7 +66,7 @@ public partial class PeopleViewModel : ViewModelBase
         ApplySortAndFilter();
     }
 
-    partial void OnSelectedPersonChanged(PersonItem? value)
+    partial void OnSelectedPersonChanged(PeoplePersonItem? value)
     {
         if (value == null) return;
         _ = OpenPersonAsync(value);
@@ -225,10 +225,10 @@ public partial class PeopleViewModel : ViewModelBase
         }
     }
 
-    private PersonItem CreatePersonItem(Person person)
+    private PeoplePersonItem CreatePersonItem(Person person)
     {
         var primaryColor = GetPrimaryColor();
-        var item = new PersonItem
+        var item = new PeoplePersonItem
         {
             Id = person.Id,
             FullName = person.FullName,
@@ -247,7 +247,7 @@ public partial class PeopleViewModel : ViewModelBase
                 var cohort = membership.Cohort;
                 if (cohort?.IsVisible != true) continue;
                 var brush = CohortColorHelper.ParseColorBrush(cohort.ColorRgb) ?? new SolidColorBrush(Colors.LightGray);
-                item.CohortDots.Add(new CohortDot { Color = brush });
+                item.CohortDots.Add(new PeopleCohortDot { Color = brush });
             }
         }
 
@@ -267,7 +267,7 @@ public partial class PeopleViewModel : ViewModelBase
         return Colors.Blue;
     }
 
-    private async Task OpenPersonAsync(PersonItem item)
+    private async Task OpenPersonAsync(PeoplePersonItem item)
     {
         try
         {
@@ -315,21 +315,4 @@ public partial class PeopleViewModel : ViewModelBase
         public bool IsChecked { get; set; } = true;
     }
 
-    public sealed class CohortDot
-    {
-        public Brush Color { get; set; } = new SolidColorBrush(Colors.LightGray);
-    }
-
-    public sealed class PersonItem
-    {
-        public string? Id { get; set; }
-        public string FullName { get; set; } = string.Empty;
-        public string DisplayBirthDate { get; set; } = string.Empty;
-        public bool HasBirthDate { get; set; }
-        public bool IsBirthdayToday { get; set; }
-        public Brush StrokeBrush { get; set; } = new SolidColorBrush(Colors.LightGray);
-        public double StrokeThickness { get; set; } = 1;
-        public Color BirthdayIconColor { get; set; } = Colors.Blue;
-        public ObservableCollection<CohortDot> CohortDots { get; } = new();
-    }
 }

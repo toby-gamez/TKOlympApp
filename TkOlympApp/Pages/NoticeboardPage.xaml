@@ -35,7 +35,7 @@
                 <LinearItemsLayout Orientation="Vertical" ItemSpacing="4" />
             </CollectionView.ItemsLayout>
             <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="viewModels:NoticeboardViewModel.AnnouncementItem">
+                <DataTemplate x:DataType="viewModels:NoticeboardAnnouncementItem">
                     <Border Padding="12" Margin="6">
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="8" />
