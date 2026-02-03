@@ -1,24 +1,17 @@
+using System;
 using Microsoft.Maui.Controls;
-using Microsoft.Maui.ApplicationModel;
+using TkOlympApp.ViewModels;
 
 namespace TkOlympApp.Pages;
 
 public partial class PrivacyPolicyPage : ContentPage
 {
-    public PrivacyPolicyPage()
-    {
-        InitializeComponent();
-    }
+    private readonly PrivacyPolicyViewModel _viewModel;
 
-    private async void OnContactTapped(object? sender, EventArgs e)
+    public PrivacyPolicyPage(PrivacyPolicyViewModel viewModel)
     {
-        try
-        {
-            await Launcher.OpenAsync("https://tkolymp.cz/kontakt");
-        }
-        catch
-        {
-            // best-effort; ignore failures
-        }
+        _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
+        InitializeComponent();
+        BindingContext = _viewModel;
     }
 }

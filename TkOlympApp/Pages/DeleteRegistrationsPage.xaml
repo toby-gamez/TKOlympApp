@@ -2,11 +2,14 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:svc="clr-namespace:TkOlympApp.Services"
+             xmlns:viewModels="clr-namespace:TkOlympApp.ViewModels"
              x:Class="TkOlympApp.Pages.DeleteRegistrationsPage"
+             x:DataType="viewModels:DeleteRegistrationsViewModel"
              Title="{svc:Translate DeleteRegistrations_Title}">
 
     <Grid>
-        <RefreshView x:Name="PageRefresh" Refreshing="OnRefresh">
+        <RefreshView IsRefreshing="{Binding IsRefreshing}"
+                     Command="{Binding RefreshCommand}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
@@ -16,9 +19,15 @@
                 <VerticalStackLayout Padding="16" Spacing="12" Grid.Row="0">
                     <Label Text="{svc:Translate DeleteRegistrations_Description}" />
 
-                <CollectionView x:Name="RegistrationsCollection" Style="{StaticResource ListCollectionView}" HeightRequest="400" SelectionChanged="OnSelectionChanged" IsGrouped="True">
+                <CollectionView x:Name="RegistrationsCollection"
+                                Style="{StaticResource ListCollectionView}"
+                                HeightRequest="400"
+                                IsGrouped="True"
+                                SelectionMode="Single"
+                                ItemsSource="{Binding Groups}"
+                                SelectedItem="{Binding SelectedItem}">
                 <CollectionView.ItemTemplate>
-                    <DataTemplate>
+                    <DataTemplate x:DataType="viewModels:DeleteRegistrationsViewModel.RegItem">
                         <Border Style="{StaticResource SelectableItemContainer}">
                             <VerticalStackLayout Padding="12" Spacing="4">
                                 <Label Text="{Binding Text}" FontAttributes="Bold" />
@@ -30,12 +39,18 @@
             </CollectionView>
                 </VerticalStackLayout>
 
-                <Button x:Name="DeleteButton" Text="{svc:Translate Delete_Button_Text}" IsEnabled="False" Clicked="OnDeleteClicked" Grid.Row="1" Margin="16" HorizontalOptions="FillAndExpand" />
+                <Button x:Name="DeleteButton"
+                        Text="{svc:Translate Delete_Button_Text}"
+                        IsEnabled="{Binding IsDeleteEnabled}"
+                        Command="{Binding DeleteCommand}"
+                        Grid.Row="1"
+                        Margin="16"
+                        HorizontalOptions="FillAndExpand" />
             </Grid>
         </RefreshView>
 
         <!-- Success overlay (hidden by default) -->
-        <Grid x:Name="SuccessOverlay" IsVisible="False" BackgroundColor="#AA000000" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand">
+        <Grid x:Name="SuccessOverlay" IsVisible="{Binding IsSuccessVisible}" BackgroundColor="#AA000000" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand">
             <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="12" Padding="24">
                 <Border BackgroundColor="#2e7d32" WidthRequest="160" HeightRequest="160" HorizontalOptions="Center" VerticalOptions="Center">
                     <Border.StrokeShape>
@@ -43,7 +58,7 @@
                     </Border.StrokeShape>
                     <Label x:Name="SuccessIcon" Text="{svc:Translate DeleteRegistrations_Success_Icon}" FontSize="96" TextColor="White" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" HorizontalOptions="Center" VerticalOptions="Center" />
                 </Border>
-                <Label x:Name="SuccessText" Text="{svc:Translate DeleteRegistrations_Success_Text}" TextColor="#c8e6c9" FontAttributes="Bold" FontSize="20" HorizontalTextAlignment="Center" />
+                <Label x:Name="SuccessText" Text="{Binding SuccessText}" TextColor="#c8e6c9" FontAttributes="Bold" FontSize="20" HorizontalTextAlignment="Center" />
             </VerticalStackLayout>
         </Grid>
     </Grid>

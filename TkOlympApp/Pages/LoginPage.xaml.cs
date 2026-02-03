@@ -1,35 +1,30 @@
+using System;
 using Microsoft.Maui.Controls;
-using TkOlympApp.Services;
-using TkOlympApp.Services.Abstractions;
+using TkOlympApp.ViewModels;
 
 namespace TkOlympApp.Pages;
 
 public partial class LoginPage : ContentPage
 {
-    private readonly IAuthService _authService;
+    private readonly LoginViewModel _viewModel;
 
-    public LoginPage(IAuthService authService)
+    public LoginPage(LoginViewModel viewModel)
     {
-        _authService = authService;
+        _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         InitializeComponent();
         Shell.SetTabBarIsVisible(this, false);
+        BindingContext = _viewModel;
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
-        
-        // Subscribe to events
-        if (LoginButton != null)
-            LoginButton.Clicked += OnLoginClicked;
+        await _viewModel.OnAppearingAsync();
     }
 
-    protected override void OnDisappearing()
+    protected override async void OnDisappearing()
     {
-        // Unsubscribe from events to prevent memory leaks
-        if (LoginButton != null)
-            LoginButton.Clicked -= OnLoginClicked;
-        
+        await _viewModel.OnDisappearingAsync();
         base.OnDisappearing();
     }
 
@@ -41,31 +36,6 @@ public partial class LoginPage : ContentPage
     private void OnPasswordBorderTapped(object? sender, EventArgs e)
     {
         PasswordEntry?.Focus();
-    }
-
-    private async void OnLoginClicked(object? sender, EventArgs e)
-    {
-        var username = UsernameEntry.Text?.Trim() ?? string.Empty;
-        var password = PasswordEntry.Text ?? string.Empty;
-
-        if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
-        {
-            await DisplayAlertAsync(LocalizationService.Get("Error_Title"), LocalizationService.Get("Login_Error_Missing"), LocalizationService.Get("Button_OK"));
-            return;
-        }
-
-        try
-        {
-            // Attempt GraphQL login; throws if credentials invalid
-            await _authService.LoginAsync(username, password);
-
-            // Navigate to the first tab (Přehled/MainPage) defined in AppShell
-            await Shell.Current.GoToAsync("//Přehled");
-        }
-        catch (Exception ex)
-        {
-            await DisplayAlertAsync(LocalizationService.Get("Login_Failed_Title"), ex.Message, LocalizationService.Get("Button_OK"));
-        }
     }
 
     protected override bool OnBackButtonPressed()

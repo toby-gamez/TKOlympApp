@@ -3,20 +3,26 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TkOlympApp.Pages.LeaderboardPage"
              xmlns:svc="clr-namespace:TkOlympApp.Services"
+             xmlns:viewModels="clr-namespace:TkOlympApp.ViewModels"
+             x:DataType="viewModels:LeaderboardViewModel"
              Title="{svc:Translate Leaderboard}">
 
     <!-- Theme resources removed: use inline AppThemeBinding in setters to avoid nested value errors -->
 
     <Grid>
         <!-- Main content -->
-        <RefreshView x:Name="LeaderboardRefresh" Refreshing="OnLeaderboardRefresh">
+        <RefreshView IsRefreshing="{Binding IsRefreshing}"
+                     Command="{Binding RefreshCommand}">
             <ScrollView>
                 <VerticalStackLayout Padding="20" Spacing="12">
 
                 <StackLayout Spacing="8">
-                    <CollectionView x:Name="ScoreboardCollection" ItemsLayout="VerticalList">
+                    <CollectionView x:Name="ScoreboardCollection"
+                                    ItemsLayout="VerticalList"
+                                    ItemsSource="{Binding Rows}"
+                                    IsVisible="{Binding IsListVisible}">
                     <CollectionView.ItemTemplate>
-                        <DataTemplate>
+                        <DataTemplate x:DataType="viewModels:LeaderboardViewModel.LeaderboardRow">
                             <Grid Padding="8" ColumnDefinitions="40, *, 80" RowDefinitions="Auto" BackgroundColor="{Binding BackgroundColor}">
                                 <Label Text="{Binding RankingDisplay}" Grid.Column="0" VerticalOptions="Center" HorizontalOptions="Center" TextColor="{Binding TextColor}">
                                     <Label.Triggers>
@@ -52,8 +58,8 @@
 
         <!-- Loading indicator (centered) with message -->
         <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="6">
-            <ActivityIndicator x:Name="LoadingIndicator" IsVisible="False" IsRunning="False" HorizontalOptions="Center" />
-            <Label Text="{svc:Translate Leaderboard_Loading}" IsVisible="{Binding Source={x:Reference LoadingIndicator}, Path=IsVisible}" HorizontalOptions="Center" />
+            <ActivityIndicator IsVisible="{Binding IsLoading}" IsRunning="{Binding IsLoading}" HorizontalOptions="Center" />
+            <Label Text="{svc:Translate Leaderboard_Loading}" IsVisible="{Binding IsLoading}" HorizontalOptions="Center" />
         </VerticalStackLayout>
 
         </Grid>

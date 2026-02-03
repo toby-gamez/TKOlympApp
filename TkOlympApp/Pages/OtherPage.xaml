@@ -3,6 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TkOlympApp.Pages.OtherPage"
              xmlns:svc="clr-namespace:TkOlympApp.Services"
+             xmlns:viewModels="clr-namespace:TkOlympApp.ViewModels"
+             x:DataType="viewModels:OtherViewModel"
              Title="{svc:Translate Other}">
     <Grid RowDefinitions="Auto,* ,Auto">
 
@@ -14,7 +16,7 @@
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
                     <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnAboutMeClicked" />
+                        <TapGestureRecognizer Command="{Binding AboutMeCommand}" />
                     </Border.GestureRecognizers>
                     <VerticalStackLayout>
                         <Label FontAttributes="Bold" Text="{svc:Translate Other_Item_Profile}" />
@@ -26,7 +28,7 @@
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
                     <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnPeopleClicked" />
+                        <TapGestureRecognizer Command="{Binding PeopleCommand}" />
                     </Border.GestureRecognizers>
                     <VerticalStackLayout>
                         <Label FontAttributes="Bold" Text="{svc:Translate Other_Item_People}" />
@@ -38,7 +40,7 @@
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
                     <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnTrainersClicked" />
+                        <TapGestureRecognizer Command="{Binding TrainersCommand}" />
                     </Border.GestureRecognizers>
                     <VerticalStackLayout>
                         <Label FontAttributes="Bold" Text="{svc:Translate Other_Trainers_Label}" />
@@ -50,7 +52,7 @@
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
                     <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnCohortGroupsClicked" />
+                        <TapGestureRecognizer Command="{Binding CohortGroupsCommand}" />
                     </Border.GestureRecognizers>
                     <VerticalStackLayout>
                         <Label FontAttributes="Bold" Text="{svc:Translate Other_CohortGroups_Label}" />
@@ -62,7 +64,7 @@
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
                     <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnLeaderboardClicked" />
+                        <TapGestureRecognizer Command="{Binding LeaderboardCommand}" />
                     </Border.GestureRecognizers>
                     <VerticalStackLayout>
                         <Label FontAttributes="Bold" Text="{svc:Translate Leaderboard}" />
@@ -76,7 +78,7 @@
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
                     <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnLanguagesClicked" />
+                        <TapGestureRecognizer Command="{Binding LanguagesCommand}" />
                     </Border.GestureRecognizers>
                     <VerticalStackLayout>
                         <Label FontAttributes="Bold" Text="{svc:Translate Other_Languages_Label}" />
@@ -88,7 +90,7 @@
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
                     <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnAboutAppClicked" />
+                        <TapGestureRecognizer Command="{Binding AboutAppCommand}" />
                     </Border.GestureRecognizers>
                     <VerticalStackLayout>
                         <Label FontAttributes="Bold" Text="{svc:Translate Other_AboutApp_Label}" />
@@ -100,7 +102,7 @@
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
                     <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnNotificationSettingsClicked" />
+                        <TapGestureRecognizer Command="{Binding NotificationSettingsCommand}" />
                     </Border.GestureRecognizers>
                     <VerticalStackLayout>
                         <Label FontAttributes="Bold" Text="{svc:Translate Notifications_Settings}" />
@@ -112,7 +114,7 @@
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
                     <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnPrivacyPolicyClicked" />
+                        <TapGestureRecognizer Command="{Binding PrivacyPolicyCommand}" />
                     </Border.GestureRecognizers>
                     <VerticalStackLayout>
                         <Label FontAttributes="Bold" Text="{svc:Translate Privacy_Title}" />
@@ -121,6 +123,12 @@
                 </Border>
             </VerticalStackLayout>
         </ScrollView>
+
+        <VerticalStackLayout Grid.Row="2" Padding="20" Spacing="8">
+            <Button Text="{svc:Translate Other_Button_Logout}"
+                Command="{Binding LogoutCommand}"
+                HorizontalOptions="FillAndExpand" />
+        </VerticalStackLayout>
 
                 
     </Grid>

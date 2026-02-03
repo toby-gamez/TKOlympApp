@@ -149,6 +149,25 @@ public static class MauiProgram
         builder.Services.AddTransient<TkOlympApp.ViewModels.CalendarViewModel>();
         builder.Services.AddTransient<TkOlympApp.ViewModels.CalendarViewViewModel>();
         builder.Services.AddTransient<TkOlympApp.ViewModels.EventsViewModel>();
+        builder.Services.AddTransient<TkOlympApp.ViewModels.PersonViewModel>();
+        builder.Services.AddTransient<TkOlympApp.ViewModels.PeopleViewModel>();
+        builder.Services.AddTransient<TkOlympApp.ViewModels.NoticeboardViewModel>();
+        builder.Services.AddTransient<TkOlympApp.ViewModels.NoticeViewModel>();
+        builder.Services.AddTransient<TkOlympApp.ViewModels.ChangePasswordViewModel>();
+        builder.Services.AddTransient<TkOlympApp.ViewModels.LoginViewModel>();
+        builder.Services.AddTransient<TkOlympApp.ViewModels.AboutAppViewModel>();
+        builder.Services.AddTransient<TkOlympApp.ViewModels.PrivacyPolicyViewModel>();
+        builder.Services.AddTransient<TkOlympApp.ViewModels.OtherViewModel>();
+        builder.Services.AddTransient<TkOlympApp.ViewModels.LanguageViewModel>();
+        builder.Services.AddTransient<TkOlympApp.ViewModels.FirstRunViewModel>();
+        builder.Services.AddTransient<TkOlympApp.ViewModels.LeaderboardViewModel>();
+        builder.Services.AddTransient<TkOlympApp.ViewModels.TrainersAndLocationsViewModel>();
+        builder.Services.AddTransient<TkOlympApp.ViewModels.CohortGroupsViewModel>();
+        builder.Services.AddTransient<TkOlympApp.ViewModels.CoupleViewModel>();
+        builder.Services.AddTransient<TkOlympApp.ViewModels.DeleteRegistrationsViewModel>();
+        builder.Services.AddTransient<TkOlympApp.ViewModels.EventNotificationSettingsViewModel>();
+        builder.Services.AddTransient<TkOlympApp.ViewModels.EventNotificationRuleEditViewModel>();
+        builder.Services.AddTransient<TkOlympApp.ViewModels.PlainTextViewModel>();
         builder.Services.AddTransient<TkOlympApp.ViewModels.MainPageViewModel>();
 
         // Notification services

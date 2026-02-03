@@ -1,27 +1,84 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
              x:Class="TkOlympApp.Pages.PeoplePage"
              xmlns:svc="clr-namespace:TkOlympApp.Services"
+             xmlns:viewModels="clr-namespace:TkOlympApp.ViewModels"
+             x:DataType="viewModels:PeopleViewModel"
              Title="{svc:Translate People_Title}">
 
     <Grid RowDefinitions="Auto,*,Auto">
         <Grid Grid.Row="0" Padding="12" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
             <Label Grid.Column="0" Text="{svc:Translate People_SortLabel}" VerticalOptions="Center" />
-            <Picker Grid.Column="1" x:Name="SortPicker" Title="{svc:Translate People_SortPickerTitle}" WidthRequest="200" SelectedIndexChanged="OnSortChanged" HorizontalOptions="Start">
-                <Picker.Items>
-                    <x:String>{svc:Translate People_Sort_Alphabetical}</x:String>
-                    <x:String>{svc:Translate People_Sort_ByBirthdays}</x:String>
-                </Picker.Items>
-            </Picker>
-            <Button Grid.Column="2" x:Name="FilterButton" Text="{svc:Translate People_FilterButton}" Clicked="OnFilterClicked" HorizontalOptions="End" />
+            <Picker Grid.Column="1"
+                    Title="{svc:Translate People_SortPickerTitle}"
+                    WidthRequest="200"
+                    HorizontalOptions="Start"
+                    ItemsSource="{Binding SortOptions}"
+                    SelectedIndex="{Binding SelectedSortIndex}" />
+            <Button Grid.Column="2"
+                    Text="{svc:Translate People_FilterButton}"
+                    Command="{Binding FilterCommand}"
+                    IsVisible="{Binding IsFilterVisible}"
+                    HorizontalOptions="End" />
         </Grid>
 
-        <RefreshView x:Name="PeopleRefresh" Grid.Row="1" Refreshing="OnPeopleRefresh">
-            <ScrollView>
-                <VerticalStackLayout x:Name="PeopleStack" Padding="12,6" Spacing="6" />
-            </ScrollView>
+        <RefreshView Grid.Row="1"
+                     IsRefreshing="{Binding IsRefreshing}"
+                     Command="{Binding RefreshCommand}">
+            <CollectionView ItemsSource="{Binding People}"
+                            SelectionMode="Single"
+                            SelectedItem="{Binding SelectedPerson}"
+                            Margin="12,6">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="viewModels:PeopleViewModel.PersonItem">
+                        <Border StrokeThickness="{Binding StrokeThickness}"
+                                Stroke="{Binding StrokeBrush}"
+                                Padding="12"
+                                Margin="0,6">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8" />
+                            </Border.StrokeShape>
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" HorizontalOptions="Fill" VerticalOptions="Center">
+                                <VerticalStackLayout Grid.Column="0" HorizontalOptions="Start" VerticalOptions="Center">
+                                    <Label Text="{Binding FullName}" FontAttributes="Bold" />
+                                    <Label Text="{Binding DisplayBirthDate}"
+                                           FontSize="12"
+                                           Style="{StaticResource MutedLabelStyle}"
+                                           IsVisible="{Binding HasBirthDate}" />
+                                </VerticalStackLayout>
+
+                                <HorizontalStackLayout Grid.Column="1" Spacing="4" HorizontalOptions="End" VerticalOptions="Center">
+                                     <Label Text="&#xE7E9;"
+                                           FontFamily="MaterialIcons"
+                                           FontSize="26"
+                                         TextColor="{Binding BirthdayIconColor}"
+                                           IsVisible="{Binding IsBirthdayToday}" />
+
+                                    <HorizontalStackLayout BindableLayout.ItemsSource="{Binding CohortDots}" Spacing="4">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="viewModels:PeopleViewModel.CohortDot">
+                                                <Border Background="{Binding Color}"
+                                                        Padding="0"
+                                                        WidthRequest="20"
+                                                        HeightRequest="20"
+                                                        Margin="0"
+                                                        HorizontalOptions="Center"
+                                                        VerticalOptions="Center"
+                                                        Stroke="{x:Null}">
+                                                    <Border.StrokeShape>
+                                                        <RoundRectangle CornerRadius="10" />
+                                                    </Border.StrokeShape>
+                                                </Border>
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
+                                    </HorizontalStackLayout>
+                                </HorizontalStackLayout>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
         </RefreshView>
 
         <!-- Manual reload removed — use pull-to-refresh -->

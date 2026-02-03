@@ -3,6 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TkOlympApp.Pages.PrivacyPolicyPage"
              xmlns:svc="clr-namespace:TkOlympApp.Services"
+             xmlns:viewModels="clr-namespace:TkOlympApp.ViewModels"
+             x:DataType="viewModels:PrivacyPolicyViewModel"
              Title="{svc:Translate Privacy_Title}">
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="12">
@@ -42,7 +44,7 @@
                         <Span Text="{svc:Translate Privacy_Contact_Prefix}" />
                         <Span Text="{svc:Translate Privacy_Contact_LinkText}" TextDecorations="Underline" TextColor="{StaticResource Primary}">
                             <Span.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnContactTapped" NumberOfTapsRequired="1" />
+                                <TapGestureRecognizer Command="{Binding OpenContactCommand}" NumberOfTapsRequired="1" />
                             </Span.GestureRecognizers>
                         </Span>
                     </FormattedString>

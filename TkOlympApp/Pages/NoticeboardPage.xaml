@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:local="clr-namespace:TkOlympApp.Pages"
+             xmlns:viewModels="clr-namespace:TkOlympApp.ViewModels"
              x:Class="TkOlympApp.Pages.NoticeboardPage"
              xmlns:svc="clr-namespace:TkOlympApp.Services"
+             x:DataType="viewModels:NoticeboardViewModel"
              Title="{svc:Translate Noticeboard}">
     <Grid Padding="20,12,20,0">
         <Grid.RowDefinitions>
@@ -12,21 +13,30 @@
         </Grid.RowDefinitions>
 
         <HorizontalStackLayout Grid.Row="0" Padding="0" Spacing="8" VerticalOptions="Center" Margin="0,0,0,5">
-            <Button x:Name="TabAktualityButton" Text="{svc:Translate Noticeboard_TabAktuality}" Clicked="OnTabAktualityClicked" />
-            <Button x:Name="TabStalaButton" Text="{svc:Translate Noticeboard_TabStala}" Clicked="OnTabStalaClicked" />
+            <Button Text="{svc:Translate Noticeboard_TabAktuality}"
+                    Command="{Binding ShowAktualityCommand}"
+                    BackgroundColor="{Binding TabAktualityBackgroundColor}"
+                    TextColor="{Binding TabAktualityTextColor}" />
+            <Button Text="{svc:Translate Noticeboard_TabStala}"
+                    Command="{Binding ShowStalaCommand}"
+                    BackgroundColor="{Binding TabStalaBackgroundColor}"
+                    TextColor="{Binding TabStalaTextColor}" />
         </HorizontalStackLayout>
 
-        <RefreshView x:Name="AnnouncementsRefresh" Refreshing="OnAnnouncementsRefresh" Grid.Row="1">
-            <CollectionView x:Name="AnnouncementsCollection" Margin="0" SelectionMode="None" VerticalOptions="FillAndExpand">
+        <RefreshView Grid.Row="1"
+                     IsRefreshing="{Binding IsRefreshing}"
+                     Command="{Binding RefreshCommand}">
+            <CollectionView Margin="0"
+                            SelectionMode="Single"
+                            SelectedItem="{Binding SelectedAnnouncement}"
+                            ItemsSource="{Binding Announcements}"
+                            VerticalOptions="FillAndExpand">
             <CollectionView.ItemsLayout>
                 <LinearItemsLayout Orientation="Vertical" ItemSpacing="4" />
             </CollectionView.ItemsLayout>
             <CollectionView.ItemTemplate>
-                <DataTemplate>
+                <DataTemplate x:DataType="viewModels:NoticeboardViewModel.AnnouncementItem">
                     <Border Padding="12" Margin="6">
-                        <Border.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnAnnouncementTapped" />
-                        </Border.GestureRecognizers>
                         <Border.StrokeShape>
                             <RoundRectangle CornerRadius="8" />
                         </Border.StrokeShape>

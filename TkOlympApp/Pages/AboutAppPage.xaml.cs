@@ -1,23 +1,17 @@
-using Microsoft.Maui.ApplicationModel;
+using System;
 using Microsoft.Maui.Controls;
-using TkOlympApp.Services;
+using TkOlympApp.ViewModels;
 
 namespace TkOlympApp.Pages;
 
 public partial class AboutAppPage : ContentPage
 {
-    public AboutAppPage()
+    private readonly AboutAppViewModel _viewModel;
+
+    public AboutAppPage(AboutAppViewModel viewModel)
     {
+        _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         InitializeComponent();
-        try
-        {
-            AppTitleLabel.Text = AppInfo.Name ?? "TkOlympApp";
-            var versionFormat = LocalizationService.Get("VersionFormat") ?? "Verze {0} (Build {1})";
-            VersionLabel.Text = string.Format(versionFormat, AppInfo.VersionString, AppInfo.BuildString);
-        }
-        catch
-        {
-            // ignore
-        }
+        BindingContext = _viewModel;
     }
 }

@@ -3,11 +3,15 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TkOlympApp.Pages.LanguagePage"
              Title="{svc:Translate Other_Languages_Label}"
-             xmlns:svc="clr-namespace:TkOlympApp.Services">
+             xmlns:svc="clr-namespace:TkOlympApp.Services"
+             xmlns:viewModels="clr-namespace:TkOlympApp.ViewModels"
+             x:DataType="viewModels:LanguageViewModel">
 
-    <CollectionView x:Name="LangList" SelectionMode="Single" SelectionChanged="OnSelectionChanged">
+    <CollectionView SelectionMode="Single"
+                    ItemsSource="{Binding Languages}"
+                    SelectedItem="{Binding SelectedLanguage}">
         <CollectionView.ItemTemplate>
-            <DataTemplate>
+            <DataTemplate x:DataType="viewModels:LanguageViewModel.LangItem">
                 <Grid Padding="12" ColumnDefinitions="Auto,*,Auto">
                     <Label Text="{Binding Flag}" FontSize="28" VerticalOptions="Center" />
                     <Label Grid.Column="1" Text="{Binding Name}" VerticalOptions="Center" Margin="12,0" />

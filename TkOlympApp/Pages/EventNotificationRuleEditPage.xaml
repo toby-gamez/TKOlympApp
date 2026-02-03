@@ -3,6 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TkOlympApp.Pages.EventNotificationRuleEditPage"
              xmlns:svc="clr-namespace:TkOlympApp.Services"
+             xmlns:viewModels="clr-namespace:TkOlympApp.ViewModels"
+             x:DataType="viewModels:EventNotificationRuleEditViewModel"
              Title="{svc:Translate Notification_EditRule_Title}">
 
     <Grid RowDefinitions="Auto,*">
@@ -10,20 +12,20 @@
             <VerticalStackLayout Padding="12" Spacing="12">
                 <Label Text="{svc:Translate Notification_EditRule_Name}" />
                 <Border Padding="6">
-                    <Entry x:Name="NameEntry" />
+                    <Entry Text="{Binding Name}" />
                 </Border>
 
                 <Label Text="{svc:Translate Notification_EditRule_TimeBefore}" />
                 <Border Padding="6">
-                    <Entry x:Name="MinutesEntry" Keyboard="Numeric" Placeholder="{svc:Translate Notification_SelectMinutes}" />
+                    <Entry Text="{Binding Minutes}" Keyboard="Numeric" Placeholder="{svc:Translate Notification_SelectMinutes}" />
                 </Border>
 
                 <Label Text="{svc:Translate Notification_EditRule_EventTypes}" />
-                <CollectionView x:Name="TypesCollection" SelectionMode="Multiple" ItemsLayout="VerticalList">
+                <CollectionView SelectionMode="Multiple" ItemsLayout="VerticalList" ItemsSource="{Binding Types}">
                     <CollectionView.ItemTemplate>
-                        <DataTemplate>
+                        <DataTemplate x:DataType="viewModels:EventNotificationRuleEditViewModel.TypeItem">
                             <HorizontalStackLayout Padding="6">
-                                <CheckBox IsChecked="{Binding Selected}" CheckedChanged="OnTypeCheckedChanged" />
+                                <CheckBox IsChecked="{Binding Selected}" />
                                 <Label Text="{Binding Label}" VerticalOptions="Center" />
                             </HorizontalStackLayout>
                         </DataTemplate>
@@ -31,18 +33,18 @@
                 </CollectionView>
 
                 <Label Text="{svc:Translate Notification_EditRule_Trainers}" />
-                <CollectionView x:Name="TrainersCollection" SelectionMode="Multiple" ItemsLayout="VerticalList">
+                <CollectionView SelectionMode="Multiple" ItemsLayout="VerticalList" ItemsSource="{Binding Trainers}">
                     <CollectionView.ItemTemplate>
-                        <DataTemplate>
+                        <DataTemplate x:DataType="viewModels:EventNotificationRuleEditViewModel.TrainerItem">
                             <HorizontalStackLayout Padding="6">
-                                <CheckBox IsChecked="{Binding Selected}" CheckedChanged="OnTrainerCheckedChanged" />
+                                <CheckBox IsChecked="{Binding Selected}" />
                                 <Label Text="{Binding Label}" VerticalOptions="Center" />
                             </HorizontalStackLayout>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
 
-                <Button Text="{svc:Translate Button_Save}" Clicked="OnSaveClicked" />
+                <Button Text="{svc:Translate Button_Save}" Command="{Binding SaveCommand}" />
             </VerticalStackLayout>
         </ScrollView>
     </Grid>

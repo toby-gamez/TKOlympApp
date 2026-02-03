@@ -4,12 +4,15 @@
              x:Class="TkOlympApp.Pages.NoticePage"
              xmlns:svc="clr-namespace:TkOlympApp.Services"
              xmlns:mi="http://www.aathifmahir.com/dotnet/2022/maui/icons"
+             xmlns:viewModels="clr-namespace:TkOlympApp.ViewModels"
+             x:DataType="viewModels:NoticeViewModel"
              Title="{svc:Translate NoticePage_Title}">
-    <RefreshView x:Name="NoticeRefresh" Refreshing="OnNoticeRefresh">
+    <RefreshView IsRefreshing="{Binding IsRefreshing}"
+                 Command="{Binding RefreshCommand}">
         <ScrollView>
             <VerticalStackLayout Padding="20" Spacing="12">
             <VerticalStackLayout Spacing="8" Margin="8,6">
-                <Label x:Name="TitleLabel" FontAttributes="Bold" FontSize="20" />
+                <Label Text="{Binding TitleText}" FontAttributes="Bold" FontSize="20" />
             </VerticalStackLayout>
                 <Border x:Name="InfoFrame" Padding="12">
                 <Border.StrokeShape>
@@ -17,21 +20,39 @@
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="6">
                     <Label Text="{svc:Translate Notice_Info}" FontAttributes="Bold" />
-                    <Label x:Name="AuthorLabel" FontSize="12"/>
-                    <Label x:Name="CreatedAtLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}"/>
-                    <Label x:Name="UpdatedAtLabel" FontSize="12" Style="{StaticResource MutedLabelStyle}" IsVisible="False" />
+                    <Label Text="{Binding AuthorText}" FontSize="12" IsVisible="{Binding AuthorVisible}"/>
+                    <Label Text="{Binding CreatedAtText}" FontSize="12" Style="{StaticResource MutedLabelStyle}"/>
+                    <Label Text="{Binding UpdatedAtText}" FontSize="12" Style="{StaticResource MutedLabelStyle}" IsVisible="{Binding UpdatedAtVisible}" />
                 </VerticalStackLayout>
             </Border>
-            <Border x:Name="BodyFrame" Padding="12">
+            <Border Padding="12" IsVisible="{Binding BodyVisible}">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="6">
                     <Grid ColumnDefinitions="*,22" HorizontalOptions="Fill">
                         <Label Text="{svc:Translate Notice_Content}" FontAttributes="Bold" Grid.Column="0" VerticalOptions="Center" />
-                        <Button x:Name="CopyBodyButton" Text="{mi:Material Icon=ContentCopy}" Clicked="OnCopyBodyClicked" Grid.Column="1" HorizontalOptions="End" BackgroundColor="Transparent" FontSize="12" TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" WidthRequest="22" MinimumWidthRequest="22" HeightRequest="22" MinimumHeightRequest="22" VerticalOptions="Center" Padding="4,0" />
+                        <Button Text="{mi:Material Icon=ContentCopy}"
+                                Command="{Binding CopyBodyCommand}"
+                                Grid.Column="1"
+                                HorizontalOptions="End"
+                                BackgroundColor="Transparent"
+                                FontSize="12"
+                                TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}"
+                                WidthRequest="22"
+                                MinimumWidthRequest="22"
+                                HeightRequest="22"
+                                MinimumHeightRequest="22"
+                                VerticalOptions="Center"
+                                Padding="4,0" />
                     </Grid>
-                    <StackLayout x:Name="BodyContent" Spacing="6" />
+                    <StackLayout Spacing="6" BindableLayout.ItemsSource="{Binding BodyViews}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate>
+                                <ContentPresenter Content="{Binding .}" />
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </StackLayout>
                 </VerticalStackLayout>
             </Border>
         </VerticalStackLayout>

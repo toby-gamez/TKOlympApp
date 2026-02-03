@@ -2,14 +2,18 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:svc="clr-namespace:TkOlympApp.Services"
+             xmlns:viewModels="clr-namespace:TkOlympApp.ViewModels"
              x:Class="TkOlympApp.Pages.CouplePage"
+             x:DataType="viewModels:CoupleViewModel"
              Title="{svc:Translate Couple_Title}">
 
     <Grid RowDefinitions="Auto,*,Auto">
-        <RefreshView x:Name="PageRefresh" Grid.Row="1" Refreshing="OnRefresh">
+        <RefreshView Grid.Row="1"
+                     IsRefreshing="{Binding IsRefreshing}"
+                     Command="{Binding RefreshCommand}">
             <ScrollView>
                 <VerticalStackLayout Padding="20" Spacing="12">
-                    <Label x:Name="ErrorLabel" TextColor="Red" IsVisible="False" Margin="0,0,0,8" />
+                    <Label TextColor="Red" IsVisible="{Binding IsErrorVisible}" Text="{Binding ErrorText}" Margin="0,0,0,8" />
 
                 <!-- Top: couple name similar to AboutMePage -->
                 <Border Padding="12">
@@ -18,9 +22,9 @@
                     </Border.StrokeShape>
                     <VerticalStackLayout Spacing="8">
                         <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
-                            <Label x:Name="ManNameValue" FontSize="20" FontAttributes="Bold" />
+                            <Label Text="{Binding ManNameValue}" FontSize="20" FontAttributes="Bold" />
                             <Label Text="{svc:Translate Couple_Separator}" FontSize="20" FontAttributes="Bold" />
-                            <Label x:Name="WomanNameValue" FontSize="20" FontAttributes="Bold" />
+                            <Label Text="{Binding WomanNameValue}" FontSize="20" FontAttributes="Bold" />
                         </HorizontalStackLayout>
                     </VerticalStackLayout>
                 </Border>
@@ -32,12 +36,12 @@
                     <VerticalStackLayout Spacing="8">
                         <HorizontalStackLayout Spacing="6">
                             <Label Text="{svc:Translate Couple_Id}" FontAttributes="Bold" FontSize="12" />
-                            <Label x:Name="IdValue" HorizontalOptions="StartAndExpand" FontSize="12" />
+                            <Label Text="{Binding IdValue}" HorizontalOptions="StartAndExpand" FontSize="12" />
                         </HorizontalStackLayout>
 
                         <HorizontalStackLayout Spacing="6">
                             <Label Text="{svc:Translate Couple_CreatedAt}" FontAttributes="Bold" FontSize="12" />
-                            <Label x:Name="CreatedAtValue" HorizontalOptions="StartAndExpand" FontSize="12" />
+                            <Label Text="{Binding CreatedAtValue}" HorizontalOptions="StartAndExpand" FontSize="12" />
                         </HorizontalStackLayout>
                     </VerticalStackLayout>
                 </Border>
@@ -49,19 +53,19 @@
                     <VerticalStackLayout Spacing="8">
                         <Label Text="{svc:Translate Couple_Man}" FontAttributes="Bold" />
                         <Border.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnManTapped" NumberOfTapsRequired="1" />
+                            <TapGestureRecognizer Command="{Binding OpenManCommand}" NumberOfTapsRequired="1" />
                         </Border.GestureRecognizers>
-                        <HorizontalStackLayout x:Name="ManFirstNameRow" Spacing="6">
+                        <HorizontalStackLayout Spacing="6" IsVisible="{Binding ManFirstNameVisible}">
                             <Label Text="{svc:Translate Couple_FirstName}" FontAttributes="Bold" FontSize="12" />
-                            <Label x:Name="ManFirstNameValue" HorizontalOptions="StartAndExpand" FontSize="12" />
+                            <Label Text="{Binding ManFirstNameValue}" HorizontalOptions="StartAndExpand" FontSize="12" />
                         </HorizontalStackLayout>
-                        <HorizontalStackLayout x:Name="ManLastNameRow" Spacing="6">
+                        <HorizontalStackLayout Spacing="6" IsVisible="{Binding ManLastNameVisible}">
                             <Label Text="{svc:Translate Couple_LastName}" FontAttributes="Bold" FontSize="12" />
-                            <Label x:Name="ManLastNameValue" HorizontalOptions="StartAndExpand" FontSize="12" />
+                            <Label Text="{Binding ManLastNameValue}" HorizontalOptions="StartAndExpand" FontSize="12" />
                         </HorizontalStackLayout>
-                        <HorizontalStackLayout x:Name="ManPhoneRow" Spacing="6">
+                        <HorizontalStackLayout Spacing="6" IsVisible="{Binding ManPhoneVisible}">
                             <Label Text="{svc:Translate Couple_Phone}" FontAttributes="Bold" FontSize="12" />
-                            <Label x:Name="ManPhoneValue" HorizontalOptions="StartAndExpand" FontSize="12" />
+                            <Label Text="{Binding ManPhoneValue}" HorizontalOptions="StartAndExpand" FontSize="12" />
                         </HorizontalStackLayout>
                     </VerticalStackLayout>
                 </Border>
@@ -73,19 +77,19 @@
                     <VerticalStackLayout Spacing="8">
                         <Label Text="{svc:Translate Couple_Woman}" FontAttributes="Bold" />
                         <Border.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnWomanTapped" NumberOfTapsRequired="1" />
+                            <TapGestureRecognizer Command="{Binding OpenWomanCommand}" NumberOfTapsRequired="1" />
                         </Border.GestureRecognizers>
-                        <HorizontalStackLayout x:Name="WomanFirstNameRow" Spacing="6">
+                        <HorizontalStackLayout Spacing="6" IsVisible="{Binding WomanFirstNameVisible}">
                             <Label Text="{svc:Translate Couple_FirstName}" FontAttributes="Bold" FontSize="12" />
-                            <Label x:Name="WomanFirstNameValue" HorizontalOptions="StartAndExpand" FontSize="12" />
+                            <Label Text="{Binding WomanFirstNameValue}" HorizontalOptions="StartAndExpand" FontSize="12" />
                         </HorizontalStackLayout>
-                        <HorizontalStackLayout x:Name="WomanLastNameRow" Spacing="6">
+                        <HorizontalStackLayout Spacing="6" IsVisible="{Binding WomanLastNameVisible}">
                             <Label Text="{svc:Translate Couple_LastName}" FontAttributes="Bold" FontSize="12" />
-                            <Label x:Name="WomanLastNameValue" HorizontalOptions="StartAndExpand" FontSize="12" />
+                            <Label Text="{Binding WomanLastNameValue}" HorizontalOptions="StartAndExpand" FontSize="12" />
                         </HorizontalStackLayout>
-                        <HorizontalStackLayout x:Name="WomanPhoneRow" Spacing="6">
+                        <HorizontalStackLayout Spacing="6" IsVisible="{Binding WomanPhoneVisible}">
                             <Label Text="{svc:Translate Couple_Phone}" FontAttributes="Bold" FontSize="12" />
-                            <Label x:Name="WomanPhoneValue" HorizontalOptions="StartAndExpand" FontSize="12" />
+                            <Label Text="{Binding WomanPhoneValue}" HorizontalOptions="StartAndExpand" FontSize="12" />
                         </HorizontalStackLayout>
                     </VerticalStackLayout>
                 </Border>

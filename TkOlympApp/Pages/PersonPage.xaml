@@ -2,14 +2,21 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:svc="clr-namespace:TkOlympApp.Services"
+             xmlns:viewModels="clr-namespace:TkOlympApp.ViewModels"
              x:Class="TkOlympApp.Pages.PersonPage"
+             x:DataType="viewModels:PersonViewModel"
              Title="{svc:Translate Person_Title}">
 
     <Grid RowDefinitions="Auto,*">
-        <RefreshView x:Name="PageRefresh" Grid.Row="1" Refreshing="OnRefresh">
+        <RefreshView Grid.Row="1"
+                     IsRefreshing="{Binding IsRefreshing}"
+                     Command="{Binding RefreshCommand}">
             <ScrollView>
                 <VerticalStackLayout Padding="20" Spacing="12">
-                    <Label x:Name="ErrorLabel" TextColor="Red" IsVisible="False" Margin="0,0,0,8" />
+                    <Label TextColor="Red"
+                           IsVisible="{Binding IsErrorVisible}"
+                           Text="{Binding ErrorText}"
+                           Margin="0,0,0,8" />
 
                 <!-- Primary: velké jméno nahoře, detaily pod ním -->
                 <Border Padding="12">
@@ -19,57 +26,57 @@
                     <VerticalStackLayout Spacing="8">
                         <!-- Jméno a příjmení velkým písmem -->
                         <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
-                            <Label x:Name="NameValue" FontSize="22" FontAttributes="Bold"/>
-                            <Label x:Name="SurnameValue" FontSize="22" FontAttributes="Bold"/>
+                            <Label Text="{Binding NameText}" FontSize="22" FontAttributes="Bold"/>
+                            <Label Text="{Binding SurnameText}" FontSize="22" FontAttributes="Bold"/>
                         </HorizontalStackLayout>
                         <!-- Důležité drobné údaje pod jménem (login removed) -->
                     </VerticalStackLayout>
                 </Border>
 
                 <!-- Contact -->
-                <Border Padding="12" x:Name="ContactBorder">
+                <Border Padding="12" IsVisible="{Binding ContactBorderVisible}">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
                     <VerticalStackLayout Spacing="8">
-                        <HorizontalStackLayout x:Name="EmailRow" Spacing="6">
+                        <HorizontalStackLayout Spacing="6" IsVisible="{Binding EmailVisible}">
                             <Label Text="{svc:Translate About_Email}" FontAttributes="Bold" FontSize="12"/>
-                            <Label x:Name="EmailValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                            <Label Text="{Binding EmailText}" HorizontalOptions="StartAndExpand" FontSize="12"/>
                         </HorizontalStackLayout>
 
-                        <HorizontalStackLayout x:Name="PhoneRow" Spacing="6">
+                        <HorizontalStackLayout Spacing="6" IsVisible="{Binding PhoneVisible}">
                             <Label Text="{svc:Translate About_Phone}" FontAttributes="Bold" FontSize="12"/>
-                            <Label x:Name="PhoneValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                            <Label Text="{Binding PhoneText}" HorizontalOptions="StartAndExpand" FontSize="12"/>
                         </HorizontalStackLayout>
                     </VerticalStackLayout>
                 </Border>
 
                 <!-- Personal -->
-                <Border Padding="12" x:Name="PersonalBorder">
+                <Border Padding="12" IsVisible="{Binding PersonalBorderVisible}">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
                     <VerticalStackLayout Spacing="8">
-                        <HorizontalStackLayout x:Name="BioRow" Spacing="6">
+                        <HorizontalStackLayout Spacing="6" IsVisible="{Binding BioVisible}">
                             <Label Text="{svc:Translate About_Bio}" FontAttributes="Bold" FontSize="12"/>
-                            <Label x:Name="BioValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                            <Label Text="{Binding BioText}" HorizontalOptions="StartAndExpand" FontSize="12"/>
                         </HorizontalStackLayout>
 
-                        <HorizontalStackLayout x:Name="BirthDateRow" Spacing="6">
+                        <HorizontalStackLayout Spacing="6" IsVisible="{Binding BirthDateVisible}">
                             <Label Text="{svc:Translate About_BirthDate}" FontAttributes="Bold" FontSize="12"/>
-                            <Label x:Name="BirthDateValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                            <Label Text="{Binding BirthDateText}" HorizontalOptions="StartAndExpand" FontSize="12"/>
                         </HorizontalStackLayout>
 
                         <!-- Nationality removed -->
 
-                        <HorizontalStackLayout x:Name="GenderRow" Spacing="6">
+                        <HorizontalStackLayout Spacing="6" IsVisible="{Binding GenderVisible}">
                             <Label Text="{svc:Translate About_Gender}" FontAttributes="Bold" FontSize="12"/>
-                            <Label x:Name="GenderValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                            <Label Text="{Binding GenderText}" HorizontalOptions="StartAndExpand" FontSize="12"/>
                         </HorizontalStackLayout>
 
-                        <HorizontalStackLayout x:Name="IsTrainerRow" Spacing="6">
+                        <HorizontalStackLayout Spacing="6" IsVisible="{Binding IsTrainerVisible}">
                             <Label Text="{svc:Translate About_IsTrainer}" FontAttributes="Bold" FontSize="12"/>
-                            <Label x:Name="IsTrainerValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                            <Label Text="{Binding IsTrainerText}" HorizontalOptions="StartAndExpand" FontSize="12"/>
                         </HorizontalStackLayout>
                     </VerticalStackLayout>
                 </Border>
@@ -77,26 +84,58 @@
                 <!-- Address removed -->
 
                 <!-- Training groups / Cohorts -->
-                <Border x:Name="CohortsFrame" Padding="12" IsVisible="False">
+                <Border Padding="12" IsVisible="{Binding CohortsVisible}">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
                     <VerticalStackLayout Spacing="6">
                         <Label Text="{svc:Translate Person_Cohorts_Label}" FontAttributes="Bold" />
-                        <StackLayout x:Name="CohortDots" Spacing="8" />
+                        <StackLayout Spacing="8" BindableLayout.ItemsSource="{Binding Cohorts}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="viewModels:PersonViewModel.CohortItem">
+                                    <Grid VerticalOptions="Center" HorizontalOptions="Fill">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <Label Text="{Binding Name}"
+                                               VerticalOptions="Center"
+                                               HorizontalOptions="Start" />
+
+                                        <Border Grid.Column="1"
+                                                WidthRequest="20"
+                                                HeightRequest="20"
+                                                Padding="0"
+                                                Margin="0"
+                                                HorizontalOptions="End"
+                                                VerticalOptions="Center"
+                                                Background="{Binding Color}"
+                                                Stroke="{x:Null}">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="10" />
+                                            </Border.StrokeShape>
+                                        </Border>
+                                    </Grid>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </StackLayout>
                     </VerticalStackLayout>
                 </Border>
 
                 <!-- Active couples -->
-                <Border x:Name="ActiveCouplesFrame" Padding="12" Margin="0,0,0,0" IsVisible="False">
+                <Border Padding="12" Margin="0,0,0,0" IsVisible="{Binding ActiveCouplesVisible}">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
                     <VerticalStackLayout Spacing="8">
                         <Label Text="{svc:Translate Person_ActiveCouples_Label}" FontAttributes="Bold" />
-                        <CollectionView x:Name="ActiveCouplesCollection" HeightRequest="150" SelectionMode="Single" SelectionChanged="OnActiveCoupleSelected">
+                        <CollectionView HeightRequest="150"
+                                        SelectionMode="Single"
+                                        ItemsSource="{Binding ActiveCouples}"
+                                        SelectedItem="{Binding SelectedActiveCouple}">
                             <CollectionView.ItemTemplate>
-                                <DataTemplate>
+                                <DataTemplate x:DataType="viewModels:PersonViewModel.ActiveCoupleDisplay">
                                     <HorizontalStackLayout Padding="8" Spacing="8">
                                         <Label Text="{Binding Text}" />
                                     </HorizontalStackLayout>
@@ -107,25 +146,25 @@
                 </Border>
 
                 <!-- Identifiers: removed national id; keep proxy/wdsf/csts if needed -->
-                <Border Padding="12" x:Name="IdsBorder">
+                <Border Padding="12" IsVisible="{Binding IdsBorderVisible}">
                     <Border.StrokeShape>
                         <RoundRectangle CornerRadius="8" />
                     </Border.StrokeShape>
                     <VerticalStackLayout Spacing="8">
 
-                        <HorizontalStackLayout x:Name="ProxyIdRow" Spacing="6">
+                        <HorizontalStackLayout Spacing="6" IsVisible="{Binding ProxyIdVisible}">
                             <Label Text="{svc:Translate About_Id}" FontAttributes="Bold" FontSize="12"/>
-                            <Label x:Name="ProxyIdValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                            <Label Text="{Binding ProxyIdText}" HorizontalOptions="StartAndExpand" FontSize="12"/>
                         </HorizontalStackLayout>
 
-                        <HorizontalStackLayout x:Name="WdsfRow" Spacing="6">
+                        <HorizontalStackLayout Spacing="6" IsVisible="{Binding WdsfVisible}">
                             <Label Text="{svc:Translate About_WdsfId}" FontAttributes="Bold" FontSize="12"/>
-                            <Label x:Name="WdsfIdValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                            <Label Text="{Binding WdsfIdText}" HorizontalOptions="StartAndExpand" FontSize="12"/>
                         </HorizontalStackLayout>
 
-                        <HorizontalStackLayout x:Name="CstsRow" Spacing="6">
+                        <HorizontalStackLayout Spacing="6" IsVisible="{Binding CstsVisible}">
                             <Label Text="{svc:Translate About_CstsId}" FontAttributes="Bold" FontSize="12"/>
-                            <Label x:Name="CstsIdValue" HorizontalOptions="StartAndExpand" FontSize="12"/>
+                            <Label Text="{Binding CstsIdText}" HorizontalOptions="StartAndExpand" FontSize="12"/>
                         </HorizontalStackLayout>
 
                     </VerticalStackLayout>
