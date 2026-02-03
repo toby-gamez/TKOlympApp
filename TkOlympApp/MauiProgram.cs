@@ -127,10 +127,12 @@ public static class MauiProgram
         })
         .AddHttpMessageHandler<AuthDelegatingHandler>();
 
-        // Instance-based (DI) services
-        builder.Services.AddSingleton<INavigationService, NavigationServiceImplementation>();
+        // Instance-based (DI) services - prefer Transient to avoid captive dependencies
+        builder.Services.AddTransient<INavigationService, NavigationServiceImplementation>();
         builder.Services.AddTransient<IEventService, EventServiceImplementation>();
-        builder.Services.AddSingleton<IUserService, UserServiceImplementation>();
+        // Explicit factory to avoid constructor ambiguity between overloads
+        builder.Services.AddTransient<IUserService>(sp =>
+            new UserServiceImplementation(sp.GetRequiredService<IGraphQlClient>(), sp.GetRequiredService<IRuntimeState>()));
         builder.Services.AddTransient<INoticeboardService, NoticeboardServiceImplementation>();
         builder.Services.AddTransient<IPeopleService, PeopleServiceImplementation>();
         builder.Services.AddTransient<ICohortService, CohortServiceImplementation>();
@@ -147,8 +149,14 @@ public static class MauiProgram
         builder.Services.AddTransient<TkOlympApp.ViewModels.EventsViewModel>();
 
         // Notification services
-        builder.Services.AddSingleton<IEventNotificationService, EventNotificationService>();
-        builder.Services.AddSingleton<INoticeboardNotificationService, NoticeboardNotificationService>();
+        builder.Services.AddTransient<IEventNotificationService, EventNotificationService>();
+        builder.Services.AddTransient<INoticeboardNotificationService, NoticeboardNotificationService>();
+
+        // UI-facing notifier (unified user alerts) - transient
+        builder.Services.AddTransient<TkOlympApp.Services.Abstractions.IUserNotifier, TkOlympApp.Services.UserNotifier>();
+
+        // Runtime state singleton to allow transient services to share small bits of application state
+        builder.Services.AddSingleton<TkOlympApp.Services.Abstractions.IRuntimeState, TkOlympApp.Services.State.RuntimeState>();
 
         // Register Pages for DI
         builder.Services.AddTransient<AppShell>();

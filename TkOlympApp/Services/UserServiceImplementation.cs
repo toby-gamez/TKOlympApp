@@ -1,5 +1,5 @@
-using Microsoft.Maui.Storage;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.DependencyInjection;
 using TkOlympApp.Models.Users;
 using TkOlympApp.Services.Abstractions;
 
@@ -8,69 +8,47 @@ namespace TkOlympApp.Services;
 public sealed class UserServiceImplementation : IUserService
 {
     private readonly IGraphQlClient _graphQlClient;
-    private readonly ISecureStorage _secureStorage;
+    private readonly IRuntimeState _runtimeState;
 
-    public UserServiceImplementation(IGraphQlClient graphQlClient, ISecureStorage secureStorage)
+    [ActivatorUtilitiesConstructor]
+    public UserServiceImplementation(IGraphQlClient graphQlClient, IRuntimeState runtimeState)
     {
         _graphQlClient = graphQlClient ?? throw new ArgumentNullException(nameof(graphQlClient));
-        _secureStorage = secureStorage ?? throw new ArgumentNullException(nameof(secureStorage));
+        _runtimeState = runtimeState ?? throw new ArgumentNullException(nameof(runtimeState));
     }
 
-    public string? CurrentPersonId { get; private set; }
-    public string? CurrentCohortId { get; private set; }
+    // Backwards-compatible constructor for existing tests and callers that still provide ISecureStorage
+    public UserServiceImplementation(IGraphQlClient graphQlClient, Microsoft.Maui.Storage.ISecureStorage secureStorage)
+        : this(graphQlClient, new Services.State.RuntimeState(secureStorage))
+    {
+    }
+
+    public string? CurrentPersonId => _runtimeState.CurrentPersonId;
+    public string? CurrentCohortId => _runtimeState.CurrentCohortId;
 
     public void SetCurrentPersonId(string? personId)
     {
-        CurrentPersonId = personId;
-        _ = SetCurrentPersonIdAsync(personId);
+        _ = _runtimeState.SetCurrentPersonIdAsync(personId);
     }
 
-    public async Task SetCurrentPersonIdAsync(string? personId, CancellationToken ct = default)
+    public Task SetCurrentPersonIdAsync(string? personId, CancellationToken ct = default)
     {
-        CurrentPersonId = personId;
-        try
-        {
-            await _secureStorage.SetAsync("currentPersonId", string.IsNullOrEmpty(personId) ? string.Empty : personId);
-        }
-        catch
-        {
-            // best-effort
-        }
+        return _runtimeState.SetCurrentPersonIdAsync(personId);
     }
 
     public void SetCurrentCohortId(string? cohortId)
     {
-        CurrentCohortId = cohortId;
-        _ = SetCurrentCohortIdAsync(cohortId);
+        _ = _runtimeState.SetCurrentCohortIdAsync(cohortId);
     }
 
-    public async Task SetCurrentCohortIdAsync(string? cohortId, CancellationToken ct = default)
+    public Task SetCurrentCohortIdAsync(string? cohortId, CancellationToken ct = default)
     {
-        CurrentCohortId = cohortId;
-        try
-        {
-            await _secureStorage.SetAsync("currentCohortId", string.IsNullOrEmpty(cohortId) ? string.Empty : cohortId);
-        }
-        catch
-        {
-            // best-effort
-        }
+        return _runtimeState.SetCurrentCohortIdAsync(cohortId);
     }
 
-    public async Task InitializeAsync(CancellationToken ct = default)
+    public Task InitializeAsync(CancellationToken ct = default)
     {
-        try
-        {
-            var storedPerson = await _secureStorage.GetAsync("currentPersonId");
-            if (!string.IsNullOrWhiteSpace(storedPerson)) CurrentPersonId = storedPerson;
-
-            var storedCohort = await _secureStorage.GetAsync("currentCohortId");
-            if (!string.IsNullOrWhiteSpace(storedCohort)) CurrentCohortId = storedCohort;
-        }
-        catch
-        {
-            // ignore
-        }
+        return _runtimeState.InitializeAsync();
     }
 
     public async Task<CurrentUser?> GetCurrentUserAsync(CancellationToken ct = default)

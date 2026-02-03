@@ -83,15 +83,34 @@ namespace TkOlympApp.Services
             {
                 try
                 {
+                    // Try to use DI-provided IUserNotifier if available (when app has been initialized)
+                    var services = Application.Current?.Handler?.MauiContext?.Services as IServiceProvider;
+                    if (services != null)
+                    {
+                        try
+                        {
+                            var notifier = services.GetService(typeof(TkOlympApp.Services.Abstractions.IUserNotifier)) as TkOlympApp.Services.Abstractions.IUserNotifier;
+                            if (notifier != null)
+                            {
+                                await notifier.ShowAsync(title, message, LocalizationService.Get("Button_OK") ?? "OK");
+                                return;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            LoggerService.SafeLogWarning<NotificationManagerService>("Failed to use IUserNotifier: {0}", new object[] { ex.Message });
+                        }
+                    }
+
                     var page = Application.Current?.Windows?.FirstOrDefault()?.Page;
                     if (page != null)
                     {
-                        await page.DisplayAlertAsync(title, message, LocalizationService.Get("Button_OK"));
+                        await page.DisplayAlertAsync(title, message, LocalizationService.Get("Button_OK") ?? "OK");
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // ignore UI errors
+                    LoggerService.SafeLogWarning<NotificationManagerService>("Failed to show notification alert: {0}", new object[] { ex.Message });
                 }
             });
         }

@@ -63,6 +63,8 @@
     <Compile Include="..\TkOlympApp\Services\Abstractions\IAuthService.cs" Link="LinkedSources\IAuthService.cs" />
     <Compile Include="..\TkOlympApp\Services\Abstractions\IGraphQlClient.cs" Link="LinkedSources\IGraphQlClient.cs" />
     <Compile Include="..\TkOlympApp\Services\Abstractions\IUserService.cs" Link="LinkedSources\IUserService.cs" />
+    <Compile Include="..\TkOlympApp\Services\Abstractions\IRuntimeState.cs" Link="LinkedSources\IRuntimeState.cs" />
+    <Compile Include="..\TkOlympApp\Services\State\RuntimeState.cs" Link="LinkedSources\RuntimeState.cs" />
     <Compile Include="..\TkOlympApp\Services\Abstractions\IEventService.cs" Link="LinkedSources\IEventService.cs" />
     <Compile Include="..\TkOlympApp\Services\Abstractions\ILeaderboardService.cs" Link="LinkedSources\ILeaderboardService.cs" />
     <Compile Include="..\TkOlympApp\Services\Abstractions\ICoupleService.cs" Link="LinkedSources\ICoupleService.cs" />

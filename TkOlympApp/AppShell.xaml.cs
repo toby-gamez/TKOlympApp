@@ -42,11 +42,56 @@ public partial class AppShell : Shell, IDisposable
 
         // Ensure tab/root pages are created via DI (not via XAML type activation).
         // This allows constructor injection and removes the parameterless-ctor requirement.
-        OverviewShellContent.ContentTemplate = new DataTemplate(() => _services.GetRequiredService<MainPage>());
-        CalendarShellContent.ContentTemplate = new DataTemplate(() => _services.GetRequiredService<CalendarPage>());
-        NoticeboardShellContent.ContentTemplate = new DataTemplate(() => _services.GetRequiredService<NoticeboardPage>());
-        EventsShellContent.ContentTemplate = new DataTemplate(() => _services.GetRequiredService<TkOlympApp.Pages.EventsPage>());
-        OtherShellContent.ContentTemplate = new DataTemplate(() => _services.GetRequiredService<OtherPage>());
+        // Guard DI resolution so startup doesn't crash if a page fails to resolve.
+        OverviewShellContent.ContentTemplate = new DataTemplate(() =>
+        {
+            try { return _services.GetRequiredService<MainPage>(); }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to resolve MainPage via DI; falling back to simple error page");
+                return new ContentPage { Content = new Label { Text = "Error loading page" } };
+            }
+        });
+
+        CalendarShellContent.ContentTemplate = new DataTemplate(() =>
+        {
+            try { return _services.GetRequiredService<CalendarPage>(); }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to resolve CalendarPage via DI; falling back to simple error page");
+                return new ContentPage { Content = new Label { Text = "Error loading page" } };
+            }
+        });
+
+        NoticeboardShellContent.ContentTemplate = new DataTemplate(() =>
+        {
+            try { return _services.GetRequiredService<NoticeboardPage>(); }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to resolve NoticeboardPage via DI; falling back to simple error page");
+                return new ContentPage { Content = new Label { Text = "Error loading page" } };
+            }
+        });
+
+        EventsShellContent.ContentTemplate = new DataTemplate(() =>
+        {
+            try { return _services.GetRequiredService<TkOlympApp.Pages.EventsPage>(); }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to resolve EventsPage via DI; falling back to simple error page");
+                return new ContentPage { Content = new Label { Text = "Error loading page" } };
+            }
+        });
+
+        OtherShellContent.ContentTemplate = new DataTemplate(() =>
+        {
+            try { return _services.GetRequiredService<OtherPage>(); }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to resolve OtherPage via DI; falling back to simple error page");
+                return new ContentPage { Content = new Label { Text = "Error loading page" } };
+            }
+        });
         
         // Set default route to MainPage (Overview) to prevent navigation flash
         CurrentItem = Items[0];

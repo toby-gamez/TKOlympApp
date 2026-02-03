@@ -1,6 +1,7 @@
 using Microsoft.Maui.Controls;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Threading;
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -21,18 +22,21 @@ public partial class MainPage : ContentPage
     private readonly IEventService _eventService;
     private readonly INoticeboardService _noticeboardService;
     private readonly IEventNotificationService _eventNotificationService;
+    private readonly IUserNotifier _notifier;
     private DayGroup? _currentDay;
     private bool _isLoading;
     private bool _suppressReloadOnNextAppearing = false;
+    private CancellationTokenSource? _cts;
     public ObservableCollection<Announcement> RecentAnnouncements { get; } = new();
     public ObservableCollection<CampItem> UpcomingCamps { get; } = new();
 
-    public MainPage(IEventService eventService, INoticeboardService noticeboardService, IEventNotificationService eventNotificationService)
+    public MainPage(IEventService eventService, INoticeboardService noticeboardService, IEventNotificationService eventNotificationService, IUserNotifier notifier)
     {
         _logger = LoggerService.CreateLogger<MainPage>();
         _eventService = eventService;
         _noticeboardService = noticeboardService;
         _eventNotificationService = eventNotificationService;
+        _notifier = notifier;
         
         try
         {
@@ -52,7 +56,7 @@ public partial class MainPage : ContentPage
         }
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
         _logger.LogDebug("MainPage appearing");
@@ -70,63 +74,19 @@ public partial class MainPage : ContentPage
         }
 
         // Initialization for notifications (moved from old calendar logic)
+        _cts = new CancellationTokenSource();
         try
         {
-            Dispatcher.Dispatch(async () =>
-            {
-                try
-                {
-                    // Schedule notifications for upcoming events (1 hour and 5 minutes before)
-                    // Load events 2 days ahead for notifications
-                    var notifStart = DateTime.Now.Date;
-                    var notifEnd = DateTime.Now.Date.AddDays(2).AddHours(23).AddMinutes(59);
-                    var notifEvents = await _eventService.GetMyEventInstancesForRangeAsync(notifStart, notifEnd);
-
-                    // Check for changes and cancellations first
-                    await _eventNotificationService.CheckAndNotifyChangesAsync(notifEvents);
-
-                    // Then schedule upcoming notifications
-                    await _eventNotificationService.ScheduleNotificationsForEventsAsync(notifEvents);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to schedule event notifications");
-                }
-
-                // Load upcoming events for display
-                try 
-                { 
-                    await LoadUpcomingEventsAsync(); 
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to load upcoming events during OnAppearing");
-                }
-                
-                // Load recent announcements
-                try 
-                { 
-                    await LoadRecentAnnouncementsAsync(); 
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to load recent announcements during OnAppearing");
-                }
-                
-                // Load upcoming camps
-                try 
-                { 
-                    await LoadUpcomingCampsAsync(); 
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to load upcoming camps during OnAppearing");
-                }
-            });
+            await InitializeAsync(_cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogInformation("Initialization cancelled");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to dispatch initialization tasks");
+            _logger.LogError(ex, "Failed to initialize MainPage");
+            try { await _notifier.ShowAsync(LocalizationService.Get("Error") ?? "Error", LocalizationService.Get("Initialization_Error") ?? "Initialization failed"); } catch { LoggerService.SafeLogWarning<MainPage>("Failed to show initialization error to user"); }
         }
     }
 
@@ -136,11 +96,76 @@ public partial class MainPage : ContentPage
         if (MainRefreshView != null)
             MainRefreshView.Refreshing -= OnRefresh;
 
+        // Cancel any ongoing initialization or loads
+        try { _cts?.Cancel(); } catch { LoggerService.SafeLogWarning<MainPage>("Failed to cancel MainPage CTS"); }
+        try { _cts?.Dispose(); _cts = null; } catch (Exception ex) { LoggerService.SafeLogWarning<MainPage>("Failed disposing CTS: {0}", new object[] { ex.Message }); }
+
         base.OnDisappearing();
         _logger.LogDebug("MainPage disappeared");
     }
 
-    private async Task LoadUpcomingEventsAsync()
+    private async Task InitializeAsync(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+
+        try
+        {
+            // Schedule notifications for upcoming events (1 hour and 5 minutes before)
+            // Load events 2 days ahead for notifications
+            var notifStart = DateTime.Now.Date;
+            var notifEnd = DateTime.Now.Date.AddDays(2).AddHours(23).AddMinutes(59);
+            var notifEvents = await _eventService.GetMyEventInstancesForRangeAsync(notifStart, notifEnd, ct: ct);
+
+            // Check for changes and cancellations first
+            await _eventNotificationService.CheckAndNotifyChangesAsync(notifEvents, ct);
+
+            // Then schedule upcoming notifications
+            await _eventNotificationService.ScheduleNotificationsForEventsAsync(notifEvents, ct);
+        }
+        catch (OperationCanceledException) { throw; }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to schedule event notifications");
+        }
+
+        ct.ThrowIfCancellationRequested();
+
+        try
+        {
+            await LoadUpcomingEventsAsync(ct);
+        }
+        catch (OperationCanceledException) { throw; }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load upcoming events during initialization");
+        }
+
+        ct.ThrowIfCancellationRequested();
+
+        try
+        {
+            await LoadRecentAnnouncementsAsync(ct);
+        }
+        catch (OperationCanceledException) { throw; }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load recent announcements during initialization");
+        }
+
+        ct.ThrowIfCancellationRequested();
+
+        try
+        {
+            await LoadUpcomingCampsAsync(ct);
+        }
+        catch (OperationCanceledException) { throw; }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load upcoming camps during initialization");
+        }
+    }
+
+    private async Task LoadUpcomingEventsAsync(CancellationToken ct = default)
     {
         if (_isLoading) return;
         _isLoading = true;
@@ -162,7 +187,7 @@ public partial class MainPage : ContentPage
             var end = now.Date.AddDays(14); // Načte tréninky na 14 dní dopředu
 
             _logger.LogInformation("Loading upcoming events from {Start} to {End}", start, end);
-            var events = await _eventService.GetMyEventInstancesForRangeAsync(start, end);
+            var events = await _eventService.GetMyEventInstancesForRangeAsync(start, end, ct: ct);
             
             // Seskupíme eventy podle dne
             var groupsByDate = events
@@ -315,12 +340,12 @@ public partial class MainPage : ContentPage
         }
     }
 
-    private async Task LoadRecentAnnouncementsAsync()
+    private async Task LoadRecentAnnouncementsAsync(CancellationToken ct = default)
     {
         try
         {
             _logger.LogDebug("Loading recent announcements");
-            var announcements = await _noticeboardService.GetMyAnnouncementsAsync();
+            var announcements = await _noticeboardService.GetMyAnnouncementsAsync(null, ct);
             RecentAnnouncements.Clear();
             
             // Vezmi 2 nejnovější (seřazené sestupně podle CreatedAt)
@@ -380,7 +405,7 @@ public partial class MainPage : ContentPage
         }
     }
 
-    private async Task LoadUpcomingCampsAsync()
+    private async Task LoadUpcomingCampsAsync(CancellationToken ct = default)
     {
         try
         {
@@ -389,7 +414,7 @@ public partial class MainPage : ContentPage
             var pastStart = now.Date.AddYears(-1); // Načte soustředění rok zpět
             var futureEnd = now.Date.AddYears(1); // Načte soustředění na rok dopředu
 
-            var events = await _eventService.GetMyEventInstancesForRangeAsync(pastStart, futureEnd);
+            var events = await _eventService.GetMyEventInstancesForRangeAsync(pastStart, futureEnd, ct: ct);
             
             // Filtrujeme pouze CAMP eventy a seřadíme podle absolutní vzdálenosti od dnešního dne
             var camps = events
@@ -636,7 +661,10 @@ public partial class MainPage : ContentPage
                                 else if (!string.IsNullOrWhiteSpace(womanLn)) surnames.Add(womanLn);
                             }
                         }
-                        catch { }
+                        catch (Exception ex)
+                        {
+                            LoggerService.SafeLogWarning<MainPage>("ComputeFirstRegistrant: failed parsing registration item: {0}", new object[] { ex.Message });
+                        }
                     }
 
                     if (count == 1)
@@ -676,7 +704,10 @@ public partial class MainPage : ContentPage
                     }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                LoggerService.SafeLogWarning<MainPage>("ComputeFirstRegistrant failed: {0}", new object[] { ex.Message });
+            }
             return string.Empty;
         }
 
@@ -690,7 +721,10 @@ public partial class MainPage : ContentPage
                     return mins > 0 ? mins + "'" : string.Empty;
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                LoggerService.SafeLogWarning<MainPage>("ComputeDuration failed: {0}", new object[] { ex.Message });
+            }
             return string.Empty;
         }
     }

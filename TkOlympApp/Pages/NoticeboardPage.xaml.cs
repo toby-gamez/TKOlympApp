@@ -10,6 +10,7 @@ using TkOlympApp.Helpers;
 using TkOlympApp.Models.Noticeboard;
 using TkOlympApp.Services;
 using TkOlympApp.Services.Abstractions;
+using Polly.CircuitBreaker;
 
 namespace TkOlympApp.Pages;
 
@@ -17,12 +18,14 @@ public partial class NoticeboardPage : ContentPage
 {
     private readonly INoticeboardService _noticeboardService;
     private readonly INoticeboardNotificationService _noticeboardNotificationService;
+    private readonly IUserNotifier _notifier;
     private bool _isAktualityActive = true;
 
-    public NoticeboardPage(INoticeboardService noticeboardService, INoticeboardNotificationService noticeboardNotificationService)
+    public NoticeboardPage(INoticeboardService noticeboardService, INoticeboardNotificationService noticeboardNotificationService, IUserNotifier notifier)
     {
         _noticeboardService = noticeboardService;
         _noticeboardNotificationService = noticeboardNotificationService;
+        _notifier = notifier;
 
         InitializeComponent();
         // default to Aktuality tab
@@ -160,9 +163,15 @@ public partial class NoticeboardPage : ContentPage
             // Check for changes and send notifications
             await _noticeboardNotificationService.CheckAndNotifyChangesAsync(list);
         }
+        catch (BrokenCircuitException bce)
+        {
+            LoggerService.SafeLogWarning<NoticeboardPage>("Circuit open when loading announcements: {0}", new object[] { bce.Message });
+            try { await _notifier.ShowAsync(LocalizationService.Get("Service_Unavailable_Title") ?? "Service unavailable", LocalizationService.Get("Service_Unavailable_Message") ?? "The service is temporarily unavailable. Please try again later.", LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+        }
         catch (Exception ex)
         {
-            await DisplayAlertAsync(LocalizationService.Get("Error_Title"), ex.Message, LocalizationService.Get("Button_OK"));
+            LoggerService.SafeLogError<NoticeboardPage>(ex, "Failed to load announcements: {0}", new object[] { ex.Message });
+            try { await _notifier.ShowAsync(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
         }
         finally
         {
@@ -221,9 +230,15 @@ public partial class NoticeboardPage : ContentPage
 
             AnnouncementsCollection.ItemsSource = views;
         }
+        catch (BrokenCircuitException bce)
+        {
+            LoggerService.SafeLogWarning<NoticeboardPage>("Circuit open when loading sticky announcements: {0}", new object[] { bce.Message });
+            try { await _notifier.ShowAsync(LocalizationService.Get("Service_Unavailable_Title") ?? "Service unavailable", LocalizationService.Get("Service_Unavailable_Message") ?? "The service is temporarily unavailable. Please try again later.", LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+        }
         catch (Exception ex)
         {
-            await DisplayAlertAsync(LocalizationService.Get("Error_Title"), ex.Message, LocalizationService.Get("Button_OK"));
+            LoggerService.SafeLogError<NoticeboardPage>(ex, "Failed to load sticky announcements: {0}", new object[] { ex.Message });
+            try { await _notifier.ShowAsync(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
         }
         finally
         {

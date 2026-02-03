@@ -22,6 +22,7 @@ public sealed class EventNotificationService : IEventNotificationService
     private readonly IEventService _eventService;
     private readonly IUserService _userService;
     private readonly ISecureStorage _secureStorage;
+    private readonly Services.Abstractions.IRuntimeState _runtimeState;
 
     private const string ChannelId = "tkolymp_events";
     private const string ChannelName = "Události a lekce";
@@ -32,12 +33,14 @@ public sealed class EventNotificationService : IEventNotificationService
         ILogger<EventNotificationService> logger,
         IEventService eventService,
         IUserService userService,
-        ISecureStorage secureStorage)
+        ISecureStorage secureStorage,
+        Services.Abstractions.IRuntimeState runtimeState)
     {
         _logger = logger;
         _eventService = eventService;
         _userService = userService;
         _secureStorage = secureStorage;
+        _runtimeState = runtimeState;
     }
 
     private class EventSnapshot
@@ -116,7 +119,11 @@ public sealed class EventNotificationService : IEventNotificationService
                     var ids = eventInstance.Event?.EventTrainersList?.Select(t => t?.Id).Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
                     if (ids != null && ids.Length > 0) trainerIds = ids;
                 }
-                catch { trainerIds = null; }
+                catch (Exception ex)
+                {
+                    _logger?.LogWarning(ex, "Failed to parse trainer ids for event {EventId}", eventInstance.Id);
+                    trainerIds = null;
+                }
                 
                 // Format event description
                 var description = FormatEventDescription(eventStart, locationText);
@@ -481,7 +488,11 @@ public sealed class EventNotificationService : IEventNotificationService
                     var ids = currentEvent.Event?.EventTrainersList?.Select(t => t?.Id).Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
                     if (ids != null && ids.Length > 0) trainerIdsForMatch = ids;
                 }
-                catch { trainerIdsForMatch = null; }
+                catch (Exception ex)
+                {
+                    _logger?.LogWarning(ex, "Failed to parse trainer ids for change-detection (event {EventId})", currentEvent.Id);
+                    trainerIdsForMatch = null;
+                }
 
                 // Check for cancellation
                 if (currentEvent.IsCancelled && !previousEvent.IsCancelled)
