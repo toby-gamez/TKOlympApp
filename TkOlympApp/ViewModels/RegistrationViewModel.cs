@@ -199,101 +199,103 @@ public partial class RegistrationViewModel : ViewModelBase
             var surname = string.IsNullOrWhiteSpace(me.UPrijmeni) ? string.Empty : me.UPrijmeni;
             var displayName = string.IsNullOrWhiteSpace(surname) ? name : $"{name} {surname}";
             string? pidDisplay = null;
-            try { pidDisplay = _userService.CurrentPersonId; } catch { pidDisplay = null; }
+            try { pidDisplay = _userService.CurrentPersonId; } catch (Exception ex) { LoggerService.SafeLogWarning<RegistrationViewModel>("Reading CurrentPersonId failed: {0}", new object[] { ex.Message }); pidDisplay = null; }
             if (string.IsNullOrWhiteSpace(pidDisplay)) pidDisplay = "není";
             displayName = $"{displayName} ({pidDisplay})";
             CurrentUserText = displayName;
             CurrentUserVisible = true;
 
-            // Show current user's personId
+            // Prepare containers
+            var registeredCoupleIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var registeredPersonNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var options = new List<RegistrationOption>();
+
+            // Load user's couples from user service
+            List<CoupleInfo>? couples = null;
+            try
+            {
+                couples = await _userService.GetActiveCouplesFromUsersAsync();
+            }
+            catch (Exception ex)
+            {
+                LoggerService.SafeLogWarning<RegistrationViewModel>("GetActiveCouplesFromUsersAsync failed: {0}", new object[] { ex.Message });
+            }
+
+            // If we don't have a proxy person id, scan recent registrations to detect already-registered people/couples
             string? selectedPersonId = null;
             try { selectedPersonId = _userService.CurrentPersonId; } catch { selectedPersonId = null; }
             if (string.IsNullOrWhiteSpace(selectedPersonId))
             {
                 PersonIdText = "není";
-                ConfirmEnabled = false;
-            }
-            else
-            {
-                PersonIdText = selectedPersonId;
-            }
-
-            CoupleIdText = string.Empty;
-            ConfirmEnabled = false;
-
-            // Load couples and build selection options
-            var couples = await _userService.GetActiveCouplesFromUsersAsync();
-            var options = new List<RegistrationOption>();
-
-            // Determine already-registered persons/couples
-            var registeredPersonNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var registeredCoupleIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            
-            try
-            {
-                var startRange = DateTime.Now.Date.AddYears(-1).ToString("o");
-                var endRange = DateTime.Now.Date.AddYears(1).ToString("o");
-                var queryObj = new
+                try
                 {
-                    query = "query($startRange: Datetime!, $endRange: Datetime!) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange) { id event { id name eventRegistrationsList { id person { firstName lastName } couple { id man { firstName lastName } woman { firstName lastName } } } } } }",
-                    variables = new { startRange = startRange, endRange = endRange }
-                };
-
-                var json = JsonSerializer.Serialize(queryObj);
-                using var content = new StringContent(json, Encoding.UTF8, "application/json");
-                using var resp = await _authService.Http.PostAsync("", content);
-                if (resp.IsSuccessStatusCode)
-                {
-                    var body = await resp.Content.ReadAsStringAsync();
-                    using var doc = JsonDocument.Parse(body);
-                    if (doc.RootElement.TryGetProperty("data", out var data) && 
-                        data.TryGetProperty("eventInstancesForRangeList", out var instances) && 
-                        instances.ValueKind == JsonValueKind.Array)
+                    var startRange = DateTime.Now.Date.AddYears(-1).ToString("o");
+                    var endRange = DateTime.Now.Date.AddYears(1).ToString("o");
+                    var queryObj = new
                     {
-                        foreach (var inst in instances.EnumerateArray())
-                        {
-                            if (!inst.TryGetProperty("event", out var ev) || ev.ValueKind == JsonValueKind.Null) continue;
-                            
-                            // Filter to current EventId
-                            if (ev.TryGetProperty("id", out var evIdEl))
-                            {
-                                long parsedEvId = 0;
-                                if (evIdEl.ValueKind == JsonValueKind.Number && evIdEl.TryGetInt64(out var n)) 
-                                    parsedEvId = n;
-                                else 
-                                    parsedEvId = long.TryParse(evIdEl.GetRawText().Trim('"'), out var t) ? t : 0;
-                                if (parsedEvId != 0 && parsedEvId != EventId) continue;
-                            }
+                        query = "query($startRange: Datetime!, $endRange: Datetime!) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange) { id event { id name eventRegistrationsList { id person { firstName lastName } couple { id man { firstName lastName } woman { firstName lastName } } } } } }",
+                        variables = new { startRange = startRange, endRange = endRange }
+                    };
 
-                            if (!ev.TryGetProperty("eventRegistrationsList", out var regs) || regs.ValueKind != JsonValueKind.Array) 
-                                continue;
-                            
-                            foreach (var reg in regs.EnumerateArray())
+                    var json = JsonSerializer.Serialize(queryObj);
+                    using var content = new StringContent(json, Encoding.UTF8, "application/json");
+                    using var resp = await _authService.Http.PostAsync("", content);
+                    if (resp.IsSuccessStatusCode)
+                    {
+                        var body = await resp.Content.ReadAsStringAsync();
+                        using var doc = JsonDocument.Parse(body);
+                        if (doc.RootElement.TryGetProperty("data", out var data) && 
+                            data.TryGetProperty("eventInstancesForRangeList", out var instances) && 
+                            instances.ValueKind == JsonValueKind.Array)
+                        {
+                            foreach (var inst in instances.EnumerateArray())
                             {
-                                // Collect couple id if present
-                                if (reg.TryGetProperty("couple", out var coupleEl) && coupleEl.ValueKind != JsonValueKind.Null)
+                                if (!inst.TryGetProperty("event", out var ev) || ev.ValueKind == JsonValueKind.Null) continue;
+
+                                // Filter to current EventId
+                                if (ev.TryGetProperty("id", out var evIdEl))
                                 {
-                                    if (coupleEl.TryGetProperty("id", out var cidEl))
-                                    {
-                                        var cid = cidEl.GetRawText().Trim('"');
-                                        if (!string.IsNullOrWhiteSpace(cid)) registeredCoupleIds.Add(cid);
-                                    }
+                                    long parsedEvId = 0;
+                                    if (evIdEl.ValueKind == JsonValueKind.Number && evIdEl.TryGetInt64(out var n)) 
+                                        parsedEvId = n;
+                                    else 
+                                        parsedEvId = long.TryParse(evIdEl.GetRawText().Trim('"'), out var t) ? t : 0;
+                                    if (parsedEvId != 0 && parsedEvId != EventId) continue;
                                 }
 
-                                // Collect person full name if present
-                                if (reg.TryGetProperty("person", out var personEl) && personEl.ValueKind != JsonValueKind.Null)
+                                if (!ev.TryGetProperty("eventRegistrationsList", out var regs) || regs.ValueKind != JsonValueKind.Array) 
+                                    continue;
+
+                                foreach (var reg in regs.EnumerateArray())
                                 {
-                                    var pf = personEl.TryGetProperty("firstName", out var pff) ? pff.GetString() ?? string.Empty : string.Empty;
-                                    var pl = personEl.TryGetProperty("lastName", out var pll) ? pll.GetString() ?? string.Empty : string.Empty;
-                                    var pFull = string.IsNullOrWhiteSpace(pf) ? pl : (string.IsNullOrWhiteSpace(pl) ? pf : (pf + " " + pl).Trim());
-                                    if (!string.IsNullOrWhiteSpace(pFull)) registeredPersonNames.Add(pFull);
+                                    // Collect couple id if present
+                                    if (reg.TryGetProperty("couple", out var coupleEl) && coupleEl.ValueKind != JsonValueKind.Null)
+                                    {
+                                        if (coupleEl.TryGetProperty("id", out var cidEl))
+                                        {
+                                            var cid = cidEl.GetRawText().Trim('"');
+                                            if (!string.IsNullOrWhiteSpace(cid)) registeredCoupleIds.Add(cid);
+                                        }
+                                    }
+
+                                    // Collect person full name if present
+                                    if (reg.TryGetProperty("person", out var personEl) && personEl.ValueKind != JsonValueKind.Null)
+                                    {
+                                        var pf = personEl.TryGetProperty("firstName", out var pff) ? pff.GetString() ?? string.Empty : string.Empty;
+                                        var pl = personEl.TryGetProperty("lastName", out var pll) ? pll.GetString() ?? string.Empty : string.Empty;
+                                        var pFull = string.IsNullOrWhiteSpace(pf) ? pl : (string.IsNullOrWhiteSpace(pl) ? pf : (pf + " " + pl).Trim());
+                                        if (!string.IsNullOrWhiteSpace(pFull)) registeredPersonNames.Add(pFull);
+                                    }
                                 }
                             }
                         }
                     }
                 }
+                catch (Exception ex)
+                {
+                    LoggerService.SafeLogWarning<RegistrationViewModel>("LoadMyCouples: scanning registrations failed: {0}", new object[] { ex.Message });
+                }
             }
-            catch { }
 
             // Use proxy/person id only
             string? myPersonIdOption = null;
@@ -321,7 +323,7 @@ public partial class RegistrationViewModel : ViewModelBase
             var myFirst = me?.UJmeno?.Trim() ?? string.Empty;
             var myLast = me?.UPrijmeni?.Trim() ?? string.Empty;
             var myFull = string.IsNullOrWhiteSpace(myFirst) ? myLast : string.IsNullOrWhiteSpace(myLast) ? myFirst : (myFirst + " " + myLast).Trim();
-            
+
             foreach (var opt in options)
             {
                 if (opt.Kind == "self")
@@ -350,6 +352,7 @@ public partial class RegistrationViewModel : ViewModelBase
         {
             // Error handling
             CurrentUserText = $"Error: {ex.Message}";
+            LoggerService.SafeLogWarning<RegistrationViewModel>("LoadMyCouplesAsync failed: {0}", new object[] { ex.Message });
         }
     }
 
@@ -373,7 +376,7 @@ public partial class RegistrationViewModel : ViewModelBase
             TrainerSelectionHeaderVisible = true;
             TrainerSelectionVisible = true;
         }
-        catch { }
+        catch (Exception ex) { LoggerService.SafeLogWarning<RegistrationViewModel>("LoadTrainerSelectionAsync failed: {0}", new object[] { ex.Message }); }
     }
 
     [RelayCommand]
@@ -406,8 +409,9 @@ public partial class RegistrationViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            // Error - in real implementation we'd want to communicate this to the view
-            throw;
+            // Log and surface minimal feedback through TitleText
+            LoggerService.SafeLogWarning<RegistrationViewModel>("ConfirmAsync failed: {0}", new object[] { ex.Message });
+            TitleText = LocalizationService.Get("Registration_Confirm_Error") ?? "Chyba při registraci";
         }
     }
 
@@ -415,26 +419,21 @@ public partial class RegistrationViewModel : ViewModelBase
     {
         var options = new JsonSerializerOptions(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = true };
 
-        if (string.IsNullOrWhiteSpace(personId) && string.IsNullOrWhiteSpace(coupleId))
-        {
-            throw new InvalidOperationException(LocalizationService.Get("Registration_NoSelection") ?? "Vyberte, koho chcete registrovat.");
-        }
-
-        var reg = new Dictionary<string, object>
-        {
-            ["eventId"] = EventId.ToString()
-        };
-
+        var reg = new Dictionary<string, object>();
         if (!string.IsNullOrWhiteSpace(personId))
         {
-            reg["personId"] = personId;
+            reg["personId"] = personId!;
         }
-        if (!string.IsNullOrWhiteSpace(coupleId))
+        else if (!string.IsNullOrWhiteSpace(coupleId))
         {
-            if (long.TryParse(coupleId, out var cid)) 
+            if (long.TryParse(coupleId, out var cid))
                 reg["coupleId"] = cid.ToString();
-            else 
+            else
                 throw new InvalidOperationException(LocalizationService.Get("Registration_IdNumeric") ?? "CoupleId must be numeric.");
+        }
+        else
+        {
+            throw new InvalidOperationException(LocalizationService.Get("Registration_NoSelection") ?? "No selection provided.");
         }
 
         if (_trainerReservationNotAllowed)
@@ -459,7 +458,7 @@ public partial class RegistrationViewModel : ViewModelBase
                     });
                 }
             }
-            if (lessonsList.Count > 0) 
+            if (lessonsList.Count > 0)
                 reg["lessons"] = lessonsList;
         }
 
@@ -492,7 +491,7 @@ public partial class RegistrationViewModel : ViewModelBase
                 var msg = data.Errors[0].Message ?? LocalizationService.Get("GraphQL_UnknownError");
                 throw new InvalidOperationException(msg);
             }
-            return data?.Data?.RegisterToEventMany?.EventRegistrations != null && 
+            return data?.Data?.RegisterToEventMany?.EventRegistrations != null &&
                    data.Data.RegisterToEventMany.EventRegistrations.Count > 0;
         }
         catch (JsonException)

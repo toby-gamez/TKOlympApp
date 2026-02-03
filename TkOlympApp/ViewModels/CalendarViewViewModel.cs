@@ -114,8 +114,9 @@ public partial class CalendarViewViewModel : ViewModelBase
             Debug.WriteLine($"CalendarView: gapDp={gapDp:F2}, screenWidthDp={screenWidthDp:F2}, prop={prop:F4}, clamped={clamped:F4}");
             return clamped;
         }
-        catch
+        catch (Exception ex)
         {
+            LoggerService.SafeLogWarning<CalendarViewViewModel>("GutterProportionFromDp failed: {0}", new object[] { ex.Message });
             return 0.01;
         }
     }
@@ -211,7 +212,7 @@ public partial class CalendarViewViewModel : ViewModelBase
             if (Date.Date >= firstDayOfWeek && Date.Date <= lastDayOfWeek)
             {
                 var weekday = Date.ToString("dddd", CultureInfo.CurrentCulture);
-                try { weekday = weekday.ToLower(CultureInfo.CurrentCulture); } catch { }
+                try { weekday = weekday.ToLower(CultureInfo.CurrentCulture); } catch (Exception ex) { LoggerService.SafeLogWarning<CalendarViewViewModel>("Lowercase weekday failed: {0}", new object[] { ex.Message }); }
                 DateLabel = weekday;
             }
             else
@@ -333,7 +334,7 @@ public partial class CalendarViewViewModel : ViewModelBase
                         AddNameVariants(highlightNames, currentUser.ULogin);
                     }
                 }
-                catch { }
+                catch (Exception ex) { LoggerService.SafeLogWarning<CalendarViewViewModel>("GetCurrentUserAsync failed: {0}", new object[] { ex.Message }); }
 
                 try
                 {
@@ -345,12 +346,12 @@ public partial class CalendarViewViewModel : ViewModelBase
                         AddNameVariants(highlightNames, string.IsNullOrWhiteSpace(c.ManName) || string.IsNullOrWhiteSpace(c.WomanName) ? null : c.ManName + " - " + c.WomanName);
                     }
                 }
-                catch { }
+                catch (Exception ex) { LoggerService.SafeLogWarning<CalendarViewViewModel>("GetActiveCouplesFromUsersAsync failed: {0}", new object[] { ex.Message }); }
 
                 var distinct = highlightNames.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
                 normalizedHighlights = distinct.Select(NormalizeName).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
             }
-            catch { }
+            catch (Exception ex) { LoggerService.SafeLogWarning<CalendarViewViewModel>("Preparing highlight names failed: {0}", new object[] { ex.Message }); }
         }
 
         // Filter out cancelled event instances
@@ -447,16 +448,16 @@ public partial class CalendarViewViewModel : ViewModelBase
         var availableViewportDp = Math.Max(120.0, screenWidthDp - labelWidthDp - pagePaddingDp);
 
         double dayWidthDp;
-        if (days <= 3)
+            if (days <= 3)
         {
             dayWidthDp = Math.Max(100.0, (availableViewportDp - totalDayGaps) / days);
-            try { TimelineLayout.WidthRequest = availableViewportDp; } catch { }
+            try { TimelineLayout.WidthRequest = availableViewportDp; } catch (Exception ex) { LoggerService.SafeLogWarning<CalendarViewViewModel>("Setting TimelineLayout.WidthRequest failed: {0}", new object[] { ex.Message }); }
         }
         else
         {
             dayWidthDp = Math.Max(120.0, screenWidthDp / 3.0);
             var totalContentWidthDp = days * dayWidthDp + totalDayGaps + marginRightDpGlobal;
-            try { TimelineLayout.WidthRequest = totalContentWidthDp; } catch { }
+            try { TimelineLayout.WidthRequest = totalContentWidthDp; } catch (Exception ex) { LoggerService.SafeLogWarning<CalendarViewViewModel>("Setting TimelineLayout.WidthRequest (paged) failed: {0}", new object[] { ex.Message }); }
         }
 
         foreach (var it in items)
@@ -482,7 +483,7 @@ public partial class CalendarViewViewModel : ViewModelBase
                         if (res is Color c) bgColor = c;
                     }
                 }
-                catch { }
+                catch (Exception ex) { LoggerService.SafeLogWarning<CalendarViewViewModel>("Failed to resolve theme color: {0}", new object[] { ex.Message }); }
             }
 
             var frame = new Border
@@ -511,7 +512,7 @@ public partial class CalendarViewViewModel : ViewModelBase
                         titleText = left;
                     }
                 }
-                catch { titleText = inst.Event?.Name ?? LocalizationService.Get("Lesson_Short") ?? "Lekce"; }
+                catch (Exception ex) { LoggerService.SafeLogWarning<CalendarViewViewModel>("Title formatting failed: {0}", new object[] { ex.Message }); titleText = inst.Event?.Name ?? LocalizationService.Get("Lesson_Short") ?? "Lekce"; }
             }
 
             bool makeBold = OnlyMine;
@@ -524,7 +525,7 @@ public partial class CalendarViewViewModel : ViewModelBase
                     var matched = !string.IsNullOrWhiteSpace(frNorm) && normalizedHighlights.Any(h => frNorm.Contains(h) || h.Contains(frNorm));
                     if (matched) makeBold = true;
                 }
-                catch { }
+                catch (Exception ex) { LoggerService.SafeLogWarning<CalendarViewViewModel>("Highlight matching failed: {0}", new object[] { ex.Message }); }
             }
 
             var title = new Label { Text = titleText, FontAttributes = (makeBold ? FontAttributes.Bold : FontAttributes.None), FontSize = 12 };
@@ -620,7 +621,7 @@ public partial class CalendarViewViewModel : ViewModelBase
         _ = Task.Run(async () => {
             while (!ct.IsCancellationRequested)
             {
-                try { MainThread.BeginInvokeOnMainThread(UpdateNowLinePosition); } catch { }
+                try { MainThread.BeginInvokeOnMainThread(UpdateNowLinePosition); } catch (Exception ex) { LoggerService.SafeLogWarning<CalendarViewViewModel>("UpdateNowLinePosition invoke failed: {0}", new object[] { ex.Message }); }
                 try { await Task.Delay(TimeSpan.FromSeconds(30), ct); } catch (TaskCanceledException) { break; }
             }
         }, ct);
@@ -628,7 +629,7 @@ public partial class CalendarViewViewModel : ViewModelBase
 
     private void StopNowTimer()
     {
-        try { _timerCts?.Cancel(); _timerCts = null; } catch { }
+        try { _timerCts?.Cancel(); _timerCts = null; } catch (Exception ex) { LoggerService.SafeLogWarning<CalendarViewViewModel>("Failed to cancel timer CTS: {0}", new object[] { ex.Message }); }
     }
 
     private class LayoutItem

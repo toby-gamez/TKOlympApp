@@ -344,7 +344,10 @@ public partial class EventViewModel : ViewModelBase
                         (myFirst + " " + myLast).Trim();
                 myCouples = await _userService.GetActiveCouplesFromUsersAsync();
             }
-            catch { }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to load current user or couples while building registrations for event {EventId}", EventId);
+            }
 
             // Build registrations list
             Registrations.Clear();
@@ -612,7 +615,7 @@ public partial class EventViewModel : ViewModelBase
 
                     CohortDots.Add(row);
                 }
-                catch { }
+                catch (Exception ex) { LoggerService.SafeLogWarning<EventViewModel>("BuildCohortDots: render cohort row failed: {0}", new object[] { ex.Message }); }
             }
 
             CohortsFrameVisible = CohortDots.Count > 0;
@@ -744,7 +747,7 @@ public partial class EventViewModel : ViewModelBase
                 }
             }
         }
-        catch { }
+        catch (Exception ex) { LoggerService.SafeLogWarning<EventViewModel>("TryParseColorBrush failed for '{0}': {1}", new object[] { colorRgb, ex.Message }); }
         
         return null;
     }

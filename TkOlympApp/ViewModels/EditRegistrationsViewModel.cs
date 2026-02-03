@@ -135,7 +135,7 @@ public partial class EditRegistrationsViewModel : ViewModelBase
                 }
             }
         }
-        catch { }
+        catch (Exception ex) { LoggerService.SafeLogWarning<EditRegistrationsViewModel>("OnRemainingItemsThresholdReached failed: {0}", new object[] { ex.Message }); }
     }
 
     private async Task LoadAsync()
@@ -152,7 +152,7 @@ public partial class EditRegistrationsViewModel : ViewModelBase
             {
                 _currentEvent = await _eventService.GetEventAsync(EventId);
             }
-            catch { _currentEvent = null; }
+            catch (Exception ex) { LoggerService.SafeLogWarning<EditRegistrationsViewModel>("Failed to load event {0}: {1}", new object[] { EventId, ex.Message }); _currentEvent = null; }
 
             // Fetch registrations
             var startRange = DateTime.Now.Date.AddYears(-1).ToString("o");
@@ -182,10 +182,10 @@ public partial class EditRegistrationsViewModel : ViewModelBase
             // Determine current user's identifiers
             await _userService.InitializeAsync();
             var myPersonId = string.Empty;
-            try { myPersonId = _userService.CurrentPersonId ?? string.Empty; } catch { myPersonId = string.Empty; }
+            try { myPersonId = _userService.CurrentPersonId ?? string.Empty; } catch (Exception ex) { LoggerService.SafeLogWarning<EditRegistrationsViewModel>("Reading CurrentPersonId failed: {0}", new object[] { ex.Message }); myPersonId = string.Empty; }
             
             var myCouples = new List<CoupleInfo>();
-            try { myCouples = await _userService.GetActiveCouplesFromUsersAsync(); } catch { }
+            try { myCouples = await _userService.GetActiveCouplesFromUsersAsync(); } catch (Exception ex) { LoggerService.SafeLogWarning<EditRegistrationsViewModel>("GetActiveCouplesFromUsersAsync failed: {0}", new object[] { ex.Message }); }
             
             var myCoupleIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var c in myCouples)
@@ -221,7 +221,7 @@ public partial class EditRegistrationsViewModel : ViewModelBase
                             if (parsedEvId != 0 && parsedEvId != EventId) continue;
                         }
                     }
-                    catch { }
+                    catch (Exception ex) { LoggerService.SafeLogWarning<EditRegistrationsViewModel>("Parsing event id failed: {0}", new object[] { ex.Message }); }
 
                     var evtName = ev.TryGetProperty("name", out var en) ? en.GetString() ?? string.Empty : string.Empty;
                     if (!ev.TryGetProperty("eventRegistrationsList", out var regs) || 
@@ -334,10 +334,10 @@ public partial class EditRegistrationsViewModel : ViewModelBase
                             }
                             grp.AddToGroup(item);
                         }
-                        catch { }
+                        catch (Exception ex) { LoggerService.SafeLogWarning<EditRegistrationsViewModel>("Processing registration node failed: {0}", new object[] { ex.Message }); }
                     }
                 }
-                catch { }
+                catch (Exception ex) { LoggerService.SafeLogWarning<EditRegistrationsViewModel>("Processing instance node failed: {0}", new object[] { ex.Message }); }
             }
         }
         catch (Exception ex)
@@ -451,20 +451,20 @@ public partial class EditRegistrationsViewModel : ViewModelBase
                                                         match.OriginalCount = cnt;
                                                     }
                                                 }
-                                                catch { }
+                                                catch (Exception ex) { LoggerService.SafeLogWarning<EditRegistrationsViewModel>("Prefill demand item failed: {0}", new object[] { ex.Message }); }
                                             }
                                         }
                                     }
-                                    catch { }
+                                    catch (Exception ex) { LoggerService.SafeLogWarning<EditRegistrationsViewModel>("Prefill demand node processing failed: {0}", new object[] { ex.Message }); }
                                 }
                             }
                         }
                     }
                 }
             }
-            catch { }
+            catch (Exception ex) { LoggerService.SafeLogWarning<EditRegistrationsViewModel>("Prefill existing demands failed: {0}", new object[] { ex.Message }); }
         }
-        catch { }
+        catch (Exception ex) { LoggerService.SafeLogWarning<EditRegistrationsViewModel>("LoadTrainerSelectionAsync failed: {0}", new object[] { ex.Message }); }
     }
 
     [RelayCommand]
