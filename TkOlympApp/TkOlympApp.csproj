@@ -27,7 +27,7 @@
 
         <!-- Versions -->
         <ApplicationDisplayVersion>0.9</ApplicationDisplayVersion>
-        <ApplicationVersion>33</ApplicationVersion>
+        <ApplicationVersion>34</ApplicationVersion>
 
         <!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
         <WindowsPackageType>None</WindowsPackageType>
