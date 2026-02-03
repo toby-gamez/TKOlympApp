@@ -142,6 +142,8 @@ public static class MauiProgram
 
         // Register ViewModels
         builder.Services.AddTransient<TkOlympApp.ViewModels.RegistrationViewModel>();
+        builder.Services.AddTransient<TkOlympApp.ViewModels.AboutMeViewModel>();
+        builder.Services.AddTransient<TkOlympApp.ViewModels.EditSelfViewModel>();
         builder.Services.AddTransient<TkOlympApp.ViewModels.EventViewModel>();
         builder.Services.AddTransient<TkOlympApp.ViewModels.EditRegistrationsViewModel>();
         builder.Services.AddTransient<TkOlympApp.ViewModels.CalendarViewModel>();
@@ -165,6 +167,7 @@ public static class MauiProgram
         builder.Services.AddTransient<LoginPage>();
         builder.Services.AddTransient<FirstRunPage>();
         builder.Services.AddTransient<AboutMePage>();
+        builder.Services.AddTransient<EditSelfPage>();
         builder.Services.AddTransient<CouplePage>();
         builder.Services.AddTransient<EventPage>();
         builder.Services.AddTransient<EventsPage>();

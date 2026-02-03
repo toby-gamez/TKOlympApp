@@ -2,7 +2,9 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:svc="clr-namespace:TkOlympApp.Services"
+             xmlns:viewModels="clr-namespace:TkOlympApp.ViewModels"
              x:Class="TkOlympApp.Pages.EditSelfPage"
+             x:DataType="viewModels:EditSelfViewModel"
              Title="{svc:Translate Page_EditSelf_Title}">
 
     <ScrollView>
@@ -15,7 +17,7 @@
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="{svc:Translate Label_FirstName}" VerticalOptions="Center" />
-                    <Entry x:Name="FirstNameEntry" Placeholder="{svc:Translate Placeholder_FirstName}" HorizontalOptions="FillAndExpand" />
+                    <Entry Text="{Binding FirstName}" Placeholder="{svc:Translate Placeholder_FirstName}" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -25,7 +27,7 @@
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="{svc:Translate Label_LastName}" VerticalOptions="Center" />
-                    <Entry x:Name="LastNameEntry" Placeholder="{svc:Translate Placeholder_LastName}" HorizontalOptions="FillAndExpand" />
+                    <Entry Text="{Binding LastName}" Placeholder="{svc:Translate Placeholder_LastName}" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -35,7 +37,7 @@
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="{svc:Translate Label_PrefixTitle}" VerticalOptions="Center" />
-                    <Entry x:Name="PrefixTitleEntry" Placeholder="{svc:Translate Placeholder_PrefixTitle}" HorizontalOptions="FillAndExpand" />
+                    <Entry Text="{Binding PrefixTitle}" Placeholder="{svc:Translate Placeholder_PrefixTitle}" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -45,7 +47,7 @@
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="{svc:Translate Label_SuffixTitle}" VerticalOptions="Center" />
-                    <Entry x:Name="SuffixTitleEntry" Placeholder="{svc:Translate Placeholder_SuffixTitle}" HorizontalOptions="FillAndExpand" />
+                    <Entry Text="{Binding SuffixTitle}" Placeholder="{svc:Translate Placeholder_SuffixTitle}" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -55,13 +57,9 @@
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="{svc:Translate Label_Gender}" VerticalOptions="Center" />
-                    <Picker x:Name="GenderPicker" HorizontalOptions="FillAndExpand">
-                        <Picker.Items>
-                            <x:String>{svc:Translate Gender_Other}</x:String>
-                            <x:String>{svc:Translate Gender_Male}</x:String>
-                            <x:String>{svc:Translate Gender_Female}</x:String>
-                        </Picker.Items>
-                    </Picker>
+                    <Picker ItemsSource="{Binding GenderOptions}"
+                            SelectedIndex="{Binding SelectedGenderIndex}"
+                            HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -71,7 +69,9 @@
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="{svc:Translate Label_BirthDate}" VerticalOptions="Center" />
-                    <DatePicker x:Name="BirthDatePicker" Format="yyyy-MM-dd" DateSelected="OnBirthDateSelected" HorizontalOptions="FillAndExpand" />
+                    <DatePicker Format="yyyy-MM-dd"
+                                Date="{Binding BirthDate}"
+                                HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -83,7 +83,7 @@
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="{svc:Translate Label_Email}" VerticalOptions="Center" />
-                    <Entry x:Name="EmailEntry" Placeholder="{svc:Translate Placeholder_Email}" Keyboard="Email" HorizontalOptions="FillAndExpand" />
+                    <Entry Text="{Binding Email}" Placeholder="{svc:Translate Placeholder_Email}" Keyboard="Email" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -93,7 +93,7 @@
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="{svc:Translate Label_Phone}" VerticalOptions="Center" />
-                    <Entry x:Name="PhoneEntry" Placeholder="{svc:Translate Placeholder_Phone}" Keyboard="Telephone" HorizontalOptions="FillAndExpand" />
+                    <Entry Text="{Binding Phone}" Placeholder="{svc:Translate Placeholder_Phone}" Keyboard="Telephone" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -103,7 +103,9 @@
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="{svc:Translate Label_Nationality}" VerticalOptions="Center" />
-                    <Picker x:Name="NationalityPicker" HorizontalOptions="FillAndExpand" />
+                        <Picker ItemsSource="{Binding NationalityOptions}"
+                            SelectedItem="{Binding SelectedNationality}"
+                            HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -115,7 +117,7 @@
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="{svc:Translate Label_WdsfId}" VerticalOptions="Center" />
-                    <Entry x:Name="WdsfEntry" Placeholder="{svc:Translate Placeholder_WdsfId}" HorizontalOptions="FillAndExpand" />
+                    <Entry Text="{Binding WdsfId}" Placeholder="{svc:Translate Placeholder_WdsfId}" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -125,7 +127,7 @@
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="{svc:Translate Label_CstsId}" VerticalOptions="Center" />
-                    <Entry x:Name="CstsEntry" Placeholder="{svc:Translate Placeholder_CstsId}" HorizontalOptions="FillAndExpand" />
+                    <Entry Text="{Binding CstsId}" Placeholder="{svc:Translate Placeholder_CstsId}" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -135,7 +137,7 @@
                 </Border.StrokeShape>
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="{svc:Translate Label_NationalId}" VerticalOptions="Center" />
-                    <Entry x:Name="NationalIdEntry" Placeholder="{svc:Translate Placeholder_NationalId}" HorizontalOptions="FillAndExpand" />
+                    <Entry Text="{Binding NationalId}" Placeholder="{svc:Translate Placeholder_NationalId}" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -147,7 +149,7 @@
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="{svc:Translate Label_Street}" VerticalOptions="Center" />
                     <Label Text="*" TextColor="Red" VerticalOptions="Center" Margin="4,0,0,0" />
-                    <Entry x:Name="StreetEntry" Placeholder="{svc:Translate Placeholder_Street}" HorizontalOptions="FillAndExpand" ClearButtonVisibility="WhileEditing" MaxLength="100" />
+                    <Entry Text="{Binding Street}" Placeholder="{svc:Translate Placeholder_Street}" HorizontalOptions="FillAndExpand" ClearButtonVisibility="WhileEditing" MaxLength="100" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -158,7 +160,7 @@
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="{svc:Translate Label_City}" VerticalOptions="Center" />
                     <Label Text="*" TextColor="Red" VerticalOptions="Center" Margin="4,0,0,0" />
-                    <Entry x:Name="CityEntry" Placeholder="{svc:Translate Placeholder_City}" HorizontalOptions="FillAndExpand" ClearButtonVisibility="WhileEditing" MaxLength="60" />
+                    <Entry Text="{Binding City}" Placeholder="{svc:Translate Placeholder_City}" HorizontalOptions="FillAndExpand" ClearButtonVisibility="WhileEditing" MaxLength="60" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -169,7 +171,7 @@
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="{svc:Translate Label_PostalCode}" VerticalOptions="Center" />
                     <Label Text="*" TextColor="Red" VerticalOptions="Center" Margin="4,0,0,0" />
-                    <Entry x:Name="PostalCodeEntry" Placeholder="{svc:Translate Placeholder_PostalCode}" HorizontalOptions="FillAndExpand" ClearButtonVisibility="WhileEditing" MaxLength="10" Keyboard="Numeric" />
+                    <Entry Text="{Binding PostalCode}" Placeholder="{svc:Translate Placeholder_PostalCode}" HorizontalOptions="FillAndExpand" ClearButtonVisibility="WhileEditing" MaxLength="10" Keyboard="Numeric" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -180,7 +182,7 @@
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="{svc:Translate Label_Region}" VerticalOptions="Center" />
                     <Label Text="*" TextColor="Red" VerticalOptions="Center" Margin="4,0,0,0" />
-                    <Entry x:Name="RegionEntry" Placeholder="{svc:Translate Placeholder_Region}" HorizontalOptions="FillAndExpand" ClearButtonVisibility="WhileEditing" MaxLength="60" />
+                    <Entry Text="{Binding Region}" Placeholder="{svc:Translate Placeholder_Region}" HorizontalOptions="FillAndExpand" ClearButtonVisibility="WhileEditing" MaxLength="60" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -191,7 +193,7 @@
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="{svc:Translate Label_District}" VerticalOptions="Center" />
                     <Label Text="*" TextColor="Red" VerticalOptions="Center" Margin="4,0,0,0" />
-                    <Entry x:Name="DistrictEntry" Placeholder="{svc:Translate Placeholder_District}" HorizontalOptions="FillAndExpand" />
+                    <Entry Text="{Binding District}" Placeholder="{svc:Translate Placeholder_District}" HorizontalOptions="FillAndExpand" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -202,7 +204,7 @@
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="{svc:Translate Label_ConscriptionNumber}" VerticalOptions="Center" />
                     <Label Text="*" TextColor="Red" VerticalOptions="Center" Margin="4,0,0,0" />
-                    <Entry x:Name="ConscriptionNumberEntry" Placeholder="{svc:Translate Placeholder_ConscriptionNumber}" HorizontalOptions="FillAndExpand" ClearButtonVisibility="WhileEditing" MaxLength="30" Keyboard="Numeric" />
+                    <Entry Text="{Binding ConscriptionNumber}" Placeholder="{svc:Translate Placeholder_ConscriptionNumber}" HorizontalOptions="FillAndExpand" ClearButtonVisibility="WhileEditing" MaxLength="30" Keyboard="Numeric" />
                 </HorizontalStackLayout>
             </Border>
 
@@ -213,7 +215,7 @@
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="{svc:Translate Label_OrientationNumber}" VerticalOptions="Center" />
                     <Label Text="*" TextColor="Red" VerticalOptions="Center" Margin="4,0,0,0" />
-                    <Entry x:Name="OrientationNumberEntry" Placeholder="{svc:Translate Placeholder_OrientationNumber}" HorizontalOptions="FillAndExpand" ClearButtonVisibility="WhileEditing" MaxLength="30" Keyboard="Numeric" />
+                    <Entry Text="{Binding OrientationNumber}" Placeholder="{svc:Translate Placeholder_OrientationNumber}" HorizontalOptions="FillAndExpand" ClearButtonVisibility="WhileEditing" MaxLength="30" Keyboard="Numeric" />
                 </HorizontalStackLayout>
             </Border>
             <Label Text="{svc:Translate Label_Bio}" FontAttributes="Bold" FontSize="18" />
@@ -221,14 +223,14 @@
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
-                <Editor x:Name="BioEditor" AutoSize="TextChanges" HeightRequest="120" HorizontalOptions="FillAndExpand" />
+                <Editor Text="{Binding Bio}" AutoSize="TextChanges" HeightRequest="120" HorizontalOptions="FillAndExpand" />
             </Border>
 
-            <Label x:Name="ErrorLabel" TextColor="Red" IsVisible="False" />
+            <Label TextColor="Red" IsVisible="{Binding IsErrorVisible}" Text="{Binding ErrorText}" />
 
             <VerticalStackLayout Spacing="8">
-                <Button x:Name="SaveButton" Text="{svc:Translate Button_Save}" Clicked="OnSaveClicked" HorizontalOptions="FillAndExpand" />
-                <Button x:Name="CancelButton" Text="{svc:Translate Button_Cancel}" Clicked="OnCancelClicked" HorizontalOptions="FillAndExpand" Style="{StaticResource ButtonSecondary}" />
+                <Button Text="{svc:Translate Button_Save}" Command="{Binding SaveCommand}" HorizontalOptions="FillAndExpand" />
+                <Button Text="{svc:Translate Button_Cancel}" Command="{Binding CancelCommand}" HorizontalOptions="FillAndExpand" Style="{StaticResource ButtonSecondary}" />
             </VerticalStackLayout>
         </VerticalStackLayout>
     </ScrollView>

@@ -100,6 +100,7 @@ public partial class AppShell : Shell, IDisposable
         Routing.RegisterRoute(nameof(LoginPage), new DiRouteFactory(_services, typeof(LoginPage)));
         Routing.RegisterRoute(nameof(FirstRunPage), new DiRouteFactory(_services, typeof(FirstRunPage)));
         Routing.RegisterRoute(nameof(AboutMePage), new DiRouteFactory(_services, typeof(AboutMePage)));
+        Routing.RegisterRoute(nameof(EditSelfPage), new DiRouteFactory(_services, typeof(EditSelfPage)));
         Routing.RegisterRoute(nameof(CouplePage), new DiRouteFactory(_services, typeof(Pages.CouplePage)));
         Routing.RegisterRoute(nameof(EventPage), new DiRouteFactory(_services, typeof(EventPage)));
         Routing.RegisterRoute(nameof(Pages.EventsPage), new DiRouteFactory(_services, typeof(Pages.EventsPage)));
