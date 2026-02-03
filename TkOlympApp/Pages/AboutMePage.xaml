@@ -122,7 +122,7 @@
                         <Label Text="{svc:Translate Person_Cohorts_Label}" FontAttributes="Bold" />
                         <StackLayout Spacing="8" BindableLayout.ItemsSource="{Binding Cohorts}">
                             <BindableLayout.ItemTemplate>
-                                <DataTemplate x:DataType="viewModels:AboutMeViewModel.CohortItem">
+                                <DataTemplate x:DataType="viewModels:AboutMeCohortItem">
                                     <Grid VerticalOptions="Center" HorizontalOptions="Fill">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />

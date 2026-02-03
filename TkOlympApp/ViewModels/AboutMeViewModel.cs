@@ -24,7 +24,7 @@ public partial class AboutMeViewModel : ViewModelBase
     private readonly INavigationService _navigationService;
     private readonly IUserNotifier _notifier;
 
-    public ObservableCollection<CohortItem> Cohorts { get; } = new();
+    public ObservableCollection<AboutMeCohortItem> Cohorts { get; } = new();
 
     [ObservableProperty]
     private string _errorText = string.Empty;
@@ -414,7 +414,7 @@ public partial class AboutMeViewModel : ViewModelBase
             var colorBrush = CohortColorHelper.ParseColorBrush(c.ColorRgb)
                              ?? new SolidColorBrush(Colors.LightGray);
 
-            Cohorts.Add(new CohortItem
+            Cohorts.Add(new AboutMeCohortItem
             {
                 Name = name,
                 Color = colorBrush
@@ -554,9 +554,4 @@ public partial class AboutMeViewModel : ViewModelBase
         return name + " " + suffix;
     }
 
-    public sealed class CohortItem
-    {
-        public string Name { get; set; } = string.Empty;
-        public Brush Color { get; set; } = new SolidColorBrush(Colors.LightGray);
-    }
 }
