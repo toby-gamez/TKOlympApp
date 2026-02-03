@@ -1,5 +1,6 @@
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
+using TkOlympApp.Services;
 using TkOlympApp.ViewModels;
 
 namespace TkOlympApp.Pages;
@@ -24,7 +25,11 @@ public partial class CalendarViewPage : ContentPage
         _viewModel.UpdateViewButtonsVisualsAction = UpdateViewButtonsVisuals;
 
         // Initialize tab visuals
-        try { SetTopTabVisuals(_viewModel.OnlyMine); } catch { }
+        try { SetTopTabVisuals(_viewModel.OnlyMine); }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning<CalendarViewPage>("Failed to initialize tab visuals: {0}", new object[] { ex.Message });
+        }
     }
 
     protected override async void OnAppearing()
@@ -79,7 +84,10 @@ public partial class CalendarViewPage : ContentPage
                 }
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning<CalendarViewPage>("Failed to set tab visuals: {0}", new object[] { ex.Message });
+        }
     }
 
     private void UpdateViewButtonsVisuals()

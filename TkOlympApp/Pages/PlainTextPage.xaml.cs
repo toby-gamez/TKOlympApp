@@ -42,7 +42,11 @@ public partial class PlainTextPage : ContentPage
             var t = text ?? string.Empty;
             if (t.Length >= 2 && t.StartsWith("\"") && t.EndsWith("\""))
                 t = t.Substring(1, t.Length - 2);
-            try { PlainTextService.LastText = t; } catch { }
+            try { PlainTextService.LastText = t; }
+            catch (Exception ex)
+            {
+                LoggerService.SafeLogWarning<PlainTextPage>("Failed to cache plain text: {0}", new object[] { ex.Message });
+            }
 
             const int maxQueryLength = 1500;
             if (!string.IsNullOrEmpty(t) && t.Length <= maxQueryLength)
@@ -56,7 +60,11 @@ public partial class PlainTextPage : ContentPage
         }
         catch (Exception ex)
         {
-            try { await Shell.Current.DisplayAlertAsync(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); } catch { }
+            try { await Shell.Current.DisplayAlertAsync(LocalizationService.Get("Error_Title") ?? "Error", ex.Message, LocalizationService.Get("Button_OK") ?? "OK"); }
+            catch (Exception alertEx)
+            {
+                LoggerService.SafeLogWarning<PlainTextPage>("Failed to show error: {0}", new object[] { alertEx.Message });
+            }
         }
     }
 

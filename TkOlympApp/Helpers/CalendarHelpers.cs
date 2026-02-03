@@ -37,7 +37,11 @@ public static class CalendarHelpers
             if (evt == null) return string.Empty;
             return evt.Name ?? string.Empty;
         }
-        catch { return string.Empty; }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning(nameof(CalendarHelpers), "ComputeEventName failed: {0}", new object[] { ex.Message });
+            return string.Empty;
+        }
     }
 
     /// <summary>
@@ -58,7 +62,11 @@ public static class CalendarHelpers
                 _ => type
             };
         }
-        catch { return string.Empty; }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning(nameof(CalendarHelpers), "ComputeEventTypeLabel failed: {0}", new object[] { ex.Message });
+            return string.Empty;
+        }
     }
 
     /// <summary>
@@ -87,7 +95,11 @@ public static class CalendarHelpers
 
             return string.Empty;
         }
-        catch { return string.Empty; }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning(nameof(CalendarHelpers), "ComputeLocationOrTrainers failed: {0}", new object[] { ex.Message });
+            return string.Empty;
+        }
     }
 
     /// <summary>
@@ -128,7 +140,10 @@ public static class CalendarHelpers
                             else if (!string.IsNullOrWhiteSpace(womanLn)) surnames.Add(womanLn);
                         }
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        LoggerService.SafeLogWarning(nameof(CalendarHelpers), "ComputeFirstRegistrant: surname extraction failed: {0}", new object[] { ex.Message });
+                    }
                 }
 
                 if (count == 1)
@@ -167,7 +182,10 @@ public static class CalendarHelpers
             }
 
         }
-        catch { }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning(nameof(CalendarHelpers), "ComputeFirstRegistrant failed: {0}", new object[] { ex.Message });
+        }
         return string.Empty;
     }
 
@@ -184,7 +202,10 @@ public static class CalendarHelpers
                 return mins > 0 ? mins + "'" : string.Empty;
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning(nameof(CalendarHelpers), "ComputeDuration failed: {0}", new object[] { ex.Message });
+        }
         return string.Empty;
     }
 

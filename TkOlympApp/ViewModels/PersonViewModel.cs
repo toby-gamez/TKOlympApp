@@ -3,9 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -14,6 +11,7 @@ using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
 using TkOlympApp.Helpers;
+using TkOlympApp.Models.People;
 using TkOlympApp.Services;
 using TkOlympApp.Services.Abstractions;
 
@@ -21,15 +19,10 @@ namespace TkOlympApp.ViewModels;
 
 public partial class PersonViewModel : ViewModelBase
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        PropertyNameCaseInsensitive = true
-    };
-
     private static readonly ConcurrentDictionary<string, (PersonDetail Person, DateTime FetchedAt)> PersonCache = new();
     private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(5);
 
-    private readonly IAuthService _authService;
+    private readonly IPeopleService _peopleService;
     private readonly INavigationService _navigationService;
 
     private bool _appeared;
@@ -129,9 +122,9 @@ public partial class PersonViewModel : ViewModelBase
     [ObservableProperty]
     private ActiveCoupleDisplay? _selectedActiveCouple;
 
-    public PersonViewModel(IAuthService authService, INavigationService navigationService)
+    public PersonViewModel(IPeopleService peopleService, INavigationService navigationService)
     {
-        _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+        _peopleService = peopleService ?? throw new ArgumentNullException(nameof(peopleService));
         _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
     }
 
@@ -163,7 +156,11 @@ public partial class PersonViewModel : ViewModelBase
     public override Task OnDisappearingAsync()
     {
         _appeared = false;
-        try { _cts?.Cancel(); } catch { }
+        try { _cts?.Cancel(); }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning<PersonViewModel>("Failed to cancel CTS: {0}", new object[] { ex.Message });
+        }
         return base.OnDisappearingAsync();
     }
 
@@ -181,7 +178,11 @@ public partial class PersonViewModel : ViewModelBase
 
         try
         {
-            try { _cts?.Cancel(); } catch { }
+            try { _cts?.Cancel(); }
+            catch (Exception ex)
+            {
+                LoggerService.SafeLogWarning<PersonViewModel>("Failed to cancel CTS on reload: {0}", new object[] { ex.Message });
+            }
             _cts = new CancellationTokenSource();
             var ct = _cts.Token;
 
@@ -199,16 +200,7 @@ public partial class PersonViewModel : ViewModelBase
                 return;
             }
 
-            var primaryQuery = "query Primary { person(id: \"" + PersonId + "\") { bio birthDate cstsId email firstName prefixTitle suffixTitle gender isTrainer lastName phone wdsfId } }";
-            var gqlReq = new { query = primaryQuery };
-            var json = JsonSerializer.Serialize(gqlReq, JsonOptions);
-            using var content = new StringContent(json, Encoding.UTF8, "application/json");
-            using var resp = await _authService.Http.PostAsync("", content, ct);
-            resp.EnsureSuccessStatusCode();
-
-            var body = await resp.Content.ReadAsStringAsync(ct);
-            var parsed = JsonSerializer.Deserialize<GraphQlResp<PersonRespData>>(body, JsonOptions);
-            var person = parsed?.Data?.Person;
+            var person = await _peopleService.GetPersonBasicAsync(PersonId, ct);
             if (person == null)
             {
                 IsErrorVisible = true;
@@ -268,24 +260,24 @@ public partial class PersonViewModel : ViewModelBase
     {
         try
         {
-            var extrasQuery = "query Extras { person(id: \"" + personId + "\") { activeCouplesList { id man { firstName lastName } woman { firstName lastName } } cohortMembershipsList { cohort { colorRgb id name ordering isVisible } } } }";
-            var gqlReq = new { query = extrasQuery };
-            var json = JsonSerializer.Serialize(gqlReq, JsonOptions);
-            using var content = new StringContent(json, Encoding.UTF8, "application/json");
-            using var resp = await _authService.Http.PostAsync("", content, ct);
-            resp.EnsureSuccessStatusCode();
-
-            var body = await resp.Content.ReadAsStringAsync(ct);
-            var parsed = JsonSerializer.Deserialize<GraphQlResp<PersonRespData>>(body, JsonOptions);
-            var person = parsed?.Data?.Person;
+            var person = await _peopleService.GetPersonExtrasAsync(personId, ct);
             if (person == null) return;
 
             if (PersonCache.TryGetValue(personId, out var existing))
             {
-                var merged = existing.Person;
-                try { merged.ActiveCouplesList = person.ActiveCouplesList; } catch { }
-                try { merged.CohortMembershipsList = person.CohortMembershipsList; } catch { }
-                PersonCache[personId] = (merged, DateTime.UtcNow);
+                try
+                {
+                    var merged = existing.Person with
+                    {
+                        ActiveCouplesList = person.ActiveCouplesList,
+                        CohortMembershipsList = person.CohortMembershipsList
+                    };
+                    PersonCache[personId] = (merged, DateTime.UtcNow);
+                }
+                catch (Exception ex)
+                {
+                    LoggerService.SafeLogWarning<PersonViewModel>("Failed to merge person extras: {0}", new object[] { ex.Message });
+                }
             }
 
             MainThread.BeginInvokeOnMainThread(() =>
@@ -296,16 +288,18 @@ public partial class PersonViewModel : ViewModelBase
         }
         catch (OperationCanceledException)
         {
+            // ignored
         }
-        catch
+        catch (Exception ex)
         {
+            LoggerService.SafeLogWarning<PersonViewModel>("Failed to load person extras: {0}", new object[] { ex.Message });
         }
     }
 
-    private void UpdateActiveCouples(List<ActiveCouple>? couples)
+    private void UpdateActiveCouples(List<PersonActiveCouple>? couples)
     {
         ActiveCouples.Clear();
-        foreach (var c in couples ?? new List<ActiveCouple>())
+        foreach (var c in couples ?? new List<PersonActiveCouple>())
         {
             var manFirst = c.Man?.FirstName?.Trim() ?? string.Empty;
             var manLast = c.Man?.LastName?.Trim() ?? string.Empty;
@@ -327,10 +321,10 @@ public partial class PersonViewModel : ViewModelBase
         ActiveCouplesVisible = ActiveCouples.Count > 0;
     }
 
-    private void UpdateCohorts(List<CohortMembership>? memberships)
+    private void UpdateCohorts(List<PersonCohortMembership>? memberships)
     {
         Cohorts.Clear();
-        var cohortsList = (memberships ?? new List<CohortMembership>())
+        var cohortsList = (memberships ?? new List<PersonCohortMembership>())
             .Where(m => m?.Cohort?.IsVisible != false)
             .OrderBy(m => m?.Cohort?.Ordering ?? int.MaxValue)
             .ToList();
@@ -425,61 +419,5 @@ public partial class PersonViewModel : ViewModelBase
     {
         public string Name { get; set; } = string.Empty;
         public Brush Color { get; set; } = new SolidColorBrush(Colors.LightGray);
-    }
-
-    private sealed class GraphQlResp<T>
-    {
-        [JsonPropertyName("data")] public T? Data { get; set; }
-    }
-
-    private sealed class PersonRespData
-    {
-        [JsonPropertyName("person")] public PersonDetail? Person { get; set; }
-    }
-
-    private sealed class PersonDetail
-    {
-        [JsonPropertyName("bio")] public string? Bio { get; set; }
-        [JsonPropertyName("birthDate")] public string? BirthDate { get; set; }
-        [JsonPropertyName("createdAt")] public string? CreatedAt { get; set; }
-        [JsonPropertyName("cstsId")] public string? CstsId { get; set; }
-        [JsonPropertyName("email")] public string? Email { get; set; }
-        [JsonPropertyName("firstName")] public string? FirstName { get; set; }
-        [JsonPropertyName("prefixTitle")] public string? PrefixTitle { get; set; }
-        [JsonPropertyName("suffixTitle")] public string? SuffixTitle { get; set; }
-        [JsonPropertyName("gender")] public string? Gender { get; set; }
-        [JsonPropertyName("isTrainer")] public bool? IsTrainer { get; set; }
-        [JsonPropertyName("lastName")] public string? LastName { get; set; }
-        [JsonPropertyName("activeCouplesList")] public List<ActiveCouple>? ActiveCouplesList { get; set; }
-        [JsonPropertyName("cohortMembershipsList")] public List<CohortMembership>? CohortMembershipsList { get; set; }
-        [JsonPropertyName("phone")] public string? Phone { get; set; }
-        [JsonPropertyName("wdsfId")] public string? WdsfId { get; set; }
-    }
-
-    private sealed class ActiveCouple
-    {
-        [JsonPropertyName("id")] public string? Id { get; set; }
-        [JsonPropertyName("man")] public ActivePerson? Man { get; set; }
-        [JsonPropertyName("woman")] public ActivePerson? Woman { get; set; }
-    }
-
-    private sealed class ActivePerson
-    {
-        [JsonPropertyName("firstName")] public string? FirstName { get; set; }
-        [JsonPropertyName("lastName")] public string? LastName { get; set; }
-    }
-
-    private sealed class CohortMembership
-    {
-        [JsonPropertyName("cohort")] public Cohort? Cohort { get; set; }
-    }
-
-    private sealed class Cohort
-    {
-        [JsonPropertyName("id")] public string? Id { get; set; }
-        [JsonPropertyName("name")] public string? Name { get; set; }
-        [JsonPropertyName("colorRgb")] public string? ColorRgb { get; set; }
-        [JsonPropertyName("ordering")] public int? Ordering { get; set; }
-        [JsonPropertyName("isVisible")] public bool? IsVisible { get; set; }
     }
 }

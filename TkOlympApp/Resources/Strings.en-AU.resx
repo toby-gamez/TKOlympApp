@@ -130,6 +130,7 @@
     <data name="ChangePassword_EnterNew" xml:space="preserve"><value>Enter new password.</value></data>
     <data name="ChangePassword_Error_Mismatch" xml:space="preserve"><value>Passwords do not match.</value></data>
     <data name="ChangePassword_Failure" xml:space="preserve"><value>Error changing password.</value></data>
+    <data name="ChangePassword_Error_Generic" xml:space="preserve"><value>Couldn't change password.</value></data>
     <data name="ChangePassword_Success_Title" xml:space="preserve"><value>Done</value></data>
     <data name="ChangePassword_Success_LoggedOut_Message" xml:space="preserve"><value>Password changed successfully. Automatic logout executed.</value></data>
     <data name="Button_Save" xml:space="preserve"><value>Save</value></data>
@@ -268,6 +269,7 @@
     <data name="DeleteRegistrations_Description" xml:space="preserve"><value>Pick the regos to yeet.</value></data>
     <data name="DeleteRegistrations_Success_Text" xml:space="preserve"><value>Reg deleted</value></data>
     <data name="DeleteRegistrations_Success_Icon" xml:space="preserve"><value>✔</value></data>
+    <data name="DeleteRegistrations_DeleteFailed" xml:space="preserve"><value>Couldn't delete rego.</value></data>
     <data name="XAML_Error_Title" xml:space="preserve"><value>XAML Bruh</value></data>
     <data name="Delete_Confirm_Title" xml:space="preserve"><value>Say it loud</value></data>
     <data name="Delete_Confirm_Message" xml:space="preserve"><value>Yeet this registration?</value></data>
@@ -276,6 +278,8 @@
     <data name="EditRegistrations_NoTrainerSelected" xml:space="preserve"><value>Major L</value></data>
     <data name="EditRegistrations_NoTrainerSelected_Text" xml:space="preserve"><value>Pick at least one gym bro and how many grinds.</value></data>
     <data name="EditRegistrations_Success_Text" xml:space="preserve"><value>Changes locked in, big W</value></data>
+    <data name="EditRegistrations_Error_NoTrainer" xml:space="preserve"><value>Pick at least one gym bro.</value></data>
+    <data name="EditRegistrations_Error_Save" xml:space="preserve"><value>Couldn't save changes.</value></data>
     <data name="EditRegistrations_Title" xml:space="preserve"><value>Tweak Registrashuns</value></data>
     <data name="EditRegistrations_Description" xml:space="preserve"><value>Pick a reg to tweak gym bro lesson demands.</value></data>
     <data name="EditRegistrations_Trainers_Label" xml:space="preserve"><value>Gym Bros</value></data>

@@ -136,6 +136,7 @@
   <data name="ChangePassword_EnterNew" xml:space="preserve"><value>Введіть новий пароль.</value></data>
   <data name="ChangePassword_Error_Mismatch" xml:space="preserve"><value>Паролі не збігаються.</value></data>
   <data name="ChangePassword_Failure" xml:space="preserve"><value>Помилка при зміні пароля.</value></data>
+  <data name="ChangePassword_Error_Generic" xml:space="preserve"><value>Не вдалося змінити пароль.</value></data>
   <data name="ChangePassword_Success_Title" xml:space="preserve"><value>Готово</value></data>
   <data name="ChangePassword_Success_LoggedOut_Message" xml:space="preserve"><value>Пароль успішно змінено. Виконано автоматичний вихід з системи.</value></data>
   <data name="Tomorrow" xml:space="preserve"><value>Завтра</value></data>
@@ -255,6 +256,7 @@
   <data name="DeleteRegistrations_Description" xml:space="preserve"><value>Виберіть реєстрації, які потрібно видалити.</value></data>
   <data name="DeleteRegistrations_Success_Text" xml:space="preserve"><value>Реєстрацію видалено</value></data>
   <data name="DeleteRegistrations_Success_Icon" xml:space="preserve"><value>✔</value></data>
+  <data name="DeleteRegistrations_DeleteFailed" xml:space="preserve"><value>Не вдалося видалити реєстрацію.</value></data>
   <data name="XAML_Error_Title" xml:space="preserve"><value>Помилка XAML</value></data>
   <data name="Delete_Confirm_Title" xml:space="preserve"><value>Підтвердити</value></data>
   <data name="Delete_Confirm_Message" xml:space="preserve"><value>Видалити реєстрацію?</value></data>
@@ -263,6 +265,8 @@
   <data name="EditRegistrations_NoTrainerSelected" xml:space="preserve"><value>Помилка</value></data>
   <data name="EditRegistrations_NoTrainerSelected_Text" xml:space="preserve"><value>Виберіть хоча б одного тренера та кількість занять.</value></data>
   <data name="EditRegistrations_Success_Text" xml:space="preserve"><value>Зміни збережено</value></data>
+  <data name="EditRegistrations_Error_NoTrainer" xml:space="preserve"><value>Виберіть хоча б одного тренера.</value></data>
+  <data name="EditRegistrations_Error_Save" xml:space="preserve"><value>Не вдалося зберегти зміни.</value></data>
   <data name="EditRegistrations_Title" xml:space="preserve"><value>Редагувати реєстрації</value></data>
   <data name="EditRegistrations_Description" xml:space="preserve"><value>Виберіть реєстрацію для редагування вимог щодо занять.</value></data>
   <data name="EditRegistrations_Trainers_Label" xml:space="preserve"><value>Тренери</value></data>

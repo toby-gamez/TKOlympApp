@@ -3,6 +3,7 @@ using System.Collections;
 using System.Text.Json;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
+using TkOlympApp.Services;
 
 namespace TkOlympApp.Helpers;
 
@@ -51,8 +52,9 @@ public static class CohortColorHelper
             // Handle single object via reflection
             return ExtractColorViaReflection(value);
         }
-        catch
+        catch (Exception ex)
         {
+            LoggerService.SafeLogWarning(nameof(CohortColorHelper), "GetColorRgb failed: {0}", new object[] { ex.Message });
             return null;
         }
     }
@@ -96,7 +98,10 @@ public static class CohortColorHelper
                 }
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning(nameof(CohortColorHelper), "ParseColorBrush failed: {0}", new object[] { ex.Message });
+        }
 
         return null;
     }
@@ -146,7 +151,10 @@ public static class CohortColorHelper
                 return colorDirect.GetValue(item) as string;
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning(nameof(CohortColorHelper), "ExtractColorViaReflection failed: {0}", new object[] { ex.Message });
+        }
 
         return null;
     }

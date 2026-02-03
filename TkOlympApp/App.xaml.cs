@@ -19,7 +19,10 @@ public partial class App : Application
             var lang = stored ?? LocalizationService.DetermineDefaultLanguage();
             LocalizationService.ApplyLanguage(lang);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning<App>("Failed to apply language: {0}", new object[] { ex.Message });
+        }
 
         // Keep constructor minimal; window + shell created in CreateWindow
     }
@@ -36,34 +39,6 @@ public partial class App : Application
         }
 
         var win = new Window(appShell);
-
-        try
-        {
-            Dispatcher.Dispatch(async () =>
-            {
-                try { await Task.Delay(150); } catch { }
-                try
-                {
-                    if (Shell.Current != null)
-                    {
-                        // If this is the first run, show FirstRunPage first
-                        try
-                        {
-                            if (!FirstRunHelper.HasSeen())
-                            {
-                                try { await Shell.Current.GoToAsync("FirstRunPage"); } catch { }
-                                return;
-                            }
-                        }
-                        catch { }
-
-                        // Default tab (Overview/Přehled) is already set in AppShell constructor
-                    }
-                }
-                catch { }
-            });
-        }
-        catch { }
 
         return win;
     }

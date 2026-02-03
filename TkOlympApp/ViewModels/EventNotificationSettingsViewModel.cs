@@ -14,13 +14,15 @@ public partial class EventNotificationSettingsViewModel : ViewModelBase
 {
     private readonly ITenantService _tenantService;
     private readonly INavigationService _navigationService;
+    private readonly IUserNotifier _notifier;
 
     public ObservableCollection<RuleItem> Items { get; } = new();
 
-    public EventNotificationSettingsViewModel(ITenantService tenantService, INavigationService navigationService)
+    public EventNotificationSettingsViewModel(ITenantService tenantService, INavigationService navigationService, IUserNotifier notifier)
     {
         _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
         _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
+        _notifier = notifier ?? throw new ArgumentNullException(nameof(notifier));
     }
 
     public override async Task OnAppearingAsync()
@@ -51,10 +53,18 @@ public partial class EventNotificationSettingsViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            await Application.Current?.MainPage?.DisplayAlert(
-                LocalizationService.Get("Error_Title") ?? "Error",
-                ex.Message,
-                LocalizationService.Get("Button_OK") ?? "OK");
+            LoggerService.SafeLogWarning<EventNotificationSettingsViewModel>("Add rule failed: {0}", new object[] { ex.Message });
+            try
+            {
+                await _notifier.ShowAsync(
+                    LocalizationService.Get("Error_Title") ?? "Error",
+                    ex.Message,
+                    LocalizationService.Get("Button_OK") ?? "OK");
+            }
+            catch (Exception notifyEx)
+            {
+                LoggerService.SafeLogWarning<EventNotificationSettingsViewModel>("Failed to show error: {0}", new object[] { notifyEx.Message });
+            }
         }
     }
 
@@ -69,7 +79,21 @@ public partial class EventNotificationSettingsViewModel : ViewModelBase
                 ["id"] = item.Setting.Id.ToString()
             });
         }
-        catch { }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning<EventNotificationSettingsViewModel>("Edit rule failed: {0}", new object[] { ex.Message });
+            try
+            {
+                await _notifier.ShowAsync(
+                    LocalizationService.Get("Error_Title") ?? "Error",
+                    ex.Message,
+                    LocalizationService.Get("Button_OK") ?? "OK");
+            }
+            catch (Exception notifyEx)
+            {
+                LoggerService.SafeLogWarning<EventNotificationSettingsViewModel>("Failed to show error: {0}", new object[] { notifyEx.Message });
+            }
+        }
     }
 
     [RelayCommand]
@@ -81,7 +105,10 @@ public partial class EventNotificationSettingsViewModel : ViewModelBase
             NotificationSettingsService.Remove(item.Setting.Id);
             Items.Remove(item);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning<EventNotificationSettingsViewModel>("Delete rule failed: {0}", new object[] { ex.Message });
+        }
     }
 
     private async Task LoadItemsAsync()
@@ -108,7 +135,10 @@ public partial class EventNotificationSettingsViewModel : ViewModelBase
                 trainerNames[id] = shortName;
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning<EventNotificationSettingsViewModel>("Failed to load trainers: {0}", new object[] { ex.Message });
+        }
 
         var converter = new TkOlympApp.Converters.EventTypeToLabelConverter();
 
@@ -168,7 +198,10 @@ public partial class EventNotificationSettingsViewModel : ViewModelBase
                 Setting = Setting with { Enabled = value };
                 NotificationSettingsService.AddOrUpdate(Setting);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                LoggerService.SafeLogWarning<EventNotificationSettingsViewModel>("Failed to update setting: {0}", new object[] { ex.Message });
+            }
         }
     }
 }

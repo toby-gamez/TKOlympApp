@@ -237,6 +237,7 @@
   <data name="DeleteRegistrations_Description" xml:space="preserve"><value>Chọn các đăng ký bạn muốn xóa.</value></data>
   <data name="DeleteRegistrations_Success_Text" xml:space="preserve"><value>Đăng ký đã được xóa</value></data>
   <data name="DeleteRegistrations_Success_Icon" xml:space="preserve"><value>✔</value></data>
+  <data name="DeleteRegistrations_DeleteFailed" xml:space="preserve"><value>Không thể xóa đăng ký.</value></data>
   <data name="XAML_Error_Title" xml:space="preserve"><value>Lỗi XAML</value></data>
   <data name="Delete_Confirm_Title" xml:space="preserve"><value>Xác nhận</value></data>
   <data name="Delete_Confirm_Message" xml:space="preserve"><value>Xóa đăng ký?</value></data>
@@ -245,6 +246,8 @@
   <data name="EditRegistrations_NoTrainerSelected" xml:space="preserve"><value>Lỗi</value></data>
   <data name="EditRegistrations_NoTrainerSelected_Text" xml:space="preserve"><value>Vui lòng chọn ít nhất một huấn luyện viên và số buổi.</value></data>
   <data name="EditRegistrations_Success_Text" xml:space="preserve"><value>Đã lưu thay đổi</value></data>
+  <data name="EditRegistrations_Error_NoTrainer" xml:space="preserve"><value>Vui lòng chọn ít nhất một huấn luyện viên.</value></data>
+  <data name="EditRegistrations_Error_Save" xml:space="preserve"><value>Không thể lưu thay đổi.</value></data>
   <data name="EditRegistrations_Title" xml:space="preserve"><value>Chỉnh sửa đăng ký</value></data>
   <data name="EditRegistrations_Description" xml:space="preserve"><value>Chọn đăng ký để chỉnh sửa yêu cầu buổi học.</value></data>
   <data name="EditRegistrations_Trainers_Label" xml:space="preserve"><value>Huấn luyện viên</value></data>
@@ -362,6 +365,7 @@
   <data name="ChangePassword_EnterNew" xml:space="preserve"><value>Nhập mật khẩu mới.</value></data>
   <data name="ChangePassword_Error_Mismatch" xml:space="preserve"><value>Mật khẩu không khớp.</value></data>
   <data name="ChangePassword_Failure" xml:space="preserve"><value>Lỗi khi thay đổi mật khẩu.</value></data>
+  <data name="ChangePassword_Error_Generic" xml:space="preserve"><value>Không thể đổi mật khẩu.</value></data>
   <data name="ChangePassword_Success_Title" xml:space="preserve"><value>Xong</value></data>
   <data name="ChangePassword_Success_LoggedOut_Message" xml:space="preserve"><value>Đổi mật khẩu thành công. Đã tự động đăng xuất.</value></data>
   <data name="Auth_RefreshFailed" xml:space="preserve"><value>Làm mới token thất bại.</value></data>

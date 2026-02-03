@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Controls;
 using TkOlympApp.Helpers;
 using TkOlympApp.Services;
@@ -48,6 +49,24 @@ public partial class NoticeViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _bodyVisible;
+
+    [ObservableProperty]
+    private string _bodyText = string.Empty;
+
+    [ObservableProperty]
+    private bool _bodyTextVisible;
+
+    [ObservableProperty]
+    private FormattedString? _bodyFormatted;
+
+    [ObservableProperty]
+    private bool _bodyFormattedVisible;
+
+    [ObservableProperty]
+    private string _bodyHtml = string.Empty;
+
+    [ObservableProperty]
+    private bool _bodyHtmlVisible;
 
     public NoticeViewModel(INoticeboardService noticeboardService, IUserNotifier notifier)
     {
@@ -154,14 +173,30 @@ public partial class NoticeViewModel : ViewModelBase
             }
 
             _lastBodyHtml = a.Body;
-            var views = HtmlHelpers.ToViews(a.Body);
-            BodyViews.Clear();
-            foreach (var v in views)
-            {
-                BodyViews.Add(v);
-            }
+            var plainBody = HtmlToPlainText(a.Body) ?? string.Empty;
+            var formatted = HtmlHelpers.ToFormattedString(a.Body);
+            var htmlImagesOnly = HtmlHelpers.BuildImagesOnlyHtml(a.Body);
 
-            BodyVisible = BodyViews.Count > 0;
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                BodyFormatted = formatted;
+                BodyFormattedVisible = formatted.Spans.Count > 0;
+
+                BodyHtml = htmlImagesOnly;
+                BodyHtmlVisible = !string.IsNullOrWhiteSpace(htmlImagesOnly);
+
+                BodyText = plainBody;
+                BodyTextVisible = !BodyFormattedVisible && !BodyHtmlVisible && !string.IsNullOrWhiteSpace(plainBody);
+
+                BodyViews.Clear();
+                var views = HtmlHelpers.ToViews(a.Body);
+                foreach (var v in views)
+                {
+                    BodyViews.Add(v);
+                }
+
+                BodyVisible = BodyFormattedVisible || BodyTextVisible || BodyViews.Count > 0 || BodyHtmlVisible;
+            });
         }
         catch (Exception ex)
         {

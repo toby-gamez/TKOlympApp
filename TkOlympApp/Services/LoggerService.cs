@@ -111,6 +111,28 @@ public static class LoggerService
         }
     }
 
+    /// <summary>
+    /// Bezpečné logování warningů podle názvu kategorie (pro statické třídy).
+    /// </summary>
+    public static void SafeLogWarning(string categoryName, string message, params object?[] args)
+    {
+        try
+        {
+            CreateLogger(categoryName).LogWarning(message, args);
+        }
+        catch
+        {
+            try
+            {
+                Debug.WriteLine($"[WARNING] {categoryName}: {string.Format(message, args)}");
+            }
+            catch
+            {
+                Debug.WriteLine($"[WARNING] {categoryName}: Logging failed");
+            }
+        }
+    }
+
     private class PerformanceLogger<T> : IDisposable
     {
         private readonly string _operationName;

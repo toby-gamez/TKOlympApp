@@ -6,21 +6,24 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.Controls;
 using TkOlympApp.Services;
+using TkOlympApp.Services.Abstractions;
 
 namespace TkOlympApp.ViewModels;
 
 public partial class LanguageViewModel : ViewModelBase
 {
     private readonly IServiceProvider _services;
+    private readonly IUserNotifier _notifier;
 
     public ObservableCollection<LangItem> Languages { get; } = new();
 
     [ObservableProperty]
     private LangItem? _selectedLanguage;
 
-    public LanguageViewModel(IServiceProvider services)
+    public LanguageViewModel(IServiceProvider services, IUserNotifier notifier)
     {
         _services = services ?? throw new ArgumentNullException(nameof(services));
+        _notifier = notifier ?? throw new ArgumentNullException(nameof(notifier));
         LoadLanguages();
     }
 
@@ -62,11 +65,26 @@ public partial class LanguageViewModel : ViewModelBase
             if (win != null)
                 win.Page = _services.GetRequiredService<TkOlympApp.AppShell>();
             else
-                try { await Shell.Current.GoToAsync(".."); } catch { }
+                try { await Shell.Current.GoToAsync(".."); }
+                catch (Exception ex)
+                {
+                    LoggerService.SafeLogWarning<LanguageViewModel>("Failed to navigate back after language change: {0}", new object[] { ex.Message });
+                }
         }
-        catch
+        catch (Exception ex)
         {
-            // ignore
+            LoggerService.SafeLogWarning<LanguageViewModel>("Failed to apply language: {0}", new object[] { ex.Message });
+            try
+            {
+                await _notifier.ShowAsync(
+                    LocalizationService.Get("Error_Title") ?? "Error",
+                    ex.Message,
+                    LocalizationService.Get("Button_OK") ?? "OK");
+            }
+            catch (Exception notifyEx)
+            {
+                LoggerService.SafeLogWarning<LanguageViewModel>("Failed to show error: {0}", new object[] { notifyEx.Message });
+            }
         }
         finally
         {

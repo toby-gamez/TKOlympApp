@@ -3,6 +3,7 @@ using Microsoft.Maui.Controls;
 using System;
 using System.Threading.Tasks;
 using TkOlympApp.Services;
+using TkOlympApp.Services.Abstractions;
 using TkOlympApp.ViewModels;
 
 namespace TkOlympApp.Pages;
@@ -15,11 +16,13 @@ public partial class CalendarPage : ContentPage
 {
     private readonly ILogger<CalendarPage> _logger;
     private readonly CalendarViewModel _viewModel;
+    private readonly IUserNotifier _notifier;
 
-    public CalendarPage(CalendarViewModel viewModel)
+    public CalendarPage(CalendarViewModel viewModel, IUserNotifier notifier)
     {
         _logger = LoggerService.CreateLogger<CalendarPage>();
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
+        _notifier = notifier ?? throw new ArgumentNullException(nameof(notifier));
 
         try
         {
@@ -40,49 +43,45 @@ public partial class CalendarPage : ContentPage
         }
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
         _logger.LogTrace("CalendarPage OnAppearing");
 
         try
         {
-            Dispatcher.Dispatch(async () =>
-            {
-                try
-                {
-                    await _viewModel.OnAppearingAsync();
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "ViewModel.OnAppearingAsync failed");
-                    await DisplayAlert(
-                        LocalizationService.Get("Error_Loading_Title") ?? "Error",
-                        ex.Message,
-                        LocalizationService.Get("Button_OK") ?? "OK");
-                }
-            });
+            await _viewModel.OnAppearingAsync();
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Dispatcher.Dispatch failed, using fallback");
-            _ = _viewModel.OnAppearingAsync();
+            _logger.LogError(ex, "ViewModel.OnAppearingAsync failed");
+            try
+            {
+                await _notifier.ShowAsync(
+                    LocalizationService.Get("Error_Loading_Title") ?? "Error",
+                    ex.Message,
+                    LocalizationService.Get("Button_OK") ?? "OK");
+            }
+            catch (Exception notifyEx)
+            {
+                LoggerService.SafeLogWarning<CalendarPage>("Failed to show error: {0}", new object[] { notifyEx.Message });
+            }
         }
     }
 
-    protected override void OnDisappearing()
+    protected override async void OnDisappearing()
     {
-        base.OnDisappearing();
-        _logger.LogTrace("CalendarPage OnDisappearing");
-
         try
         {
-            _ = _viewModel.OnDisappearingAsync();
+            await _viewModel.OnDisappearingAsync();
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "ViewModel.OnDisappearingAsync failed");
         }
+
+        base.OnDisappearing();
+        _logger.LogTrace("CalendarPage OnDisappearing");
     }
 
     /// <summary>

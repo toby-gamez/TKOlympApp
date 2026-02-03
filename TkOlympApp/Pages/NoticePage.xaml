@@ -46,6 +46,18 @@
                                 VerticalOptions="Center"
                                 Padding="4,0" />
                     </Grid>
+                          <Label FormattedText="{Binding BodyFormatted}"
+                              LineBreakMode="WordWrap"
+                              IsVisible="{Binding BodyFormattedVisible}" />
+                        <WebView IsVisible="{Binding BodyHtmlVisible}"
+                                 HeightRequest="240">
+                            <WebView.Source>
+                                <HtmlWebViewSource Html="{Binding BodyHtml}" />
+                            </WebView.Source>
+                        </WebView>
+                          <Label Text="{Binding BodyText}"
+                              LineBreakMode="WordWrap"
+                              IsVisible="{Binding BodyTextVisible}" />
                     <StackLayout Spacing="6" BindableLayout.ItemsSource="{Binding BodyViews}">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate>

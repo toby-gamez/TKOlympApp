@@ -61,6 +61,13 @@ public sealed class UserServiceImplementation : IUserService
         return data?.GetCurrentUser;
     }
 
+    public async Task<string?> GetCurrentUserProxyIdAsync(CancellationToken ct = default)
+    {
+        var query = "query MyQuery { userProxiesList { person { id } } }";
+        var data = await _graphQlClient.PostAsync<UserProxiesData>(query, null, ct);
+        return data?.UserProxiesList?.FirstOrDefault()?.Person?.Id;
+    }
+
     public async Task<List<CoupleInfo>> GetActiveCouplesFromUsersAsync(CancellationToken ct = default)
     {
         var query = @"query von {
@@ -191,8 +198,14 @@ public sealed class UserServiceImplementation : IUserService
         [JsonPropertyName("person")] public PersonProxy? Person { get; set; }
     }
 
+    private sealed class UserProxiesData
+    {
+        [JsonPropertyName("userProxiesList")] public UserProxy[]? UserProxiesList { get; set; }
+    }
+
     private sealed class PersonProxy
     {
+        [JsonPropertyName("id")] public string? Id { get; set; }
         [JsonPropertyName("activeCouplesList")] public CoupleProxy[]? ActiveCouplesList { get; set; }
         [JsonPropertyName("cohortMembershipsList")] public CohortMembershipProxy[]? CohortMembershipsList { get; set; }
     }

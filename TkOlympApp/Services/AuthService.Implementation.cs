@@ -217,6 +217,36 @@ public class AuthServiceImplementation : IAuthService
         }
     }
 
+    public async Task ChangePasswordAsync(string newPassword, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(newPassword))
+        {
+            throw new InvalidOperationException(LocalizationService.Get("ChangePassword_EnterNew") ?? "Zadejte nové heslo.");
+        }
+
+        var gqlReq = new GraphQlRequest
+        {
+            Query = "mutation ChangePassword($newPass: String!) { changePassword(input: {newPass: $newPass}) { clientMutationId } }",
+            Variables = new Dictionary<string, object> { ["newPass"] = newPassword }
+        };
+
+        var json = JsonSerializer.Serialize(gqlReq);
+        using var content = new StringContent(json, Encoding.UTF8, "application/json");
+        using var resp = await _httpClient.PostAsync("", content, ct);
+
+        var body = await resp.Content.ReadAsStringAsync(ct);
+        var options = new JsonSerializerOptions(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = true };
+        var parsed = JsonSerializer.Deserialize<GraphQlResponse<ChangePasswordData>>(body, options);
+
+        if (parsed?.Errors != null && parsed.Errors.Count > 0)
+        {
+            var msg = parsed.Errors[0].Message ?? LocalizationService.Get("ChangePassword_Error_Generic") ?? "Chyba při změně hesla.";
+            throw new GraphQLException(msg, parsed.Errors.Select(e => e.Message ?? string.Empty).ToList(), body);
+        }
+
+        resp.EnsureSuccessStatusCode();
+    }
+
     private static bool IsJwtExpired(string jwt, int leewaySeconds = 60)
     {
         try
@@ -295,6 +325,16 @@ public class AuthServiceImplementation : IAuthService
     private sealed class Person
     {
         [JsonPropertyName("id")] public string? Id { get; set; }
+    }
+
+    private sealed class ChangePasswordData
+    {
+        [JsonPropertyName("changePassword")] public ChangePasswordPayload? ChangePassword { get; set; }
+    }
+
+    private sealed class ChangePasswordPayload
+    {
+        [JsonPropertyName("clientMutationId")] public string? ClientMutationId { get; set; }
     }
     #endregion
 }

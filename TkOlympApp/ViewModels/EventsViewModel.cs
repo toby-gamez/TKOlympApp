@@ -1,7 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Maui;
@@ -13,13 +10,9 @@ namespace TkOlympApp.ViewModels;
 
 public partial class EventsViewModel : ViewModelBase
 {
-    private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web)
-    {
-        PropertyNameCaseInsensitive = true
-    };
-
-    private readonly IAuthService _authService;
+    private readonly IEventService _eventService;
     private readonly INavigationService _navigationService;
+    private readonly IUserNotifier _notifier;
 
     public ObservableCollection<EventItem> PlannedItems { get; } = new();
     public ObservableCollection<EventItem> OccurredItems { get; } = new();
@@ -46,10 +39,11 @@ public partial class EventsViewModel : ViewModelBase
     [ObservableProperty]
     private Color _tabOccurredTextColor = Colors.Black;
 
-    public EventsViewModel(IAuthService authService, INavigationService navigationService)
+    public EventsViewModel(IEventService eventService, INavigationService navigationService, IUserNotifier notifier)
     {
-        _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+        _eventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
         _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
+        _notifier = notifier ?? throw new ArgumentNullException(nameof(notifier));
     }
 
     public void UpdateTabVisuals(AppTheme theme)
@@ -135,37 +129,14 @@ public partial class EventsViewModel : ViewModelBase
             var startRange = DateTime.Now.AddMonths(-12);
             var endRange = DateTime.Now.AddMonths(12);
 
-            var query = new GraphQlRequest
-            {
-                Query =
-                    "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $onlyType: EventType) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange, onlyType: $onlyType) { id isCancelled event { id name location { id name } isVisible type } since until } }",
-                Variables = new Dictionary<string, object>
-                {
-                    { "startRange", startRange.ToString("o") },
-                    { "endRange", endRange.ToString("o") },
-                    { "onlyType", "CAMP" }
-                }
-            };
-
-            var json = JsonSerializer.Serialize(query, Options);
-            using var content = new StringContent(json, Encoding.UTF8, "application/json");
-            using var resp = await _authService.Http.PostAsync("", content);
-            if (!resp.IsSuccessStatusCode)
-            {
-                return;
-            }
-
-            var body = await resp.Content.ReadAsStringAsync();
-            var data = JsonSerializer.Deserialize<GraphQlResponse<EventInstancesData>>(body, Options);
-            if (data?.Errors != null && data.Errors.Count > 0)
-            {
-                return;
-            }
+            var list = await _eventService.GetEventInstancesForRangeListAsync(
+                startRange,
+                endRange,
+                onlyType: "CAMP");
 
             PlannedItems.Clear();
             OccurredItems.Clear();
 
-            var list = data?.Data?.EventInstancesList ?? new List<EventInstanceDto>();
             foreach (var it in list)
             {
                 var ev = it.Event;
@@ -207,9 +178,20 @@ public partial class EventsViewModel : ViewModelBase
 
             UpdateVisibleItems();
         }
-        catch
+        catch (Exception ex)
         {
-            // Intentionally swallowed (ViewModels can't show alerts directly).
+            LoggerService.SafeLogWarning<EventsViewModel>("Refresh failed: {0}", new object[] { ex.Message });
+            try
+            {
+                await _notifier.ShowAsync(
+                    LocalizationService.Get("Error_Loading_Title") ?? "Chyba",
+                    ex.Message,
+                    LocalizationService.Get("Button_OK") ?? "OK");
+            }
+            catch (Exception notifyEx)
+            {
+                LoggerService.SafeLogWarning<EventsViewModel>("Failed to show error: {0}", new object[] { notifyEx.Message });
+            }
         }
         finally
         {
@@ -242,51 +224,6 @@ public partial class EventsViewModel : ViewModelBase
         }
     }
 
-    private sealed class GraphQlRequest
-    {
-        public string Query { get; set; } = string.Empty;
-        public Dictionary<string, object>? Variables { get; set; }
-    }
-
-    private sealed class GraphQlResponse<T>
-    {
-        public T? Data { get; set; }
-        public List<GraphQlError>? Errors { get; set; }
-    }
-
-    private sealed class GraphQlError
-    {
-        public string? Message { get; set; }
-    }
-
-    private sealed class EventInstancesData
-    {
-        [JsonPropertyName("eventInstancesForRangeList")] public List<EventInstanceDto>? EventInstancesList { get; set; }
-    }
-
-    private sealed class EventInstanceDto
-    {
-        [JsonPropertyName("id")] public long Id { get; set; }
-        [JsonPropertyName("event")] public EventNode? Event { get; set; }
-        [JsonPropertyName("isCancelled")] public bool IsCancelled { get; set; }
-        [JsonPropertyName("since")] public DateTime? Since { get; set; }
-        [JsonPropertyName("until")] public DateTime? Until { get; set; }
-    }
-
-    private sealed class EventNode
-    {
-        [JsonPropertyName("id")] public long Id { get; set; }
-        [JsonPropertyName("name")] public string? Name { get; set; }
-        [JsonPropertyName("location")] public EventLocation? Location { get; set; }
-        [JsonPropertyName("isVisible")] public bool IsVisible { get; set; }
-        [JsonPropertyName("type")] public string? Type { get; set; }
-    }
-
-    private sealed class EventLocation
-    {
-        [JsonPropertyName("id")] public long? Id { get; set; }
-        [JsonPropertyName("name")] public string? Name { get; set; }
-    }
 
     public sealed class EventItem
     {

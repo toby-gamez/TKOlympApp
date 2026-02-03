@@ -2,14 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Maui.Controls;
 using TkOlympApp.Helpers;
+using TkOlympApp.Models.People;
 using TkOlympApp.Services;
 using TkOlympApp.Services.Abstractions;
 
@@ -17,12 +15,7 @@ namespace TkOlympApp.ViewModels;
 
 public partial class EditSelfViewModel : ViewModelBase
 {
-    private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web)
-    {
-        PropertyNameCaseInsensitive = true
-    };
-
-    private readonly IAuthService _authService;
+    private readonly IPeopleService _peopleService;
     private readonly IUserService _userService;
     private readonly IUserNotifier _notifier;
 
@@ -101,9 +94,9 @@ public partial class EditSelfViewModel : ViewModelBase
     [ObservableProperty]
     private string _bio = string.Empty;
 
-    public EditSelfViewModel(IAuthService authService, IUserService userService, IUserNotifier notifier)
+    public EditSelfViewModel(IPeopleService peopleService, IUserService userService, IUserNotifier notifier)
     {
-        _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+        _peopleService = peopleService ?? throw new ArgumentNullException(nameof(peopleService));
         _userService = userService ?? throw new ArgumentNullException(nameof(userService));
         _notifier = notifier ?? throw new ArgumentNullException(nameof(notifier));
     }
@@ -129,7 +122,11 @@ public partial class EditSelfViewModel : ViewModelBase
     [RelayCommand]
     private async Task CancelAsync()
     {
-        try { await Shell.Current.Navigation.PopModalAsync(); } catch { }
+        try { await Shell.Current.Navigation.PopModalAsync(); }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning<EditSelfViewModel>("Failed to close edit modal: {0}", new object[] { ex.Message });
+        }
     }
 
     [RelayCommand]
@@ -162,90 +159,48 @@ public partial class EditSelfViewModel : ViewModelBase
                 return;
             }
 
-            var parts = new List<string>();
-            void AddStringField(string name, string? value)
-            {
-                if (string.IsNullOrWhiteSpace(value)) return;
-                var esc = JsonSerializer.Serialize(value);
-                parts.Add($"{name}: {esc}");
-            }
-
-            AddStringField("bio", Bio);
-            if (BirthDateSet)
-            {
-                var bdStr = $"{BirthDate:yyyy-MM-dd}";
-                parts.Add($"birthDate: {JsonSerializer.Serialize(bdStr)}");
-            }
-            AddStringField("cstsId", CstsId);
-            AddStringField("email", Email);
-            AddStringField("firstName", FirstName);
-            AddStringField("lastName", LastName);
-            AddStringField("nationalIdNumber", NationalId);
-
             string? natValue = null;
             if (!string.IsNullOrWhiteSpace(SelectedNationality))
             {
                 if (NationalityHelper.TryGetNumericCodeForName(SelectedNationality, out var code)) natValue = code;
                 else natValue = SelectedNationality;
             }
-            AddStringField("nationality", natValue);
-            AddStringField("phone", Phone);
-            AddStringField("wdsfId", WdsfId);
-            AddStringField("prefixTitle", PrefixTitle);
-            AddStringField("suffixTitle", SuffixTitle);
-
-            var addressParts = new List<string>();
-            void AddAddressField(string name, string? value)
-            {
-                if (string.IsNullOrWhiteSpace(value)) return;
-                var esc = JsonSerializer.Serialize(value);
-                addressParts.Add($"{name}: {esc}");
-            }
-
-            AddAddressField("street", Street);
-            AddAddressField("city", City);
-            AddAddressField("postalCode", PostalCode);
-            AddAddressField("region", Region);
-            AddAddressField("district", District);
-            AddAddressField("conscriptionNumber", ConscriptionNumber);
-            AddAddressField("orientationNumber", OrientationNumber);
-
-            if (addressParts.Count > 0)
-            {
-                parts.Add("address: { " + string.Join(", ", addressParts) + " }");
-            }
 
             var genderValue = SelectedGenderIndex switch { 1 => "MAN", 2 => "WOMAN", _ => "UNSPECIFIED" };
-            if (!string.IsNullOrWhiteSpace(genderValue)) parts.Add($"gender: {genderValue}");
 
-            var patchBody = parts.Count == 0 ? string.Empty : "{ " + string.Join(", ", parts) + " }";
+            var address = new PersonAddress(
+                City,
+                ConscriptionNumber,
+                District,
+                OrientationNumber,
+                PostalCode,
+                Region,
+                Street);
 
-            var mutation = patchBody.Length == 0
-                ? $"mutation {{ updatePerson(input: {{id: \"{_personId}\"}}) {{ clientMutationId }} }}"
-                : $"mutation {{ updatePerson(input: {{id: \"{_personId}\", patch: {patchBody}}}) {{ clientMutationId }} }}";
+            var request = new PersonUpdateRequest(
+                Bio,
+                BirthDateSet ? BirthDate : null,
+                BirthDateSet,
+                CstsId,
+                Email,
+                FirstName,
+                LastName,
+                NationalId,
+                natValue,
+                Phone,
+                WdsfId,
+                PrefixTitle,
+                SuffixTitle,
+                genderValue,
+                address);
 
-            var gqlReq = new { query = mutation };
-            var json = JsonSerializer.Serialize(gqlReq, Options);
-            using var content = new StringContent(json, Encoding.UTF8, "application/json");
-            using var resp = await _authService.Http.PostAsync("", content);
+            await _peopleService.UpdatePersonAsync(_personId, request);
 
-            var body = await resp.Content.ReadAsStringAsync();
-            var parsed = JsonSerializer.Deserialize<GraphQlResp<object>>(body, Options);
-            if (parsed?.Errors != null && parsed.Errors.Length > 0)
+            try { await Shell.Current.Navigation.PopModalAsync(); }
+            catch (Exception ex)
             {
-                ErrorText = parsed.Errors[0].Message ?? (LocalizationService.Get("Error_Saving") ?? "Chyba při ukládání.");
-                IsErrorVisible = true;
-                return;
+                LoggerService.SafeLogWarning<EditSelfViewModel>("Failed to close edit modal after save: {0}", new object[] { ex.Message });
             }
-
-            if (!resp.IsSuccessStatusCode)
-            {
-                ErrorText = $"HTTP: {resp.StatusCode}";
-                IsErrorVisible = true;
-                return;
-            }
-
-            try { await Shell.Current.Navigation.PopModalAsync(); } catch { }
             var title = LocalizationService.Get("Save_Success_Title") ?? "Hotovo";
             var msg = LocalizationService.Get("Save_Success_Message") ?? "Údaje byly uloženy.";
             var ok = LocalizationService.Get("Button_OK") ?? "OK";
@@ -270,8 +225,9 @@ public partial class EditSelfViewModel : ViewModelBase
             GenderOptions.Add(LocalizationService.Get("Gender_Male") ?? (LocalizationService.Get("About_Gender_Male") ?? "Male"));
             GenderOptions.Add(LocalizationService.Get("Gender_Female") ?? (LocalizationService.Get("About_Gender_Female") ?? "Female"));
         }
-        catch
+        catch (Exception ex)
         {
+            LoggerService.SafeLogWarning<EditSelfViewModel>("Failed to load gender options: {0}", new object[] { ex.Message });
         }
 
         try
@@ -282,8 +238,9 @@ public partial class EditSelfViewModel : ViewModelBase
                 NationalityOptions.Add(country);
             }
         }
-        catch
+        catch (Exception ex)
         {
+            LoggerService.SafeLogWarning<EditSelfViewModel>("Failed to load nationality options: {0}", new object[] { ex.Message });
         }
 
         try
@@ -295,16 +252,7 @@ public partial class EditSelfViewModel : ViewModelBase
                 return;
             }
 
-            var query = "query MyQuery { person(id: \"" + _personId + "\") { bio birthDate cstsId email firstName gender lastName nationalIdNumber nationality phone wdsfId prefixTitle suffixTitle address { city conscriptionNumber district orientationNumber postalCode region street } } }";
-            var gqlReq = new { query };
-            var json = JsonSerializer.Serialize(gqlReq, Options);
-            using var content = new StringContent(json, Encoding.UTF8, "application/json");
-            using var resp = await _authService.Http.PostAsync("", content);
-            resp.EnsureSuccessStatusCode();
-
-            var body = await resp.Content.ReadAsStringAsync();
-            var parsed = JsonSerializer.Deserialize<GraphQlResp<PersonRespData>>(body, Options);
-            var person = parsed?.Data?.Person;
+            var person = await _peopleService.GetPersonFullAsync(_personId);
             if (person == null) return;
 
             FirstName = person.FirstName ?? string.Empty;
@@ -352,48 +300,4 @@ public partial class EditSelfViewModel : ViewModelBase
         }
     }
 
-    private sealed class GraphQlResp<T>
-    {
-        [JsonPropertyName("data")] public T? Data { get; set; }
-        [JsonPropertyName("errors")] public GraphQlError[]? Errors { get; set; }
-    }
-
-    private sealed class GraphQlError
-    {
-        [JsonPropertyName("message")] public string? Message { get; set; }
-    }
-
-    private sealed class PersonRespData
-    {
-        [JsonPropertyName("person")] public PersonDetail? Person { get; set; }
-    }
-
-    private sealed class PersonDetail
-    {
-        [JsonPropertyName("bio")] public string? Bio { get; set; }
-        [JsonPropertyName("birthDate")] public string? BirthDate { get; set; }
-        [JsonPropertyName("cstsId")] public string? CstsId { get; set; }
-        [JsonPropertyName("email")] public string? Email { get; set; }
-        [JsonPropertyName("firstName")] public string? FirstName { get; set; }
-        [JsonPropertyName("gender")] public string? Gender { get; set; }
-        [JsonPropertyName("lastName")] public string? LastName { get; set; }
-        [JsonPropertyName("nationalIdNumber")] public string? NationalIdNumber { get; set; }
-        [JsonPropertyName("nationality")] public string? Nationality { get; set; }
-        [JsonPropertyName("phone")] public string? Phone { get; set; }
-        [JsonPropertyName("wdsfId")] public string? WdsfId { get; set; }
-        [JsonPropertyName("prefixTitle")] public string? PrefixTitle { get; set; }
-        [JsonPropertyName("suffixTitle")] public string? SuffixTitle { get; set; }
-        [JsonPropertyName("address")] public AddressDetail? Address { get; set; }
-    }
-
-    private sealed class AddressDetail
-    {
-        [JsonPropertyName("city")] public string? City { get; set; }
-        [JsonPropertyName("conscriptionNumber")] public string? ConscriptionNumber { get; set; }
-        [JsonPropertyName("district")] public string? District { get; set; }
-        [JsonPropertyName("orientationNumber")] public string? OrientationNumber { get; set; }
-        [JsonPropertyName("postalCode")] public string? PostalCode { get; set; }
-        [JsonPropertyName("region")] public string? Region { get; set; }
-        [JsonPropertyName("street")] public string? Street { get; set; }
-    }
 }

@@ -145,6 +145,7 @@ public sealed record EventInfo(
     [property: JsonPropertyName("since")] DateTime? Since,
     [property: JsonPropertyName("until")] DateTime? Until,
     [property: JsonPropertyName("isRegistrationOpen")] bool? IsRegistrationOpen,
+    [property: JsonPropertyName("isVisible")] bool IsVisible,
     [property: JsonPropertyName("isPublic")] bool IsPublic,
     [property: JsonPropertyName("guestPrice")] Money? GuestPrice,
     [property: JsonPropertyName("eventTrainersList")] List<EventTrainer>? EventTrainersList,
@@ -165,20 +166,26 @@ public sealed record CohortRef(
 );
 
 public sealed record EventRegistrationShort(
+    [property: JsonPropertyName("id")] string? Id,
     [property: JsonPropertyName("person")] EventPersonShort? Person,
     [property: JsonPropertyName("couple")] EventCoupleShort? Couple
 );
 
 public sealed record EventPersonShort(
-    [property: JsonPropertyName("name")] string? Name
+    [property: JsonPropertyName("id")] string? Id,
+    [property: JsonPropertyName("name")] string? Name,
+    [property: JsonPropertyName("firstName")] string? FirstName,
+    [property: JsonPropertyName("lastName")] string? LastName
 );
 
 public sealed record EventCoupleShort(
+    [property: JsonPropertyName("id")] string? Id,
     [property: JsonPropertyName("man")] EventCoupleMemberShort? Man,
     [property: JsonPropertyName("woman")] EventCoupleMemberShort? Woman
 );
 
 public sealed record EventCoupleMemberShort(
+    [property: JsonPropertyName("firstName")] string? FirstName,
     [property: JsonPropertyName("lastName")] string? LastName
 );
 

@@ -122,7 +122,10 @@ public partial class CoupleViewModel : ViewModelBase
                 ["personId"] = id
             });
         }
-        catch { }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning<CoupleViewModel>("Failed to navigate to man profile: {0}", new object[] { ex.Message });
+        }
     }
 
     [RelayCommand]
@@ -137,7 +140,10 @@ public partial class CoupleViewModel : ViewModelBase
                 ["personId"] = id
             });
         }
-        catch { }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning<CoupleViewModel>("Failed to navigate to woman profile: {0}", new object[] { ex.Message });
+        }
     }
 
     private async Task LoadAsync()
@@ -194,6 +200,7 @@ public partial class CoupleViewModel : ViewModelBase
         {
             IsErrorVisible = true;
             ErrorText = ex.Message;
+            LoggerService.SafeLogWarning<CoupleViewModel>("Failed to load couple: {0}", new object[] { ex.Message });
         }
         finally
         {

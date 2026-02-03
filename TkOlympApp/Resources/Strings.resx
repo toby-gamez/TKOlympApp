@@ -257,6 +257,7 @@
   <data name="DeleteRegistrations_Description" xml:space="preserve"><value>Vyberte registrace, které chcete smazat.</value></data>
   <data name="DeleteRegistrations_Success_Text" xml:space="preserve"><value>Registrace smazána</value></data>
   <data name="DeleteRegistrations_Success_Icon" xml:space="preserve"><value>✔</value></data>
+  <data name="DeleteRegistrations_DeleteFailed" xml:space="preserve"><value>Smazání registrace se nezdařilo.</value></data>
   <data name="XAML_Error_Title" xml:space="preserve"><value>XAML chyba</value></data>
   <data name="Delete_Confirm_Title" xml:space="preserve"><value>Potvrzení</value></data>
   <data name="Delete_Confirm_Message" xml:space="preserve"><value>Smazat registraci?</value></data>
@@ -264,11 +265,14 @@
   <data name="Button_Cancel" xml:space="preserve"><value>Zrušit</value></data>
   <data name="EditRegistrations_NoTrainerSelected" xml:space="preserve"><value>Chyba</value></data>
   <data name="EditRegistrations_NoTrainerSelected_Text" xml:space="preserve"><value>Vyberte alespoň jednoho trenéra a počet lekcí.</value></data>
+  <data name="EditRegistrations_Error_NoTrainer" xml:space="preserve"><value>Vyberte trenéra.</value></data>
+  <data name="EditRegistrations_Error_Save" xml:space="preserve"><value>Uložení změn selhalo.</value></data>
   <data name="EditRegistrations_Success_Text" xml:space="preserve"><value>Změny uloženy</value></data>
   <data name="EditRegistrations_Title" xml:space="preserve"><value>Upravit lekce</value></data>
   <data name="EditRegistrations_Description" xml:space="preserve"><value>Vyberte registraci pro úpravu požadavků na lekce.</value></data>
   <data name="EditRegistrations_Trainers_Label" xml:space="preserve"><value>Trenéři</value></data>
   <data name="EditRegistrations_Button_Text" xml:space="preserve"><value>Potvrdit</value></data>
+  <data name="ChangePassword_Error_Generic" xml:space="preserve"><value>Chyba při změně hesla.</value></data>
   <data name="About_Phone" xml:space="preserve"><value>Telefon:</value></data>
   <data name="About_Bio" xml:space="preserve"><value>Bio:</value></data>
   <data name="About_BirthDate" xml:space="preserve"><value>Datum narození:</value></data>

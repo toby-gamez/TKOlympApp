@@ -274,10 +274,7 @@ public partial class NoticeboardViewModel : ViewModelBase
     {
         try
         {
-            await _navigationService.NavigateToAsync(nameof(Pages.NoticePage), new Dictionary<string, object>
-            {
-                ["id"] = item.Id
-            });
+            await _navigationService.NavigateToAsync($"{nameof(Pages.NoticePage)}?id={item.Id}");
         }
         catch (Exception ex)
         {

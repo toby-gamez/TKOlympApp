@@ -15,6 +15,7 @@ namespace TkOlympApp.ViewModels;
 public partial class CohortGroupsViewModel : ViewModelBase
 {
     private readonly ICohortService _cohortService;
+    private readonly IUserNotifier _notifier;
     private bool _loaded;
 
     public ObservableCollection<CohortGroupItem> Groups { get; } = new();
@@ -22,9 +23,10 @@ public partial class CohortGroupsViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isRefreshing;
 
-    public CohortGroupsViewModel(ICohortService cohortService)
+    public CohortGroupsViewModel(ICohortService cohortService, IUserNotifier notifier)
     {
         _cohortService = cohortService ?? throw new ArgumentNullException(nameof(cohortService));
+        _notifier = notifier ?? throw new ArgumentNullException(nameof(notifier));
     }
 
     public override async Task OnAppearingAsync()
@@ -76,14 +78,23 @@ public partial class CohortGroupsViewModel : ViewModelBase
             }
             catch
             {
+                LoggerService.SafeLogWarning<CohortGroupsViewModel>("Failed to add manual cohort group", Array.Empty<object>());
             }
         }
         catch (Exception ex)
         {
-            await Application.Current?.MainPage?.DisplayAlert(
-                LocalizationService.Get("Error_Title") ?? "Error",
-                ex.Message,
-                LocalizationService.Get("Button_OK") ?? "OK");
+            LoggerService.SafeLogWarning<CohortGroupsViewModel>("Failed to load cohort groups: {0}", new object[] { ex.Message });
+            try
+            {
+                await _notifier.ShowAsync(
+                    LocalizationService.Get("Error_Title") ?? "Error",
+                    ex.Message,
+                    LocalizationService.Get("Button_OK") ?? "OK");
+            }
+            catch (Exception notifyEx)
+            {
+                LoggerService.SafeLogWarning<CohortGroupsViewModel>("Failed to show error: {0}", new object[] { notifyEx.Message });
+            }
         }
         finally
         {
@@ -115,7 +126,10 @@ public partial class CohortGroupsViewModel : ViewModelBase
                 }
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning<CohortGroupsViewModel>("Failed to parse cohort color: {0}", new object[] { ex.Message });
+        }
         return null;
     }
 

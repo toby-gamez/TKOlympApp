@@ -63,4 +63,9 @@ public interface IAuthService
     /// </summary>
     /// <param name="ct">Cancellation token.</param>
     Task LogoutAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Changes the current user's password.
+    /// </summary>
+    Task ChangePasswordAsync(string newPassword, CancellationToken ct = default);
 }

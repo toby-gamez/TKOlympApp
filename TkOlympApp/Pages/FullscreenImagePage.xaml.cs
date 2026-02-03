@@ -1,6 +1,7 @@
 using System;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
+using TkOlympApp.Services;
 using TkOlympApp.ViewModels;
 
 namespace TkOlympApp.Pages;
@@ -43,7 +44,10 @@ public partial class FullscreenImagePage : ContentPage
                     _currentScale = 2;
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                LoggerService.SafeLogWarning<FullscreenImagePage>("Double-tap zoom failed: {0}", new object[] { ex.Message });
+            }
         };
         RootGrid.GestureRecognizers.Add(dbl);
     }
@@ -63,7 +67,10 @@ public partial class FullscreenImagePage : ContentPage
                 _currentScale = current;
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning<FullscreenImagePage>("Pinch update failed: {0}", new object[] { ex.Message });
+        }
     }
 
     private void OnPanUpdated(object? sender, PanUpdatedEventArgs e)
@@ -85,6 +92,9 @@ public partial class FullscreenImagePage : ContentPage
                 _yOffset = _image.TranslationY;
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning<FullscreenImagePage>("Pan update failed: {0}", new object[] { ex.Message });
+        }
     }
 }

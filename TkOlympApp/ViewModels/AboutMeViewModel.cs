@@ -3,15 +3,13 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
 using TkOlympApp.Helpers;
+using TkOlympApp.Models.People;
 using TkOlympApp.Services;
 using TkOlympApp.Services.Abstractions;
 
@@ -19,13 +17,9 @@ namespace TkOlympApp.ViewModels;
 
 public partial class AboutMeViewModel : ViewModelBase
 {
-    private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web)
-    {
-        PropertyNameCaseInsensitive = true
-    };
-
     private readonly IServiceProvider _services;
     private readonly IAuthService _authService;
+    private readonly IPeopleService _peopleService;
     private readonly IUserService _userService;
     private readonly INavigationService _navigationService;
     private readonly IUserNotifier _notifier;
@@ -164,12 +158,14 @@ public partial class AboutMeViewModel : ViewModelBase
     public AboutMeViewModel(
         IServiceProvider services,
         IAuthService authService,
+        IPeopleService peopleService,
         IUserService userService,
         INavigationService navigationService,
         IUserNotifier notifier)
     {
         _services = services ?? throw new ArgumentNullException(nameof(services));
         _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+        _peopleService = peopleService ?? throw new ArgumentNullException(nameof(peopleService));
         _userService = userService ?? throw new ArgumentNullException(nameof(userService));
         _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
         _notifier = notifier ?? throw new ArgumentNullException(nameof(notifier));
@@ -199,7 +195,11 @@ public partial class AboutMeViewModel : ViewModelBase
             }
             catch
             {
-                try { await Shell.Current.GoToAsync($"//{nameof(Pages.LoginPage)}"); } catch { }
+                try { await Shell.Current.GoToAsync($"//{nameof(Pages.LoginPage)}"); }
+                catch (Exception ex)
+                {
+                    LoggerService.SafeLogWarning<AboutMeViewModel>("Failed to navigate to login after logout: {0}", new object[] { ex.Message });
+                }
             }
         }
         catch
@@ -208,7 +208,11 @@ public partial class AboutMeViewModel : ViewModelBase
             var msg = LocalizationService.Get("Error_OperationFailed_Message") ?? "Operace selhala.";
             var ok = LocalizationService.Get("Button_OK") ?? "OK";
             await _notifier.ShowAsync(title, msg, ok);
-            try { await Shell.Current.GoToAsync(nameof(Pages.LoginPage)); } catch { }
+            try { await Shell.Current.GoToAsync(nameof(Pages.LoginPage)); }
+            catch (Exception ex)
+            {
+                LoggerService.SafeLogWarning<AboutMeViewModel>("Failed to navigate to login: {0}", new object[] { ex.Message });
+            }
         }
     }
 
@@ -318,29 +322,15 @@ public partial class AboutMeViewModel : ViewModelBase
     {
         try
         {
-            var gqlReq = new { query = "query MyQuery { userProxiesList { person { id } } }" };
-            var json = JsonSerializer.Serialize(gqlReq, Options);
-            using var content = new StringContent(json, Encoding.UTF8, "application/json");
-            using var resp = await _authService.Http.PostAsync("", content);
-
-            var body = await resp.Content.ReadAsStringAsync();
-            if (!resp.IsSuccessStatusCode)
-            {
-                throw new InvalidOperationException($"HTTP {(int)resp.StatusCode}: {body}");
-            }
-
-            var parsed = JsonSerializer.Deserialize<GraphQlResp<UserProxiesData>>(body, Options);
-            if (parsed?.Errors != null && parsed.Errors.Length > 0)
-            {
-                var msg = parsed.Errors[0]?.Message ?? LocalizationService.Get("GraphQL_UnknownError");
-                throw new InvalidOperationException(msg);
-            }
-
-            var proxyId = parsed?.Data?.UserProxiesList?.FirstOrDefault()?.Person?.Id;
+            var proxyId = await _userService.GetCurrentUserProxyIdAsync();
             ProxyIdText = NonEmpty(proxyId);
             ProxyIdVisible = !string.IsNullOrWhiteSpace(proxyId);
 
-            try { _userService.SetCurrentPersonId(proxyId); } catch { }
+            try { _userService.SetCurrentPersonId(proxyId); }
+            catch (Exception ex)
+            {
+                LoggerService.SafeLogWarning<AboutMeViewModel>("Failed to set current person id: {0}", new object[] { ex.Message });
+            }
 
             UpdateBorderVisibility();
 
@@ -365,27 +355,7 @@ public partial class AboutMeViewModel : ViewModelBase
     {
         try
         {
-            var query = "query MyQuery { person(id: \"" + proxyId + "\") { address { city conscriptionNumber district orientationNumber postalCode region street } bio birthDate createdAt cstsId email firstName prefixTitle suffixTitle gender isTrainer lastName nationalIdNumber nationality phone wdsfId cohortMembershipsList { cohort { colorRgb id name ordering isVisible } } } }";
-
-            var gqlReqP = new { query };
-            var jsonP = JsonSerializer.Serialize(gqlReqP, Options);
-            using var contentP = new StringContent(jsonP, Encoding.UTF8, "application/json");
-            using var respP = await _authService.Http.PostAsync("", contentP);
-
-            var bodyP = await respP.Content.ReadAsStringAsync();
-            if (!respP.IsSuccessStatusCode)
-            {
-                throw new InvalidOperationException($"HTTP {(int)respP.StatusCode}: {bodyP}");
-            }
-
-            var parsedP = JsonSerializer.Deserialize<GraphQlResp<PersonRespData>>(bodyP, Options);
-            if (parsedP?.Errors != null && parsedP.Errors.Length > 0)
-            {
-                var msg = parsedP.Errors[0]?.Message ?? LocalizationService.Get("GraphQL_UnknownError");
-                throw new InvalidOperationException(msg);
-            }
-
-            var person = parsedP?.Data?.Person;
+            var person = await _peopleService.GetPersonFullAsync(proxyId);
             if (person == null) return;
 
             NameText = FormatPrefixName(person.PrefixTitle, person.FirstName);
@@ -426,11 +396,11 @@ public partial class AboutMeViewModel : ViewModelBase
         }
     }
 
-    private void UpdateCohorts(List<CohortMembership>? memberships)
+    private void UpdateCohorts(List<PersonCohortMembership>? memberships)
     {
         Cohorts.Clear();
 
-        var cohortsList = (memberships ?? new List<CohortMembership>())
+        var cohortsList = (memberships ?? new List<PersonCohortMembership>())
             .Where(m => m?.Cohort?.IsVisible != false)
             .OrderBy(m => m?.Cohort?.Ordering ?? int.MaxValue)
             .ToList();
@@ -519,7 +489,7 @@ public partial class AboutMeViewModel : ViewModelBase
         return s;
     }
 
-    private static string ComposeAddress(Address? a)
+    private static string ComposeAddress(PersonAddress? a)
     {
         if (a == null) return "—";
         var street = a.Street?.Trim();
@@ -588,82 +558,5 @@ public partial class AboutMeViewModel : ViewModelBase
     {
         public string Name { get; set; } = string.Empty;
         public Brush Color { get; set; } = new SolidColorBrush(Colors.LightGray);
-    }
-
-    private sealed class GraphQlResp<T>
-    {
-        [JsonPropertyName("data")] public T? Data { get; set; }
-        [JsonPropertyName("errors")] public GraphQlError[]? Errors { get; set; }
-    }
-
-    private sealed class GraphQlError
-    {
-        [JsonPropertyName("message")] public string? Message { get; set; }
-    }
-
-    private sealed class UserProxiesData
-    {
-        [JsonPropertyName("userProxiesList")] public UserProxy[]? UserProxiesList { get; set; }
-    }
-
-    private sealed class UserProxy
-    {
-        [JsonPropertyName("person")] public Person? Person { get; set; }
-    }
-
-    private sealed class Person
-    {
-        [JsonPropertyName("id")] public string? Id { get; set; }
-    }
-
-    private sealed class PersonRespData
-    {
-        [JsonPropertyName("person")] public PersonDetail? Person { get; set; }
-    }
-
-    private sealed class PersonDetail
-    {
-        [JsonPropertyName("address")] public Address? Address { get; set; }
-        [JsonPropertyName("bio")] public string? Bio { get; set; }
-        [JsonPropertyName("birthDate")] public string? BirthDate { get; set; }
-        [JsonPropertyName("createdAt")] public string? CreatedAt { get; set; }
-        [JsonPropertyName("cstsId")] public string? CstsId { get; set; }
-        [JsonPropertyName("email")] public string? Email { get; set; }
-        [JsonPropertyName("firstName")] public string? FirstName { get; set; }
-        [JsonPropertyName("prefixTitle")] public string? PrefixTitle { get; set; }
-        [JsonPropertyName("suffixTitle")] public string? SuffixTitle { get; set; }
-        [JsonPropertyName("gender")] public string? Gender { get; set; }
-        [JsonPropertyName("isTrainer")] public bool? IsTrainer { get; set; }
-        [JsonPropertyName("lastName")] public string? LastName { get; set; }
-        [JsonPropertyName("nationalIdNumber")] public string? NationalIdNumber { get; set; }
-        [JsonPropertyName("nationality")] public string? Nationality { get; set; }
-        [JsonPropertyName("phone")] public string? Phone { get; set; }
-        [JsonPropertyName("wdsfId")] public string? WdsfId { get; set; }
-        [JsonPropertyName("cohortMembershipsList")] public List<CohortMembership>? CohortMembershipsList { get; set; }
-    }
-
-    private sealed class CohortMembership
-    {
-        [JsonPropertyName("cohort")] public Cohort? Cohort { get; set; }
-    }
-
-    private sealed class Cohort
-    {
-        [JsonPropertyName("colorRgb")] public string? ColorRgb { get; set; }
-        [JsonPropertyName("id")] public string? Id { get; set; }
-        [JsonPropertyName("name")] public string? Name { get; set; }
-        [JsonPropertyName("ordering")] public int? Ordering { get; set; }
-        [JsonPropertyName("isVisible")] public bool? IsVisible { get; set; }
-    }
-
-    private sealed class Address
-    {
-        [JsonPropertyName("city")] public string? City { get; set; }
-        [JsonPropertyName("conscriptionNumber")] public string? ConscriptionNumber { get; set; }
-        [JsonPropertyName("district")] public string? District { get; set; }
-        [JsonPropertyName("orientationNumber")] public string? OrientationNumber { get; set; }
-        [JsonPropertyName("postalCode")] public string? PostalCode { get; set; }
-        [JsonPropertyName("region")] public string? Region { get; set; }
-        [JsonPropertyName("street")] public string? Street { get; set; }
     }
 }

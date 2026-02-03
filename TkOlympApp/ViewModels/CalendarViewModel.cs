@@ -28,6 +28,7 @@ public partial class CalendarViewModel : ViewModelBase
     private readonly INavigationService _navigationService;
     private readonly List<TrainerDetailRow> _trainerDetailRows = new(); // for async updates
     private bool _suppressReloadOnNextAppearing = false;
+    private CancellationTokenSource? _loadCts;
 
     [ObservableProperty]
     private bool _isRefreshing = false;
@@ -87,7 +88,21 @@ public partial class CalendarViewModel : ViewModelBase
             return;
         }
 
-        await LoadEventsAsync(preferAllTabWhileLoading: true);
+        await LoadEventsAsync(preferAllTabWhileLoading: false);
+    }
+
+    public override Task OnDisappearingAsync()
+    {
+        try
+        {
+            _loadCts?.Cancel();
+        }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning<CalendarViewModel>("Failed to cancel load CTS: {0}", new object[] { ex.Message });
+        }
+
+        return base.OnDisappearingAsync();
     }
 
     [RelayCommand]
@@ -223,6 +238,19 @@ public partial class CalendarViewModel : ViewModelBase
 
         IsBusy = true;
 
+        try
+        {
+            _loadCts?.Cancel();
+            _loadCts = new CancellationTokenSource();
+        }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning<CalendarViewModel>("Failed to reset load CTS: {0}", new object[] { ex.Message });
+            _loadCts = new CancellationTokenSource();
+        }
+
+        var ct = _loadCts.Token;
+
         // UX: when loading (especially week navigation / initial load), jump to "All" and clear content
         // so the UI stays responsive and doesn't show stale rows.
         if (preferAllTabWhileLoading && OnlyMine)
@@ -255,11 +283,11 @@ public partial class CalendarViewModel : ViewModelBase
             List<EventInstance> events;
             if (OnlyMine)
             {
-                events = await _eventService.GetMyEventInstancesForRangeAsync(start, end);
+                events = await _eventService.GetMyEventInstancesForRangeAsync(start, end, ct: ct);
             }
             else
             {
-                events = await _eventService.GetEventInstancesForRangeListAsync(start, end);
+                events = await _eventService.GetEventInstancesForRangeListAsync(start, end, ct: ct);
             }
 
             _logger.LogInformation("Fetched {Count} events for week {WeekStart} - {WeekEnd}",
@@ -268,7 +296,7 @@ public partial class CalendarViewModel : ViewModelBase
             // Build rows off the UI thread, then swap in one shot to avoid per-row layout churn
             var weekStart = WeekStart;
             var weekEnd = WeekEnd;
-            var (rows, trainerRows) = await Task.Run(() => BuildRows(events, weekStart, weekEnd));
+            var (rows, trainerRows) = await Task.Run(() => BuildRows(events, weekStart, weekEnd), ct);
 
             await MainThread.InvokeOnMainThreadAsync(() =>
             {
@@ -281,12 +309,12 @@ public partial class CalendarViewModel : ViewModelBase
             List<string> normalizedHighlights = new();
             if (!OnlyMine)
             {
-                normalizedHighlights = await BuildHighlightListAsync();
+                normalizedHighlights = await BuildHighlightListAsync(ct);
                 ApplyHighlighting(normalizedHighlights);
             }
 
-            // Background fetch for missing first-registrant names
-            _ = Task.Run(() => BackgroundFetchRegistrantNamesAsync(normalizedHighlights));
+            // Background fetch for missing first-registrant names (awaited with cancellation)
+            await BackgroundFetchRegistrantNamesAsync(normalizedHighlights, ct);
         }
         catch (Exception ex)
         {
@@ -388,7 +416,7 @@ public partial class CalendarViewModel : ViewModelBase
         return (rows, trainerRows);
     }
 
-    private async Task<List<string>> BuildHighlightListAsync()
+    private async Task<List<string>> BuildHighlightListAsync(CancellationToken ct)
     {
         try
         {
@@ -396,7 +424,7 @@ public partial class CalendarViewModel : ViewModelBase
 
             try
             {
-                var currentUser = await _userService.GetCurrentUserAsync();
+                var currentUser = await _userService.GetCurrentUserAsync(ct);
                 if (currentUser != null)
                 {
                     var full = ((currentUser.UJmeno ?? string.Empty) + " " + 
@@ -412,7 +440,7 @@ public partial class CalendarViewModel : ViewModelBase
 
             try
             {
-                var couples = await _userService.GetActiveCouplesFromUsersAsync();
+                var couples = await _userService.GetActiveCouplesFromUsersAsync(ct);
                 foreach (var c in couples)
                 {
                     CalendarHelpers.AddNameVariants(highlightNames, c.ManName);
@@ -463,7 +491,7 @@ public partial class CalendarViewModel : ViewModelBase
         }
     }
 
-    private async Task BackgroundFetchRegistrantNamesAsync(List<string> normalizedHighlights)
+    private async Task BackgroundFetchRegistrantNamesAsync(List<string> normalizedHighlights, CancellationToken ct)
     {
         try
         {
@@ -472,6 +500,12 @@ public partial class CalendarViewModel : ViewModelBase
 
             foreach (var row in _trainerDetailRows)
             {
+                if (ct.IsCancellationRequested)
+                {
+                    _logger.LogDebug("Background fetch cancelled");
+                    return;
+                }
+
                 var inst = row.Instance;
                 var evt = inst?.Event;
                 if (!row.IsLoaded && evt != null && evt.Id != 0)
@@ -479,7 +513,7 @@ public partial class CalendarViewModel : ViewModelBase
                     try
                     {
                         var id = evt.Id;
-                        var details = await _eventService.GetEventAsync(id);
+                        var details = await _eventService.GetEventAsync(id, ct);
                         string name = string.Empty;
 
                         try

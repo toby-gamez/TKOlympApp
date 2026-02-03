@@ -28,9 +28,29 @@ public partial class OtherViewModel : ViewModelBase
             await _authService.LogoutAsync();
             await _navigationService.NavigateToAsync($"//{nameof(Pages.LoginPage)}");
         }
-        catch
+        catch (Exception ex)
         {
-            try { await _navigationService.NavigateToAsync(nameof(Pages.LoginPage)); } catch { }
+            LoggerService.SafeLogWarning<OtherViewModel>("Logout failed: {0}", new object[] { ex.Message });
+            try
+            {
+                await _navigationService.NavigateToAsync(nameof(Pages.LoginPage));
+            }
+            catch (Exception navEx)
+            {
+                LoggerService.SafeLogWarning<OtherViewModel>("Fallback navigation failed: {0}", new object[] { navEx.Message });
+            }
+
+            try
+            {
+                await _notifier.ShowAsync(
+                    LocalizationService.Get("Error_Title") ?? "Error",
+                    ex.Message,
+                    LocalizationService.Get("Button_OK") ?? "OK");
+            }
+            catch (Exception notifyEx)
+            {
+                LoggerService.SafeLogWarning<OtherViewModel>("Failed to show error: {0}", new object[] { notifyEx.Message });
+            }
         }
     }
 
@@ -73,9 +93,9 @@ public partial class OtherViewModel : ViewModelBase
             var mgr = NotificationManagerService.Instance;
             mgr?.SendNotification("Nová aktualita", "Test aktuality");
         }
-        catch
+        catch (Exception ex)
         {
-            // ignore
+            LoggerService.SafeLogWarning<OtherViewModel>("Failed to send test notification: {0}", new object[] { ex.Message });
         }
     }
 

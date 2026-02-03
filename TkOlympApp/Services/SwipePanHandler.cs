@@ -33,7 +33,11 @@ namespace TkOlympApp.Services
                     var delta = e.TotalX;
                     state.TotalX = delta;
                     // apply translation
-                    try { root.TranslationX = state.StartTranslation + delta; } catch { }
+                    try { root.TranslationX = state.StartTranslation + delta; }
+                    catch (Exception ex)
+                    {
+                        LoggerService.SafeLogWarning(nameof(SwipePanHandler), "Failed to update translation: {0}", new object[] { ex.Message });
+                    }
                     break;
                 case GestureStatus.Completed:
                 case GestureStatus.Canceled:
@@ -62,7 +66,11 @@ namespace TkOlympApp.Services
 
                     // after navigation, ensure incoming page content animates in
                     // set translation to opposite off-screen and animate to 0
-                    try { root.TranslationX = -off; } catch { }
+                    try { root.TranslationX = -off; }
+                    catch (Exception ex)
+                    {
+                        LoggerService.SafeLogWarning(nameof(SwipePanHandler), "Failed to set translation before snap-in: {0}", new object[] { ex.Message });
+                    }
                     await root.TranslateToAsync(0, 0, 200, Easing.SinOut);
                 }
                 else
@@ -71,9 +79,14 @@ namespace TkOlympApp.Services
                     await root.TranslateToAsync(0, 0, 150, Easing.SinOut);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                try { await root.TranslateToAsync(0, 0, 150, Easing.SinOut); } catch { }
+                LoggerService.SafeLogWarning(nameof(SwipePanHandler), "Swipe pan failed: {0}", new object[] { ex.Message });
+                try { await root.TranslateToAsync(0, 0, 150, Easing.SinOut); }
+                catch (Exception resetEx)
+                {
+                    LoggerService.SafeLogWarning(nameof(SwipePanHandler), "Failed to reset translation after error: {0}", new object[] { resetEx.Message });
+                }
             }
             finally
             {

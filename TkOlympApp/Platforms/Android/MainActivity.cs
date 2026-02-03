@@ -5,6 +5,7 @@ using Microsoft.Maui;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Controls;
 using AndroidX.Activity;
+using TkOlympApp.Services;
 
 #pragma warning disable CA1416
 
@@ -83,9 +84,9 @@ public class MainActivity : MauiAppCompatActivity
                     var dlg = builder.Create();
                     dlg?.Show();
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // ignore UI errors
+                    LoggerService.SafeLogWarning<MainActivity>("Failed to show update dialog: {0}", new object[] { ex.Message });
                 }
             }
         }
@@ -105,7 +106,11 @@ public class MainActivity : MauiAppCompatActivity
             {
                 MainThread.BeginInvokeOnMainThread(async () =>
                 {
-                    try { await nav.PopModalAsync(); } catch { }
+                    try { await nav.PopModalAsync(); }
+                    catch (Exception ex)
+                    {
+                        LoggerService.SafeLogWarning<MainActivity>("Failed to pop modal: {0}", new object[] { ex.Message });
+                    }
                 });
                 return;
             }
@@ -119,9 +124,14 @@ public class MainActivity : MauiAppCompatActivity
                     {
                         await shell!.GoToAsync("..");
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        try { await nav.PopAsync(); } catch { }
+                        LoggerService.SafeLogWarning<MainActivity>("Shell back navigation failed: {0}", new object[] { ex.Message });
+                        try { await nav.PopAsync(); }
+                        catch (Exception popEx)
+                        {
+                            LoggerService.SafeLogWarning<MainActivity>("Fallback pop failed: {0}", new object[] { popEx.Message });
+                        }
                     }
                 });
                 return;

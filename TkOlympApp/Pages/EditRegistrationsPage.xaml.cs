@@ -1,5 +1,6 @@
 using Microsoft.Maui.Controls;
 using System;
+using TkOlympApp.Services;
 using TkOlympApp.ViewModels;
 
 namespace TkOlympApp.Pages;
@@ -68,7 +69,10 @@ public partial class EditRegistrationsPage : ContentPage
                 if (to.Count < 100) to.Count = to.Count + 1;
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning<EditRegistrationsPage>("Failed to increment trainer count: {0}", new object[] { ex.Message });
+        }
     }
 
     private void OnTrainerMinusClicked(object? sender, EventArgs e)
@@ -80,6 +84,9 @@ public partial class EditRegistrationsPage : ContentPage
                 if (to.Count > 0) to.Count = to.Count - 1;
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning<EditRegistrationsPage>("Failed to decrement trainer count: {0}", new object[] { ex.Message });
+        }
     }
 }

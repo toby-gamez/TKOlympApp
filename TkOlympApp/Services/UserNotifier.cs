@@ -24,7 +24,11 @@ namespace TkOlympApp.Services
             }
             catch (Exception ex)
             {
-                try { LoggerService.SafeLogError<UserNotifier>(ex, "UserNotifier failed to show alert"); } catch { }
+                try { LoggerService.SafeLogError<UserNotifier>(ex, "UserNotifier failed to show alert"); }
+                catch (Exception logEx)
+                {
+                    System.Diagnostics.Debug.WriteLine($"UserNotifier logging failed: {logEx}");
+                }
             }
         }
     }

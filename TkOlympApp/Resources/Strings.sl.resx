@@ -233,6 +233,7 @@
       <data name="DeleteRegistrations_Description" xml:space="preserve"><value>Izberite prijave, ki jih želite izbrisati.</value></data>
       <data name="DeleteRegistrations_Success_Text" xml:space="preserve"><value>Prijava izbrisana</value></data>
       <data name="DeleteRegistrations_Success_Icon" xml:space="preserve"><value>✔</value></data>
+      <data name="DeleteRegistrations_DeleteFailed" xml:space="preserve"><value>Prijave ni bilo mogoče izbrisati.</value></data>
       <data name="XAML_Error_Title" xml:space="preserve"><value>Napaka XAML</value></data>
       <data name="Delete_Confirm_Title" xml:space="preserve"><value>Potrdite</value></data>
       <data name="Delete_Confirm_Message" xml:space="preserve"><value>Izbrisati prijavo?</value></data>
@@ -241,6 +242,8 @@
       <data name="EditRegistrations_NoTrainerSelected" xml:space="preserve"><value>Napaka</value></data>
       <data name="EditRegistrations_NoTrainerSelected_Text" xml:space="preserve"><value>Izberite vsaj enega trenerja in število ur.</value></data>
       <data name="EditRegistrations_Success_Text" xml:space="preserve"><value>Spremembe shranjene</value></data>
+      <data name="EditRegistrations_Error_NoTrainer" xml:space="preserve"><value>Izberite vsaj enega trenerja.</value></data>
+      <data name="EditRegistrations_Error_Save" xml:space="preserve"><value>Sprememb ni bilo mogoče shraniti.</value></data>
       <data name="EditRegistrations_Title" xml:space="preserve"><value>Uredi prijave</value></data>
       <data name="EditRegistrations_Description" xml:space="preserve"><value>Izberite prijavo za urejanje zahtev po urah.</value></data>
       <data name="EditRegistrations_Trainers_Label" xml:space="preserve"><value>Trenerji</value></data>
@@ -365,6 +368,7 @@
   <data name="ChangePassword_EnterNew" xml:space="preserve"><value>Vnesite novo geslo.</value></data>
   <data name="ChangePassword_Error_Mismatch" xml:space="preserve"><value>Gesli se ne ujemata.</value></data>
   <data name="ChangePassword_Failure" xml:space="preserve"><value>Napaka pri spremembi gesla.</value></data>
+  <data name="ChangePassword_Error_Generic" xml:space="preserve"><value>Gesla ni bilo mogoče spremeniti.</value></data>
   <data name="ChangePassword_Success_Title" xml:space="preserve"><value>Končano</value></data>
   <data name="ChangePassword_Success_LoggedOut_Message" xml:space="preserve"><value>Geslo je bilo uspešno spremenjeno. Izvedena je bila samodejna odjava.</value></data>
   <data name="Auth_RefreshFailed" xml:space="preserve"><value>Osvežitev žetona ni uspela.</value></data>

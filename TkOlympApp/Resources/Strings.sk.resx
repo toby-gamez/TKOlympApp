@@ -129,6 +129,7 @@
     <data name="ChangePassword_EnterNew" xml:space="preserve"><value>Zadajte nové heslo.</value></data>
     <data name="ChangePassword_Error_Mismatch" xml:space="preserve"><value>Heslá sa nezhodujú.</value></data>
     <data name="ChangePassword_Failure" xml:space="preserve"><value>Chyba pri zmene hesla.</value></data>
+    <data name="ChangePassword_Error_Generic" xml:space="preserve"><value>Nepodarilo sa zmeniť heslo.</value></data>
     <data name="ChangePassword_Success_Title" xml:space="preserve"><value>Hotovo</value></data>
     <data name="ChangePassword_Success_LoggedOut_Message" xml:space="preserve"><value>Heslo bolo úspešne zmenené. Prebehlo automatické odhlásenie.</value></data>
     <data name="Button_Save" xml:space="preserve"><value>Uložiť</value></data>
@@ -247,6 +248,7 @@
         <data name="DeleteRegistrations_Description" xml:space="preserve"><value>Vyberte registrácie, ktoré chcete vymazať.</value></data>
         <data name="DeleteRegistrations_Success_Text" xml:space="preserve"><value>Registrácia vymazaná</value></data>
         <data name="DeleteRegistrations_Success_Icon" xml:space="preserve"><value>✔</value></data>
+        <data name="DeleteRegistrations_DeleteFailed" xml:space="preserve"><value>Registráciu sa nepodarilo vymazať.</value></data>
        <data name="XAML_Error_Title" xml:space="preserve"><value>Chyba XAML</value></data>
        <data name="Delete_Confirm_Title" xml:space="preserve"><value>Potvrdiť</value></data>
        <data name="Delete_Confirm_Message" xml:space="preserve"><value>Vymazať registráciu?</value></data>
@@ -255,6 +257,8 @@
     <data name="EditRegistrations_NoTrainerSelected" xml:space="preserve"><value>Chyba</value></data>
     <data name="EditRegistrations_NoTrainerSelected_Text" xml:space="preserve"><value>Vyberte aspoň jedného trénera a počet lekcií.</value></data>
     <data name="EditRegistrations_Success_Text" xml:space="preserve"><value>Zmeny uložené</value></data>
+    <data name="EditRegistrations_Error_NoTrainer" xml:space="preserve"><value>Vyberte aspoň jedného trénera.</value></data>
+    <data name="EditRegistrations_Error_Save" xml:space="preserve"><value>Nepodarilo sa uložiť zmeny.</value></data>
     <data name="EditRegistrations_Title" xml:space="preserve"><value>Upraviť registrácie</value></data>
     <data name="EditRegistrations_Description" xml:space="preserve"><value>Vyberte registráciu na úpravu požiadaviek na lekcie.</value></data>
     <data name="EditRegistrations_Trainers_Label" xml:space="preserve"><value>Tréneri</value></data>

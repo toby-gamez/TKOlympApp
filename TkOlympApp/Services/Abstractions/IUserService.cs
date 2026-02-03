@@ -18,5 +18,7 @@ public interface IUserService
     Task<CurrentUser?> GetCurrentUserAsync(CancellationToken ct = default);
     Task<List<CoupleInfo>> GetActiveCouplesFromUsersAsync(CancellationToken ct = default);
     Task<List<CohortInfo>> GetCohortsFromUsersAsync(CancellationToken ct = default);
+
+    Task<string?> GetCurrentUserProxyIdAsync(CancellationToken ct = default);
 }
 

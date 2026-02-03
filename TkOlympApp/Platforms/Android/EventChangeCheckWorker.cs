@@ -21,47 +21,7 @@ public class EventChangeCheckWorker : Worker
         {
             System.Diagnostics.Debug.WriteLine("EventChangeCheckWorker: Starting background check");
 
-            // Run async work synchronously in background thread
-            Task.Run(async () =>
-            {
-                try
-                {
-                    // Check if user is authenticated
-                    var services = IPlatformApplication.Current?.Services;
-                    if (services == null)
-                    {
-                        System.Diagnostics.Debug.WriteLine("EventChangeCheckWorker: Services not available, skipping");
-                        return;
-                    }
-                    var authService = services.GetRequiredService<IAuthService>();
-                    var hasToken = await authService.HasTokenAsync();
-                    if (!hasToken)
-                    {
-                        System.Diagnostics.Debug.WriteLine("EventChangeCheckWorker: No auth token, skipping");
-                        return;
-                    }
-
-                    var eventService = services.GetRequiredService<IEventService>();
-                    var eventNotificationService = services.GetRequiredService<IEventNotificationService>();
-
-                    // Load events for next 2 days
-                    var start = DateTime.Now.Date;
-                    var end = DateTime.Now.Date.AddDays(2).AddHours(23).AddMinutes(59);
-                    var events = await eventService.GetMyEventInstancesForRangeAsync(start, end);
-
-                    // Check for changes and send notifications
-                    await eventNotificationService.CheckAndNotifyChangesAsync(events);
-
-                    // Also reschedule upcoming notifications
-                    await eventNotificationService.ScheduleNotificationsForEventsAsync(events);
-
-                    System.Diagnostics.Debug.WriteLine($"EventChangeCheckWorker: Completed check for {events.Count} events");
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"EventChangeCheckWorker: Error in async work: {ex}");
-                }
-            }).Wait();
+            DoWorkAsync().GetAwaiter().GetResult();
 
             return Result.InvokeSuccess()!;
         }
@@ -69,6 +29,47 @@ public class EventChangeCheckWorker : Worker
         {
             System.Diagnostics.Debug.WriteLine($"EventChangeCheckWorker: Worker failed: {ex}");
             return Result.InvokeFailure()!;
+        }
+    }
+
+    private static async Task DoWorkAsync()
+    {
+        try
+        {
+            // Check if user is authenticated
+            var services = IPlatformApplication.Current?.Services;
+            if (services == null)
+            {
+                System.Diagnostics.Debug.WriteLine("EventChangeCheckWorker: Services not available, skipping");
+                return;
+            }
+            var authService = services.GetRequiredService<IAuthService>();
+            var hasToken = await authService.HasTokenAsync();
+            if (!hasToken)
+            {
+                System.Diagnostics.Debug.WriteLine("EventChangeCheckWorker: No auth token, skipping");
+                return;
+            }
+
+            var eventService = services.GetRequiredService<IEventService>();
+            var eventNotificationService = services.GetRequiredService<IEventNotificationService>();
+
+            // Load events for next 2 days
+            var start = DateTime.Now.Date;
+            var end = DateTime.Now.Date.AddDays(2).AddHours(23).AddMinutes(59);
+            var events = await eventService.GetMyEventInstancesForRangeAsync(start, end);
+
+            // Check for changes and send notifications
+            await eventNotificationService.CheckAndNotifyChangesAsync(events);
+
+            // Also reschedule upcoming notifications
+            await eventNotificationService.ScheduleNotificationsForEventsAsync(events);
+
+            System.Diagnostics.Debug.WriteLine($"EventChangeCheckWorker: Completed check for {events.Count} events");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"EventChangeCheckWorker: Error in async work: {ex}");
         }
     }
 }

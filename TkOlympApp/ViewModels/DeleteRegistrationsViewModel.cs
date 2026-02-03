@@ -1,13 +1,11 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Maui.Controls;
+using TkOlympApp.Models.Events;
 using TkOlympApp.Models.Users;
 using TkOlympApp.Services;
 using TkOlympApp.Services.Abstractions;
@@ -16,8 +14,9 @@ namespace TkOlympApp.ViewModels;
 
 public partial class DeleteRegistrationsViewModel : ViewModelBase
 {
-    private readonly IAuthService _authService;
+    private readonly IEventService _eventService;
     private readonly IUserService _userService;
+    private readonly IUserNotifier _notifier;
 
     private RegGroup? _selectedGroup;
 
@@ -41,10 +40,11 @@ public partial class DeleteRegistrationsViewModel : ViewModelBase
     [ObservableProperty]
     private long _eventId;
 
-    public DeleteRegistrationsViewModel(IAuthService authService, IUserService userService)
+    public DeleteRegistrationsViewModel(IEventService eventService, IUserService userService, IUserNotifier notifier)
     {
-        _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+        _eventService = eventService ?? throw new ArgumentNullException(nameof(eventService));
         _userService = userService ?? throw new ArgumentNullException(nameof(userService));
+        _notifier = notifier ?? throw new ArgumentNullException(nameof(notifier));
     }
 
     partial void OnEventIdChanged(long value)
@@ -87,7 +87,12 @@ public partial class DeleteRegistrationsViewModel : ViewModelBase
         if (_selectedGroup != null)
         {
             var template = LocalizationService.Get("Delete_Confirm_Message_Group") ?? "Smazat všechny registrace pro {0}?";
-            try { confirmText = string.Format(template, _selectedGroup.Key); } catch { confirmText = $"Smazat všechny registrace pro {_selectedGroup.Key}?"; }
+            try { confirmText = string.Format(template, _selectedGroup.Key); }
+            catch (Exception ex)
+            {
+                LoggerService.SafeLogWarning<DeleteRegistrationsViewModel>("Failed to format delete group confirm text: {0}", new object[] { ex.Message });
+                confirmText = $"Smazat všechny registrace pro {_selectedGroup.Key}?";
+            }
         }
         else
         {
@@ -117,47 +122,10 @@ public partial class DeleteRegistrationsViewModel : ViewModelBase
 
             foreach (var id in idsToDelete)
             {
-                var clientMutationId = Guid.NewGuid().ToString();
-                var gql = new
+                var okDelete = await _eventService.DeleteEventRegistrationAsync(id);
+                if (!okDelete)
                 {
-                    query = "mutation DeleteReg($input: DeleteEventRegistrationInput!) { deleteEventRegistration(input: $input) { eventRegistration { id } } }",
-                    variables = new { input = new { id = id, clientMutationId = clientMutationId } }
-                };
-
-                var json = JsonSerializer.Serialize(gql);
-                using var content = new StringContent(json, Encoding.UTF8, "application/json");
-                using var resp = await _authService.Http.PostAsync("", content);
-                var body = await resp.Content.ReadAsStringAsync();
-                if (!resp.IsSuccessStatusCode)
-                {
-                    await Application.Current?.MainPage?.DisplayAlert(
-                        LocalizationService.Get("Error_Title") ?? "Error",
-                        body,
-                        LocalizationService.Get("Button_OK") ?? "OK");
-                    return;
-                }
-
-                using var doc = JsonDocument.Parse(body);
-                if (!(doc.RootElement.TryGetProperty("data", out var data) && data.TryGetProperty("deleteEventRegistration", out var del) && del.TryGetProperty("eventRegistration", out var er) && er.TryGetProperty("id", out var _)))
-                {
-                    if (doc.RootElement.TryGetProperty("errors", out var errs) && errs.ValueKind == JsonValueKind.Array && errs.GetArrayLength() > 0)
-                    {
-                        var first = errs[0];
-                        var msg = first.TryGetProperty("message", out var m) ? m.GetString() : body;
-                        await Application.Current?.MainPage?.DisplayAlert(
-                            LocalizationService.Get("Error_Title") ?? "Error",
-                            msg ?? body,
-                            LocalizationService.Get("Button_OK") ?? "OK");
-                        return;
-                    }
-                    else
-                    {
-                        await Application.Current?.MainPage?.DisplayAlert(
-                            LocalizationService.Get("Error_Title") ?? "Error",
-                            body,
-                            LocalizationService.Get("Button_OK") ?? "OK");
-                        return;
-                    }
+                    throw new InvalidOperationException(LocalizationService.Get("DeleteRegistrations_DeleteFailed") ?? "Smazání registrace se nezdařilo.");
                 }
             }
 
@@ -169,10 +137,18 @@ public partial class DeleteRegistrationsViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            await Application.Current?.MainPage?.DisplayAlert(
-                LocalizationService.Get("Error_Title") ?? "Error",
-                ex.Message,
-                LocalizationService.Get("Button_OK") ?? "OK");
+            LoggerService.SafeLogWarning<DeleteRegistrationsViewModel>("Delete failed: {0}", new object[] { ex.Message });
+            try
+            {
+                await _notifier.ShowAsync(
+                    LocalizationService.Get("Error_Title") ?? "Error",
+                    ex.Message,
+                    LocalizationService.Get("Button_OK") ?? "OK");
+            }
+            catch (Exception notifyEx)
+            {
+                LoggerService.SafeLogWarning<DeleteRegistrationsViewModel>("Failed to show error: {0}", new object[] { notifyEx.Message });
+            }
         }
     }
 
@@ -185,37 +161,20 @@ public partial class DeleteRegistrationsViewModel : ViewModelBase
 
             await _userService.InitializeAsync();
             var myCouples = new System.Collections.Generic.List<CoupleInfo>();
-            try { myCouples = await _userService.GetActiveCouplesFromUsersAsync(); } catch { }
+            try { myCouples = await _userService.GetActiveCouplesFromUsersAsync(); }
+            catch (Exception ex)
+            {
+                LoggerService.SafeLogWarning<DeleteRegistrationsViewModel>("Failed to load couples: {0}", new object[] { ex.Message });
+            }
             var myCoupleIds = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var c in myCouples)
             {
                 if (!string.IsNullOrWhiteSpace(c.Id)) myCoupleIds.Add(c.Id!);
             }
 
-            var startRange = DateTime.Now.Date.AddYears(-1).ToString("o");
-            var endRange = DateTime.Now.Date.AddYears(1).ToString("o");
-            var queryObj = new
-            {
-                query = @"query($startRange: Datetime!, $endRange: Datetime!) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange) { id event { id name eventRegistrationsList { id person { firstName lastName } couple { id man { firstName lastName } woman { firstName lastName } } } } } }",
-                variables = new { startRange = startRange, endRange = endRange }
-            };
-
-            var json = JsonSerializer.Serialize(queryObj);
-            using var content = new StringContent(json, Encoding.UTF8, "application/json");
-            using var resp = await _authService.Http.PostAsync("", content);
-            var body = await resp.Content.ReadAsStringAsync();
-            if (!resp.IsSuccessStatusCode)
-            {
-                await Application.Current?.MainPage?.DisplayAlert(
-                    LocalizationService.Get("Error_Loading_Title") ?? "Error",
-                    body,
-                    LocalizationService.Get("Button_OK") ?? "OK");
-                return;
-            }
-
-            using var doc = JsonDocument.Parse(body);
-            if (!doc.RootElement.TryGetProperty("data", out var data)) return;
-            if (!data.TryGetProperty("eventInstancesForRangeList", out var instances) || instances.ValueKind != JsonValueKind.Array) return;
+            var startRange = DateTime.Now.Date.AddYears(-1);
+            var endRange = DateTime.Now.Date.AddYears(1);
+            var instances = await _eventService.GetEventInstancesForRangeListAsync(startRange, endRange);
 
             var me = await _userService.GetCurrentUserAsync();
             var myFirst = me?.UJmeno?.Trim() ?? string.Empty;
@@ -223,96 +182,89 @@ public partial class DeleteRegistrationsViewModel : ViewModelBase
             var myFull = string.IsNullOrWhiteSpace(myFirst) ? myLast : string.IsNullOrWhiteSpace(myLast) ? myFirst : (myFirst + " " + myLast).Trim();
 
             var seenRegIds = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var inst in instances.EnumerateArray())
+            foreach (var inst in instances)
             {
-                try
+                var ev = inst.Event;
+                if (ev == null) continue;
+
+                if (EventId != 0 && ev.Id != EventId) continue;
+
+                var evtName = ev.Name ?? string.Empty;
+                var regs = ev.EventRegistrationsList ?? new System.Collections.Generic.List<EventRegistrationShort>();
+                foreach (var reg in regs)
                 {
-                    if (!inst.TryGetProperty("event", out var ev) || ev.ValueKind == JsonValueKind.Null) continue;
-                    try
+                    var regId = reg.Id;
+                    if (string.IsNullOrWhiteSpace(regId)) continue;
+
+                    bool isMine = false;
+                    var coupleId = reg.Couple?.Id;
+                    if (!string.IsNullOrWhiteSpace(coupleId) && myCoupleIds.Contains(coupleId))
                     {
-                        if (EventId != 0 && ev.TryGetProperty("id", out var evIdEl))
+                        isMine = true;
+                    }
+
+                    if (!isMine && !string.IsNullOrWhiteSpace(myFull))
+                    {
+                        var pf = reg.Person?.FirstName ?? string.Empty;
+                        var pl = reg.Person?.LastName ?? string.Empty;
+                        var pFull = string.IsNullOrWhiteSpace(pf) ? pl : (string.IsNullOrWhiteSpace(pl) ? pf : (pf + " " + pl).Trim());
+                        if (!string.IsNullOrWhiteSpace(pFull) && string.Equals(pFull, myFull, StringComparison.OrdinalIgnoreCase))
                         {
-                            long parsedEvId = 0;
-                            if (evIdEl.ValueKind == JsonValueKind.Number && evIdEl.TryGetInt64(out var n)) parsedEvId = n;
-                            else parsedEvId = long.TryParse(evIdEl.GetRawText().Trim('"'), out var t) ? t : 0;
-                            if (parsedEvId != 0 && parsedEvId != EventId) continue;
+                            isMine = true;
                         }
                     }
-                    catch { }
 
-                    var evtName = ev.TryGetProperty("name", out var en) ? en.GetString() ?? string.Empty : string.Empty;
-                    if (!ev.TryGetProperty("eventRegistrationsList", out var regs) || regs.ValueKind != JsonValueKind.Array) continue;
-                    foreach (var reg in regs.EnumerateArray())
+                    if (!isMine) continue;
+                    if (seenRegIds.Contains(regId)) continue;
+                    seenRegIds.Add(regId);
+
+                    string display = string.Empty;
+                    if (reg.Person != null)
                     {
-                        try
-                        {
-                            var regId = reg.TryGetProperty("id", out var idEl) ? idEl.GetRawText().Trim('"') : null;
-                            if (string.IsNullOrWhiteSpace(regId)) continue;
-
-                            bool isMine = false;
-                            if (reg.TryGetProperty("couple", out var coupleEl) && coupleEl.ValueKind != JsonValueKind.Null)
-                            {
-                                if (coupleEl.TryGetProperty("id", out var cidEl))
-                                {
-                                    var cid = cidEl.GetRawText().Trim('"');
-                                    if (!string.IsNullOrWhiteSpace(cid) && myCoupleIds.Contains(cid)) isMine = true;
-                                }
-                            }
-
-                            if (!isMine && !string.IsNullOrWhiteSpace(myFull) && reg.TryGetProperty("person", out var personEl) && personEl.ValueKind != JsonValueKind.Null)
-                            {
-                                var pf = personEl.TryGetProperty("firstName", out var pff) ? pff.GetString() ?? string.Empty : string.Empty;
-                                var pl = personEl.TryGetProperty("lastName", out var pll) ? pll.GetString() ?? string.Empty : string.Empty;
-                                var pFull = string.IsNullOrWhiteSpace(pf) ? pl : (string.IsNullOrWhiteSpace(pl) ? pf : (pf + " " + pl).Trim());
-                                if (!string.IsNullOrWhiteSpace(pFull) && string.Equals(pFull, myFull, StringComparison.OrdinalIgnoreCase)) isMine = true;
-                            }
-
-                            if (isMine)
-                            {
-                                if (seenRegIds.Contains(regId)) continue;
-                                seenRegIds.Add(regId);
-
-                                string display = string.Empty;
-                                if (reg.TryGetProperty("person", out var personEl2) && personEl2.ValueKind != JsonValueKind.Null)
-                                {
-                                    var fn = personEl2.TryGetProperty("firstName", out var fnEl) ? fnEl.GetString() ?? string.Empty : string.Empty;
-                                    var ln = personEl2.TryGetProperty("lastName", out var lnEl) ? lnEl.GetString() ?? string.Empty : string.Empty;
-                                    display = string.IsNullOrWhiteSpace(fn) ? ln : (string.IsNullOrWhiteSpace(ln) ? fn : (fn + " " + ln).Trim());
-                                }
-                                else if (reg.TryGetProperty("couple", out var coupleEl2) && coupleEl2.ValueKind != JsonValueKind.Null)
-                                {
-                                    var manFn = coupleEl2.TryGetProperty("man", out var manEl) && manEl.ValueKind != JsonValueKind.Null ? (manEl.TryGetProperty("firstName", out var mfn) ? mfn.GetString() ?? string.Empty : string.Empty) : string.Empty;
-                                    var manLn = coupleEl2.TryGetProperty("man", out var manEl2) && manEl2.ValueKind != JsonValueKind.Null ? (manEl2.TryGetProperty("lastName", out var mln) ? mln.GetString() ?? string.Empty : string.Empty) : string.Empty;
-                                    var womanFn = coupleEl2.TryGetProperty("woman", out var womEl) && womEl.ValueKind != JsonValueKind.Null ? (womEl.TryGetProperty("firstName", out var wfn) ? wfn.GetString() ?? string.Empty : string.Empty) : string.Empty;
-                                    var womanLn = coupleEl2.TryGetProperty("woman", out var womEl2) && womEl2.ValueKind != JsonValueKind.Null ? (womEl2.TryGetProperty("lastName", out var wln) ? wln.GetString() ?? string.Empty : string.Empty) : string.Empty;
-                                    var manName = string.IsNullOrWhiteSpace(manFn) ? manLn : (manFn + " " + manLn).Trim();
-                                    var womanName = string.IsNullOrWhiteSpace(womanFn) ? womanLn : (womanFn + " " + womanLn).Trim();
-                                    display = !string.IsNullOrWhiteSpace(manName) && !string.IsNullOrWhiteSpace(womanName) ? (manName + " - " + womanName) : (manName + womanName);
-                                }
-
-                                var item = new RegItem { Id = regId!, Text = string.IsNullOrWhiteSpace(display) ? regId! : display, Secondary = evtName };
-                                var groupKey = string.IsNullOrWhiteSpace(item.Text) ? "" : item.Text;
-                                var grp = Groups.FirstOrDefault(g => string.Equals(g.Key, groupKey, StringComparison.OrdinalIgnoreCase));
-                                if (grp == null)
-                                {
-                                    grp = new RegGroup(groupKey);
-                                    Groups.Add(grp);
-                                }
-                                grp.AddToGroup(item);
-                            }
-                        }
-                        catch { }
+                        var fn = reg.Person.FirstName ?? string.Empty;
+                        var ln = reg.Person.LastName ?? string.Empty;
+                        display = string.IsNullOrWhiteSpace(fn) ? (string.IsNullOrWhiteSpace(ln) ? reg.Person.Name ?? string.Empty : ln)
+                            : (string.IsNullOrWhiteSpace(ln) ? fn : (fn + " " + ln).Trim());
                     }
+                    else if (reg.Couple != null)
+                    {
+                        var manFn = reg.Couple.Man?.FirstName ?? string.Empty;
+                        var manLn = reg.Couple.Man?.LastName ?? string.Empty;
+                        var womanFn = reg.Couple.Woman?.FirstName ?? string.Empty;
+                        var womanLn = reg.Couple.Woman?.LastName ?? string.Empty;
+                        var manName = string.IsNullOrWhiteSpace(manFn) ? manLn : (manFn + " " + manLn).Trim();
+                        var womanName = string.IsNullOrWhiteSpace(womanFn) ? womanLn : (womanFn + " " + womanLn).Trim();
+                        display = !string.IsNullOrWhiteSpace(manName) && !string.IsNullOrWhiteSpace(womanName)
+                            ? (manName + " - " + womanName)
+                            : (manName + womanName);
+                    }
+
+                    var item = new RegItem { Id = regId, Text = string.IsNullOrWhiteSpace(display) ? regId : display, Secondary = evtName };
+                    var groupKey = string.IsNullOrWhiteSpace(item.Text) ? "" : item.Text;
+                    var grp = Groups.FirstOrDefault(g => string.Equals(g.Key, groupKey, StringComparison.OrdinalIgnoreCase));
+                    if (grp == null)
+                    {
+                        grp = new RegGroup(groupKey);
+                        Groups.Add(grp);
+                    }
+                    grp.AddToGroup(item);
                 }
-                catch { }
             }
         }
         catch (Exception ex)
         {
-            await Application.Current?.MainPage?.DisplayAlert(
-                LocalizationService.Get("Error_Loading_Title") ?? "Error",
-                ex.Message,
-                LocalizationService.Get("Button_OK") ?? "OK");
+            LoggerService.SafeLogWarning<DeleteRegistrationsViewModel>("Failed to load registrations: {0}", new object[] { ex.Message });
+            try
+            {
+                await _notifier.ShowAsync(
+                    LocalizationService.Get("Error_Loading_Title") ?? "Error",
+                    ex.Message,
+                    LocalizationService.Get("Button_OK") ?? "OK");
+            }
+            catch (Exception notifyEx)
+            {
+                LoggerService.SafeLogWarning<DeleteRegistrationsViewModel>("Failed to show error: {0}", new object[] { notifyEx.Message });
+            }
         }
         finally
         {

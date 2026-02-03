@@ -14,6 +14,7 @@ public partial class EventNotificationRuleEditViewModel : ViewModelBase
 {
     private readonly ITenantService _tenantService;
     private readonly INavigationService _navigationService;
+    private readonly IUserNotifier _notifier;
 
     private EventNotificationSetting? _setting;
 
@@ -29,10 +30,11 @@ public partial class EventNotificationRuleEditViewModel : ViewModelBase
     [ObservableProperty]
     private string? _settingId;
 
-    public EventNotificationRuleEditViewModel(ITenantService tenantService, INavigationService navigationService)
+    public EventNotificationRuleEditViewModel(ITenantService tenantService, INavigationService navigationService, IUserNotifier notifier)
     {
         _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
         _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
+        _notifier = notifier ?? throw new ArgumentNullException(nameof(notifier));
     }
 
     public override async Task OnAppearingAsync()
@@ -65,8 +67,9 @@ public partial class EventNotificationRuleEditViewModel : ViewModelBase
 
                 foreach (var t in list) Trainers.Add(t);
             }
-            catch
+            catch (Exception ex)
             {
+                LoggerService.SafeLogWarning<EventNotificationRuleEditViewModel>("Failed to load trainers: {0}", new object[] { ex.Message });
             }
 
             if (!string.IsNullOrWhiteSpace(SettingId) && _setting == null)
@@ -80,7 +83,10 @@ public partial class EventNotificationRuleEditViewModel : ViewModelBase
                         if (found != null) _setting = found;
                     }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    LoggerService.SafeLogWarning<EventNotificationRuleEditViewModel>("Failed to resolve notification setting: {0}", new object[] { ex.Message });
+                }
             }
 
             if (_setting != null)
@@ -98,8 +104,9 @@ public partial class EventNotificationRuleEditViewModel : ViewModelBase
                 }
             }
         }
-        catch
+        catch (Exception ex)
         {
+            LoggerService.SafeLogWarning<EventNotificationRuleEditViewModel>("Failed to load notification rule: {0}", new object[] { ex.Message });
         }
     }
 
@@ -133,10 +140,18 @@ public partial class EventNotificationRuleEditViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            await Application.Current?.MainPage?.DisplayAlert(
-                LocalizationService.Get("Error_Title") ?? "Error",
-                ex.Message,
-                LocalizationService.Get("Button_OK") ?? "OK");
+            LoggerService.SafeLogWarning<EventNotificationRuleEditViewModel>("Save failed: {0}", new object[] { ex.Message });
+            try
+            {
+                await _notifier.ShowAsync(
+                    LocalizationService.Get("Error_Title") ?? "Error",
+                    ex.Message,
+                    LocalizationService.Get("Button_OK") ?? "OK");
+            }
+            catch (Exception notifyEx)
+            {
+                LoggerService.SafeLogWarning<EventNotificationRuleEditViewModel>("Failed to show error: {0}", new object[] { notifyEx.Message });
+            }
         }
     }
 

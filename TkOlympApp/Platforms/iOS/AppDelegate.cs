@@ -4,6 +4,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using TkOlympApp.Services.Abstractions;
+using TkOlympApp.Services;
 
 
 namespace TkOlympApp;
@@ -20,7 +21,10 @@ public class AppDelegate : MauiUIApplicationDelegate
             // Request background fetch approximately every 30 minutes (system may adjust)
             UIApplication.SharedApplication.SetMinimumBackgroundFetchInterval(1800); // seconds
         }
-        catch { }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning<AppDelegate>("Failed to set background fetch interval: {0}", new object[] { ex.Message });
+        }
         return base.FinishedLaunching(app, options);
     }
 
@@ -56,8 +60,9 @@ public class AppDelegate : MauiUIApplicationDelegate
 
                 completionHandler(UIBackgroundFetchResult.NewData);
             }
-            catch
+            catch (Exception ex)
             {
+                LoggerService.SafeLogWarning<AppDelegate>("Background fetch failed: {0}", new object[] { ex.Message });
                 completionHandler(UIBackgroundFetchResult.Failed);
             }
         });

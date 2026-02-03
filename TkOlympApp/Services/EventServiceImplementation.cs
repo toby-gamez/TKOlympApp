@@ -337,7 +337,7 @@ fragment EventFull on Event {
                 if (!string.IsNullOrEmpty(onlyType)) variables["onlyType"] = onlyType;
 
                 var query =
-                    "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $first: Int, $offset: Int, $onlyType: EventType) { eventInstancesForRangeList(onlyMine: true, startRange: $startRange, endRange: $endRange, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled since until updatedAt event { id description name type locationText isRegistrationOpen isPublic eventTrainersList { name } eventTargetCohortsList { cohortId cohort { id name colorRgb } } eventRegistrationsList { person { name } couple { man { lastName } woman { lastName } } } location { id name } } } }";
+                    "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $first: Int, $offset: Int, $onlyType: EventType) { eventInstancesForRangeList(onlyMine: true, startRange: $startRange, endRange: $endRange, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled since until updatedAt event { id description name type locationText isRegistrationOpen isVisible isPublic eventTrainersList { name } eventTargetCohortsList { cohortId cohort { id name colorRgb } } eventRegistrationsList { id person { id name firstName lastName } couple { id man { firstName lastName } woman { firstName lastName } } } location { id name } } } }";
 
                 _logger.LogGraphQLRequest("GetMyEventInstancesForRange", variables);
 
@@ -422,7 +422,7 @@ fragment EventFull on Event {
         if (!string.IsNullOrEmpty(onlyType)) variables["onlyType"] = onlyType;
 
         var query =
-            "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $first: Int, $offset: Int, $onlyType: EventType) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled since until updatedAt event { id description name type locationText isRegistrationOpen isPublic eventTrainersList { name } eventTargetCohortsList { cohortId cohort { id name colorRgb } } eventRegistrationsList { person { name } couple { man { lastName } woman { lastName } } } location { id name } } } }";
+            "query MyQuery($startRange: Datetime!, $endRange: Datetime!, $first: Int, $offset: Int, $onlyType: EventType) { eventInstancesForRangeList(startRange: $startRange, endRange: $endRange, first: $first, offset: $offset, onlyType: $onlyType) { id isCancelled since until updatedAt event { id description name type locationText isRegistrationOpen isVisible isPublic eventTrainersList { name } eventTargetCohortsList { cohortId cohort { id name colorRgb } } eventRegistrationsList { id person { id name firstName lastName } couple { id man { firstName lastName } woman { firstName lastName } } } location { id name } } } }";
 
         var (data, raw) = await _graphQlClient.PostWithRawAsync<EventInstancesForRangeData>(query, variables, ct);
         LastEventInstancesForRangeRawJson = raw;
@@ -588,6 +588,50 @@ fragment EventFull on Event {
                data.RegisterToEventMany.EventRegistrations.Count > 0;
     }
 
+    public async Task<bool> DeleteEventRegistrationAsync(string registrationId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(registrationId))
+        {
+            throw new ArgumentException("Registration id is required.", nameof(registrationId));
+        }
+
+        var variables = new Dictionary<string, object>
+        {
+            ["input"] = new Dictionary<string, object>
+            {
+                ["id"] = registrationId,
+                ["clientMutationId"] = Guid.NewGuid().ToString()
+            }
+        };
+
+        var query = "mutation DeleteReg($input: DeleteEventRegistrationInput!) { deleteEventRegistration(input: $input) { eventRegistration { id } } }";
+        var data = await _graphQlClient.PostAsync<DeleteEventRegistrationData>(query, variables, ct);
+        return data?.DeleteEventRegistration?.EventRegistration?.Id != null;
+    }
+
+    public async Task<bool> SetLessonDemandAsync(string registrationId, string trainerId, int lessonCount, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(registrationId))
+            throw new ArgumentException("Registration id is required.", nameof(registrationId));
+        if (string.IsNullOrWhiteSpace(trainerId))
+            throw new ArgumentException("Trainer id is required.", nameof(trainerId));
+
+        var variables = new Dictionary<string, object>
+        {
+            ["input"] = new Dictionary<string, object>
+            {
+                ["registrationId"] = registrationId,
+                ["trainerId"] = trainerId,
+                ["lessonCount"] = lessonCount,
+                ["clientMutationId"] = Guid.NewGuid().ToString()
+            }
+        };
+
+        var query = "mutation SetLessonDemand($input: SetLessonDemandInput!) { setLessonDemand(input: $input) { eventLessonDemand { id } } }";
+        var data = await _graphQlClient.PostAsync<SetLessonDemandData>(query, variables, ct);
+        return data?.SetLessonDemand?.EventLessonDemand?.Id != null;
+    }
+
     private sealed class EventInstanceData
     {
         [JsonPropertyName("eventInstance")] public EventInstanceDetails? EventInstance { get; set; }
@@ -651,6 +695,36 @@ fragment EventFull on Event {
     private sealed class RegisterToEventManyPayload
     {
         [JsonPropertyName("eventRegistrations")] public List<EventRegistrationResult>? EventRegistrations { get; set; }
+    }
+
+    private sealed class DeleteEventRegistrationData
+    {
+        [JsonPropertyName("deleteEventRegistration")] public DeleteEventRegistrationPayload? DeleteEventRegistration { get; set; }
+    }
+
+    private sealed class DeleteEventRegistrationPayload
+    {
+        [JsonPropertyName("eventRegistration")] public DeleteEventRegistrationResult? EventRegistration { get; set; }
+    }
+
+    private sealed class DeleteEventRegistrationResult
+    {
+        [JsonPropertyName("id")] public string? Id { get; set; }
+    }
+
+    private sealed class SetLessonDemandData
+    {
+        [JsonPropertyName("setLessonDemand")] public SetLessonDemandPayload? SetLessonDemand { get; set; }
+    }
+
+    private sealed class SetLessonDemandPayload
+    {
+        [JsonPropertyName("eventLessonDemand")] public SetLessonDemandResult? EventLessonDemand { get; set; }
+    }
+
+    private sealed class SetLessonDemandResult
+    {
+        [JsonPropertyName("id")] public string? Id { get; set; }
     }
 
     private sealed class EventRegistrationResult

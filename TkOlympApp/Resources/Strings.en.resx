@@ -255,6 +255,7 @@
   <data name="DeleteRegistrations_Description" xml:space="preserve"><value>Select registrations to delete.</value></data>
   <data name="DeleteRegistrations_Success_Text" xml:space="preserve"><value>Registration deleted</value></data>
   <data name="DeleteRegistrations_Success_Icon" xml:space="preserve"><value>✔</value></data>
+  <data name="DeleteRegistrations_DeleteFailed" xml:space="preserve"><value>Failed to delete registration.</value></data>
   <data name="XAML_Error_Title" xml:space="preserve"><value>XAML Error</value></data>
   <data name="Delete_Confirm_Title" xml:space="preserve"><value>Confirm</value></data>
   <data name="Delete_Confirm_Message" xml:space="preserve"><value>Delete registration?</value></data>
@@ -262,6 +263,8 @@
   <data name="Button_Cancel" xml:space="preserve"><value>Cancel</value></data>
   <data name="EditRegistrations_NoTrainerSelected" xml:space="preserve"><value>Error</value></data>
   <data name="EditRegistrations_NoTrainerSelected_Text" xml:space="preserve"><value>Select at least one trainer and the number of lessons.</value></data>
+  <data name="EditRegistrations_Error_NoTrainer" xml:space="preserve"><value>Select a trainer.</value></data>
+  <data name="EditRegistrations_Error_Save" xml:space="preserve"><value>Failed to save changes.</value></data>
   <data name="EditRegistrations_Success_Text" xml:space="preserve"><value>Changes saved</value></data>
   <data name="EditRegistrations_Title" xml:space="preserve"><value>Edit registrations</value></data>
   <data name="EditRegistrations_Description" xml:space="preserve"><value>Select a registration to edit lesson demands.</value></data>
@@ -275,6 +278,7 @@
     <data name="Notification_NewAnnouncement_Title" xml:space="preserve"><value>New announcement</value></data>
     <data name="Notification_NewAnnouncement_Message" xml:space="preserve"><value>New announcement</value></data>
     <data name="ChangePassword_Title" xml:space="preserve"><value>Change password</value></data>
+    <data name="ChangePassword_Error_Generic" xml:space="preserve"><value>Failed to change password.</value></data>
   <data name="About_Gender" xml:space="preserve"><value>Gender:</value></data>
   <data name="About_IsTrainer" xml:space="preserve"><value>Trainer:</value></data>
   <data name="About_Address" xml:space="preserve"><value>Address:</value></data>

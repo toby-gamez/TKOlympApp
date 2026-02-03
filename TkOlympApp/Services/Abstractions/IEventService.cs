@@ -107,5 +107,15 @@ public interface IEventService
     /// Registers a person or couple to an event with optional lesson demands.
     /// </summary>
     Task<bool> RegisterToEventManyAsync(EventRegistrationRequest request, CancellationToken ct = default);
+
+    /// <summary>
+    /// Deletes an event registration by id.
+    /// </summary>
+    Task<bool> DeleteEventRegistrationAsync(string registrationId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Sets lesson demand for a registration and trainer.
+    /// </summary>
+    Task<bool> SetLessonDemandAsync(string registrationId, string trainerId, int lessonCount, CancellationToken ct = default);
 }
 

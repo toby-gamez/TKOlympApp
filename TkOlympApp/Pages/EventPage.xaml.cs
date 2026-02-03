@@ -1,5 +1,6 @@
 using Microsoft.Maui.Controls;
 using System;
+using TkOlympApp.Services;
 using TkOlympApp.ViewModels;
 
 namespace TkOlympApp.Pages;
@@ -47,10 +48,17 @@ public partial class EventPage : ContentPage
             if (selected == null) return;
             
             // Clear selection for UX
-            try { RegistrationsCollection.SelectedItem = null; } catch { }
+            try { RegistrationsCollection.SelectedItem = null; }
+            catch (Exception ex)
+            {
+                LoggerService.SafeLogWarning<EventPage>("Failed to clear registration selection: {0}", new object[] { ex.Message });
+            }
 
             await _viewModel.RegistrationSelectedCommand.ExecuteAsync(selected);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning<EventPage>("Registration selection failed: {0}", new object[] { ex.Message });
+        }
     }
 }

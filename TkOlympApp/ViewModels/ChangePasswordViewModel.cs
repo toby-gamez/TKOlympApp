@@ -1,7 +1,4 @@
 using System;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -69,7 +66,11 @@ public partial class ChangePasswordViewModel : ViewModelBase
     [RelayCommand]
     private async Task CancelAsync()
     {
-        try { await Shell.Current.Navigation.PopModalAsync(); } catch { }
+        try { await Shell.Current.Navigation.PopModalAsync(); }
+        catch (Exception ex)
+        {
+            LoggerService.SafeLogWarning<ChangePasswordViewModel>("Failed to close change password modal: {0}", new object[] { ex.Message });
+        }
     }
 
     [RelayCommand]
@@ -94,41 +95,27 @@ public partial class ChangePasswordViewModel : ViewModelBase
                 return;
             }
 
-            var gqlReq = new
-            {
-                query = "mutation MyMutation($newPass: String!) { changePassword(input: {newPass: $newPass}) { clientMutationId } }",
-                variables = new { newPass = NewPassword }
-            };
+            await _authService.ChangePasswordAsync(NewPassword);
 
-            var options = new JsonSerializerOptions(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = true };
-            var json = JsonSerializer.Serialize(gqlReq, options);
-            using var content = new StringContent(json, Encoding.UTF8, "application/json");
-            using var resp = await _authService.Http.PostAsync("", content);
-
-            var body = await resp.Content.ReadAsStringAsync();
-            var parsed = JsonSerializer.Deserialize<GraphQlRespWithErrors<ChangePasswordData>>(body, options);
-            if (parsed?.Errors != null && parsed.Errors.Length > 0)
+            try { await Shell.Current.Navigation.PopModalAsync(); }
+            catch (Exception ex)
             {
-                var msg = parsed.Errors[0].Message ?? "Chyba při změně hesla.";
-                ErrorText = msg;
-                IsErrorVisible = true;
-                return;
+                LoggerService.SafeLogWarning<ChangePasswordViewModel>("Failed to close change password modal after success: {0}", new object[] { ex.Message });
             }
-
-            if (!resp.IsSuccessStatusCode)
-            {
-                ErrorText = $"HTTP: {resp.StatusCode}";
-                IsErrorVisible = true;
-                return;
-            }
-
-            try { await Shell.Current.Navigation.PopModalAsync(); } catch { }
 
             try
             {
                 await _authService.LogoutAsync();
                 try { await _navigationService.NavigateToAsync(nameof(Pages.LoginPage)); }
-                catch { try { await Shell.Current.GoToAsync($"//{nameof(Pages.LoginPage)}"); } catch { } }
+                catch (Exception navEx)
+                {
+                    LoggerService.SafeLogWarning<ChangePasswordViewModel>("Login navigation failed: {0}", new object[] { navEx.Message });
+                    try { await Shell.Current.GoToAsync($"//{nameof(Pages.LoginPage)}"); }
+                    catch (Exception shellEx)
+                    {
+                        LoggerService.SafeLogWarning<ChangePasswordViewModel>("Shell login navigation failed: {0}", new object[] { shellEx.Message });
+                    }
+                }
             }
             catch
             {
@@ -197,31 +184,12 @@ public partial class ChangePasswordViewModel : ViewModelBase
                 return brush;
             }
         }
-        catch
+        catch (Exception ex)
         {
+            LoggerService.SafeLogWarning<ChangePasswordViewModel>("Failed to resolve brush: {0}", new object[] { ex.Message });
         }
 
         return fallback;
     }
 
-    private sealed class GraphQlError
-    {
-        [JsonPropertyName("message")] public string? Message { get; set; }
-    }
-
-    private sealed class GraphQlRespWithErrors<T>
-    {
-        [JsonPropertyName("data")] public T? Data { get; set; }
-        [JsonPropertyName("errors")] public GraphQlError[]? Errors { get; set; }
-    }
-
-    private sealed class ChangePasswordData
-    {
-        [JsonPropertyName("changePassword")] public ChangePasswordResult? ChangePassword { get; set; }
-    }
-
-    private sealed class ChangePasswordResult
-    {
-        [JsonPropertyName("clientMutationId")] public string? ClientMutationId { get; set; }
-    }
 }
