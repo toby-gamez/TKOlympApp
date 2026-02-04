@@ -7,6 +7,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -25,6 +30,14 @@ import kotlinx.coroutines.withContext
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.OffsetDateTime
+import java.time.LocalDateTime
+import java.util.Locale
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Card
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -34,6 +47,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 
@@ -83,38 +97,52 @@ fun CalendarScreen() {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        when (selectedTab) {
-            0 -> Text(
-                "Moje",
-                style = MaterialTheme.typography.bodyLarge
-            )
-
-            1 -> Text(
-                "Všechny",
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
-
-        // display grouped events
+        // display grouped events inside a scrollable area so tabs stay fixed
         val grouped = eventsByDayState.value
         val todayKey = LocalDate.now().format(fmt)
 
-        grouped.forEach { (date, list) ->
-            Column(modifier = Modifier.padding(8.dp)) {
-                val header = when (date) {
-                    todayKey -> "dnes"
-                    LocalDate.now().plusDays(1).format(fmt) -> "zítra"
-                    else -> date
-                }
-                Text(header, style = MaterialTheme.typography.titleMedium)
-                list.forEach { item ->
-                    val name = item.event?.name ?: "(no name)"
-                    val cancelled = item.isCancelled
-                    Text(
-                        text = "- $name",
-                        style = MaterialTheme.typography.bodyLarge.copy(textDecoration = if (cancelled) TextDecoration.LineThrough else TextDecoration.None),
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
+        Column(modifier = Modifier
+            .weight(1f)
+            .verticalScroll(rememberScrollState())
+        ) {
+            grouped.forEach { (date, list) ->
+                Column(modifier = Modifier.padding(8.dp)) {
+                    val header = when (date) {
+                        todayKey -> "dnes"
+                        LocalDate.now().plusDays(1).format(fmt) -> "zítra"
+                        else -> {
+                            val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
+                            if (ld == null) date else {
+                                val nowYear = LocalDate.now().year
+                                val pattern = if (ld.year == nowYear) "d. MMMM" else "d. MMMM yyyy"
+                                ld.format(DateTimeFormatter.ofPattern(pattern, Locale("cs")))
+                            }
+                        }
+                    }
+                    Text(header, style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Group lesson events (type == "lesson") by first trainer name
+                    // Treat empty strings as missing names: only group when trainer name is non-blank
+                    val lessons = list.filter {
+                        it.event?.type?.equals("lesson", ignoreCase = true) == true &&
+                        !it.event?.eventTrainersList.isNullOrEmpty() &&
+                        !it.event?.eventTrainersList?.firstOrNull().isNullOrBlank()
+                    }
+                    val other = list - lessons
+
+                    val lessonsByTrainer = lessons.groupBy { it.event?.eventTrainersList?.firstOrNull()!!.trim() }
+
+                    // Render grouped lessons as LessonView when group size > 1, otherwise fall back to single-card
+                    lessonsByTrainer.forEach { (trainer, instances) ->
+                        // Render LessonView even for a single-instance group so "Moje" shows lessons
+                        LessonView(trainerName = trainer, instances = instances.sortedBy { it.since })
+                    }
+
+                    // Render other events
+                    other.sortedBy { it.since }.forEach { item ->
+                        RenderSingleEventCard(item)
+                    }
                 }
             }
         }
@@ -142,6 +170,219 @@ private fun PrimaryTabRow(
     // Simple wrapper over TabRow so we can change styling from one place later
     TabRow(selectedTabIndex = selectedTabIndex, modifier = modifier) {
         content()
+    }
+}
+
+private fun parseColorOrDefault(hex: String?): Color {
+    if (hex.isNullOrBlank()) return Color.Gray
+    return try {
+        var s = hex.trim()
+        if (!s.startsWith("#")) s = "#" + s
+        Color(android.graphics.Color.parseColor(s))
+    } catch (e: Exception) {
+        Color.Gray
+    }
+}
+
+private fun translateEventType(type: String?): String? {
+    if (type.isNullOrBlank()) return null
+    return when (type.trim().lowercase(Locale.ROOT)) {
+        "group" -> "společná"
+        "lesson" -> "lekce"
+        "holiday" -> "prázdniny"
+        "rezervation" -> "nabídka"
+        "camp" -> "soustředění"
+        else -> type
+    }
+}
+
+private fun formatTimes(since: String?, until: String?): String {
+    if (since.isNullOrBlank() && until.isNullOrBlank()) return ""
+
+    fun fmtTime(s: String?): String? {
+        if (s.isNullOrBlank()) return null
+        return try {
+            val odt = OffsetDateTime.parse(s)
+            odt.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))
+        } catch (_: Exception) {
+            try {
+                val ldt = LocalDateTime.parse(s)
+                ldt.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))
+            } catch (_: Exception) {
+                val t = s.substringAfter('T', "").substringBefore('Z').substringBefore('+').substringBefore('-')
+                if (t.isBlank()) null else t
+            }
+        }
+    }
+
+    val a = fmtTime(since)
+    val b = fmtTime(until)
+    return when {
+        a != null && b != null -> "$a - $b"
+        a != null -> a
+        b != null -> b
+        else -> ""
+    }
+}
+
+@Composable
+private fun LessonView(trainerName: String, instances: List<EventInstance>) {
+    Card(modifier = Modifier
+        .fillMaxWidth()
+        .padding(vertical = 6.dp)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Text(trainerName, style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.weight(1f))
+                Text("lekce", style = MaterialTheme.typography.labelSmall)
+            }
+                // show first non-blank location for the group (if any)
+                val groupLocation = instances.mapNotNull { inst ->
+                    inst.event?.locationText?.takeIf { !it.isNullOrBlank() } ?: inst.event?.location?.name?.takeIf { !it.isNullOrBlank() }
+                }.firstOrNull().orEmpty()
+                if (groupLocation.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(groupLocation, style = MaterialTheme.typography.bodySmall)
+                }
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // participants grid: each event -> one row with time, name, duration
+            instances.sortedBy { it.since }.forEach { inst ->
+                val time = formatTimes(inst.since, inst.until)
+                val participants = participantsForEvent(inst.event)
+                val durationMin = durationMinutes(inst.since, inst.until)
+                val deco = if (inst.isCancelled) TextDecoration.LineThrough else TextDecoration.None
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    // fixed width time column so times align
+                    Text(
+                        time,
+                        style = MaterialTheme.typography.bodySmall.copy(textDecoration = deco),
+                        modifier = Modifier.width(100.dp)
+                    )
+
+                    // participants column grows to fill remaining space
+                    Column(modifier = Modifier.weight(1f)) {
+                        if (participants.isEmpty()) {
+                            Text(
+                                "VOLNO",
+                                style = MaterialTheme.typography.bodySmall.copy(textDecoration = deco),
+                                color = Color(0xFF4CAF50)
+                            )
+                        } else {
+                            Text(participants.joinToString(", "), style = MaterialTheme.typography.bodySmall.copy(textDecoration = deco))
+                        }
+                    }
+
+                    // fixed width duration column, right-aligned
+                    Text(
+                        durationMin ?: "",
+                        style = MaterialTheme.typography.bodySmall.copy(textDecoration = deco),
+                        modifier = Modifier.width(48.dp),
+                        textAlign = TextAlign.End
+                    )
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun RenderSingleEventCard(item: EventInstance) {
+    val name = item.event?.name ?: "(no name)"
+    val cancelled = item.isCancelled
+    val eventObj = item.event
+    val locationOrTrainer = listOfNotNull(
+        eventObj?.locationText?.takeIf { !it.isNullOrBlank() },
+        eventObj?.location?.name?.takeIf { !it.isNullOrBlank() },
+        eventObj?.eventTrainersList?.firstOrNull()?.takeIf { !it.isNullOrBlank() }
+    ).firstOrNull().orEmpty()
+    val timeText = formatTimes(item.since, item.until)
+
+    Card(modifier = Modifier
+        .fillMaxWidth()
+        .padding(vertical = 4.dp)
+    ) {
+        Column(modifier = Modifier
+            .fillMaxWidth()
+            .padding(12.dp)
+        ) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = name,
+                        style = MaterialTheme.typography.titleMedium.copy(textDecoration = if (cancelled) TextDecoration.LineThrough else TextDecoration.None)
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    if (locationOrTrainer.isNotBlank()) {
+                        Text(locationOrTrainer, style = MaterialTheme.typography.bodySmall)
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+                    if (timeText.isNotBlank()) {
+                        Text(timeText, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+
+                Column(horizontalAlignment = Alignment.End) {
+                    val typeText = item.event?.type ?: ""
+                    val displayType = translateEventType(typeText)
+                    if (!displayType.isNullOrBlank()) {
+                        Text(displayType, style = MaterialTheme.typography.labelSmall)
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row {
+                        val cohorts = item.event?.eventTargetCohortsList ?: emptyList()
+                        val cohortColors = cohorts.mapNotNull { tc ->
+                            val hex = tc.cohort?.colorRgb
+                            if (hex.isNullOrBlank()) null else try {
+                                parseColorOrDefault(hex)
+                            } catch (_: Exception) { null }
+                        }
+
+                        if (cohortColors.isNotEmpty()) {
+                            cohortColors.forEachIndexed { idx, color ->
+                                Box(modifier = Modifier
+                                    .size(12.dp)
+                                    .background(color, CircleShape)
+                                )
+                                if (idx != cohortColors.lastIndex) Spacer(modifier = Modifier.width(6.dp))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun participantsForEvent(event: com.tkolymp.shared.event.Event?): List<String> {
+    if (event == null) return emptyList()
+    val regs = event.eventRegistrationsList
+    if (regs.isEmpty()) return emptyList()
+    return regs.mapNotNull { r ->
+        r.person?.name ?: run {
+            val man = r.couple?.man
+            val woman = r.couple?.woman
+            if (man != null && woman != null) {
+                val manSurname = man.lastName?.takeIf { it.isNotBlank() } ?: man.firstName?.takeIf { it.isNotBlank() } ?: ""
+                val womanSurname = woman.lastName?.takeIf { it.isNotBlank() } ?: woman.firstName?.takeIf { it.isNotBlank() } ?: ""
+                val pair = listOfNotNull(manSurname.takeIf { it.isNotBlank() }, womanSurname.takeIf { it.isNotBlank() }).joinToString(" - ")
+                if (pair.isNotBlank()) pair else null
+            } else null
+        }
+    }
+}
+
+private fun durationMinutes(since: String?, until: String?): String? {
+    if (since.isNullOrBlank() || until.isNullOrBlank()) return null
+    return try {
+        val a = OffsetDateTime.parse(since)
+        val b = OffsetDateTime.parse(until)
+        val mins = java.time.Duration.between(a, b).toMinutes()
+        "${mins}'"
+    } catch (_: Exception) {
+        null
     }
 }
 
