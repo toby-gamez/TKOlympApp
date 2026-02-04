@@ -26,6 +26,51 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
+import java.time.Instant
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
+
+private fun formatDateString(raw: String): String? {
+    val s = raw.trim()
+    // Quick extract if value contains a date-like prefix
+    val datePrefix = Regex("\\d{4}-\\d{2}-\\d{2}").find(s)?.value
+    val formatterOut = DateTimeFormatter.ofPattern("d. M. yyyy")
+    try {
+        // Try plain local date
+        if (datePrefix != null && datePrefix.length == 10) {
+            val ld = LocalDate.parse(datePrefix)
+            return ld.format(formatterOut)
+        }
+        // Try ISO local date-time / offset
+        val odt = OffsetDateTime.parse(s)
+        return odt.toLocalDate().format(formatterOut)
+    } catch (_: DateTimeParseException) {
+    }
+    try {
+        val zdt = ZonedDateTime.parse(s)
+        return zdt.toLocalDate().format(formatterOut)
+    } catch (_: DateTimeParseException) {
+    }
+    try {
+        val instant = Instant.parse(s)
+        val ld = instant.atZone(ZoneId.systemDefault()).toLocalDate()
+        return ld.format(formatterOut)
+    } catch (_: DateTimeParseException) {
+    }
+    return null
+}
 
 @Composable
 fun OtherScreen(onProfileClick: () -> Unit = {}) {
@@ -36,10 +81,11 @@ fun OtherScreen(onProfileClick: () -> Unit = {}) {
     var coupleIds by remember { mutableStateOf<List<String>>(emptyList()) }
     var rawJson by remember { mutableStateOf<String?>(null) }
     var personDetailsRaw by remember { mutableStateOf<String?>(null) }
-    var personBio by remember { mutableStateOf<String?>(null) }
+    var personDob by remember { mutableStateOf<String?>(null) }
     var personFirstName by remember { mutableStateOf<String?>(null) }
     var personLastName by remember { mutableStateOf<String?>(null) }
     var personPrefix by remember { mutableStateOf<String?>(null) }
+    var personSuffix by remember { mutableStateOf<String?>(null) }
     var loading by remember { mutableStateOf(false) }
     var showDebug by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -87,10 +133,17 @@ fun OtherScreen(onProfileClick: () -> Unit = {}) {
                 val p = Json.parseToJsonElement(personDetailsRaw!!).jsonObject
                 personFirstName = p["firstName"]?.toString()?.replace("\"", "")
                 personLastName = p["lastName"]?.toString()?.replace("\"", "")
-                personBio = p["bio"]?.toString()?.replace("\"", "")
+                personDob = p["birthDate"]?.toString()?.replace("\"", "")
+                    ?: p["dateOfBirth"]?.toString()?.replace("\"", "")
+                    ?: p["dob"]?.toString()?.replace("\"", "")
+                    ?: p["bio"]?.toString()?.replace("\"", "")
                 personPrefix = p["prefixTitle"]?.toString()?.replace("\"", "")
+                personSuffix = p["suffixTitle"]?.toString()?.replace("\"", "")
+                    ?: p["postfixTitle"]?.toString()?.replace("\"", "")
+                    ?: p["suffix"]?.toString()?.replace("\"", "")
                 if (!personFirstName.isNullOrBlank() || !personLastName.isNullOrBlank()) {
-                    name = listOfNotNull(personPrefix, personFirstName, personLastName).joinToString(" ")
+                    val base = listOfNotNull(personPrefix, personFirstName, personLastName).joinToString(" ")
+                    name = if (!personSuffix.isNullOrBlank()) "$base, ${personSuffix}" else base
                 }
             } catch (_: Throwable) { }
         }
@@ -102,27 +155,53 @@ fun OtherScreen(onProfileClick: () -> Unit = {}) {
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {
-        Text("Ostatní", style = MaterialTheme.typography.headlineMedium)
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = name ?: "Můj účet",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.clickable { onProfileClick() }
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            if (loading) CircularProgressIndicator(modifier = Modifier.width(20.dp), strokeWidth = 2.dp)
+        Card(modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .clickable { onProfileClick() }
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp)
+            ) {
+                Box(modifier = Modifier.width(48.dp)) {
+                    Icon(
+                        imageVector = Icons.Filled.Person,
+                        contentDescription = "Profile",
+                        modifier = Modifier.size(40.dp).align(Alignment.CenterStart)
+                    )
+                }
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = name ?: "Můj účet", style = MaterialTheme.typography.titleLarge, modifier = Modifier.align(Alignment.Start))
+                    if (subtitle != null) Text(subtitle!!, style = MaterialTheme.typography.bodySmall, modifier = Modifier.align(Alignment.Start))
+                    if (personDob != null && !showDebug) {
+                        val formatted = formatDateString(personDob!!)
+                        Text(
+                            formatted ?: personDob!!,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+                        )
+                    }
+                }
+
+                if (loading) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                }
+            }
         }
-        if (subtitle != null) Text(subtitle!!, style = MaterialTheme.typography.bodySmall)
+
         if (error != null) Text(error!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
         if (showDebug) {
             Text("personId: ${personId ?: "(null)"}", style = MaterialTheme.typography.bodySmall)
             Text("coupleIds: ${if (coupleIds.isEmpty()) "[]" else coupleIds.joinToString(", ")}", style = MaterialTheme.typography.bodySmall)
             if (rawJson != null) Text("raw: ${rawJson}", style = MaterialTheme.typography.bodySmall)
             if (personDetailsRaw != null) Text("person: ${personDetailsRaw}", style = MaterialTheme.typography.bodySmall)
-            if (personBio != null) Text("bio: ${personBio}", style = MaterialTheme.typography.bodySmall)
-        } else {
-            if (personBio != null) Text(personBio!!, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
+            if (personDob != null) Text("birth: ${personDob}", style = MaterialTheme.typography.bodySmall)
         }
     }
 }
