@@ -13,37 +13,37 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 
 @Composable
-fun AppBottomBar(current: Screen, onSelect: (Screen) -> Unit) {
+fun AppBottomBar(current: String, onSelect: (String) -> Unit) {
     NavigationBar {
         NavigationBarItem(
-            selected = current is Screen.Overview,
-            onClick = { onSelect(Screen.Overview) },
+            selected = current == "overview",
+            onClick = { onSelect("overview") },
             icon = { Icon(Icons.Default.Home, contentDescription = null) },
-            label = { Text(Screen.Overview.title) }
+            label = { Text("Přehled") }
         )
         NavigationBarItem(
-            selected = current is Screen.Calendar,
-            onClick = { onSelect(Screen.Calendar) },
+            selected = current == "calendar",
+            onClick = { onSelect("calendar") },
             icon = { Icon(Icons.Default.CalendarToday, contentDescription = null) },
-            label = { Text(Screen.Calendar.title) }
+            label = { Text("Kalendář") }
         )
         NavigationBarItem(
-            selected = current is Screen.Board,
-            onClick = { onSelect(Screen.Board) },
+            selected = current == "board",
+            onClick = { onSelect("board") },
             icon = { Icon(Icons.Default.Dashboard, contentDescription = null) },
-            label = { Text(Screen.Board.title) }
+            label = { Text("Nástěnka") }
         )
         NavigationBarItem(
-            selected = current is Screen.Events,
-            onClick = { onSelect(Screen.Events) },
+            selected = current == "events",
+            onClick = { onSelect("events") },
             icon = { Icon(Icons.Default.Event, contentDescription = null) },
-            label = { Text(Screen.Events.title) }
+            label = { Text("Akce") }
         )
         NavigationBarItem(
-            selected = current is Screen.Other,
-            onClick = { onSelect(Screen.Other) },
+            selected = current == "other",
+            onClick = { onSelect("other") },
             icon = { Icon(Icons.Default.MoreHoriz, contentDescription = null) },
-            label = { Text(Screen.Other.title) }
+            label = { Text("Ostatní") }
         )
     }
 }

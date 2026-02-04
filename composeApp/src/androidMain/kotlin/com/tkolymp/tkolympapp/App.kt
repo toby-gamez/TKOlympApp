@@ -14,14 +14,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.Alignment
-import com.tkolymp.tkolympapp.LoginScreen
 import ui.theme.AppTheme
 
 @Composable
 @Preview
 fun App() {
     AppTheme {
-        var current by remember { mutableStateOf<Screen>(Screen.Overview) }
+        var current by remember { mutableStateOf("overview") }
         var loggedIn by remember { mutableStateOf<Boolean?>(null) }
 
         val ctx = LocalContext.current
@@ -41,7 +40,7 @@ fun App() {
 
         when (loggedIn) {
             null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-            false -> LoginScreen(onSuccess = { loggedIn = true; current = Screen.Overview })
+            false -> LoginScreen(onSuccess = { loggedIn = true; current = "overview" })
             true -> Scaffold(
                 modifier = Modifier.fillMaxSize(),
                 bottomBar = { AppBottomBar(current = current, onSelect = { current = it }) }
@@ -54,11 +53,11 @@ fun App() {
                         .padding(padding)
                 ) {
                     when (current) {
-                        Screen.Overview -> OverviewScreen()
-                        Screen.Calendar -> CalendarScreen()
-                        Screen.Board -> BoardScreen()
-                        Screen.Events -> EventsScreen()
-                        Screen.Other -> OtherScreen()
+                        "overview" -> OverviewScreen()
+                        "calendar" -> CalendarScreen()
+                        "board" -> BoardScreen()
+                        "events" -> EventsScreen()
+                        "other" -> OtherScreen()
                     }
                 }
             }
