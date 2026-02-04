@@ -44,3 +44,4 @@ shared/build/*
 composeApp/build/*
 composeApp/.cxx/*
 .gradle/9.1.0/*
+.kotlin/sessions/*
