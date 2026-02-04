@@ -58,7 +58,7 @@ import kotlinx.coroutines.launch
 
 
 @Composable
-fun CalendarScreen() {
+fun CalendarScreen(onOpenEvent: (Long) -> Unit = {}) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     val tabs = listOf("Moje", "Všechny")
     val eventsByDayState = remember { mutableStateOf<Map<String, List<EventInstance>>>(emptyMap()) }
@@ -121,6 +121,8 @@ fun CalendarScreen() {
         val grouped = eventsByDayState.value
         val todayKey = LocalDate.now().format(fmt)
 
+        // calendar remains visible; opening an event is handled by parent via `onOpenEvent`
+
         Column(modifier = Modifier
             .weight(1f)
             .verticalScroll(rememberScrollState())
@@ -161,13 +163,14 @@ fun CalendarScreen() {
                             instances = instances.sortedBy { it.since },
                             isAllTab = (selectedTab == 1),
                             myPersonId = myPersonId.value,
-                            myCoupleIds = myCoupleIds.value
+                            myCoupleIds = myCoupleIds.value,
+                            onEventClick = { id -> onOpenEvent(id) }
                         )
                     }
 
                     // Render other events
                     other.sortedBy { it.since }.forEach { item ->
-                        RenderSingleEventCard(item)
+                        RenderSingleEventCard(item) { id -> onOpenEvent(id) }
                     }
                 }
             }
@@ -210,46 +213,7 @@ private fun parseColorOrDefault(hex: String?): Color {
     }
 }
 
-private fun translateEventType(type: String?): String? {
-    if (type.isNullOrBlank()) return null
-    return when (type.trim().lowercase(Locale.ROOT)) {
-        "group" -> "společná"
-        "lesson" -> "lekce"
-        "holiday" -> "prázdniny"
-        "rezervation" -> "nabídka"
-        "camp" -> "soustředění"
-        else -> type
-    }
-}
-
-private fun formatTimes(since: String?, until: String?): String {
-    if (since.isNullOrBlank() && until.isNullOrBlank()) return ""
-
-    fun fmtTime(s: String?): String? {
-        if (s.isNullOrBlank()) return null
-        return try {
-            val odt = OffsetDateTime.parse(s)
-            odt.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))
-        } catch (_: Exception) {
-            try {
-                val ldt = LocalDateTime.parse(s)
-                ldt.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))
-            } catch (_: Exception) {
-                val t = s.substringAfter('T', "").substringBefore('Z').substringBefore('+').substringBefore('-')
-                if (t.isBlank()) null else t
-            }
-        }
-    }
-
-    val a = fmtTime(since)
-    val b = fmtTime(until)
-    return when {
-        a != null && b != null -> "$a - $b"
-        a != null -> a
-        b != null -> b
-        else -> ""
-    }
-}
+// helpers moved to EventUtils.kt
 
 @Composable
 private fun LessonView(
@@ -258,6 +222,7 @@ private fun LessonView(
     isAllTab: Boolean,
     myPersonId: String?,
     myCoupleIds: List<String>
+    , onEventClick: (Long) -> Unit
 ) {
     Card(modifier = Modifier
         .fillMaxWidth()
@@ -305,7 +270,10 @@ private fun LessonView(
                 val participantsEmpty = parts.isEmpty()
                 val durationMin = durationMinutes(inst.since, inst.until)
                 val deco = if (inst.isCancelled) TextDecoration.LineThrough else TextDecoration.None
-                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Row(modifier = Modifier.fillMaxWidth().clickable {
+                    val evId = inst.event?.id ?: return@clickable
+                    onEventClick(evId)
+                }, verticalAlignment = Alignment.CenterVertically) {
                     // fixed width time column so times align
                     Text(
                         time,
@@ -349,7 +317,7 @@ private fun LessonView(
 }
 
 @Composable
-private fun RenderSingleEventCard(item: EventInstance) {
+private fun RenderSingleEventCard(item: EventInstance, onEventClick: (Long) -> Unit) {
     val name = item.event?.name ?: "(no name)"
     val cancelled = item.isCancelled
     val eventObj = item.event
@@ -363,6 +331,7 @@ private fun RenderSingleEventCard(item: EventInstance) {
     Card(modifier = Modifier
         .fillMaxWidth()
         .padding(vertical = 4.dp)
+        .clickable { val evId = item.event?.id ?: return@clickable; onEventClick(evId) }
     ) {
         Column(modifier = Modifier
             .fillMaxWidth()
@@ -416,33 +385,5 @@ private fun RenderSingleEventCard(item: EventInstance) {
     }
 }
 
-private fun participantsForEvent(event: com.tkolymp.shared.event.Event?): List<String> {
-    if (event == null) return emptyList()
-    val regs = event.eventRegistrationsList
-    if (regs.isEmpty()) return emptyList()
-    return regs.mapNotNull { r ->
-        r.person?.name ?: run {
-            val man = r.couple?.man
-            val woman = r.couple?.woman
-            if (man != null && woman != null) {
-                val manSurname = man.lastName?.takeIf { it.isNotBlank() } ?: man.firstName?.takeIf { it.isNotBlank() } ?: ""
-                val womanSurname = woman.lastName?.takeIf { it.isNotBlank() } ?: woman.firstName?.takeIf { it.isNotBlank() } ?: ""
-                val pair = listOfNotNull(manSurname.takeIf { it.isNotBlank() }, womanSurname.takeIf { it.isNotBlank() }).joinToString(" - ")
-                if (pair.isNotBlank()) pair else null
-            } else null
-        }
-    }
-}
-
-private fun durationMinutes(since: String?, until: String?): String? {
-    if (since.isNullOrBlank() || until.isNullOrBlank()) return null
-    return try {
-        val a = OffsetDateTime.parse(since)
-        val b = OffsetDateTime.parse(until)
-        val mins = java.time.Duration.between(a, b).toMinutes()
-        "${mins}'"
-    } catch (_: Exception) {
-        null
-    }
-}
+// helpers moved to EventUtils.kt
 

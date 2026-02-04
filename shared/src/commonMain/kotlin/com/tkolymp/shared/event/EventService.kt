@@ -18,6 +18,12 @@ interface IEventService {
         offset: Int = 0,
         onlyType: String? = null
     ): Map<String, List<EventInstance>>
+
+    /**
+     * Fetch full event object (raw JsonObject) by id using the EventFull fragment.
+     * Returns the `event` JsonObject from the GraphQL response or null on error.
+     */
+    suspend fun fetchEventById(id: BigInt): JsonObject?
 }
 
 // Notes: GraphQL types
@@ -66,6 +72,227 @@ data class Event(
 
 class EventService(private val client: IGraphQlClient = ServiceLocator.graphQlClient) : IEventService {
     private val json = Json { ignoreUnknownKeys = true }
+
+    private val eventByIdQuery = """
+            query Event(${'$'}id: BigInt!) {
+                event(id: ${'$'}id) {
+                    id
+                    type
+                    summary
+                    description
+                    name
+                    capacity
+                    remainingPersonSpots
+                    remainingLessons
+                    location {
+                        id
+                        name
+                        __typename
+                    }
+                    locationText
+                    isLocked
+                    isVisible
+                    isPublic
+                    enableNotes
+                    eventTrainersList {
+                        id
+                        name
+                        personId
+                        lessonsOffered
+                        lessonsRemaining
+                        __typename
+                    }
+                    eventInstancesList(orderBy: SINCE_ASC) {
+                        id
+                        since
+                        until
+                        isCancelled
+                        trainersList {
+                            id
+                            personId
+                            person {
+                                id
+                                name
+                                __typename
+                            }
+                            __typename
+                        }
+                        attendanceSummaryList {
+                            count
+                            status
+                            __typename
+                        }
+                        eventInstanceTrainersByInstanceIdList {
+                            id
+                            personId
+                            __typename
+                        }
+                        __typename
+                    }
+                    eventTargetCohortsList {
+                        id
+                        cohort {
+                            id
+                            name
+                            colorRgb
+                            __typename
+                        }
+                        __typename
+                    }
+                    myRegistrationsList {
+                        id
+                        note
+                        eventId
+                        personId
+                        person {
+                            id
+                            name
+                            firstName
+                            lastName
+                            __typename
+                        }
+                        coupleId
+                        couple {
+                            id
+                            status
+                            since
+                            until
+                            woman {
+                                id
+                                name
+                                firstName
+                                lastName
+                                __typename
+                            }
+                            man {
+                                id
+                                name
+                                firstName
+                                lastName
+                                __typename
+                            }
+                            __typename
+                        }
+                        eventLessonDemandsByRegistrationIdList {
+                            id
+                            lessonCount
+                            trainerId
+                            __typename
+                        }
+                        createdAt
+                        __typename
+                    }
+                    eventRegistrationsList {
+                        id
+                        note
+                        eventId
+                        personId
+                        person {
+                            id
+                            name
+                            firstName
+                            lastName
+                            __typename
+                        }
+                        coupleId
+                        couple {
+                            id
+                            status
+                            since
+                            until
+                            woman {
+                                id
+                                name
+                                firstName
+                                lastName
+                                __typename
+                            }
+                            man {
+                                id
+                                name
+                                firstName
+                                lastName
+                                __typename
+                            }
+                            __typename
+                        }
+                        eventLessonDemandsByRegistrationIdList {
+                            id
+                            lessonCount
+                            trainerId
+                            __typename
+                        }
+                        createdAt
+                        __typename
+                    }
+                    eventExternalRegistrationsList {
+                        id
+                        birthDate
+                        nationality
+                        note
+                        phone
+                        prefixTitle
+                        suffixTitle
+                        taxIdentificationNumber
+                        updatedAt
+                        createdAt
+                        email
+                        eventId
+                        firstName
+                        lastName
+                        __typename
+                    }
+                    eventRegistrations(first: 3) {
+                        totalCount
+                        nodes {
+                            id
+                            note
+                            eventId
+                            personId
+                            person {
+                                id
+                                name
+                                firstName
+                                lastName
+                                __typename
+                            }
+                            coupleId
+                            couple {
+                                id
+                                status
+                                since
+                                until
+                                woman {
+                                    id
+                                    name
+                                    firstName
+                                    lastName
+                                    __typename
+                                }
+                                man {
+                                    id
+                                    name
+                                    firstName
+                                    lastName
+                                    __typename
+                                }
+                                __typename
+                            }
+                            eventLessonDemandsByRegistrationIdList {
+                                id
+                                lessonCount
+                                trainerId
+                                __typename
+                            }
+                            createdAt
+                            __typename
+                        }
+                        __typename
+                    }
+                    __typename
+                }
+            }
+    """.trimIndent()
 
         private val query = """
                 query MyQuery(
@@ -230,5 +457,18 @@ class EventService(private val client: IGraphQlClient = ServiceLocator.graphQlCl
         }
 
         return grouped.toSortedMap()
+    }
+
+    override suspend fun fetchEventById(id: BigInt): JsonObject? {
+        val variables = buildJsonObject { put("id", JsonPrimitive(id)) }
+        val resp = try {
+            client.post(eventByIdQuery, variables)
+        } catch (ex: Exception) {
+            return null
+        }
+
+        val data = resp.jsonObject["data"]?.jsonObject ?: return null
+        val ev = data["event"]
+        return (ev as? JsonObject)
     }
 }

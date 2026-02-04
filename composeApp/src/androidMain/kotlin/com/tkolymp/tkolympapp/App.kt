@@ -36,6 +36,7 @@ fun App() {
     AppTheme {
         var current by remember { mutableStateOf("overview") }
         var loggedIn by remember { mutableStateOf<Boolean?>(null) }
+        var activeEventId by remember { mutableStateOf<Long?>(null) }
 
         val ctx = LocalContext.current
         if (!LocalInspectionMode.current) {
@@ -60,6 +61,14 @@ fun App() {
                     when (current) {
                         "overview" -> TopAppBar(title = { Text("Přehled") })
                         "calendar" -> TopAppBar(title = { Text("Kalendář") })
+                        "event" -> TopAppBar(
+                            title = { Text("Událost") },
+                            navigationIcon = {
+                                IconButton(onClick = { current = "calendar"; activeEventId = null }) {
+                                    Icon(Icons.Default.ArrowBack, contentDescription = "Zpět")
+                                }
+                            }
+                        )
                         "board" -> TopAppBar(title = { Text("Nástěnka") })
                         "events" -> TopAppBar(title = { Text("Akce") })
                         "other" -> TopAppBar(title = { Text("Ostatní") })
@@ -95,9 +104,10 @@ fun App() {
                 when (loggedIn) {
                     null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
                     false -> LoginScreen(onSuccess = { loggedIn = true; current = "overview" })
-                    true -> when (current) {
+                            true -> when (current) {
                             "overview" -> OverviewScreen()
-                            "calendar" -> CalendarScreen()
+                            "calendar" -> CalendarScreen(onOpenEvent = { id -> activeEventId = id; current = "event" })
+                            "event" -> activeEventId?.let { eid -> EventScreen(eventId = eid, onBack = { current = "calendar"; activeEventId = null }) } ?: run { /* no-op */ }
                             "board" -> BoardScreen()
                             "events" -> EventsScreen()
                             "other" -> OtherScreen(onProfileClick = { current = "profile" })
