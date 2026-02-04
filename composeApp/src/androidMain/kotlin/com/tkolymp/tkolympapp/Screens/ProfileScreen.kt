@@ -31,6 +31,10 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 @Composable
 fun ProfileScreen(onLogout: () -> Unit = {}) {
@@ -43,6 +47,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}) {
     var coupleNames by remember { mutableStateOf<List<String>>(emptyList()) }
         var personFields by remember { mutableStateOf<List<Pair<String,String>>>(emptyList()) }
         var currentUserFields by remember { mutableStateOf<List<Pair<String,String>>>(emptyList()) }
+    var addressFields by remember { mutableStateOf<List<Pair<String,String>>>(emptyList()) }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
@@ -101,12 +106,21 @@ fun ProfileScreen(onLogout: () -> Unit = {}) {
                 val first = p["firstName"]?.toString()?.replace("\"", "")
                 val last = p["lastName"]?.toString()?.replace("\"", "")
                 val bio = p["bio"]?.toString()?.replace("\"", "")
-                val addressObj = p["address"]?.jsonObject
-                val addr = addressObj?.let { a -> listOfNotNull(a["street"]?.toString()?.replace("\"", ""), a["city"]?.toString()?.replace("\"", ""), a["postalCode"]?.toString()?.replace("\"", "")).joinToString(", ") }
+                    val addressObj = p["address"]?.jsonObject
+                    // build a human-friendly single-line address (fallback) and a list of individual address fields
+                    val addr = addressObj?.let { a -> listOfNotNull(a["street"]?.toString()?.replace("\"", ""), a["city"]?.toString()?.replace("\"", ""), a["postalCode"]?.toString()?.replace("\"", "")).joinToString(", ") }
+                    val afields = mutableListOf<Pair<String,String>>()
+                    addressObj?.let { a ->
+                        listOf("street","city","postalCode","region","district","conscriptionNumber","orientationNumber").forEach { key ->
+                            val value = a[key]?.jsonPrimitive?.contentOrNull ?: a[key]?.toString()?.replace("\"", "")
+                            if (!value.isNullOrBlank()) afields.add(key to value)
+                        }
+                    }
 
-                titleText = listOfNotNull(prefix, first, last).joinToString(" ").takeIf { it.isNotBlank() }
-                bioText = bio?.takeIf { it.isNotBlank() }
-                addrText = addr?.takeIf { it.isNotBlank() }
+                    titleText = listOfNotNull(prefix, first, last).joinToString(" ").takeIf { it.isNotBlank() }
+                    bioText = bio?.takeIf { it.isNotBlank() }
+                    addrText = addr?.takeIf { it.isNotBlank() }
+                    addressFields = afields
             } catch (_: Throwable) { }
         }
             // Build flattened fields list for display
@@ -142,19 +156,115 @@ fun ProfileScreen(onLogout: () -> Unit = {}) {
             } catch (_: Throwable) { }
     }
 
+    val outerScroll = rememberScrollState()
+
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier.fillMaxSize().verticalScroll(outerScroll).padding(16.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {
-        Text("Můj profil", style = MaterialTheme.typography.headlineMedium)
+                
+                // Top header: show full name with titles (fallback to username)
+                fun formatValue(key: String, value: String): String {
+                    val v = value.trim()
 
-        // Title
-        if (titleText != null) Text(titleText!!, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
+                    // Booleans
+                    when {
+                        v.equals("true", ignoreCase = true) -> return "ano"
+                        v.equals("false", ignoreCase = true) -> return "ne"
+                    }
 
-        Spacer(modifier = Modifier.height(12.dp))
+                    // Birth date formatting (try several ISO-like formats)
+                    if (key.equals("birthDate", ignoreCase = true)) {
+                        val fmt = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+                        try {
+                            val ld = LocalDate.parse(v)
+                            return ld.format(fmt)
+                        } catch (_: DateTimeParseException) {
+                        }
+                        try {
+                            val odt = OffsetDateTime.parse(v)
+                            return odt.toLocalDate().format(fmt)
+                        } catch (_: DateTimeParseException) {
+                        }
+                        // Fallback simple regex YYYY-MM-DD
+                        val m = Regex("(\\d{4})-(\\d{2})-(\\d{2})").find(v)
+                        if (m != null) return "${m.groupValues[3]}.${m.groupValues[2]}.${m.groupValues[1]}"
+                    }
 
-        // Bio card
+                    // Gender values
+                    val up = v.uppercase()
+                    if (key.equals("gender", ignoreCase = true) || up in setOf("MAN", "WOMAN", "UNSPECIFIED")) {
+                        return when (up) {
+                            "MAN" -> "muž"
+                            "WOMAN" -> "žena"
+                            else -> "nevybráno"
+                        }
+                    }
+
+                    return v
+                }
+
+                val displayName = titleText ?: currentUserFields.find { it.first == "username" }?.second
+                Column(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(displayName ?: "Uživatel", style = MaterialTheme.typography.headlineSmall)
+                }
+                // Merge personFields and currentUserFields but exclude keys shown elsewhere
+                val mergedFields = remember(personFields, currentUserFields, addrText, titleText, bioText) {
+                val map = linkedMapOf<String, String>()
+                val excluded = setOf(
+                    "prefixTitle", "firstName", "lastName", "bio", "address",
+                    "activeCouplesList", "cohortMembershipsList"
+                )
+
+                personFields.forEach { (k, v) -> if (k !in excluded && v.isNotBlank()) map[k] = v }
+                currentUserFields.forEach { (k, v) -> if (k !in excluded && !map.containsKey(k) && v.isNotBlank()) map[k] = v }
+
+                map
+                }
+
+                // Labeling and categorization
+                val labelMap = mapOf(
+                    "email" to "Email",
+                    "address" to "Adresa",
+                    "isTrainer" to "Trenér",
+                    "mobilePhone" to "Telefon",
+                    "phone" to "Telefon",
+                    "workPhone" to "Telefon (služ.)",
+                    "birthDate" to "Datum narození",
+                    "gender" to "Pohlaví",
+                    "nationality" to "Státní příslušnost",
+                    "username" to "Uživatelské jméno",
+                    "id" to "ID",
+                    "personalId" to "Rodné číslo",
+                    "passportNumber" to "Číslo pasu",
+                    "idNumber" to "Číslo dokladu",
+                    "wdsfId" to "WDSF ID",
+                    "cstsId" to "ČSTS IDT"
+                )
+
+                fun humanizeKey(k: String): String {
+                    val spaced = k.replace(Regex("([a-z])([A-Z])"), "$1 $2").replace('_', ' ').replace('-', ' ')
+                    return spaced.split(' ').joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
+                }
+
+                val personalKeys = setOf("birthDate", "gender", "nationality", "maritalStatus", "placeOfBirth")
+                val contactKeys = setOf("email", "mobilePhone", "phone", "workPhone")
+                val externalKeys = setOf("personalId", "idNumber", "passportNumber", "externalId", "ico", "dic")
+
+                val personalList = mutableListOf<Pair<String, String>>()
+                val contactList = mutableListOf<Pair<String, String>>()
+                val externalList = mutableListOf<Pair<String, String>>()
+                val otherList = mutableListOf<Pair<String, String>>()
+
+                mergedFields.forEach { (k, v) ->
+                    when {
+                        k in personalKeys -> personalList.add(k to v)
+                        k in contactKeys -> contactList.add(k to v)
+                        k in externalKeys -> externalList.add(k to v)
+                        else -> otherList.add(k to v)
+                    }
+                }
         Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
             Column(modifier = Modifier.padding(12.dp)) {
                 Text("O mně", style = MaterialTheme.typography.labelLarge)
@@ -167,12 +277,29 @@ fun ProfileScreen(onLogout: () -> Unit = {}) {
             }
         }
 
-        // Address card
+        // Address card — show all available address subfields
         Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
             Column(modifier = Modifier.padding(12.dp)) {
                 Text("Adresa", style = MaterialTheme.typography.labelLarge)
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
-                if (!addrText.isNullOrBlank()) {
+                if (addressFields.isNotEmpty()) {
+                    addressFields.forEach { (k, v) ->
+                        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.Start) {
+                            val label = when (k) {
+                                "street" -> "Ulice"
+                                "city" -> "Město"
+                                "postalCode" -> "PSČ"
+                                "region" -> "Kraj"
+                                "district" -> "Okres"
+                                "conscriptionNumber" -> "Číslo popisné"
+                                "orientationNumber" -> "Číslo orientační"
+                                else -> k
+                            }
+                            Text("$label:", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(end = 8.dp))
+                            Text(formatValue(k, v), style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                } else if (!addrText.isNullOrBlank()) {
                     Text(addrText!!, style = MaterialTheme.typography.bodyMedium)
                 } else {
                     Text("Adresa není dostupná.", style = MaterialTheme.typography.bodySmall)
@@ -198,46 +325,72 @@ fun ProfileScreen(onLogout: () -> Unit = {}) {
         }
 
         Spacer(modifier = Modifier.height(12.dp))
-
-        // All fields card (person)
-        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-            val scroll = rememberScrollState()
-            Column(modifier = Modifier.padding(12.dp).verticalScroll(scroll)) {
-                Text("Detaily (person)", style = MaterialTheme.typography.labelLarge)
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
-                if (personFields.isNotEmpty()) {
-                    personFields.forEach { (k,v) ->
+        // Category cards (visible, not hidden in details)
+        if (personalList.isNotEmpty()) {
+            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text("Osobní údaje", style = MaterialTheme.typography.labelLarge)
+                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+                    personalList.forEach { (k, v) ->
                         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.Start) {
-                            Text("$k:", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(end = 8.dp))
-                            Text(v, style = MaterialTheme.typography.bodySmall)
+                            val label = labelMap[k] ?: humanizeKey(k)
+                            Text("$label:", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(end = 8.dp))
+                            Text(formatValue(k, v), style = MaterialTheme.typography.bodySmall)
                         }
                     }
-                } else {
-                    Text("Žádné detaily.", style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // All fields card (current user)
-        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-            val scroll2 = rememberScrollState()
-            Column(modifier = Modifier.padding(12.dp).verticalScroll(scroll2)) {
-                Text("Detaily (currentUser)", style = MaterialTheme.typography.labelLarge)
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
-                if (currentUserFields.isNotEmpty()) {
-                    currentUserFields.forEach { (k,v) ->
+        if (contactList.isNotEmpty()) {
+            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text("Kontakty", style = MaterialTheme.typography.labelLarge)
+                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+                    contactList.forEach { (k, v) ->
                         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.Start) {
-                            Text("$k:", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(end = 8.dp))
-                            Text(v, style = MaterialTheme.typography.bodySmall)
+                            val label = labelMap[k] ?: humanizeKey(k)
+                            Text("$label:", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(end = 8.dp))
+                            Text(formatValue(k, v), style = MaterialTheme.typography.bodySmall)
                         }
                     }
-                } else {
-                    Text("Žádné detaily.", style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
+
+        if (externalList.isNotEmpty()) {
+            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text("Externí identifikace", style = MaterialTheme.typography.labelLarge)
+                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+                    externalList.forEach { (k, v) ->
+                        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.Start) {
+                            val label = labelMap[k] ?: humanizeKey(k)
+                            Text("$label:", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(end = 8.dp))
+                            Text(formatValue(k, v), style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+            }
+        }
+
+        if (otherList.isNotEmpty()) {
+            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text("Ostatní detaily", style = MaterialTheme.typography.labelLarge)
+                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+                    otherList.forEach { (k, v) ->
+                        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.Start) {
+                            val label = labelMap[k] ?: humanizeKey(k)
+                            Text("$label:", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(end = 8.dp))
+                            Text(formatValue(k, v), style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+            }
+        }
+
+        // (Removed duplicate detail cards; fields are shown in categorized cards above)
 
         Button(onClick = { /* TODO: change password flow */ }, modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
             Text("Změnit heslo")
