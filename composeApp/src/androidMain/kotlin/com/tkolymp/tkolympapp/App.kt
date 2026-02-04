@@ -10,6 +10,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -59,6 +63,14 @@ fun App() {
                         "board" -> TopAppBar(title = { Text("Nástěnka") })
                         "events" -> TopAppBar(title = { Text("Akce") })
                         "other" -> TopAppBar(title = { Text("Ostatní") })
+                        "profile" -> TopAppBar(
+                            title = { Text("Můj profil") },
+                            navigationIcon = {
+                                IconButton(onClick = { current = "other" }) {
+                                    Icon(Icons.Default.ArrowBack, contentDescription = "Zpět")
+                                }
+                            }
+                        )
                         else -> {}
                     }
                 }
@@ -84,13 +96,14 @@ fun App() {
                     null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
                     false -> LoginScreen(onSuccess = { loggedIn = true; current = "overview" })
                     true -> when (current) {
-                        "overview" -> OverviewScreen()
-                        "calendar" -> CalendarScreen()
-                        "board" -> BoardScreen()
-                        "events" -> EventsScreen()
-                        "other" -> OtherScreen()
-                        else -> {}
-                    }
+                            "overview" -> OverviewScreen()
+                            "calendar" -> CalendarScreen()
+                            "board" -> BoardScreen()
+                            "events" -> EventsScreen()
+                            "other" -> OtherScreen(onProfileClick = { current = "profile" })
+                            "profile" -> ProfileScreen(onLogout = { loggedIn = false; current = "overview" })
+                            else -> {}
+                        }
                 }
             }
         }

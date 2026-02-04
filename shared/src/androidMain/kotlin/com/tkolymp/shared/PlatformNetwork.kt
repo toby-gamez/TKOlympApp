@@ -5,6 +5,8 @@ import com.tkolymp.shared.auth.AuthService
 import com.tkolymp.shared.network.GraphQlClientImpl
 import com.tkolymp.shared.storage.TokenStorage
 import com.tkolymp.shared.event.EventService
+import com.tkolymp.shared.storage.UserStorage
+import com.tkolymp.shared.user.UserService
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -32,11 +34,15 @@ suspend fun initNetworking(context: Context, baseUrl: String) {
     val gql = GraphQlClientImpl(client, baseUrl)
     val auth = AuthService(storage, gql)
     val eventSvc = EventService(gql)
+    val userStorage = UserStorage(context)
+    val userSvc = UserService(gql, userStorage)
 
     ServiceLocator.graphQlClient = gql
     ServiceLocator.authService = auth
     ServiceLocator.tokenStorage = storage
     ServiceLocator.eventService = eventSvc
+    ServiceLocator.userStorage = userStorage
+    ServiceLocator.userService = userSvc
 
     auth.initialize()
 }

@@ -57,7 +57,20 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
                 scope.launch {
                     try {
                         val ok = ServiceLocator.authService.login(username, password)
-                        if (ok) onSuccess() else error = "Přihlášení selhalo"
+                        if (ok) {
+                            try {
+                                val personId = try { ServiceLocator.userService.fetchAndStorePersonId() } catch (e: Throwable) { null }
+                                if (personId == null) {
+                                    error = "Nelze získat personId po přihlášení"
+                                } else {
+                                    try { ServiceLocator.userService.fetchAndStoreActiveCouples() } catch (_: Throwable) {}
+                                    try { ServiceLocator.userService.fetchAndStorePersonDetails(personId) } catch (_: Throwable) {}
+                                    onSuccess()
+                                }
+                            } catch (ex: Throwable) {
+                                error = ex.message ?: "Chyba při načítání uživatele"
+                            }
+                        } else error = "Přihlášení selhalo"
                     } catch (ex: Throwable) {
                         error = ex.message ?: "Chyba při přihlášení"
                     } finally {
