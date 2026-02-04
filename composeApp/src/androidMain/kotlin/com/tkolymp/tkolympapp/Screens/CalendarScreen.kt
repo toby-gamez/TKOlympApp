@@ -67,13 +67,12 @@ fun CalendarScreen() {
     val myCoupleIds = remember { mutableStateOf<List<String>>(emptyList()) }
     val scope = rememberCoroutineScope()
 
-    // compute start (Monday) and end (Sunday) for current week
+    // compute start (today) and end (today + 7 days)
     val today = LocalDate.now()
-    val monday = today.with(DayOfWeek.MONDAY)
-    val sunday = today.with(DayOfWeek.SUNDAY)
+    val endDay = today.plusDays(7)
     val fmt = DateTimeFormatter.ISO_LOCAL_DATE
-    val startIso = monday.toString() + "T00:00:00Z"
-    val endIso = sunday.toString() + "T23:59:59Z"
+    val startIso = today.toString() + "T00:00:00Z"
+    val endIso = endDay.toString() + "T23:59:59Z"
 
     LaunchedEffect(selectedTab) {
         val onlyMine = selectedTab == 0
