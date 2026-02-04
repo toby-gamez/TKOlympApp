@@ -10,6 +10,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.Alignment
+import com.tkolymp.tkolympapp.LoginScreen
 import ui.theme.AppTheme
 
 @Composable
@@ -17,24 +22,44 @@ import ui.theme.AppTheme
 fun App() {
     AppTheme {
         var current by remember { mutableStateOf<Screen>(Screen.Overview) }
+        var loggedIn by remember { mutableStateOf<Boolean?>(null) }
 
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            bottomBar = { AppBottomBar(current = current, onSelect = { current = it }) }
-        ) { padding ->
-            Box(
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.primaryContainer)
-                    .safeContentPadding()
-                    .fillMaxSize()
-                    .padding(padding)
-            ) {
-                when (current) {
-                    Screen.Overview -> OverviewScreen()
-                    Screen.Calendar -> CalendarScreen()
-                    Screen.Board -> BoardScreen()
-                    Screen.Events -> EventsScreen()
-                    Screen.Other -> OtherScreen()
+        val ctx = LocalContext.current
+        if (!LocalInspectionMode.current) {
+            LaunchedEffect(Unit) {
+                try {
+                    com.tkolymp.shared.initNetworking(ctx, "https://api.rozpisovnik.cz/graphql")
+                    val has = try { com.tkolymp.shared.ServiceLocator.authService.hasToken() } catch (_: Throwable) { false }
+                    loggedIn = has
+                } catch (_: Throwable) {
+                    loggedIn = false
+                }
+            }
+        } else {
+            if (loggedIn == null) loggedIn = false
+        }
+
+        when (loggedIn) {
+            null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            false -> LoginScreen(onSuccess = { loggedIn = true; current = Screen.Overview })
+            true -> Scaffold(
+                modifier = Modifier.fillMaxSize(),
+                bottomBar = { AppBottomBar(current = current, onSelect = { current = it }) }
+            ) { padding ->
+                Box(
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .safeContentPadding()
+                        .fillMaxSize()
+                        .padding(padding)
+                ) {
+                    when (current) {
+                        Screen.Overview -> OverviewScreen()
+                        Screen.Calendar -> CalendarScreen()
+                        Screen.Board -> BoardScreen()
+                        Screen.Events -> EventsScreen()
+                        Screen.Other -> OtherScreen()
+                    }
                 }
             }
         }

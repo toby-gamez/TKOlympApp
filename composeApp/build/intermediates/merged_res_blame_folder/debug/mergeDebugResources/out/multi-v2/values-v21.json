@@ -4,7 +4,7 @@
             "outputFile": "com.tkolymp.tkolympapp.composeApp-mergeDebugResources-42:/values-v21/values-v21.xml",
             "map": [
                 {
-                    "source": "/home/tobias/.gradle/caches/9.1.0/transforms/b81f5d59ad511d1c8e79452abb062e77/transformed/core-1.16.0/res/values-v21/values-v21.xml",
+                    "source": "/home/tobias/.gradle/caches/9.1.0/transforms/54651dc384a754e4d627bad88e06f1de/transformed/core-1.16.0/res/values-v21/values-v21.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9,10,13",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4",

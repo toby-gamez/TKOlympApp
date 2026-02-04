@@ -35,3 +35,12 @@ global.json
 .github/*
 TkOlympApp.Tests/obj/*
 TkOlympApp.Tests/bin/*
+.gradle/*
+build/*
+.gradle/9.1.0/*
+.gradle/9.1.0/*
+shared/build/*
+.kotlin/metadata/*
+composeApp/build/*
+composeApp/.cxx/*
+.gradle/9.1.0/*
