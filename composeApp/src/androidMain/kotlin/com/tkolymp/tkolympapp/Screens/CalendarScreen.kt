@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.ServiceLocator
@@ -49,6 +50,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -57,6 +63,9 @@ fun CalendarScreen() {
     val tabs = listOf("Moje", "Všechny")
     val eventsByDayState = remember { mutableStateOf<Map<String, List<EventInstance>>>(emptyMap()) }
     val errorMessage = remember { mutableStateOf<String?>(null) }
+    val myPersonId = remember { mutableStateOf<String?>(null) }
+    val myCoupleIds = remember { mutableStateOf<List<String>>(emptyList()) }
+    val scope = rememberCoroutineScope()
 
     // compute start (Monday) and end (Sunday) for current week
     val today = LocalDate.now()
@@ -78,6 +87,18 @@ fun CalendarScreen() {
             emptyMap()
         }
         eventsByDayState.value = map
+    }
+
+    // load cached user/person/couples (used to detect "my" participants)
+    LaunchedEffect(Unit) {
+        scope.launch {
+            try {
+                myPersonId.value = ServiceLocator.userService.getCachedPersonId()
+            } catch (_: Throwable) { myPersonId.value = null }
+            try {
+                myCoupleIds.value = ServiceLocator.userService.getCachedCoupleIds()
+            } catch (_: Throwable) { myCoupleIds.value = emptyList() }
+        }
     }
     Column(
         modifier = Modifier
@@ -136,7 +157,13 @@ fun CalendarScreen() {
                     // Render grouped lessons as LessonView when group size > 1, otherwise fall back to single-card
                     lessonsByTrainer.forEach { (trainer, instances) ->
                         // Render LessonView even for a single-instance group so "Moje" shows lessons
-                        LessonView(trainerName = trainer, instances = instances.sortedBy { it.since })
+                        LessonView(
+                            trainerName = trainer,
+                            instances = instances.sortedBy { it.since },
+                            isAllTab = (selectedTab == 1),
+                            myPersonId = myPersonId.value,
+                            myCoupleIds = myCoupleIds.value
+                        )
                     }
 
                     // Render other events
@@ -226,7 +253,13 @@ private fun formatTimes(since: String?, until: String?): String {
 }
 
 @Composable
-private fun LessonView(trainerName: String, instances: List<EventInstance>) {
+private fun LessonView(
+    trainerName: String,
+    instances: List<EventInstance>,
+    isAllTab: Boolean,
+    myPersonId: String?,
+    myCoupleIds: List<String>
+) {
     Card(modifier = Modifier
         .fillMaxWidth()
         .padding(vertical = 6.dp)
@@ -250,7 +283,27 @@ private fun LessonView(trainerName: String, instances: List<EventInstance>) {
             // participants grid: each event -> one row with time, name, duration
             instances.sortedBy { it.since }.forEach { inst ->
                 val time = formatTimes(inst.since, inst.until)
-                val participants = participantsForEvent(inst.event)
+                // build participant display names together with ownership flag
+                val regs = inst.event?.eventRegistrationsList ?: emptyList()
+                    val parts: List<Pair<String, Boolean>> = regs.mapNotNull { r ->
+                    val display = r.person?.name ?: run {
+                        val man = r.couple?.man
+                        val woman = r.couple?.woman
+                        if (man != null && woman != null) {
+                            val manSurname = man.lastName?.takeIf { it.isNotBlank() } ?: man.firstName?.takeIf { it.isNotBlank() } ?: ""
+                            val womanSurname = woman.lastName?.takeIf { it.isNotBlank() } ?: woman.firstName?.takeIf { it.isNotBlank() } ?: ""
+                            val pair = listOfNotNull(manSurname.takeIf { it.isNotBlank() }, womanSurname.takeIf { it.isNotBlank() }).joinToString(" - ")
+                            if (pair.isNotBlank()) pair else null
+                        } else null
+                    }
+                    if (display == null) null else {
+                        val personIdStr = r.person?.id?.toString()
+                        val coupleIdStr = r.couple?.id?.toString()
+                        val isMine = (myPersonId != null && personIdStr == myPersonId) || (coupleIdStr != null && myCoupleIds.contains(coupleIdStr))
+                        Pair(display, isMine)
+                    }
+                }
+                val participantsEmpty = parts.isEmpty()
                 val durationMin = durationMinutes(inst.since, inst.until)
                 val deco = if (inst.isCancelled) TextDecoration.LineThrough else TextDecoration.None
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -263,14 +316,22 @@ private fun LessonView(trainerName: String, instances: List<EventInstance>) {
 
                     // participants column grows to fill remaining space
                     Column(modifier = Modifier.weight(1f)) {
-                        if (participants.isEmpty()) {
+                        if (participantsEmpty) {
                             Text(
                                 "VOLNO",
                                 style = MaterialTheme.typography.bodySmall.copy(textDecoration = deco),
                                 color = Color(0xFF4CAF50)
                             )
                         } else {
-                            Text(participants.joinToString(", "), style = MaterialTheme.typography.bodySmall.copy(textDecoration = deco))
+                            val annotated = buildAnnotatedString {
+                                parts.forEachIndexed { idx, (display, isMine) ->
+                                    if (isAllTab && isMine) {
+                                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) { append(display) }
+                                    } else append(display)
+                                    if (idx != parts.lastIndex) append(", ")
+                                }
+                            }
+                            Text(annotated, style = MaterialTheme.typography.bodySmall.copy(textDecoration = deco))
                         }
                     }
 
