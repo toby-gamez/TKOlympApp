@@ -21,7 +21,7 @@ class GraphQlClientImpl(private val httpClient: HttpClient, private val endpoint
         val resp: JsonElement = httpClient.post(endpoint) {
             contentType(ContentType.Application.Json)
             header("x-tenant-id", "1")
-            if (token != null) header("Bearer", token)
+            if (token != null) header("Authorization", "Bearer $token")
             setBody(body)
         }.body()
 

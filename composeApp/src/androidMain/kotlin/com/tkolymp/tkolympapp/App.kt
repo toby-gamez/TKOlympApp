@@ -50,6 +50,7 @@ fun App() {
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
+            containerColor = MaterialTheme.colorScheme.surface,
             topBar = {
                 if (loggedIn == true) {
                     when (current) {
@@ -75,7 +76,7 @@ fun App() {
 
             Box(
                 modifier = Modifier
-                    .background(MaterialTheme.colorScheme.primaryContainer)
+                    .background(MaterialTheme.colorScheme.surface)
                     .fillMaxSize()
                     .padding(contentPadding)
             ) {
