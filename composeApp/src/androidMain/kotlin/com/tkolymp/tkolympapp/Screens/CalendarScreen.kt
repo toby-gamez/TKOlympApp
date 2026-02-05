@@ -1,74 +1,67 @@
 
 package com.tkolymp.tkolympapp
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.Text
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.padding
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.unit.dp
-import com.tkolymp.shared.ServiceLocator
-import com.tkolymp.shared.event.EventInstance
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.time.DayOfWeek
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.time.OffsetDateTime
-import java.time.LocalDateTime
-import java.util.Locale
-import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Card
-import androidx.compose.ui.graphics.Color
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ViewTimeline
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.event.EventInstance
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-
+import kotlinx.coroutines.withContext
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,11 +76,11 @@ fun CalendarScreen(
     val tabs = listOf("Moje", "Všechny")
     val eventsByDayState = remember { mutableStateOf<Map<String, List<EventInstance>>>(emptyMap()) }
     val errorMessage = remember { mutableStateOf<String?>(null) }
+    val isLoading = remember { mutableStateOf(false) }
     val myPersonId = remember { mutableStateOf<String?>(null) }
     val myCoupleIds = remember { mutableStateOf<List<String>>(emptyList()) }
     val scope = rememberCoroutineScope()
 
-    // compute start (today + offset) and end (start + 7 days)
     val today = LocalDate.now().plusWeeks(weekOffset.toLong())
     val endDay = today.plusDays(7)
     val fmt = DateTimeFormatter.ISO_LOCAL_DATE
@@ -97,6 +90,7 @@ fun CalendarScreen(
     LaunchedEffect(selectedTab, weekOffset) {
         val onlyMine = selectedTab == 0
         val svc = ServiceLocator.eventService
+        isLoading.value = true
         val map = try {
             withContext(Dispatchers.IO) {
                 svc.fetchEventsGroupedByDay(startIso, endIso, onlyMine, 200, 0, null)
@@ -104,11 +98,12 @@ fun CalendarScreen(
         } catch (e: Exception) {
             errorMessage.value = e.message ?: "Unknown error"
             emptyMap()
+        } finally {
+            isLoading.value = false
         }
         eventsByDayState.value = map
     }
 
-    // load cached user/person/couples (used to detect "my" participants)
     LaunchedEffect(Unit) {
         scope.launch {
             try {
@@ -119,6 +114,7 @@ fun CalendarScreen(
             } catch (_: Throwable) { myCoupleIds.value = emptyList() }
         }
     }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -132,9 +128,7 @@ fun CalendarScreen(
                     IconButton(onClick = { onWeekOffsetChange(weekOffset - 1) }) {
                         Icon(Icons.Default.ChevronLeft, contentDescription = "Předchozí týden")
                     }
-                    TextButton(onClick = { onWeekOffsetChange(0) }) {
-                        Text("dnes")
-                    }
+                    TextButton(onClick = { onWeekOffsetChange(0) }) { Text("dnes") }
                     IconButton(onClick = { onWeekOffsetChange(weekOffset + 1) }) {
                         Icon(Icons.Default.ChevronRight, contentDescription = "Následující týden")
                     }
@@ -142,98 +136,97 @@ fun CalendarScreen(
             )
         }
     ) { padding ->
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = padding.calculateTopPadding(), bottom = bottomPadding),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.Start
-    ) {
-        PrimaryTabRow(selectedTabIndex = selectedTab, modifier = Modifier.fillMaxWidth()) {
-            tabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTab == index,
-                    onClick = { selectedTab = index },
-                    text = { Text(title) }
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // display grouped events inside a scrollable area so tabs stay fixed
-        val grouped = eventsByDayState.value
-        val todayKey = LocalDate.now().format(fmt)
-
-        // calendar remains visible; opening an event is handled by parent via `onOpenEvent`
-
-        Column(modifier = Modifier
-            .weight(1f)
-            .verticalScroll(rememberScrollState())
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = padding.calculateTopPadding(), bottom = bottomPadding),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.Start
         ) {
-            grouped.forEach { (date, list) ->
-                Column(modifier = Modifier.padding(8.dp)) {
-                    val header = when (date) {
-                        todayKey -> "dnes"
-                        LocalDate.now().plusDays(1).format(fmt) -> "zítra"
-                        else -> {
-                            val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
-                            if (ld == null) date else {
-                                val nowYear = LocalDate.now().year
-                                val pattern = if (ld.year == nowYear) "d. MMMM" else "d. MMMM yyyy"
-                                ld.format(DateTimeFormatter.ofPattern(pattern, Locale("cs")))
+            PrimaryTabRow(selectedTabIndex = selectedTab, modifier = Modifier.fillMaxWidth()) {
+                tabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTab == index,
+                        onClick = { selectedTab = index },
+                        text = { Text(title) }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            val grouped = eventsByDayState.value
+            val todayKey = LocalDate.now().format(fmt)
+
+            if (isLoading.value) {
+                Box(modifier = Modifier
+                    .weight(1f)
+                    .fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                Column(modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                ) {
+                    grouped.forEach { (date, list) ->
+                        Column(modifier = Modifier.padding(8.dp)) {
+                            val header = when (date) {
+                                todayKey -> "dnes"
+                                LocalDate.now().plusDays(1).format(fmt) -> "zítra"
+                                else -> {
+                                    val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
+                                    if (ld == null) date else {
+                                        val nowYear = LocalDate.now().year
+                                        val pattern = if (ld.year == nowYear) "d. MMMM" else "d. MMMM yyyy"
+                                        ld.format(DateTimeFormatter.ofPattern(pattern, Locale("cs")))
+                                    }
+                                }
+                            }
+                            Text(header, style = MaterialTheme.typography.titleMedium)
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            val lessons = list.filter {
+                                it.event?.type?.equals("lesson", ignoreCase = true) == true &&
+                                        !it.event?.eventTrainersList.isNullOrEmpty() &&
+                                        !it.event?.eventTrainersList?.firstOrNull().isNullOrBlank()
+                            }
+                            val other = list - lessons
+
+                            val lessonsByTrainer = lessons.groupBy { it.event?.eventTrainersList?.firstOrNull()!!.trim() }
+
+                            lessonsByTrainer.forEach { (trainer, instances) ->
+                                LessonView(
+                                    trainerName = trainer,
+                                    instances = instances.sortedBy { it.since },
+                                    isAllTab = (selectedTab == 1),
+                                    myPersonId = myPersonId.value,
+                                    myCoupleIds = myCoupleIds.value,
+                                    onEventClick = { id: Long -> onOpenEvent(id) }
+                                )
+                            }
+
+                            other.sortedBy { it.since }.forEach { item ->
+                                RenderSingleEventCard(item = item, onEventClick = { id: Long -> onOpenEvent(id) })
                             }
                         }
                     }
-                    Text(header, style = MaterialTheme.typography.titleMedium)
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    // Group lesson events (type == "lesson") by first trainer name
-                    // Treat empty strings as missing names: only group when trainer name is non-blank
-                    val lessons = list.filter {
-                        it.event?.type?.equals("lesson", ignoreCase = true) == true &&
-                        !it.event?.eventTrainersList.isNullOrEmpty() &&
-                        !it.event?.eventTrainersList?.firstOrNull().isNullOrBlank()
-                    }
-                    val other = list - lessons
-
-                    val lessonsByTrainer = lessons.groupBy { it.event?.eventTrainersList?.firstOrNull()!!.trim() }
-
-                    // Render grouped lessons as LessonView when group size > 1, otherwise fall back to single-card
-                    lessonsByTrainer.forEach { (trainer, instances) ->
-                        // Render LessonView even for a single-instance group so "Moje" shows lessons
-                        LessonView(
-                            trainerName = trainer,
-                            instances = instances.sortedBy { it.since },
-                            isAllTab = (selectedTab == 1),
-                            myPersonId = myPersonId.value,
-                            myCoupleIds = myCoupleIds.value,
-                            onEventClick = { id -> onOpenEvent(id) }
-                        )
-                    }
-
-                    // Render other events
-                    other.sortedBy { it.since }.forEach { item ->
-                        RenderSingleEventCard(item) { id -> onOpenEvent(id) }
-                    }
                 }
             }
-        }
 
-        if (errorMessage.value != null) {
-            AlertDialog(
-                onDismissRequest = { errorMessage.value = null },
-                confirmButton = {
-                    TextButton(onClick = { errorMessage.value = null }) { Text("OK") }
-                },
-                title = { Text("Chyba při načítání akcí") },
-                text = { Text(errorMessage.value ?: "Neznámá chyba") }
-            )
+            if (errorMessage.value != null) {
+                AlertDialog(
+                    onDismissRequest = { errorMessage.value = null },
+                    confirmButton = {
+                        TextButton(onClick = { errorMessage.value = null }) { Text("OK") }
+                    },
+                    title = { Text("Chyba při načítání akcí") },
+                    text = { Text(errorMessage.value ?: "Neznámá chyba") }
+                )
+            }
         }
-    }
     }
 }
-
 
 @Composable
 internal fun PrimaryTabRow(
@@ -241,7 +234,6 @@ internal fun PrimaryTabRow(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
-    // Simple wrapper over TabRow so we can change styling from one place later
     TabRow(selectedTabIndex = selectedTabIndex, modifier = modifier) {
         content()
     }
@@ -258,16 +250,14 @@ internal fun parseColorOrDefault(hex: String?): Color {
     }
 }
 
-// helpers moved to EventUtils.kt
-
 @Composable
 internal fun LessonView(
     trainerName: String,
     instances: List<EventInstance>,
     isAllTab: Boolean,
     myPersonId: String?,
-    myCoupleIds: List<String>
-    , onEventClick: (Long) -> Unit
+    myCoupleIds: List<String>,
+    onEventClick: (Long) -> Unit
 ) {
     Card(modifier = Modifier
         .fillMaxWidth()
@@ -279,22 +269,20 @@ internal fun LessonView(
                 Spacer(modifier = Modifier.weight(1f))
                 Text("lekce", style = MaterialTheme.typography.labelSmall)
             }
-                // show first non-blank location for the group (if any)
-                val groupLocation = instances.mapNotNull { inst ->
-                    inst.event?.locationText?.takeIf { !it.isNullOrBlank() } ?: inst.event?.location?.name?.takeIf { !it.isNullOrBlank() }
-                }.firstOrNull().orEmpty()
-                if (groupLocation.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(groupLocation, style = MaterialTheme.typography.bodySmall)
-                }
+
+            val groupLocation = instances.mapNotNull { inst ->
+                inst.event?.locationText?.takeIf { !it.isNullOrBlank() } ?: inst.event?.location?.name?.takeIf { !it.isNullOrBlank() }
+            }.firstOrNull().orEmpty()
+            if (groupLocation.isNotBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(groupLocation, style = MaterialTheme.typography.bodySmall)
+            }
             Spacer(modifier = Modifier.height(8.dp))
 
-            // participants grid: each event -> one row with time, name, duration
             instances.sortedBy { it.since }.forEach { inst ->
                 val time = formatTimes(inst.since, inst.until)
-                // build participant display names together with ownership flag
                 val regs = inst.event?.eventRegistrationsList ?: emptyList()
-                    val parts: List<Pair<String, Boolean>> = regs.mapNotNull { r ->
+                val parts: List<Pair<String, Boolean>> = regs.mapNotNull { r ->
                     val display = r.person?.name ?: run {
                         val man = r.couple?.man
                         val woman = r.couple?.woman
@@ -315,18 +303,17 @@ internal fun LessonView(
                 val participantsEmpty = parts.isEmpty()
                 val durationMin = durationMinutes(inst.since, inst.until)
                 val deco = if (inst.isCancelled) TextDecoration.LineThrough else TextDecoration.None
+
                 Row(modifier = Modifier.fillMaxWidth().clickable {
                     val evId = inst.event?.id ?: return@clickable
                     onEventClick(evId)
                 }, verticalAlignment = Alignment.CenterVertically) {
-                    // fixed width time column so times align
                     Text(
                         time,
                         style = MaterialTheme.typography.bodySmall.copy(textDecoration = deco),
                         modifier = Modifier.width(100.dp)
                     )
 
-                    // participants column grows to fill remaining space
                     Column(modifier = Modifier.weight(1f)) {
                         if (participantsEmpty) {
                             Text(
@@ -347,7 +334,6 @@ internal fun LessonView(
                         }
                     }
 
-                    // fixed width duration column, right-aligned
                     Text(
                         durationMin ?: "",
                         style = MaterialTheme.typography.bodySmall.copy(textDecoration = deco),
@@ -430,5 +416,6 @@ internal fun RenderSingleEventCard(item: EventInstance, onEventClick: (Long) -> 
     }
 }
 
-// helpers moved to EventUtils.kt
+// Note: helpers such as formatTimes, formatTimesWithDate, durationMinutes and translateEventType
+// are expected to live in EventUtils.kt as in the original project.
 

@@ -30,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.font.FontWeight
 import com.tkolymp.shared.ServiceLocator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -71,6 +72,8 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null) {
     val error = remember { mutableStateOf<String?>(null) }
     val eventJson = remember { mutableStateOf<JsonObject?>(null) }
     val showAllInstances = remember { mutableStateOf(false) }
+    val myPersonId = remember { mutableStateOf<String?>(null) }
+    val myCoupleIds = remember { mutableStateOf<List<String>>(emptyList()) }
 
     LaunchedEffect(eventId) {
         loading.value = true
@@ -86,6 +89,14 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null) {
             } else {
                 eventJson.value = ev
             }
+            // load cached current user ids for highlighting
+            try {
+                withContext(Dispatchers.IO) {
+                    val us = ServiceLocator.userService
+                    myPersonId.value = us.getCachedPersonId()
+                    myCoupleIds.value = us.getCachedCoupleIds()
+                }
+            } catch (_: Exception) {}
         } catch (ex: Exception) {
             ex.printStackTrace()
             error.value = ex.message ?: "Chyba při načítání: ${ex::class.simpleName}"
@@ -366,22 +377,39 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null) {
                         val person = reg["person"].asJsonObjectOrNull()
                         val couple = reg["couple"].asJsonObjectOrNull()
                         val note = reg.str("note")
-                        
+
                         // Získat demands (požadavky na lekce s trenéry)
                         val lessonDemands = reg["eventLessonDemandsByRegistrationIdList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
-                        
+
+                        // Build name text and skip entries without any real name
                         val nameText = when {
                             couple != null -> {
-                                val woman = couple["woman"].asJsonObjectOrNull()?.str("name")
-                                val man = couple["man"].asJsonObjectOrNull()?.str("name")
-                                "$woman - $man"
+                                val woman = couple["woman"].asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() }
+                                val man = couple["man"].asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() }
+                                when {
+                                    woman != null && man != null -> "$woman - $man"
+                                    woman != null -> woman
+                                    man != null -> man
+                                    else -> null
+                                }
                             }
-                            person != null -> person.str("name") ?: "(bez jména)"
-                            else -> "(bez jména)"
+                            person != null -> person.str("name")?.takeIf { it.isNotBlank() }
+                            else -> null
                         }
-                        
-                        Text(nameText, style = MaterialTheme.typography.bodySmall)
-                        
+
+                        if (nameText.isNullOrBlank()) return@forEach // do not show unnamed registrations
+
+                        // Determine whether this registration is the current user
+                        val personId = person?.str("id")
+                        val coupleId = couple?.str("id")
+                        val isMe = (personId != null && personId == myPersonId.value) || (coupleId != null && myCoupleIds.value.contains(coupleId))
+
+                        if (isMe) {
+                            Text(nameText, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
+                        } else {
+                            Text(nameText, style = MaterialTheme.typography.bodySmall)
+                        }
+
                         // Zobrazit trenéry a počet lekcí z demands
                         if (lessonDemands.isNotEmpty()) {
                             lessonDemands.forEach { demandEl ->
