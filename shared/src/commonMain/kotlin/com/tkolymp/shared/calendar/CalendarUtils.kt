@@ -22,7 +22,15 @@ object CalendarUtils {
         val endTime = instance.until?.let { parseUtcToLocal(it) } ?: return null
         
         val event = instance.event
-        val title = event?.name ?: "Bez názvu"
+        
+        // Determine title: if event has no name and is a lesson, use trainer name
+        val title = when {
+            !event?.name.isNullOrBlank() -> event?.name!!
+            event?.type?.equals("lesson", ignoreCase = true) == true -> {
+                event.eventTrainersList.firstOrNull()?.takeIf { it.isNotBlank() } ?: "Bez názvu"
+            }
+            else -> "Bez názvu"
+        }
         
         // Determine if this is "my" event
         val isMyEvent = isUserParticipant(event, myPersonId, myCoupleIds)

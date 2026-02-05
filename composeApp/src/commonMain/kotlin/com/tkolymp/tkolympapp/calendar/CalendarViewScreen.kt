@@ -272,7 +272,10 @@ private fun SingleDayTimelineView(
                     TimelineEventCard(
                         layoutData = layoutData,
                         minuteHeight = minuteHeight,
-                        onClick = { onEventClick(layoutData.event.id) }
+                        onClick = { 
+                            val evId = layoutData.event.event?.id ?: return@TimelineEventCard
+                            onEventClick(evId)
+                        }
                     )
                 }
             }
@@ -382,7 +385,10 @@ private fun MultiDayTimelineView(
                                     layoutData = layoutData,
                                     minuteHeight = minuteHeight,
                                     compact = true,
-                                    onClick = { onEventClick(layoutData.event.id) }
+                                    onClick = { 
+                                        val evId = layoutData.event.event?.id ?: return@TimelineEventCard
+                                        onEventClick(evId)
+                                    }
                                 )
                             }
                         }
@@ -481,9 +487,43 @@ private fun TimelineEventCard(
     val widthFraction = 1f / totalColumns
     val leftFraction = column.toFloat() / totalColumns
     
+    val isLesson = event.type?.equals("lesson", ignoreCase = true) == true
+    
+    // For lessons, get couple name or "VOLNO"
+    val coupleInfo = remember(event.event, isLesson) {
+        if (isLesson) {
+            getCoupleInfo(event.event)
+        } else null
+    }
+    
+    val displayTitle = remember(event.title, coupleInfo, isLesson) {
+        if (isLesson && coupleInfo != null) {
+            coupleInfo.displayName
+        } else {
+            event.title
+        }
+    }
+    
+    val isFreeLesson = coupleInfo?.isFree == true
+    
     // Get color
     val backgroundColor = remember(event.colorRgb, event.type) {
         parseEventColor(event.colorRgb, event.type)
+    }
+    
+    // Get trainer name for lessons
+    val trainerName = remember(event.event, isLesson) {
+        if (isLesson) {
+            event.event?.eventTrainersList?.firstOrNull()
+        } else null
+    }
+    
+    // Determine max lines based on duration
+    val titleMaxLines = when {
+        compact -> 1
+        layoutData.durationMinutes < 30 -> 1
+        layoutData.durationMinutes < 60 -> 2
+        else -> 3
     }
     
     BoxWithConstraints(
@@ -501,7 +541,7 @@ private fun TimelineEventCard(
                     y = offsetDp
                 )
                 .height(heightDp.coerceAtLeast(20.dp))
-                .padding(2.dp)
+                .padding(horizontal = 1.dp)
         ) {
             Card(
                 modifier = Modifier
@@ -516,11 +556,11 @@ private fun TimelineEventCard(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(4.dp)
+                        .padding(horizontal = 4.dp, vertical = 2.dp)
                 ) {
-                    // Title
+                    // Title (couple name for lessons, event title for others)
                     Text(
-                        text = event.title,
+                        text = displayTitle,
                         style = if (compact) {
                             MaterialTheme.typography.labelSmall
                         } else {
@@ -528,23 +568,71 @@ private fun TimelineEventCard(
                         },
                         fontWeight = if (event.isMyEvent) FontWeight.Bold else FontWeight.Normal,
                         textDecoration = if (event.isCancelled) TextDecoration.LineThrough else null,
-                        maxLines = if (compact) 1 else 2,
+                        maxLines = titleMaxLines,
                         overflow = TextOverflow.Ellipsis,
                         color = Color.White
                     )
                     
-                    // Time (if space allows)
+                    // Secondary info: trainer for lessons, time for others
                     if (layoutData.durationMinutes > 30 && !compact) {
-                        Text(
-                            text = "${CalendarUtils.formatTime(event.startTime)} - ${CalendarUtils.formatTime(event.endTime)}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color.White.copy(alpha = 0.9f)
-                        )
+                        if (isLesson && !trainerName.isNullOrBlank()) {
+                            Text(
+                                text = trainerName,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White.copy(alpha = 0.9f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        } else if (!isLesson) {
+                            Text(
+                                text = "${CalendarUtils.formatTime(event.startTime)} - ${CalendarUtils.formatTime(event.endTime)}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White.copy(alpha = 0.9f)
+                            )
+                        }
                     }
                 }
             }
         }
     }
+}
+
+/**
+ * Couple info for lessons
+ */
+private data class CoupleInfo(
+    val displayName: String,
+    val isFree: Boolean
+)
+
+/**
+ * Get couple info from event - returns couple name or "VOLNO" if no registrations
+ */
+private fun getCoupleInfo(event: com.tkolymp.shared.event.Event?): CoupleInfo? {
+    if (event == null) return null
+    
+    // Check if there are any registrations
+    if (event.eventRegistrationsList.isEmpty()) {
+        return CoupleInfo("VOLNO", true)
+    }
+    
+    // Try to get first registration with couple
+    val registration = event.eventRegistrationsList.firstOrNull { it.couple != null }
+    val couple = registration?.couple
+    
+    if (couple != null) {
+        val manLastName = couple.man?.lastName
+        val womanLastName = couple.woman?.lastName
+        
+        return if (!manLastName.isNullOrBlank() && !womanLastName.isNullOrBlank()) {
+            CoupleInfo("$manLastName - $womanLastName", false)
+        } else {
+            CoupleInfo("VOLNO", true)
+        }
+    }
+    
+    // No couple, show as free
+    return CoupleInfo("VOLNO", true)
 }
 
 /**

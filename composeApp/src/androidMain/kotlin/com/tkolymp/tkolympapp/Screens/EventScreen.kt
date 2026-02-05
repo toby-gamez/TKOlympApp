@@ -115,10 +115,17 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null) {
     fun JsonObject.int(key: String) = try { this[key]?.jsonPrimitive?.intOrNull } catch (_: Exception) { null }
     fun JsonObject.bool(key: String) = try { this[key]?.jsonPrimitive?.booleanOrNull } catch (_: Exception) { null }
 
-    val name = ev.str("name") ?: "(bez názvu)"
+    val type = ev.str("type") ?: ""
+    val trainers = ev["eventTrainersList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
+    val name = when {
+        !ev.str("name").isNullOrBlank() -> ev.str("name")!!
+        type.equals("lesson", ignoreCase = true) -> {
+            trainers.firstOrNull()?.asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() } ?: "(bez názvu)"
+        }
+        else -> "(bez názvu)"
+    }
     val descr = ev.str("description") ?: ""
     val summary = ev.str("summary") ?: ""
-    val type = ev.str("type") ?: ""
     val locationName = ev["location"].asJsonObjectOrNull()?.str("name") ?: ev.str("locationText")
         
         val isVisible = ev.bool("isVisible") ?: false
@@ -135,7 +142,6 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null) {
         val firstDate = firstInstance?.str("since")
         val lastDate = lastInstance?.str("until")
 
-        val trainers = ev["eventTrainersList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
         val cohorts = ev["eventTargetCohortsList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
         val registrations = ev["eventRegistrationsList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
         val externalRegistrations = ev["eventExternalRegistrationsList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
@@ -258,17 +264,17 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null) {
         }
 
         // Kapacita
-        if (capacity != null || remainingLessons != null) {
+        if ((capacity != null && capacity > 0) || remainingLessons != null) {
             Spacer(modifier = Modifier.height(8.dp))
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text("Kapacita", style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(6.dp))
                     val registeredCount = registrations.size + externalRegistrations.size
-                    if (capacity != null) {
-                        Text("Registrováno: $registeredCount / $capacity osob", style = MaterialTheme.typography.bodySmall)
+                    if (capacity != null && capacity > 0) {
+                        Text("Registrováno: $registeredCount / $capacity míst", style = MaterialTheme.typography.bodySmall)
                     } else if (registeredCount > 0) {
-                        Text("Registrováno: $registeredCount osob", style = MaterialTheme.typography.bodySmall)
+                        Text("Registrováno: $registeredCount míst", style = MaterialTheme.typography.bodySmall)
                     }
                     if (remainingLessons != null) {
                         Text("Zbývající lekce: $remainingLessons", style = MaterialTheme.typography.bodySmall)
@@ -338,6 +344,9 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null) {
                         val couple = reg["couple"].asJsonObjectOrNull()
                         val note = reg.str("note")
                         
+                        // Získat demands (požadavky na lekce s trenéry)
+                        val lessonDemands = reg["eventLessonDemandsByRegistrationIdList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
+                        
                         val nameText = when {
                             couple != null -> {
                                 val woman = couple["woman"].asJsonObjectOrNull()?.str("name")
@@ -349,6 +358,32 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null) {
                         }
                         
                         Text(nameText, style = MaterialTheme.typography.bodySmall)
+                        
+                        // Zobrazit trenéry a počet lekcí z demands
+                        if (lessonDemands.isNotEmpty()) {
+                            lessonDemands.forEach { demandEl ->
+                                val demand = demandEl.asJsonObjectOrNull() ?: return@forEach
+                                val trainerId = demand.int("trainerId")
+                                val lessonCount = demand.int("lessonCount")
+                                
+                                // Najít jméno trenéra podle trainerId
+                                val trainerName = trainers.firstOrNull { trainerEl ->
+                                    val trainer = trainerEl.asJsonObjectOrNull() ?: return@firstOrNull false
+                                    trainer.int("id") == trainerId
+                                }?.asJsonObjectOrNull()?.str("name") ?: "Trenér #$trainerId"
+                                
+                                val demandText = if (lessonCount != null && lessonCount > 0) {
+                                    "$trainerName: $lessonCount lekcí"
+                                } else {
+                                    trainerName
+                                }
+                                
+                                Text("   $demandText", style = MaterialTheme.typography.bodySmall.copy(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                ))
+                            }
+                        }
+                        
                         if (!note.isNullOrBlank()) {
                             Text("   Poznámka: $note", style = MaterialTheme.typography.bodySmall.copy(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant

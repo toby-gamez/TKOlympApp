@@ -42,6 +42,7 @@ fun App() {
         var loggedIn by remember { mutableStateOf<Boolean?>(null) }
         var activeEventId by remember { mutableStateOf<Long?>(null) }
         var weekOffset by remember { mutableStateOf(0) }
+        var previousScreen by remember { mutableStateOf<String?>(null) }
 
         val ctx = LocalContext.current
         if (!LocalInspectionMode.current) {
@@ -93,7 +94,11 @@ fun App() {
                         "event" -> TopAppBar(
                             title = { Text("Událost") },
                             navigationIcon = {
-                                IconButton(onClick = { current = "calendar"; activeEventId = null }) {
+                                IconButton(onClick = { 
+                                    current = previousScreen ?: "calendar"
+                                    activeEventId = null
+                                    previousScreen = null
+                                }) {
                                     Icon(Icons.Default.ArrowBack, contentDescription = "Zpět")
                                 }
                             }
@@ -104,7 +109,10 @@ fun App() {
                         "profile" -> TopAppBar(
                             title = { Text("Můj profil") },
                             navigationIcon = {
-                                IconButton(onClick = { current = "other" }) {
+                                IconButton(onClick = { 
+                                    current = previousScreen ?: "other"
+                                    previousScreen = null
+                                }) {
                                     Icon(Icons.Default.ArrowBack, contentDescription = "Zpět")
                                 }
                             }
@@ -138,16 +146,42 @@ fun App() {
                             "calendar" -> CalendarScreen(
                                 weekOffset = weekOffset,
                                 onWeekOffsetChange = { weekOffset = it },
-                                onOpenEvent = { id -> activeEventId = id; current = "event" }
+                                onOpenEvent = { id -> 
+                                    previousScreen = "calendar"
+                                    activeEventId = id
+                                    current = "event"
+                                }
                             )
                             "timeline" -> com.tkolymp.tkolympapp.calendar.CalendarViewScreen(
-                                onEventClick = { id -> activeEventId = id; current = "event" }
+                                onEventClick = { id -> 
+                                    previousScreen = "timeline"
+                                    activeEventId = id
+                                    current = "event"
+                                }
                             )
-                            "event" -> activeEventId?.let { eid -> EventScreen(eventId = eid, onBack = { current = "calendar"; activeEventId = null }) } ?: run { /* no-op */ }
+                            "event" -> activeEventId?.let { eid -> 
+                                EventScreen(
+                                    eventId = eid,
+                                    onBack = { 
+                                        current = previousScreen ?: "calendar"
+                                        activeEventId = null
+                                        previousScreen = null
+                                    }
+                                )
+                            } ?: run { /* no-op */ }
                             "board" -> BoardScreen()
                             "events" -> EventsScreen()
-                            "other" -> OtherScreen(onProfileClick = { current = "profile" })
-                            "profile" -> ProfileScreen(onLogout = { loggedIn = false; current = "overview" })
+                            "other" -> OtherScreen(onProfileClick = { 
+                                previousScreen = "other"
+                                current = "profile"
+                            })
+                            "profile" -> ProfileScreen(
+                                onLogout = { loggedIn = false; current = "overview" },
+                                onBack = { 
+                                    current = previousScreen ?: "other"
+                                    previousScreen = null
+                                }
+                            )
                             else -> {}
                         }
                 }

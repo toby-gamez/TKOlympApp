@@ -37,7 +37,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
 @Composable
-fun ProfileScreen(onLogout: () -> Unit = {}) {
+fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
     var userJson by remember { mutableStateOf<String?>(null) }
     var personJson by remember { mutableStateOf<String?>(null) }
     var titleText by remember { mutableStateOf<String?>(null) }
