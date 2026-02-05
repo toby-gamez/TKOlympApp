@@ -46,6 +46,92 @@ fun formatTimes(since: String?, until: String?): String {
     }
 }
 
+fun formatTimesWithDate(since: String?, until: String?): String {
+    if (since.isNullOrBlank() && until.isNullOrBlank()) return ""
+
+    fun parseDateTime(s: String?): Pair<String?, String?>? {
+        if (s.isNullOrBlank()) return null
+        return try {
+            val odt = OffsetDateTime.parse(s)
+            val date = odt.toLocalDate().format(DateTimeFormatter.ofPattern("d.M.yyyy"))
+            val time = odt.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))
+            Pair(date, time)
+        } catch (_: Exception) {
+            try {
+                val ldt = LocalDateTime.parse(s)
+                val date = ldt.toLocalDate().format(DateTimeFormatter.ofPattern("d.M.yyyy"))
+                val time = ldt.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))
+                Pair(date, time)
+            } catch (_: Exception) {
+                null
+            }
+        }
+    }
+
+    val sinceData = parseDateTime(since)
+    val untilData = parseDateTime(until)
+
+    return when {
+        sinceData != null && untilData != null -> {
+            val (sinceDate, sinceTime) = sinceData
+            val (untilDate, untilTime) = untilData
+            if (sinceDate == untilDate) {
+                // Stejný den - zobraz jen časy bez data
+                "$sinceTime - $untilTime"
+            } else {
+                // Různé dny - zobraz s daty
+                "$sinceDate $sinceTime - $untilDate $untilTime"
+            }
+        }
+        sinceData != null -> "${sinceData.first} ${sinceData.second}"
+        untilData != null -> "${untilData.first} ${untilData.second}"
+        else -> ""
+    }
+}
+
+fun formatTimesWithDateAlways(since: String?, until: String?): String {
+    if (since.isNullOrBlank() && until.isNullOrBlank()) return ""
+
+    fun parseDateTime(s: String?): Pair<String?, String?>? {
+        if (s.isNullOrBlank()) return null
+        return try {
+            val odt = OffsetDateTime.parse(s)
+            val date = odt.toLocalDate().format(DateTimeFormatter.ofPattern("d.M.yyyy"))
+            val time = odt.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))
+            Pair(date, time)
+        } catch (_: Exception) {
+            try {
+                val ldt = LocalDateTime.parse(s)
+                val date = ldt.toLocalDate().format(DateTimeFormatter.ofPattern("d.M.yyyy"))
+                val time = ldt.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))
+                Pair(date, time)
+            } catch (_: Exception) {
+                null
+            }
+        }
+    }
+
+    val sinceData = parseDateTime(since)
+    val untilData = parseDateTime(until)
+
+    return when {
+        sinceData != null && untilData != null -> {
+            val (sinceDate, sinceTime) = sinceData
+            val (untilDate, untilTime) = untilData
+            if (sinceDate == untilDate) {
+                // Stejný den - ale stále zobraz datum
+                "$sinceDate $sinceTime - $untilTime"
+            } else {
+                // Různé dny - zobraz oba daty
+                "$sinceDate $sinceTime - $untilDate $untilTime"
+            }
+        }
+        sinceData != null -> "${sinceData.first} ${sinceData.second}"
+        untilData != null -> "${untilData.first} ${untilData.second}"
+        else -> ""
+    }
+}
+
 fun durationMinutes(since: String?, until: String?): String? {
     if (since.isNullOrBlank() || until.isNullOrBlank()) return null
     return try {
@@ -56,6 +142,61 @@ fun durationMinutes(since: String?, until: String?): String? {
     } catch (_: Exception) {
         null
     }
+}
+
+fun formatHtmlContent(html: String?): String {
+    if (html.isNullOrBlank()) return ""
+    
+    var text = html
+        // Nahradit odstavce a breaks novými řádky
+        .replace(Regex("<br\\s*/?>", RegexOption.IGNORE_CASE), "\n")
+        .replace(Regex("<p[^>]*>", RegexOption.IGNORE_CASE), "")
+        .replace(Regex("</p>", RegexOption.IGNORE_CASE), "\n\n")
+        
+        // Nadpisy
+        .replace(Regex("<h[1-6][^>]*>", RegexOption.IGNORE_CASE), "\n")
+        .replace(Regex("</h[1-6]>", RegexOption.IGNORE_CASE), "\n\n")
+        
+        // Seznamy
+        .replace(Regex("<li[^>]*>", RegexOption.IGNORE_CASE), "\n• ")
+        .replace(Regex("</li>", RegexOption.IGNORE_CASE), "")
+        .replace(Regex("</?[ou]l[^>]*>", RegexOption.IGNORE_CASE), "\n")
+        
+        // Formátovací tagy - zachovat obsah, odstranit tagy
+        .replace(Regex("</?strong>", RegexOption.IGNORE_CASE), "")
+        .replace(Regex("</?b>", RegexOption.IGNORE_CASE), "")
+        .replace(Regex("</?em>", RegexOption.IGNORE_CASE), "")
+        .replace(Regex("</?i>", RegexOption.IGNORE_CASE), "")
+    
+    // Extrahovat odkazy před odstraněním HTML tagů
+    text = text.replace(Regex("<a[^>]+href=[\"']([^\"']+)[\"'][^>]*>([^<]*)</a>", RegexOption.IGNORE_CASE)) { matchResult ->
+        val url = matchResult.groupValues[1]
+        val linkText = matchResult.groupValues[2]
+        if (linkText.isNotBlank()) {
+            "$linkText ($url)"
+        } else {
+            url
+        }
+    }
+    
+    text = text
+        // Odstranit zbylé HTML tagy
+        .replace(Regex("<[^>]+>"), "")
+        
+        // Dekódovat HTML entity
+        .replace("&nbsp;", " ")
+        .replace("&amp;", "&")
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&quot;", "\"")
+        .replace("&#39;", "'")
+        .replace("&apos;", "'")
+        
+        // Vyčistit nadbytečné prázdné řádky
+        .replace(Regex("\n{3,}"), "\n\n")
+        .trim()
+    
+    return text
 }
 
 fun participantsForEvent(event: Event?): List<String> {

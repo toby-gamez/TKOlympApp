@@ -12,8 +12,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.ViewTimeline
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,6 +41,7 @@ fun App() {
         var current by remember { mutableStateOf("overview") }
         var loggedIn by remember { mutableStateOf<Boolean?>(null) }
         var activeEventId by remember { mutableStateOf<Long?>(null) }
+        var weekOffset by remember { mutableStateOf(0) }
 
         val ctx = LocalContext.current
         if (!LocalInspectionMode.current) {
@@ -60,7 +65,31 @@ fun App() {
                 if (loggedIn == true) {
                     when (current) {
                         "overview" -> TopAppBar(title = { Text("Přehled") })
-                        "calendar" -> TopAppBar(title = { Text("Kalendář") })
+                        "calendar" -> TopAppBar(
+                            title = { Text("Kalendář") },
+                            actions = {
+                                IconButton(onClick = { current = "timeline" }) {
+                                    Icon(Icons.Default.ViewTimeline, contentDescription = "Timeline zobrazení")
+                                }
+                                IconButton(onClick = { weekOffset -= 1 }) {
+                                    Icon(Icons.Default.ChevronLeft, contentDescription = "Předchozí týden")
+                                }
+                                TextButton(onClick = { weekOffset = 0 }) {
+                                    Text("dnes")
+                                }
+                                IconButton(onClick = { weekOffset += 1 }) {
+                                    Icon(Icons.Default.ChevronRight, contentDescription = "Následující týden")
+                                }
+                            }
+                        )
+                        "timeline" -> TopAppBar(
+                            title = { Text("Timeline") },
+                            navigationIcon = {
+                                IconButton(onClick = { current = "calendar" }) {
+                                    Icon(Icons.Default.ArrowBack, contentDescription = "Zpět")
+                                }
+                            }
+                        )
                         "event" -> TopAppBar(
                             title = { Text("Událost") },
                             navigationIcon = {
@@ -106,7 +135,14 @@ fun App() {
                     false -> LoginScreen(onSuccess = { loggedIn = true; current = "overview" })
                             true -> when (current) {
                             "overview" -> OverviewScreen()
-                            "calendar" -> CalendarScreen(onOpenEvent = { id -> activeEventId = id; current = "event" })
+                            "calendar" -> CalendarScreen(
+                                weekOffset = weekOffset,
+                                onWeekOffsetChange = { weekOffset = it },
+                                onOpenEvent = { id -> activeEventId = id; current = "event" }
+                            )
+                            "timeline" -> com.tkolymp.tkolympapp.calendar.CalendarViewScreen(
+                                onEventClick = { id -> activeEventId = id; current = "event" }
+                            )
                             "event" -> activeEventId?.let { eid -> EventScreen(eventId = eid, onBack = { current = "calendar"; activeEventId = null }) } ?: run { /* no-op */ }
                             "board" -> BoardScreen()
                             "events" -> EventsScreen()

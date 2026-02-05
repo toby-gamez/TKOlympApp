@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -61,6 +62,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null) {
     val loading = remember { mutableStateOf(false) }
     val error = remember { mutableStateOf<String?>(null) }
     val eventJson = remember { mutableStateOf<JsonObject?>(null) }
+    val showAllInstances = remember { mutableStateOf(false) }
 
     LaunchedEffect(eventId) {
         loading.value = true
@@ -161,8 +163,8 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null) {
                 if (firstDate != null || lastDate != null) {
                     val dateText = when {
                         firstDate != null && lastDate != null && firstDate != lastDate -> 
-                            "Termín: ${formatTimes(firstDate, null)} - ${formatTimes(lastDate, null)}"
-                        firstDate != null -> "Termín: ${formatTimes(firstDate, lastDate)}"
+                            "Termín: ${formatTimesWithDateAlways(firstDate, null)} - ${formatTimesWithDateAlways(lastDate, null)}"
+                        firstDate != null -> "Termín: ${formatTimesWithDateAlways(firstDate, lastDate)}"
                         else -> ""
                     }
                     if (dateText.isNotBlank()) {
@@ -172,6 +174,54 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null) {
                 }
                 if (instances.isNotEmpty()) {
                     Text("Počet termínů: ${instances.size}", style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+
+        // Seznam termínů
+        if (instances.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text("Termíny události", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    
+                    val instancesToShow = if (showAllInstances.value || instances.size <= 3) {
+                        instances
+                    } else {
+                        instances.take(3)
+                    }
+                    
+                    instancesToShow.forEachIndexed { index, instanceEl ->
+                        val instance = instanceEl.asJsonObjectOrNull() ?: return@forEachIndexed
+                        val since = instance.str("since")
+                        val until = instance.str("until")
+                        val instLocation = instance["location"].asJsonObjectOrNull()?.str("name")
+                        
+                        if (index > 0) Spacer(modifier = Modifier.height(4.dp))
+                        
+                        Text("${index + 1}. ${formatTimesWithDateAlways(since, until)}", 
+                            style = MaterialTheme.typography.bodySmall)
+                        
+                        if (!instLocation.isNullOrBlank() && instLocation != locationName) {
+                            Text("   Místo: $instLocation", 
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                ))
+                        }
+                    }
+                    
+                    if (instances.size > 3 && !showAllInstances.value) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        TextButton(onClick = { showAllInstances.value = true }) {
+                            Text("Zobrazit všech ${instances.size} termínů")
+                        }
+                    } else if (instances.size > 3 && showAllInstances.value) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        TextButton(onClick = { showAllInstances.value = false }) {
+                            Text("Zobrazit méně")
+                        }
+                    }
                 }
             }
         }
@@ -193,13 +243,15 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null) {
         if (summary.isNotBlank() || descr.isNotBlank()) {
             Spacer(modifier = Modifier.height(8.dp))
             Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    if (summary.isNotBlank()) {
-                        Text(summary, style = MaterialTheme.typography.bodyMedium)
-                        if (descr.isNotBlank()) Spacer(modifier = Modifier.height(8.dp))
-                    }
-                    if (descr.isNotBlank()) {
-                        Text(descr, style = MaterialTheme.typography.bodySmall)
+                SelectionContainer {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        if (summary.isNotBlank()) {
+                            Text(formatHtmlContent(summary), style = MaterialTheme.typography.bodyMedium)
+                            if (descr.isNotBlank()) Spacer(modifier = Modifier.height(8.dp))
+                        }
+                        if (descr.isNotBlank()) {
+                            Text(formatHtmlContent(descr), style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                 }
             }
@@ -271,15 +323,17 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null) {
         Spacer(modifier = Modifier.height(8.dp))
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(12.dp)) {
-                Text("Přihlášení účastníci (${registrations.size})", style = MaterialTheme.typography.titleMedium)
+                val totalCount = registrations.size + externalRegistrations.size
+                Text("Přihlášení účastníci ($totalCount)", style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(6.dp))
-                if (registrations.isEmpty()) {
+                if (totalCount == 0) {
                     Text("Žádní přihlášení účastníci", style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     ))
                 } else {
-                    registrations.forEachIndexed { index, regEl ->
-                        val reg = regEl.asJsonObjectOrNull() ?: return@forEachIndexed
+                    // Běžné registrace
+                    registrations.forEach { regEl ->
+                        val reg = regEl.asJsonObjectOrNull() ?: return@forEach
                         val person = reg["person"].asJsonObjectOrNull()
                         val couple = reg["couple"].asJsonObjectOrNull()
                         val note = reg.str("note")
@@ -288,43 +342,30 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null) {
                             couple != null -> {
                                 val woman = couple["woman"].asJsonObjectOrNull()?.str("name")
                                 val man = couple["man"].asJsonObjectOrNull()?.str("name")
-                                "$woman & $man (pár)"
+                                "$woman - $man"
                             }
                             person != null -> person.str("name") ?: "(bez jména)"
                             else -> "(bez jména)"
                         }
                         
-                        Text("${index + 1}. $nameText", style = MaterialTheme.typography.bodySmall)
+                        Text(nameText, style = MaterialTheme.typography.bodySmall)
                         if (!note.isNullOrBlank()) {
                             Text("   Poznámka: $note", style = MaterialTheme.typography.bodySmall.copy(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             ))
                         }
                     }
-                }
-            }
-        }
-
-        // Externí registrace
-        Spacer(modifier = Modifier.height(8.dp))
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(12.dp)) {
-                Text("Externí registrace (${externalRegistrations.size})", style = MaterialTheme.typography.titleMedium)
-                Spacer(modifier = Modifier.height(6.dp))
-                if (externalRegistrations.isEmpty()) {
-                    Text("Žádné externí registrace", style = MaterialTheme.typography.bodySmall.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    ))
-                } else {
-                    externalRegistrations.forEachIndexed { index, extRegEl ->
-                        val extReg = extRegEl.asJsonObjectOrNull() ?: return@forEachIndexed
+                    
+                    // Externí registrace
+                    externalRegistrations.forEach { extRegEl ->
+                        val extReg = extRegEl.asJsonObjectOrNull() ?: return@forEach
                         val firstName = extReg.str("firstName") ?: ""
                         val lastName = extReg.str("lastName") ?: ""
                         val email = extReg.str("email")
                         val phone = extReg.str("phone")
                         val note = extReg.str("note")
                         
-                        Text("${index + 1}. $firstName $lastName", style = MaterialTheme.typography.bodySmall)
+                        Text("$firstName $lastName (externí)", style = MaterialTheme.typography.bodySmall)
                         if (!email.isNullOrBlank()) {
                             Text("   Email: $email", style = MaterialTheme.typography.bodySmall.copy(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant

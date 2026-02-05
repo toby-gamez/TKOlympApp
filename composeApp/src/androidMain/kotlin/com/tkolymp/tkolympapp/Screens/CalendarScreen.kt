@@ -41,6 +41,11 @@ import androidx.compose.material3.Card
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -58,7 +63,11 @@ import kotlinx.coroutines.launch
 
 
 @Composable
-fun CalendarScreen(onOpenEvent: (Long) -> Unit = {}) {
+fun CalendarScreen(
+    weekOffset: Int = 0,
+    onWeekOffsetChange: (Int) -> Unit = {},
+    onOpenEvent: (Long) -> Unit = {}
+) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     val tabs = listOf("Moje", "Všechny")
     val eventsByDayState = remember { mutableStateOf<Map<String, List<EventInstance>>>(emptyMap()) }
@@ -67,14 +76,14 @@ fun CalendarScreen(onOpenEvent: (Long) -> Unit = {}) {
     val myCoupleIds = remember { mutableStateOf<List<String>>(emptyList()) }
     val scope = rememberCoroutineScope()
 
-    // compute start (today) and end (today + 7 days)
-    val today = LocalDate.now()
+    // compute start (today + offset) and end (start + 7 days)
+    val today = LocalDate.now().plusWeeks(weekOffset.toLong())
     val endDay = today.plusDays(7)
     val fmt = DateTimeFormatter.ISO_LOCAL_DATE
     val startIso = today.toString() + "T00:00:00Z"
     val endIso = endDay.toString() + "T23:59:59Z"
 
-    LaunchedEffect(selectedTab) {
+    LaunchedEffect(selectedTab, weekOffset) {
         val onlyMine = selectedTab == 0
         val svc = ServiceLocator.eventService
         val map = try {
@@ -326,7 +335,7 @@ private fun RenderSingleEventCard(item: EventInstance, onEventClick: (Long) -> U
         eventObj?.location?.name?.takeIf { !it.isNullOrBlank() },
         eventObj?.eventTrainersList?.firstOrNull()?.takeIf { !it.isNullOrBlank() }
     ).firstOrNull().orEmpty()
-    val timeText = formatTimes(item.since, item.until)
+    val timeText = formatTimesWithDate(item.since, item.until)
 
     Card(modifier = Modifier
         .fillMaxWidth()
