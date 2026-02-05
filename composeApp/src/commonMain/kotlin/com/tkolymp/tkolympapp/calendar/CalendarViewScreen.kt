@@ -12,10 +12,31 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.layout.Layout
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -37,10 +58,12 @@ import kotlinx.datetime.*
 /**
  * Main CalendarView screen with timeline visualization
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarViewScreen(
     viewModel: CalendarViewModel = remember { CalendarViewModel() },
-    onEventClick: (Long) -> Unit = {}
+    onEventClick: (Long) -> Unit = {},
+    onBack: (() -> Unit)? = null
 ) {
     val state by viewModel.state.collectAsState()
     val scope = rememberCoroutineScope()
@@ -50,9 +73,24 @@ fun CalendarViewScreen(
         viewModel.loadEvents()
     }
     
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Timeline") },
+                navigationIcon = {
+                    onBack?.let {
+                        IconButton(onClick = it) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Zpět")
+                        }
+                    }
+                }
+            )
+        }
+    ) { padding ->
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .padding(padding)
             .background(MaterialTheme.colorScheme.background)
     ) {
         // Top bar with navigation and view mode selector
@@ -119,13 +157,14 @@ fun CalendarViewScreen(
             }
         }
     }
+    }
 }
 
 /**
  * Top bar with navigation controls
  */
 @Composable
-private fun CalendarTopBar(
+internal fun CalendarTopBar(
     dateLabel: String,
     viewMode: ViewMode,
     showOnlyMine: Boolean,
@@ -212,7 +251,7 @@ private fun CalendarTopBar(
  * Single day timeline view with hour markers and events
  */
 @Composable
-private fun SingleDayTimelineView(
+internal fun SingleDayTimelineView(
     events: List<EventLayoutData>,
     selectedDate: LocalDate,
     onEventClick: (Long) -> Unit
@@ -287,7 +326,7 @@ private fun SingleDayTimelineView(
  * Multi-day timeline view (3-day or week view)
  */
 @Composable
-private fun MultiDayTimelineView(
+internal fun MultiDayTimelineView(
     dates: List<LocalDate>,
     getEventsForDate: (LocalDate) -> List<EventLayoutData>,
     onEventClick: (Long) -> Unit
@@ -411,7 +450,7 @@ private fun MultiDayTimelineView(
  * Hour markers column
  */
 @Composable
-private fun HourMarkersColumn(
+internal fun HourMarkersColumn(
     modifier: Modifier = Modifier,
     compact: Boolean = false
 ) {
@@ -443,7 +482,7 @@ private fun HourMarkersColumn(
  * "Now" line showing current time
  */
 @Composable
-private fun NowLine(
+internal fun NowLine(
     modifier: Modifier = Modifier,
     minuteHeight: androidx.compose.ui.unit.Dp
 ) {
@@ -469,7 +508,7 @@ private fun NowLine(
  * Individual event card in timeline
  */
 @Composable
-private fun TimelineEventCard(
+internal fun TimelineEventCard(
     layoutData: EventLayoutData,
     minuteHeight: androidx.compose.ui.unit.Dp,
     compact: Boolean = false,
@@ -600,7 +639,7 @@ private fun TimelineEventCard(
 /**
  * Couple info for lessons
  */
-private data class CoupleInfo(
+internal data class CoupleInfo(
     val displayName: String,
     val isFree: Boolean
 )
@@ -608,7 +647,7 @@ private data class CoupleInfo(
 /**
  * Get couple info from event - returns couple name or "VOLNO" if no registrations
  */
-private fun getCoupleInfo(event: com.tkolymp.shared.event.Event?): CoupleInfo? {
+internal fun getCoupleInfo(event: com.tkolymp.shared.event.Event?): CoupleInfo? {
     if (event == null) return null
     
     // Check if there are any registrations
@@ -638,7 +677,7 @@ private fun getCoupleInfo(event: com.tkolymp.shared.event.Event?): CoupleInfo? {
 /**
  * Parse event color from string
  */
-private fun parseEventColor(colorRgb: String?, type: String?): Color {
+internal fun parseEventColor(colorRgb: String?, type: String?): Color {
     // Special handling for lessons - use secondary theme color
     if (colorRgb == "lesson" || type?.equals("lesson", ignoreCase = true) == true) {
         return Color(0xFF2196F3) // Material Blue - will be replaced with theme color in UI

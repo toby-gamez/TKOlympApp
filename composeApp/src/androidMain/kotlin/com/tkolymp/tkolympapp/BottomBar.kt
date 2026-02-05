@@ -11,10 +11,11 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 
 @Composable
-fun AppBottomBar(current: String, onSelect: (String) -> Unit) {
-    NavigationBar {
+fun AppBottomBar(current: String, onSelect: (String) -> Unit, modifier: Modifier = Modifier) {
+    NavigationBar(modifier = modifier) {
         NavigationBarItem(
             selected = current == "overview",
             onClick = { onSelect("overview") },

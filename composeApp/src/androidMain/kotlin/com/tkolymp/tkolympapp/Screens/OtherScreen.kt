@@ -4,8 +4,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -15,6 +18,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.ServiceLocator
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
@@ -72,8 +77,9 @@ private fun formatDateString(raw: String): String? {
     return null
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OtherScreen(onProfileClick: () -> Unit = {}) {
+fun OtherScreen(onProfileClick: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
     var name by remember { mutableStateOf<String?>(null) }
     var subtitle by remember { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -149,9 +155,15 @@ fun OtherScreen(onProfileClick: () -> Unit = {}) {
         }
     }
 
+    Scaffold(
+        topBar = {
+            TopAppBar(title = { Text("Ostatní") })
+        }
+    ) { padding ->
     Column(
         modifier = Modifier
-            .fillMaxSize(),
+            .fillMaxSize()
+            .padding(top = padding.calculateTopPadding(), bottom = bottomPadding),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {
@@ -203,5 +215,6 @@ fun OtherScreen(onProfileClick: () -> Unit = {}) {
             if (personDetailsRaw != null) Text("person: ${personDetailsRaw}", style = MaterialTheme.typography.bodySmall)
             if (personDob != null) Text("birth: ${personDob}", style = MaterialTheme.typography.bodySmall)
         }
+    }
     }
 }

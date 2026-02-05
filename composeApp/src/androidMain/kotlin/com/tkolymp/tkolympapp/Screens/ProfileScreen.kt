@@ -13,8 +13,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,6 +43,7 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
     var userJson by remember { mutableStateOf<String?>(null) }
@@ -158,8 +166,26 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
 
     val outerScroll = rememberScrollState()
 
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Můj profil") },
+                navigationIcon = {
+                    onBack?.let {
+                        IconButton(onClick = it) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Zpět")
+                        }
+                    }
+                }
+            )
+        }
+    ) { padding ->
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(outerScroll).padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)
+            .verticalScroll(outerScroll)
+            .padding(16.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {
@@ -409,5 +435,6 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
             Text("Odhlásit")
         }
+    }
     }
 }

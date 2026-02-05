@@ -46,6 +46,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.ViewTimeline
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -59,14 +65,19 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
     weekOffset: Int = 0,
     onWeekOffsetChange: (Int) -> Unit = {},
-    onOpenEvent: (Long) -> Unit = {}
+    onOpenEvent: (Long) -> Unit = {},
+    onNavigateTimeline: (() -> Unit)? = null,
+    bottomPadding: Dp = 0.dp
 ) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     val tabs = listOf("Moje", "Všechny")
@@ -108,9 +119,33 @@ fun CalendarScreen(
             } catch (_: Throwable) { myCoupleIds.value = emptyList() }
         }
     }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Kalendář") },
+                actions = {
+                    onNavigateTimeline?.let {
+                        IconButton(onClick = it) {
+                            Icon(Icons.Default.ViewTimeline, contentDescription = "Timeline zobrazení")
+                        }
+                    }
+                    IconButton(onClick = { onWeekOffsetChange(weekOffset - 1) }) {
+                        Icon(Icons.Default.ChevronLeft, contentDescription = "Předchozí týden")
+                    }
+                    TextButton(onClick = { onWeekOffsetChange(0) }) {
+                        Text("dnes")
+                    }
+                    IconButton(onClick = { onWeekOffsetChange(weekOffset + 1) }) {
+                        Icon(Icons.Default.ChevronRight, contentDescription = "Následující týden")
+                    }
+                }
+            )
+        }
+    ) { padding ->
     Column(
         modifier = Modifier
-            .fillMaxSize(),
+            .fillMaxSize()
+            .padding(top = padding.calculateTopPadding(), bottom = bottomPadding),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {
@@ -196,11 +231,12 @@ fun CalendarScreen(
             )
         }
     }
+    }
 }
 
 
 @Composable
-private fun PrimaryTabRow(
+internal fun PrimaryTabRow(
     selectedTabIndex: Int,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
@@ -211,7 +247,7 @@ private fun PrimaryTabRow(
     }
 }
 
-private fun parseColorOrDefault(hex: String?): Color {
+internal fun parseColorOrDefault(hex: String?): Color {
     if (hex.isNullOrBlank()) return Color.Gray
     return try {
         var s = hex.trim()
@@ -225,7 +261,7 @@ private fun parseColorOrDefault(hex: String?): Color {
 // helpers moved to EventUtils.kt
 
 @Composable
-private fun LessonView(
+internal fun LessonView(
     trainerName: String,
     instances: List<EventInstance>,
     isAllTab: Boolean,
@@ -326,7 +362,7 @@ private fun LessonView(
 }
 
 @Composable
-private fun RenderSingleEventCard(item: EventInstance, onEventClick: (Long) -> Unit) {
+internal fun RenderSingleEventCard(item: EventInstance, onEventClick: (Long) -> Unit) {
     val name = item.event?.name ?: "(no name)"
     val cancelled = item.isCancelled
     val eventObj = item.event
