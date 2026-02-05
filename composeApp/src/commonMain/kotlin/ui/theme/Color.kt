@@ -9,16 +9,16 @@ import androidx.compose.ui.graphics.Color
 private val md_theme_light_primary = Color(0xFFEE1733) // brand
 private val md_theme_light_onPrimary = Color.White
 
-private val md_theme_light_primaryContainer = Color(0xFFFFD8DC)
+private val md_theme_light_primaryContainer = Color(0xFFE77C8A)
 private val md_theme_light_onPrimaryContainer = Color(0xFF3F0008)
 
 private val md_theme_light_secondary = Color(0xFFC40F2A) // tmavší červená
 private val md_theme_light_onSecondary = Color.White
 
-private val md_theme_light_secondaryContainer = Color(0xFFFFE1E4)
+private val md_theme_light_secondaryContainer = Color(0xFFF68B99)
 private val md_theme_light_onSecondaryContainer = Color(0xFF3A0007)
 
-private val md_theme_light_tertiary = Color(0xFFFF8A96) //
+private val md_theme_light_tertiary = Color(0xFFF1495A) //
 private val md_theme_light_onTertiary = Color(0xFF3A0007)
 
 private val md_theme_light_tertiaryContainer = Color(0xFFFFECEE)

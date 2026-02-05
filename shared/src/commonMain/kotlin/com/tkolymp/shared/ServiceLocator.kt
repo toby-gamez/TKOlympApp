@@ -6,6 +6,7 @@ import com.tkolymp.shared.storage.TokenStorage
 import com.tkolymp.shared.event.IEventService
 import com.tkolymp.shared.storage.UserStorage
 import com.tkolymp.shared.user.UserService
+import com.tkolymp.shared.announcements.IAnnouncementService
 
 object ServiceLocator {
     lateinit var graphQlClient: IGraphQlClient
@@ -14,4 +15,5 @@ object ServiceLocator {
     lateinit var eventService: IEventService
     lateinit var userStorage: UserStorage
     lateinit var userService: UserService
+    lateinit var announcementService: IAnnouncementService
 }

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App theme that overrides text selection handles and cursor to use app colors -->
+    <style name="AppTheme" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:textSelectHandle">@drawable/handle_tinted</item>
+        <item name="android:textSelectHandleLeft">@drawable/handle_start_tinted</item>
+        <item name="android:textSelectHandleRight">@drawable/handle_end_tinted</item>
+        <item name="android:textCursorDrawable">@drawable/cursor_tinted</item>
+    </style>
+</resources>

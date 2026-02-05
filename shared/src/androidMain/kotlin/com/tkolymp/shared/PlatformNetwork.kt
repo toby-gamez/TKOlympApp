@@ -34,6 +34,7 @@ suspend fun initNetworking(context: Context, baseUrl: String) {
     val gql = GraphQlClientImpl(client, baseUrl)
     val auth = AuthService(storage, gql)
     val eventSvc = EventService(gql)
+    val announcementSvc = com.tkolymp.shared.announcements.AnnouncementServiceImpl()
     val userStorage = UserStorage(context)
     val userSvc = UserService(gql, userStorage)
 
@@ -41,6 +42,7 @@ suspend fun initNetworking(context: Context, baseUrl: String) {
     ServiceLocator.authService = auth
     ServiceLocator.tokenStorage = storage
     ServiceLocator.eventService = eventSvc
+    ServiceLocator.announcementService = announcementSvc
     ServiceLocator.userStorage = userStorage
     ServiceLocator.userService = userSvc
 

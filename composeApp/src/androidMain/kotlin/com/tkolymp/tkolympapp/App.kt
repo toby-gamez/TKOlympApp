@@ -167,7 +167,7 @@ fun AppNavHost(
             enterTransition = { fadeIn(animationSpec = tween(300)) },
             exitTransition = { fadeOut(animationSpec = tween(300)) }
         ) {
-            BoardScreen(bottomPadding = bottomPadding)
+            BoardScreen(bottomPadding = bottomPadding, onOpenNotice = { id -> navController.navigate("notice/$id") })
         }
         
         composable(
@@ -252,6 +252,43 @@ fun AppNavHost(
             eventId?.let { eid ->
                 EventScreen(
                     eventId = eid,
+                    onBack = { navController.navigateUp() }
+                )
+            }
+        }
+
+        composable(
+            route = "notice/{noticeId}",
+            arguments = listOf(navArgument("noticeId") { type = NavType.LongType }),
+            enterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            popEnterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            }
+        ) { backStackEntry ->
+            val noticeId = backStackEntry.arguments?.getLong("noticeId")
+            noticeId?.let { nid ->
+                NoticeScreen(
+                    announcementId = nid,
                     onBack = { navController.navigateUp() }
                 )
             }
