@@ -216,7 +216,45 @@ fun AppNavHost(
                 )
             }
         ) {
-            PeopleScreen(onPersonClick = { /* navigate to profile or person detail if implemented */ navController.navigate("profile") }, onBack = { navController.navigateUp() })
+            PeopleScreen(onPersonClick = { id -> navController.navigate("person/$id") }, onBack = { navController.navigateUp() })
+        }
+
+        composable(
+            route = "person/{personId}",
+            arguments = listOf(navArgument("personId") { type = NavType.StringType }),
+            enterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            popEnterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            }
+        ) { backStackEntry ->
+            val personId = backStackEntry.arguments?.getString("personId")
+            personId?.let { pid ->
+                com.tkolymp.tkolympapp.Screens.PersonPage(
+                    personId = pid,
+                    onBack = { navController.navigateUp() },
+                    onOpenCouple = { /* no-op for now */ }
+                )
+            }
         }
         
         // Vedlejší obrazovky s horizontálními přechody

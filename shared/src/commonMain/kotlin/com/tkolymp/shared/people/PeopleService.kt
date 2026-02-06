@@ -5,13 +5,15 @@ import com.tkolymp.shared.network.IGraphQlClient
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
 data class PersonName(val firstName: String?, val lastName: String?)
 
 data class Cohort(val id: String?, val name: String?, val colorRgb: String?, val isVisible: Boolean?)
-data class CohortMembership(val cohort: Cohort?)
+data class CohortMembership(val cohort: Cohort?, val since: String? = null, val until: String? = null)
 data class Person(
     val id: String,
     val firstName: String?,
@@ -20,6 +22,28 @@ data class Person(
     val suffixTitle: String? = null,
     val birthDate: String?,
     val cohortMembershipsList: List<CohortMembership>
+)
+
+data class CoupleMember(val firstName: String?, val lastName: String?)
+data class ActiveCouple(val id: String?, val man: CoupleMember?, val woman: CoupleMember?)
+
+data class PersonDetails(
+    val id: String,
+    val firstName: String?,
+    val lastName: String?,
+    val prefixTitle: String? = null,
+    val suffixTitle: String? = null,
+    val birthDate: String?,
+    val bio: String?,
+    val cstsId: String?,
+    val email: String?,
+    val gender: String?,
+    val isTrainer: Boolean?,
+    val phone: String?,
+    val wdsfId: String?,
+    val activeCouplesList: List<ActiveCouple>,
+    val cohortMembershipsList: List<CohortMembership>,
+    val rawResponse: JsonElement? = null
 )
 
 class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlClient) {
@@ -136,4 +160,110 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
             Person(id, first, last, prefix, suffix, birth, memberships)
         }
     }
+
+        suspend fun fetchPerson(personId: String): PersonDetails? {
+                // use GraphQL variable for person id and pass it via `variables` to the client
+                val query = """
+                        query PersonBasic(${'$'}id: BigInt!) {
+                            person(id: ${'$'}id) {
+                                id
+                                bio
+                                birthDate
+                                cstsId
+                                email
+                                firstName
+                                prefixTitle
+                                suffixTitle
+                                gender
+                                isTrainer
+                                lastName
+                                phone
+                                wdsfId
+                                activeCouplesList {
+                                    man { firstName lastName }
+                                    woman { firstName lastName }
+                                    id
+                                }
+                                cohortMembershipsList {
+                                    cohort { colorRgb name isVisible id }
+                                    since
+                                    until
+                                }
+                            }
+                        }
+                """.trimIndent()
+
+                val idVar = personId.toLongOrNull()?.let { JsonPrimitive(it) } ?: JsonPrimitive(personId)
+                val variables = buildJsonObject { put("id", idVar) }
+                val el = try { client.post(query, variables) } catch (ex: Exception) {
+                    // surface exception for callers/logging
+                    throw ex
+                }
+            val root = (el as? JsonObject)?.get("data") as? JsonObject
+            if (root == null) {
+                    // return an object with the raw response so UI can show it for debugging
+                    return PersonDetails(
+                        id = personId,
+                        firstName = null,
+                        lastName = null,
+                        prefixTitle = null,
+                        suffixTitle = null,
+                        birthDate = null,
+                        bio = null,
+                        cstsId = null,
+                        email = null,
+                        gender = null,
+                        isTrainer = null,
+                        phone = null,
+                        wdsfId = null,
+                        activeCouplesList = emptyList(),
+                        cohortMembershipsList = emptyList(),
+                        rawResponse = el
+                    )
+                }
+
+            val personObj = root.get("person") as? JsonObject
+            val id = personObj?.get("id")?.jsonPrimitive?.contentOrNull ?: personId
+                val first = personObj?.get("firstName")?.jsonPrimitive?.contentOrNull
+                val last = personObj?.get("lastName")?.jsonPrimitive?.contentOrNull
+                val prefix = personObj?.get("prefixTitle")?.jsonPrimitive?.contentOrNull
+                val suffix = personObj?.get("suffixTitle")?.jsonPrimitive?.contentOrNull
+                val birth = personObj?.get("birthDate")?.jsonPrimitive?.contentOrNull
+                val bio = personObj?.get("bio")?.jsonPrimitive?.contentOrNull
+                val csts = personObj?.get("cstsId")?.jsonPrimitive?.contentOrNull
+                val email = personObj?.get("email")?.jsonPrimitive?.contentOrNull
+                val gender = personObj?.get("gender")?.jsonPrimitive?.contentOrNull
+                val isTrainer = personObj?.get("isTrainer")?.jsonPrimitive?.contentOrNull?.let { it == "true" }
+                val phone = personObj?.get("phone")?.jsonPrimitive?.contentOrNull
+                val wdsf = personObj?.get("wdsfId")?.jsonPrimitive?.contentOrNull
+
+            val couplesArr = (personObj?.get("activeCouplesList") as? kotlinx.serialization.json.JsonArray)?._safeMap { cEl ->
+                        val cObj = cEl as? JsonObject ?: return@_safeMap null
+                        val cid = cObj.get("id")?.jsonPrimitive?.contentOrNull
+                        val manObj = cObj.get("man") as? JsonObject
+                        val womanObj = cObj.get("woman") as? JsonObject
+                        val man = CoupleMember(manObj?.get("firstName")?.jsonPrimitive?.contentOrNull, manObj?.get("lastName")?.jsonPrimitive?.contentOrNull)
+                        val woman = CoupleMember(womanObj?.get("firstName")?.jsonPrimitive?.contentOrNull, womanObj?.get("lastName")?.jsonPrimitive?.contentOrNull)
+                        ActiveCouple(cid, man, woman)
+            } ?: emptyList()
+
+            val memberships = (personObj?.get("cohortMembershipsList") as? kotlinx.serialization.json.JsonArray)?._safeMap { mEl ->
+                val mObj = mEl as? JsonObject ?: return@_safeMap null
+                val cohortObj = mObj.get("cohort") as? JsonObject
+                val cId = cohortObj?.get("id")?.jsonPrimitive?.contentOrNull
+                val cName = cohortObj?.get("name")?.jsonPrimitive?.contentOrNull
+                val cColor = cohortObj?.get("colorRgb")?.jsonPrimitive?.contentOrNull
+                val cVis = cohortObj?.get("isVisible")?.jsonPrimitive?.contentOrNull?.let { it == "true" }
+                val since = mObj.get("since")?.jsonPrimitive?.contentOrNull
+                val until = mObj.get("until")?.jsonPrimitive?.contentOrNull
+                CohortMembership(Cohort(cId, cName, cColor, cVis), since, until)
+            } ?: emptyList()
+
+            return PersonDetails(id, first, last, prefix, suffix, birth, bio, csts, email, gender, isTrainer, phone, wdsf, couplesArr, memberships, el)
+        }
+
+        // helper extension to map JsonArray safely to list (generic)
+        private fun <T> kotlinx.serialization.json.JsonArray._safeMap(mapper: (kotlinx.serialization.json.JsonElement) -> T?): List<T> {
+            return this.mapNotNull { mapper(it) }
+        }
 }
