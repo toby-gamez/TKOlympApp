@@ -33,6 +33,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.people.PersonDetails
 import kotlinx.coroutines.Dispatchers
@@ -70,11 +72,16 @@ fun PersonPage(personId: String, onBack: () -> Unit = {}, onOpenCouple: (String)
             IconButton(onClick = onBack) { Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Zpět") }
         })
     }) { padding ->
-        Column(modifier = Modifier.padding(padding).padding(8.dp).verticalScroll(rememberScrollState())) {
-            if (loading) {
-                Text("Načítání…", modifier = Modifier.padding(8.dp))
-                return@Column
+        if (loading) {
+            Box(modifier = Modifier
+                .padding(padding)
+                .fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
             }
+            return@Scaffold
+        }
+
+        Column(modifier = Modifier.padding(padding).padding(8.dp).verticalScroll(rememberScrollState())) {
 
             error?.let { Text("Chyba: $it", color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(8.dp)) }
 
