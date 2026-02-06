@@ -1,0 +1,297 @@
+package com.tkolymp.tkolympapp.Screens
+
+// no manual refresh button
+ 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.people.Person
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.time.Instant
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
+import java.time.temporal.ChronoUnit
+
+private enum class SortMode { ALPHABETICAL, BIRTHDAY }
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) {
+    var people by remember { mutableStateOf<List<Person>>(emptyList()) }
+    var loading by remember { mutableStateOf(false) }
+    var sortMode by remember { mutableStateOf<SortMode>(SortMode.ALPHABETICAL) }
+
+    LaunchedEffect(Unit) {
+        loading = true
+        val list = try { withContext(Dispatchers.IO) { ServiceLocator.peopleService.fetchPeople() } } catch (_: Throwable) { emptyList() }
+        people = list
+        loading = false
+    }
+
+    Scaffold(topBar = {
+        TopAppBar(
+            title = { Text("Lidé") },
+            navigationIcon = {
+                IconButton(onClick = onBack) {
+                    Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Zpět")
+                }
+            }
+        )
+    }) { padding ->
+        Column(modifier = Modifier.padding(padding)) {
+            // sort controls
+            Row(modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                TextButton(onClick = { sortMode = SortMode.ALPHABETICAL }) {
+                    Text("Abecedně", color = if (sortMode == SortMode.ALPHABETICAL) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                TextButton(onClick = { sortMode = SortMode.BIRTHDAY }) {
+                    Text("Narozeniny", color = if (sortMode == SortMode.BIRTHDAY) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                }
+            }
+
+            // groups (cohorts) filter with multi-selection (default: show all)
+            var selectedGroups by remember { mutableStateOf<Set<String>>(emptySet()) }
+            val groups = remember(people) {
+                people.flatMap { p -> p.cohortMembershipsList.mapNotNull { it.cohort } }
+                    .mapNotNull { c ->
+                        // only include visible cohorts
+                        if (c.isVisible == false) return@mapNotNull null
+                        val id = c.id ?: return@mapNotNull null
+                        val name = c.name ?: id
+                        id to name
+                    }
+                    .distinctBy { it.first }
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                    // 'Vše' clears selection (empty = show all)
+                    FilterChip(
+                        selected = selectedGroups.isEmpty() || selectedGroups.size == groups.size,
+                        onClick = { selectedGroups = emptySet() },
+                        label = { Text("Vše") }
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    groups.forEach { (id, name) ->
+                        FilterChip(
+                            selected = selectedGroups.contains(id),
+                            onClick = {
+                                selectedGroups = if (selectedGroups.contains(id)) selectedGroups - id else selectedGroups + id
+                            },
+                            label = { Text(name) }
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                    }
+                }
+
+            }
+
+            val displayed = remember(people, sortMode, selectedGroups, groups) {
+                val filtered = if (selectedGroups.isEmpty() || selectedGroups.size == groups.size) people else people.filter { p ->
+                    p.cohortMembershipsList
+                        .mapNotNull { it.cohort }
+                        .filter { it.isVisible != false }
+                        .any { it.id?.let { id -> selectedGroups.contains(id) } == true }
+                }
+                when (sortMode) {
+                    SortMode.ALPHABETICAL -> filtered.sortedBy { p -> listOf(p.firstName, p.lastName, p.suffixTitle).filterNotNull().filter { it.isNotBlank() }.joinToString(" ").lowercase() }
+                    SortMode.BIRTHDAY -> filtered.sortedBy { daysUntilNextBirthday(it.birthDate) }
+                }
+            }
+            // manual refresh removed; initial load happens in LaunchedEffect
+
+            if (displayed.isEmpty()) {
+                Text("Žádní lidé k zobrazení.", modifier = Modifier.padding(16.dp))
+            } else {
+                LazyColumn(modifier = Modifier.padding(4.dp)) {
+                    items(displayed) { p ->
+                        Card(modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp, vertical = 4.dp)
+                            .clickable { onPersonClick(p.id) }
+                        ) {
+                            Row(modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    val base = listOf(p.prefixTitle, p.firstName, p.lastName).filterNotNull().filter { it.isNotBlank() }.joinToString(" ")
+                                    val name = if (!p.suffixTitle.isNullOrBlank()) "$base, ${p.suffixTitle}" else base
+                                    Text(name.ifBlank { p.id }, style = MaterialTheme.typography.titleMedium)
+                                    p.birthDate?.let { raw ->
+                                        val formatted = formatDateString(raw)
+                                        Text(formatted ?: raw, style = MaterialTheme.typography.bodySmall)
+                                    }
+                                }
+
+                                // show cohort color(s) as small circles on the right (similar to CalendarScreen)
+                                val cohortColors = p.cohortMembershipsList
+                                                .mapNotNull { it.cohort }
+                                                .filter { it.isVisible != false }
+                                                .mapNotNull { it.colorRgb }
+                                                .mapNotNull { hex ->
+                                                    try {
+                                                        parseColorOrDefault(hex)
+                                                    } catch (_: Exception) { null }
+                                                }
+
+                                if (cohortColors.isEmpty()) {
+                                    val cohortName = p.cohortMembershipsList
+                                        .mapNotNull { it.cohort }
+                                        .firstOrNull { it.isVisible != false }
+                                        ?.name
+                                    cohortName?.let { Text(it, style = MaterialTheme.typography.labelSmall) }
+                                } else {
+                                    Row {
+                                        cohortColors.forEachIndexed { idx, color ->
+                                            Box(modifier = Modifier
+                                                .size(12.dp)
+                                                .background(color, CircleShape)
+                                            )
+                                            if (idx != cohortColors.lastIndex) Spacer(modifier = Modifier.width(6.dp))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+internal fun parseColorOrDefault(hex: String?): Color {
+    if (hex.isNullOrBlank()) return Color.Gray
+    return try {
+        var s = hex.trim()
+        if (!s.startsWith("#")) s = "#" + s
+        Color(android.graphics.Color.parseColor(s))
+    } catch (e: Exception) {
+        Color.Gray
+    }
+}
+
+internal fun formatDateString(raw: String?): String? {
+    if (raw.isNullOrBlank()) return null
+    val s = raw.trim()
+    val datePrefix = Regex("\\d{4}-\\d{2}-\\d{2}").find(s)?.value
+    val formatterOut = DateTimeFormatter.ofPattern("d. M. yyyy")
+    try {
+        if (datePrefix != null && datePrefix.length == 10) {
+            val ld = LocalDate.parse(datePrefix)
+            return ld.format(formatterOut)
+        }
+        val odt = OffsetDateTime.parse(s)
+        return odt.toLocalDate().format(formatterOut)
+    } catch (_: DateTimeParseException) {
+    }
+    try {
+        val zdt = ZonedDateTime.parse(s)
+        return zdt.toLocalDate().format(formatterOut)
+    } catch (_: DateTimeParseException) {
+    }
+    try {
+        val instant = Instant.parse(s)
+        val ld = instant.atZone(ZoneId.systemDefault()).toLocalDate()
+        return ld.format(formatterOut)
+    } catch (_: DateTimeParseException) {
+    }
+    return null
+}
+
+internal fun daysUntilNextBirthday(raw: String?): Int {
+    if (raw.isNullOrBlank()) return Int.MAX_VALUE
+    val s = raw.trim()
+    val datePrefix = Regex("\\d{4}-\\d{2}-\\d{2}").find(s)?.value
+    val today = LocalDate.now()
+    val ld: LocalDate = try {
+        if (datePrefix != null && datePrefix.length == 10) {
+            LocalDate.parse(datePrefix)
+        } else {
+            try {
+                OffsetDateTime.parse(s).toLocalDate()
+            } catch (_: DateTimeParseException) {
+                try {
+                    ZonedDateTime.parse(s).toLocalDate()
+                } catch (_: DateTimeParseException) {
+                    try {
+                        Instant.parse(s).atZone(ZoneId.systemDefault()).toLocalDate()
+                    } catch (_: DateTimeParseException) {
+                        return Int.MAX_VALUE
+                    }
+                }
+            }
+        }
+    } catch (_: Exception) {
+        return Int.MAX_VALUE
+    }
+
+    val month = ld.monthValue
+    val day = ld.dayOfMonth
+    val candidate = try {
+        LocalDate.of(today.year, month, day)
+    } catch (_: Exception) {
+        // handle Feb 29 on non-leap years by using Feb 28
+        if (month == 2 && day == 29) LocalDate.of(today.year, 2, 28) else return Int.MAX_VALUE
+    }
+
+    var next = if (candidate.isBefore(today)) candidate.plusYears(1) else candidate
+    // ensure next exists (leap-year edge-case)
+    if (next.monthValue == 2 && next.dayOfMonth == 29) {
+        // if target year isn't leap, shift to Feb 28
+        if (!java.time.Year.isLeap(next.year.toLong())) next = LocalDate.of(next.year, 2, 28)
+    }
+
+    return try {
+        ChronoUnit.DAYS.between(today, next).toInt()
+    } catch (_: Exception) {
+        Int.MAX_VALUE
+    }
+}

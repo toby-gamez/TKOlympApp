@@ -35,6 +35,14 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Box
@@ -79,7 +87,7 @@ private fun formatDateString(raw: String): String? {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OtherScreen(onProfileClick: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
+fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
     var name by remember { mutableStateOf<String?>(null) }
     var subtitle by remember { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -208,6 +216,92 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
         }
 
         if (error != null) Text(error!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+        
+        Spacer(modifier = Modifier.width(16.dp))
+        
+        // První sekce - Členové a klub
+        Text(
+            text = "Členové a klub",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 4.dp)
+        )
+        
+        val mainItems = listOf(
+            Pair("Lidé", Icons.Filled.People),
+            Pair("Trenéři a tréninkové prostory", Icons.Filled.FitnessCenter),
+            Pair("Tréninkové skupiny", Icons.Filled.Groups),
+            Pair("Žebříček", Icons.Filled.EmojiEvents)
+        )
+        
+        mainItems.forEach { (item, icon) ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                    .clickable { if (item == "Lidé") onPeopleClick() }
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = item,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(
+                        text = item,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            }
+        }
+        
+        Spacer(modifier = Modifier.width(16.dp))
+        
+        // Druhá sekce - Aplikace
+        Text(
+            text = "Aplikace",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp)
+        )
+        
+        val settingsItems = listOf(
+            Pair("Jazyky", Icons.Filled.Language),
+            Pair("O aplikaci", Icons.Filled.Info),
+            Pair("Nastavení notifikací", Icons.Filled.Notifications),
+            Pair("Zásady ochrany osobních údajů", Icons.Filled.Security)
+        )
+        
+        settingsItems.forEach { (item, icon) ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = item,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(
+                        text = item,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            }
+        }
+        
         if (showDebug) {
             Text("personId: ${personId ?: "(null)"}", style = MaterialTheme.typography.bodySmall)
             Text("coupleIds: ${if (coupleIds.isEmpty()) "[]" else coupleIds.joinToString(", ")}", style = MaterialTheme.typography.bodySmall)

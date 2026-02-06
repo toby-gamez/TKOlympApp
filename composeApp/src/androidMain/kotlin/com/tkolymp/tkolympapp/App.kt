@@ -41,6 +41,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.tkolympapp.Screens.CalendarViewScreen
+import com.tkolymp.tkolympapp.Screens.PeopleScreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -185,7 +186,37 @@ fun AppNavHost(
             enterTransition = { fadeIn(animationSpec = tween(300)) },
             exitTransition = { fadeOut(animationSpec = tween(300)) }
         ) {
-            OtherScreen(onProfileClick = { navController.navigate("profile") }, bottomPadding = bottomPadding)
+            OtherScreen(onProfileClick = { navController.navigate("profile") }, onPeopleClick = { navController.navigate("people") }, bottomPadding = bottomPadding)
+        }
+
+        composable(
+            route = "people",
+            enterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            popEnterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            }
+        ) {
+            PeopleScreen(onPersonClick = { /* navigate to profile or person detail if implemented */ navController.navigate("profile") }, onBack = { navController.navigateUp() })
         }
         
         // Vedlejší obrazovky s horizontálními přechody
