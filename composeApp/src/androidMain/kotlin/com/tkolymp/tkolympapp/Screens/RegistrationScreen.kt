@@ -1,38 +1,44 @@
 package com.tkolymp.tkolympapp
 
 import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import com.tkolymp.shared.ServiceLocator
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.tkolymp.shared.ServiceLocator
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
@@ -83,24 +89,49 @@ fun RegistrationScreen(
     onSetLessonDemand: (String, Int, Int) -> Unit,
     onDelete: (String) -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        TopAppBar(
-            title = { Text(when (mode) { is RegMode.Register -> "Zapsat se"; is RegMode.Edit -> "Upravit registraci"; is RegMode.Delete -> "Smazat registraci" }) },
-            navigationIcon = {
-                IconButton(onClick = onClose) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Zpět")
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(when (mode) { is RegMode.Register -> "Zapsat se"; is RegMode.Edit -> "Upravit registraci"; is RegMode.Delete -> "Smazat registraci" }) },
+                navigationIcon = {
+                    IconButton(onClick = onClose) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Zpět")
+                    }
                 }
+            )
+        }
+    ) { padding ->
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)
+            .verticalScroll(rememberScrollState())
+            .background(MaterialTheme.colorScheme.background)
+            .padding(12.dp)
+        ) {
+
+        // cache trainer display names (shared across modes)
+        val trainerNames = remember { mutableStateMapOf<String, String>() }
+        LaunchedEffect(trainers) {
+            try {
+                val svc = ServiceLocator.peopleService
+                trainers.forEachIndexed { idx, tEl ->
+                    val tObj = tEl as? JsonObject
+                    val tIdStr = tObj?.get("id")?.jsonPrimitive?.contentOrNull ?: idx.toString()
+                    val personRef = tObj?.get("person").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
+                        ?: tObj?.get("personId")?.jsonPrimitive?.contentOrNull
+                    val fetched = when {
+                        !personRef.isNullOrBlank() -> try { svc.fetchPersonDisplayName(personRef, false) } catch (_: Throwable) { null }
+                        else -> null
+                    }
+                    if (!fetched.isNullOrBlank()) trainerNames[tIdStr] = fetched
+                }
+            } catch (_: Throwable) {
             }
-        )
-
-        // show event id for debugging / clarity
-        Text("ID: $eventId", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-
-        Spacer(modifier = Modifier.height(8.dp))
+        }
 
         when (mode) {
             is RegMode.Register -> {
-                Card(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+                Column(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(12.dp)) {
                         Text("Vyberte, koho registrujete:", style = MaterialTheme.typography.bodyMedium)
                         Spacer(modifier = Modifier.height(6.dp))
@@ -176,7 +207,10 @@ fun RegistrationScreen(
 
                         trainers.forEachIndexed { idx, tEl ->
                             val tObj = tEl as? JsonObject
-                            val tName = tObj?.get("name")?.jsonPrimitive?.contentOrNull ?: "Trenér #$idx"
+                            val tIdStr = tObj?.get("id")?.jsonPrimitive?.contentOrNull ?: idx.toString()
+                            val tName = tObj?.get("name")?.jsonPrimitive?.contentOrNull
+                                ?: trainerNames[tIdStr]
+                                ?: "Trenér #$idx"
                             Row(modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 6.dp),
@@ -185,29 +219,41 @@ fun RegistrationScreen(
                             ) {
                                 Text(tName, modifier = Modifier.weight(1f))
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Button(onClick = {
+                                    IconButton(onClick = {
                                         val old = counts.getOrNull(idx) ?: 0
                                         val newVal = (old - 1).coerceAtLeast(0)
                                         if (idx < counts.size) counts[idx] = newVal else counts.add(newVal)
                                         Log.d("RegScreen", "Register mode: trainer=$idx old=$old new=$newVal")
-                                    }) { Text("-") }
+                                    }) { Icon(Icons.Default.Remove, contentDescription = "Snížit") }
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text("${counts[idx]}", modifier = Modifier.padding(8.dp))
-                                    Button(onClick = {
+                                    IconButton(onClick = {
                                         val old = counts.getOrNull(idx) ?: 0
                                         val maxForTrainer = (tObj?.get("lessonsRemaining")?.jsonPrimitive?.intOrNull
                                             ?.let { if (it < 0) Int.MAX_VALUE else it } ?: Int.MAX_VALUE)
                                         val newVal = (old + 1).coerceAtMost(maxForTrainer)
                                         if (idx < counts.size) counts[idx] = newVal else counts.add(newVal)
                                         Log.d("RegScreen", "Register mode: trainer=$idx old=$old max=$maxForTrainer new=$newVal")
-                                    }) { Text("+") }
+                                    }) { Icon(Icons.Default.Add, contentDescription = "Přidat") }
                                 }
                             }
                         }
 
                         Spacer(modifier = Modifier.height(12.dp))
+                        val showSelectError = remember { mutableStateOf(false) }
+                        val showRegisterError = remember { mutableStateOf<String?>(null) }
+                        if (showSelectError.value) {
+                            Text("Vyberte někoho k registraci", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
                         Button(onClick = {
                             val registrant = selectedRegistrant.value
+                            if (registrant.first.isNullOrBlank() && registrant.second.isNullOrBlank()) {
+                                showSelectError.value = true
+                                return@Button
+                            }
+                            showSelectError.value = false
+                            showRegisterError.value = null
                             val lessons = trainers.mapIndexedNotNull { i, tEl ->
                                 val cnt = counts[i]
                                 if (cnt > 0) {
@@ -216,16 +262,25 @@ fun RegistrationScreen(
                                 } else null
                             }
                             val regInput = RegistrationInput(registrant.first, registrant.second, lessons)
-                            onRegister(listOf(regInput))
-                        }) { Text("Potvrdit registraci") }
+                            try {
+                                onRegister(listOf(regInput))
+                                onClose()
+                            } catch (t: Throwable) {
+                                Log.e("RegScreen", "Register failed", t)
+                                showRegisterError.value = t.message ?: "Chyba při registraci"
+                            }
+                        }, modifier = Modifier.fillMaxWidth()) { Text("Potvrdit registraci") }
+                        if (!showRegisterError.value.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(showRegisterError.value!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                 }
             }
             is RegMode.Edit -> {
-                Card(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Text("Vyberte svou registraci:", style = MaterialTheme.typography.bodyMedium)
-                        Spacer(modifier = Modifier.height(6.dp))
+                Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).padding(12.dp)) {
+                    Text("Vyberte svou registraci:", style = MaterialTheme.typography.bodyMedium)
+                    Spacer(modifier = Modifier.height(6.dp))
 
                         val selectedRegId = remember { mutableStateOf<String?>(null) }
                         // helper to compute initial counts for a registration id
@@ -257,11 +312,35 @@ fun RegistrationScreen(
                         }
 
                         Column {
+                            // fetch display names for registrations (person/couple) and show them
+                            val regDisplayNames = remember { mutableStateMapOf<String, String>() }
+                            LaunchedEffect(registrations) {
+                                try {
+                                    val svc = ServiceLocator.peopleService
+                                    registrations.forEach { rEl ->
+                                        val r = rEl as? JsonObject
+                                        val rid = r?.get("id")?.jsonPrimitive?.contentOrNull
+                                        if (rid != null) {
+                                            val personId = r?.get("person").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
+                                            val coupleId = r?.get("couple").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
+                                            val fetched = when {
+                                                !personId.isNullOrBlank() -> try { svc.fetchPersonDisplayName(personId, false) } catch (_: Throwable) { null }
+                                                !coupleId.isNullOrBlank() -> try { svc.fetchCoupleDisplayName(coupleId) } catch (_: Throwable) { null }
+                                                else -> null
+                                            }
+                                            if (!fetched.isNullOrBlank()) regDisplayNames[rid] = fetched
+                                        }
+                                    }
+                                } catch (_: Throwable) {
+                                }
+                            }
+
                             registrations.forEach { rEl ->
                                 val r = rEl as? JsonObject
                                 val rid = r?.get("id")?.jsonPrimitive?.contentOrNull
-                                val label = r?.get("person").asJsonObjectOrNull()?.get("name")?.jsonPrimitive?.contentOrNull
-                                    ?: r?.get("couple").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull ?: "#${rid ?: "?"}"
+                                val labelFromJson = r?.get("person").asJsonObjectOrNull()?.get("name")?.jsonPrimitive?.contentOrNull
+                                    ?: r?.get("couple").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
+                                val label = regDisplayNames[rid ?: ""] ?: labelFromJson ?: "#${rid ?: "?"}"
                                 Row(modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(vertical = 4.dp)
@@ -280,13 +359,15 @@ fun RegistrationScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         val selectedId = selectedRegId.value
+                        val showEditError = remember { mutableStateOf<String?>(null) }
                         if (selectedId != null) {
-                            Text("Upravit nároky na lekce:")
+                            Text("Upravit nároky na lekce:", style = MaterialTheme.typography.bodyMedium)
                             // ensure counts exist for this registration
                             val countsState = countsByReg[selectedId]!!
                             trainers.forEachIndexed { idx, tEl ->
                                 val tObj = tEl as? JsonObject
-                                val tName = tObj?.get("name")?.jsonPrimitive?.contentOrNull ?: "Trenér #$idx"
+                                val tIdStr = tObj?.get("id")?.jsonPrimitive?.contentOrNull ?: idx.toString()
+                                val tName = tObj?.get("name")?.jsonPrimitive?.contentOrNull ?: trainerNames[tIdStr] ?: "Trenér #$idx"
                                 Row(modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(vertical = 6.dp),
@@ -295,50 +376,86 @@ fun RegistrationScreen(
                                 ) {
                                     Text(tName, modifier = Modifier.weight(1f))
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Button(onClick = {
+                                        IconButton(onClick = {
                                             val old = countsState.getOrNull(idx) ?: 0
                                             val newVal = (old - 1).coerceAtLeast(0)
                                             if (idx < countsState.size) countsState[idx] = newVal else countsState.add(newVal)
-                                        }) { Text("-") }
+                                        }) { Icon(Icons.Default.Remove, contentDescription = "Snížit") }
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text("${countsState.getOrNull(idx) ?: 0}", modifier = Modifier.padding(8.dp))
-                                        Button(onClick = {
+                                        IconButton(onClick = {
                                             val old = countsState.getOrNull(idx) ?: 0
                                             val maxForTrainer = (tObj?.get("lessonsRemaining")?.jsonPrimitive?.intOrNull
                                                 ?.let { if (it < 0) Int.MAX_VALUE else it } ?: Int.MAX_VALUE)
                                             val newVal = (old + 1).coerceAtMost(maxForTrainer)
                                             if (idx < countsState.size) countsState[idx] = newVal else countsState.add(newVal)
                                             Log.d("RegScreen", "Edit mode: reg=$selectedId trainer=$idx old=$old max=$maxForTrainer new=$newVal")
-                                        }) { Text("+") }
+                                        }) { Icon(Icons.Default.Add, contentDescription = "Přidat") }
                                     }
                                 }
                             }
 
                             Spacer(modifier = Modifier.height(12.dp))
                             Button(onClick = {
-                                // call onSetLessonDemand for each trainer using countsState
-                                val regId = selectedId
-                                countsState.forEachIndexed { i, cnt ->
-                                    val trainerId = (trainers[i] as? JsonObject)?.get("id")?.jsonPrimitive?.intOrNull ?: i
-                                    onSetLessonDemand(regId!!, trainerId, cnt)
+                                showEditError.value = null
+                                try {
+                                    // call onSetLessonDemand for each trainer using countsState
+                                    val regId = selectedId
+                                    countsState.forEachIndexed { i, cnt ->
+                                        val trainerId = (trainers[i] as? JsonObject)?.get("id")?.jsonPrimitive?.intOrNull ?: i
+                                        onSetLessonDemand(regId!!, trainerId, cnt)
+                                    }
+                                    onClose()
+                                } catch (t: Throwable) {
+                                    Log.e("RegScreen", "SetLessonDemand failed", t)
+                                    showEditError.value = t.message ?: "Chyba při ukládání změn"
                                 }
-                            }) { Text("Uložit změny") }
+                            }, modifier = Modifier.fillMaxWidth()) { Text("Uložit změny") }
+                            if (!showEditError.value.isNullOrBlank()) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(showEditError.value!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                            }
                         }
                     }
                 }
-            }
+
             is RegMode.Delete -> {
-                Card(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+                Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                     Column(modifier = Modifier.padding(12.dp)) {
                         Text("Vyberte registraci k odstranění:", style = MaterialTheme.typography.bodyMedium)
                         Spacer(modifier = Modifier.height(6.dp))
                         val selectedReg = remember { mutableStateOf<String?>(null) }
+                        val showDeleteError = remember { mutableStateOf<String?>(null) }
                         Column {
+                            // fetch display names for registrations (person/couple) and show them
+                            val regDisplayNames = remember { mutableStateMapOf<String, String>() }
+                            LaunchedEffect(registrations) {
+                                try {
+                                    val svc = ServiceLocator.peopleService
+                                    registrations.forEach { rEl ->
+                                        val r = rEl as? JsonObject
+                                        val rid = r?.get("id")?.jsonPrimitive?.contentOrNull
+                                        if (rid != null) {
+                                            val personId = r?.get("person").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
+                                            val coupleId = r?.get("couple").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
+                                            val fetched = when {
+                                                !personId.isNullOrBlank() -> try { svc.fetchPersonDisplayName(personId, false) } catch (_: Throwable) { null }
+                                                !coupleId.isNullOrBlank() -> try { svc.fetchCoupleDisplayName(coupleId) } catch (_: Throwable) { null }
+                                                else -> null
+                                            }
+                                            if (!fetched.isNullOrBlank()) regDisplayNames[rid] = fetched
+                                        }
+                                    }
+                                } catch (_: Throwable) {
+                                }
+                            }
+
                             registrations.forEach { rEl ->
                                 val r = rEl as? JsonObject
                                 val rid = r?.get("id")?.jsonPrimitive?.contentOrNull
-                                val label = r?.get("person").asJsonObjectOrNull()?.get("name")?.jsonPrimitive?.contentOrNull
-                                    ?: r?.get("couple").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull ?: "#${rid ?: "?"}"
+                                val labelFromJson = r?.get("person").asJsonObjectOrNull()?.get("name")?.jsonPrimitive?.contentOrNull
+                                    ?: r?.get("couple").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
+                                val label = regDisplayNames[rid ?: ""] ?: labelFromJson ?: "#${rid ?: "?"}"
                                 Row(modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(vertical = 4.dp)
@@ -353,12 +470,50 @@ fun RegistrationScreen(
                         }
 
                         Spacer(modifier = Modifier.height(12.dp))
-                        Button(onClick = {
-                            selectedReg.value?.let { onDelete(it) }
-                        }) { Text("Smazat vybranou registraci") }
+                        val showConfirmDelete = remember { mutableStateOf(false) }
+                        Button(
+                            onClick = {
+                                showDeleteError.value = null
+                                if (selectedReg.value != null) {
+                                    showConfirmDelete.value = true
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = selectedReg.value != null
+                        ) { Text("Smazat vybranou registraci") }
+
+                        if (showConfirmDelete.value) {
+                            AlertDialog(
+                                onDismissRequest = { showConfirmDelete.value = false },
+                                title = { Text("Potvrzení smazání") },
+                                text = { Text("Opravdu chcete smazat vybranou registraci?") },
+                                confirmButton = {
+                                    TextButton(onClick = {
+                                        showConfirmDelete.value = false
+                                        showDeleteError.value = null
+                                        selectedReg.value?.let {
+                                            try {
+                                                onDelete(it)
+                                                onClose()
+                                            } catch (t: Throwable) {
+                                                Log.e("RegScreen", "Delete failed", t)
+                                                showDeleteError.value = t.message ?: "Chyba při mazání"
+                                            }
+                                        }
+                                    }) { Text("Smazat") }
+                                },
+                                dismissButton = {
+                                    TextButton(onClick = { showConfirmDelete.value = false }) { Text("Zrušit") }
+                                }
+                            )
+                        }
+                        if (!showDeleteError.value.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(showDeleteError.value!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                 }
             }
         }
     }
-}
+}}

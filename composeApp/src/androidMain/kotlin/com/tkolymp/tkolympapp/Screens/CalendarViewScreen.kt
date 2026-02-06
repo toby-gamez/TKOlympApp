@@ -237,22 +237,21 @@ internal fun CalendarTopBar(
                     )
                 }
             }
-            
-            // My events filter
-            FilterChip(
-                selected = showOnlyMine,
-                onClick = onToggleOnlyMine,
-                label = { Text("Moje") }
-            )
-        }
-        
-        // Today button
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            TextButton(onClick = onTodayClick) {
-                Text("Dnes")
+
+            // Right-side: my events filter + Today button
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(onClick = onTodayClick) {
+                    Text("Dnes")
+                }
+
+                FilterChip(
+                    selected = showOnlyMine,
+                    onClick = onToggleOnlyMine,
+                    label = { Text("Moje") }
+                )
             }
         }
     }

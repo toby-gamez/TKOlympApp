@@ -17,6 +17,12 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -333,7 +339,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                     if (userRegistered) isRegistrationOpen else false
                 }
 
-                val editRegistrationButtonVisible = if (trainerCount == 1) false else true
+                val editRegistrationButtonVisible = true
                 val deleteFullWidth = trainerCount == 1
 
                 // --- Render buttons stacked under the event info ---
@@ -348,20 +354,42 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                         }
 
                         if (registrationActionsRowVisible) {
-                            // Stacked actions: edit (if visible) and delete
+                            // If edit actions and the "Zapsat dalšího" action are visible,
+                            // render all three on a single row: wide text button + two tonal icon buttons.
                             if (editRegistrationButtonVisible) {
-                                Button(onClick = { onOpenRegistration?.invoke("edit", null) }, modifier = Modifier.fillMaxWidth()) {
-                                    Text("Upravit registraci")
+                                Box(modifier = Modifier.fillMaxWidth()) {
+                                    Button(
+                                        onClick = { onOpenRegistration?.invoke("register", null) },
+                                        modifier = Modifier.widthIn(max = 300.dp).padding(end = 112.dp)
+                                    ) {
+                                        Text("Zapsat dalšího")
+                                    }
+                                    Row(modifier = Modifier.align(Alignment.CenterEnd), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        FilledTonalButton(onClick = { onOpenRegistration?.invoke("edit", null) }) {
+                                            Icon(Icons.Default.Edit, contentDescription = "Upravit registraci")
+                                        }
+                                        FilledTonalButton(onClick = { onOpenRegistration?.invoke("delete", null) }) {
+                                            Icon(Icons.Default.Delete, contentDescription = "Smazat registraci")
+                                        }
+                                    }
                                 }
                                 Spacer(modifier = Modifier.height(6.dp))
-                            }
+                            } else {
+                                // Fallback: show edit as full-width if applicable
+                                if (editRegistrationButtonVisible) {
+                                    Button(onClick = { onOpenRegistration?.invoke("edit", null) }, modifier = Modifier.fillMaxWidth()) {
+                                        Text("Upravit registraci")
+                                    }
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                }
 
-                            // Delete button: if only one trainer, show as full-width (deleteFullWidth)
-                            Button(
-                                onClick = { onOpenRegistration?.invoke("delete", null) },
-                                modifier = if (deleteFullWidth) Modifier.fillMaxWidth() else Modifier.fillMaxWidth()
-                            ) {
-                                Text("Smazat registraci")
+                                // Delete button: if only one trainer, show as full-width (deleteFullWidth)
+                                Button(
+                                    onClick = { onOpenRegistration?.invoke("delete", null) },
+                                    modifier = if (deleteFullWidth) Modifier.fillMaxWidth() else Modifier.fillMaxWidth()
+                                ) {
+                                    Text("Smazat registraci")
+                                }
                             }
                         }
                     }
