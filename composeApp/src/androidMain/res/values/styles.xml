@@ -6,5 +6,8 @@
         <item name="android:textSelectHandleLeft">@drawable/handle_start_tinted</item>
         <item name="android:textSelectHandleRight">@drawable/handle_end_tinted</item>
         <item name="android:textCursorDrawable">@drawable/cursor_tinted</item>
+        <item name="android:windowSplashScreenBackground">@color/splash_background</item>
+        <!-- Splash icon -->
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_splash</item>
     </style>
 </resources>
