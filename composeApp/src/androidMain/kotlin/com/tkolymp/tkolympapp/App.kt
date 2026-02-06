@@ -10,7 +10,6 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
@@ -18,15 +17,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.TextButton
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ChevronLeft
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.ViewTimeline
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -56,12 +46,10 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import java.util.UUID
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.tkolympapp.Screens.CalendarViewScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -228,7 +216,7 @@ fun AppNavHost(
                 )
             }
         ) {
-            com.tkolymp.tkolympapp.calendar.CalendarViewScreen(
+            CalendarViewScreen(
                 onEventClick = { id -> navController.navigate("event/$id") },
                 onBack = { navController.navigateUp() }
             )
@@ -409,7 +397,9 @@ fun AppNavHost(
                                         ServiceLocator.eventService.setLessonDemand(registrationId, trainerId, lessonCount)
                                     }
                                     if (success) {
-                                        // stay on screen, maybe refresh
+                                        regResultMessage.value = "Uloženo"
+                                    } else {
+                                        regResultMessage.value = "Chyba při ukládání"
                                     }
                                 } catch (_: Exception) {}
                             }

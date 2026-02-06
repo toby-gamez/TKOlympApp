@@ -39,6 +39,8 @@ suspend fun initNetworking(context: Context, baseUrl: String) {
     val userSvc = UserService(gql, userStorage)
 
     ServiceLocator.graphQlClient = gql
+    // ensure peopleService is available like other services
+    ServiceLocator.peopleService = com.tkolymp.tkolympapp.PeopleService()
     ServiceLocator.authService = auth
     ServiceLocator.tokenStorage = storage
     ServiceLocator.eventService = eventSvc

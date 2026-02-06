@@ -1,5 +1,6 @@
 package com.tkolymp.tkolympapp
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,6 +26,10 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import com.tkolymp.shared.ServiceLocator
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -70,12 +75,15 @@ fun RegistrationScreen(
     registrations: JsonArray,
     myPersonId: String?,
     myCoupleIds: List<String>,
+    // optional display names: if provided the UI will show these instead of generic labels
+    myPersonName: String? = null,
+    myCoupleNames: Map<String, String> = emptyMap(),
     onClose: () -> Unit,
     onRegister: (List<RegistrationInput>) -> Unit,
     onSetLessonDemand: (String, Int, Int) -> Unit,
     onDelete: (String) -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         TopAppBar(
             title = { Text(when (mode) { is RegMode.Register -> "Zapsat se"; is RegMode.Edit -> "Upravit registraci"; is RegMode.Delete -> "Smazat registraci" }) },
             navigationIcon = {
@@ -97,33 +105,62 @@ fun RegistrationScreen(
                         Text("Vyberte, koho registrujete:", style = MaterialTheme.typography.bodyMedium)
                         Spacer(modifier = Modifier.height(6.dp))
                         val selectedRegistrant = remember { mutableStateOf<Pair<String?, String?>>(Pair(myPersonId, null)) }
+                        // local observable display name state (start with provided names if any)
+                        val personNameState = remember { androidx.compose.runtime.mutableStateOf<String?>(myPersonName) }
+                        val coupleNamesState = remember { mutableStateMapOf<String, String>().apply { putAll(myCoupleNames) } }
+
+                        // fetch names if not provided and peopleService available
+                        LaunchedEffect(myPersonId, myCoupleIds) {
+                            // fetch person name
+                            if (personNameState.value.isNullOrBlank() && myPersonId != null) {
+                                try {
+                                    val svc = ServiceLocator.peopleService
+                                    val fetched = svc.fetchPersonDisplayName(myPersonId, true)
+                                    if (!fetched.isNullOrBlank()) personNameState.value = fetched
+                                } catch (_: Throwable) {
+                                }
+                            }
+                            // fetch couple names
+                            myCoupleIds.forEach { cid ->
+                                if (coupleNamesState[cid].isNullOrBlank()) {
+                                    try {
+                                        val svc = ServiceLocator.peopleService
+                                        val fetched = svc.fetchCoupleDisplayName(cid)
+                                        if (!fetched.isNullOrBlank()) coupleNamesState[cid] = fetched
+                                    } catch (_: Throwable) {
+                                    }
+                                }
+                            }
+                        }
                         Column {
                             if (myPersonId != null) {
-                                Row(modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp)
-                                    .clickable { selectedRegistrant.value = Pair(myPersonId, null) },
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    RadioButton(selected = selectedRegistrant.value.first == myPersonId && selectedRegistrant.value.second == null,
-                                        onClick = { selectedRegistrant.value = Pair(myPersonId, null) })
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Jako já")
+                                    val personLabel = personNameState.value ?: "Jako já"
+                                    Row(modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp)
+                                        .clickable { selectedRegistrant.value = Pair(myPersonId, null) },
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        RadioButton(selected = selectedRegistrant.value.first == myPersonId && selectedRegistrant.value.second == null,
+                                            onClick = { selectedRegistrant.value = Pair(myPersonId, null) })
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(personLabel)
+                                    }
                                 }
-                            }
-                            myCoupleIds.forEach { cid ->
-                                Row(modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp)
-                                    .clickable { selectedRegistrant.value = Pair(null, cid) },
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    RadioButton(selected = selectedRegistrant.value.first == null && selectedRegistrant.value.second == cid,
-                                        onClick = { selectedRegistrant.value = Pair(null, cid) })
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Pár $cid")
+                                myCoupleIds.forEach { cid ->
+                                    val coupleLabel = coupleNamesState[cid] ?: "Pár $cid"
+                                    Row(modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp)
+                                        .clickable { selectedRegistrant.value = Pair(null, cid) },
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        RadioButton(selected = selectedRegistrant.value.first == null && selectedRegistrant.value.second == cid,
+                                            onClick = { selectedRegistrant.value = Pair(null, cid) })
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(coupleLabel)
+                                    }
                                 }
-                            }
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -149,12 +186,20 @@ fun RegistrationScreen(
                                 Text(tName, modifier = Modifier.weight(1f))
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Button(onClick = {
-                                        counts[idx] = (counts[idx] - 1).coerceAtLeast(0)
+                                        val old = counts.getOrNull(idx) ?: 0
+                                        val newVal = (old - 1).coerceAtLeast(0)
+                                        if (idx < counts.size) counts[idx] = newVal else counts.add(newVal)
+                                        Log.d("RegScreen", "Register mode: trainer=$idx old=$old new=$newVal")
                                     }) { Text("-") }
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text("${counts[idx]}", modifier = Modifier.padding(8.dp))
                                     Button(onClick = {
-                                        counts[idx] = counts[idx] + 1
+                                        val old = counts.getOrNull(idx) ?: 0
+                                        val maxForTrainer = (tObj?.get("lessonsRemaining")?.jsonPrimitive?.intOrNull
+                                            ?.let { if (it < 0) Int.MAX_VALUE else it } ?: Int.MAX_VALUE)
+                                        val newVal = (old + 1).coerceAtMost(maxForTrainer)
+                                        if (idx < counts.size) counts[idx] = newVal else counts.add(newVal)
+                                        Log.d("RegScreen", "Register mode: trainer=$idx old=$old max=$maxForTrainer new=$newVal")
                                     }) { Text("+") }
                                 }
                             }
@@ -251,14 +296,19 @@ fun RegistrationScreen(
                                     Text(tName, modifier = Modifier.weight(1f))
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Button(onClick = {
-                                            countsState[idx] = (countsState[idx] - 1).coerceAtLeast(0)
+                                            val old = countsState.getOrNull(idx) ?: 0
+                                            val newVal = (old - 1).coerceAtLeast(0)
+                                            if (idx < countsState.size) countsState[idx] = newVal else countsState.add(newVal)
                                         }) { Text("-") }
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text("${countsState[idx]}", modifier = Modifier.padding(8.dp))
+                                        Text("${countsState.getOrNull(idx) ?: 0}", modifier = Modifier.padding(8.dp))
                                         Button(onClick = {
+                                            val old = countsState.getOrNull(idx) ?: 0
                                             val maxForTrainer = (tObj?.get("lessonsRemaining")?.jsonPrimitive?.intOrNull
-                                                ?: Int.MAX_VALUE)
-                                            countsState[idx] = (countsState[idx] + 1).coerceAtMost(maxForTrainer)
+                                                ?.let { if (it < 0) Int.MAX_VALUE else it } ?: Int.MAX_VALUE)
+                                            val newVal = (old + 1).coerceAtMost(maxForTrainer)
+                                            if (idx < countsState.size) countsState[idx] = newVal else countsState.add(newVal)
+                                            Log.d("RegScreen", "Edit mode: reg=$selectedId trainer=$idx old=$old max=$maxForTrainer new=$newVal")
                                         }) { Text("+") }
                                     }
                                 }
@@ -283,13 +333,23 @@ fun RegistrationScreen(
                         Text("Vyberte registraci k odstranění:", style = MaterialTheme.typography.bodyMedium)
                         Spacer(modifier = Modifier.height(6.dp))
                         val selectedReg = remember { mutableStateOf<String?>(null) }
-                        registrations.forEach { rEl ->
-                            val r = rEl as? JsonObject
-                            val rid = r?.get("id")?.jsonPrimitive?.contentOrNull
-                            val label = r?.get("person").asJsonObjectOrNull()?.get("name")?.jsonPrimitive?.contentOrNull
-                                ?: r?.get("couple").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull ?: "#${rid ?: "?"}"
-                            Button(onClick = { selectedReg.value = rid }) { Text(label ?: "registrace") }
-                            Spacer(modifier = Modifier.height(6.dp))
+                        Column {
+                            registrations.forEach { rEl ->
+                                val r = rEl as? JsonObject
+                                val rid = r?.get("id")?.jsonPrimitive?.contentOrNull
+                                val label = r?.get("person").asJsonObjectOrNull()?.get("name")?.jsonPrimitive?.contentOrNull
+                                    ?: r?.get("couple").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull ?: "#${rid ?: "?"}"
+                                Row(modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp)
+                                    .clickable { selectedReg.value = rid },
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    RadioButton(selected = selectedReg.value == rid, onClick = { selectedReg.value = rid })
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(label ?: "registrace")
+                                }
+                            }
                         }
 
                         Spacer(modifier = Modifier.height(12.dp))
