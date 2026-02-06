@@ -127,7 +127,7 @@ fun PersonPage(personId: String, onBack: () -> Unit = {}, onOpenCouple: (String)
             p.bio?.takeIf { it.isNotBlank() }?.let { bio ->
                 Card(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
                     Column(modifier = Modifier.padding(8.dp)) {
-                        Text("Biografie", style = MaterialTheme.typography.labelLarge)
+                        Text("O mně", style = MaterialTheme.typography.labelLarge)
                         Divider(modifier = Modifier.padding(vertical = 6.dp))
                         Text(bio, style = MaterialTheme.typography.bodyMedium)
                     }
@@ -152,19 +152,25 @@ fun PersonPage(personId: String, onBack: () -> Unit = {}, onOpenCouple: (String)
                                         Column(modifier = Modifier.padding(8.dp)) {
                                             Row(
                                                 modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                horizontalArrangement = Arrangement.Start,
                                                 verticalAlignment = Alignment.CenterVertically
                                             ) {
-                                                Text(c.name ?: c.id ?: "-", style = MaterialTheme.typography.titleMedium)
+                                                Text(
+                                                    text = (c.name ?: c.id ?: "-"),
+                                                    style = MaterialTheme.typography.titleMedium,
+                                                    modifier = Modifier.weight(1f)
+                                                )
                                                 Box(modifier = Modifier.size(12.dp).background(color, shape = CircleShape))
                                             }
                                             val since = mem.since
                                             val until = mem.until
-                                            if (!since.isNullOrBlank() || !until.isNullOrBlank()) {
-                                                val sinceLabel = since?.let { formatDateStringSmall(it) ?: it }?.let { "od $it" }
-                                                val untilLabel = until?.let { formatDateStringSmall(it) ?: it }?.let { "do $it" }
-                                                val range = listOfNotNull(sinceLabel, untilLabel).joinToString(" ")
-                                                Text(range, style = MaterialTheme.typography.labelSmall)
+                                            if (!since.isNullOrBlank()) {
+                                                val sinceLabel = formatDateStringSmall(since) ?: since
+                                                Text("Od: $sinceLabel", style = MaterialTheme.typography.labelSmall)
+                                            }
+                                            if (!until.isNullOrBlank()) {
+                                                val untilLabel = formatDateStringSmall(until) ?: until
+                                                Text("Do: $untilLabel", style = MaterialTheme.typography.labelSmall)
                                             }
                                         }
                                     }

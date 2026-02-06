@@ -77,7 +77,7 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
     suspend fun fetchAndStorePersonDetails(personId: String): JsonObject? {
         // Try sending id as numeric BigInt when possible (server expects BigInt)
         val idLong = personId.toLongOrNull()
-        val baseSelection = "person(id: \$id) { bio birthDate lastName firstName phone prefixTitle wdsfId cstsId gender isTrainer address { city conscriptionNumber district orientationNumber postalCode region street } }"
+        val baseSelection = "person(id: \$id) { bio birthDate lastName firstName email phone prefixTitle wdsfId cstsId gender isTrainer address { city conscriptionNumber district orientationNumber postalCode region street } activeCouplesList { id man { firstName lastName } woman { firstName lastName } } cohortMembershipsList { cohort { id colorRgb name isVisible } since until } }"
 
         var query: String
         var variables: JsonObject

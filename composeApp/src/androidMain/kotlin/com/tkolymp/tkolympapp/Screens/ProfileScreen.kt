@@ -1,15 +1,18 @@
 package com.tkolymp.tkolympapp
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Divider
@@ -20,8 +23,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,6 +44,8 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
+data class CohortDisplay(val name: String, val colorRgb: String?, val since: String?, val until: String?)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
@@ -51,8 +54,11 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
     var titleText by remember { mutableStateOf<String?>(null) }
     var bioText by remember { mutableStateOf<String?>(null) }
     var addrText by remember { mutableStateOf<String?>(null) }
+    var emailText by remember { mutableStateOf<String?>(null) }
     var coupleIds by remember { mutableStateOf<List<String>>(emptyList()) }
-    var coupleNames by remember { mutableStateOf<List<String>>(emptyList()) }
+    var coupleNames by remember { mutableStateOf<List<String>>(emptyList()) } // cohort names (legacy)
+    var activeCoupleNames by remember { mutableStateOf<List<String>>(emptyList()) }
+    var cohortItems by remember { mutableStateOf<List<CohortDisplay>>(emptyList()) }
         var personFields by remember { mutableStateOf<List<Pair<String,String>>>(emptyList()) }
         var currentUserFields by remember { mutableStateOf<List<Pair<String,String>>>(emptyList()) }
     var addressFields by remember { mutableStateOf<List<Pair<String,String>>>(emptyList()) }
@@ -62,20 +68,26 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         userJson = try { ServiceLocator.userService.getCachedCurrentUserJson() } catch (_: Throwable) { null }
 
         val cachedPerson = try { ServiceLocator.userService.getCachedPersonDetailsJson() } catch (_: Throwable) { null }
-        if (cachedPerson.isNullOrBlank()) {
-            val pid = try { ServiceLocator.userService.getCachedPersonId() } catch (_: Throwable) { null }
-            if (!pid.isNullOrBlank()) {
-                try {
-                    ServiceLocator.userService.fetchAndStorePersonDetails(pid)
-                } catch (_: Throwable) { }
+        val pid = try { ServiceLocator.userService.getCachedPersonId() } catch (_: Throwable) { null }
+        if (pid != null && pid.isNotBlank()) {
+            // refetch if there's no cached person or the cached JSON lacks required fields (activeCouplesList/cohortMembershipsList/email)
+            val needsRefetch = cachedPerson.isNullOrBlank() || !(
+                cachedPerson.contains("activeCouplesList") &&
+                cachedPerson.contains("cohortMembershipsList") &&
+                (cachedPerson.contains("email") || cachedPerson.contains("uEmail"))
+            )
+            if (needsRefetch) {
+                try { ServiceLocator.userService.fetchAndStorePersonDetails(pid) } catch (_: Throwable) { }
             }
         }
 
         personJson = try { ServiceLocator.userService.getCachedPersonDetailsJson() } catch (_: Throwable) { null }
         coupleIds = try { ServiceLocator.userService.getCachedCoupleIds() } catch (_: Throwable) { emptyList() }
 
-        // Try to extract human-friendly group names from personJson if possible
-        val names = mutableListOf<String>()
+        // Try to extract human-friendly active couples and cohort names from personJson if possible
+        val cohortNames = mutableListOf<String>()
+        val activeNames = mutableListOf<String>()
+        val cohortItemsLocal = mutableListOf<CohortDisplay>()
         try {
             if (!personJson.isNullOrBlank()) {
                 val p = Json.parseToJsonElement(personJson!!).jsonObject
@@ -88,24 +100,51 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                         val woman = obj["woman"]?.jsonObject
                         val manName = man?.let { m -> listOfNotNull(m["firstName"]?.toString()?.replace("\"", ""), m["lastName"]?.toString()?.replace("\"", "")).joinToString(" ") }
                         val womanName = woman?.let { w -> listOfNotNull(w["firstName"]?.toString()?.replace("\"", ""), w["lastName"]?.toString()?.replace("\"", "")).joinToString(" ") }
-                        val display = listOfNotNull(manName, womanName).joinToString(" / ")
-                        if (display.isNotBlank()) names.add(display)
+                        val display = listOfNotNull(manName, womanName).joinToString(" - ")
+                        if (display.isNotBlank()) activeNames.add(display)
                     }
                 }
 
-                // cohortMembershipsList -> cohort { name }
+                // cohortMembershipsList -> cohort { name, isVisible } + since/until
                 val cohorts = p["cohortMembershipsList"]
                 if (cohorts is kotlinx.serialization.json.JsonArray) {
+                    fun fmtDate(s: String?): String? {
+                        if (s.isNullOrBlank()) return null
+                        val fmt = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+                        try {
+                            val ld = LocalDate.parse(s)
+                            return ld.format(fmt)
+                        } catch (_: Exception) {}
+                        try {
+                            val odt = OffsetDateTime.parse(s)
+                            return odt.toLocalDate().format(fmt)
+                        } catch (_: Exception) {}
+                        val m = Regex("(\\d{4})-(\\d{2})-(\\d{2})").find(s)
+                        if (m != null) return "${m.groupValues[3]}.${m.groupValues[2]}.${m.groupValues[1]}"
+                        return s
+                    }
+
                     cohorts.forEach { item ->
                         val obj = item as? kotlinx.serialization.json.JsonObject ?: return@forEach
                         val cohort = obj["cohort"]?.jsonObject
                         val cname = cohort?.get("name")?.jsonPrimitive?.contentOrNull
-                        if (!cname.isNullOrBlank()) names.add(cname)
+                        if (!cname.isNullOrBlank()) {
+                            // show all cohorts regardless of visibility flag
+                            val sinceRaw = obj["since"]?.jsonPrimitive?.contentOrNull
+                            val untilRaw = obj["until"]?.jsonPrimitive?.contentOrNull
+                            val since = fmtDate(sinceRaw)
+                            val until = fmtDate(untilRaw)
+                            val cColor = cohort?.get("colorRgb")?.jsonPrimitive?.contentOrNull
+                            cohortNames.add(cname)
+                            cohortItemsLocal.add(CohortDisplay(cname, cColor, since, until))
+                        }
                     }
                 }
             }
         } catch (_: Throwable) { }
-        coupleNames = if (names.isNotEmpty()) names else coupleIds.map { "#${it}" }
+        coupleNames = cohortNames
+        activeCoupleNames = if (activeNames.isNotEmpty()) activeNames else coupleIds.map { "#${it}" }
+        cohortItems = cohortItemsLocal
 
         if (!personJson.isNullOrBlank()) {
             try {
@@ -114,6 +153,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                 val first = p["firstName"]?.toString()?.replace("\"", "")
                 val last = p["lastName"]?.toString()?.replace("\"", "")
                 val bio = p["bio"]?.toString()?.replace("\"", "")
+                val email = p["email"]?.jsonPrimitive?.contentOrNull ?: p["uEmail"]?.jsonPrimitive?.contentOrNull
                     val addressObj = p["address"]?.jsonObject
                     // build a human-friendly single-line address (fallback) and a list of individual address fields
                     val addr = addressObj?.let { a -> listOfNotNull(a["street"]?.toString()?.replace("\"", ""), a["city"]?.toString()?.replace("\"", ""), a["postalCode"]?.toString()?.replace("\"", "")).joinToString(", ") }
@@ -128,6 +168,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                     titleText = listOfNotNull(prefix, first, last).joinToString(" ").takeIf { it.isNotBlank() }
                     bioText = bio?.takeIf { it.isNotBlank() }
                     addrText = addr?.takeIf { it.isNotBlank() }
+                    emailText = email?.takeIf { it.isNotBlank() }
                     addressFields = afields
             } catch (_: Throwable) { }
         }
@@ -161,6 +202,11 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                     obj.entries.forEach { (k,v) -> cu.add(k to (v.jsonPrimitive.contentOrNull ?: v.toString())) }
                 }
                 currentUserFields = cu
+                // if we didn't get email from personJson, try to populate from current user JSON
+                if (emailText.isNullOrBlank()) {
+                    val found = cu.firstOrNull { it.first.equals("email", ignoreCase = true) || it.first.equals("uEmail", ignoreCase = true) }
+                    emailText = found?.second?.takeIf { it.isNotBlank() }
+                }
             } catch (_: Throwable) { }
     }
 
@@ -234,6 +280,12 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                 val displayName = titleText ?: currentUserFields.find { it.first == "username" }?.second
                 Column(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(displayName ?: "Uživatel", style = MaterialTheme.typography.headlineSmall)
+                }
+                // show email under name if available
+                emailText?.let {
+                    Column(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(it, style = MaterialTheme.typography.bodySmall)
+                    }
                 }
                 // Merge personFields and currentUserFields but exclude keys shown elsewhere
                 val mergedFields = remember(personFields, currentUserFields, addrText, titleText, bioText) {
@@ -333,15 +385,49 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
             }
         }
 
-        // Groups card
+        // Active couples card (prefer activeCouplesList data)
         Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
             Column(modifier = Modifier.padding(12.dp)) {
-                Text("Skupiny", style = MaterialTheme.typography.labelLarge)
+                Text("Aktivní páry", style = MaterialTheme.typography.labelLarge)
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
-                if (coupleNames.isNotEmpty()) {
+                if (activeCoupleNames.isNotEmpty()) {
                     Column {
-                        coupleNames.forEach { name ->
+                        activeCoupleNames.forEach { name ->
                             Text(name, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(vertical = 2.dp))
+                        }
+                    }
+                } else {
+                    Text("Žádné aktivní páry.", style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+
+        // Groups (cohorts) card - styled like PersonPage
+        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Text("Tréninkové skupiny", style = MaterialTheme.typography.labelLarge)
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                if (cohortItems.isNotEmpty()) {
+                    Column {
+                        cohortItems.forEach { item ->
+                            val color = try { parseColorOrDefault(item.colorRgb) } catch (_: Exception) { androidx.compose.ui.graphics.Color.Gray }
+                            Card(modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(8.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.Start,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(text = item.name, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                                        Box(modifier = Modifier.size(12.dp).background(color, shape = androidx.compose.foundation.shape.CircleShape))
+                                    }
+                                    if (!item.since.isNullOrBlank()) Text("Od: ${item.since}", style = MaterialTheme.typography.labelSmall)
+                                    if (!item.until.isNullOrBlank()) Text("Do: ${item.until}", style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
                         }
                     }
                 } else {
@@ -350,7 +436,6 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
         // Category cards (visible, not hidden in details)
         if (personalList.isNotEmpty()) {
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
