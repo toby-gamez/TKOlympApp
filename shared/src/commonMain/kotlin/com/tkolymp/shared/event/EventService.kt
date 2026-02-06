@@ -24,6 +24,17 @@ interface IEventService {
      * Returns the `event` JsonObject from the GraphQL response or null on error.
      */
     suspend fun fetchEventById(id: BigInt): JsonObject?
+
+    // Register many registrations at once. Accepts an array of registration objects
+    // matching the server input shape (each is a JsonObject with personId/coupleId and lessons array).
+    // Returns the raw GraphQL response element or null on network error.
+    suspend fun registerToEventMany(registrations: JsonArray): JsonElement?
+
+    // Set lesson demand for a single registration/trainer pair.
+    suspend fun setLessonDemand(registrationId: String, trainerId: Int, lessonCount: Int): Boolean
+
+    // Delete an event registration by id. Returns the raw GraphQL response element or null on network error.
+    suspend fun deleteEventRegistration(registrationId: String): kotlinx.serialization.json.JsonElement?
 }
 
 // Notes: GraphQL types
@@ -470,5 +481,63 @@ class EventService(private val client: IGraphQlClient = ServiceLocator.graphQlCl
         val data = resp.jsonObject["data"]?.jsonObject ?: return null
         val ev = data["event"]
         return (ev as? JsonObject)
+    }
+
+    override suspend fun registerToEventMany(registrations: JsonArray): JsonElement? {
+        val mutation = """mutation RegisterToEvent(${'$'}input: RegisterToEventManyInput!) { registerToEventMany(input: ${'$'}input) { eventRegistrations { id } } }"""
+        val variables = buildJsonObject {
+            put("input", buildJsonObject {
+                put("registrations", registrations)
+                put("clientMutationId", JsonPrimitive(java.util.UUID.randomUUID().toString()))
+            })
+        }
+
+        val resp = try {
+            client.post(mutation, variables)
+        } catch (ex: Exception) {
+            return null
+        }
+
+        return resp
+    }
+
+    override suspend fun setLessonDemand(registrationId: String, trainerId: Int, lessonCount: Int): Boolean {
+        val mutation = """mutation SetLessonDemand(${'$'}input: SetLessonDemandInput!) { setLessonDemand(input: ${'$'}input) { eventLessonDemand { id } } }"""
+        val variables = buildJsonObject {
+            put("input", buildJsonObject {
+                put("registrationId", JsonPrimitive(registrationId))
+                put("trainerId", JsonPrimitive(trainerId))
+                put("lessonCount", JsonPrimitive(lessonCount))
+                put("clientMutationId", JsonPrimitive(java.util.UUID.randomUUID().toString()))
+            })
+        }
+
+        val resp = try {
+            client.post(mutation, variables)
+        } catch (ex: Exception) {
+            return false
+        }
+
+        val data = resp.jsonObject["data"]?.jsonObject
+        val created = data?.get("setLessonDemand")?.jsonObject?.get("eventLessonDemand")
+        return created != null
+    }
+
+    override suspend fun deleteEventRegistration(registrationId: String): kotlinx.serialization.json.JsonElement? {
+        val mutation = """mutation CancelReg(${'$'}input: CancelRegistrationInput!) { cancelRegistration(input: ${'$'}input) { clientMutationId } }"""
+        val variables = buildJsonObject {
+            put("input", buildJsonObject {
+                put("registrationId", JsonPrimitive(registrationId))
+                put("clientMutationId", JsonPrimitive(java.util.UUID.randomUUID().toString()))
+            })
+        }
+
+        val resp = try {
+            client.post(mutation, variables)
+        } catch (ex: Exception) {
+            return null
+        }
+
+        return resp
     }
 }

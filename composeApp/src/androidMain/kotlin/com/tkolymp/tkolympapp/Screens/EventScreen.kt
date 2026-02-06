@@ -2,6 +2,7 @@ package com.tkolymp.tkolympapp
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,14 +20,17 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.Button
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -38,9 +42,16 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.Json
+import kotlinx.coroutines.launch
+import java.util.UUID
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 private fun JsonElement?.asJsonObjectOrNull(): JsonObject? = try {
@@ -67,7 +78,7 @@ private fun JsonElement?.asJsonArrayOrNull(): JsonArray? = try {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null) {
+fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration: ((String, String?) -> Unit)? = null) {
     val loading = remember { mutableStateOf(false) }
     val error = remember { mutableStateOf<String?>(null) }
     val eventJson = remember { mutableStateOf<JsonObject?>(null) }
@@ -129,6 +140,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null) {
         }
         return
     }
+    // registration navigation handled by App NavHost via `onOpenRegistration`
 
     fun JsonObject.str(key: String) = try { this[key]?.jsonPrimitive?.contentOrNull } catch (_: Exception) { null }
     fun JsonObject.int(key: String) = try { this[key]?.jsonPrimitive?.intOrNull } catch (_: Exception) { null }
@@ -277,8 +289,87 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null) {
                 Text("Veřejné: ${if (isPublic) "Ano" else "Ne"}", style = MaterialTheme.typography.bodySmall)
                 Text("Registrace: ${if (isLocked) "Uzavřeno" else "Otevřeno"}", style = MaterialTheme.typography.bodySmall)
                 Text("Poznámky povoleny: ${if (enableNotes) "Ano" else "Ne"}", style = MaterialTheme.typography.bodySmall)
+                // --- Registration action buttons visibility logic (from MAUI EventViewModel.LoadEventAsync) ---
+                // If event is locked, treat registrations as closed regardless of the explicit flag
+                val isRegistrationOpen = if (isLocked) false else (ev.bool("isRegistrationOpen") ?: true)
+
+                val trainerCount = trainers.size
+
+                val userRegistered = registrations.any { regEl ->
+                    val reg = regEl.asJsonObjectOrNull() ?: return@any false
+                    val personId = reg["person"].asJsonObjectOrNull()?.str("id")
+                    val coupleId = reg["couple"].asJsonObjectOrNull()?.str("id")
+                    (personId != null && personId == myPersonId.value) || (coupleId != null && myCoupleIds.value.contains(coupleId))
+                }
+
+                val isPast = try {
+                    val now = java.time.Instant.now()
+                    when {
+                        lastDate != null -> java.time.OffsetDateTime.parse(lastDate).toInstant().isBefore(now)
+                        firstDate != null -> java.time.OffsetDateTime.parse(firstDate).toInstant().plus(java.time.Duration.ofDays(1)).isBefore(now)
+                        else -> false
+                    }
+                } catch (_: Exception) {
+                    false
+                }
+
+                // Defaults (pre-load)
+                val registerButtonVisibleDefault = false
+                val registrationActionsRowVisibleDefault = false
+                val editRegistrationButtonVisibleDefault = true
+                val deleteButtonColumnDefault = 1
+                val deleteButtonColumnSpanDefault = 1
+
+                // Final visibility rules
+                val registerButtonVisible = if (isPast) {
+                    false
+                } else {
+                    if (userRegistered) false else isRegistrationOpen
+                }
+
+                val registrationActionsRowVisible = if (isPast) {
+                    false
+                } else {
+                    if (userRegistered) isRegistrationOpen else false
+                }
+
+                val editRegistrationButtonVisible = if (trainerCount == 1) false else true
+                val deleteFullWidth = trainerCount == 1
+
+                // --- Render buttons stacked under the event info ---
+                if (registerButtonVisible || registrationActionsRowVisible) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        if (registerButtonVisible) {
+                            Button(onClick = { onOpenRegistration?.invoke("register", null) }, modifier = Modifier.fillMaxWidth()) {
+                                Text("Zapsat se")
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                        }
+
+                        if (registrationActionsRowVisible) {
+                            // Stacked actions: edit (if visible) and delete
+                            if (editRegistrationButtonVisible) {
+                                Button(onClick = { onOpenRegistration?.invoke("edit", null) }, modifier = Modifier.fillMaxWidth()) {
+                                    Text("Upravit registraci")
+                                }
+                                Spacer(modifier = Modifier.height(6.dp))
+                            }
+
+                            // Delete button: if only one trainer, show as full-width (deleteFullWidth)
+                            Button(
+                                onClick = { onOpenRegistration?.invoke("delete", null) },
+                                modifier = if (deleteFullWidth) Modifier.fillMaxWidth() else Modifier.fillMaxWidth()
+                            ) {
+                                Text("Smazat registraci")
+                            }
+                        }
+                    }
+                }
             }
         }
+
+        
 
         // Popis a shrnutí
         if (summary.isNotBlank() || descr.isNotBlank()) {
@@ -477,5 +568,5 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null) {
 
         Spacer(modifier = Modifier.height(16.dp))
     }
-    }
+}
 }
