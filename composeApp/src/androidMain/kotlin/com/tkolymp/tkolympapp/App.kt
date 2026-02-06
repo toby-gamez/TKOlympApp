@@ -39,17 +39,17 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import ui.theme.AppTheme
-import kotlinx.coroutines.launch
+import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.tkolympapp.Screens.CalendarViewScreen
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
-import com.tkolymp.shared.ServiceLocator
-import com.tkolymp.tkolympapp.Screens.CalendarViewScreen
+import ui.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -249,7 +249,7 @@ fun AppNavHost(
                     animationSpec = tween(400)
                 )
             }
-            ) { backStackEntry ->
+        ) { backStackEntry ->
             val eventId = backStackEntry.arguments?.getLong("eventId")
             eventId?.let { eid ->
                 EventScreen(
@@ -434,11 +434,13 @@ fun AppNavHost(
                             }
                         }
                     )
-                        regResultMessage.value?.let { msg ->
-                            Text(msg, modifier = Modifier.padding(8.dp), color = MaterialTheme.colorScheme.error)
-                        }
+                    
+                    regResultMessage.value?.let { msg ->
+                        Text(msg, modifier = Modifier.padding(8.dp), color = MaterialTheme.colorScheme.error)
+                    }
                 }
             }
+        }
         }
 
         composable(
@@ -511,4 +513,5 @@ fun AppNavHost(
             )
         }
     }
-}}
+}
+
