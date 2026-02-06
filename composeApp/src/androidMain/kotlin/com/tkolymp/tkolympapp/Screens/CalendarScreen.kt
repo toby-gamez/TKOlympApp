@@ -348,7 +348,7 @@ internal fun LessonView(
 }
 
 @Composable
-internal fun RenderSingleEventCard(item: EventInstance, onEventClick: (Long) -> Unit) {
+internal fun RenderSingleEventCard(item: EventInstance, onEventClick: (Long) -> Unit, showType: Boolean = true) {
     val name = item.event?.name ?: "(no name)"
     val cancelled = item.isCancelled
     val eventObj = item.event
@@ -385,10 +385,12 @@ internal fun RenderSingleEventCard(item: EventInstance, onEventClick: (Long) -> 
                 }
 
                 Column(horizontalAlignment = Alignment.End) {
-                    val typeText = item.event?.type ?: ""
-                    val displayType = translateEventType(typeText)
-                    if (!displayType.isNullOrBlank()) {
-                        Text(displayType, style = MaterialTheme.typography.labelSmall)
+                    if (showType) {
+                        val typeText = item.event?.type ?: ""
+                        val displayType = translateEventType(typeText)
+                        if (!displayType.isNullOrBlank()) {
+                            Text(displayType, style = MaterialTheme.typography.labelSmall)
+                        }
                     }
                     Spacer(modifier = Modifier.height(6.dp))
                     Row {

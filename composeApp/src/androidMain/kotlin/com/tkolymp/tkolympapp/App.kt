@@ -175,7 +175,7 @@ fun AppNavHost(
             enterTransition = { fadeIn(animationSpec = tween(300)) },
             exitTransition = { fadeOut(animationSpec = tween(300)) }
         ) {
-            EventsScreen(bottomPadding = bottomPadding)
+            EventsScreen(bottomPadding = bottomPadding, onOpenEvent = { id -> navController.navigate("event/$id") })
         }
         
         composable(
