@@ -219,7 +219,8 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null) {
         }
 
         // Seznam termínů
-        if (instances.isNotEmpty()) {
+        // Show the instances card only when there is more than one instance
+        if (instances.size > 1) {
             Spacer(modifier = Modifier.height(8.dp))
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(12.dp)) {
@@ -285,6 +286,13 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null) {
             Card(modifier = Modifier.fillMaxWidth()) {
                 SelectionContainer {
                     Column(modifier = Modifier.padding(12.dp)) {
+                        val headerText = when {
+                            summary.isNotBlank() && descr.isNotBlank() -> "Shrnutí a popis"
+                            summary.isNotBlank() -> "Shrnutí"
+                            else -> "Popis"
+                        }
+                        Text(headerText, style = MaterialTheme.typography.titleMedium)
+                        Spacer(modifier = Modifier.height(6.dp))
                         if (summary.isNotBlank()) {
                             Text(formatHtmlContent(summary), style = MaterialTheme.typography.bodyMedium)
                             if (descr.isNotBlank()) Spacer(modifier = Modifier.height(8.dp))
@@ -448,20 +456,15 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null) {
                         val firstName = extReg.str("firstName") ?: ""
                         val lastName = extReg.str("lastName") ?: ""
                         val email = extReg.str("email")
-                        val phone = extReg.str("phone")
                         val note = extReg.str("note")
-                        
+
                         Text("$firstName $lastName (externí)", style = MaterialTheme.typography.bodySmall)
                         if (!email.isNullOrBlank()) {
                             Text("   Email: $email", style = MaterialTheme.typography.bodySmall.copy(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             ))
                         }
-                        if (!phone.isNullOrBlank()) {
-                            Text("   Tel: $phone", style = MaterialTheme.typography.bodySmall.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            ))
-                        }
+                        // Phone number intentionally not shown for external registrations
                         if (!note.isNullOrBlank()) {
                             Text("   Poznámka: $note", style = MaterialTheme.typography.bodySmall.copy(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
