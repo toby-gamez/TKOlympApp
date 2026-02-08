@@ -5,10 +5,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -413,19 +415,25 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                             val color = try { parseColorOrDefault(item.colorRgb) } catch (_: Exception) { androidx.compose.ui.graphics.Color.Gray }
                             Card(modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 4.dp)
+                                .padding(vertical = 2.dp)
                             ) {
-                                Column(modifier = Modifier.padding(8.dp)) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.Start,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(text = item.name, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-                                        Box(modifier = Modifier.size(12.dp).background(color, shape = androidx.compose.foundation.shape.CircleShape))
+                                Column(modifier = Modifier.padding(6.dp)) {
+                                    val since = item.since
+                                    val until = item.until
+                                    Row(modifier = Modifier.fillMaxWidth()) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(text = item.name, style = MaterialTheme.typography.titleSmall)
+                                            if (!since.isNullOrBlank()) Text("Od: ${since}", style = MaterialTheme.typography.labelSmall)
+                                            if (!until.isNullOrBlank()) Text("Do: ${until}", style = MaterialTheme.typography.labelSmall)
+                                        }
+                                        Box(modifier = Modifier
+                                            .width(28.dp)
+                                            .fillMaxHeight(),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Box(modifier = Modifier.size(12.dp).background(color, shape = androidx.compose.foundation.shape.CircleShape))
+                                        }
                                     }
-                                    if (!item.since.isNullOrBlank()) Text("Od: ${item.since}", style = MaterialTheme.typography.labelSmall)
-                                    if (!item.until.isNullOrBlank()) Text("Do: ${item.until}", style = MaterialTheme.typography.labelSmall)
                                 }
                             }
                         }

@@ -6,15 +6,19 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -33,8 +37,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.people.PersonDetails
 import kotlinx.coroutines.Dispatchers
@@ -49,7 +51,7 @@ import java.time.format.DateTimeParseException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PersonPage(personId: String, onBack: () -> Unit = {}, onOpenCouple: (String) -> Unit = {}) {
+fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (String) -> Unit = {}) {
     var person by remember { mutableStateOf<PersonDetails?>(null) }
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -147,30 +149,33 @@ fun PersonPage(personId: String, onBack: () -> Unit = {}, onOpenCouple: (String)
                                     val color = try { parseColorOrDefault(c.colorRgb) } catch (_: Exception) { Color.Gray }
                                     Card(modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(vertical = 4.dp)
+                                        .padding(vertical = 2.dp)
                                     ) {
-                                        Column(modifier = Modifier.padding(8.dp)) {
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.Start,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Text(
-                                                    text = (c.name ?: c.id ?: "-"),
-                                                    style = MaterialTheme.typography.titleMedium,
-                                                    modifier = Modifier.weight(1f)
-                                                )
-                                                Box(modifier = Modifier.size(12.dp).background(color, shape = CircleShape))
-                                            }
+                                        Column(modifier = Modifier.padding(6.dp)) {
                                             val since = mem.since
                                             val until = mem.until
-                                            if (!since.isNullOrBlank()) {
-                                                val sinceLabel = formatDateStringSmall(since) ?: since
-                                                Text("Od: $sinceLabel", style = MaterialTheme.typography.labelSmall)
-                                            }
-                                            if (!until.isNullOrBlank()) {
-                                                val untilLabel = formatDateStringSmall(until) ?: until
-                                                Text("Do: $untilLabel", style = MaterialTheme.typography.labelSmall)
+                                            Row(modifier = Modifier.fillMaxWidth()) {
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    Text(
+                                                        text = (c.name ?: c.id ?: "-"),
+                                                        style = MaterialTheme.typography.titleSmall,
+                                                    )
+                                                    if (!since.isNullOrBlank()) {
+                                                        val sinceLabel = formatDateStringSmall(since) ?: since
+                                                        Text("Od: $sinceLabel", style = MaterialTheme.typography.labelSmall)
+                                                    }
+                                                    if (!until.isNullOrBlank()) {
+                                                        val untilLabel = formatDateStringSmall(until) ?: until
+                                                        Text("Do: $untilLabel", style = MaterialTheme.typography.labelSmall)
+                                                    }
+                                                }
+                                                Box(modifier = Modifier
+                                                    .width(28.dp)
+                                                    .fillMaxHeight(),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Box(modifier = Modifier.size(12.dp).background(color, shape = CircleShape))
+                                                }
                                             }
                                         }
                                     }

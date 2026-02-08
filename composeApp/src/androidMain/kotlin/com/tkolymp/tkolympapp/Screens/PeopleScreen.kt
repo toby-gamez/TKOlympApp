@@ -20,6 +20,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -172,12 +173,32 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) 
                                 .fillMaxWidth()
                                 .padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Column(modifier = Modifier.weight(1f)) {
+                                    val isBirthdayToday = daysUntilNextBirthday(p.birthDate) == 0
                                     val base = listOf(p.prefixTitle, p.firstName, p.lastName).filterNotNull().filter { it.isNotBlank() }.joinToString(" ")
                                     val name = if (!p.suffixTitle.isNullOrBlank()) "$base, ${p.suffixTitle}" else base
-                                    Text(name.ifBlank { p.id }, style = MaterialTheme.typography.titleMedium)
+                                    Text(
+                                        name.ifBlank { p.id },
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = if (isBirthdayToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                    )
                                     p.birthDate?.let { raw ->
                                         val formatted = formatDateString(raw)
-                                        Text(formatted ?: raw, style = MaterialTheme.typography.bodySmall)
+                                        Row(verticalAlignment = Alignment.Bottom) {
+                                            if (isBirthdayToday) {
+                                                Icon(
+                                                    imageVector = Icons.Filled.Cake,
+                                                    contentDescription = "Dnes mají narozeniny",
+                                                    tint = MaterialTheme.colorScheme.primary,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                            }
+                                            Text(
+                                                formatted ?: raw,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = if (isBirthdayToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
                                     }
                                 }
 

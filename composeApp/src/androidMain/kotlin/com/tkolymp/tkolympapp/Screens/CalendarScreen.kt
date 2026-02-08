@@ -177,8 +177,8 @@ fun CalendarScreen(
                                 else -> {
                                     val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
                                     if (ld == null) date else {
-                                        val nowYear = LocalDate.now().year
-                                        val pattern = if (ld.year == nowYear) "d. MMMM" else "d. MMMM yyyy"
+                                        val now = LocalDate.now()
+                                        val pattern = if (ld.year == now.year) "EEEE, d. MMMM" else "EEEE, d. MMMM yyyy"
                                         ld.format(DateTimeFormatter.ofPattern(pattern, Locale("cs")))
                                     }
                                 }

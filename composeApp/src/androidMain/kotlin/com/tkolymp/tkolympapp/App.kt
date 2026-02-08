@@ -249,7 +249,7 @@ fun AppNavHost(
         ) { backStackEntry ->
             val personId = backStackEntry.arguments?.getString("personId")
             personId?.let { pid ->
-                com.tkolymp.tkolympapp.Screens.PersonPage(
+                com.tkolymp.tkolympapp.Screens.PersonScreen(
                     personId = pid,
                     onBack = { navController.navigateUp() },
                     onOpenCouple = { /* no-op for now */ }
