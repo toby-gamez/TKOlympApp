@@ -1,9 +1,11 @@
 package com.tkolymp.tkolympapp
 
 import com.tkolymp.shared.event.Event
-import java.time.OffsetDateTime
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 
 fun translateEventType(type: String?): String? {
     if (type.isNullOrBlank()) return null
@@ -19,21 +21,11 @@ fun translateEventType(type: String?): String? {
 
 fun formatTimes(since: String?, until: String?): String {
     if (since.isNullOrBlank() && until.isNullOrBlank()) return ""
-
     fun fmtTime(s: String?): String? {
-        if (s.isNullOrBlank()) return null
-        return try {
-            val odt = OffsetDateTime.parse(s)
-            odt.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))
-        } catch (_: Exception) {
-            try {
-                val ldt = LocalDateTime.parse(s)
-                ldt.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))
-            } catch (_: Exception) {
-                val t = s.substringAfter('T', "").substringBefore('Z').substringBefore('+').substringBefore('-')
-                if (t.isBlank()) null else t
-            }
-        }
+        val ldt = parseToLocal(s) ?: return null
+        val hh = ldt.hour.toString().padStart(2, '0')
+        val mm = ldt.minute.toString().padStart(2, '0')
+        return "$hh:$mm"
     }
 
     val a = fmtTime(since)
@@ -50,22 +42,10 @@ fun formatTimesWithDate(since: String?, until: String?): String {
     if (since.isNullOrBlank() && until.isNullOrBlank()) return ""
 
     fun parseDateTime(s: String?): Pair<String?, String?>? {
-        if (s.isNullOrBlank()) return null
-        return try {
-            val odt = OffsetDateTime.parse(s)
-            val date = odt.toLocalDate().format(DateTimeFormatter.ofPattern("d.M.yyyy"))
-            val time = odt.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))
-            Pair(date, time)
-        } catch (_: Exception) {
-            try {
-                val ldt = LocalDateTime.parse(s)
-                val date = ldt.toLocalDate().format(DateTimeFormatter.ofPattern("d.M.yyyy"))
-                val time = ldt.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))
-                Pair(date, time)
-            } catch (_: Exception) {
-                null
-            }
-        }
+        val ldt = parseToLocal(s) ?: return null
+        val date = "${ldt.date.dayOfMonth}.${ldt.date.monthNumber}.${ldt.date.year}"
+        val time = "${ldt.hour.toString().padStart(2, '0')}:${ldt.minute.toString().padStart(2, '0')}"
+        return Pair(date, time)
     }
 
     val sinceData = parseDateTime(since)
@@ -89,26 +69,28 @@ fun formatTimesWithDate(since: String?, until: String?): String {
     }
 }
 
+fun parseToLocal(s: String?): LocalDateTime? {
+    if (s.isNullOrBlank()) return null
+    return try {
+        val instant = Instant.parse(s)
+        instant.toLocalDateTime(TimeZone.currentSystemDefault())
+    } catch (_: Exception) {
+        try {
+            LocalDateTime.parse(s)
+        } catch (_: Exception) {
+            null
+        }
+    }
+}
+
 fun formatTimesWithDateAlways(since: String?, until: String?): String {
     if (since.isNullOrBlank() && until.isNullOrBlank()) return ""
 
     fun parseDateTime(s: String?): Pair<String?, String?>? {
-        if (s.isNullOrBlank()) return null
-        return try {
-            val odt = OffsetDateTime.parse(s)
-            val date = odt.toLocalDate().format(DateTimeFormatter.ofPattern("d.M.yyyy"))
-            val time = odt.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))
-            Pair(date, time)
-        } catch (_: Exception) {
-            try {
-                val ldt = LocalDateTime.parse(s)
-                val date = ldt.toLocalDate().format(DateTimeFormatter.ofPattern("d.M.yyyy"))
-                val time = ldt.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))
-                Pair(date, time)
-            } catch (_: Exception) {
-                null
-            }
-        }
+        val ldt = parseToLocal(s) ?: return null
+        val date = "${ldt.date.dayOfMonth}.${ldt.date.monthNumber}.${ldt.date.year}"
+        val time = "${ldt.hour.toString().padStart(2, '0')}:${ldt.minute.toString().padStart(2, '0')}"
+        return Pair(date, time)
     }
 
     val sinceData = parseDateTime(since)
@@ -135,10 +117,24 @@ fun formatTimesWithDateAlways(since: String?, until: String?): String {
 fun durationMinutes(since: String?, until: String?): String? {
     if (since.isNullOrBlank() || until.isNullOrBlank()) return null
     return try {
-        val a = OffsetDateTime.parse(since)
-        val b = OffsetDateTime.parse(until)
-        val mins = java.time.Duration.between(a, b).toMinutes()
-        "${mins}'"
+        val aInstant = try { Instant.parse(since) } catch (_: Exception) { null }
+        val bInstant = try { Instant.parse(until) } catch (_: Exception) { null }
+        if (aInstant != null && bInstant != null) {
+            val secs = bInstant.epochSeconds - aInstant.epochSeconds
+            val mins = secs / 60
+            "${mins}'"
+        } else {
+            // Fallback: try parsing as local datetimes and compute difference
+            val aLocal = try { LocalDateTime.parse(since) } catch (_: Exception) { null }
+            val bLocal = try { LocalDateTime.parse(until) } catch (_: Exception) { null }
+            if (aLocal != null && bLocal != null) {
+                val aZ = aLocal.toInstant(TimeZone.currentSystemDefault())
+                val bZ = bLocal.toInstant(TimeZone.currentSystemDefault())
+                val secs = bZ.epochSeconds - aZ.epochSeconds
+                val mins = secs / 60
+                "${mins}'"
+            } else null
+        }
     } catch (_: Exception) {
         null
     }
