@@ -19,6 +19,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -511,12 +512,20 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
 
         // (Removed duplicate detail cards; fields are shown in categorized cards above)
 
-        Button(onClick = { /* TODO: change password flow */ }, modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
-            Text("Změnit heslo")
-        }
+        Row(modifier = Modifier.fillMaxWidth().padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilledTonalButton(
+                onClick = { /* TODO: change password flow */ },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Změnit heslo")
+            }
 
-        Button(onClick = { /* TODO: change personal data flow */ }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
-            Text("Změnit osobní data")
+            FilledTonalButton(
+                onClick = { /* TODO: change personal data flow */ },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Změnit osobní data")
+            }
         }
 
         Button(onClick = {
