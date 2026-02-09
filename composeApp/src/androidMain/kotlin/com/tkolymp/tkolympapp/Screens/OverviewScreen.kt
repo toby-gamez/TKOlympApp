@@ -213,11 +213,11 @@ fun OverviewScreen(
             }
             Row(modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 6.dp), horizontalArrangement = Arrangement.Center) {
+                .padding(vertical = 2.dp), horizontalArrangement = Arrangement.Center) {
                 TextButton(onClick = onOpenCalendar) { Text("Více") }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             // Board announcements (styled like BoardScreen)
             Row(modifier = Modifier.padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -262,11 +262,11 @@ fun OverviewScreen(
             }
             Row(modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 6.dp), horizontalArrangement = Arrangement.Center) {
+                .padding(vertical = 2.dp), horizontalArrangement = Arrangement.Center) {
                 TextButton(onClick = onOpenBoard) { Text("Více") }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             // Camps section (styled like Calendar)
             Row(modifier = Modifier.padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -311,7 +311,7 @@ fun OverviewScreen(
             }
             Row(modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 6.dp), horizontalArrangement = Arrangement.Center) {
+                .padding(vertical = 2.dp), horizontalArrangement = Arrangement.Center) {
                 TextButton(onClick = onOpenEvents) { Text("Více") }
             }
 
