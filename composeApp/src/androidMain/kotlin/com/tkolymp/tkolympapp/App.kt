@@ -44,6 +44,7 @@ import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.tkolympapp.Screens.CalendarViewScreen
 import com.tkolymp.tkolympapp.Screens.PeopleScreen
 import com.tkolymp.tkolympapp.Screens.TrainersLocationsScreen
+import com.tkolymp.tkolympapp.Screens.GroupsScreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -208,8 +209,39 @@ fun AppNavHost(
                 onProfileClick = { navController.navigate("profile") },
                 onPeopleClick = { navController.navigate("people") },
                 onTrainersClick = { navController.navigate("trainers") },
+                onGroupsClick = { navController.navigate("groups") },
                 bottomPadding = bottomPadding
             )
+        }
+
+        composable(
+            route = "groups",
+            enterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            popEnterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            }
+        ) {
+            GroupsScreen(onBack = { navController.navigateUp() }, bottomPadding = bottomPadding)
         }
 
         composable(

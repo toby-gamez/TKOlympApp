@@ -22,14 +22,16 @@ data class Trainer(
     val isVisible: Boolean?
 )
 
-data class ClubData(val locations: List<Location>, val trainers: List<Trainer>, val raw: JsonElement?)
+data class Cohort(val colorRgb: String?, val name: String?, val description: String?, val location: String?)
+
+data class ClubData(val locations: List<Location>, val trainers: List<Trainer>, val cohorts: List<Cohort>, val raw: JsonElement?)
 
 class ClubService(private val client: IGraphQlClient = ServiceLocator.graphQlClient) {
     private val json = Json { ignoreUnknownKeys = true }
 
     suspend fun fetchClubData(): ClubData {
         val query = """
-            query MyQuery {
+            query Query {
               tenantLocationsList { name }
               tenantTrainersList {
                 person { id firstName lastName prefixTitle suffixTitle }
@@ -37,18 +39,29 @@ class ClubService(private val client: IGraphQlClient = ServiceLocator.graphQlCli
                 guestPayout45Min { amount currency }
                 isVisible
               }
+              getCurrentTenant {
+                id
+                cohortsList(condition: { isVisible: true }, orderBy: [NAME_ASC]) {
+                  colorRgb
+                  name
+                  description
+                  location
+                }
+              }
             }
         """.trimIndent()
 
         val el: JsonElement = try { client.post(query, null) } catch (ex: Exception) {
-            return ClubData(emptyList(), emptyList(), null)
+            return ClubData(emptyList(), emptyList(), emptyList(), null)
         }
 
         val root = (el as? JsonObject)?.get("data") as? JsonObject
-        if (root == null) return ClubData(emptyList(), emptyList(), el)
+        if (root == null) return ClubData(emptyList(), emptyList(), emptyList(), el)
 
         val locationsArr = (root["tenantLocationsList"] as? JsonArray) ?: JsonArray(emptyList())
         val trainersArr = (root["tenantTrainersList"] as? JsonArray) ?: JsonArray(emptyList())
+        val tenantObj = root["getCurrentTenant"] as? JsonObject
+        val cohortsArr = (tenantObj?.get("cohortsList") as? JsonArray) ?: JsonArray(emptyList())
 
         val locations = locationsArr.mapNotNull { it as? JsonObject }.map { obj ->
             Location(obj["name"]?.jsonPrimitive?.contentOrNull)
@@ -78,6 +91,15 @@ class ClubService(private val client: IGraphQlClient = ServiceLocator.graphQlCli
             Trainer(person, guestPrice, guestPayout, visible)
         }
 
-        return ClubData(locations, trainers, el)
+        val cohorts = cohortsArr.mapNotNull { it as? JsonObject }.map { obj ->
+            Cohort(
+                colorRgb = obj["colorRgb"]?.jsonPrimitive?.contentOrNull,
+                name = obj["name"]?.jsonPrimitive?.contentOrNull,
+                description = obj["description"]?.jsonPrimitive?.contentOrNull,
+                location = obj["location"]?.jsonPrimitive?.contentOrNull
+            )
+        }
+
+        return ClubData(locations, trainers, cohorts, el)
     }
 }

@@ -101,7 +101,7 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
         LazyColumn(modifier = Modifier.padding(padding)) {
             // Locations header
             item {
-                Text("Lokace", modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Text("Tréninkové prostory", modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             }
 
             // show locations except explicit "ZRUŠENO"
@@ -129,14 +129,14 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                         }
                     ) {
                         Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(imageVector = Icons.Filled.Place, contentDescription = "Lokace", modifier = Modifier.size(28.dp))
+                            Icon(imageVector = Icons.Filled.Place, contentDescription = "Tréninkové prostory", modifier = Modifier.size(28.dp))
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(text = loc.name ?: "(bez názvu)", style = MaterialTheme.typography.bodyLarge)
                         }
                     }
                 }
             } else {
-                item { Text("Žádné lokace", modifier = Modifier.padding(16.dp)) }
+                item { Text("Žádné tréninkové prostory", modifier = Modifier.padding(16.dp)) }
             }
 
             // Trainers header
