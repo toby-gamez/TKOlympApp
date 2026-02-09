@@ -87,7 +87,7 @@ private fun formatDateString(raw: String): String? {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {}, onTrainersClick: () -> Unit = {}, onGroupsClick: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
+fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {}, onTrainersClick: () -> Unit = {}, onGroupsClick: () -> Unit = {}, onLeaderboardClick: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
     var name by remember { mutableStateOf<String?>(null) }
     var subtitle by remember { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -234,7 +234,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
         )
         
         mainItems.forEach { (item, icon) ->
-            Card(
+                        Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp, vertical = 4.dp)
@@ -242,6 +242,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                         if (item == "Lidé") onPeopleClick()
                         if (item == "Trenéři a tréninkové prostory") onTrainersClick()
                         if (item == "Tréninkové skupiny") onGroupsClick()
+                        if (item == "Žebříček") onLeaderboardClick()
                     }
             ) {
                 Row(

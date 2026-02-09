@@ -46,6 +46,18 @@ data class PersonDetails(
     val rawResponse: JsonElement? = null
 )
 
+data class ScoreboardEntry(
+    val ranking: Int?,
+    val personId: String?,
+    val personFirstName: String?,
+    val personLastName: String?,
+    val totalScore: Double? = null,
+    val lessonTotalScore: Double? = null,
+    val groupTotalScore: Double? = null,
+    val eventTotalScore: Double? = null,
+    val manualTotalScore: Double? = null
+)
+
 class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlClient) {
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -260,6 +272,51 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
             } ?: emptyList()
 
             return PersonDetails(id, first, last, prefix, suffix, birth, bio, csts, email, gender, isTrainer, phone, wdsf, couplesArr, memberships, el)
+        }
+
+        suspend fun fetchScoreboard(cohortId: String? = null, since: String, until: String): List<ScoreboardEntry> {
+            val query = """
+                    query Scoreboard(${'$'}cohortId: BigInt, ${'$'}since: Date, ${'$'}until: Date) {
+                        scoreboardEntriesList(cohortId: ${'$'}cohortId, since: ${'$'}since, until: ${'$'}until) {
+                            ranking
+                            personId
+                            totalScore
+                            lessonTotalScore
+                            groupTotalScore
+                            eventTotalScore
+                            manualTotalScore
+                            person { firstName lastName id }
+                        }
+                    }
+            """.trimIndent()
+
+            val idVar = cohortId?.toLongOrNull()?.let { JsonPrimitive(it) } ?: cohortId?.let { JsonPrimitive(it) }
+            val variables = buildJsonObject {
+                if (idVar != null) put("cohortId", idVar)
+                put("since", JsonPrimitive(since))
+                put("until", JsonPrimitive(until))
+            }
+
+            val el = try { client.post(query, variables) } catch (_: Exception) { return emptyList() }
+            val arr = (el as? JsonObject)
+                ?.get("data")?.let { it as? JsonObject }
+                ?.get("scoreboardEntriesList") as? kotlinx.serialization.json.JsonArray
+                ?: return emptyList()
+
+            return arr.mapNotNull { e ->
+                val obj = e as? JsonObject ?: return@mapNotNull null
+                val ranking = obj.get("ranking")?.jsonPrimitive?.contentOrNull?.toIntOrNull()
+                val personId = obj.get("personId")?.jsonPrimitive?.contentOrNull
+                val total = obj.get("totalScore")?.jsonPrimitive?.contentOrNull?.toDoubleOrNull()
+                val lesson = obj.get("lessonTotalScore")?.jsonPrimitive?.contentOrNull?.toDoubleOrNull()
+                val group = obj.get("groupTotalScore")?.jsonPrimitive?.contentOrNull?.toDoubleOrNull()
+                val event = obj.get("eventTotalScore")?.jsonPrimitive?.contentOrNull?.toDoubleOrNull()
+                val manual = obj.get("manualTotalScore")?.jsonPrimitive?.contentOrNull?.toDoubleOrNull()
+                val personObj = obj.get("person") as? JsonObject
+                val first = personObj?.get("firstName")?.jsonPrimitive?.contentOrNull
+                val last = personObj?.get("lastName")?.jsonPrimitive?.contentOrNull
+                ScoreboardEntry(ranking, personId, first, last, total, lesson, group, event, manual)
+            }
         }
 
         // helper extension to map JsonArray safely to list (generic)
