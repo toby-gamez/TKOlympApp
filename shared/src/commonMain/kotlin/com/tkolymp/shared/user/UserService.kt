@@ -109,4 +109,16 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
     suspend fun getLastApiError(): String? = lastApiError
 
     suspend fun clear() { storage.clear() }
+
+    suspend fun changePassword(newPass: String): Boolean {
+        // Insert the password directly into the mutation (backend expects a simple string).
+        val esc = newPass.replace("\\", "\\\\").replace("\"", "\\\"")
+        val query = "mutation { changePassword(input: {newPass: \"$esc\"}) { clientMutationId } }"
+        val resp = try { client.post(query, null) } catch (ex: Throwable) { lastApiError = ex.message; return false }
+        checkAndSetErrors(resp)
+        val errors = try { resp.jsonObject["errors"] } catch (_: Throwable) { null }
+        if (errors != null) return false
+        val data = try { resp.jsonObject["data"]?.jsonObject?.get("changePassword") } catch (_: Throwable) { null }
+        return data != null
+    }
 }

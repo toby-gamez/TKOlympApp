@@ -1,5 +1,6 @@
 package com.tkolymp.tkolympapp
 
+// Biometric support removed — no FragmentActivity import
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Divider
@@ -25,6 +27,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,6 +39,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.ServiceLocator
 import kotlinx.coroutines.launch
@@ -66,6 +71,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         var currentUserFields by remember { mutableStateOf<List<Pair<String,String>>>(emptyList()) }
     var addressFields by remember { mutableStateOf<List<Pair<String,String>>>(emptyList()) }
     val scope = rememberCoroutineScope()
+    val ctx = LocalContext.current
 
     LaunchedEffect(Unit) {
         userJson = try { ServiceLocator.userService.getCachedCurrentUserJson() } catch (_: Throwable) { null }
@@ -513,12 +519,26 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         // (Removed duplicate detail cards; fields are shown in categorized cards above)
 
         Row(modifier = Modifier.fillMaxWidth().padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilledTonalButton(
-                onClick = { /* TODO: change password flow */ },
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Změnit heslo")
-            }
+                var showChangePassDialog by remember { mutableStateOf(false) }
+
+                FilledTonalButton(
+                    onClick = { showChangePassDialog = true },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Změnit heslo")
+                }
+
+                if (showChangePassDialog) {
+                    ChangePasswordDialog(onDismiss = { showChangePassDialog = false }, onSuccess = {
+                        // clear storage and navigate to login
+                        scope.launch {
+                            try { ServiceLocator.tokenStorage.clear() } catch (_: Throwable) {}
+                            try { ServiceLocator.userService.clear() } catch (_: Throwable) {}
+                            showChangePassDialog = false
+                            onLogout()
+                        }
+                    })
+                }
 
             FilledTonalButton(
                 onClick = { /* TODO: change personal data flow */ },
@@ -539,4 +559,63 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         }
     }
     }
+}
+
+
+@Composable
+private fun ChangePasswordDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
+    var newPass by remember { mutableStateOf("") }
+    var confirm by remember { mutableStateOf("") }
+    var loading by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
+    val ctx = LocalContext.current
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Změnit heslo") },
+        text = {
+            Column {
+                Text("Heslo musí mít alespoň 8 znaků.")
+                TextField(value = newPass, onValueChange = { newPass = it }, label = { Text("Nové heslo") })
+                TextField(value = confirm, onValueChange = { confirm = it }, label = { Text("Potvrzení hesla") })
+                error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                if (loading) androidx.compose.material3.CircularProgressIndicator()
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                // validation
+                error = null
+                if (newPass.length < 8) { error = "Heslo musí mít alespoň 8 znaků"; return@TextButton }
+                if (newPass != confirm) { error = "Hesla se neshodují"; return@TextButton }
+
+                scope.launch {
+                    loading = true
+                    try {
+                        try {
+                            val result = ServiceLocator.userService.changePassword(newPass)
+                            if (result) {
+                                onSuccess()
+                            } else {
+                                // try to get last API error from the service
+                                val apiErr = try { ServiceLocator.userService.getLastApiError() } catch (_: Throwable) { null }
+                                error = if (!apiErr.isNullOrBlank()) "Změna hesla selhala: $apiErr" else "Změna hesla selhala"
+                            }
+                        } catch (ex: Throwable) {
+                            // Show exception message when available
+                            val causeMsg = generateSequence(ex.cause) { it.cause }
+                                .mapNotNull { it.message }
+                                .firstOrNull()
+                            val msg = ex.message ?: ex.toString()
+                            error = "Změna hesla selhala: ${causeMsg ?: msg}"
+                        }
+                    } finally {
+                        loading = false
+                    }
+                }
+            }) { Text("Potvrdit") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Zrušit") } }
+    )
 }

@@ -33,6 +33,8 @@ kotlin {
         val androidMain by getting {
             dependencies {
                 implementation(libs.ktor.okhttp)
+                // Removed biometric support; keep core dependencies as needed
+                implementation("androidx.core:core-ktx:1.9.0")
             }
         }
         commonTest.dependencies {

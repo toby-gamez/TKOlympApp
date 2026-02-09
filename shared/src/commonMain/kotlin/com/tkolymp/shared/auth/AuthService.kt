@@ -29,11 +29,14 @@ class AuthService(private val storage: TokenStorage, private val client: IGraphQ
             ?.jsonObject?.get("jwt")
             ?.jsonPrimitive?.contentOrNull
 
-        if (token != null) {
+        if (!token.isNullOrBlank()) {
             storage.saveToken(token)
             currentToken = token
             return true
         }
+
+        val errors = resp.jsonObject["errors"]?.toString() ?: resp.toString()
+        try { println("Login failed: $errors") } catch (_: Throwable) {}
 
         return false
     }
