@@ -43,6 +43,7 @@ import androidx.navigation.navArgument
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.tkolympapp.Screens.CalendarViewScreen
 import com.tkolymp.tkolympapp.Screens.PeopleScreen
+import com.tkolymp.tkolympapp.Screens.TrainersLocationsScreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -203,7 +204,42 @@ fun AppNavHost(
             enterTransition = { fadeIn(animationSpec = tween(300)) },
             exitTransition = { fadeOut(animationSpec = tween(300)) }
         ) {
-            OtherScreen(onProfileClick = { navController.navigate("profile") }, onPeopleClick = { navController.navigate("people") }, bottomPadding = bottomPadding)
+            OtherScreen(
+                onProfileClick = { navController.navigate("profile") },
+                onPeopleClick = { navController.navigate("people") },
+                onTrainersClick = { navController.navigate("trainers") },
+                bottomPadding = bottomPadding
+            )
+        }
+
+        composable(
+            route = "trainers",
+            enterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            popEnterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            }
+        ) {
+            TrainersLocationsScreen(onBack = { navController.navigateUp() })
         }
 
         composable(

@@ -37,6 +37,7 @@ suspend fun initNetworking(context: Context, baseUrl: String) {
     val announcementSvc = com.tkolymp.shared.announcements.AnnouncementServiceImpl()
     val userStorage = UserStorage(context)
     val userSvc = UserService(gql, userStorage)
+    val clubSvc = com.tkolymp.shared.club.ClubService(gql)
 
     ServiceLocator.graphQlClient = gql
     // ensure peopleService is available like other services
@@ -47,6 +48,7 @@ suspend fun initNetworking(context: Context, baseUrl: String) {
     ServiceLocator.announcementService = announcementSvc
     ServiceLocator.userStorage = userStorage
     ServiceLocator.userService = userSvc
+    ServiceLocator.clubService = clubSvc
 
     auth.initialize()
 }
