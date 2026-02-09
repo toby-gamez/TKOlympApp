@@ -32,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.ServiceLocator
 import kotlinx.coroutines.Dispatchers
@@ -44,6 +45,7 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
     val entriesState = remember { mutableStateOf<List<com.tkolymp.shared.people.ScoreboardEntry>>(emptyList()) }
     val loading = remember { mutableStateOf(true) }
     val error = remember { mutableStateOf<String?>(null) }
+    val currentPersonId = remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         loading.value = true
@@ -52,6 +54,10 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
             val until = LocalDate.now().toString()
             val list = withContext(Dispatchers.IO) { ServiceLocator.peopleService.fetchScoreboard(null, since, until) }
             entriesState.value = list.sortedWith(compareBy({ it.ranking ?: Int.MAX_VALUE }, { it.personLastName ?: "" }, { it.personFirstName ?: "" }))
+            // load cached personId to highlight current user name
+            try {
+                currentPersonId.value = withContext(Dispatchers.IO) { ServiceLocator.userService.getCachedPersonId() }
+            } catch (_: Throwable) { /* ignore */ }
         } catch (ex: Exception) {
             error.value = ex.message
         } finally {
@@ -92,7 +98,14 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                                     .fillMaxWidth()
                                     .padding(12.dp), verticalAlignment = ComposeAlignment.CenterVertically) {
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text(text = "${rank}. ${listOfNotNull(item.personFirstName, item.personLastName).joinToString(" ")}", style = if (isTop) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge)
+                                        val name = listOfNotNull(item.personFirstName, item.personLastName).joinToString(" ")
+                                        val isCurrent = item.personId != null && item.personId == currentPersonId.value
+                                        Text(
+                                            text = "${rank}. $name",
+                                            style = if (isTop) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge,
+                                            fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
                                     }
 
                                     // Right side: show total score only (no abbreviations)
