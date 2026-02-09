@@ -32,6 +32,7 @@ import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -88,10 +89,19 @@ fun App() {
                     exit = slideOutVertically(targetOffsetY = { it }, animationSpec = tween(300))
                 ) {
                     AppBottomBar(current = currentRoute ?: "overview", onSelect = { 
-                        navController.navigate(it) {
-                            popUpTo("overview") { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
+                        val startId = navController.graph.findStartDestination().id
+                        if (it == "overview") {
+                            navController.navigate(it) {
+                                popUpTo(startId) { /* do not save/restore overview state to avoid restoring nested navigation */ }
+                                launchSingleTop = true
+                                restoreState = false
+                            }
+                        } else {
+                            navController.navigate(it) {
+                                popUpTo(startId) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
                         }
                     })
                 }
@@ -148,7 +158,14 @@ fun AppNavHost(
             enterTransition = { fadeIn(animationSpec = tween(300)) },
             exitTransition = { fadeOut(animationSpec = tween(300)) }
         ) {
-            OverviewScreen(bottomPadding = bottomPadding)
+            OverviewScreen(
+                bottomPadding = bottomPadding,
+                onOpenEvent = { id -> navController.navigate("event/$id") },
+                onOpenNotice = { id -> navController.navigate("notice/$id") },
+                onOpenCalendar = { navController.navigate("calendar") },
+                onOpenBoard = { navController.navigate("board") },
+                onOpenEvents = { navController.navigate("events") }
+            )
         }
         
         composable(
