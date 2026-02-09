@@ -18,6 +18,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -154,20 +155,31 @@ fun OverviewScreen(
             Row(modifier = Modifier.padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("Nejbližší tréninky", style = MaterialTheme.typography.titleLarge)
             }
-            Column(modifier = Modifier.padding(horizontal = 12.dp)) {
-                val limitedTrainings = trainings.sortedBy { it.since ?: it.updatedAt ?: "" }.take(2)
-                val mapByDay = limitedTrainings.groupBy { inst ->
-                    val s = inst.since ?: inst.until ?: inst.updatedAt ?: ""
-                    s.substringBefore('T').ifEmpty { s }
-                }.toSortedMap()
+            val limitedTrainings = trainings.sortedBy { it.since ?: it.updatedAt ?: "" }.take(2)
+            val trainingsMapByDay = limitedTrainings.groupBy { inst ->
+                val s = inst.since ?: inst.until ?: inst.updatedAt ?: ""
+                s.substringBefore('T').ifEmpty { s }
+            }.toSortedMap()
 
-                if (mapByDay.isEmpty()) {
-                    Text("Nic k zobrazení", modifier = Modifier.padding(vertical = 6.dp))
+            Column(modifier = Modifier.padding(horizontal = 12.dp)) {
+                if (trainingsMapByDay.isEmpty()) {
+                    if (loading) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    } else {
+                        Text("Zatím jste si nic nenaplánovali", modifier = Modifier.padding(vertical = 6.dp))
+                    }
                 } else {
                     val fmt = DateTimeFormatter.ISO_LOCAL_DATE
                     val todayKey = LocalDate.now().format(fmt)
 
-                    mapByDay.forEach { (date, list) ->
+                    trainingsMapByDay.forEach { (date, list) ->
                         Column(modifier = Modifier.padding(vertical = 6.dp)) {
                             val header = when (date) {
                                 todayKey -> "dnes"
@@ -211,10 +223,11 @@ fun OverviewScreen(
                     }
                 }
             }
+            val trainingsEmpty = trainingsMapByDay.isEmpty()
             Row(modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 2.dp), horizontalArrangement = Arrangement.Center) {
-                TextButton(onClick = onOpenCalendar) { Text("Více") }
+                TextButton(onClick = onOpenCalendar) { Text(if (trainingsEmpty) "Podívat se na ostatní" else "Více") }
             }
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -225,7 +238,18 @@ fun OverviewScreen(
             }
             Column(modifier = Modifier.padding(horizontal = 12.dp)) {
                 if (announcements.isEmpty()) {
-                    Text("Nic k zobrazení", modifier = Modifier.padding(vertical = 6.dp))
+                    if (loading) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    } else {
+                        Text("Zatím jste si nic nenaplánovali", modifier = Modifier.padding(vertical = 6.dp))
+                    }
                 } else {
                     announcements.forEach { a ->
                         Column(modifier = Modifier.padding(4.dp)) {
@@ -260,10 +284,11 @@ fun OverviewScreen(
                     }
                 }
             }
+            val boardEmpty = announcements.isEmpty()
             Row(modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 2.dp), horizontalArrangement = Arrangement.Center) {
-                TextButton(onClick = onOpenBoard) { Text("Více") }
+                TextButton(onClick = onOpenBoard) { Text(if (boardEmpty) "Podívat se na ostatní" else "Více") }
             }
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -272,20 +297,31 @@ fun OverviewScreen(
             Row(modifier = Modifier.padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("Nejbližší soustředění", style = MaterialTheme.typography.titleLarge)
             }
-            Column(modifier = Modifier.padding(horizontal = 12.dp)) {
-                    val limitedCamps = camps.sortedBy { it.since ?: it.updatedAt ?: "" }.take(2)
-                    val mapByDay = limitedCamps.groupBy { inst ->
-                        val s = inst.since ?: inst.until ?: inst.updatedAt ?: ""
-                        s.substringBefore('T').ifEmpty { s }
-                    }.toSortedMap()
+            val limitedCamps = camps.sortedBy { it.since ?: it.updatedAt ?: "" }.take(2)
+            val campsMapByDay = limitedCamps.groupBy { inst ->
+                val s = inst.since ?: inst.until ?: inst.updatedAt ?: ""
+                s.substringBefore('T').ifEmpty { s }
+            }.toSortedMap()
 
-                if (mapByDay.isEmpty()) {
-                    Text("Nic k zobrazení", modifier = Modifier.padding(vertical = 6.dp))
+            Column(modifier = Modifier.padding(horizontal = 12.dp)) {
+                if (campsMapByDay.isEmpty()) {
+                    if (loading) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    } else {
+                        Text("Zatím jste si nic nenaplánovali", modifier = Modifier.padding(vertical = 6.dp))
+                    }
                 } else {
                     val fmt = DateTimeFormatter.ISO_LOCAL_DATE
                     val todayKey = LocalDate.now().format(fmt)
 
-                    mapByDay.forEach { (date, list) ->
+                    campsMapByDay.forEach { (date, list) ->
                         Column(modifier = Modifier.padding(vertical = 6.dp)) {
                             val header = when (date) {
                                 todayKey -> "dnes"
@@ -309,10 +345,11 @@ fun OverviewScreen(
                     }
                 }
             }
+            val campsEmpty = campsMapByDay.isEmpty()
             Row(modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 2.dp), horizontalArrangement = Arrangement.Center) {
-                TextButton(onClick = onOpenEvents) { Text("Více") }
+                TextButton(onClick = onOpenEvents) { Text(if (campsEmpty) "Podívat se na ostatní" else "Více") }
             }
 
             if (loading) {
@@ -332,11 +369,11 @@ private fun OverviewSection(
 ) {
     Row(modifier = Modifier.padding(horizontal = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(title, style = MaterialTheme.typography.titleMedium)
-        TextButton(onClick = onMore) { Text("Více") }
+        TextButton(onClick = onMore) { Text(if (items.isEmpty()) "Podívat se na ostatní" else "Více") }
     }
     Column(modifier = Modifier.padding(horizontal = 12.dp)) {
         if (items.isEmpty()) {
-            Text("Nic k zobrazení", modifier = Modifier.padding(vertical = 6.dp))
+            Text("Zatím jste si nic nenaplánovali", modifier = Modifier.padding(vertical = 6.dp))
         } else {
             items.forEach { (id, label) ->
                 Text(
