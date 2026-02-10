@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -520,6 +521,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
 
         Row(modifier = Modifier.fillMaxWidth().padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 var showChangePassDialog by remember { mutableStateOf(false) }
+                var showEditPersonal by remember { mutableStateOf(false) }
 
                 FilledTonalButton(
                     onClick = { showChangePassDialog = true },
@@ -540,12 +542,62 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                     })
                 }
 
-            FilledTonalButton(
-                onClick = { /* TODO: change personal data flow */ },
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Změnit osobní data")
-            }
+                FilledTonalButton(
+                    onClick = { showEditPersonal = true },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Změnit osobní data")
+                }
+
+                if (showEditPersonal) {
+                    ChangePersonalDataDialog(
+                        initialFirst = currentUserFields.find { it.first.equals("firstName", ignoreCase = true) }?.second ?: personFields.find { it.first.equals("firstName", ignoreCase = true) }?.second ?: "",
+                        initialLast = currentUserFields.find { it.first.equals("lastName", ignoreCase = true) }?.second ?: personFields.find { it.first.equals("lastName", ignoreCase = true) }?.second ?: "",
+                        initialBio = bioText ?: "",
+                        initialEmail = emailText ?: "",
+                        initialStreet = addressFields.firstOrNull { it.first == "street" }?.second ?: "",
+                        initialCity = addressFields.firstOrNull { it.first == "city" }?.second ?: "",
+                        initialPostal = addressFields.firstOrNull { it.first == "postalCode" }?.second ?: "",
+                        initialPhone = currentUserFields.find { it.first.equals("phone", ignoreCase = true) }?.second ?: personFields.find { it.first.equals("phone", ignoreCase = true) }?.second ?: "",
+                        initialMobile = currentUserFields.find { it.first.equals("mobilePhone", ignoreCase = true) }?.second ?: personFields.find { it.first.equals("mobilePhone", ignoreCase = true) }?.second ?: "",
+                        initialBirthDate = personFields.find { it.first.equals("birthDate", ignoreCase = true) }?.second ?: currentUserFields.find { it.first.equals("birthDate", ignoreCase = true) }?.second ?: "",
+                        initialGender = personFields.find { it.first.equals("gender", ignoreCase = true) }?.second ?: currentUserFields.find { it.first.equals("gender", ignoreCase = true) }?.second ?: "",
+                        onDismiss = { showEditPersonal = false },
+                        onSave = { first, last, bio, email, street, city, postal, phone, mobile, birth, gender ->
+                            // update local UI state so user sees changes immediately
+                            titleText = listOfNotNull(first.takeIf { it.isNotBlank() }, last.takeIf { it.isNotBlank() }).joinToString(" ").takeIf { it.isNotBlank() }
+                            bioText = bio.takeIf { it.isNotBlank() }
+                            emailText = email.takeIf { it.isNotBlank() }
+                            val singleLineAddr = listOfNotNull(street.takeIf { it.isNotBlank() }, city.takeIf { it.isNotBlank() }, postal.takeIf { it.isNotBlank() }).joinToString(", ")
+                            addrText = singleLineAddr.takeIf { it.isNotBlank() }
+                            val af = mutableListOf<Pair<String,String>>()
+                            if (street.isNotBlank()) af.add("street" to street)
+                            if (city.isNotBlank()) af.add("city" to city)
+                            if (postal.isNotBlank()) af.add("postalCode" to postal)
+                            addressFields = af
+                            // update contact fields locally
+                            val newCurrent = currentUserFields.toMutableList()
+                            fun upsert(list: MutableList<Pair<String,String>>, key: String, value: String) {
+                                if (value.isBlank()) return
+                                val idx = list.indexOfFirst { it.first.equals(key, ignoreCase = true) }
+                                if (idx >= 0) list[idx] = key to value else list.add(key to value)
+                            }
+                            upsert(newCurrent, "phone", phone)
+                            upsert(newCurrent, "mobilePhone", mobile)
+                            upsert(newCurrent, "birthDate", birth)
+                            upsert(newCurrent, "gender", gender)
+                            currentUserFields = newCurrent
+                            // Optionally persist via userService if implemented; best-effort (silently ignored if missing)
+                            scope.launch {
+                                try {
+                                    val updater = ServiceLocator.userService
+                                    // If the service exposes an update method, it can be called here.
+                                } catch (_: Throwable) { }
+                            }
+                            showEditPersonal = false
+                        }
+                    )
+                }
         }
 
         Button(onClick = {
@@ -575,7 +627,7 @@ private fun ChangePasswordDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
         onDismissRequest = onDismiss,
         title = { Text("Změnit heslo") },
         text = {
-            Column {
+            Column(modifier = Modifier.heightIn(max = 220.dp).verticalScroll(rememberScrollState())) {
                 Text("Heslo musí mít alespoň 8 znaků.")
                 TextField(value = newPass, onValueChange = { newPass = it }, label = { Text("Nové heslo") })
                 TextField(value = confirm, onValueChange = { confirm = it }, label = { Text("Potvrzení hesla") })
@@ -615,6 +667,90 @@ private fun ChangePasswordDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
                     }
                 }
             }) { Text("Potvrdit") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Zrušit") } }
+    )
+}
+
+
+@Composable
+private fun ChangePersonalDataDialog(
+    initialFirst: String,
+    initialLast: String,
+    initialBio: String,
+    initialEmail: String,
+    initialStreet: String,
+    initialCity: String,
+    initialPostal: String,
+    initialPhone: String,
+    initialMobile: String,
+    initialBirthDate: String,
+    initialGender: String,
+    onDismiss: () -> Unit,
+    onSave: (first: String, last: String, bio: String, email: String, street: String, city: String, postal: String, phone: String, mobile: String, birthDate: String, gender: String) -> Unit
+) {
+    var first by remember { mutableStateOf(initialFirst) }
+    var last by remember { mutableStateOf(initialLast) }
+    var bio by remember { mutableStateOf(initialBio) }
+    var email by remember { mutableStateOf(initialEmail) }
+    var street by remember { mutableStateOf(initialStreet) }
+    var city by remember { mutableStateOf(initialCity) }
+    var postal by remember { mutableStateOf(initialPostal) }
+    var phone by remember { mutableStateOf(initialPhone) }
+    var mobile by remember { mutableStateOf(initialMobile) }
+    var birth by remember { mutableStateOf(initialBirthDate) }
+    var gender by remember { mutableStateOf(initialGender) }
+    var saving by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Upravit osobní údaje") },
+        text = {
+            Column(modifier = Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
+                TextField(value = first, onValueChange = { first = it }, label = { Text("Jméno") }, singleLine = true)
+                TextField(value = last, onValueChange = { last = it }, label = { Text("Příjmení") }, singleLine = true)
+                TextField(value = bio, onValueChange = { bio = it }, label = { Text("Bio") })
+                TextField(value = email, onValueChange = { email = it }, label = { Text("Email") }, singleLine = true)
+                Divider(modifier = Modifier.padding(vertical = 6.dp))
+                Text("Kontakty", style = MaterialTheme.typography.labelSmall)
+                TextField(value = phone, onValueChange = { phone = it }, label = { Text("Telefon") }, singleLine = true)
+                TextField(value = mobile, onValueChange = { mobile = it }, label = { Text("Mobil") }, singleLine = true)
+                TextField(value = birth, onValueChange = { birth = it }, label = { Text("Datum narození") }, singleLine = true)
+                TextField(value = gender, onValueChange = { gender = it }, label = { Text("Pohlaví") }, singleLine = true)
+                Divider(modifier = Modifier.padding(vertical = 6.dp))
+                Text("Adresa", style = MaterialTheme.typography.labelSmall)
+                TextField(value = street, onValueChange = { street = it }, label = { Text("Ulice") }, singleLine = true)
+                TextField(value = city, onValueChange = { city = it }, label = { Text("Město") }, singleLine = true)
+                TextField(value = postal, onValueChange = { postal = it }, label = { Text("PSČ") }, singleLine = true)
+                error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                if (saving) androidx.compose.material3.CircularProgressIndicator()
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                error = null
+                if (email.isNotBlank() && !email.contains("@")) { error = "Neplatný email"; return@TextButton }
+                scope.launch {
+                    saving = true
+                    try {
+                        // For now, only update local UI via callback. Persistence can be added if service supports it.
+                        onSave(
+                            first.trim(), last.trim(), bio.trim(), email.trim(),
+                            street.trim(), city.trim(), postal.trim(), phone.trim(), mobile.trim(), birth.trim(), gender.trim()
+                        )
+                        try {
+                            android.widget.Toast.makeText(ctx, "Údaje uloženy (lokálně)", android.widget.Toast.LENGTH_SHORT).show()
+                        } catch (_: Throwable) { }
+                    } catch (ex: Throwable) {
+                        error = ex.message ?: "Uložení selhalo"
+                    } finally {
+                        saving = false
+                    }
+                }
+            }) { Text("Uložit") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Zrušit") } }
     )

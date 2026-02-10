@@ -42,6 +42,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.tkolympapp.Screens.CalendarViewScreen
+import com.tkolymp.tkolympapp.Screens.AboutScreen
 import com.tkolymp.tkolympapp.Screens.PeopleScreen
 import com.tkolymp.tkolympapp.Screens.TrainersLocationsScreen
 import com.tkolymp.tkolympapp.Screens.GroupsScreen
@@ -212,8 +213,70 @@ fun AppNavHost(
                 onTrainersClick = { navController.navigate("trainers") },
                     onGroupsClick = { navController.navigate("groups") },
                     onLeaderboardClick = { navController.navigate("leaderboard") },
+                onAboutClick = { navController.navigate("about") },
+                onPrivacyClick = { navController.navigate("privacy") },
                 bottomPadding = bottomPadding
             )
+        }
+
+        composable(
+            route = "about",
+            enterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            popEnterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            }
+        ) {
+            AboutScreen(onBack = { navController.navigateUp() })
+        }
+
+        composable(
+            route = "privacy",
+            enterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            popEnterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            }
+        ) {
+            PrivacyPolicyScreen(onBack = { navController.navigateUp() })
         }
 
         composable(

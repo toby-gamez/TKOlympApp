@@ -1,6 +1,8 @@
 package com.tkolymp.tkolympapp
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -87,7 +89,7 @@ private fun formatDateString(raw: String): String? {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {}, onTrainersClick: () -> Unit = {}, onGroupsClick: () -> Unit = {}, onLeaderboardClick: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
+fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {}, onTrainersClick: () -> Unit = {}, onGroupsClick: () -> Unit = {}, onLeaderboardClick: () -> Unit = {}, onAboutClick: () -> Unit = {}, onPrivacyClick: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
     var name by remember { mutableStateOf<String?>(null) }
     var subtitle by remember { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -168,14 +170,15 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
             TopAppBar(title = { Text("Ostatní") })
         }
     ) { padding ->
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = padding.calculateTopPadding(), bottom = bottomPadding),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.Start
-    ) {
-
+        val scrollState = rememberScrollState()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + bottomPadding),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.Start
+        ) {
         Card(modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
@@ -286,6 +289,12 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp, vertical = 4.dp)
+                    .clickable {
+                        if (item == "Jazyky") {}
+                        if (item == "O aplikaci") onAboutClick()
+                        if (item == "Nastavení notifikací") {}
+                        if (item == "Zásady ochrany osobních údajů") onPrivacyClick()
+                    }
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -314,6 +323,6 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
             if (personDetailsRaw != null) Text("person: ${personDetailsRaw}", style = MaterialTheme.typography.bodySmall)
             if (personDob != null) Text("birth: ${personDob}", style = MaterialTheme.typography.bodySmall)
         }
-    }
+        }
     }
 }
