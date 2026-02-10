@@ -1,12 +1,33 @@
 package com.tkolymp.tkolympapp
 
+// coroutine helpers not needed here; avoid importing isActive directly
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -16,7 +37,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,30 +45,6 @@ import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.ServiceLocator
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
-import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
-import androidx.compose.material3.Icon
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Security
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.width
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -56,6 +52,23 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
+import kotlin.coroutines.cancellation.CancellationException
+
+// Helper: do not surface internal/cancellation/compose runtime messages to the UI
+private fun shouldShowErrorMessage(msg: String?): Boolean {
+    if (msg.isNullOrBlank()) return false
+    val low = msg.lowercase()
+    if (low.contains("remembercoroutinescope") || low.contains("left the composition") || low.contains("left composition") ) return false
+    if (low.contains("compose") && low.contains("coroutine")) return false
+    return true
+}
+
+private fun shouldShowError(t: Throwable?): Boolean {
+    if (t == null) return false
+    if (t is CancellationException) return false
+    val m = t.message ?: return true
+    return shouldShowErrorMessage(m)
+}
 
 private fun formatDateString(raw: String): String? {
     val s = raw.trim()
@@ -104,7 +117,6 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
     var personSuffix by remember { mutableStateOf<String?>(null) }
     var loading by remember { mutableStateOf(false) }
     var showDebug by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         rawJson = try { ServiceLocator.userService.getCachedCurrentUserJson() } catch (_: Throwable) { null }
@@ -119,7 +131,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                 ServiceLocator.userService.fetchAndStorePersonDetails(personId!!)
                 personDetailsRaw = try { ServiceLocator.userService.getCachedPersonDetailsJson() } catch (_: Throwable) { null }
                 val apiErr = try { ServiceLocator.userService.getLastApiError() } catch (_: Throwable) { null }
-                if (!apiErr.isNullOrBlank()) error = apiErr
+                if (!apiErr.isNullOrBlank() && shouldShowErrorMessage(apiErr)) error = apiErr
             } catch (_: Throwable) {
                 // ignore network errors here; error will be shown if parsing fails
             } finally {
@@ -130,7 +142,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
         // show any last API error
         try {
             val apiErr = ServiceLocator.userService.getLastApiError()
-            if (!apiErr.isNullOrBlank()) error = apiErr
+            if (!apiErr.isNullOrBlank() && shouldShowErrorMessage(apiErr)) error = apiErr
         } catch (_: Throwable) { }
 
         if (rawJson != null) {
@@ -141,7 +153,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                 name = listOfNotNull(jmeno, prijmeni).joinToString(" ")
                 subtitle = obj["uLogin"]?.toString()?.replace("\"", "")
             } catch (ex: Throwable) {
-                error = ex.message ?: "Chyba při načítání profilu"
+                if (shouldShowError(ex)) error = ex.message ?: "Chyba při načítání profilu"
             }
         }
         if (personDetailsRaw != null) {
@@ -166,163 +178,161 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("Ostatní") })
-        }
-    ) { padding ->
-        val scrollState = rememberScrollState()
+        topBar = { TopAppBar(title = { Text("Další") }) }
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + bottomPadding),
+                .verticalScroll(rememberScrollState())
+                .padding(innerPadding)
+                .padding(bottom = bottomPadding),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
-        Card(modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-            .clickable { onProfileClick() }
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp)
+            Card(modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
+                .clickable { onProfileClick() }
             ) {
-                Box(modifier = Modifier.width(48.dp)) {
-                    Icon(
-                        imageVector = Icons.Filled.Person,
-                        contentDescription = "Profile",
-                        modifier = Modifier.size(40.dp).align(Alignment.CenterStart)
-                    )
-                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp)
+                ) {
+                    Box(modifier = Modifier.width(48.dp)) {
+                        Icon(
+                            imageVector = Icons.Filled.Person,
+                            contentDescription = "Profile",
+                            modifier = Modifier.size(40.dp)
+                        )
+                    }
 
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(text = name ?: "Můj účet", style = MaterialTheme.typography.titleLarge, modifier = Modifier.align(Alignment.Start))
-                    if (subtitle != null) Text(subtitle!!, style = MaterialTheme.typography.bodySmall, modifier = Modifier.align(Alignment.Start))
-                    if (personDob != null && !showDebug) {
-                        val formatted = formatDateString(personDob!!)
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(text = name ?: "Můj účet", style = MaterialTheme.typography.titleLarge)
+                        if (subtitle != null) Text(subtitle!!, style = MaterialTheme.typography.bodySmall)
+                        if (personDob != null && !showDebug) {
+                            val formatted = formatDateString(personDob!!)
+                            Text(
+                                formatted ?: personDob!!,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+                    }
+
+                    if (loading) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                    }
+                }
+            }
+
+            if (error != null) Text(error!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(12.dp))
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            // První sekce - Členové a klub
+            Text(
+                text = "Členové a klub",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 4.dp)
+            )
+
+            val mainItems = listOf(
+                Pair("Lidé", Icons.Filled.People),
+                Pair("Trenéři a tréninkové prostory", Icons.Filled.FitnessCenter),
+                Pair("Tréninkové skupiny", Icons.Filled.Groups),
+                Pair("Žebříček", Icons.Filled.EmojiEvents)
+            )
+
+            mainItems.forEach { (item, icon) ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .clickable {
+                            if (item == "Lidé") onPeopleClick()
+                            if (item == "Trenéři a tréninkové prostory") onTrainersClick()
+                            if (item == "Tréninkové skupiny") onGroupsClick()
+                            if (item == "Žebříček") onLeaderboardClick()
+                        }
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = item,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
                         Text(
-                            formatted ?: personDob!!,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+                            text = item,
+                            style = MaterialTheme.typography.bodyLarge
                         )
                     }
                 }
-
-                if (loading) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                }
             }
-        }
 
-        if (error != null) Text(error!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-        
-        Spacer(modifier = Modifier.width(16.dp))
-        
-        // První sekce - Členové a klub
-        Text(
-            text = "Členové a klub",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 4.dp)
-        )
-        
-        val mainItems = listOf(
-            Pair("Lidé", Icons.Filled.People),
-            Pair("Trenéři a tréninkové prostory", Icons.Filled.FitnessCenter),
-            Pair("Tréninkové skupiny", Icons.Filled.Groups),
-            Pair("Žebříček", Icons.Filled.EmojiEvents)
-        )
-        
-        mainItems.forEach { (item, icon) ->
-                        Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                    .clickable {
-                        if (item == "Lidé") onPeopleClick()
-                        if (item == "Trenéři a tréninkové prostory") onTrainersClick()
-                        if (item == "Tréninkové skupiny") onGroupsClick()
-                        if (item == "Žebříček") onLeaderboardClick()
-                    }
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
+            Spacer(modifier = Modifier.width(16.dp))
+
+            // Druhá sekce - Aplikace
+            Text(
+                text = "Aplikace",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp)
+            )
+
+            val settingsItems = listOf(
+                Pair("Jazyky", Icons.Filled.Language),
+                Pair("O aplikaci", Icons.Filled.Info),
+                Pair("Nastavení notifikací", Icons.Filled.Notifications),
+                Pair("Zásady ochrany osobních údajů", Icons.Filled.Security)
+            )
+
+            settingsItems.forEach { (item, icon) ->
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .clickable {
+                            if (item == "Jazyky") {}
+                            if (item == "O aplikaci") onAboutClick()
+                            if (item == "Nastavení notifikací") {}
+                            if (item == "Zásady ochrany osobních údajů") onPrivacyClick()
+                        }
                 ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = item,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(
-                        text = item,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
-            }
-        }
-        
-        Spacer(modifier = Modifier.width(16.dp))
-        
-        // Druhá sekce - Aplikace
-        Text(
-            text = "Aplikace",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp)
-        )
-        
-        val settingsItems = listOf(
-            Pair("Jazyky", Icons.Filled.Language),
-            Pair("O aplikaci", Icons.Filled.Info),
-            Pair("Nastavení notifikací", Icons.Filled.Notifications),
-            Pair("Zásady ochrany osobních údajů", Icons.Filled.Security)
-        )
-        
-        settingsItems.forEach { (item, icon) ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                    .clickable {
-                        if (item == "Jazyky") {}
-                        if (item == "O aplikaci") onAboutClick()
-                        if (item == "Nastavení notifikací") {}
-                        if (item == "Zásady ochrany osobních údajů") onPrivacyClick()
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = item,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text(
+                            text = item,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
                     }
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = item,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(
-                        text = item,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
                 }
             }
-        }
-        
-        if (showDebug) {
-            Text("personId: ${personId ?: "(null)"}", style = MaterialTheme.typography.bodySmall)
-            Text("coupleIds: ${if (coupleIds.isEmpty()) "[]" else coupleIds.joinToString(", ")}", style = MaterialTheme.typography.bodySmall)
-            if (rawJson != null) Text("raw: ${rawJson}", style = MaterialTheme.typography.bodySmall)
-            if (personDetailsRaw != null) Text("person: ${personDetailsRaw}", style = MaterialTheme.typography.bodySmall)
-            if (personDob != null) Text("birth: ${personDob}", style = MaterialTheme.typography.bodySmall)
-        }
+
+            if (showDebug) {
+                Text("personId: ${personId ?: "(null)"}", style = MaterialTheme.typography.bodySmall)
+                Text("coupleIds: ${if (coupleIds.isEmpty()) "[]" else coupleIds.joinToString(", ")}", style = MaterialTheme.typography.bodySmall)
+                if (rawJson != null) Text("raw: ${rawJson}", style = MaterialTheme.typography.bodySmall)
+                if (personDetailsRaw != null) Text("person: ${personDetailsRaw}", style = MaterialTheme.typography.bodySmall)
+                if (personDob != null) Text("birth: ${personDob}", style = MaterialTheme.typography.bodySmall)
+            }
         }
     }
 }

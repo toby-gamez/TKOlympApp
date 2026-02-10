@@ -30,6 +30,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -73,8 +74,9 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
     var addressFields by remember { mutableStateOf<List<Pair<String,String>>>(emptyList()) }
     val scope = rememberCoroutineScope()
     val ctx = LocalContext.current
+    val refreshTriggerState = remember { mutableStateOf(0) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(refreshTriggerState.value) {
         userJson = try { ServiceLocator.userService.getCachedCurrentUserJson() } catch (_: Throwable) { null }
 
         val cachedPerson = try { ServiceLocator.userService.getCachedPersonDetailsJson() } catch (_: Throwable) { null }
@@ -555,15 +557,25 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                         initialLast = currentUserFields.find { it.first.equals("lastName", ignoreCase = true) }?.second ?: personFields.find { it.first.equals("lastName", ignoreCase = true) }?.second ?: "",
                         initialBio = bioText ?: "",
                         initialEmail = emailText ?: "",
+                        initialPrefix = personFields.find { it.first.equals("prefixTitle", ignoreCase = true) }?.second ?: currentUserFields.find { it.first.equals("prefixTitle", ignoreCase = true) }?.second ?: "",
+                        initialSuffix = personFields.find { it.first.equals("suffixTitle", ignoreCase = true) }?.second ?: currentUserFields.find { it.first.equals("suffixTitle", ignoreCase = true) }?.second ?: "",
+                        initialCstsId = personFields.find { it.first.equals("cstsId", ignoreCase = true) }?.second ?: "",
+                        initialWdsfId = personFields.find { it.first.equals("wdsfId", ignoreCase = true) }?.second ?: "",
+                        initialNationalIdNumber = personFields.find { it.first.equals("nationalIdNumber", ignoreCase = true) }?.second ?: "",
+                        initialNationality = personFields.find { it.first.equals("nationality", ignoreCase = true) }?.second ?: "",
                         initialStreet = addressFields.firstOrNull { it.first == "street" }?.second ?: "",
                         initialCity = addressFields.firstOrNull { it.first == "city" }?.second ?: "",
                         initialPostal = addressFields.firstOrNull { it.first == "postalCode" }?.second ?: "",
-                        initialPhone = currentUserFields.find { it.first.equals("phone", ignoreCase = true) }?.second ?: personFields.find { it.first.equals("phone", ignoreCase = true) }?.second ?: "",
-                        initialMobile = currentUserFields.find { it.first.equals("mobilePhone", ignoreCase = true) }?.second ?: personFields.find { it.first.equals("mobilePhone", ignoreCase = true) }?.second ?: "",
+                        initialRegion = addressFields.firstOrNull { it.first == "region" }?.second ?: "",
+                        initialDistrict = addressFields.firstOrNull { it.first == "district" }?.second ?: "",
+                        initialConscription = addressFields.firstOrNull { it.first == "conscriptionNumber" }?.second ?: "",
+                        initialOrientation = addressFields.firstOrNull { it.first == "orientationNumber" }?.second ?: "",
+                        initialPhone = currentUserFields.firstOrNull { it.first.equals("phone", ignoreCase = true) || it.first.equals("mobilePhone", ignoreCase = true) }?.second ?: personFields.firstOrNull { it.first.equals("phone", ignoreCase = true) || it.first.equals("mobilePhone", ignoreCase = true) }?.second ?: "",
+                        initialMobile = currentUserFields.firstOrNull { it.first.equals("mobilePhone", ignoreCase = true) || it.first.equals("phone", ignoreCase = true) }?.second ?: personFields.firstOrNull { it.first.equals("mobilePhone", ignoreCase = true) || it.first.equals("phone", ignoreCase = true) }?.second ?: "",
                         initialBirthDate = personFields.find { it.first.equals("birthDate", ignoreCase = true) }?.second ?: currentUserFields.find { it.first.equals("birthDate", ignoreCase = true) }?.second ?: "",
                         initialGender = personFields.find { it.first.equals("gender", ignoreCase = true) }?.second ?: currentUserFields.find { it.first.equals("gender", ignoreCase = true) }?.second ?: "",
                         onDismiss = { showEditPersonal = false },
-                        onSave = { first, last, bio, email, street, city, postal, phone, mobile, birth, gender ->
+                        onSave = { first, last, bio, email, prefix, suffix, csts, wdsf, nid, nationality, street, city, postal, region, district, conscription, orientation, phone, mobile, birth, gender ->
                             // update local UI state so user sees changes immediately
                             titleText = listOfNotNull(first.takeIf { it.isNotBlank() }, last.takeIf { it.isNotBlank() }).joinToString(" ").takeIf { it.isNotBlank() }
                             bioText = bio.takeIf { it.isNotBlank() }
@@ -574,6 +586,10 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                             if (street.isNotBlank()) af.add("street" to street)
                             if (city.isNotBlank()) af.add("city" to city)
                             if (postal.isNotBlank()) af.add("postalCode" to postal)
+                            if (region.isNotBlank()) af.add("region" to region)
+                            if (district.isNotBlank()) af.add("district" to district)
+                            if (conscription.isNotBlank()) af.add("conscriptionNumber" to conscription)
+                            if (orientation.isNotBlank()) af.add("orientationNumber" to orientation)
                             addressFields = af
                             // update contact fields locally
                             val newCurrent = currentUserFields.toMutableList()
@@ -586,15 +602,13 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                             upsert(newCurrent, "mobilePhone", mobile)
                             upsert(newCurrent, "birthDate", birth)
                             upsert(newCurrent, "gender", gender)
+                            upsert(newCurrent, "prefixTitle", prefix)
+                            upsert(newCurrent, "suffixTitle", suffix)
                             currentUserFields = newCurrent
-                            // Optionally persist via userService if implemented; best-effort (silently ignored if missing)
-                            scope.launch {
-                                try {
-                                    val updater = ServiceLocator.userService
-                                    // If the service exposes an update method, it can be called here.
-                                } catch (_: Throwable) { }
-                            }
+                            // persistence moved into dialog; parent only updates UI optimistically
                             showEditPersonal = false
+                            // trigger a refresh of person data
+                            refreshTriggerState.value = refreshTriggerState.value + 1
                         }
                     )
                 }
@@ -679,41 +693,67 @@ private fun ChangePersonalDataDialog(
     initialLast: String,
     initialBio: String,
     initialEmail: String,
+    initialPrefix: String,
+    initialSuffix: String,
+    initialCstsId: String,
+    initialWdsfId: String,
+    initialNationalIdNumber: String,
+    initialNationality: String,
     initialStreet: String,
     initialCity: String,
     initialPostal: String,
+    initialRegion: String,
+    initialDistrict: String,
+    initialConscription: String,
+    initialOrientation: String,
     initialPhone: String,
     initialMobile: String,
     initialBirthDate: String,
     initialGender: String,
     onDismiss: () -> Unit,
-    onSave: (first: String, last: String, bio: String, email: String, street: String, city: String, postal: String, phone: String, mobile: String, birthDate: String, gender: String) -> Unit
+    onSave: (first: String, last: String, bio: String, email: String, prefix: String, suffix: String, csts: String, wdsf: String, nid: String, nationality: String, street: String, city: String, postal: String, region: String, district: String, conscription: String, orientation: String, phone: String, mobile: String, birthDate: String, gender: String) -> Unit
 ) {
-    var first by remember { mutableStateOf(initialFirst) }
-    var last by remember { mutableStateOf(initialLast) }
-    var bio by remember { mutableStateOf(initialBio) }
-    var email by remember { mutableStateOf(initialEmail) }
-    var street by remember { mutableStateOf(initialStreet) }
-    var city by remember { mutableStateOf(initialCity) }
-    var postal by remember { mutableStateOf(initialPostal) }
-    var phone by remember { mutableStateOf(initialPhone) }
-    var mobile by remember { mutableStateOf(initialMobile) }
-    var birth by remember { mutableStateOf(initialBirthDate) }
-    var gender by remember { mutableStateOf(initialGender) }
+    var first by remember(initialFirst) { mutableStateOf(initialFirst) }
+    var last by remember(initialLast) { mutableStateOf(initialLast) }
+    var bio by remember(initialBio) { mutableStateOf(initialBio) }
+    var email by remember(initialEmail) { mutableStateOf(initialEmail) }
+    var prefix by remember(initialPrefix) { mutableStateOf(initialPrefix) }
+    var suffix by remember(initialSuffix) { mutableStateOf(initialSuffix) }
+    var csts by remember(initialCstsId) { mutableStateOf(initialCstsId) }
+    var wdsf by remember(initialWdsfId) { mutableStateOf(initialWdsfId) }
+    var nid by remember(initialNationalIdNumber) { mutableStateOf(initialNationalIdNumber) }
+    var nationality by remember(initialNationality) { mutableStateOf(initialNationality) }
+    var street by remember(initialStreet) { mutableStateOf(initialStreet) }
+    var city by remember(initialCity) { mutableStateOf(initialCity) }
+    var postal by remember(initialPostal) { mutableStateOf(initialPostal) }
+    var region by remember(initialRegion) { mutableStateOf(initialRegion) }
+    var district by remember(initialDistrict) { mutableStateOf(initialDistrict) }
+    var conscription by remember(initialConscription) { mutableStateOf(initialConscription) }
+    var orientation by remember(initialOrientation) { mutableStateOf(initialOrientation) }
+    var phone by remember(initialPhone) { mutableStateOf(initialPhone) }
+    var mobile by remember(initialMobile) { mutableStateOf(initialMobile) }
+    var birth by remember(initialBirthDate) { mutableStateOf(initialBirthDate) }
+    var gender by remember(initialGender) { mutableStateOf(initialGender) }
     var saving by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
 
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = { if (!saving) onDismiss() },
         title = { Text("Upravit osobní údaje") },
         text = {
             Column(modifier = Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
                 TextField(value = first, onValueChange = { first = it }, label = { Text("Jméno") }, singleLine = true)
                 TextField(value = last, onValueChange = { last = it }, label = { Text("Příjmení") }, singleLine = true)
+                TextField(value = prefix, onValueChange = { prefix = it }, label = { Text("Titul před") }, singleLine = true)
+                TextField(value = suffix, onValueChange = { suffix = it }, label = { Text("Titul za") }, singleLine = true)
                 TextField(value = bio, onValueChange = { bio = it }, label = { Text("Bio") })
                 TextField(value = email, onValueChange = { email = it }, label = { Text("Email") }, singleLine = true)
+                TextField(value = csts, onValueChange = { csts = it }, label = { Text("ČSTS ID") }, singleLine = true)
+                TextField(value = wdsf, onValueChange = { wdsf = it }, label = { Text("WDSF ID") }, singleLine = true)
+                TextField(value = nid, onValueChange = { nid = it }, label = { Text("Rodné číslo / národní ID") }, singleLine = true)
+                TextField(value = nationality, onValueChange = { nationality = it }, label = { Text("Národnost") }, singleLine = true)
                 Divider(modifier = Modifier.padding(vertical = 6.dp))
                 Text("Kontakty", style = MaterialTheme.typography.labelSmall)
                 TextField(value = phone, onValueChange = { phone = it }, label = { Text("Telefon") }, singleLine = true)
@@ -725,25 +765,71 @@ private fun ChangePersonalDataDialog(
                 TextField(value = street, onValueChange = { street = it }, label = { Text("Ulice") }, singleLine = true)
                 TextField(value = city, onValueChange = { city = it }, label = { Text("Město") }, singleLine = true)
                 TextField(value = postal, onValueChange = { postal = it }, label = { Text("PSČ") }, singleLine = true)
+                TextField(value = region, onValueChange = { region = it }, label = { Text("Kraj / region") }, singleLine = true)
+                TextField(value = district, onValueChange = { district = it }, label = { Text("Okres / district") }, singleLine = true)
+                TextField(value = conscription, onValueChange = { conscription = it }, label = { Text("Číslo popisné (conscription)") }, singleLine = true)
+                TextField(value = orientation, onValueChange = { orientation = it }, label = { Text("Číslo orientační (orientation)") }, singleLine = true)
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                 if (saving) androidx.compose.material3.CircularProgressIndicator()
             }
         },
         confirmButton = {
-            TextButton(onClick = {
+                TextButton(onClick = {
                 error = null
                 if (email.isNotBlank() && !email.contains("@")) { error = "Neplatný email"; return@TextButton }
                 scope.launch {
                     saving = true
                     try {
-                        // For now, only update local UI via callback. Persistence can be added if service supports it.
-                        onSave(
-                            first.trim(), last.trim(), bio.trim(), email.trim(),
-                            street.trim(), city.trim(), postal.trim(), phone.trim(), mobile.trim(), birth.trim(), gender.trim()
-                        )
-                        try {
-                            android.widget.Toast.makeText(ctx, "Údaje uloženy (lokálně)", android.widget.Toast.LENGTH_SHORT).show()
-                        } catch (_: Throwable) { }
+                        // perform network save here and only close dialog on success
+                        val pid = try { ServiceLocator.userService.getCachedPersonId() } catch (_: Throwable) { null }
+                        if (pid.isNullOrBlank()) {
+                            error = "Nelze určit ID uživatele"
+                        } else {
+                            val req = com.tkolymp.shared.user.PersonUpdateRequest(
+                                bio = bio,
+                                cstsId = csts,
+                                email = email,
+                                firstName = first,
+                                lastName = last,
+                                nationalIdNumber = nid,
+                                nationality = nationality,
+                                phone = phone,
+                                wdsfId = wdsf,
+                                prefixTitle = prefix,
+                                suffixTitle = suffix,
+                                gender = gender,
+                                birthDateSet = true,
+                                birthDate = birth,
+                                address = com.tkolymp.shared.user.AddressUpdate(
+                                    street = street,
+                                    city = city,
+                                    postalCode = postal,
+                                    region = region,
+                                    district = district,
+                                    conscriptionNumber = conscription,
+                                    orientationNumber = orientation
+                                )
+                            )
+                            try {
+                                println("[ProfileScreen] Sending PersonUpdateRequest: $req")
+                            } catch (_: Throwable) {}
+                            val ok = try { ServiceLocator.userService.updatePerson(pid, req) } catch (ex: Throwable) { false }
+                            if (ok) {
+                                // update parent UI and refetch details
+                                onSave(
+                                    first.trim(), last.trim(), bio.trim(), email.trim(), prefix.trim(), suffix.trim(), csts.trim(), wdsf.trim(), nid.trim(), nationality.trim(),
+                                    street.trim(), city.trim(), postal.trim(), region.trim(), district.trim(), conscription.trim(), orientation.trim(),
+                                    phone.trim(), mobile.trim(), birth.trim(), gender.trim()
+                                )
+                                    try { ServiceLocator.userService.fetchAndStorePersonDetails(pid) } catch (_: Throwable) { }
+                                try { ServiceLocator.authService.initialize() } catch (_: Throwable) { }
+                                try { android.widget.Toast.makeText(ctx, "Údaje uloženy", android.widget.Toast.LENGTH_SHORT).show() } catch (_: Throwable) { }
+                                    onDismiss()
+                            } else {
+                                val apiErr = try { ServiceLocator.userService.getLastApiError() } catch (_: Throwable) { null }
+                                error = "Uložení selhalo: ${apiErr ?: "neznámá chyba"}"
+                            }
+                        }
                     } catch (ex: Throwable) {
                         error = ex.message ?: "Uložení selhalo"
                     } finally {
