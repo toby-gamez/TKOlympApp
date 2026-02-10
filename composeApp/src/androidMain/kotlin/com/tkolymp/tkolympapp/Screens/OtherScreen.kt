@@ -178,7 +178,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Další") }) }
+        topBar = { TopAppBar(title = { Text("Ostatní") }) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
