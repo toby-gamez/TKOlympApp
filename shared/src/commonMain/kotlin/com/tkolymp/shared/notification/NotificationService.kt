@@ -41,7 +41,8 @@ class NotificationService(
             val ev = inst.event ?: return@forEach
 
             settings.rules.filter { it.enabled }.forEach { rule ->
-                // Match using explicit lists if provided, otherwise fall back to old filterType/filterValue
+                // Match using explicit lists if provided.
+                // If no explicit values were selected for a BY_* filter, treat that as "match all" for that dimension.
                 val matches = when {
                     rule.locations.isNotEmpty() -> {
                         val locName = ev.location?.name ?: ev.locationText ?: ""
@@ -57,17 +58,10 @@ class NotificationService(
                     }
                     else -> when (rule.filterType) {
                         FilterType.ALL -> true
-                        FilterType.BY_LOCATION -> {
-                            val locName = ev.location?.name ?: ev.locationText ?: ""
-                            rule.filterValue?.let { fv -> locName.contains(fv, ignoreCase = true) } ?: false
-                        }
-                        FilterType.BY_TRAINER -> {
-                            val trainers = ev.eventTrainersList ?: emptyList()
-                            rule.filterValue?.let { fv -> trainers.any { it.contains(fv, ignoreCase = true) } } ?: false
-                        }
-                        FilterType.BY_TYPE -> {
-                            rule.filterValue?.let { fv -> (ev.type ?: "").equals(fv, ignoreCase = true) } ?: false
-                        }
+                        // If no explicit values were selected for BY_* filters, treat as match-all
+                        FilterType.BY_LOCATION -> true
+                        FilterType.BY_TRAINER -> true
+                        FilterType.BY_TYPE -> true
                     }
                 }
 

@@ -6,9 +6,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class NotificationRule(
     val id: String,
+    val name: String = "",
     val enabled: Boolean = true,
     val filterType: FilterType = FilterType.ALL,
-    val filterValue: String? = null,
     val locations: List<String> = emptyList(),
     val trainers: List<String> = emptyList(),
     val types: List<String> = emptyList(),

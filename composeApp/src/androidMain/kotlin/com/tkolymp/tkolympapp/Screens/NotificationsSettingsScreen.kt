@@ -1,6 +1,7 @@
 package com.tkolymp.tkolympapp.Screens
 
-import androidx.compose.foundation.clickable
+import android.util.Log
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -19,7 +21,10 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -56,7 +61,7 @@ import java.util.UUID
 fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
     val scope = rememberCoroutineScope()
     var availableLocations by remember { mutableStateOf<List<String>>(emptyList()) }
-    var availableTrainers by remember { mutableStateOf<List<String>>(emptyList()) }
+    var availableTrainers by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     val availableTypes = listOf("CAMP", "LESSON", "GROUP", "RESERVATION", "HOLIDAY")
     val rules = remember { mutableStateListOf<NotificationRule>() }
     var globalEnabled by remember { mutableStateOf(true) }
@@ -76,14 +81,15 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                 // no service
             }
             // load club data (locations/trainers)
-            try {
+                try {
                 val club = withContext(Dispatchers.IO) { ServiceLocator.clubService.fetchClubData() }
                 availableLocations = club.locations.mapNotNull { it.name }.distinct()
                 availableTrainers = club.trainers.mapNotNull { t ->
                     t.person?.let { p ->
                         val name = listOfNotNull(p.firstName, p.lastName).joinToString(" ")
                         val trimmed = name.trim()
-                        if (trimmed.isNotBlank()) trimmed else null
+                        val id = p.id ?: return@mapNotNull null
+                        if (trimmed.isNotBlank()) Pair(id, trimmed) else null
                     }
                 }.distinct()
             } catch (_: Throwable) { /* ignore */ }
@@ -97,11 +103,16 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
         scope.launch {
             try {
                 val svc = ServiceLocator.notificationService
-                val settings =
-                    NotificationSettings(globalEnabled = globalEnabled, rules = rules.toList())
-                svc.updateSettings(settings)
-            } catch (_: UninitializedPropertyAccessException) {
-                // ignore
+                val settings = NotificationSettings(globalEnabled = globalEnabled, rules = rules.toList())
+                try {
+                    svc.updateSettings(settings)
+                } catch (t: Throwable) {
+                    Log.e("NotificationsSettings", "Failed to update settings", t)
+                }
+            } catch (e: UninitializedPropertyAccessException) {
+                Log.w("NotificationsSettings", "notificationService not initialized: ${e.message}")
+            } catch (t: Throwable) {
+                Log.e("NotificationsSettings", "Unexpected error persisting settings", t)
             }
         }
     }
@@ -137,20 +148,18 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                 .fillMaxWidth()
                                 .padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                                     Column(modifier = Modifier.weight(1f)) {
-                                    val desc = when {
-                                        r.locations.isNotEmpty() -> "Místa: ${r.locations.joinToString(", ")}" 
-                                        r.trainers.isNotEmpty() -> "Trenéři: ${r.trainers.joinToString(", ")}" 
-                                        r.types.isNotEmpty() -> "Typy: ${r.types.joinToString(", ")}" 
-                                        else -> when (r.filterType) {
-                                            FilterType.ALL -> "Všechny události"
-                                            FilterType.BY_LOCATION -> "Místo: ${r.filterValue ?: "(nezadáno)"}"
-                                            FilterType.BY_TRAINER -> "Trenér: ${r.filterValue ?: "(nezadáno)"}"
-                                            FilterType.BY_TYPE -> "Typ: ${r.filterValue ?: "(nezadáno)"}"
+                                        val title = if (r.name.isNotBlank()) r.name else if (r.filterType == FilterType.ALL) "Všechny události" else "Pravidlo"
+                                        Text(text = title)
+                                        if (r.filterType == FilterType.ALL) {
+                                            Text(text = "Všechny události", style = androidx.compose.material3.MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
+                                        } else {
+                                            Text(text = "Místa: ${if (r.locations.isNotEmpty()) r.locations.joinToString(", ") else "(vše)"}", style = androidx.compose.material3.MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
+                                                val trainerDisplay = if (r.trainers.isNotEmpty()) r.trainers.map { t -> if (t.contains("::")) t.substringAfter("::") else t }.joinToString(", ") else "(vše)"
+                                                Text(text = "Trenéři: $trainerDisplay", style = androidx.compose.material3.MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 2.dp))
+                                            Text(text = "Typy: ${if (r.types.isNotEmpty()) r.types.joinToString(", ") else "(vše)"}", style = androidx.compose.material3.MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 2.dp))
                                         }
+                                        Text(text = "${r.timesBeforeMinutes.joinToString(", ")} min předem", style = androidx.compose.material3.MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp))
                                     }
-                                    Text(text = desc)
-                                    Text(text = "Časy: ${r.timesBeforeMinutes.joinToString(", ")} min před", modifier = Modifier.padding(top = 6.dp))
-                                }
 
                                 Row {
                                     Switch(checked = r.enabled, onCheckedChange = { new ->
@@ -180,18 +189,43 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
 
     if (showDialog) {
         val dialogExisting = editRule
-        var selType by remember(dialogExisting) { mutableStateOf(dialogExisting?.filterType ?: FilterType.ALL) }
-        var value by remember(dialogExisting) { mutableStateOf( when {
-            dialogExisting?.locations?.isNotEmpty() == true -> dialogExisting.locations.joinToString(",")
-            dialogExisting?.trainers?.isNotEmpty() == true -> dialogExisting.trainers.joinToString(",")
-            dialogExisting?.types?.isNotEmpty() == true -> dialogExisting.types.joinToString(",")
-            else -> dialogExisting?.filterValue ?: ""
-        }) }
-        var timesText by remember(dialogExisting) { mutableStateOf(dialogExisting?.timesBeforeMinutes?.joinToString(",") ?: "60,5") }
+        var selType by remember(dialogExisting) {
+            mutableStateOf(
+                when (dialogExisting?.filterType) {
+                    FilterType.ALL, null -> FilterType.BY_LOCATION
+                    else -> dialogExisting.filterType
+                }
+            )
+        }
+        // removed single text filterValue input; selection is via checkboxes
 
-        val selectedLocations = remember(dialogExisting) { mutableStateListOf<String>().apply { dialogExisting?.locations?.let { addAll(it) } } }
-        val selectedTrainers = remember(dialogExisting) { mutableStateListOf<String>().apply { dialogExisting?.trainers?.let { addAll(it) } } }
+        val selectedLocations = remember { mutableStateListOf<String>() }
+        val selectedTrainers = remember { mutableStateListOf<String>() }
         val selectedTypes = remember(dialogExisting) { mutableStateListOf<String>().apply { dialogExisting?.types?.let { addAll(it) } } }
+
+        // When editing, try to prefill selections. Resolve trainer ids when club data is available.
+        LaunchedEffect(dialogExisting, availableTrainers) {
+            selectedLocations.clear()
+            selectedTrainers.clear()
+            dialogExisting?.locations?.let { selectedLocations.addAll(it) }
+            dialogExisting?.trainers?.let { trList ->
+                trList.forEach { s ->
+                    if (s.contains("::")) {
+                        selectedTrainers.add(s)
+                    } else {
+                        val matched = availableTrainers.find { it.second == s }
+                        if (matched != null) selectedTrainers.add("${matched.first}::${s}") else selectedTrainers.add(s)
+                    }
+                }
+            }
+        }
+
+        // single time value + unit state (moved outside inner Column so save button can access)
+        var timeValue by remember(dialogExisting) { mutableStateOf(dialogExisting?.timesBeforeMinutes?.firstOrNull()?.toString() ?: "60") }
+        var timeUnitExpanded by remember { mutableStateOf(false) }
+        val timeUnits = listOf("minuty", "hodiny")
+        var timeUnit by remember(dialogExisting) { mutableStateOf("minuty") }
+        var ruleName by remember(dialogExisting) { mutableStateOf(dialogExisting?.name ?: "") }
 
         Dialog(onDismissRequest = { showDialog = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
             Surface(modifier = Modifier.fillMaxSize()) {
@@ -200,16 +234,35 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                     Column(modifier = Modifier
                         .weight(1f)
                         .padding(16.dp)) {
-                        // Simple selector via clickable texts
-                        Text("Typ filtru:")
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            listOf(FilterType.ALL, FilterType.BY_LOCATION, FilterType.BY_TRAINER, FilterType.BY_TYPE).forEach { t ->
-                                val label = when (t) { FilterType.ALL -> "Vše"; FilterType.BY_LOCATION -> "Místo"; FilterType.BY_TRAINER -> "Trenér"; FilterType.BY_TYPE -> "Typ" }
-                                Text(label, modifier = Modifier.clickable { selType = t }.padding(6.dp))
-                            }
-                        }
-                        OutlinedTextField(value = value, onValueChange = { value = it }, label = { Text("Hodnota filtru (čárkou oddělené hodnoty)") }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
-                        OutlinedTextField(value = timesText, onValueChange = { timesText = it }, label = { Text("Časy před (minuty, čárkou oddělené)") }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
+                        OutlinedTextField(value = ruleName, onValueChange = { ruleName = it }, label = { Text("Název pravidla") }, modifier = Modifier.fillMaxWidth())
+                        Spacer(modifier = Modifier.height(8.dp))
+                                        // Filter type selector using chips
+                                        Text("Typ filtru:")
+                                        Row(modifier = Modifier
+                                            .fillMaxWidth()
+                                            .horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            listOf(FilterType.BY_LOCATION, FilterType.BY_TRAINER, FilterType.BY_TYPE).forEach { t ->
+                                                val label = when (t) {
+                                                    FilterType.BY_LOCATION -> "Místo"
+                                                    FilterType.BY_TRAINER -> "Trenér"
+                                                    FilterType.BY_TYPE -> "Typ"
+                                                    else -> t.name
+                                                }
+                                                FilterChip(selected = (selType == t), onClick = { selType = t }, label = { Text(label) })
+                                            }
+                                        }
+
+                                        Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            OutlinedTextField(value = timeValue, onValueChange = { timeValue = it }, label = { Text("Čas předem") }, modifier = Modifier.weight(1f))
+                                            Box {
+                                                Button(onClick = { timeUnitExpanded = true }) { Text(timeUnit) }
+                                                DropdownMenu(expanded = timeUnitExpanded, onDismissRequest = { timeUnitExpanded = false }) {
+                                                    timeUnits.forEach { u ->
+                                                        DropdownMenuItem(text = { Text(u) }, onClick = { timeUnit = u; timeUnitExpanded = false })
+                                                    }
+                                                }
+                                            }
+                                        }
 
                         Spacer(modifier = Modifier.height(8.dp))
                         Text("Nebo vyber z dostupných hodnot:")
@@ -229,11 +282,22 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                             FilterType.BY_TRAINER -> {
                                 LazyColumn(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
                                     items(availableTrainers) { tr ->
+                                        val trId = tr.first
+                                        val trName = tr.second
                                         Row(modifier = Modifier.fillMaxWidth().padding(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                                            Checkbox(checked = selectedTrainers.contains(tr), onCheckedChange = {
-                                                if (it) selectedTrainers.add(tr) else selectedTrainers.remove(tr)
+                                            val isChecked = selectedTrainers.any { sel ->
+                                                if (sel.contains("::")) sel.substringBefore("::") == trId else sel == trName
+                                            }
+                                            Checkbox(checked = isChecked, onCheckedChange = { checked ->
+                                                if (checked) {
+                                                    selectedTrainers.add("${trId}::${trName}")
+                                                } else {
+                                                    selectedTrainers.removeAll { sel ->
+                                                        if (sel.contains("::")) sel.substringBefore("::") == trId else sel == trName
+                                                    }
+                                                }
                                             })
-                                            Text(tr)
+                                            Text(trName)
                                         }
                                     }
                                 }
@@ -258,36 +322,43 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                         Button(onClick = { showDialog = false }) { Text("Zrušit") }
                         Spacer(modifier = Modifier.padding(6.dp))
                         Button(onClick = {
-                            // parse times
-                            val times = timesText.split(',').mapNotNull { it.trim().toIntOrNull() }.ifEmpty { listOf(60,5) }
-                            val typedLists = value.split(',').map { it.trim() }.filter { it.isNotEmpty() }
+                            // parse single time + unit
+                            val tv = timeValue.trim().toIntOrNull() ?: 60
+                            val minutes = if (timeUnit == "hodiny") tv * 60 else tv
+                            val times = listOf(minutes)
                             val existing = dialogExisting
 
-                            // prefer selected checkboxes when present, otherwise fall back to typed value
-                            val finalLocations = if (selectedLocations.isNotEmpty()) selectedLocations.toList() else typedLists
-                            val finalTrainers = if (selectedTrainers.isNotEmpty()) selectedTrainers.toList() else typedLists
-                            val finalTypes = if (selectedTypes.isNotEmpty()) selectedTypes.toList() else typedLists
+                            // prefer selected checkboxes when present, otherwise empty = match all
+                            val finalLocations = if (selectedLocations.isNotEmpty()) selectedLocations.toList() else emptyList()
+                            val finalTrainers = if (selectedTrainers.isNotEmpty()) selectedTrainers.toList() else emptyList()
+                            val finalTypes = if (selectedTypes.isNotEmpty()) selectedTypes.toList() else emptyList()
 
-                            if (existing == null) {
-                                val nr = when (selType) {
-                                    FilterType.BY_LOCATION -> NotificationRule(id = UUID.randomUUID().toString(), enabled = true, filterType = selType, locations = finalLocations, timesBeforeMinutes = times)
-                                    FilterType.BY_TRAINER -> NotificationRule(id = UUID.randomUUID().toString(), enabled = true, filterType = selType, trainers = finalTrainers, timesBeforeMinutes = times)
-                                    FilterType.BY_TYPE -> NotificationRule(id = UUID.randomUUID().toString(), enabled = true, filterType = selType, types = finalTypes, timesBeforeMinutes = times)
-                                    else -> NotificationRule(id = UUID.randomUUID().toString(), enabled = true, filterType = selType, filterValue = value.ifBlank { null }, timesBeforeMinutes = times)
-                                }
-                                rules.add(nr)
-                            } else {
-                                val idx = rules.indexOfFirst { it.id == existing.id }
-                                if (idx >= 0) {
-                                    val updated = when (selType) {
-                                        FilterType.BY_LOCATION -> existing.copy(filterType = selType, locations = finalLocations, trainers = emptyList(), types = emptyList(), filterValue = null, timesBeforeMinutes = times)
-                                        FilterType.BY_TRAINER -> existing.copy(filterType = selType, trainers = finalTrainers, locations = emptyList(), types = emptyList(), filterValue = null, timesBeforeMinutes = times)
-                                        FilterType.BY_TYPE -> existing.copy(filterType = selType, types = finalTypes, locations = emptyList(), trainers = emptyList(), filterValue = null, timesBeforeMinutes = times)
-                                        else -> existing.copy(filterType = selType, filterValue = value.ifBlank { null }, locations = emptyList(), trainers = emptyList(), types = emptyList(), timesBeforeMinutes = times)
+                                if (existing == null) {
+                                    val nr = NotificationRule(
+                                        id = UUID.randomUUID().toString(),
+                                        name = ruleName,
+                                        enabled = true,
+                                        filterType = selType,
+                                        locations = finalLocations,
+                                        trainers = finalTrainers,
+                                        types = finalTypes,
+                                        timesBeforeMinutes = times
+                                    )
+                                    rules.add(nr)
+                                } else {
+                                    val idx = rules.indexOfFirst { it.id == existing.id }
+                                    if (idx >= 0) {
+                                        val updated = existing.copy(
+                                            name = ruleName,
+                                            filterType = selType,
+                                            locations = finalLocations,
+                                            trainers = finalTrainers,
+                                            types = finalTypes,
+                                            timesBeforeMinutes = times
+                                        )
+                                        rules[idx] = updated
                                     }
-                                    rules[idx] = updated
                                 }
-                            }
                             persist()
                             showDialog = false
                         }) { Text("Uložit") }
