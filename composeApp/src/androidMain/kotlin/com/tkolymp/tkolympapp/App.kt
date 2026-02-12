@@ -47,6 +47,7 @@ import com.tkolymp.tkolympapp.Screens.PeopleScreen
 import com.tkolymp.tkolympapp.Screens.TrainersLocationsScreen
 import com.tkolymp.tkolympapp.Screens.GroupsScreen
 import com.tkolymp.tkolympapp.Screens.LeaderboardScreen
+import com.tkolymp.tkolympapp.Screens.NotificationsSettingsScreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -215,8 +216,39 @@ fun AppNavHost(
                     onLeaderboardClick = { navController.navigate("leaderboard") },
                 onAboutClick = { navController.navigate("about") },
                 onPrivacyClick = { navController.navigate("privacy") },
+                onNotificationsClick = { navController.navigate("notifications") },
                 bottomPadding = bottomPadding
             )
+        }
+
+        composable(
+            route = "notifications",
+            enterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            popEnterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            }
+        ) {
+            NotificationsSettingsScreen(onBack = { navController.navigateUp() })
         }
 
         composable(

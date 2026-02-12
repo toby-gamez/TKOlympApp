@@ -102,7 +102,7 @@ private fun formatDateString(raw: String): String? {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {}, onTrainersClick: () -> Unit = {}, onGroupsClick: () -> Unit = {}, onLeaderboardClick: () -> Unit = {}, onAboutClick: () -> Unit = {}, onPrivacyClick: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
+fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {}, onTrainersClick: () -> Unit = {}, onGroupsClick: () -> Unit = {}, onLeaderboardClick: () -> Unit = {}, onAboutClick: () -> Unit = {}, onPrivacyClick: () -> Unit = {}, onNotificationsClick: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
     var name by remember { mutableStateOf<String?>(null) }
     var subtitle by remember { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -302,7 +302,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                         .clickable {
                             if (item == "Jazyky") {}
                             if (item == "O aplikaci") onAboutClick()
-                            if (item == "Nastavení notifikací") {}
+                            if (item == "Nastavení notifikací") onNotificationsClick()
                             if (item == "Zásady ochrany osobních údajů") onPrivacyClick()
                         }
                 ) {

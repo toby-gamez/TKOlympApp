@@ -4,6 +4,9 @@ import android.content.Context
 import com.tkolymp.shared.auth.AuthService
 import com.tkolymp.shared.network.GraphQlClientImpl
 import com.tkolymp.shared.storage.TokenStorage
+import com.tkolymp.shared.notification.NotificationStorage
+import com.tkolymp.shared.notification.NotificationSchedulerAndroid
+import com.tkolymp.shared.notification.NotificationService
 import com.tkolymp.shared.event.EventService
 import com.tkolymp.shared.storage.UserStorage
 import com.tkolymp.shared.user.UserService
@@ -38,6 +41,9 @@ suspend fun initNetworking(context: Context, baseUrl: String) {
     val userStorage = UserStorage(context)
     val userSvc = UserService(gql, userStorage)
     val clubSvc = com.tkolymp.shared.club.ClubService(gql)
+    val notificationStorage = NotificationStorage(context)
+    val notificationScheduler = NotificationSchedulerAndroid(context)
+    val notificationSvc = NotificationService(notificationStorage, notificationScheduler, eventSvc)
 
     ServiceLocator.graphQlClient = gql
     // ensure peopleService is available like other services
@@ -45,6 +51,9 @@ suspend fun initNetworking(context: Context, baseUrl: String) {
     ServiceLocator.authService = auth
     ServiceLocator.tokenStorage = storage
     ServiceLocator.eventService = eventSvc
+    ServiceLocator.notificationStorage = notificationStorage
+    ServiceLocator.notificationScheduler = notificationScheduler
+    ServiceLocator.notificationService = notificationSvc
     ServiceLocator.announcementService = announcementSvc
     ServiceLocator.userStorage = userStorage
     ServiceLocator.userService = userSvc

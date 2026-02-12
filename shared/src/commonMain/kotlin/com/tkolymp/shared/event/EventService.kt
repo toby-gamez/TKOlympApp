@@ -467,6 +467,18 @@ class EventService(private val client: IGraphQlClient = ServiceLocator.graphQlCl
             datePart.ifEmpty { "unknown" }
         }
 
+        // Trigger notification processing (best-effort)
+        try {
+            val allInstances = instances.toList()
+            try {
+                ServiceLocator.notificationService.processEvents(allInstances)
+            } catch (_: UninitializedPropertyAccessException) {
+                // not initialized yet
+            } catch (_: Throwable) {
+                // ignore other notification scheduling errors
+            }
+        } catch (_: Throwable) { }
+
         return grouped.toSortedMap()
     }
 
