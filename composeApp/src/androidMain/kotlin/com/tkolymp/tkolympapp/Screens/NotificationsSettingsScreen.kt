@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
@@ -34,6 +35,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -118,7 +120,9 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Nastavení notifikací") }) },
+        topBar = { TopAppBar(title = { Text("Nastavení notifikací") }, navigationIcon = {
+            IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = "Zpět") }
+        }) },
         floatingActionButton = {
             FloatingActionButton(onClick = { editRule = null; showDialog = true }) {
                 Icon(Icons.Default.Add, contentDescription = "Přidat")
@@ -129,7 +133,9 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
             .fillMaxSize()
             .padding(inner)) {
             if (loading) {
-                Text("Načítání…", modifier = Modifier.padding(16.dp))
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
                 return@Box
             }
 
