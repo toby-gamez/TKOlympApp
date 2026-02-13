@@ -30,6 +30,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -37,10 +38,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.viewmodels.PersonViewModel
 import com.tkolymp.shared.people.PersonDetails
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -52,21 +54,11 @@ import java.time.format.DateTimeParseException
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (String) -> Unit = {}) {
-    var person by remember { mutableStateOf<PersonDetails?>(null) }
-    var loading by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<String?>(null) }
+    val viewModel = remember { PersonViewModel() }
+    val state by viewModel.state.collectAsState()
 
     LaunchedEffect(personId) {
-        loading = true
-        error = null
-        val p = try {
-            withContext(Dispatchers.IO) { ServiceLocator.peopleService.fetchPerson(personId) }
-        } catch (ex: Throwable) {
-            error = ex.message ?: ex.toString()
-            null
-        }
-        person = p
-        loading = false
+        viewModel.loadPerson(personId)
     }
 
     Scaffold(topBar = {
@@ -74,7 +66,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
             IconButton(onClick = onBack) { Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Zpět") }
         })
     }) { padding ->
-        if (loading) {
+        if (state.isLoading) {
             Box(modifier = Modifier
                 .padding(padding)
                 .fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -82,12 +74,11 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
             }
             return@Scaffold
         }
-
         Column(modifier = Modifier.padding(padding).padding(8.dp).verticalScroll(rememberScrollState())) {
 
-            error?.let { Text("Chyba: $it", color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(8.dp)) }
+            state.error?.let { Text("Chyba: $it", color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(8.dp)) }
 
-            val p = person
+            val p = state.person as? PersonDetails
             if (p == null) {
                 Text("Osoba nenalezena: $personId", modifier = Modifier.padding(8.dp))
                 return@Column

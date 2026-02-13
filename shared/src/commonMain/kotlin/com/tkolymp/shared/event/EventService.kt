@@ -472,14 +472,13 @@ class EventService(private val client: IGraphQlClient = ServiceLocator.graphQlCl
             val allInstances = instances.toList()
             try {
                 ServiceLocator.notificationService.processEvents(allInstances)
-            } catch (_: UninitializedPropertyAccessException) {
-                // not initialized yet
             } catch (_: Throwable) {
-                // ignore other notification scheduling errors
+                // ignore notification scheduling errors
             }
         } catch (_: Throwable) { }
 
-        return grouped.toSortedMap()
+        // Return a deterministically-ordered map (sorted by key) without using JVM-only APIs
+        return grouped.entries.sortedBy { it.key }.associate { it.key to it.value }
     }
 
     override suspend fun fetchEventById(id: BigInt): JsonObject? {
@@ -500,7 +499,7 @@ class EventService(private val client: IGraphQlClient = ServiceLocator.graphQlCl
         val variables = buildJsonObject {
             put("input", buildJsonObject {
                 put("registrations", registrations)
-                put("clientMutationId", JsonPrimitive(java.util.UUID.randomUUID().toString()))
+                put("clientMutationId", JsonPrimitive(kotlin.random.Random.Default.nextLong().toString()))
             })
         }
 
@@ -520,7 +519,7 @@ class EventService(private val client: IGraphQlClient = ServiceLocator.graphQlCl
                 put("registrationId", JsonPrimitive(registrationId))
                 put("trainerId", JsonPrimitive(trainerId))
                 put("lessonCount", JsonPrimitive(lessonCount))
-                put("clientMutationId", JsonPrimitive(java.util.UUID.randomUUID().toString()))
+                put("clientMutationId", JsonPrimitive(kotlin.random.Random.Default.nextLong().toString()))
             })
         }
 
@@ -540,7 +539,7 @@ class EventService(private val client: IGraphQlClient = ServiceLocator.graphQlCl
         val variables = buildJsonObject {
             put("input", buildJsonObject {
                 put("registrationId", JsonPrimitive(registrationId))
-                put("clientMutationId", JsonPrimitive(java.util.UUID.randomUUID().toString()))
+                put("clientMutationId", JsonPrimitive(kotlin.random.Random.Default.nextLong().toString()))
             })
         }
 

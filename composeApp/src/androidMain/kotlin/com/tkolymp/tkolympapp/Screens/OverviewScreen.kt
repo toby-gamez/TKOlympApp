@@ -34,6 +34,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import androidx.compose.runtime.collectAsState
+import com.tkolymp.shared.viewmodels.OverviewViewModel
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import java.time.LocalDate
@@ -63,91 +65,18 @@ fun OverviewScreen(
             horizontalAlignment = Alignment.Start
         ) {
 
-            var trainings by remember { mutableStateOf<List<com.tkolymp.shared.event.EventInstance>>(emptyList()) }
-            var camps by remember { mutableStateOf<List<com.tkolymp.shared.event.EventInstance>>(emptyList()) }
-            var trainingItems by remember { mutableStateOf<List<Pair<Long, String>>>(emptyList()) }
-            var campItems by remember { mutableStateOf<List<Pair<Long, String>>>(emptyList()) }
-            var announcements by remember { mutableStateOf<List<com.tkolymp.shared.announcements.Announcement>>(emptyList()) }
-            var loading by remember { mutableStateOf(true) }
-            var error by remember { mutableStateOf<String?>(null) }
+            val viewModel = remember { OverviewViewModel() }
+            val state by viewModel.state.collectAsState()
 
             LaunchedEffect(Unit) {
-                loading = true
-                try {
-                    val now = java.time.Instant.now()
-                    val startIso = now.toString()
-                    val endIso = now.plus(java.time.Duration.ofDays(90)).toString()
-
-                    val evSvc = com.tkolymp.shared.ServiceLocator.eventService
-                    val map = withContext(Dispatchers.IO) { evSvc.fetchEventsGroupedByDay(startIso, endIso, onlyMine = true, first = 200) }
-
-                    val instances = map.values.flatten().mapNotNull { inst ->
-                        inst.since?.let { sinceStr ->
-                            try {
-                                val instTime = java.time.Instant.parse(sinceStr)
-                                Pair(instTime, inst)
-                            } catch (_: Exception) { null }
-                        }
-                    }.sortedBy { it.first }.map { it.second }
-
-                    trainings = instances.filter { inst ->
-                        if (inst.isCancelled) return@filter false
-                        val t = inst.event?.type
-                        !(t?.contains("CAMP", ignoreCase = true) == true)
-                    }
-                    camps = instances.filter { inst ->
-                        if (inst.isCancelled) return@filter false
-                        val t = inst.event?.type
-                        t?.contains("CAMP", ignoreCase = true) == true
-                    }
-
-                    // Helper to resolve an event name: prefer provided name, otherwise fetch full event by id
-                    suspend fun resolveEventLabel(inst: com.tkolymp.shared.event.EventInstance): String {
-                        val ev = inst.event
-                        val sincePart = inst.since ?: inst.until ?: ""
-                        val suffix = if (sincePart.isNotEmpty()) " to $sincePart" else ""
-                        val provided = ev?.name
-                        if (!provided.isNullOrBlank()) return "$provided$suffix"
-
-                        val evId = ev?.id
-                        if (evId != null) {
-                            try {
-                                val evJson = withContext(Dispatchers.IO) { evSvc.fetchEventById(evId) }
-                                val fetchedName = evJson?.get("name")?.jsonPrimitive?.contentOrNull
-                                if (!fetchedName.isNullOrBlank()) return "$fetchedName$suffix"
-                            } catch (_: Exception) {
-                                // ignore and fallthrough to default
-                            }
-                        }
-
-                        return "(bez názvu)$suffix"
-                    }
-
-                    // Pre-resolve labels for small lists so UI shows names even if initial payload lacks them
-                    val resolvedTrainings = mutableListOf<Pair<Long, String>>()
-                    for (inst in trainings.take(2)) {
-                        val label = resolveEventLabel(inst)
-                        resolvedTrainings += Pair(inst.id, label)
-                    }
-
-                    val resolvedCamps = mutableListOf<Pair<Long, String>>()
-                    for (inst in camps.take(2)) {
-                        val label = resolveEventLabel(inst)
-                        resolvedCamps += Pair(inst.id, label)
-                    }
-
-                    trainingItems = resolvedTrainings
-                    campItems = resolvedCamps
-
-                    val annSvc = com.tkolymp.shared.ServiceLocator.announcementService
-                    val anns = withContext(Dispatchers.IO) { annSvc.getAnnouncements(false) }
-                    announcements = anns.filter { it.isVisible }.take(2)
-                } catch (ex: Exception) {
-                    error = ex.message
-                } finally {
-                    loading = false
-                }
+                viewModel.loadOverview()
             }
+
+            val trainings = state.upcomingEvents.filterIsInstance<com.tkolymp.shared.event.EventInstance>()
+            val camps = trainings.filter { it.event?.type?.contains("CAMP", ignoreCase = true) == true }
+            val trainingItems = remember(trainings) { trainings.take(2).map { Pair(it.id, it.event?.name ?: "(bez názvu)") } }
+            val campItems = remember(camps) { camps.take(2).map { Pair(it.id, it.event?.name ?: "(bez názvu)") } }
+            val announcements = state.recentAnnouncements.filterIsInstance<com.tkolymp.shared.announcements.Announcement>()
 
             // Trainings section (styled like Calendar)
             // Trainings section (grouped by day, styled like Calendar)
@@ -159,11 +88,11 @@ fun OverviewScreen(
             val trainingsMapByDay = limitedTrainings.groupBy { inst ->
                 val s = inst.since ?: inst.until ?: inst.updatedAt ?: ""
                 s.substringBefore('T').ifEmpty { s }
-            }.toSortedMap()
+            }.entries.sortedBy { it.key }.associate { it.key to it.value }
 
             Column(modifier = Modifier.padding(horizontal = 12.dp)) {
                 if (trainingsMapByDay.isEmpty()) {
-                    if (loading) {
+                    if (state.isLoading) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -238,7 +167,7 @@ fun OverviewScreen(
             }
             Column(modifier = Modifier.padding(horizontal = 12.dp)) {
                 if (announcements.isEmpty()) {
-                    if (loading) {
+                    if (state.isLoading) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -301,11 +230,11 @@ fun OverviewScreen(
             val campsMapByDay = limitedCamps.groupBy { inst ->
                 val s = inst.since ?: inst.until ?: inst.updatedAt ?: ""
                 s.substringBefore('T').ifEmpty { s }
-            }.toSortedMap()
+            }.entries.sortedBy { it.key }.associate { it.key to it.value }
 
             Column(modifier = Modifier.padding(horizontal = 12.dp)) {
                 if (campsMapByDay.isEmpty()) {
-                    if (loading) {
+                    if (state.isLoading) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -352,10 +281,10 @@ fun OverviewScreen(
                 TextButton(onClick = onOpenEvents) { Text(if (campsEmpty) "Podívat se na ostatní" else "Více") }
             }
 
-            if (loading) {
+            if (state.isLoading) {
                 Text("Načítám...", modifier = Modifier.padding(12.dp))
             }
-            error?.let { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(12.dp)) }
+            state.error?.let { Text(text = it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(12.dp)) }
         }
     }
 }

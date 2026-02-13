@@ -34,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,9 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.tkolymp.shared.ServiceLocator
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
+import com.tkolymp.shared.viewmodels.OtherViewModel
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -103,78 +102,12 @@ private fun formatDateString(raw: String): String? {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {}, onTrainersClick: () -> Unit = {}, onGroupsClick: () -> Unit = {}, onLeaderboardClick: () -> Unit = {}, onAboutClick: () -> Unit = {}, onPrivacyClick: () -> Unit = {}, onNotificationsClick: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
-    var name by remember { mutableStateOf<String?>(null) }
-    var subtitle by remember { mutableStateOf<String?>(null) }
-    var error by remember { mutableStateOf<String?>(null) }
-    var personId by remember { mutableStateOf<String?>(null) }
-    var coupleIds by remember { mutableStateOf<List<String>>(emptyList()) }
-    var rawJson by remember { mutableStateOf<String?>(null) }
-    var personDetailsRaw by remember { mutableStateOf<String?>(null) }
-    var personDob by remember { mutableStateOf<String?>(null) }
-    var personFirstName by remember { mutableStateOf<String?>(null) }
-    var personLastName by remember { mutableStateOf<String?>(null) }
-    var personPrefix by remember { mutableStateOf<String?>(null) }
-    var personSuffix by remember { mutableStateOf<String?>(null) }
-    var loading by remember { mutableStateOf(false) }
+    val viewModel = remember { OtherViewModel() }
+    val state by viewModel.state.collectAsState()
     var showDebug by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        rawJson = try { ServiceLocator.userService.getCachedCurrentUserJson() } catch (_: Throwable) { null }
-        personId = try { ServiceLocator.userService.getCachedPersonId() } catch (_: Throwable) { null }
-        coupleIds = try { ServiceLocator.userService.getCachedCoupleIds() } catch (_: Throwable) { emptyList() }
-        personDetailsRaw = try { ServiceLocator.userService.getCachedPersonDetailsJson() } catch (_: Throwable) { null }
-
-        // If we have personId but no cached person details yet, try fetching them now.
-        if (personDetailsRaw.isNullOrBlank() && !personId.isNullOrBlank()) {
-            loading = true
-            try {
-                ServiceLocator.userService.fetchAndStorePersonDetails(personId!!)
-                personDetailsRaw = try { ServiceLocator.userService.getCachedPersonDetailsJson() } catch (_: Throwable) { null }
-                val apiErr = try { ServiceLocator.userService.getLastApiError() } catch (_: Throwable) { null }
-                if (!apiErr.isNullOrBlank() && shouldShowErrorMessage(apiErr)) error = apiErr
-            } catch (_: Throwable) {
-                // ignore network errors here; error will be shown if parsing fails
-            } finally {
-                loading = false
-            }
-        }
-
-        // show any last API error
-        try {
-            val apiErr = ServiceLocator.userService.getLastApiError()
-            if (!apiErr.isNullOrBlank() && shouldShowErrorMessage(apiErr)) error = apiErr
-        } catch (_: Throwable) { }
-
-        if (rawJson != null) {
-            try {
-                val obj = Json.parseToJsonElement(rawJson!!).jsonObject
-                val jmeno = obj["uJmeno"]?.let { it.toString().replace("\"", "") }
-                val prijmeni = obj["uPrijmeni"]?.let { it.toString().replace("\"", "") }
-                name = listOfNotNull(jmeno, prijmeni).joinToString(" ")
-                subtitle = obj["uLogin"]?.toString()?.replace("\"", "")
-            } catch (ex: Throwable) {
-                if (shouldShowError(ex)) error = ex.message ?: "Chyba při načítání profilu"
-            }
-        }
-        if (personDetailsRaw != null) {
-            try {
-                val p = Json.parseToJsonElement(personDetailsRaw!!).jsonObject
-                personFirstName = p["firstName"]?.toString()?.replace("\"", "")
-                personLastName = p["lastName"]?.toString()?.replace("\"", "")
-                personDob = p["birthDate"]?.toString()?.replace("\"", "")
-                    ?: p["dateOfBirth"]?.toString()?.replace("\"", "")
-                    ?: p["dob"]?.toString()?.replace("\"", "")
-                    ?: p["bio"]?.toString()?.replace("\"", "")
-                personPrefix = p["prefixTitle"]?.toString()?.replace("\"", "")
-                personSuffix = p["suffixTitle"]?.toString()?.replace("\"", "")
-                    ?: p["postfixTitle"]?.toString()?.replace("\"", "")
-                    ?: p["suffix"]?.toString()?.replace("\"", "")
-                if (!personFirstName.isNullOrBlank() || !personLastName.isNullOrBlank()) {
-                    val base = listOfNotNull(personPrefix, personFirstName, personLastName).joinToString(" ")
-                    name = if (!personSuffix.isNullOrBlank()) "$base, ${personSuffix}" else base
-                }
-            } catch (_: Throwable) { }
-        }
+        viewModel.load()
     }
 
     Scaffold(
@@ -209,26 +142,26 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                     }
 
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(text = name ?: "Můj účet", style = MaterialTheme.typography.titleLarge)
-                        if (subtitle != null) Text(subtitle!!, style = MaterialTheme.typography.bodySmall)
-                        if (personDob != null && !showDebug) {
-                            val formatted = formatDateString(personDob!!)
+                        Text(text = state.name ?: "Můj účet", style = MaterialTheme.typography.titleLarge)
+                        if (state.subtitle != null) Text(state.subtitle!!, style = MaterialTheme.typography.bodySmall)
+                        if (state.personDob != null && !showDebug) {
+                            val formatted = formatDateString(state.personDob!!)
                             Text(
-                                formatted ?: personDob!!,
+                                formatted ?: state.personDob!!,
                                 style = MaterialTheme.typography.bodySmall,
                                 modifier = Modifier.padding(top = 4.dp)
                             )
                         }
                     }
 
-                    if (loading) {
+                    if (state.isLoading) {
                         Spacer(modifier = Modifier.width(8.dp))
                         CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                     }
                 }
             }
 
-            if (error != null) Text(error!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(12.dp))
+            if (state.error != null) Text(state.error!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(12.dp))
 
             Spacer(modifier = Modifier.width(16.dp))
 
@@ -326,13 +259,13 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                 }
             }
 
-            if (showDebug) {
-                Text("personId: ${personId ?: "(null)"}", style = MaterialTheme.typography.bodySmall)
-                Text("coupleIds: ${if (coupleIds.isEmpty()) "[]" else coupleIds.joinToString(", ")}", style = MaterialTheme.typography.bodySmall)
-                if (rawJson != null) Text("raw: ${rawJson}", style = MaterialTheme.typography.bodySmall)
-                if (personDetailsRaw != null) Text("person: ${personDetailsRaw}", style = MaterialTheme.typography.bodySmall)
-                if (personDob != null) Text("birth: ${personDob}", style = MaterialTheme.typography.bodySmall)
-            }
+                if (showDebug) {
+                    Text("personId: ${state.personId ?: "(null)"}", style = MaterialTheme.typography.bodySmall)
+                    Text("coupleIds: ${if (state.coupleIds.isEmpty()) "[]" else state.coupleIds.joinToString(", ")}", style = MaterialTheme.typography.bodySmall)
+                    if (state.rawJson != null) Text("raw: ${state.rawJson}", style = MaterialTheme.typography.bodySmall)
+                    if (state.personDetailsRaw != null) Text("person: ${state.personDetailsRaw}", style = MaterialTheme.typography.bodySmall)
+                    if (state.personDob != null) Text("birth: ${state.personDob}", style = MaterialTheme.typography.bodySmall)
+                }
         }
     }
 }

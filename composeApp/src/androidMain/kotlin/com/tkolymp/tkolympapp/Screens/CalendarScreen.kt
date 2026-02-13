@@ -36,9 +36,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -54,11 +54,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.event.EventInstance
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -74,11 +70,9 @@ fun CalendarScreen(
 ) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     val tabs = listOf("Moje", "Všechny")
-    val eventsByDayState = remember { mutableStateOf<Map<String, List<EventInstance>>>(emptyMap()) }
-    val errorMessage = remember { mutableStateOf<String?>(null) }
-    val isLoading = remember { mutableStateOf(false) }
-    val myPersonId = remember { mutableStateOf<String?>(null) }
-    val myCoupleIds = remember { mutableStateOf<List<String>>(emptyList()) }
+    // moved data loading into shared CalendarViewModel
+    val calendarViewModel = remember { com.tkolymp.shared.viewmodels.CalendarViewModel() }
+    val calState by calendarViewModel.state.collectAsState()
     val scope = rememberCoroutineScope()
 
     val today = LocalDate.now().plusWeeks(weekOffset.toLong())
@@ -89,31 +83,10 @@ fun CalendarScreen(
 
     LaunchedEffect(selectedTab, weekOffset) {
         val onlyMine = selectedTab == 0
-        val svc = ServiceLocator.eventService
-        isLoading.value = true
-        val map = try {
-            withContext(Dispatchers.IO) {
-                svc.fetchEventsGroupedByDay(startIso, endIso, onlyMine, 200, 0, null)
-            }
-        } catch (e: Exception) {
-            errorMessage.value = e.message ?: "Unknown error"
-            emptyMap()
-        } finally {
-            isLoading.value = false
-        }
-        eventsByDayState.value = map
+        calendarViewModel.load(startIso, endIso, onlyMine)
     }
 
-    LaunchedEffect(Unit) {
-        scope.launch {
-            try {
-                myPersonId.value = ServiceLocator.userService.getCachedPersonId()
-            } catch (_: Throwable) { myPersonId.value = null }
-            try {
-                myCoupleIds.value = ServiceLocator.userService.getCachedCoupleIds()
-            } catch (_: Throwable) { myCoupleIds.value = emptyList() }
-        }
-    }
+    // user id / couple ids are provided by calendar viewmodel state
 
     Scaffold(
         topBar = {
@@ -155,10 +128,10 @@ fun CalendarScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            val grouped = eventsByDayState.value
+            val grouped = calState.eventsByDay
             val todayKey = LocalDate.now().format(fmt)
 
-            if (isLoading.value) {
+            if (calState.isLoading) {
                 Box(modifier = Modifier
                     .weight(1f)
                     .fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -196,12 +169,12 @@ fun CalendarScreen(
                             val lessonsByTrainer = lessons.groupBy { it.event?.eventTrainersList?.firstOrNull()!!.trim() }
 
                             lessonsByTrainer.forEach { (trainer, instances) ->
-                                LessonView(
+                                    LessonView(
                                     trainerName = trainer,
                                     instances = instances.sortedBy { it.since },
                                     isAllTab = (selectedTab == 1),
-                                    myPersonId = myPersonId.value,
-                                    myCoupleIds = myCoupleIds.value,
+                                        myPersonId = calState.myPersonId,
+                                        myCoupleIds = calState.myCoupleIds,
                                     onEventClick = { id: Long -> onOpenEvent(id) }
                                 )
                             }
@@ -214,14 +187,14 @@ fun CalendarScreen(
                 }
             }
 
-            if (errorMessage.value != null) {
+            calState.error?.let { err ->
                 AlertDialog(
-                    onDismissRequest = { errorMessage.value = null },
+                    onDismissRequest = { /* dismiss handled by parent state refresh */ },
                     confirmButton = {
-                        TextButton(onClick = { errorMessage.value = null }) { Text("OK") }
+                        TextButton(onClick = { /* noop */ }) { Text("OK") }
                     },
                     title = { Text("Chyba při načítání akcí") },
-                    text = { Text(errorMessage.value ?: "Neznámá chyba") }
+                    text = { Text(err) }
                 )
             }
         }
@@ -282,7 +255,7 @@ internal fun LessonView(
             instances.sortedBy { it.since }.forEach { inst ->
                 val time = formatTimes(inst.since, inst.until)
                 val regs = inst.event?.eventRegistrationsList ?: emptyList()
-                val parts: List<Pair<String, Boolean>> = regs.mapNotNull { r ->
+                                val parts: List<Pair<String, Boolean>> = regs.mapNotNull { r ->
                     val display = r.person?.name ?: run {
                         val man = r.couple?.man
                         val woman = r.couple?.woman
@@ -322,14 +295,14 @@ internal fun LessonView(
                                 color = Color(0xFF4CAF50)
                             )
                         } else {
-                            val annotated = buildAnnotatedString {
+                                val annotated = buildAnnotatedString {
                                 parts.forEachIndexed { idx, (display, isMine) ->
                                     if (isAllTab && isMine) {
                                         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) { append(display) }
                                     } else append(display)
                                     if (idx != parts.lastIndex) append(", ")
                                 }
-                            }
+                                }
                             Text(annotated, style = MaterialTheme.typography.bodySmall.copy(textDecoration = deco))
                         }
                     }

@@ -35,6 +35,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -42,10 +43,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.viewmodels.PeopleViewModel
 import com.tkolymp.shared.people.Person
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -59,15 +61,12 @@ private enum class SortMode { ALPHABETICAL, BIRTHDAY }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) {
-    var people by remember { mutableStateOf<List<Person>>(emptyList()) }
-    var loading by remember { mutableStateOf(false) }
+    val viewModel = remember { PeopleViewModel() }
+    val state by viewModel.state.collectAsState()
     var sortMode by remember { mutableStateOf<SortMode>(SortMode.ALPHABETICAL) }
 
     LaunchedEffect(Unit) {
-        loading = true
-        val list = try { withContext(Dispatchers.IO) { ServiceLocator.peopleService.fetchPeople() } } catch (_: Throwable) { emptyList() }
-        people = list
-        loading = false
+        viewModel.loadPeople()
     }
 
     Scaffold(topBar = {
@@ -80,7 +79,7 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) 
             }
         )
     }) { padding ->
-        if (loading) {
+        if (state.isLoading) {
             Box(modifier = Modifier
                 .padding(padding)
                 .fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -88,6 +87,7 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) 
             }
             return@Scaffold
         }
+        val people = state.people.filterIsInstance<Person>()
 
         Column(modifier = Modifier.padding(padding)) {
             // sort controls

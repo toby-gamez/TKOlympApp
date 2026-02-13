@@ -6,25 +6,26 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.ui.Alignment
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.viewmodels.LoginViewModel
 import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(onSuccess: () -> Unit = {}) {
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var loading by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<String?>(null) }
-
+    val viewModel = remember { LoginViewModel() }
+    val state by viewModel.state.collectAsState()
     val scope = rememberCoroutineScope()
 
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -35,15 +36,15 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
         ) {
             Text("Přihlášení", style = MaterialTheme.typography.headlineSmall)
             OutlinedTextField(
-                value = username,
-                onValueChange = { username = it },
+                value = state.username,
+                onValueChange = { viewModel.updateUsername(it) },
                 label = { Text("Login") },
                 modifier = Modifier.fillMaxWidth(0.85f)
             )
 
             OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
+                value = state.password,
+                onValueChange = { viewModel.updatePassword(it) },
                 label = { Text("Heslo") },
                 modifier = Modifier.fillMaxWidth(0.85f),
                 visualTransformation = PasswordVisualTransformation(),
@@ -51,38 +52,17 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
             )
 
             Button(onClick = {
-                if (loading) return@Button
-                loading = true
-                error = null
+                if (state.isLoading) return@Button
                 scope.launch {
-                    try {
-                        val ok = ServiceLocator.authService.login(username, password)
-                        if (ok) {
-                            try {
-                                val personId = try { ServiceLocator.userService.fetchAndStorePersonId() } catch (e: Throwable) { null }
-                                if (personId == null) {
-                                    error = "Nelze získat personId po přihlášení"
-                                } else {
-                                    try { ServiceLocator.userService.fetchAndStoreActiveCouples() } catch (_: Throwable) {}
-                                    try { ServiceLocator.userService.fetchAndStorePersonDetails(personId) } catch (_: Throwable) {}
-                                    onSuccess()
-                                }
-                            } catch (ex: Throwable) {
-                                error = ex.message ?: "Chyba při načítání uživatele"
-                            }
-                        } else error = "Přihlášení selhalo"
-                    } catch (ex: Throwable) {
-                        error = ex.message ?: "Chyba při přihlášení"
-                    } finally {
-                        loading = false
-                    }
+                    val ok = viewModel.login()
+                    if (ok) onSuccess()
                 }
-            }, modifier = Modifier.fillMaxWidth()) {
-                Text(if (loading) "Probíhá..." else "Přihlásit")
+            }, modifier = Modifier.fillMaxWidth(), enabled = !state.isLoading) {
+                Text(if (state.isLoading) "Probíhá..." else "Přihlásit")
             }
 
-            if (error != null) {
-                Text(error ?: "", color = MaterialTheme.colorScheme.error)
+            if (state.error != null) {
+                Text(state.error ?: "", color = MaterialTheme.colorScheme.error)
             }
         }
     }

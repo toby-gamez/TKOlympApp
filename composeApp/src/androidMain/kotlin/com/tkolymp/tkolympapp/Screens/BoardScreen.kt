@@ -27,6 +27,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,16 +39,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.viewmodels.BoardViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
-    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+    val viewModel = remember { BoardViewModel() }
+    val state by viewModel.state.collectAsState()
     val tabs = listOf("Aktuality", "Stálá nástěnka")
-    var announcements by remember { mutableStateOf(listOf<com.tkolymp.shared.announcements.Announcement>()) }
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMsg by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
 
     Scaffold(
@@ -60,37 +60,30 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
-            PrimaryTabRow(selectedTabIndex = selectedTab, modifier = Modifier.fillMaxWidth()) {
+            PrimaryTabRow(selectedTabIndex = state.selectedTab, modifier = Modifier.fillMaxWidth()) {
                 tabs.forEachIndexed { index, title ->
                     Tab(
-                        selected = selectedTab == index,
-                        onClick = { selectedTab = index },
+                        selected = state.selectedTab == index,
+                        onClick = { viewModel.selectTab(index) },
                         text = { Text(title) }
                     )
                 }
             }
 
-            LaunchedEffect(selectedTab) {
-                isLoading = true
-                errorMsg = null
-                try {
-                    val sticky = selectedTab == 1
-                    announcements = ServiceLocator.announcementService.getAnnouncements(sticky)
-                } catch (t: Throwable) {
-                    errorMsg = t.message ?: "Chyba při načítání"
-                } finally {
-                    isLoading = false
-                }
+            LaunchedEffect(state.selectedTab) {
+                // load announcements whenever selected tab changes
+                scope.launch { viewModel.loadAnnouncements() }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            if (isLoading) {
+            if (state.isLoading) {
                 Box(modifier = Modifier.weight(1f).fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             } else {
                 Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+                    val announcements = state.currentAnnouncements.filterIsInstance<com.tkolymp.shared.announcements.Announcement>()
                     announcements.forEach { a ->
                         Column(modifier = Modifier.padding(4.dp)) {
                             Card(
@@ -124,14 +117,14 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
                 }
             }
 
-            if (errorMsg != null) {
+            if (state.error != null) {
                 AlertDialog(
-                    onDismissRequest = { errorMsg = null },
+                    onDismissRequest = { /* dismiss handled via ViewModel state */ },
                     confirmButton = {
-                        TextButton(onClick = { errorMsg = null }) { Text("OK") }
+                        TextButton(onClick = { /* dismiss */ }) { Text("OK") }
                     },
                     title = { Text("Chyba při načítání příspěvků") },
-                    text = { Text(errorMsg ?: "Neznámá chyba") }
+                    text = { Text(state.error ?: "Neznámá chyba") }
                 )
             }
         }

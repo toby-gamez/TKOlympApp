@@ -59,6 +59,9 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
+import com.tkolymp.shared.viewmodels.EventViewModel
 
 private fun JsonElement?.asJsonObjectOrNull(): JsonObject? = try {
     when {
@@ -85,61 +88,32 @@ private fun JsonElement?.asJsonArrayOrNull(): JsonArray? = try {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration: ((String, String?) -> Unit)? = null) {
-    val loading = remember { mutableStateOf(false) }
-    val error = remember { mutableStateOf<String?>(null) }
-    val eventJson = remember { mutableStateOf<JsonObject?>(null) }
+    val viewModel = remember { EventViewModel() }
+    val state by viewModel.state.collectAsState()
     val showAllInstances = remember { mutableStateOf(false) }
-    val myPersonId = remember { mutableStateOf<String?>(null) }
-    val myCoupleIds = remember { mutableStateOf<List<String>>(emptyList()) }
 
     LaunchedEffect(eventId) {
-        loading.value = true
-        error.value = null
-        // initialize auth (harmless if already initialized)
-        try { withContext(Dispatchers.IO) { ServiceLocator.authService.initialize() } } catch (_: Exception) {}
-
-        val svc = ServiceLocator.eventService
-        try {
-            val ev = withContext(Dispatchers.IO) { svc.fetchEventById(eventId) }
-            if (ev == null) {
-                error.value = "Událost nenalezena"
-            } else {
-                eventJson.value = ev
-            }
-            // load cached current user ids for highlighting
-            try {
-                withContext(Dispatchers.IO) {
-                    val us = ServiceLocator.userService
-                    myPersonId.value = us.getCachedPersonId()
-                    myCoupleIds.value = us.getCachedCoupleIds()
-                }
-            } catch (_: Exception) {}
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-            error.value = ex.message ?: "Chyba při načítání: ${ex::class.simpleName}"
-        } finally {
-            loading.value = false
-        }
+        viewModel.loadEvent(eventId)
     }
 
-    if (loading.value) {
+    if (state.isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(modifier = Modifier.padding(16.dp))
         }
         return
     }
 
-    if (error.value != null) {
+    state.error?.let { err ->
         AlertDialog(
-            onDismissRequest = { error.value = null },
-            confirmButton = { TextButton(onClick = { error.value = null }) { Text("OK") } },
+            onDismissRequest = { /* no-op */ },
+            confirmButton = { TextButton(onClick = { /* no-op */ }) { Text("OK") } },
             title = { Text("Chyba") },
-            text = { Text(error.value ?: "Neznámá chyba") }
+            text = { Text(err) }
         )
         return
     }
 
-    val ev = eventJson.value
+    val ev = state.eventJson
     if (ev == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("Žádná událost k zobrazení", modifier = Modifier.padding(16.dp))
@@ -305,7 +279,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                     val reg = regEl.asJsonObjectOrNull() ?: return@any false
                     val personId = reg["person"].asJsonObjectOrNull()?.str("id")
                     val coupleId = reg["couple"].asJsonObjectOrNull()?.str("id")
-                    (personId != null && personId == myPersonId.value) || (coupleId != null && myCoupleIds.value.contains(coupleId))
+                    (personId != null && personId == state.myPersonId) || (coupleId != null && state.myCoupleIds.contains(coupleId))
                 }
 
                 val isPast = try {
@@ -529,7 +503,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                         // Determine whether this registration is the current user
                         val personId = person?.str("id")
                         val coupleId = couple?.str("id")
-                        val isMe = (personId != null && personId == myPersonId.value) || (coupleId != null && myCoupleIds.value.contains(coupleId))
+                        val isMe = (personId != null && personId == state.myPersonId) || (coupleId != null && state.myCoupleIds.contains(coupleId))
 
                         if (isMe) {
                             Text(nameText, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))

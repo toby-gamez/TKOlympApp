@@ -33,6 +33,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
+import com.tkolymp.shared.viewmodels.GroupsViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -46,21 +48,9 @@ import com.tkolymp.shared.club.Cohort
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroupsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
-    var loading by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<String?>(null) }
-    var cohorts by remember { mutableStateOf<List<Cohort>>(emptyList()) }
-
-    LaunchedEffect(Unit) {
-        loading = true
-        try {
-            val cd = ClubService().fetchClubData()
-            cohorts = cd.cohorts
-        } catch (ex: Throwable) {
-            error = ex.message ?: "Chyba při načítání tréninkových skupin"
-        } finally {
-            loading = false
-        }
-    }
+    val vm = remember { GroupsViewModel() }
+    val state by vm.state.collectAsState()
+    LaunchedEffect(Unit) { vm.load() }
 
     val scrollState = rememberScrollState()
 
@@ -84,7 +74,7 @@ fun GroupsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
-            if (loading) {
+            if (state.isLoading) {
                 Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp))
                     Spacer(modifier = Modifier.width(12.dp))
@@ -92,11 +82,9 @@ fun GroupsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                 }
             }
 
-            if (error != null) {
-                Text(error!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(16.dp))
-            }
+            state.error?.let { err -> Text(err, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(16.dp)) }
 
-            cohorts.forEach { cohort ->
+            state.cohorts.forEach { cohort ->
                 Card(modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp, vertical = 6.dp)

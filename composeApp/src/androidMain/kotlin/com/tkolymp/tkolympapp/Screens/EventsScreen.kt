@@ -33,6 +33,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.event.EventInstance
+import com.tkolymp.shared.viewmodels.EventsViewModel
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
@@ -44,39 +47,13 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
     var selectedTab by rememberSaveable { mutableStateOf(0) }
     val tabs = listOf("Naplánováno", "Proběhlé")
 
-    val eventsByDayState = remember { mutableStateOf<Map<String, List<EventInstance>>>(emptyMap()) }
-    val isLoading = remember { mutableStateOf(false) }
-    val errorMessage = remember { mutableStateOf<String?>(null) }
-    val scope = rememberCoroutineScope()
+    val viewModel = remember { EventsViewModel() }
+    val state by viewModel.state.collectAsState()
 
     val today = LocalDate.now()
     val fmt = DateTimeFormatter.ISO_LOCAL_DATE
 
-    LaunchedEffect(Unit) {
-        isLoading.value = true
-        errorMessage.value = null
-            try {
-            val start = LocalDate.of(2023, 1, 1)
-            val end = today.plusYears(1)
-            val startIso = start.toString() + "T00:00:00Z"
-            val endIso = end.toString() + "T23:59:59Z"
-            val svc = ServiceLocator.eventService
-            val map = withContext(Dispatchers.IO) {
-                svc.fetchEventsGroupedByDay(startIso, endIso, false, 500, 0, "CAMP")
-            }
-
-            // filter out non-visible events
-            val filtered = map.mapValues { entry ->
-                entry.value.filter { it.event?.isVisible != false }
-            }.filterValues { it.isNotEmpty() }
-
-            eventsByDayState.value = filtered
-        } catch (ex: Exception) {
-            errorMessage.value = ex.message ?: "Chyba při načítání"
-        } finally {
-            isLoading.value = false
-        }
-    }
+    LaunchedEffect(Unit) { viewModel.loadCampsNextYear() }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Akce") }) }
@@ -94,14 +71,14 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                 }
             }
 
-            if (isLoading.value) {
+            if (state.isLoading) {
                 Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                     CircularProgressIndicator()
                 }
                 return@Column
             }
 
-            val grouped = eventsByDayState.value
+            val grouped = state.eventsByDay
 
             Column(modifier = Modifier
                 .fillMaxSize()
@@ -113,7 +90,7 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                     val planned = grouped.filter { (dateStr, _) ->
                         val d = try { LocalDate.parse(dateStr, fmt) } catch (_: Exception) { null }
                         d != null && !d.isBefore(today)
-                    }.toSortedMap()
+                    }.entries.sortedBy { it.key }.associate { it.key to it.value }
 
                     if (planned.isEmpty()) {
                         Spacer(modifier = Modifier.height(12.dp))
@@ -223,12 +200,12 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                 }
             }
 
-            if (errorMessage.value != null) {
+            state.error?.let { err ->
                 AlertDialog(
-                    onDismissRequest = { errorMessage.value = null },
-                    confirmButton = { TextButton(onClick = { errorMessage.value = null }) { Text("OK") } },
+                    onDismissRequest = { /* no-op */ },
+                    confirmButton = { TextButton(onClick = { /* no-op */ }) { Text("OK") } },
                     title = { Text("Chyba při načítání akcí") },
-                    text = { Text(errorMessage.value ?: "Neznámá chyba") }
+                    text = { Text(err) }
                 )
             }
         }

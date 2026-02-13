@@ -40,6 +40,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
+import com.tkolymp.shared.viewmodels.NotificationsSettingsViewModel
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,42 +68,42 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
     var availableLocations by remember { mutableStateOf<List<String>>(emptyList()) }
     var availableTrainers by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     val availableTypes = listOf("CAMP", "LESSON", "GROUP", "RESERVATION", "HOLIDAY")
-    val rules = remember { mutableStateListOf<NotificationRule>() }
+    var rules = remember { mutableStateListOf<NotificationRule>() }
     var globalEnabled by remember { mutableStateOf(true) }
-    var loading by remember { mutableStateOf(true) }
+    val viewModel = remember { NotificationsSettingsViewModel() }
+    val vmState by viewModel.state.collectAsState()
     var showDialog by remember { mutableStateOf(false) }
     var editRule by remember { mutableStateOf<NotificationRule?>(null) }
     var deletingRuleId by remember { mutableStateOf<String?>(null) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        loading = true
+        // load vm settings and UI data in parallel
         try {
-            try {
-                val svc = ServiceLocator.notificationService
-                val settings = svc.getSettings()
-                settings?.rules?.forEach { rules.add(it) }
-                globalEnabled = settings?.globalEnabled ?: true
-            } catch (_: UninitializedPropertyAccessException) {
-                // no service
-            }
-            // load club data (locations/trainers)
-                try {
-                val club = withContext(Dispatchers.IO) { ServiceLocator.clubService.fetchClubData() }
-                availableLocations = club.locations.mapNotNull { it.name }.distinct()
-                availableTrainers = club.trainers.mapNotNull { t ->
-                    t.person?.let { p ->
-                        val name = listOfNotNull(p.firstName, p.lastName).joinToString(" ")
-                        val trimmed = name.trim()
-                        val id = p.id ?: return@mapNotNull null
-                        if (trimmed.isNotBlank()) Pair(id, trimmed) else null
-                    }
-                }.distinct()
-            } catch (_: Throwable) { /* ignore */ }
-
-        } finally {
-            loading = false
+            viewModel.loadSettings()
+        } catch (_: Throwable) {}
+        try {
+            val svc = ServiceLocator.notificationService
+            val settings = try { svc.getSettings() } catch (_: Throwable) { null }
+            settings?.rules?.forEach { rules.add(it) }
+            globalEnabled = settings?.globalEnabled ?: true
+        } catch (_: UninitializedPropertyAccessException) {
+            // no service
         }
+
+        // load club data (locations/trainers)
+        try {
+            val club = withContext(Dispatchers.IO) { ServiceLocator.clubService.fetchClubData() }
+            availableLocations = club.locations.mapNotNull { it.name }.distinct()
+            availableTrainers = club.trainers.mapNotNull { t ->
+                t.person?.let { p ->
+                    val name = listOfNotNull(p.firstName, p.lastName).joinToString(" ")
+                    val trimmed = name.trim()
+                    val id = p.id ?: return@mapNotNull null
+                    if (trimmed.isNotBlank()) Pair(id, trimmed) else null
+                }
+            }.distinct()
+        } catch (_: Throwable) { /* ignore */ }
     }
 
     fun persist() {
@@ -135,7 +137,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
         Box(modifier = Modifier
             .fillMaxSize()
             .padding(inner)) {
-            if (loading) {
+            if (vmState.isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }

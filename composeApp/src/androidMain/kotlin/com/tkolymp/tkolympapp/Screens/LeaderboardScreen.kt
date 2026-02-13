@@ -27,42 +27,35 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.viewmodels.LeaderboardViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
-    val entriesState = remember { mutableStateOf<List<com.tkolymp.shared.people.ScoreboardEntry>>(emptyList()) }
-    val loading = remember { mutableStateOf(true) }
-    val error = remember { mutableStateOf<String?>(null) }
+    val viewModel = remember { LeaderboardViewModel() }
+    val state by viewModel.state.collectAsState()
     val currentPersonId = remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
-        loading.value = true
+        viewModel.loadLeaderboard()
+        // try to load current person id for highlighting
         try {
-            val since = "2025-09-01"
-            val until = LocalDate.now().toString()
-            val list = withContext(Dispatchers.IO) { ServiceLocator.peopleService.fetchScoreboard(null, since, until) }
-            entriesState.value = list.sortedWith(compareBy({ it.ranking ?: Int.MAX_VALUE }, { it.personLastName ?: "" }, { it.personFirstName ?: "" }))
-            // load cached personId to highlight current user name
-            try {
-                currentPersonId.value = withContext(Dispatchers.IO) { ServiceLocator.userService.getCachedPersonId() }
-            } catch (_: Throwable) { /* ignore */ }
-        } catch (ex: Exception) {
-            error.value = ex.message
-        } finally {
-            loading.value = false
-        }
+            currentPersonId.value = withContext(Dispatchers.IO) { com.tkolymp.shared.ServiceLocator.userService.getCachedPersonId() }
+        } catch (_: Throwable) { /* ignore */ }
     }
 
     Scaffold(
@@ -76,10 +69,10 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
             .fillMaxSize()
             .padding(top = padding.calculateTopPadding(), bottom = bottomPadding)) {
             when {
-                loading.value -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Načítání...") }
-                error.value != null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(error.value ?: "Chyba") }
+                state.isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Načítání...") }
+                state.error != null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(state.error ?: "Chyba") }
                 else -> {
-                    val entries = entriesState.value
+                    val entries = state.rankings.filterIsInstance<com.tkolymp.shared.people.ScoreboardEntry>()
                     LazyColumn(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Top) {
                         itemsIndexed(entries) { index, item ->
                             val rank = (item.ranking ?: (index + 1))

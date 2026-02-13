@@ -35,6 +35,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
+import com.tkolymp.shared.viewmodels.TrainersLocationsViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -47,22 +49,11 @@ import kotlinx.coroutines.withContext
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
-    var data by remember { mutableStateOf<ClubData?>(null) }
-    var loading by remember { mutableStateOf(true) }
-    var error by remember { mutableStateOf<String?>(null) }
+    val vm = remember { TrainersLocationsViewModel() }
+    val state by vm.state.collectAsState()
     val ctx = LocalContext.current
 
-    LaunchedEffect(Unit) {
-        loading = true
-        try {
-            val d = withContext(Dispatchers.IO) { ServiceLocator.clubService.fetchClubData() }
-            data = d
-        } catch (ex: Exception) {
-            error = ex.message
-        } finally {
-            loading = false
-        }
-    }
+    LaunchedEffect(Unit) { vm.load() }
 
     Scaffold(topBar = {
         TopAppBar(
@@ -74,7 +65,7 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
             }
         )
     }) { padding ->
-        if (loading) {
+        if (state.isLoading) {
             Column(modifier = Modifier
                 .padding(padding)
                 .fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
@@ -82,15 +73,14 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
             }
             return@Scaffold
         }
-
-        if (error != null) {
+        state.error?.let { err ->
             Column(modifier = Modifier.padding(padding).fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                Text(error ?: "Chyba")
+                Text(err)
             }
             return@Scaffold
         }
 
-        val club = data
+        val club = state.clubData
         if (club == null || (club.locations.isEmpty() && club.trainers.isEmpty())) {
             Column(modifier = Modifier.padding(padding).fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                 Text("Žádná data")

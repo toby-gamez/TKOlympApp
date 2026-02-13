@@ -35,6 +35,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -44,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.viewmodels.ProfileViewModel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.contentOrNull
@@ -76,48 +78,36 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
     val ctx = LocalContext.current
     val refreshTriggerState = remember { mutableStateOf(0) }
 
-    LaunchedEffect(refreshTriggerState.value) {
-        userJson = try { ServiceLocator.userService.getCachedCurrentUserJson() } catch (_: Throwable) { null }
+    // Use ProfileViewModel to load cached user/person JSON and couple IDs
+    val profileViewModel = remember { ProfileViewModel() }
+    val profileState by profileViewModel.state.collectAsState()
+    LaunchedEffect(refreshTriggerState.value) { profileViewModel.load() }
+    LaunchedEffect(profileState) {
+        userJson = profileState.userJson
+        personJson = profileState.personJson
+        coupleIds = profileState.coupleIds
 
-        val cachedPerson = try { ServiceLocator.userService.getCachedPersonDetailsJson() } catch (_: Throwable) { null }
-        val pid = try { ServiceLocator.userService.getCachedPersonId() } catch (_: Throwable) { null }
-        if (pid != null && pid.isNotBlank()) {
-            // refetch if there's no cached person or the cached JSON lacks required fields (activeCouplesList/cohortMembershipsList/email)
-            val needsRefetch = cachedPerson.isNullOrBlank() || !(
-                cachedPerson.contains("activeCouplesList") &&
-                cachedPerson.contains("cohortMembershipsList") &&
-                (cachedPerson.contains("email") || cachedPerson.contains("uEmail"))
-            )
-            if (needsRefetch) {
-                try { ServiceLocator.userService.fetchAndStorePersonDetails(pid) } catch (_: Throwable) { }
-            }
-        }
-
-        personJson = try { ServiceLocator.userService.getCachedPersonDetailsJson() } catch (_: Throwable) { null }
-        coupleIds = try { ServiceLocator.userService.getCachedCoupleIds() } catch (_: Throwable) { emptyList() }
-
-        // Try to extract human-friendly active couples and cohort names from personJson if possible
+        // derive display fields from JSON payloads (same logic as original screen)
         val cohortNames = mutableListOf<String>()
         val activeNames = mutableListOf<String>()
         val cohortItemsLocal = mutableListOf<CohortDisplay>()
+
         try {
             if (!personJson.isNullOrBlank()) {
                 val p = Json.parseToJsonElement(personJson!!).jsonObject
-                // activeCouplesList -> man/woman names
                 val active = p["activeCouplesList"]
                 if (active is kotlinx.serialization.json.JsonArray) {
                     active.forEach { item ->
                         val obj = item as? kotlinx.serialization.json.JsonObject ?: return@forEach
                         val man = obj["man"]?.jsonObject
                         val woman = obj["woman"]?.jsonObject
-                        val manName = man?.let { m -> listOfNotNull(m["firstName"]?.toString()?.replace("\"", ""), m["lastName"]?.toString()?.replace("\"", "")).joinToString(" ") }
-                        val womanName = woman?.let { w -> listOfNotNull(w["firstName"]?.toString()?.replace("\"", ""), w["lastName"]?.toString()?.replace("\"", "")).joinToString(" ") }
+                        val manName = man?.let { m -> listOfNotNull(m["firstName"]?.jsonPrimitive?.contentOrNull, m["lastName"]?.jsonPrimitive?.contentOrNull).joinToString(" ") }
+                        val womanName = woman?.let { w -> listOfNotNull(w["firstName"]?.jsonPrimitive?.contentOrNull, w["lastName"]?.jsonPrimitive?.contentOrNull).joinToString(" ") }
                         val display = listOfNotNull(manName, womanName).joinToString(" - ")
                         if (display.isNotBlank()) activeNames.add(display)
                     }
                 }
 
-                // cohortMembershipsList -> cohort { name, isVisible } + since/until
                 val cohorts = p["cohortMembershipsList"]
                 if (cohorts is kotlinx.serialization.json.JsonArray) {
                     fun fmtDate(s: String?): String? {
@@ -141,7 +131,6 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                         val cohort = obj["cohort"]?.jsonObject
                         val cname = cohort?.get("name")?.jsonPrimitive?.contentOrNull
                         if (!cname.isNullOrBlank()) {
-                            // show all cohorts regardless of visibility flag
                             val sinceRaw = obj["since"]?.jsonPrimitive?.contentOrNull
                             val untilRaw = obj["until"]?.jsonPrimitive?.contentOrNull
                             val since = fmtDate(sinceRaw)
@@ -154,6 +143,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                 }
             }
         } catch (_: Throwable) { }
+
         coupleNames = cohortNames
         activeCoupleNames = if (activeNames.isNotEmpty()) activeNames else coupleIds.map { "#${it}" }
         cohortItems = cohortItemsLocal
@@ -161,65 +151,62 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         if (!personJson.isNullOrBlank()) {
             try {
                 val p = Json.parseToJsonElement(personJson!!).jsonObject
-                val prefix = p["prefixTitle"]?.toString()?.replace("\"", "")
-                val first = p["firstName"]?.toString()?.replace("\"", "")
-                val last = p["lastName"]?.toString()?.replace("\"", "")
-                val bio = p["bio"]?.toString()?.replace("\"", "")
+                val prefix = p["prefixTitle"]?.jsonPrimitive?.contentOrNull
+                val first = p["firstName"]?.jsonPrimitive?.contentOrNull
+                val last = p["lastName"]?.jsonPrimitive?.contentOrNull
+                val bio = p["bio"]?.jsonPrimitive?.contentOrNull
                 val email = p["email"]?.jsonPrimitive?.contentOrNull ?: p["uEmail"]?.jsonPrimitive?.contentOrNull
-                    val addressObj = p["address"]?.jsonObject
-                    // build a human-friendly single-line address (fallback) and a list of individual address fields
-                    val addr = addressObj?.let { a -> listOfNotNull(a["street"]?.toString()?.replace("\"", ""), a["city"]?.toString()?.replace("\"", ""), a["postalCode"]?.toString()?.replace("\"", "")).joinToString(", ") }
-                    val afields = mutableListOf<Pair<String,String>>()
-                    addressObj?.let { a ->
-                        listOf("street","city","postalCode","region","district","conscriptionNumber","orientationNumber").forEach { key ->
-                            val value = a[key]?.jsonPrimitive?.contentOrNull ?: a[key]?.toString()?.replace("\"", "")
-                            if (!value.isNullOrBlank()) afields.add(key to value)
-                        }
+                val addressObj = p["address"]?.jsonObject
+                val addr = addressObj?.let { a -> listOfNotNull(a["street"]?.jsonPrimitive?.contentOrNull, a["city"]?.jsonPrimitive?.contentOrNull, a["postalCode"]?.jsonPrimitive?.contentOrNull).joinToString(", ") }
+                val afields = mutableListOf<Pair<String,String>>()
+                addressObj?.let { a ->
+                    listOf("street","city","postalCode","region","district","conscriptionNumber","orientationNumber").forEach { key ->
+                        val value = a[key]?.jsonPrimitive?.contentOrNull
+                        if (!value.isNullOrBlank()) afields.add(key to value)
                     }
+                }
 
-                    titleText = listOfNotNull(prefix, first, last).joinToString(" ").takeIf { it.isNotBlank() }
-                    bioText = bio?.takeIf { it.isNotBlank() }
-                    addrText = addr?.takeIf { it.isNotBlank() }
-                    emailText = email?.takeIf { it.isNotBlank() }
-                    addressFields = afields
+                titleText = listOfNotNull(prefix, first, last).joinToString(" ").takeIf { it.isNotBlank() }
+                bioText = bio?.takeIf { it.isNotBlank() }
+                addrText = addr?.takeIf { it.isNotBlank() }
+                emailText = email?.takeIf { it.isNotBlank() }
+                addressFields = afields
             } catch (_: Throwable) { }
         }
-            // Build flattened fields list for display
-            try {
-                val fields = mutableListOf<Pair<String,String>>()
-                if (!personJson.isNullOrBlank()) {
-                    val p = Json.parseToJsonElement(personJson!!)
-                    fun eltToStr(e: kotlinx.serialization.json.JsonElement): String {
-                        return when (e) {
-                            is kotlinx.serialization.json.JsonPrimitive -> e.contentOrNull ?: e.toString()
-                            is kotlinx.serialization.json.JsonObject -> e.map { (k,v) -> "$k: ${eltToStr(v)}" }.joinToString(", ")
-                            is kotlinx.serialization.json.JsonArray -> e.map { eltToStr(it) }.joinToString("; ")
-                            else -> e.toString()
-                        }
-                    }
 
-                    val obj = p.jsonObject
-                    obj.entries.forEach { (k,v) ->
-                        fields.add(k to eltToStr(v))
+        // Build flattened fields list for display
+        try {
+            val fields = mutableListOf<Pair<String,String>>()
+            if (!personJson.isNullOrBlank()) {
+                val p = Json.parseToJsonElement(personJson!!)
+                fun eltToStr(e: kotlinx.serialization.json.JsonElement): String {
+                    return when (e) {
+                        is kotlinx.serialization.json.JsonPrimitive -> e.contentOrNull ?: e.toString()
+                        is kotlinx.serialization.json.JsonObject -> e.map { (k,v) -> "$k: ${eltToStr(v)}" }.joinToString(", ")
+                        is kotlinx.serialization.json.JsonArray -> e.map { eltToStr(it) }.joinToString("; ")
+                        else -> e.toString()
                     }
                 }
-                personFields = fields
-            } catch (_: Throwable) { }
 
-            try {
-                val cu = mutableListOf<Pair<String,String>>()
-                if (!userJson.isNullOrBlank()) {
-                    val u = Json.parseToJsonElement(userJson!!)
-                    val obj = u.jsonObject
-                    obj.entries.forEach { (k,v) -> cu.add(k to (v.jsonPrimitive.contentOrNull ?: v.toString())) }
-                }
-                currentUserFields = cu
-                // if we didn't get email from personJson, try to populate from current user JSON
-                if (emailText.isNullOrBlank()) {
-                    val found = cu.firstOrNull { it.first.equals("email", ignoreCase = true) || it.first.equals("uEmail", ignoreCase = true) }
-                    emailText = found?.second?.takeIf { it.isNotBlank() }
-                }
-            } catch (_: Throwable) { }
+                val obj = p.jsonObject
+                obj.entries.forEach { (k,v) -> fields.add(k to eltToStr(v)) }
+            }
+            personFields = fields
+        } catch (_: Throwable) { }
+
+        try {
+            val cu = mutableListOf<Pair<String,String>>()
+            if (!userJson.isNullOrBlank()) {
+                val u = Json.parseToJsonElement(userJson!!)
+                val obj = u.jsonObject
+                obj.entries.forEach { (k,v) -> cu.add(k to (v.jsonPrimitive.contentOrNull ?: v.toString())) }
+            }
+            currentUserFields = cu
+            if (emailText.isNullOrBlank()) {
+                val found = cu.firstOrNull { it.first.equals("email", ignoreCase = true) || it.first.equals("uEmail", ignoreCase = true) }
+                emailText = found?.second?.takeIf { it.isNotBlank() }
+            }
+        } catch (_: Throwable) { }
     }
 
     val outerScroll = rememberScrollState()

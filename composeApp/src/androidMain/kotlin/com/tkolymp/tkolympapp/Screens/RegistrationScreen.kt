@@ -44,6 +44,9 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
+import com.tkolymp.shared.viewmodels.RegistrationViewModel
 
 private fun kotlinx.serialization.json.JsonElement?.asJsonObjectOrNull(): JsonObject? = try {
     when {
@@ -109,24 +112,11 @@ fun RegistrationScreen(
             .padding(12.dp)
         ) {
 
-        // cache trainer display names (shared across modes)
-        val trainerNames = remember { mutableStateMapOf<String, String>() }
+        // cache trainer display names (shared across modes) — moved to shared ViewModel
+        val regViewModel = remember { RegistrationViewModel() }
+        val regState by regViewModel.state.collectAsState()
         LaunchedEffect(trainers) {
-            try {
-                val svc = ServiceLocator.peopleService
-                trainers.forEachIndexed { idx, tEl ->
-                    val tObj = tEl as? JsonObject
-                    val tIdStr = tObj?.get("id")?.jsonPrimitive?.contentOrNull ?: idx.toString()
-                    val personRef = tObj?.get("person").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
-                        ?: tObj?.get("personId")?.jsonPrimitive?.contentOrNull
-                    val fetched = when {
-                        !personRef.isNullOrBlank() -> try { svc.fetchPersonDisplayName(personRef, false) } catch (_: Throwable) { null }
-                        else -> null
-                    }
-                    if (!fetched.isNullOrBlank()) trainerNames[tIdStr] = fetched
-                }
-            } catch (_: Throwable) {
-            }
+            regViewModel.loadNames(trainers, myPersonId, myCoupleIds, myPersonName, myCoupleNames)
         }
 
         when (mode) {
@@ -140,28 +130,10 @@ fun RegistrationScreen(
                         val personNameState = remember { androidx.compose.runtime.mutableStateOf<String?>(myPersonName) }
                         val coupleNamesState = remember { mutableStateMapOf<String, String>().apply { putAll(myCoupleNames) } }
 
-                        // fetch names if not provided and peopleService available
-                        LaunchedEffect(myPersonId, myCoupleIds) {
-                            // fetch person name
-                            if (personNameState.value.isNullOrBlank() && myPersonId != null) {
-                                try {
-                                    val svc = ServiceLocator.peopleService
-                                    val fetched = svc.fetchPersonDisplayName(myPersonId, true)
-                                    if (!fetched.isNullOrBlank()) personNameState.value = fetched
-                                } catch (_: Throwable) {
-                                }
-                            }
-                            // fetch couple names
-                            myCoupleIds.forEach { cid ->
-                                if (coupleNamesState[cid].isNullOrBlank()) {
-                                    try {
-                                        val svc = ServiceLocator.peopleService
-                                        val fetched = svc.fetchCoupleDisplayName(cid)
-                                        if (!fetched.isNullOrBlank()) coupleNamesState[cid] = fetched
-                                    } catch (_: Throwable) {
-                                    }
-                                }
-                            }
+                        // populate local hints from shared ViewModel state
+                        LaunchedEffect(myPersonId, myCoupleIds, regState) {
+                            if (personNameState.value.isNullOrBlank()) personNameState.value = regState.myPersonName
+                            regState.myCoupleNames.forEach { (k, v) -> if (coupleNamesState[k].isNullOrBlank()) coupleNamesState[k] = v }
                         }
                         Column {
                             if (myPersonId != null) {
@@ -209,7 +181,7 @@ fun RegistrationScreen(
                             val tObj = tEl as? JsonObject
                             val tIdStr = tObj?.get("id")?.jsonPrimitive?.contentOrNull ?: idx.toString()
                             val tName = tObj?.get("name")?.jsonPrimitive?.contentOrNull
-                                ?: trainerNames[tIdStr]
+                                ?: regState.trainerNames[tIdStr]
                                 ?: "Trenér #$idx"
                             Row(modifier = Modifier
                                 .fillMaxWidth()
@@ -367,7 +339,7 @@ fun RegistrationScreen(
                             trainers.forEachIndexed { idx, tEl ->
                                 val tObj = tEl as? JsonObject
                                 val tIdStr = tObj?.get("id")?.jsonPrimitive?.contentOrNull ?: idx.toString()
-                                val tName = tObj?.get("name")?.jsonPrimitive?.contentOrNull ?: trainerNames[tIdStr] ?: "Trenér #$idx"
+                                val tName = tObj?.get("name")?.jsonPrimitive?.contentOrNull ?: regState.trainerNames[tIdStr] ?: "Trenér #$idx"
                                 Row(modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(vertical = 6.dp),

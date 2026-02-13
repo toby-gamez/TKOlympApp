@@ -1,6 +1,11 @@
 package com.tkolymp.tkolympapp
 
+import android.graphics.PorterDuff
+import android.graphics.drawable.Drawable
 import android.text.Html
+import android.text.method.LinkMovementMethod
+import android.util.TypedValue
+import android.widget.TextView
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -9,8 +14,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -22,24 +28,18 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import android.widget.TextView
-import android.text.method.LinkMovementMethod
-import androidx.compose.ui.graphics.toArgb
-import android.util.TypedValue
-import android.graphics.drawable.Drawable
-import androidx.core.graphics.drawable.DrawableCompat
-import android.graphics.PorterDuff
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
-import com.tkolymp.shared.ServiceLocator
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.graphics.drawable.DrawableCompat
+import com.tkolymp.shared.viewmodels.NoticeViewModel
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -94,42 +94,31 @@ private fun tintTextViewSelectionHandles(tv: TextView, color: Int) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
-    val loading = remember { mutableStateOf(false) }
-    val error = remember { mutableStateOf<String?>(null) }
-    val ann = remember { mutableStateOf<com.tkolymp.shared.announcements.Announcement?>(null) }
+    val viewModel = remember { NoticeViewModel() }
+    val state by viewModel.state.collectAsState()
 
     LaunchedEffect(announcementId) {
-        loading.value = true
-        error.value = null
-        try {
-            val svc = ServiceLocator.announcementService
-            ann.value = svc.getAnnouncementById(announcementId)
-            if (ann.value == null) error.value = "Oznámení nenalezeno"
-        } catch (ex: Exception) {
-            error.value = ex.message ?: "Chyba při načítání"
-        } finally {
-            loading.value = false
-        }
+        viewModel.load(announcementId)
     }
 
-    if (loading.value) {
+    if (state.isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(modifier = Modifier.padding(16.dp))
         }
         return
     }
 
-    if (error.value != null) {
+    if (state.error != null) {
         AlertDialog(
-            onDismissRequest = { error.value = null },
-            confirmButton = { TextButton(onClick = { error.value = null }) { Text("OK") } },
+            onDismissRequest = { /* dismiss handled via ViewModel state */ },
+            confirmButton = { TextButton(onClick = { /* no-op */ }) { Text("OK") } },
             title = { Text("Chyba") },
-            text = { Text(error.value ?: "Neznámá chyba") }
+            text = { Text(state.error ?: "Neznámá chyba") }
         )
         return
     }
 
-    val a = ann.value
+    val a = state.announcement
     if (a == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("Žádné oznámení k zobrazení", modifier = Modifier.padding(16.dp))
