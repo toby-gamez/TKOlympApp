@@ -36,6 +36,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -70,6 +71,8 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
     var loading by remember { mutableStateOf(true) }
     var showDialog by remember { mutableStateOf(false) }
     var editRule by remember { mutableStateOf<NotificationRule?>(null) }
+    var deletingRuleId by remember { mutableStateOf<String?>(null) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         loading = true
@@ -177,8 +180,8 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                     })
                                     IconButton(onClick = { editRule = r; showDialog = true }) { Icon(Icons.Default.Edit, contentDescription = "Upravit") }
                                     IconButton(onClick = {
-                                        rules.removeAll { it.id == r.id }
-                                        persist()
+                                        deletingRuleId = r.id
+                                        showDeleteConfirm = true
                                     }) { Icon(Icons.Default.Delete, contentDescription = "Smazat") }
                                 }
                             }
@@ -191,6 +194,28 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                 }
             }
         }
+    }
+
+    if (showDeleteConfirm) {
+        val toDeleteId = deletingRuleId
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false; deletingRuleId = null },
+            title = { Text("Smazat pravidlo") },
+            text = { Text("Opravdu chcete smazat toto pravidlo?") },
+            confirmButton = {
+                Button(onClick = {
+                    if (toDeleteId != null) {
+                        rules.removeAll { it.id == toDeleteId }
+                        persist()
+                    }
+                    showDeleteConfirm = false
+                    deletingRuleId = null
+                }) { Text("Smazat") }
+            },
+            dismissButton = {
+                Button(onClick = { showDeleteConfirm = false; deletingRuleId = null }) { Text("Zrušit") }
+            }
+        )
     }
 
     if (showDialog) {
