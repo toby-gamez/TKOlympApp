@@ -69,7 +69,9 @@ fun OverviewScreen(
             val state by viewModel.state.collectAsState()
 
             LaunchedEffect(Unit) {
-                viewModel.loadOverview()
+                val startIso = LocalDate.now().toString() + "T00:00:00Z"
+                val endIso = LocalDate.now().plusYears(1).toString() + "T23:59:59Z"
+                viewModel.loadOverview(startIso, endIso)
             }
 
             val trainings = state.upcomingEvents.filterIsInstance<com.tkolymp.shared.event.EventInstance>()
@@ -84,7 +86,7 @@ fun OverviewScreen(
             Row(modifier = Modifier.padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("Nejbližší tréninky", style = MaterialTheme.typography.titleLarge)
             }
-            val limitedTrainings = trainings.sortedBy { it.since ?: it.updatedAt ?: "" }.take(2)
+            val limitedTrainings = trainings.sortedBy { it.since ?: it.updatedAt ?: "" }
             val trainingsMapByDay = limitedTrainings.groupBy { inst ->
                 val s = inst.since ?: inst.until ?: inst.updatedAt ?: ""
                 s.substringBefore('T').ifEmpty { s }
@@ -108,7 +110,26 @@ fun OverviewScreen(
                     val fmt = DateTimeFormatter.ISO_LOCAL_DATE
                     val todayKey = LocalDate.now().format(fmt)
 
-                    trainingsMapByDay.forEach { (date, list) ->
+                    // Show only one day: prefer today (only if it has future events), otherwise the next training day
+                    val sortedKeys = trainingsMapByDay.keys.sorted()
+                    val nowInstant = java.time.Instant.now()
+                    val selectedKey = run {
+                        if (sortedKeys.isEmpty()) null
+                        else if (sortedKeys.contains(todayKey)) {
+                            val todayList = trainingsMapByDay[todayKey] ?: emptyList()
+                            val hasFutureToday = todayList.any { inst ->
+                                val timeStr = inst.until ?: inst.since ?: inst.updatedAt ?: ""
+                                val instInstant = try { java.time.Instant.parse(timeStr) } catch (_: Exception) { null }
+                                instInstant?.isAfter(nowInstant) == true
+                            }
+                            if (hasFutureToday) todayKey else sortedKeys.find { it > todayKey } ?: sortedKeys.firstOrNull()
+                        } else {
+                            sortedKeys.find { it > todayKey } ?: sortedKeys.firstOrNull()
+                        }
+                    }
+
+                    selectedKey?.let { date ->
+                        val list = trainingsMapByDay[date] ?: emptyList()
                         Column(modifier = Modifier.padding(vertical = 6.dp)) {
                             val header = when (date) {
                                 todayKey -> "dnes"
@@ -139,8 +160,8 @@ fun OverviewScreen(
                                     trainerName = trainer,
                                     instances = instances.sortedBy { it.since },
                                     isAllTab = false,
-                                    myPersonId = null,
-                                    myCoupleIds = emptyList(),
+                                    myPersonId = state.myPersonId,
+                                    myCoupleIds = state.myCoupleIds,
                                     onEventClick = { id: Long -> onOpenEvent(id) }
                                 )
                             }

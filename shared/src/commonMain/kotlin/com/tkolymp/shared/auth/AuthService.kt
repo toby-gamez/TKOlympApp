@@ -42,7 +42,27 @@ class AuthService(private val storage: TokenStorage, private val client: IGraphQ
     }
 
     override suspend fun refreshJwt(): Boolean {
-        // Implement your refresh mutation/call here when backend supports it.
+        val query = "query Refresh { refreshJwt }"
+
+        val resp = try {
+            client.post(query, null)
+        } catch (ex: Exception) {
+            try { println("refreshJwt failed: ${ex.message}") } catch (_: Throwable) {}
+            return false
+        }
+
+        val token = resp.jsonObject["data"]
+            ?.jsonObject?.get("refreshJwt")
+            ?.jsonPrimitive?.contentOrNull
+
+        if (!token.isNullOrBlank()) {
+            storage.saveToken(token)
+            currentToken = token
+            return true
+        }
+
+        val errors = resp.jsonObject["errors"]?.toString() ?: resp.toString()
+        try { println("refreshJwt failed: $errors") } catch (_: Throwable) {}
         return false
     }
 
