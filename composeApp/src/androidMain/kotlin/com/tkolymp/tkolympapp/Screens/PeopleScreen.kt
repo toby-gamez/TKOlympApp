@@ -22,11 +22,18 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Cake
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.TextField
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import java.text.Normalizer
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -65,6 +72,17 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) 
     val viewModel = remember { PeopleViewModel() }
     val state by viewModel.state.collectAsState()
     var sortMode by remember { mutableStateOf<SortMode>(SortMode.ALPHABETICAL) }
+    var showSearch by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    LaunchedEffect(showSearch) {
+        if (showSearch) {
+            focusRequester.requestFocus()
+            keyboardController?.show()
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.loadPeople()
@@ -76,6 +94,11 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) 
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Zpět")
+                }
+            },
+            actions = {
+                IconButton(onClick = { showSearch = !showSearch }) {
+                    Icon(imageVector = Icons.Filled.Search, contentDescription = "Hledat")
                 }
             }
         )
@@ -91,6 +114,28 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) 
         val people = state.people.filterIsInstance<Person>()
 
         Column(modifier = Modifier.padding(padding)) {
+            // search field
+            if (showSearch) {
+                TextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 6.dp)
+                        .focusRequester(focusRequester),
+                    singleLine = true,
+                    leadingIcon = { Icon(imageVector = Icons.Filled.Search, contentDescription = "") },
+                    trailingIcon = {
+                        IconButton(onClick = {
+                            if (searchQuery.isNotBlank()) searchQuery = "" else showSearch = false
+                        }) {
+                            Icon(imageVector = Icons.Filled.Close, contentDescription = "Zavřít")
+                        }
+                    },
+                    placeholder = { Text("Hledat podle jména nebo příjmení") }
+                )
+            }
+
             // sort controls
             Row(modifier = Modifier
                 .fillMaxWidth()
@@ -146,16 +191,28 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) 
 
             }
 
-            val displayed = remember(people, sortMode, selectedGroups, groups) {
+            val displayed = remember(people, sortMode, selectedGroups, groups, searchQuery) {
                 val filtered = if (selectedGroups.isEmpty() || selectedGroups.size == groups.size) people else people.filter { p ->
                     p.cohortMembershipsList
                         .mapNotNull { it.cohort }
                         .filter { it.isVisible != false }
                         .any { it.id?.let { id -> selectedGroups.contains(id) } == true }
                 }
+                fun normalizeForSearch(s: String?): String {
+                    if (s.isNullOrBlank()) return ""
+                    val n = Normalizer.normalize(s, Normalizer.Form.NFD)
+                    return n.replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "").lowercase()
+                }
+
+                val searched = if (searchQuery.isBlank()) filtered else filtered.filter { p ->
+                    val q = normalizeForSearch(searchQuery.trim())
+                    listOf(p.firstName, p.lastName)
+                        .filterNotNull()
+                        .any { normalizeForSearch(it).contains(q) }
+                }
                 when (sortMode) {
-                    SortMode.ALPHABETICAL -> filtered.sortedBy { p -> listOf(p.firstName, p.lastName, p.suffixTitle).filterNotNull().filter { it.isNotBlank() }.joinToString(" ").lowercase() }
-                    SortMode.BIRTHDAY -> filtered.sortedBy { daysUntilNextBirthday(it.birthDate) }
+                    SortMode.ALPHABETICAL -> searched.sortedBy { p -> listOf(p.firstName, p.lastName, p.suffixTitle).filterNotNull().filter { it.isNotBlank() }.joinToString(" ").lowercase() }
+                    SortMode.BIRTHDAY -> searched.sortedBy { daysUntilNextBirthday(it.birthDate) }
                 }
             }
             // manual refresh removed; initial load happens in LaunchedEffect

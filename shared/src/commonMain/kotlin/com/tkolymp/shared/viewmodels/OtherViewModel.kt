@@ -63,7 +63,7 @@ class OtherViewModel(
                         val obj = Json.parseToJsonElement(it).jsonObject
                         val jmeno = obj["uJmeno"]?.toString()?.replace("\"", "")
                         val prijmeni = obj["uPrijmeni"]?.toString()?.replace("\"", "")
-                        name = listOfNotNull(jmeno, prijmeni).joinToString(" ")
+                        name = listOfNotNull(jmeno?.takeIf { it.isNotBlank() }, prijmeni?.takeIf { it.isNotBlank() }).joinToString(" ")
                         subtitle = obj["uLogin"]?.toString()?.replace("\"", "")
                     }
                 } catch (_: Throwable) { }
@@ -82,7 +82,10 @@ class OtherViewModel(
                             ?: p["postfixTitle"]?.toString()?.replace("\"", "")
                             ?: p["suffix"]?.toString()?.replace("\"", "")
                         if (!personFirstName.isNullOrBlank() || !personLastName.isNullOrBlank()) {
-                            val base = listOfNotNull(personPrefix, personFirstName, personLastName).joinToString(" ")
+                            val parts = listOf(personPrefix, personFirstName, personLastName)
+                                .filter { !it.isNullOrBlank() }
+                                .map { it!! }
+                            val base = parts.joinToString(" ")
                             name = if (!personSuffix.isNullOrBlank()) "$base, ${personSuffix}" else base
                         }
                     }

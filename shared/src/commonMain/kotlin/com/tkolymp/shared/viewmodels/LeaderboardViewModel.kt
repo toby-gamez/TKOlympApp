@@ -21,7 +21,7 @@ class LeaderboardViewModel(
         _state.value = _state.value.copy(isLoading = true, error = null)
         try {
             val until = "2100-01-01"
-            val list = try { peopleService.fetchScoreboard(null, "1970-01-01", until) } catch (_: Throwable) { emptyList<com.tkolymp.shared.people.ScoreboardEntry>() }
+            val list = try { peopleService.fetchScoreboard(null, "2025-09-01", until) } catch (_: Throwable) { emptyList<com.tkolymp.shared.people.ScoreboardEntry>() }
             _state.value = _state.value.copy(rankings = list as? List<Any> ?: emptyList(), isLoading = false)
         } catch (ex: Throwable) {
             _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání žebříčku")

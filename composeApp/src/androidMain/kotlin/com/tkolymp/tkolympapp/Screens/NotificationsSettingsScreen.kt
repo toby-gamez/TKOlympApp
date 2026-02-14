@@ -68,6 +68,14 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
     var availableLocations by remember { mutableStateOf<List<String>>(emptyList()) }
     var availableTrainers by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     val availableTypes = listOf("CAMP", "LESSON", "GROUP", "RESERVATION", "HOLIDAY")
+    // display labels for types (Czech)
+    val typeLabels = mapOf(
+        "LESSON" to "lekce",
+        "CAMP" to "soustředění",
+        "GROUP" to "společná",
+        "RESERVATION" to "nabídka",
+        "HOLIDAY" to "prázdniny"
+    )
     var rules = remember { mutableStateListOf<NotificationRule>() }
     var globalEnabled by remember { mutableStateOf(true) }
     val viewModel = remember { NotificationsSettingsViewModel() }
@@ -92,9 +100,12 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
         }
 
         // load club data (locations/trainers)
-        try {
+            try {
             val club = withContext(Dispatchers.IO) { ServiceLocator.clubService.fetchClubData() }
-            availableLocations = club.locations.mapNotNull { it.name }.distinct()
+            // exclude placeholder/removed location entries (e.g. "ZRUŠENO")
+            availableLocations = club.locations.mapNotNull { it.name?.trim() }
+                .filter { it.isNotBlank() && !it.equals("ZRUŠENO", ignoreCase = true) }
+                .distinct()
             availableTrainers = club.trainers.mapNotNull { t ->
                 t.person?.let { p ->
                     val name = listOfNotNull(p.firstName, p.lastName).joinToString(" ")
@@ -167,7 +178,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                             Text(text = "Místa: ${if (r.locations.isNotEmpty()) r.locations.joinToString(", ") else "(vše)"}", style = androidx.compose.material3.MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
                                                 val trainerDisplay = if (r.trainers.isNotEmpty()) r.trainers.map { t -> if (t.contains("::")) t.substringAfter("::") else t }.joinToString(", ") else "(vše)"
                                                 Text(text = "Trenéři: $trainerDisplay", style = androidx.compose.material3.MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 2.dp))
-                                            Text(text = "Typy: ${if (r.types.isNotEmpty()) r.types.joinToString(", ") else "(vše)"}", style = androidx.compose.material3.MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 2.dp))
+                                            Text(text = "Typy: ${if (r.types.isNotEmpty()) r.types.map { typeLabels[it] ?: it }.joinToString(", ") else "(vše)"}", style = androidx.compose.material3.MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 2.dp))
                                         }
                                         Text(text = "${r.timesBeforeMinutes.joinToString(", ")} min předem", style = androidx.compose.material3.MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp))
                                     }
@@ -342,7 +353,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                             Checkbox(checked = selectedTypes.contains(tp), onCheckedChange = {
                                                 if (it) selectedTypes.add(tp) else selectedTypes.remove(tp)
                                             })
-                                            Text(tp)
+                                            Text(typeLabels[tp] ?: tp)
                                         }
                                     }
                                 }

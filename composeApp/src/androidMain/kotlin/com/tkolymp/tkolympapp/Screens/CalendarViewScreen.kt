@@ -43,6 +43,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -556,8 +557,12 @@ internal fun TimelineEventCard(
     val isFreeLesson = coupleInfo?.isFree == true
     
     // Get color
-    val backgroundColor = remember(event.colorRgb, event.type) {
-        parseEventColor(event.colorRgb, event.type)
+    val backgroundColor = parseEventColor(event.colorRgb, event.type)
+
+    val contentColor = if (isLesson) {
+        if (isSystemInDarkTheme()) Color.White else Color(0xFF212121)
+    } else {
+        Color.White
     }
     
     // Get trainer name for lessons
@@ -619,16 +624,16 @@ internal fun TimelineEventCard(
                         textDecoration = if (event.isCancelled) TextDecoration.LineThrough else null,
                         maxLines = titleMaxLines,
                         overflow = TextOverflow.Ellipsis,
-                        color = Color.White
+                        color = contentColor
                     )
                     
                     // Secondary info: trainer for lessons, time for others
                     if (layoutData.durationMinutes > 30 && !compact) {
-                        if (isLesson && !trainerName.isNullOrBlank()) {
+                            if (isLesson && !trainerName.isNullOrBlank()) {
                             Text(
                                 text = trainerName,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = Color.White.copy(alpha = 0.9f),
+                                color = contentColor.copy(alpha = 0.9f),
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -636,7 +641,7 @@ internal fun TimelineEventCard(
                             Text(
                                 text = "${CalendarUtils.formatTime(event.startTime)} - ${CalendarUtils.formatTime(event.endTime)}",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = Color.White.copy(alpha = 0.9f)
+                                color = contentColor.copy(alpha = 0.9f)
                             )
                         }
                     }
@@ -687,23 +692,24 @@ internal fun getCoupleInfo(event: Event?): CoupleInfo? {
 /**
  * Parse event color from string
  */
+@Composable
 internal fun parseEventColor(colorRgb: String?, type: String?): Color {
-    // Special handling for lessons - use secondary theme color
+    // Special handling for lessons - use very light gray in light mode and dark gray in dark mode
     if (colorRgb == "lesson" || type?.equals("lesson", ignoreCase = true) == true) {
-        return Color(0xFF2196F3) // Material Blue - will be replaced with theme color in UI
+        return if (isSystemInDarkTheme()) Color(0xFF303030) else Color(0xFFF5F5F5)
     }
-    
+
     if (colorRgb.isNullOrBlank()) {
         return Color(0xFFADD8E6) // Light blue default
     }
-    
+
     return try {
         val hex = if (colorRgb.startsWith("#")) {
             colorRgb.substring(1)
         } else {
             colorRgb
         }
-        
+
         val rgb = hex.toLong(16)
         Color(
             red = ((rgb shr 16) and 0xFF).toInt(),
