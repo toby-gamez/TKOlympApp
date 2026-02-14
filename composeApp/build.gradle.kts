@@ -18,6 +18,7 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
+            implementation("com.google.accompanist:accompanist-swiperefresh:0.30.1")
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
