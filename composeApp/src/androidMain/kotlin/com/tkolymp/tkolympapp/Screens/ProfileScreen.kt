@@ -314,6 +314,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                     "username" to "Uživatelské jméno",
                     "id" to "ID",
                     "personalId" to "Rodné číslo",
+                    "nationalIdNumber" to "Rodné číslo",
                     "passportNumber" to "Číslo pasu",
                     "idNumber" to "Číslo dokladu",
                     "wdsfId" to "WDSF ID",

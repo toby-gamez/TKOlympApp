@@ -144,7 +144,7 @@ fun ChangePersonalDataDialog(
                 TextField(value = email, onValueChange = { email = it }, label = { Text("Email") }, singleLine = true)
                 TextField(value = csts, onValueChange = { csts = it }, label = { Text("ČSTS ID") }, singleLine = true)
                 TextField(value = wdsf, onValueChange = { wdsf = it }, label = { Text("WDSF ID") }, singleLine = true)
-                TextField(value = nid, onValueChange = { nid = it }, label = { Text("Rodné číslo / národní ID") }, singleLine = true)
+                TextField(value = nid, onValueChange = { nid = it }, label = { Text("Rodné číslo") }, singleLine = true)
                 TextField(value = nationality, onValueChange = { nationality = it }, label = { Text("Národnost") }, singleLine = true)
                 androidx.compose.material3.Divider(modifier = Modifier.padding(vertical = 6.dp))
                 Text("Kontakty", style = MaterialTheme.typography.labelSmall)
