@@ -1,21 +1,25 @@
 package com.tkolymp.shared.announcements
 
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.cache.CacheService
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.serialization.json.*
 
-class AnnouncementServiceImpl : IAnnouncementService {
+class AnnouncementServiceImpl(private val cache: CacheService = ServiceLocator.cacheService) : IAnnouncementService {
     private val query = """
         query MyQuery(${'$'}sticky: Boolean) { myAnnouncements(sticky: ${'$'}sticky) { nodes { body createdAt id isSticky isVisible title author { id uJmeno uPrijmeni } updatedAt } } }
     """.trimIndent()
 
     override suspend fun getAnnouncements(sticky: Boolean): List<Announcement> {
+        val cacheKey = "announcements_sticky_${'$'}sticky"
+        cache.get<List<Announcement>>(cacheKey)?.let { return it }
         val variables = buildJsonObject { put("sticky", JsonPrimitive(sticky)) }
         val resp = ServiceLocator.graphQlClient.post(query, variables)
         val data = resp.jsonObject["data"] ?: return emptyList()
         val myAnnouncements = (data.jsonObject["myAnnouncements"] ?: return emptyList())
         val nodes = myAnnouncements.jsonObject["nodes"] ?: return emptyList()
         if (nodes is JsonArray) {
-            return nodes.mapNotNull { elem ->
+            val result = nodes.mapNotNull { elem ->
                 try {
                     val obj = elem.jsonObject
                     val id = obj["id"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
@@ -47,6 +51,8 @@ class AnnouncementServiceImpl : IAnnouncementService {
                     null
                 }
             }
+            try { cache.put(cacheKey, result, ttl = 2.minutes) } catch (_: Throwable) {}
+            return result
         }
         return emptyList()
     }
@@ -56,6 +62,8 @@ class AnnouncementServiceImpl : IAnnouncementService {
     """.trimIndent()
 
     override suspend fun getAnnouncementById(id: Long): Announcement? {
+        val cacheKey = "announcement_${'$'}id"
+        cache.get<Announcement>(cacheKey)?.let { return it }
         val variables = buildJsonObject { put("id", JsonPrimitive(id)) }
         val resp = ServiceLocator.graphQlClient.post(singleQuery, variables)
         val data = resp.jsonObject["data"] ?: return null
@@ -77,7 +85,7 @@ class AnnouncementServiceImpl : IAnnouncementService {
                     uPrijmeni = it["uPrijmeni"]?.jsonPrimitive?.contentOrNull
                 )
             }
-            Announcement(
+            val announcement = Announcement(
                 id = idStr,
                 title = title,
                 body = body,
@@ -87,6 +95,8 @@ class AnnouncementServiceImpl : IAnnouncementService {
                 isVisible = isVisible,
                 author = author
             )
+            try { cache.put(cacheKey, announcement, ttl = 5.minutes) } catch (_: Throwable) {}
+            announcement
         } catch (_: Throwable) { null }
     }
 }

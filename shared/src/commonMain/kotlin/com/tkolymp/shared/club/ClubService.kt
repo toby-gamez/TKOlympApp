@@ -1,6 +1,9 @@
 package com.tkolymp.shared.club
 
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.cache.CacheService
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import com.tkolymp.shared.network.IGraphQlClient
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -26,10 +29,16 @@ data class Cohort(val colorRgb: String?, val name: String?, val description: Str
 
 data class ClubData(val locations: List<Location>, val trainers: List<Trainer>, val cohorts: List<Cohort>, val raw: JsonElement?)
 
-class ClubService(private val client: IGraphQlClient = ServiceLocator.graphQlClient) {
+class ClubService(private val client: IGraphQlClient = ServiceLocator.graphQlClient,
+                  private val cache: CacheService = ServiceLocator.cacheService) {
     private val json = Json { ignoreUnknownKeys = true }
 
     suspend fun fetchClubData(): ClubData {
+        val cacheKey = "club_data"
+        try {
+            val cached: ClubData? = cache.get(cacheKey)
+            if (cached != null) return cached
+        } catch (_: Throwable) {}
         val query = """
             query Query {
               tenantLocationsList { name }
@@ -100,6 +109,8 @@ class ClubService(private val client: IGraphQlClient = ServiceLocator.graphQlCli
             )
         }
 
-        return ClubData(locations, trainers, cohorts, el)
+        val cd = ClubData(locations, trainers, cohorts, el)
+        try { cache.put(cacheKey, cd, ttl = 10.minutes) } catch (_: Throwable) {}
+        return cd
     }
 }

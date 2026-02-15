@@ -1,6 +1,7 @@
 package com.tkolymp.shared.viewmodels
 
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.cache.CacheService
 import com.tkolymp.shared.event.EventInstance
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -18,13 +19,17 @@ data class CalendarState(
 
 class CalendarViewModel(
     private val eventService: com.tkolymp.shared.event.IEventService = ServiceLocator.eventService,
-    private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService
+    private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService,
+    private val cache: CacheService = ServiceLocator.cacheService
 ) {
     private val _state = MutableStateFlow(CalendarState())
     val state: StateFlow<CalendarState> = _state.asStateFlow()
 
-    suspend fun load(startIso: String, endIso: String, onlyMine: Boolean) {
+    suspend fun load(startIso: String, endIso: String, onlyMine: Boolean, forceRefresh: Boolean = false) {
         _state.value = _state.value.copy(isLoading = true, error = null)
+        if (forceRefresh) {
+            try { cache.invalidatePrefix("events_") } catch (_: Throwable) {}
+        }
         try {
             val map = try {
                 withContext(Dispatchers.Default) {

@@ -85,7 +85,7 @@ fun CalendarScreen(
 
     LaunchedEffect(selectedTab, weekOffset) {
         val onlyMine = selectedTab == 0
-        calendarViewModel.load(startIso, endIso, onlyMine)
+        calendarViewModel.load(startIso, endIso, onlyMine, forceRefresh = false)
     }
 
     // user id / couple ids are provided by calendar viewmodel state
@@ -116,7 +116,7 @@ fun CalendarScreen(
             onRefresh = {
                 scope.launch {
                     val onlyMine = selectedTab == 0
-                    calendarViewModel.load(startIso, endIso, onlyMine)
+                    calendarViewModel.load(startIso, endIso, onlyMine, forceRefresh = true)
                 }
             },
             modifier = Modifier.padding(top = padding.calculateTopPadding(), bottom = bottomPadding)

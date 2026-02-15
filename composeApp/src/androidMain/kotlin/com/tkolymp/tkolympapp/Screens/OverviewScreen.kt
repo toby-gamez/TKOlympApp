@@ -59,7 +59,7 @@ fun OverviewScreen(
         LaunchedEffect(Unit) {
             val startIso = LocalDate.now().toString() + "T00:00:00Z"
             val endIso = LocalDate.now().plusYears(1).toString() + "T23:59:59Z"
-            viewModel.loadOverview(startIso, endIso)
+            viewModel.loadOverview(startIso, endIso, forceRefresh = false)
         }
 
         SwipeToReload(
@@ -67,7 +67,7 @@ fun OverviewScreen(
             onRefresh = { scope.launch {
                 val startIso = LocalDate.now().toString() + "T00:00:00Z"
                 val endIso = LocalDate.now().plusYears(1).toString() + "T23:59:59Z"
-                viewModel.loadOverview(startIso, endIso)
+                viewModel.loadOverview(startIso, endIso, forceRefresh = true)
             } },
             modifier = Modifier.padding(top = padding.calculateTopPadding(), bottom = bottomPadding)
         ) {

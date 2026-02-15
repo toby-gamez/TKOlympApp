@@ -36,8 +36,14 @@ suspend fun initNetworking(context: Context, baseUrl: String) {
 
     val gql = GraphQlClientImpl(client, baseUrl)
     val auth = AuthService(storage, gql)
-    val eventSvc = EventService(gql)
-    val announcementSvc = com.tkolymp.shared.announcements.AnnouncementServiceImpl()
+    val cache = com.tkolymp.shared.cache.CacheService()
+
+    // register cache early so default parameters that reference ServiceLocator.cacheService
+    // do not throw UninitializedPropertyAccessException
+    ServiceLocator.cacheService = cache
+
+    val eventSvc = EventService(gql, cache)
+    val announcementSvc = com.tkolymp.shared.announcements.AnnouncementServiceImpl(cache)
     val userStorage = UserStorage(context)
     val userSvc = UserService(gql, userStorage)
     val clubSvc = com.tkolymp.shared.club.ClubService(gql)
@@ -51,6 +57,7 @@ suspend fun initNetworking(context: Context, baseUrl: String) {
     ServiceLocator.authService = auth
     ServiceLocator.tokenStorage = storage
     ServiceLocator.eventService = eventSvc
+    ServiceLocator.cacheService = cache
     ServiceLocator.notificationStorage = notificationStorage
     ServiceLocator.notificationScheduler = notificationScheduler
     ServiceLocator.notificationService = notificationSvc

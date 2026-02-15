@@ -1,6 +1,8 @@
 package com.tkolymp.shared.event
 
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.cache.CacheService
+import kotlin.time.Duration.Companion.minutes
 import com.tkolymp.shared.network.IGraphQlClient
 import kotlinx.serialization.json.*
 
@@ -81,7 +83,10 @@ data class Event(
     val location: Location?
 )
 
-class EventService(private val client: IGraphQlClient = ServiceLocator.graphQlClient) : IEventService {
+class EventService(
+    private val client: IGraphQlClient = ServiceLocator.graphQlClient,
+    private val cache: CacheService = ServiceLocator.cacheService
+) : IEventService {
     private val json = Json { ignoreUnknownKeys = true }
 
     private val eventByIdQuery = """
@@ -350,6 +355,8 @@ class EventService(private val client: IGraphQlClient = ServiceLocator.graphQlCl
         offset: Int,
         onlyType: String?
     ): Map<String, List<EventInstance>> {
+        val cacheKey = "events_${'$'}{startRangeIso}_${'$'}{endRangeIso}_${'$'}{onlyMine}_${'$'}{first}_${'$'}{offset}_${'$'}{onlyType}"
+        cache.get<Map<String, List<EventInstance>>>(cacheKey)?.let { return it }
         val variables = buildJsonObject {
             put("startRange", JsonPrimitive(startRangeIso))
             put("endRange", JsonPrimitive(endRangeIso))
@@ -477,11 +484,17 @@ class EventService(private val client: IGraphQlClient = ServiceLocator.graphQlCl
             }
         } catch (_: Throwable) { }
 
-        // Return a deterministically-ordered map (sorted by key) without using JVM-only APIs
-        return grouped.entries.sortedBy { it.key }.associate { it.key to it.value }
+        val result = grouped.entries.sortedBy { it.key }.associate { it.key to it.value }
+        try {
+            cache.put(cacheKey, result, ttl = 3.minutes)
+        } catch (_: Throwable) { }
+        return result
     }
 
     override suspend fun fetchEventById(id: BigInt): JsonObject? {
+        val cacheKey = "event_${'$'}id"
+        cache.get<JsonObject>(cacheKey)?.let { return it }
+
         val variables = buildJsonObject { put("id", JsonPrimitive(id)) }
         val resp = try {
             client.post(eventByIdQuery, variables)
@@ -491,7 +504,11 @@ class EventService(private val client: IGraphQlClient = ServiceLocator.graphQlCl
 
         val data = resp.jsonObject["data"]?.jsonObject ?: return null
         val ev = data["event"]
-        return (ev as? JsonObject)
+        val obj = (ev as? JsonObject)
+        if (obj != null) {
+            try { cache.put(cacheKey, obj, ttl = 5.minutes) } catch (_: Throwable) { }
+        }
+        return obj
     }
 
     override suspend fun registerToEventMany(registrations: JsonArray): JsonElement? {
@@ -509,6 +526,7 @@ class EventService(private val client: IGraphQlClient = ServiceLocator.graphQlCl
             return null
         }
 
+        try { cache.invalidatePrefix("events_") } catch (_: Throwable) {}
         return resp
     }
 
@@ -531,7 +549,9 @@ class EventService(private val client: IGraphQlClient = ServiceLocator.graphQlCl
 
         val data = resp.jsonObject["data"]?.jsonObject
         val created = data?.get("setLessonDemand")?.jsonObject?.get("eventLessonDemand")
-        return created != null
+        val ok = created != null
+        if (ok) try { cache.invalidatePrefix("events_") } catch (_: Throwable) {}
+        return ok
     }
 
     override suspend fun deleteEventRegistration(registrationId: String): kotlinx.serialization.json.JsonElement? {
@@ -549,6 +569,7 @@ class EventService(private val client: IGraphQlClient = ServiceLocator.graphQlCl
             return null
         }
 
+        try { cache.invalidatePrefix("events_") } catch (_: Throwable) {}
         return resp
     }
 }

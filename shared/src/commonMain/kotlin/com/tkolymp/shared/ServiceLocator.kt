@@ -12,6 +12,7 @@ import com.tkolymp.shared.club.ClubService
 import com.tkolymp.shared.notification.NotificationStorage
 import com.tkolymp.shared.notification.INotificationScheduler
 import com.tkolymp.shared.notification.NotificationService
+import com.tkolymp.shared.cache.CacheService
 
 object ServiceLocator {
     lateinit var graphQlClient: IGraphQlClient
@@ -23,6 +24,7 @@ object ServiceLocator {
     lateinit var announcementService: IAnnouncementService
     lateinit var peopleService: PeopleService
     lateinit var clubService: ClubService
+    lateinit var cacheService: CacheService
 
     // Notification-related plumbing (initialized on platform)
     lateinit var notificationStorage: NotificationStorage

@@ -1,6 +1,9 @@
 package com.tkolymp.shared.people
 
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.cache.CacheService
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import com.tkolymp.shared.network.IGraphQlClient
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -58,7 +61,8 @@ data class ScoreboardEntry(
     val manualTotalScore: Double? = null
 )
 
-class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlClient) {
+class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlClient,
+                    private val cache: CacheService = ServiceLocator.cacheService) {
     private val json = Json { ignoreUnknownKeys = true }
 
     suspend fun fetchPersonName(personId: String): PersonName? {
@@ -120,6 +124,11 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
     }
 
     suspend fun fetchPeople(): List<Person> {
+        val cacheKey = "people_all"
+        try {
+            val cached: List<Person>? = cache.get(cacheKey)
+            if (cached != null) return cached
+        } catch (_: Throwable) {}
         val query = """
             query MyQuery {
                 people {
@@ -150,7 +159,7 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
             ?.get("nodes")?.let { it as? kotlinx.serialization.json.JsonArray }
             ?: return emptyList()
 
-        return nodes.mapNotNull { nodeEl ->
+        val result = nodes.mapNotNull { nodeEl ->
             val node = nodeEl as? JsonObject ?: return@mapNotNull null
             val id = node.get("id")?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
             val first = node.get("firstName")?.jsonPrimitive?.contentOrNull
@@ -171,9 +180,16 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
 
             Person(id, first, last, prefix, suffix, birth, memberships)
         }
+        try { cache.put(cacheKey, result, ttl = 10.minutes) } catch (_: Throwable) {}
+        return result
     }
 
         suspend fun fetchPerson(personId: String): PersonDetails? {
+            val cacheKey = "person_$personId"
+            try {
+                val cached: PersonDetails? = cache.get(cacheKey)
+                if (cached != null) return cached
+            } catch (_: Throwable) {}
                 // use GraphQL variable for person id and pass it via `variables` to the client
                 val query = """
                         query PersonBasic(${'$'}id: BigInt!) {
@@ -271,10 +287,18 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                 CohortMembership(Cohort(cId, cName, cColor, cVis), since, until)
             } ?: emptyList()
 
-            return PersonDetails(id, first, last, prefix, suffix, birth, bio, csts, email, gender, isTrainer, phone, wdsf, couplesArr, memberships, el)
+            val pd = PersonDetails(id, first, last, prefix, suffix, birth, bio, csts, email, gender, isTrainer, phone, wdsf, couplesArr, memberships, el)
+            try { cache.put(cacheKey, pd, ttl = 15.minutes) } catch (_: Throwable) {}
+            return pd
         }
 
         suspend fun fetchScoreboard(cohortId: String? = null, since: String, until: String): List<ScoreboardEntry> {
+            val keyPart = cohortId ?: "all"
+            val cacheKey = "scoreboard_${keyPart}_${since}_${until}"
+            try {
+                val cached: List<ScoreboardEntry>? = cache.get(cacheKey)
+                if (cached != null) return cached
+            } catch (_: Throwable) {}
             val query = """
                     query Scoreboard(${'$'}cohortId: BigInt, ${'$'}since: Date, ${'$'}until: Date) {
                         scoreboardEntriesList(cohortId: ${'$'}cohortId, since: ${'$'}since, until: ${'$'}until) {
@@ -303,7 +327,7 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                 ?.get("scoreboardEntriesList") as? kotlinx.serialization.json.JsonArray
                 ?: return emptyList()
 
-            return arr.mapNotNull { e ->
+            val res = arr.mapNotNull { e ->
                 val obj = e as? JsonObject ?: return@mapNotNull null
                 val ranking = obj.get("ranking")?.jsonPrimitive?.contentOrNull?.toIntOrNull()
                 val personId = obj.get("personId")?.jsonPrimitive?.contentOrNull
@@ -317,6 +341,8 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                 val last = personObj?.get("lastName")?.jsonPrimitive?.contentOrNull
                 ScoreboardEntry(ranking, personId, first, last, total, lesson, group, event, manual)
             }
+            try { cache.put(cacheKey, res, ttl = 15.minutes) } catch (_: Throwable) {}
+            return res
         }
 
         // helper extension to map JsonArray safely to list (generic)

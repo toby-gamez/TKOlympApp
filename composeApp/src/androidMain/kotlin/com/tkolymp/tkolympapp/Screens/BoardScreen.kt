@@ -72,14 +72,14 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
 
             LaunchedEffect(state.selectedTab) {
                 // load announcements whenever selected tab changes
-                scope.launch { viewModel.loadAnnouncements() }
+                scope.launch { viewModel.loadAnnouncements(forceRefresh = false) }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
             SwipeToReload(
                 isRefreshing = state.isLoading,
-                onRefresh = { scope.launch { viewModel.loadAnnouncements() } },
+                onRefresh = { scope.launch { viewModel.loadAnnouncements(forceRefresh = true) } },
                 modifier = Modifier.weight(1f)
             ) {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
