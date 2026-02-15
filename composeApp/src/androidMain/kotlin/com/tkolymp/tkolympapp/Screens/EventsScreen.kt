@@ -2,15 +2,13 @@ package com.tkolymp.tkolympapp
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -21,6 +19,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,13 +30,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.tkolymp.shared.ServiceLocator
-import com.tkolymp.shared.event.EventInstance
 import com.tkolymp.shared.viewmodels.EventsViewModel
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -53,30 +47,29 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
     val today = LocalDate.now()
     val fmt = DateTimeFormatter.ISO_LOCAL_DATE
 
+    val scope = rememberCoroutineScope()
     LaunchedEffect(Unit) { viewModel.loadCampsNextYear() }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Akce") }) }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = padding.calculateTopPadding(), bottom = bottomPadding),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.Start
+        SwipeToReload(
+            isRefreshing = state.isLoading,
+            onRefresh = { scope.launch { viewModel.loadCampsNextYear() } },
+            modifier = Modifier.padding(top = padding.calculateTopPadding(), bottom = bottomPadding)
         ) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.Start
+            ) {
             TabRow(selectedTabIndex = selectedTab) {
                 tabs.forEachIndexed { index, title ->
                     Tab(selected = selectedTab == index, onClick = { selectedTab = index }, text = { Text(title) })
                 }
             }
 
-            if (state.isLoading) {
-                Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                    CircularProgressIndicator()
-                }
-                return@Column
-            }
+            // keep content visible during refresh; SwipeToReload shows the progress indicator
 
             val grouped = state.eventsByDay
 
@@ -210,4 +203,4 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
             }
         }
     }
-}
+}}

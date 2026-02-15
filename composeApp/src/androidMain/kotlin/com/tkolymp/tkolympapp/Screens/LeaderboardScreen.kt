@@ -68,10 +68,12 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                 .padding(12.dp))
         }) }
     ) { padding ->
-        SwipeToReload(isRefreshing = state.isLoading, onRefresh = { scope.launch { viewModel.loadLeaderboard() } }) {
-            Box(modifier = Modifier
-                .fillMaxSize()
-                .padding(top = padding.calculateTopPadding(), bottom = bottomPadding)) {
+        SwipeToReload(
+            isRefreshing = state.isLoading,
+            onRefresh = { scope.launch { viewModel.loadLeaderboard() } },
+            modifier = Modifier.padding(top = padding.calculateTopPadding(), bottom = bottomPadding)
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
                 when {
                     state.isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
                     state.error != null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(state.error ?: "Chyba") }

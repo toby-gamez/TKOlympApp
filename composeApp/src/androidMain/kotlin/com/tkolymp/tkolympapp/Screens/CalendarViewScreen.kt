@@ -43,6 +43,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import com.tkolymp.tkolympapp.SwipeToReload
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -118,53 +119,52 @@ fun CalendarViewScreen(
         )
         
         Divider()
-        
-        // Timeline view
-        if (state.isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        } else if (state.error != null) {
-            Box(
-                modifier = Modifier.fillMaxSize().padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "Chyba při načítání",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = state.error ?: "",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(onClick = { scope.launch { viewModel.loadEvents() } }) {
-                        Text("Zkusit znovu")
+
+        // Timeline view wrapped in swipe-to-refresh — keep UI visible during refresh
+        SwipeToReload(
+            isRefreshing = state.isLoading,
+            onRefresh = { scope.launch { viewModel.loadEvents() } },
+            modifier = Modifier.weight(1f)
+        ) {
+            if (state.error != null) {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Chyba při načítání",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = state.error ?: "",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(onClick = { scope.launch { viewModel.loadEvents() } }) {
+                            Text("Zkusit znovu")
+                        }
                     }
                 }
-            }
-        } else {
-            // Show timeline based on view mode
-            when (state.viewMode) {
-                ViewMode.DAY -> {
-                    SingleDayTimelineView(
-                        events = state.layoutData.values.toList(),
-                        selectedDate = state.selectedDate,
-                        onEventClick = onEventClick
-                    )
-                }
-                ViewMode.THREE_DAY, ViewMode.WEEK -> {
-                    MultiDayTimelineView(
-                        dates = viewModel.getDatesInRange(),
-                        getEventsForDate = { date -> viewModel.getEventsForDate(date) },
-                        onEventClick = onEventClick
-                    )
+            } else {
+                // Show timeline based on view mode
+                when (state.viewMode) {
+                    ViewMode.DAY -> {
+                        SingleDayTimelineView(
+                            events = state.layoutData.values.toList(),
+                            selectedDate = state.selectedDate,
+                            onEventClick = onEventClick
+                        )
+                    }
+                    ViewMode.THREE_DAY, ViewMode.WEEK -> {
+                        MultiDayTimelineView(
+                            dates = viewModel.getDatesInRange(),
+                            getEventsForDate = { date -> viewModel.getEventsForDate(date) },
+                            onEventClick = onEventClick
+                        )
+                    }
                 }
             }
         }

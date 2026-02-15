@@ -1,5 +1,6 @@
 package com.tkolymp.tkolympapp
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,60 +9,46 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.Button
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
-import com.tkolymp.shared.ServiceLocator
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import androidx.compose.ui.unit.dp
+import com.tkolymp.shared.viewmodels.EventViewModel
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.Json
-import kotlinx.coroutines.launch
-import java.util.UUID
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
-import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.collectAsState
-import com.tkolymp.shared.viewmodels.EventViewModel
 
 private fun JsonElement?.asJsonObjectOrNull(): JsonObject? = try {
     when {
@@ -96,66 +83,12 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
         viewModel.loadEvent(eventId)
     }
 
-    if (state.isLoading) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(modifier = Modifier.padding(16.dp))
-        }
-        return
-    }
-
-    state.error?.let { err ->
-        AlertDialog(
-            onDismissRequest = { /* no-op */ },
-            confirmButton = { TextButton(onClick = { /* no-op */ }) { Text("OK") } },
-            title = { Text("Chyba") },
-            text = { Text(err) }
-        )
-        return
-    }
-
     val ev = state.eventJson
-    if (ev == null) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Žádná událost k zobrazení", modifier = Modifier.padding(16.dp))
-        }
-        return
-    }
     // registration navigation handled by App NavHost via `onOpenRegistration`
 
     fun JsonObject.str(key: String) = try { this[key]?.jsonPrimitive?.contentOrNull } catch (_: Exception) { null }
     fun JsonObject.int(key: String) = try { this[key]?.jsonPrimitive?.intOrNull } catch (_: Exception) { null }
     fun JsonObject.bool(key: String) = try { this[key]?.jsonPrimitive?.booleanOrNull } catch (_: Exception) { null }
-
-    val type = ev.str("type") ?: ""
-    val trainers = ev["eventTrainersList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
-    val name = when {
-        !ev.str("name").isNullOrBlank() -> ev.str("name")!!
-        type.equals("lesson", ignoreCase = true) -> {
-            trainers.firstOrNull()?.asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() } ?: "(bez názvu)"
-        }
-        else -> "(bez názvu)"
-    }
-    val descr = ev.str("description") ?: ""
-    val summary = ev.str("summary") ?: ""
-    val locationName = ev["location"].asJsonObjectOrNull()?.str("name") ?: ev.str("locationText")
-        
-        val isVisible = ev.bool("isVisible") ?: false
-        val isPublic = ev.bool("isPublic") ?: false
-        val isLocked = ev.bool("isLocked") ?: false
-        val enableNotes = ev.bool("enableNotes") ?: false
-        val capacity = ev.int("capacity")
-        val remainingPersonSpots = ev.int("remainingPersonSpots")
-        val remainingLessons = ev.int("remainingLessons")
-
-        val instances = ev["eventInstancesList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
-        val firstInstance = instances.firstOrNull().asJsonObjectOrNull()
-        val lastInstance = instances.lastOrNull().asJsonObjectOrNull()
-        val firstDate = firstInstance?.str("since")
-        val lastDate = lastInstance?.str("until")
-
-        val cohorts = ev["eventTargetCohortsList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
-        val registrations = ev["eventRegistrationsList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
-        val externalRegistrations = ev["eventExternalRegistrationsList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
 
         Scaffold(
             topBar = {
@@ -171,12 +104,55 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                 )
             }
         ) { padding ->
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .padding(padding)
-            .verticalScroll(rememberScrollState())
-            .padding(12.dp)
+        val scope = rememberCoroutineScope()
+
+        SwipeToReload(
+            isRefreshing = state.isLoading,
+            onRefresh = { scope.launch { viewModel.loadEvent(eventId) } },
+            modifier = Modifier.padding(padding)
         ) {
+            if (ev == null) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Žádná událost k zobrazení", modifier = Modifier.padding(16.dp))
+                }
+                } else {
+                // compute event-derived values only when `ev` is non-null
+                val type = ev.str("type") ?: ""
+                val trainers = ev["eventTrainersList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
+                val name = when {
+                    !ev.str("name").isNullOrBlank() -> ev.str("name")!!
+                    type.equals("lesson", ignoreCase = true) -> {
+                        trainers.firstOrNull()?.asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() } ?: "(bez názvu)"
+                    }
+                    else -> "(bez názvu)"
+                }
+                val descr = ev.str("description") ?: ""
+                val summary = ev.str("summary") ?: ""
+                val locationName = ev["location"].asJsonObjectOrNull()?.str("name") ?: ev.str("locationText")
+                
+                val isVisible = ev.bool("isVisible") ?: false
+                val isPublic = ev.bool("isPublic") ?: false
+                val isLocked = ev.bool("isLocked") ?: false
+                val enableNotes = ev.bool("enableNotes") ?: false
+                val capacity = ev.int("capacity")
+                val remainingPersonSpots = ev.int("remainingPersonSpots")
+                val remainingLessons = ev.int("remainingLessons")
+
+                val instances = ev["eventInstancesList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
+                val firstInstance = instances.firstOrNull().asJsonObjectOrNull()
+                val lastInstance = instances.lastOrNull().asJsonObjectOrNull()
+                val firstDate = firstInstance?.str("since")
+                val lastDate = lastInstance?.str("until")
+
+                val cohorts = ev["eventTargetCohortsList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
+                val registrations = ev["eventRegistrationsList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
+                val externalRegistrations = ev["eventExternalRegistrationsList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
+
+                Column(modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(12.dp)
+                ) {
             Text(name, style = MaterialTheme.typography.titleLarge)
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -571,4 +547,4 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
-}
+}}}

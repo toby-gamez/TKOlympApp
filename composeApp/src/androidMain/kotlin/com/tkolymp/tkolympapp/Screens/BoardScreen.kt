@@ -77,12 +77,12 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            if (state.isLoading) {
-                Box(modifier = Modifier.weight(1f).fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            } else {
-                Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+            SwipeToReload(
+                isRefreshing = state.isLoading,
+                onRefresh = { scope.launch { viewModel.loadAnnouncements() } },
+                modifier = Modifier.weight(1f)
+            ) {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     val announcements = state.currentAnnouncements.filterIsInstance<com.tkolymp.shared.announcements.Announcement>()
                     announcements.forEach { a ->
                         Column(modifier = Modifier.padding(4.dp)) {

@@ -33,6 +33,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.collectAsState
 import com.tkolymp.shared.viewmodels.GroupsViewModel
 import androidx.compose.ui.Alignment
@@ -44,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.tkolymp.shared.club.ClubService
 import com.tkolymp.shared.club.Cohort
+import com.tkolymp.tkolympapp.SwipeToReload
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,6 +56,7 @@ fun GroupsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
     LaunchedEffect(Unit) { vm.load() }
 
     val scrollState = rememberScrollState()
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -66,21 +70,20 @@ fun GroupsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
             )
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = padding.calculateTopPadding(), bottom = bottomPadding)
-                .verticalScroll(scrollState),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.Start
+        SwipeToReload(
+            isRefreshing = state.isLoading,
+            onRefresh = { scope.launch { vm.load() } },
+            modifier = Modifier.padding(top = padding.calculateTopPadding(), bottom = bottomPadding)
         ) {
-            if (state.isLoading) {
-                Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text("Načítám…", style = MaterialTheme.typography.bodyMedium)
-                }
-            }
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.Start
+            ) {
+            // Loading state is represented by the SwipeToReload indicator,
+            // so we no longer show an additional inline progress row here.
 
             state.error?.let { err -> Text(err, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(16.dp)) }
 
@@ -133,4 +136,5 @@ fun GroupsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
             }
         }
     }
+}
 }

@@ -46,6 +46,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,6 +65,7 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoUnit
+import com.tkolymp.tkolympapp.SwipeToReload
 
 private enum class SortMode { ALPHABETICAL, BIRTHDAY }
 @OptIn(ExperimentalMaterial3Api::class)
@@ -103,17 +105,21 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) 
             }
         )
     }) { padding ->
-        if (state.isLoading) {
-            Box(modifier = Modifier
-                .padding(padding)
-                .fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-            return@Scaffold
-        }
-        val people = state.people.filterIsInstance<Person>()
+        val scope = rememberCoroutineScope()
 
-        Column(modifier = Modifier.padding(padding)) {
+        SwipeToReload(
+            isRefreshing = state.isLoading,
+            onRefresh = { scope.launch { viewModel.loadPeople() } },
+            modifier = Modifier.padding(padding)
+        ) {
+            if (state.isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                val people = state.people.filterIsInstance<Person>()
+
+                Column(modifier = Modifier) {
             // search field
             if (showSearch) {
                 TextField(
@@ -291,6 +297,8 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) 
                             }
                         }
                     }
+                }
+            }
                 }
             }
         }

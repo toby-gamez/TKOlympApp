@@ -14,30 +14,26 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import androidx.compose.runtime.collectAsState
 import com.tkolymp.shared.viewmodels.OverviewViewModel
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -56,23 +52,32 @@ fun OverviewScreen(
         topBar = { TopAppBar(title = { Text("Přehled") }) }
     ) { padding ->
         val scrollState = rememberScrollState()
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(top = padding.calculateTopPadding(), bottom = bottomPadding),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.Start
-        ) {
+        val viewModel = remember { OverviewViewModel() }
+        val state by viewModel.state.collectAsState()
+        val scope = rememberCoroutineScope()
 
-            val viewModel = remember { OverviewViewModel() }
-            val state by viewModel.state.collectAsState()
+        LaunchedEffect(Unit) {
+            val startIso = LocalDate.now().toString() + "T00:00:00Z"
+            val endIso = LocalDate.now().plusYears(1).toString() + "T23:59:59Z"
+            viewModel.loadOverview(startIso, endIso)
+        }
 
-            LaunchedEffect(Unit) {
+        SwipeToReload(
+            isRefreshing = state.isLoading,
+            onRefresh = { scope.launch {
                 val startIso = LocalDate.now().toString() + "T00:00:00Z"
                 val endIso = LocalDate.now().plusYears(1).toString() + "T23:59:59Z"
                 viewModel.loadOverview(startIso, endIso)
-            }
+            } },
+            modifier = Modifier.padding(top = padding.calculateTopPadding(), bottom = bottomPadding)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.Start
+            ) {
 
             val trainings = state.upcomingEvents.filterIsInstance<com.tkolymp.shared.event.EventInstance>()
             val camps = trainings.filter { it.event?.type?.contains("CAMP", ignoreCase = true) == true }
@@ -308,6 +313,8 @@ fun OverviewScreen(
             state.error?.let { Text(text = it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(12.dp)) }
         }
     }
+}
+
 }
 
 @Composable

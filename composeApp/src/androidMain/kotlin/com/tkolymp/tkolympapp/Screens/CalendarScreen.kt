@@ -41,6 +41,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -58,6 +59,7 @@ import com.tkolymp.shared.event.EventInstance
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import com.tkolymp.tkolympapp.SwipeToReload
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -109,35 +111,37 @@ fun CalendarScreen(
             )
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = padding.calculateTopPadding(), bottom = bottomPadding),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.Start
+        SwipeToReload(
+            isRefreshing = calState.isLoading,
+            onRefresh = {
+                scope.launch {
+                    val onlyMine = selectedTab == 0
+                    calendarViewModel.load(startIso, endIso, onlyMine)
+                }
+            },
+            modifier = Modifier.padding(top = padding.calculateTopPadding(), bottom = bottomPadding)
         ) {
-            PrimaryTabRow(selectedTabIndex = selectedTab, modifier = Modifier.fillMaxWidth()) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTab == index,
-                        onClick = { selectedTab = index },
-                        text = { Text(title) }
-                    )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize(),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.Start
+            ) {
+                PrimaryTabRow(selectedTabIndex = selectedTab, modifier = Modifier.fillMaxWidth()) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = selectedTab == index,
+                            onClick = { selectedTab = index },
+                            text = { Text(title) }
+                        )
+                    }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            val grouped = calState.eventsByDay
-            val todayKey = LocalDate.now().format(fmt)
+                val grouped = calState.eventsByDay
+                val todayKey = LocalDate.now().format(fmt)
 
-            if (calState.isLoading) {
-                Box(modifier = Modifier
-                    .weight(1f)
-                    .fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            } else {
                 Column(modifier = Modifier
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
@@ -169,12 +173,12 @@ fun CalendarScreen(
                             val lessonsByTrainer = lessons.groupBy { it.event?.eventTrainersList?.firstOrNull()!!.trim() }
 
                             lessonsByTrainer.forEach { (trainer, instances) ->
-                                    LessonView(
+                                LessonView(
                                     trainerName = trainer,
                                     instances = instances.sortedBy { it.since },
                                     isAllTab = (selectedTab == 1),
-                                        myPersonId = calState.myPersonId,
-                                        myCoupleIds = calState.myCoupleIds,
+                                    myPersonId = calState.myPersonId,
+                                    myCoupleIds = calState.myCoupleIds,
                                     onEventClick = { id: Long -> onOpenEvent(id) }
                                 )
                             }
@@ -186,17 +190,17 @@ fun CalendarScreen(
                     }
                 }
             }
+        }
 
-            calState.error?.let { err ->
-                AlertDialog(
-                    onDismissRequest = { /* dismiss handled by parent state refresh */ },
-                    confirmButton = {
-                        TextButton(onClick = { /* noop */ }) { Text("OK") }
-                    },
-                    title = { Text("Chyba při načítání akcí") },
-                    text = { Text(err) }
-                )
-            }
+        calState.error?.let { err ->
+            AlertDialog(
+                onDismissRequest = { /* dismiss handled by parent state refresh */ },
+                confirmButton = {
+                    TextButton(onClick = { /* noop */ }) { Text("OK") }
+                },
+                title = { Text("Chyba při načítání akcí") },
+                text = { Text(err) }
+            )
         }
     }
 }

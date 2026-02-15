@@ -6,45 +6,41 @@ import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.Row
-import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.collectAsState
-import com.tkolymp.shared.viewmodels.TrainersLocationsViewModel
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.tkolymp.shared.ServiceLocator
-import com.tkolymp.shared.club.ClubData
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.tkolymp.shared.viewmodels.TrainersLocationsViewModel
+import com.tkolymp.tkolympapp.SwipeToReload
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,6 +50,8 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
     val ctx = LocalContext.current
 
     LaunchedEffect(Unit) { vm.load() }
+
+    val scope = rememberCoroutineScope()
 
     Scaffold(topBar = {
         TopAppBar(
@@ -65,30 +63,22 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
             }
         )
     }) { padding ->
-        if (state.isLoading) {
-            Column(modifier = Modifier
-                .padding(padding)
-                .fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                CircularProgressIndicator()
-            }
-            return@Scaffold
-        }
-        state.error?.let { err ->
-            Column(modifier = Modifier.padding(padding).fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                Text(err)
-            }
-            return@Scaffold
-        }
-
-        val club = state.clubData
-        if (club == null || (club.locations.isEmpty() && club.trainers.isEmpty())) {
-            Column(modifier = Modifier.padding(padding).fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                Text("Žádná data")
-            }
-            return@Scaffold
-        }
-
-        LazyColumn(modifier = Modifier.padding(padding)) {
+        SwipeToReload(
+            isRefreshing = state.isLoading,
+            onRefresh = { scope.launch { vm.load() } },
+            modifier = Modifier.padding(padding)
+        ) {
+            val club = state.clubData
+            if (state.error != null) {
+                Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                    Text(state.error ?: "")
+                }
+            } else if (club == null || (club.locations.isEmpty() && club.trainers.isEmpty())) {
+                Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                    Text("Žádná data")
+                }
+            } else {
+                LazyColumn(modifier = Modifier) {
             // Locations header
             item {
                 Text("Tréninkové prostory", modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
@@ -187,4 +177,4 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
             }
         }
     }
-}
+}}}
