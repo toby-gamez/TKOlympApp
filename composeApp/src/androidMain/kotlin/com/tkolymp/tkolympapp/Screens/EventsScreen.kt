@@ -50,15 +50,16 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
     val scope = rememberCoroutineScope()
     LaunchedEffect(selectedTab) {
         // load when screen first composes and when switching tabs to ensure data is present
-        viewModel.loadCampsNextYear()
+        // use cache by default; do not force network call on each tab switch
+        scope.launch { viewModel.loadCampsNextYear() }
     }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Akce") }) }
     ) { padding ->
-        SwipeToReload(
+            SwipeToReload(
             isRefreshing = state.isLoading,
-            onRefresh = { scope.launch { viewModel.loadCampsNextYear() } },
+            onRefresh = { scope.launch { viewModel.loadCampsNextYear(forceRefresh = true) } },
             modifier = Modifier.padding(top = padding.calculateTopPadding(), bottom = bottomPadding)
         ) {
             Column(

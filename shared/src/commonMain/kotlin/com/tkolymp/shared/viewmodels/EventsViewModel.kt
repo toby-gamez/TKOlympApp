@@ -21,16 +21,18 @@ class EventsViewModel(
     private val _state = MutableStateFlow(EventsState())
     val state: StateFlow<EventsState> = _state.asStateFlow()
 
-    suspend fun loadCampsNextYear() {
+    suspend fun loadCampsNextYear(forceRefresh: Boolean = false) {
         _state.value = _state.value.copy(isLoading = true, error = null)
         try {
-            // Invalidate events cache first to avoid stale cached results
-            try { ServiceLocator.cacheService.invalidatePrefix("events_") } catch (_: Throwable) {}
+            // Invalidate events cache only when explicitly requested to avoid unnecessary network calls
+            if (forceRefresh) {
+                try { ServiceLocator.cacheService.invalidatePrefix("camps_") } catch (_: Throwable) {}
+            }
 
             // Use a broad fixed range (multiplatform-safe) to fetch upcoming camps
             val startIso = "2023-01-01T00:00:00Z"
             val endIso = "2100-01-01T23:59:59Z"
-            val map = try { withContext(Dispatchers.IO) { eventService.fetchEventsGroupedByDay(startIso, endIso, false, 500, 0, "CAMP") } } catch (ex: Throwable) { emptyMap<String, List<EventInstance>>() }
+            val map = try { withContext(Dispatchers.IO) { eventService.fetchEventsGroupedByDay(startIso, endIso, false, 500, 0, "CAMP", cacheNamespace = "camps_") } } catch (ex: Throwable) { emptyMap<String, List<EventInstance>>() }
             val filtered = map.mapValues { entry -> entry.value.filter { it.event?.isVisible != false } }.filterValues { it.isNotEmpty() }
             if (filtered.isEmpty()) {
                 _state.value = _state.value.copy(eventsByDay = filtered, isLoading = false, error = "Žádné akce typu CAMP - server nevrátil žádné výsledky")

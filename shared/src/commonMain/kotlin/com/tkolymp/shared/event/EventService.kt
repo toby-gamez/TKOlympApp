@@ -18,7 +18,8 @@ interface IEventService {
         onlyMine: Boolean = false,
         first: Int = 200,
         offset: Int = 0,
-        onlyType: String? = null
+        onlyType: String? = null,
+        cacheNamespace: String? = null
     ): Map<String, List<EventInstance>>
 
     /**
@@ -353,9 +354,11 @@ class EventService(
         onlyMine: Boolean,
         first: Int,
         offset: Int,
-        onlyType: String?
+        onlyType: String?,
+        cacheNamespace: String?
     ): Map<String, List<EventInstance>> {
-        val cacheKey = "events_${'$'}{startRangeIso}_${'$'}{endRangeIso}_${'$'}{onlyMine}_${'$'}{first}_${'$'}{offset}_${'$'}{onlyType}"
+        val ns = cacheNamespace ?: "events"
+        val cacheKey = "${'$'}{ns}_${'$'}{startRangeIso}_${'$'}{endRangeIso}_${'$'}{onlyMine}_${'$'}{first}_${'$'}{offset}_${'$'}{onlyType}"
         cache.get<Map<String, List<EventInstance>>>(cacheKey)?.let { return it }
         val variables = buildJsonObject {
             put("startRange", JsonPrimitive(startRangeIso))
@@ -526,7 +529,8 @@ class EventService(
             return null
         }
 
-        try { cache.invalidatePrefix("events_") } catch (_: Throwable) {}
+        // Do not automatically clear caches on mutations; caches are per-consumer and
+        // should expire by TTL or be invalidated explicitly by callers when needed.
         return resp
     }
 
@@ -550,7 +554,7 @@ class EventService(
         val data = resp.jsonObject["data"]?.jsonObject
         val created = data?.get("setLessonDemand")?.jsonObject?.get("eventLessonDemand")
         val ok = created != null
-        if (ok) try { cache.invalidatePrefix("events_") } catch (_: Throwable) {}
+        // Do not clear caches here; let consumers decide when to refresh their own cache.
         return ok
     }
 
@@ -569,7 +573,7 @@ class EventService(
             return null
         }
 
-        try { cache.invalidatePrefix("events_") } catch (_: Throwable) {}
+        // No global cache clear performed.
         return resp
     }
 }

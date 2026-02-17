@@ -29,13 +29,13 @@ class OverviewViewModel(
     suspend fun loadOverview(startIso: String = "1970-01-01T00:00:00Z", endIso: String = "2100-01-01T00:00:00Z", forceRefresh: Boolean = false) {
         _state.value = _state.value.copy(isLoading = true, error = null)
         if (forceRefresh) {
-            try { cache.invalidatePrefix("events_") } catch (_: Throwable) {}
+            try { cache.invalidatePrefix("overview_") } catch (_: Throwable) {}
             try { cache.invalidatePrefix("announcements_") } catch (_: Throwable) {}
         }
         try {
             val events = try {
-                val grouped = withContext(Dispatchers.Default) {
-                    eventService.fetchEventsGroupedByDay(startIso, endIso, onlyMine = true, first = 200)
+                    val grouped = withContext(Dispatchers.Default) {
+                    eventService.fetchEventsGroupedByDay(startIso, endIso, onlyMine = true, first = 200, cacheNamespace = "overview_")
                 }
                 grouped.values.flatten()
             } catch (_: Throwable) { emptyList<Any>() }

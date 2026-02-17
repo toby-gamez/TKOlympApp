@@ -82,28 +82,23 @@ fun CalendarScreen(
     // allow internal control of week offset when parent doesn't provide a handler
     LaunchedEffect(weekOffset) { if (localWeekOffset != weekOffset) localWeekOffset = weekOffset }
 
-    // compute week range anchored on Monday of the week (so navigation moves whole weeks)
+    // compute week range anchored on today (do not search for start of week)
     val baseToday = LocalDate.now()
-    val weekStart = try {
-        baseToday.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY)).plusWeeks(localWeekOffset.toLong())
-    } catch (_: Exception) {
-        // fallback to simple offset if TemporalAdjusters not available
-        baseToday.plusWeeks(localWeekOffset.toLong())
-    }
+    val weekStart = baseToday.plusWeeks(localWeekOffset.toLong())
     val today = weekStart
     val endDay = weekStart.plusDays(6)
     val fmt = DateTimeFormatter.ISO_LOCAL_DATE
     val startIso = today.toString() + "T00:00:00Z"
     val endIso = endDay.toString() + "T23:59:59Z"
 
-    val prevSelectedTab = remember { androidx.compose.runtime.mutableStateOf(selectedTab) }
-    val prevWeekOffset = remember { androidx.compose.runtime.mutableStateOf(localWeekOffset) }
+    // initialize to different values so the first load is treated as a change
+    // and will force a refresh (forceRefresh = true) on first composition
+    val prevSelectedTab = remember { androidx.compose.runtime.mutableStateOf(selectedTab + 1) }
+    val prevWeekOffset = remember { androidx.compose.runtime.mutableStateOf(localWeekOffset + 1) }
     LaunchedEffect(selectedTab, localWeekOffset) {
         val onlyMine = selectedTab == 0
-        // recompute start/end inside effect to match current localWeekOffset
-        val t = try {
-            LocalDate.now().with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY)).plusWeeks(localWeekOffset.toLong())
-        } catch (_: Exception) { LocalDate.now().plusWeeks(localWeekOffset.toLong()) }
+        // recompute start/end inside effect to match current localWeekOffset (start = today)
+        val t = LocalDate.now().plusWeeks(localWeekOffset.toLong())
         val e = t.plusDays(6)
         val sIso = t.toString() + "T00:00:00Z"
         val eIso = e.toString() + "T23:59:59Z"

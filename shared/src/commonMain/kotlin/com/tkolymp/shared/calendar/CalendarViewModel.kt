@@ -76,7 +76,8 @@ class CalendarViewModel(
                 onlyMine = currentState.showOnlyMine,
                 first = 500,
                 offset = 0,
-                onlyType = null
+                onlyType = null,
+                cacheNamespace = "calendar_"
             )
             
             // Convert to TimelineEvents

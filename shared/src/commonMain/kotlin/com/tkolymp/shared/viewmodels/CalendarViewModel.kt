@@ -28,12 +28,12 @@ class CalendarViewModel(
     suspend fun load(startIso: String, endIso: String, onlyMine: Boolean, forceRefresh: Boolean = false) {
         _state.value = _state.value.copy(isLoading = true, error = null)
         if (forceRefresh) {
-            try { cache.invalidatePrefix("events_") } catch (_: Throwable) {}
+            try { cache.invalidatePrefix("calendar_") } catch (_: Throwable) {}
         }
         try {
             val map = try {
                 withContext(Dispatchers.Default) {
-                    eventService.fetchEventsGroupedByDay(startIso, endIso, onlyMine, 200, 0, null)
+                    eventService.fetchEventsGroupedByDay(startIso, endIso, onlyMine, 200, 0, null, cacheNamespace = "calendar_")
                 }
             } catch (ex: Throwable) {
                 _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání akcí")
