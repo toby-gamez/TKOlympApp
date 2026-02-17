@@ -54,11 +54,8 @@ class NotificationSchedulerAndroid(private val platformContext: Any) : INotifica
         val intent = makeIntent(notificationId, title, text)
         val flags = PendingIntent.FLAG_UPDATE_CURRENT or if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
         val pi = PendingIntent.getBroadcast(context, notificationId.hashCode(), intent, flags)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi)
-        } else {
-            am.setExact(AlarmManager.RTC_WAKEUP, triggerAt, pi)
-        }
+        // Use a regular (inexact) alarm instead of exact scheduling.
+        am.set(AlarmManager.RTC_WAKEUP, triggerAt, pi)
         return triggerAt
     }
 }

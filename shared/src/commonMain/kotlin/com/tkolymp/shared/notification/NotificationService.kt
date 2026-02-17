@@ -69,9 +69,21 @@ class NotificationService(
 
                 rule.timesBeforeMinutes.forEach { minutesBefore ->
                     val nid = "evt_${ev.id}_inst_${inst.id}_$minutesBefore"
-                    val trigger = try { scheduler.scheduleNotificationAt(nid, ev.name, "Událost začíná za $minutesBefore minut", since, minutesBefore) } catch (_: Throwable) { null }
+
+                    val titleToShow: String? = ev.name?.takeIf { it.isNotBlank() } ?: run {
+                        val evType = ev.type ?: ""
+                        if (evType.equals("LESSON", ignoreCase = true)) {
+                            val trainers = ev.eventTrainersList ?: emptyList()
+                            if (trainers.isNotEmpty()) trainers.joinToString(", ") else "Lekce"
+                        } else {
+                            // fallback to event type or generic label
+                            evType.ifEmpty { "Událost" }
+                        }
+                    }
+
+                    val trigger = try { scheduler.scheduleNotificationAt(nid, titleToShow, "Událost začíná za $minutesBefore minut", since, minutesBefore) } catch (_: Throwable) { null }
                     if (trigger != null) {
-                        scheduled += ScheduledNotification(nid, ev.id, ev.name, trigger)
+                        scheduled += ScheduledNotification(nid, ev.id, titleToShow, trigger)
                     }
                 }
             }
