@@ -48,7 +48,10 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
     val fmt = DateTimeFormatter.ISO_LOCAL_DATE
 
     val scope = rememberCoroutineScope()
-    LaunchedEffect(Unit) { viewModel.loadCampsNextYear() }
+    LaunchedEffect(selectedTab) {
+        // load when screen first composes and when switching tabs to ensure data is present
+        viewModel.loadCampsNextYear()
+    }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Akce") }) }
@@ -68,10 +71,14 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                     Tab(selected = selectedTab == index, onClick = { selectedTab = index }, text = { Text(title) })
                 }
             }
+            
 
             // keep content visible during refresh; SwipeToReload shows the progress indicator
 
-            val grouped = state.eventsByDay
+            // Ensure we only show CAMP events here (defensive: viewmodel should already filter)
+            val grouped = state.eventsByDay.mapValues { entry ->
+                entry.value.filter { it.event?.type?.equals("CAMP", ignoreCase = true) == true }
+            }.filterValues { it.isNotEmpty() }
 
             Column(modifier = Modifier
                 .fillMaxSize()

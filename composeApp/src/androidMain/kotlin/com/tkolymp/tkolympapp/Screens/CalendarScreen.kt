@@ -1,4 +1,5 @@
 
+
 package com.tkolymp.tkolympapp
 
 import androidx.compose.foundation.background
@@ -71,21 +72,45 @@ fun CalendarScreen(
     bottomPadding: Dp = 0.dp
 ) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+    var localWeekOffset by rememberSaveable { mutableIntStateOf(weekOffset) }
     val tabs = listOf("Moje", "Všechny")
     // moved data loading into shared CalendarViewModel
     val calendarViewModel = remember { com.tkolymp.shared.viewmodels.CalendarViewModel() }
     val calState by calendarViewModel.state.collectAsState()
     val scope = rememberCoroutineScope()
 
-    val today = LocalDate.now().plusWeeks(weekOffset.toLong())
-    val endDay = today.plusDays(7)
+    // allow internal control of week offset when parent doesn't provide a handler
+    LaunchedEffect(weekOffset) { if (localWeekOffset != weekOffset) localWeekOffset = weekOffset }
+
+    // compute week range anchored on Monday of the week (so navigation moves whole weeks)
+    val baseToday = LocalDate.now()
+    val weekStart = try {
+        baseToday.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY)).plusWeeks(localWeekOffset.toLong())
+    } catch (_: Exception) {
+        // fallback to simple offset if TemporalAdjusters not available
+        baseToday.plusWeeks(localWeekOffset.toLong())
+    }
+    val today = weekStart
+    val endDay = weekStart.plusDays(6)
     val fmt = DateTimeFormatter.ISO_LOCAL_DATE
     val startIso = today.toString() + "T00:00:00Z"
     val endIso = endDay.toString() + "T23:59:59Z"
 
-    LaunchedEffect(selectedTab, weekOffset) {
+    val prevSelectedTab = remember { androidx.compose.runtime.mutableStateOf(selectedTab) }
+    val prevWeekOffset = remember { androidx.compose.runtime.mutableStateOf(localWeekOffset) }
+    LaunchedEffect(selectedTab, localWeekOffset) {
         val onlyMine = selectedTab == 0
-        calendarViewModel.load(startIso, endIso, onlyMine, forceRefresh = false)
+        // recompute start/end inside effect to match current localWeekOffset
+        val t = try {
+            LocalDate.now().with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY)).plusWeeks(localWeekOffset.toLong())
+        } catch (_: Exception) { LocalDate.now().plusWeeks(localWeekOffset.toLong()) }
+        val e = t.plusDays(6)
+        val sIso = t.toString() + "T00:00:00Z"
+        val eIso = e.toString() + "T23:59:59Z"
+        val forceRefresh = prevSelectedTab.value != selectedTab || prevWeekOffset.value != localWeekOffset
+        calendarViewModel.load(sIso, eIso, onlyMine, forceRefresh = forceRefresh)
+        prevSelectedTab.value = selectedTab
+        prevWeekOffset.value = localWeekOffset
     }
 
     // user id / couple ids are provided by calendar viewmodel state
@@ -100,11 +125,20 @@ fun CalendarScreen(
                             Icon(Icons.Default.ViewTimeline, contentDescription = "Timeline zobrazení")
                         }
                     }
-                    IconButton(onClick = { onWeekOffsetChange(weekOffset - 1) }) {
+                    IconButton(onClick = {
+                        localWeekOffset = localWeekOffset - 1
+                        onWeekOffsetChange(localWeekOffset)
+                    }) {
                         Icon(Icons.Default.ChevronLeft, contentDescription = "Předchozí týden")
                     }
-                    TextButton(onClick = { onWeekOffsetChange(0) }) { Text("dnes") }
-                    IconButton(onClick = { onWeekOffsetChange(weekOffset + 1) }) {
+                    TextButton(onClick = {
+                        localWeekOffset = 0
+                        onWeekOffsetChange(0)
+                    }) { Text("dnes") }
+                    IconButton(onClick = {
+                        localWeekOffset = localWeekOffset + 1
+                        onWeekOffsetChange(localWeekOffset)
+                    }) {
                         Icon(Icons.Default.ChevronRight, contentDescription = "Následující týden")
                     }
                 }
@@ -116,7 +150,11 @@ fun CalendarScreen(
             onRefresh = {
                 scope.launch {
                     val onlyMine = selectedTab == 0
-                    calendarViewModel.load(startIso, endIso, onlyMine, forceRefresh = true)
+                    val t = LocalDate.now().plusWeeks(localWeekOffset.toLong())
+                    val e = t.plusDays(7)
+                    val sIso = t.toString() + "T00:00:00Z"
+                    val eIso = e.toString() + "T23:59:59Z"
+                    calendarViewModel.load(sIso, eIso, onlyMine, forceRefresh = true)
                 }
             },
             modifier = Modifier.padding(top = padding.calculateTopPadding(), bottom = bottomPadding)
@@ -127,6 +165,7 @@ fun CalendarScreen(
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.Start
             ) {
+                // Calendar controls
                 PrimaryTabRow(selectedTabIndex = selectedTab, modifier = Modifier.fillMaxWidth()) {
                     tabs.forEachIndexed { index, title ->
                         Tab(
@@ -140,17 +179,24 @@ fun CalendarScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 val grouped = calState.eventsByDay
-                val todayKey = LocalDate.now().format(fmt)
+                val todayKey = baseToday.format(fmt)
+                val visibleDates = mutableListOf<String>()
+                var dd = today
+                while (!dd.isAfter(endDay)) {
+                    visibleDates += dd.format(fmt)
+                    dd = dd.plusDays(1)
+                }
 
                 Column(modifier = Modifier
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
                 ) {
-                    grouped.forEach { (date, list) ->
+                    visibleDates.forEach { date ->
+                        val list = grouped[date] ?: return@forEach
                         Column(modifier = Modifier.padding(8.dp)) {
                             val header = when (date) {
                                 todayKey -> "dnes"
-                                LocalDate.now().plusDays(1).format(fmt) -> "zítra"
+                                baseToday.plusDays(1).format(fmt) -> "zítra"
                                 else -> {
                                     val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
                                     if (ld == null) date else {

@@ -24,12 +24,19 @@ class EventsViewModel(
     suspend fun loadCampsNextYear() {
         _state.value = _state.value.copy(isLoading = true, error = null)
         try {
+            // Invalidate events cache first to avoid stale cached results
+            try { ServiceLocator.cacheService.invalidatePrefix("events_") } catch (_: Throwable) {}
+
             // Use a broad fixed range (multiplatform-safe) to fetch upcoming camps
             val startIso = "2023-01-01T00:00:00Z"
             val endIso = "2100-01-01T23:59:59Z"
             val map = try { withContext(Dispatchers.IO) { eventService.fetchEventsGroupedByDay(startIso, endIso, false, 500, 0, "CAMP") } } catch (ex: Throwable) { emptyMap<String, List<EventInstance>>() }
             val filtered = map.mapValues { entry -> entry.value.filter { it.event?.isVisible != false } }.filterValues { it.isNotEmpty() }
-            _state.value = _state.value.copy(eventsByDay = filtered, isLoading = false)
+            if (filtered.isEmpty()) {
+                _state.value = _state.value.copy(eventsByDay = filtered, isLoading = false, error = "Žádné akce typu CAMP - server nevrátil žádné výsledky")
+            } else {
+                _state.value = _state.value.copy(eventsByDay = filtered, isLoading = false)
+            }
         } catch (ex: Throwable) {
             _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání akcí")
         }

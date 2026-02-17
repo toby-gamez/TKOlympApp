@@ -1,5 +1,7 @@
 package com.tkolymp.shared.cache
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.Clock
@@ -18,29 +20,41 @@ data class CacheEntry<T>(
 class CacheService {
     private val cache = mutableMapOf<String, CacheEntry<*>>()
     private val mutex = Mutex()
+    private val cacheDispatcher = Dispatchers.Default.limitedParallelism(1)
 
-    suspend fun <T> get(key: String): T? = mutex.withLock {
+    suspend fun <T> get(key: String): T? = withContext(cacheDispatcher) {
         @Suppress("UNCHECKED_CAST")
-        val entry = cache[key] as? CacheEntry<T> ?: return@withLock null
-        return@withLock if (entry.isValid()) entry.data else {
-            cache.remove(key)
-            null
+        val result: T? = mutex.withLock {
+            val entry = cache[key] as? CacheEntry<T> ?: return@withLock null
+            if (entry.isValid()) entry.data else {
+                cache.remove(key)
+                null
+            }
+        }
+        result
+    }
+
+    suspend fun <T> put(key: String, value: T, ttl: Duration = 5.minutes) = withContext(cacheDispatcher) {
+        mutex.withLock {
+            cache[key] = CacheEntry(value, Clock.System.now(), ttl)
         }
     }
 
-    suspend fun <T> put(key: String, value: T, ttl: Duration = 5.minutes) = mutex.withLock {
-        cache[key] = CacheEntry(value, Clock.System.now(), ttl)
+    suspend fun invalidate(key: String) = withContext(cacheDispatcher) {
+        mutex.withLock {
+            cache.remove(key)
+        }
     }
 
-    suspend fun invalidate(key: String) = mutex.withLock {
-        cache.remove(key)
+    suspend fun invalidatePrefix(prefix: String) = withContext(cacheDispatcher) {
+        mutex.withLock {
+            cache.keys.filter { it.startsWith(prefix) }.forEach { cache.remove(it) }
+        }
     }
 
-    suspend fun invalidatePrefix(prefix: String) = mutex.withLock {
-        cache.keys.filter { it.startsWith(prefix) }.forEach { cache.remove(it) }
-    }
-
-    suspend fun clear() = mutex.withLock {
-        cache.clear()
+    suspend fun clear() = withContext(cacheDispatcher) {
+        mutex.withLock {
+            cache.clear()
+        }
     }
 }
