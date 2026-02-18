@@ -1,16 +1,32 @@
 package com.tkolymp.tkolympapp
 
+// using Material3 DatePickerDialog
+ 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -19,9 +35,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.ServiceLocator
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun ChangePasswordDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
@@ -79,6 +101,7 @@ fun ChangePasswordDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChangePersonalDataDialog(
     initialFirst: String,
@@ -124,8 +147,48 @@ fun ChangePersonalDataDialog(
     var orientation by remember(initialOrientation) { mutableStateOf(initialOrientation) }
     var phone by remember(initialPhone) { mutableStateOf(initialPhone) }
     var mobile by remember(initialMobile) { mutableStateOf(initialMobile) }
-    var birth by remember(initialBirthDate) { mutableStateOf(initialBirthDate) }
-    var gender by remember(initialGender) { mutableStateOf(initialGender) }
+    // Birth date handling: keep ISO value for API and user-friendly display
+    fun parseToLocalDate(s: String?): LocalDate? {
+        if (s.isNullOrBlank()) return null
+        try {
+            return LocalDate.parse(s)
+        } catch (_: Exception) {}
+        try {
+            val odt = OffsetDateTime.parse(s)
+            return odt.toLocalDate()
+        } catch (_: Exception) {}
+        val m = Regex("(\\d{4})-(\\d{2})-(\\d{2})").find(s)
+        if (m != null) return LocalDate.of(m.groupValues[1].toInt(), m.groupValues[2].toInt(), m.groupValues[3].toInt())
+        return null
+    }
+
+    val initialLocal = parseToLocalDate(initialBirthDate)
+    var birthIso by remember(initialBirthDate) { mutableStateOf(initialLocal?.toString() ?: initialBirthDate) }
+    fun formatDisplayDate(iso: String?): String {
+        val ld = parseToLocalDate(iso) ?: return iso ?: ""
+        return try { ld.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) } catch (_: Exception) { ld.toString() }
+    }
+    var birthDisplay by remember(birthIso) { mutableStateOf(formatDisplayDate(birthIso)) }
+
+    // Gender selection: display Czech labels but send MAN/WOMAN/UNSPECIFIED
+    val genderMap = mapOf("muž" to "MAN", "žena" to "WOMAN", "nespecifikováno" to "UNSPECIFIED")
+    fun isoToLabel(g: String?): String {
+        if (g.isNullOrBlank()) return "nespecifikováno"
+        val up = g.uppercase()
+        return when (up) {
+            "MAN" -> "muž"
+            "WOMAN" -> "žena"
+            "UNSPECIFIED" -> "nespecifikováno"
+            else -> g
+        }
+    }
+    fun labelToIso(label: String): String = genderMap[label] ?: label.uppercase()
+
+    var birth by remember { mutableStateOf(birthIso) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    val initialMillis = parseToLocalDate(birth)?.atStartOfDay()?.atZone(ZoneId.systemDefault())?.toInstant()?.toEpochMilli()
+    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
+    var gender by remember(initialGender) { mutableStateOf(isoToLabel(initialGender)) }
     var saving by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     val ctx = LocalContext.current
@@ -150,8 +213,64 @@ fun ChangePersonalDataDialog(
                 Text("Kontakty", style = MaterialTheme.typography.labelSmall)
                 TextField(value = phone, onValueChange = { phone = it }, label = { Text("Telefon") }, singleLine = true)
                 TextField(value = mobile, onValueChange = { mobile = it }, label = { Text("Mobil") }, singleLine = true)
-                TextField(value = birth, onValueChange = { birth = it }, label = { Text("Datum narození") }, singleLine = true)
-                TextField(value = gender, onValueChange = { gender = it }, label = { Text("Pohlaví") }, singleLine = true)
+                            val focusManager = LocalFocusManager.current
+                            // Date picker field (read-only) with explicit IconButton to open Material3 DatePickerDialog
+                            Row(modifier = Modifier.fillMaxWidth()) {
+                                TextField(
+                                    value = birthDisplay,
+                                    onValueChange = { /* read-only */ },
+                                    label = { Text("Datum narození") },
+                                    singleLine = true,
+                                    readOnly = true,
+                                    modifier = Modifier.fillMaxWidth(0.85f)
+                                )
+                                IconButton(onClick = {
+                                    println("[ProfileDialogs] Date icon clicked")
+                                    focusManager.clearFocus()
+                                    showDatePicker = true
+                                }) {
+                                    Icon(imageVector = Icons.Default.CalendarToday, contentDescription = "Vybrat datum")
+                                }
+                            }
+                            if (showDatePicker) {
+                                DatePickerDialog(onDismissRequest = { showDatePicker = false }, confirmButton = {
+                                    TextButton(onClick = {
+                                        val selMillis = datePickerState.selectedDateMillis
+                                        if (selMillis != null) {
+                                            val sel = Instant.ofEpochMilli(selMillis).atZone(ZoneId.systemDefault()).toLocalDate()
+                                            birthIso = sel.toString()
+                                            birth = birthIso
+                                            birthDisplay = formatDisplayDate(birthIso)
+                                        }
+                                        showDatePicker = false
+                                    }) { Text("OK") }
+                                }) {
+                                    DatePicker(state = datePickerState)
+                                }
+                            }
+
+                // Gender selection using ExposedDropdownMenuBox
+                var genderExpanded by remember { mutableStateOf(false) }
+                ExposedDropdownMenuBox(expanded = genderExpanded, onExpandedChange = { genderExpanded = it }) {
+                    TextField(
+                        value = gender,
+                        onValueChange = { /* no-op */ },
+                        label = { Text("Pohlaví") },
+                        singleLine = true,
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = genderExpanded) },
+                        modifier = Modifier.fillMaxWidth().menuAnchor()
+                    )
+                    DropdownMenu(expanded = genderExpanded, onDismissRequest = { genderExpanded = false }) {
+                        listOf("muž", "žena", "nespecifikováno").forEach { opt ->
+                            DropdownMenuItem(text = { Text(opt) }, onClick = {
+                                println("[ProfileDialogs] Gender selected: $opt")
+                                gender = opt
+                                genderExpanded = false
+                            })
+                        }
+                    }
+                }
                 androidx.compose.material3.Divider(modifier = Modifier.padding(vertical = 6.dp))
                 Text("Adresa", style = MaterialTheme.typography.labelSmall)
                 TextField(value = street, onValueChange = { street = it }, label = { Text("Ulice") }, singleLine = true)
@@ -176,6 +295,7 @@ fun ChangePersonalDataDialog(
                         if (pid.isNullOrBlank()) {
                             error = "Nelze určit ID uživatele"
                         } else {
+                            val genderIso = labelToIso(gender)
                             val req = com.tkolymp.shared.user.PersonUpdateRequest(
                                 bio = bio,
                                 cstsId = csts,
@@ -188,9 +308,9 @@ fun ChangePersonalDataDialog(
                                 wdsfId = wdsf,
                                 prefixTitle = prefix,
                                 suffixTitle = suffix,
-                                gender = gender,
+                                gender = genderIso,
                                 birthDateSet = true,
-                                birthDate = birth,
+                                birthDate = birthIso,
                                 address = com.tkolymp.shared.user.AddressUpdate(
                                     street = street,
                                     city = city,
