@@ -46,6 +46,7 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
+import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.viewmodels.RegistrationViewModel
 
 private fun kotlinx.serialization.json.JsonElement?.asJsonObjectOrNull(): JsonObject? = try {
