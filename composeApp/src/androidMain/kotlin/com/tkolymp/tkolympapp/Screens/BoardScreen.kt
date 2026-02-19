@@ -24,6 +24,8 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -85,32 +87,32 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     val announcements = state.currentAnnouncements.filterIsInstance<com.tkolymp.shared.announcements.Announcement>()
                     announcements.forEach { a ->
-                        Column(modifier = Modifier.padding(4.dp)) {
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 2.dp)
-                                    .clickable {
-                                        a.id.toLongOrNull()?.let { nid -> onOpenNotice(nid) }
-                                    },
-                                colors = CardDefaults.cardColors()
-                            ) {
-                                Column(modifier = Modifier.padding(12.dp)) {
-                                    Text(a.title ?: "(bez názvu)", style = MaterialTheme.typography.titleMedium)
-                                    val authorName = listOfNotNull(a.author?.uJmeno, a.author?.uPrijmeni).joinToString(" ").trim()
-                                    if (authorName.isNotEmpty()) {
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text(authorName, style = MaterialTheme.typography.bodySmall)
-                                    }
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    val plainBody = Html.fromHtml(a.body ?: "", Html.FROM_HTML_MODE_LEGACY).toString()
-                                    Text(
-                                        plainBody,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 4.dp)
+                                .clickable {
+                                    a.id.toLongOrNull()?.let { nid -> onOpenNotice(nid) }
+                                },
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                        ) {
+                            Column(modifier = Modifier.padding(14.dp)) {
+                                Text(a.title ?: "(bez názvu)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                                val authorName = listOfNotNull(a.author?.uJmeno, a.author?.uPrijmeni).joinToString(" ").trim()
+                                if (authorName.isNotEmpty()) {
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(authorName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
+                                Spacer(modifier = Modifier.height(6.dp))
+                                val plainBody = Html.fromHtml(a.body ?: "", Html.FROM_HTML_MODE_LEGACY).toString()
+                                Text(
+                                    plainBody,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
                     }

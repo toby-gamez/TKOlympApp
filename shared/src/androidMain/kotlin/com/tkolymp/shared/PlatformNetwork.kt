@@ -9,6 +9,7 @@ import com.tkolymp.shared.notification.NotificationSchedulerAndroid
 import com.tkolymp.shared.notification.NotificationService
 import com.tkolymp.shared.event.EventService
 import com.tkolymp.shared.storage.UserStorage
+import com.tkolymp.shared.storage.OnboardingStorage
 import com.tkolymp.shared.user.UserService
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
@@ -65,6 +66,7 @@ suspend fun initNetworking(context: Context, baseUrl: String) {
     ServiceLocator.userStorage = userStorage
     ServiceLocator.userService = userSvc
     ServiceLocator.clubService = clubSvc
+    ServiceLocator.onboardingStorage = OnboardingStorage(context)
 
     auth.initialize()
 }

@@ -19,6 +19,8 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -157,7 +159,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
             Spacer(modifier = Modifier.height(8.dp))
 
             // Typ a základní info
-        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
             Column(modifier = Modifier.padding(12.dp)) {
                 val displayType = translateEventType(type)
                 if (!displayType.isNullOrBlank()) {
@@ -190,7 +192,11 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
         // Show the instances card only when there is more than one instance
         if (instances.size > 1) {
             Spacer(modifier = Modifier.height(8.dp))
-            Card(modifier = Modifier.fillMaxWidth()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text("Termíny události", style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(6.dp))
@@ -237,7 +243,11 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
 
         // O události (stav a nastavení)
         Spacer(modifier = Modifier.height(8.dp))
-        Card(modifier = Modifier.fillMaxWidth()) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        ) {
             Column(modifier = Modifier.padding(12.dp)) {
                 Text("O události", style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(6.dp))
@@ -352,7 +362,11 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
         // Popis a shrnutí
         if (summary.isNotBlank() || descr.isNotBlank()) {
             Spacer(modifier = Modifier.height(8.dp))
-            Card(modifier = Modifier.fillMaxWidth()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
                 SelectionContainer {
                     Column(modifier = Modifier.padding(12.dp)) {
                         val headerText = when {
@@ -377,7 +391,11 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
         // Kapacita
         if ((capacity != null && capacity > 0) || remainingLessons != null) {
             Spacer(modifier = Modifier.height(8.dp))
-            Card(modifier = Modifier.fillMaxWidth()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text("Kapacita", style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(6.dp))
@@ -397,7 +415,11 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
         // Trenéři
         if (trainers.isNotEmpty()) {
             Spacer(modifier = Modifier.height(8.dp))
-            Card(modifier = Modifier.fillMaxWidth()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text("Trenéři", style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(6.dp))
@@ -421,7 +443,11 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
         // Cílové kohorty
         if (cohorts.isNotEmpty()) {
             Spacer(modifier = Modifier.height(8.dp))
-            Card(modifier = Modifier.fillMaxWidth()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text("Cílové skupiny", style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(6.dp))
@@ -438,7 +464,11 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
 
         // Přihlášení účastníci
         Spacer(modifier = Modifier.height(8.dp))
-        Card(modifier = Modifier.fillMaxWidth()) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        ) {
             Column(modifier = Modifier.padding(12.dp)) {
                 val totalCount = registrations.size + externalRegistrations.size
                 Text("Přihlášení účastníci ($totalCount)", style = MaterialTheme.typography.titleMedium)

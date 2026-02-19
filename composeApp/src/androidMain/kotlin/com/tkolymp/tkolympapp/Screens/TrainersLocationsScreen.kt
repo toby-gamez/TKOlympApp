@@ -20,6 +20,8 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -81,7 +83,7 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                 LazyColumn(modifier = Modifier) {
             // Locations header
             item {
-                Text("Tréninkové prostory", modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Text("Tréninkové prostory", modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
 
             // show locations except explicit "ZRUŠENO"
@@ -92,10 +94,11 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
 
             if (visibleLocations.isNotEmpty()) {
                 items(visibleLocations) { loc ->
-                    Card(modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                        .clickable {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                            .clickable {
                             val q = loc.name ?: return@clickable
                             val geoUri = Uri.parse("geo:0,0?q=${Uri.encode(q)}")
                             val intent = Intent(Intent.ACTION_VIEW, geoUri)
@@ -106,7 +109,9 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                                 val i2 = Intent(Intent.ACTION_VIEW, web)
                                 try { ctx.startActivity(i2) } catch (_: Exception) { }
                             } catch (_: Exception) { }
-                        }
+                        },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                     ) {
                         Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(imageVector = Icons.Filled.Place, contentDescription = "Tréninkové prostory", modifier = Modifier.size(28.dp))
@@ -121,7 +126,7 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
 
             // Trainers header
             item {
-                Text("Trenéři", modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Text("Trenéři", modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
 
             // helper to format price
@@ -148,9 +153,12 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
 
             if (visibleTrainers.isNotEmpty()) {
                 items(visibleTrainers) { t ->
-                    Card(modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                     ) {
                         Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                             Row(verticalAlignment = Alignment.CenterVertically) {

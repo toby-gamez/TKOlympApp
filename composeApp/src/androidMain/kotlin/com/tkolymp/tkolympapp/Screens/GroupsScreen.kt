@@ -19,6 +19,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -88,16 +90,19 @@ fun GroupsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
             state.error?.let { err -> Text(err, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(16.dp)) }
 
             state.cohorts.forEach { cohort ->
-                Card(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 6.dp)
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                 ) {
                     Row(modifier = Modifier
                         .fillMaxWidth()
                         .padding(12.dp), verticalAlignment = Alignment.Top) {
 
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(text = cohort.name ?: "(bez názvu)", style = MaterialTheme.typography.titleMedium)
+                            Text(text = cohort.name ?: "(bez názvu)", style = MaterialTheme.typography.titleMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
 
                             if (!cohort.location.isNullOrBlank()) {
                                 Text(text = cohort.location ?: "", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))

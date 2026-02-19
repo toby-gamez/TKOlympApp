@@ -41,6 +41,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.viewmodels.OnboardingViewModel
+import com.tkolymp.tkolympapp.Screens.OnboardingScreen
 import com.tkolymp.tkolympapp.Screens.CalendarViewScreen
 import com.tkolymp.tkolympapp.Screens.AboutScreen
 import com.tkolymp.tkolympapp.Screens.PeopleScreen
@@ -64,6 +66,7 @@ import ui.theme.AppTheme
 fun App() {
     AppTheme {
         var loggedIn by remember { mutableStateOf<Boolean?>(null) }
+        var showOnboarding by remember { mutableStateOf<Boolean?>(null) }
         var weekOffset by remember { mutableIntStateOf(0) }
         val navController = rememberNavController()
         val currentBackStackEntry by navController.currentBackStackEntryAsState()
@@ -75,13 +78,18 @@ fun App() {
                 try {
                     com.tkolymp.shared.initNetworking(ctx, "https://api.rozpisovnik.cz/graphql")
                     val has = try { com.tkolymp.shared.ServiceLocator.authService.hasToken() } catch (_: Throwable) { false }
+                    // For now always show onboarding on launch
+                    showOnboarding = true
                     loggedIn = has
                 } catch (_: Throwable) {
                     loggedIn = false
+                    // still show onboarding even if init fails
+                    showOnboarding = true
                 }
             }
         } else {
             if (loggedIn == null) loggedIn = false
+            if (showOnboarding == null) showOnboarding = true
         }
 
         Scaffold(
@@ -89,7 +97,7 @@ fun App() {
             containerColor = MaterialTheme.colorScheme.surface,
             bottomBar = {
                 AnimatedVisibility(
-                    visible = loggedIn == true && currentRoute in listOf("overview", "calendar", "board", "events", "other"),
+                    visible = showOnboarding != true && loggedIn == true && currentRoute in listOf("overview", "calendar", "board", "events", "other"),
                     enter = slideInVertically(initialOffsetY = { it }, animationSpec = tween(300)),
                     exit = slideOutVertically(targetOffsetY = { it }, animationSpec = tween(300))
                 ) {
@@ -117,17 +125,20 @@ fun App() {
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.surface)
             ) {
-                when (loggedIn) {
-                    null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { 
-                        CircularProgressIndicator() 
+                when {
+                    loggedIn == null || showOnboarding == null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
                     }
-                    false -> LoginScreen(onSuccess = { 
+                    showOnboarding == true -> OnboardingScreen(
+                        onFinish = { showOnboarding = false }
+                    )
+                    loggedIn == false -> LoginScreen(onSuccess = {
                         loggedIn = true
                         navController.navigate("overview") {
                             popUpTo(0) { inclusive = true }
                         }
                     })
-                    true -> AppNavHost(
+                    else -> AppNavHost(
                         navController = navController,
                         weekOffset = weekOffset,
                         onWeekOffsetChange = { weekOffset = it },

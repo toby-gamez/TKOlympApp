@@ -16,6 +16,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -82,7 +84,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
             }
 
             // Basic Info card
-            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
+            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                 Column(modifier = Modifier.padding(8.dp)) {
                     Text("Základní informace", style = MaterialTheme.typography.labelLarge)
                     Divider(modifier = Modifier.padding(vertical = 6.dp))
@@ -108,7 +110,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
 
             // Bio card (if present and non-empty)
             p.bio?.takeIf { it.isNotBlank() }?.let { bio ->
-                Card(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
+                Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                     Column(modifier = Modifier.padding(8.dp)) {
                         Text("O mně", style = MaterialTheme.typography.labelLarge)
                         Divider(modifier = Modifier.padding(vertical = 6.dp))
@@ -120,7 +122,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
             // Tréninkové skupiny (stacked)
             val visibleGroups = p.cohortMembershipsList.filter { it.cohort?.isVisible != false }
             if (visibleGroups.isNotEmpty()) {
-                Card(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
+                Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                     Column(modifier = Modifier.padding(8.dp)) {
                         Text("Tréninkové skupiny", style = MaterialTheme.typography.labelLarge)
                         Divider(modifier = Modifier.padding(vertical = 6.dp))

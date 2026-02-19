@@ -1,6 +1,7 @@
 package com.tkolymp.tkolympapp
 
 // coroutine helpers not needed here; avoid importing isActive directly
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,8 +14,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Groups
@@ -25,6 +29,7 @@ import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -32,6 +37,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -122,40 +130,62 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
-            Card(modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp)
-                .clickable { onProfileClick() }
+            // Profile card
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .clickable { onProfileClick() },
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(12.dp)
+                        .padding(16.dp)
                 ) {
-                    Box(modifier = Modifier.width(48.dp)) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
+                    ) {
                         Icon(
                             imageVector = Icons.Filled.Person,
                             contentDescription = "Profile",
-                            modifier = Modifier.size(40.dp)
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(32.dp)
                         )
                     }
 
+                    Spacer(modifier = Modifier.width(16.dp))
+
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(text = state.name ?: "Můj účet", style = MaterialTheme.typography.titleLarge)
-                        if (state.subtitle != null) Text(state.subtitle!!, style = MaterialTheme.typography.bodySmall)
+                        Text(
+                            text = state.name ?: "Můj účet",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        if (state.subtitle != null) Text(
+                            state.subtitle!!,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                        )
                         if (state.personDob != null && !showDebug) {
                             val formatted = formatDateString(state.personDob!!)
                             Text(
                                 formatted ?: state.personDob!!,
                                 style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.padding(top = 4.dp)
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+                                modifier = Modifier.padding(top = 2.dp)
                             )
                         }
                     }
 
                     if (state.isLoading) {
-                        Spacer(modifier = Modifier.width(8.dp))
                         CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                     }
                 }
@@ -169,7 +199,8 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
             Text(
                 text = "Členové a klub",
                 style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 4.dp)
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp)
             )
 
             val mainItems = listOf(
@@ -183,29 +214,47 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .padding(horizontal = 16.dp, vertical = 4.dp)
                         .clickable {
                             if (item == "Lidé") onPeopleClick()
                             if (item == "Trenéři a tréninkové prostory") onTrainersClick()
                             if (item == "Tréninkové skupiny") onGroupsClick()
                             if (item == "Žebříček") onLeaderboardClick()
-                        }
+                        },
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp)
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
                     ) {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = item,
-                            modifier = Modifier.size(24.dp)
-                        )
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(Color.White)
+                        ) {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = item,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
                         Spacer(modifier = Modifier.width(16.dp))
                         Text(
                             text = item,
-                            style = MaterialTheme.typography.bodyLarge
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -217,6 +266,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
             Text(
                 text = "Aplikace",
                 style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp)
             )
 
@@ -231,29 +281,47 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .padding(horizontal = 16.dp, vertical = 4.dp)
                         .clickable {
                             if (item == "Jazyky") {}
                             if (item == "O aplikaci") onAboutClick()
                             if (item == "Nastavení notifikací") onNotificationsClick()
                             if (item == "Zásady ochrany osobních údajů") onPrivacyClick()
-                        }
+                        },
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp)
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
                     ) {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = item,
-                            modifier = Modifier.size(24.dp)
-                        )
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(Color.White)
+                        ) {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = item,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
                         Spacer(modifier = Modifier.width(16.dp))
                         Text(
                             text = item,
-                            style = MaterialTheme.typography.bodyLarge
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }

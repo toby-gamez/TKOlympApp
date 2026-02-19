@@ -21,6 +21,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -49,7 +51,9 @@ fun OverviewScreen(
     onOpenEvents: () -> Unit = {}
 ) {
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Přehled") }) }
+        topBar = {
+            TopAppBar(title = { Text("Přehled") })
+        }
     ) { padding ->
         val scrollState = rememberScrollState()
         val viewModel = remember { OverviewViewModel() }
@@ -87,9 +91,9 @@ fun OverviewScreen(
 
             // Trainings section (styled like Calendar)
             // Trainings section (grouped by day, styled like Calendar)
-            Spacer(modifier = Modifier.height(4.dp))
-            Row(modifier = Modifier.padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("Nejbližší tréninky", style = MaterialTheme.typography.titleLarge)
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("Nejbližší tréninky", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
             val limitedTrainings = trainings.sortedBy { it.since ?: it.updatedAt ?: "" }
             val trainingsMapByDay = limitedTrainings.groupBy { inst ->
@@ -185,11 +189,11 @@ fun OverviewScreen(
                 TextButton(onClick = onOpenCalendar) { Text(if (trainingsEmpty) "Podívat se na ostatní" else "Více") }
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Board announcements (styled like BoardScreen)
-            Row(modifier = Modifier.padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("Něco z nástěnky", style = MaterialTheme.typography.titleLarge)
+            Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("Něco z nástěnky", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
             Column(modifier = Modifier.padding(horizontal = 12.dp)) {
                 if (announcements.isEmpty()) {
@@ -215,14 +219,15 @@ fun OverviewScreen(
                                     .clickable {
                                         a.id.toLongOrNull()?.let { nid -> onOpenNotice(nid) }
                                     },
-                                colors = CardDefaults.cardColors()
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                             ) {
-                                Column(modifier = Modifier.padding(12.dp)) {
-                                    Text(a.title ?: "(bez názvu)", style = MaterialTheme.typography.titleMedium)
+                                Column(modifier = Modifier.padding(14.dp)) {
+                                    Text(a.title ?: "(bez názvu)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                                     val authorName = listOfNotNull(a.author?.uJmeno, a.author?.uPrijmeni).joinToString(" ").trim()
                                     if (authorName.isNotEmpty()) {
                                         Spacer(modifier = Modifier.height(4.dp))
-                                        Text(authorName, style = MaterialTheme.typography.bodySmall)
+                                        Text(authorName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                     Spacer(modifier = Modifier.height(4.dp))
                                     var plainBody = Html.fromHtml(a.body ?: "", Html.FROM_HTML_MODE_LEGACY).toString()
@@ -246,11 +251,11 @@ fun OverviewScreen(
                 TextButton(onClick = onOpenBoard) { Text(if (boardEmpty) "Podívat se na ostatní" else "Více") }
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Camps section (styled like Calendar)
-            Row(modifier = Modifier.padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("Nejbližší soustředění", style = MaterialTheme.typography.titleLarge)
+            Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("Nejbližší soustředění", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
             val limitedCamps = camps.sortedBy { it.since ?: it.updatedAt ?: "" }.take(2)
             val campsMapByDay = limitedCamps.groupBy { inst ->

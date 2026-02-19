@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -90,9 +91,13 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                                     else -> CardDefaults.cardColors()
                                 }
 
-                                Card(modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(8.dp), colors = colors) {
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = colors
+                                ) {
                                     Row(modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(12.dp), verticalAlignment = ComposeAlignment.CenterVertically) {
