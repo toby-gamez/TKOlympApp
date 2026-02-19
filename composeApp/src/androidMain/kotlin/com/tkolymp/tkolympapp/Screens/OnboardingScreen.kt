@@ -21,6 +21,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Groups
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.tkolymp.tkolympapp.R
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -33,6 +36,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -82,24 +86,7 @@ fun OnboardingScreen(
             .padding(bottom = 40.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Skip button
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp, end = 16.dp),
-            horizontalArrangement = Arrangement.End
-        ) {
-            if (!isLastPage) {
-                TextButton(onClick = {
-                    scope.launch {
-                        viewModel.completeOnboarding()
-                        onFinish()
-                    }
-                }) {
-                    Text("Přeskočit", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-        }
+        // (Skip button removed)
 
         // Pager
         HorizontalPager(
@@ -108,7 +95,7 @@ fun OnboardingScreen(
                 .weight(1f)
                 .fillMaxWidth()
         ) { pageIndex ->
-            OnboardingPageContent(page = pages[pageIndex])
+            OnboardingPageContent(page = pages[pageIndex], pageIndex = pageIndex)
         }
 
         // Dot indicators
@@ -170,7 +157,7 @@ fun OnboardingScreen(
 }
 
 @Composable
-private fun OnboardingPageContent(page: OnboardingPage) {
+private fun OnboardingPageContent(page: OnboardingPage, pageIndex: Int) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -183,14 +170,23 @@ private fun OnboardingPageContent(page: OnboardingPage) {
             modifier = Modifier
                 .size(120.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer)
+                .background(MaterialTheme.colorScheme.primary)
         ) {
-            Icon(
-                imageVector = page.icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(60.dp)
-            )
+            if (pageIndex == 0) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                    contentDescription = null,
+                    modifier = Modifier.size(96.dp),
+                    contentScale = ContentScale.Fit
+                )
+            } else {
+                Icon(
+                    imageVector = page.icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(60.dp)
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(40.dp))

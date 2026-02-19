@@ -130,13 +130,13 @@ fun App() {
                         CircularProgressIndicator()
                     }
                     showOnboarding == true -> OnboardingScreen(
-                        onFinish = { showOnboarding = false }
+                        onFinish = {
+                            showOnboarding = false
+                            loggedIn = false
+                        }
                     )
                     loggedIn == false -> LoginScreen(onSuccess = {
                         loggedIn = true
-                        navController.navigate("overview") {
-                            popUpTo(0) { inclusive = true }
-                        }
                     })
                     else -> AppNavHost(
                         navController = navController,

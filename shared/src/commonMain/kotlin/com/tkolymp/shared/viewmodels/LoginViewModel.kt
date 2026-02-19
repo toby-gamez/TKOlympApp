@@ -13,10 +13,12 @@ data class LoginState(
     override val error: String? = null
 ) : ViewModelState
 
-class LoginViewModel(
-    private val authService: IAuthService = ServiceLocator.authService,
-    private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService
-) {
+class LoginViewModel() {
+    private val authService: IAuthService
+        get() = ServiceLocator.authService
+
+    private val userService: com.tkolymp.shared.user.UserService
+        get() = ServiceLocator.userService
     private val _state = MutableStateFlow(LoginState())
     val state: StateFlow<LoginState> = _state.asStateFlow()
 
