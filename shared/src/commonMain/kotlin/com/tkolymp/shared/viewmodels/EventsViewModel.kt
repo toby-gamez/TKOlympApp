@@ -40,13 +40,13 @@ class EventsViewModel(
             val endIso = "2100-01-01T23:59:59Z"
             val map = try { withContext(Dispatchers.IO) { eventService.fetchEventsGroupedByDay(startIso, endIso, false, 500, 0, "CAMP", cacheNamespace = "camps_") } } catch (ex: Throwable) { emptyMap<String, List<EventInstance>>() }
             val filtered = map.mapValues { entry -> entry.value.filter { it.event?.isVisible != false } }.filterValues { it.isNotEmpty() }
-            if (filtered.isEmpty()) {
-                _state.value = _state.value.copy(eventsByDay = filtered, isLoading = false, error = "Žádné akce typu CAMP - server nevrátil žádné výsledky")
-            } else {
-                _state.value = _state.value.copy(eventsByDay = filtered, isLoading = false)
-            }
+            _state.value = _state.value.copy(eventsByDay = filtered, isLoading = false)
         } catch (ex: Throwable) {
             _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání akcí")
         }
+    }
+
+    fun clearError() {
+        _state.value = _state.value.copy(error = null)
     }
 }

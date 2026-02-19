@@ -203,8 +203,8 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
 
             state.error?.let { err ->
                 AlertDialog(
-                    onDismissRequest = { /* no-op */ },
-                    confirmButton = { TextButton(onClick = { /* no-op */ }) { Text("OK") } },
+                    onDismissRequest = { viewModel.clearError() },
+                    confirmButton = { TextButton(onClick = { viewModel.clearError() }) { Text("OK") } },
                     title = { Text("Chyba při načítání akcí") },
                     text = { Text(err) }
                 )

@@ -235,9 +235,9 @@ fun CalendarScreen(
 
         calState.error?.let { err ->
             AlertDialog(
-                onDismissRequest = { /* dismiss handled by parent state refresh */ },
+                onDismissRequest = { calendarViewModel.clearError() },
                 confirmButton = {
-                    TextButton(onClick = { /* noop */ }) { Text("OK") }
+                    TextButton(onClick = { calendarViewModel.clearError() }) { Text("OK") }
                 },
                 title = { Text("Chyba při načítání akcí") },
                 text = { Text(err) }

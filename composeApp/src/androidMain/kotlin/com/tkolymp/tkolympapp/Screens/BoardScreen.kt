@@ -119,9 +119,9 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
 
             if (state.error != null) {
                 AlertDialog(
-                    onDismissRequest = { /* dismiss handled via ViewModel state */ },
+                    onDismissRequest = { viewModel.clearError() },
                     confirmButton = {
-                        TextButton(onClick = { /* dismiss */ }) { Text("OK") }
+                        TextButton(onClick = { viewModel.clearError() }) { Text("OK") }
                     },
                     title = { Text("Chyba při načítání příspěvků") },
                     text = { Text(state.error ?: "Neznámá chyba") }

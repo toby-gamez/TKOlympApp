@@ -48,4 +48,8 @@ class CalendarViewModel(
             _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání")
         }
     }
+
+    fun clearError() {
+        _state.value = _state.value.copy(error = null)
+    }
 }

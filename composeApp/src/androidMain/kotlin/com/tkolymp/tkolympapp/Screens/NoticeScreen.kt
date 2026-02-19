@@ -215,8 +215,8 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
 
         state.error?.let { err ->
             AlertDialog(
-                onDismissRequest = { /* dismiss handled via ViewModel state */ },
-                confirmButton = { TextButton(onClick = { /* no-op */ }) { Text("OK") } },
+                onDismissRequest = { viewModel.clearError() },
+                confirmButton = { TextButton(onClick = { viewModel.clearError() }) { Text("OK") } },
                 title = { Text("Chyba") },
                 text = { Text(err ?: "Neznámá chyba") }
             )

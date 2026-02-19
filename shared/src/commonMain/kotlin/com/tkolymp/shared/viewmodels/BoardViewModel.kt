@@ -42,4 +42,8 @@ class BoardViewModel(
     fun selectTab(index: Int) {
         _state.value = _state.value.copy(selectedTab = index)
     }
+
+    fun clearError() {
+        _state.value = _state.value.copy(error = null)
+    }
 }
