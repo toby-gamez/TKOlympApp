@@ -358,8 +358,19 @@ class EventService(
         cacheNamespace: String?
     ): Map<String, List<EventInstance>> {
         val ns = cacheNamespace ?: "events"
-        val cacheKey = "${'$'}{ns}_${'$'}{startRangeIso}_${'$'}{endRangeIso}_${'$'}{onlyMine}_${'$'}{first}_${'$'}{offset}_${'$'}{onlyType}"
-        cache.get<Map<String, List<EventInstance>>>(cacheKey)?.let { return it }
+        val cacheKey = "${ns}_${startRangeIso}_${endRangeIso}_${onlyMine}_${first}_${offset}_${onlyType}"
+            val cached = try {
+                cache.get<Map<String, List<EventInstance>>>(cacheKey)
+            } catch (t: Throwable) {
+                println("EventService.fetchEventsGroupedByDay: cache.get failed for $cacheKey: ${t.message}")
+                null
+            }
+            if (cached != null) {
+                println("EventService.fetchEventsGroupedByDay: cache HIT for $cacheKey")
+                return cached
+            } else {
+                println("EventService.fetchEventsGroupedByDay: cache MISS for $cacheKey")
+            }
         val variables = buildJsonObject {
             put("startRange", JsonPrimitive(startRangeIso))
             put("endRange", JsonPrimitive(endRangeIso))
@@ -489,13 +500,16 @@ class EventService(
 
         val result = grouped.entries.sortedBy { it.key }.associate { it.key to it.value }
         try {
+            println("EventService.fetchEventsGroupedByDay: fetched ${instances.size} instances, storing ${result.size} grouped days into cache key=$cacheKey")
             cache.put(cacheKey, result, ttl = 3.minutes)
-        } catch (_: Throwable) { }
+        } catch (t: Throwable) {
+            println("EventService.fetchEventsGroupedByDay: cache.put failed: ${t.message}")
+        }
         return result
     }
 
     override suspend fun fetchEventById(id: BigInt): JsonObject? {
-        val cacheKey = "event_${'$'}id"
+        val cacheKey = "event_${id}"
         cache.get<JsonObject>(cacheKey)?.let { return it }
 
         val variables = buildJsonObject { put("id", JsonPrimitive(id)) }

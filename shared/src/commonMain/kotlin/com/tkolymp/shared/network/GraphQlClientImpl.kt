@@ -18,6 +18,7 @@ class GraphQlClientImpl(private val httpClient: HttpClient, private val endpoint
 
         val token = try { ServiceLocator.authService.getToken() } catch (_: Throwable) { null }
 
+        println("GraphQlClientImpl.post: posting to $endpoint, tokenPresent=${token != null}")
         val resp: JsonElement = httpClient.post(endpoint) {
             contentType(ContentType.Application.Json)
             header("x-tenant-id", "1")

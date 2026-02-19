@@ -22,11 +22,17 @@ class EventsViewModel(
     val state: StateFlow<EventsState> = _state.asStateFlow()
 
     suspend fun loadCampsNextYear(forceRefresh: Boolean = false) {
+        println("EventsViewModel.loadCampsNextYear: forceRefresh=$forceRefresh")
         _state.value = _state.value.copy(isLoading = true, error = null)
         try {
             // Invalidate events cache only when explicitly requested to avoid unnecessary network calls
             if (forceRefresh) {
-                try { ServiceLocator.cacheService.invalidatePrefix("camps_") } catch (_: Throwable) {}
+                try {
+                    println("EventsViewModel: invalidating cache prefix camps_")
+                    ServiceLocator.cacheService.invalidatePrefix("camps_")
+                } catch (t: Throwable) {
+                    println("EventsViewModel: failed to invalidate cache: ${t.message}")
+                }
             }
 
             // Use a broad fixed range (multiplatform-safe) to fetch upcoming camps

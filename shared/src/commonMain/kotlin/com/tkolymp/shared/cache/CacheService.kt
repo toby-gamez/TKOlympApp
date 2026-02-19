@@ -25,8 +25,16 @@ class CacheService {
     suspend fun <T> get(key: String): T? = withContext(cacheDispatcher) {
         @Suppress("UNCHECKED_CAST")
         val result: T? = mutex.withLock {
-            val entry = cache[key] as? CacheEntry<T> ?: return@withLock null
-            if (entry.isValid()) entry.data else {
+            val entry = cache[key] as? CacheEntry<T>
+            if (entry == null) {
+                println("CacheService.get: MISS for key=$key")
+                return@withLock null
+            }
+            if (entry.isValid()) {
+                println("CacheService.get: HIT for key=$key")
+                entry.data
+            } else {
+                println("CacheService.get: EXPIRED for key=$key, removing")
                 cache.remove(key)
                 null
             }
@@ -36,6 +44,7 @@ class CacheService {
 
     suspend fun <T> put(key: String, value: T, ttl: Duration = 5.minutes) = withContext(cacheDispatcher) {
         mutex.withLock {
+            println("CacheService.put: key=$key ttl=${ttl.inWholeMilliseconds}ms")
             cache[key] = CacheEntry(value, Clock.System.now(), ttl)
         }
     }
@@ -48,7 +57,9 @@ class CacheService {
 
     suspend fun invalidatePrefix(prefix: String) = withContext(cacheDispatcher) {
         mutex.withLock {
-            cache.keys.filter { it.startsWith(prefix) }.forEach { cache.remove(it) }
+            val toRemove = cache.keys.filter { it.startsWith(prefix) }
+            toRemove.forEach { cache.remove(it) }
+            println("CacheService.invalidatePrefix: prefix=$prefix removed=${toRemove.size}")
         }
     }
 

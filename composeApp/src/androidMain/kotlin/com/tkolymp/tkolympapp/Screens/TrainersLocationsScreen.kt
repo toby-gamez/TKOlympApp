@@ -158,7 +158,11 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column {
                                     val p = t.person
-                                    val name = listOfNotNull(p?.prefixTitle, p?.firstName, p?.lastName).joinToString(" ").trim()
+                                    val name = listOfNotNull(
+                                        p?.prefixTitle?.takeIf { it.isNotBlank() },
+                                        p?.firstName?.takeIf { it.isNotBlank() },
+                                        p?.lastName?.takeIf { it.isNotBlank() }
+                                    ).joinToString(" ")
                                     val displayName = if (!p?.suffixTitle.isNullOrBlank()) "$name, ${p?.suffixTitle}" else name
                                     Text(text = if (displayName.isBlank()) (p?.id ?: "(trenér)") else displayName, style = MaterialTheme.typography.bodyLarge)
                                 }
