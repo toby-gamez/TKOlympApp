@@ -30,23 +30,29 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.viewmodels.RegistrationViewModel
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.collectAsState
-import com.tkolymp.shared.viewmodels.RegistrationViewModel
 
 private fun kotlinx.serialization.json.JsonElement?.asJsonObjectOrNull(): JsonObject? = try {
     when {
@@ -104,20 +110,60 @@ fun RegistrationScreen(
             )
         }
     ) { padding ->
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .padding(padding)
-            .verticalScroll(rememberScrollState())
-            .background(MaterialTheme.colorScheme.background)
-            .padding(12.dp)
-        ) {
+        val scope = rememberCoroutineScope()
 
         // cache trainer display names (shared across modes) — moved to shared ViewModel
         val regViewModel = remember { RegistrationViewModel() }
         val regState by regViewModel.state.collectAsState()
-        LaunchedEffect(trainers) {
+        LaunchedEffect(Unit) {
             regViewModel.loadNames(trainers, myPersonId, myCoupleIds, myPersonName, myCoupleNames)
         }
+
+        // Ensure we refresh every time the screen becomes visible (ON_RESUME).
+        val lifecycleOwner = LocalLifecycleOwner.current
+        // Re-create observer when `trainers` changes so the observer captures up-to-date data
+        DisposableEffect(lifecycleOwner, trainers) {
+            val observer = LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME) {
+                    scope.launch {
+                        try {
+                            try { ServiceLocator.cacheService.invalidatePrefix("person_") } catch (_: Throwable) {}
+                            try { ServiceLocator.cacheService.invalidate("people_all") } catch (_: Throwable) {}
+                        } catch (_: Throwable) {}
+                        try {
+                            // Force fresh fetch of person/couple names on lifecycle resume by
+                            // not passing local hints. This ensures register mode updates even
+                            // when `myPersonName`/`myCoupleNames` were provided to the screen.
+                            regViewModel.loadNames(trainers, myPersonId, myCoupleIds, null, emptyMap())
+                        } catch (t: Throwable) {
+                            Log.e("RegScreen", "lifecycle refresh loadNames failed", t)
+                        }
+                    }
+                }
+            }
+            lifecycleOwner.lifecycle.addObserver(observer)
+            onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+        }
+
+        SwipeToReload(isRefreshing = regState.isLoading, onRefresh = {
+            scope.launch {
+                try {
+                    try { ServiceLocator.cacheService.invalidatePrefix("person_") } catch (_: Throwable) {}
+                    try { ServiceLocator.cacheService.invalidate("people_all") } catch (_: Throwable) {}
+                } catch (_: Throwable) {}
+                try {
+                    regViewModel.loadNames(trainers, myPersonId, myCoupleIds, myPersonName, myCoupleNames)
+                } catch (t: Throwable) {
+                    Log.e("RegScreen", "refresh loadNames failed", t)
+                }
+            }
+        }, modifier = Modifier.padding(padding)) {
+            Column(modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .background(MaterialTheme.colorScheme.background)
+                .padding(12.dp)
+            ) {
 
         when (mode) {
             is RegMode.Register -> {
@@ -125,45 +171,91 @@ fun RegistrationScreen(
                     Column(modifier = Modifier.padding(12.dp)) {
                         Text("Vyberte, koho registrujete:", style = MaterialTheme.typography.bodyMedium)
                         Spacer(modifier = Modifier.height(6.dp))
-                        val selectedRegistrant = remember { mutableStateOf<Pair<String?, String?>>(Pair(myPersonId, null)) }
+                        // compute already-registered person/couple ids so we don't offer them for new registration
+                        val registeredPersonIds = remember(registrations) {
+                            val set = mutableSetOf<String>()
+                            registrations.forEach { rEl ->
+                                val r = rEl as? JsonObject
+                                val pid = r?.get("person").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
+                                if (!pid.isNullOrBlank()) set.add(pid)
+                            }
+                            set
+                        }
+                        val registeredCoupleIds = remember(registrations) {
+                            val set = mutableSetOf<String>()
+                            registrations.forEach { rEl ->
+                                val r = rEl as? JsonObject
+                                val cid = r?.get("couple").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
+                                if (!cid.isNullOrBlank()) set.add(cid)
+                            }
+                            set
+                        }
+
+                        // pick a sensible initial selection: prefer self if not already registered, otherwise first unregistered couple
+                        val selectedRegistrant = remember {
+                            val firstPerson = if (!myPersonId.isNullOrBlank() && !registeredPersonIds.contains(myPersonId)) myPersonId else null
+                            val firstUnregCouple = myCoupleIds.firstOrNull { !registeredCoupleIds.contains(it) }
+                            mutableStateOf<Pair<String?, String?>>(Pair(firstPerson, if (firstPerson == null) firstUnregCouple else null))
+                        }
                         // local observable display name state (start with provided names if any)
                         val personNameState = remember { androidx.compose.runtime.mutableStateOf<String?>(myPersonName) }
                         val coupleNamesState = remember { mutableStateMapOf<String, String>().apply { putAll(myCoupleNames) } }
 
-                        // populate local hints from shared ViewModel state
-                        LaunchedEffect(myPersonId, myCoupleIds, regState) {
-                            if (personNameState.value.isNullOrBlank()) personNameState.value = regState.myPersonName
-                            regState.myCoupleNames.forEach { (k, v) -> if (coupleNamesState[k].isNullOrBlank()) coupleNamesState[k] = v }
-                        }
-                        Column {
-                            if (myPersonId != null) {
-                                    val personLabel = personNameState.value ?: "Jako já"
-                                    Row(modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 4.dp)
-                                        .clickable { selectedRegistrant.value = Pair(myPersonId, null) },
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        RadioButton(selected = selectedRegistrant.value.first == myPersonId && selectedRegistrant.value.second == null,
-                                            onClick = { selectedRegistrant.value = Pair(myPersonId, null) })
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(personLabel)
-                                    }
+                        // Fetch fresh person / couple display names directly (like Edit/Delete)
+                        LaunchedEffect(myPersonId, myCoupleIds) {
+                            try {
+                                val svc = ServiceLocator.peopleService
+                                if (!myPersonId.isNullOrBlank()) {
+                                    val fetched = try { svc.fetchPersonDisplayName(myPersonId, true) } catch (_: Throwable) { null }
+                                    if (!fetched.isNullOrBlank()) personNameState.value = fetched
                                 }
                                 myCoupleIds.forEach { cid ->
-                                    val coupleLabel = coupleNamesState[cid] ?: "Pár $cid"
-                                    Row(modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 4.dp)
-                                        .clickable { selectedRegistrant.value = Pair(null, cid) },
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        RadioButton(selected = selectedRegistrant.value.first == null && selectedRegistrant.value.second == cid,
-                                            onClick = { selectedRegistrant.value = Pair(null, cid) })
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(coupleLabel)
+                                    if (coupleNamesState[cid].isNullOrBlank()) {
+                                        val fetched = try { svc.fetchCoupleDisplayName(cid) } catch (_: Throwable) { null }
+                                        if (!fetched.isNullOrBlank()) coupleNamesState[cid] = fetched
                                     }
                                 }
+                            } catch (_: Throwable) {
+                            }
+                        }
+
+                        // populate local hints from shared ViewModel state
+                        LaunchedEffect(myPersonId, myCoupleIds, regState) {
+                            // if server-provided name exists, prefer it (refresh should replace stale hints)
+                            regState.myPersonName?.let { personNameState.value = it }
+                            // merge couple names from view model (overwrite to keep them fresh)
+                            regState.myCoupleNames.forEach { (k, v) -> if (!v.isNullOrBlank()) coupleNamesState[k] = v }
+                        }
+                        Column {
+                                if (myPersonId != null && !registeredPersonIds.contains(myPersonId)) {
+                                        val personLabel = personNameState.value ?: "Jako já"
+                                        Row(modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 4.dp)
+                                            .clickable { selectedRegistrant.value = Pair(myPersonId, null) },
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            RadioButton(selected = selectedRegistrant.value.first == myPersonId && selectedRegistrant.value.second == null,
+                                                onClick = { selectedRegistrant.value = Pair(myPersonId, null) })
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(personLabel)
+                                        }
+                                    }
+                                    myCoupleIds.forEach { cid ->
+                                        if (registeredCoupleIds.contains(cid)) return@forEach
+                                        val coupleLabel = coupleNamesState[cid] ?: "Pár $cid"
+                                        Row(modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 4.dp)
+                                            .clickable { selectedRegistrant.value = Pair(null, cid) },
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            RadioButton(selected = selectedRegistrant.value.first == null && selectedRegistrant.value.second == cid,
+                                                onClick = { selectedRegistrant.value = Pair(null, cid) })
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(coupleLabel)
+                                        }
+                                    }
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -488,4 +580,4 @@ fun RegistrationScreen(
             }
         }
     }
-}}
+}}}
