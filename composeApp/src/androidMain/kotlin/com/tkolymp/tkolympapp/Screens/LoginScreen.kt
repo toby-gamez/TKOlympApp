@@ -39,6 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tkolymp.shared.viewmodels.LoginViewModel
+import com.tkolymp.tkolympapp.ui.brandLightPrimary
 import kotlinx.coroutines.launch
 
 @Composable
@@ -66,7 +67,7 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
                 modifier = Modifier
                     .size(100.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary)
+                    .background(brandLightPrimary())
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_launcher_foreground),

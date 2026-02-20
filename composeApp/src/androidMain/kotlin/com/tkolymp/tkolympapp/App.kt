@@ -78,12 +78,14 @@ fun App() {
                 try {
                     com.tkolymp.shared.initNetworking(ctx, "https://api.rozpisovnik.cz/graphql")
                     val has = try { com.tkolymp.shared.ServiceLocator.authService.hasToken() } catch (_: Throwable) { false }
-                    // For now always show onboarding on launch
-                    showOnboarding = true
+                    // Show onboarding only on first launch (persisted in onboarding storage)
+                    val onboardingVm = OnboardingViewModel()
+                    val seen = try { onboardingVm.hasSeenOnboarding() } catch (_: Throwable) { false }
+                    showOnboarding = !seen
                     loggedIn = has
                 } catch (_: Throwable) {
                     loggedIn = false
-                    // still show onboarding even if init fails
+                    // still show onboarding if init fails
                     showOnboarding = true
                 }
             }

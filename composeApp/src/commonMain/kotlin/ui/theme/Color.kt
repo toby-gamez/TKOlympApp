@@ -7,6 +7,9 @@ import androidx.compose.ui.graphics.Color
 // Light theme colors (primary provided: #EE1733)
 // Light theme – RED ONLY
 private val md_theme_light_primary = Color(0xFFEE1733) // brand
+// Public alias for the exact light-branding primary color (use this when you need the brand color
+// unchanged across light/dark themes)
+val BrandLightPrimary = md_theme_light_primary
 private val md_theme_light_onPrimary = Color.White
 
 private val md_theme_light_primaryContainer = Color(0xFFE77C8A)

@@ -44,6 +44,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tkolymp.shared.viewmodels.OnboardingViewModel
+import com.tkolymp.tkolympapp.ui.brandLightPrimary
 import kotlinx.coroutines.launch
 
 private data class OnboardingPage(
@@ -170,7 +171,7 @@ private fun OnboardingPageContent(page: OnboardingPage, pageIndex: Int) {
             modifier = Modifier
                 .size(120.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary)
+                .background(brandLightPrimary())
         ) {
             if (pageIndex == 0) {
                 Image(
