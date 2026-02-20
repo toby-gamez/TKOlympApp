@@ -1,108 +1,129 @@
-# TK Olymp aplikace
+# TKOlympApp
 
-## Krátký přehled projektu
-- **TkOlympApp** je klientská .NET MAUI aplikace (mobilní) sloužící jako klient tkolymp.cz. Aplikace zobrazuje události, žebříčky, nástěnku a detailní stránky událostí.
+Mobilní aplikace pro TK Olymp — tenisový klub. Postavena na **Kotlin Multiplatform** s **Compose Multiplatform** UI, cílí na Android a iOS z jediné sdílené codebase.
 
-## Použité technologie
-- Platforma: .NET MAUI (multi-target: Android, iOS, v budoucnu - Mac OS a Windows)
-- Jazyk: C# + XAML
-- Síť: GraphQL dotazy přes `HttpClient` (instance-based služby přes DI v `TkOlympApp/Services/`)
-- Serializace: `System.Text.Json` s `JsonSerializerDefaults.Web`
+---
 
-## Hlavní funkce
-- Autentizace a ukládání JWT do `SecureStorage` (viz `TkOlympApp/Services/AuthService.cs`).
-- Načítání a zobrazení údálostí pomocí GraphQL (viz `TkOlympApp/Services/EventService.cs`).
-- Nástěnka a oznámení (viz `TkOlympApp/Services/NoticeboardService.cs`).
-- Žebříčky (viz `TkOlympApp/Services/LeaderboardService.cs`).
-- Uživatelský profil (viz `TkOlympApp/Services/UserService.cs`).
+## Technologie
 
-## Struktura projektu (vybrané soubory)
-- `TkOlympApp/MauiProgram.cs` – konfigurace aplikace a registrace fontů/ikon.
-- `TkOlympApp/AppShell.xaml.cs` – routing a navigace (Shell + URI query parameters).
-- `TkOlympApp/Pages/` – stránky aplikace (např. `MainPage`, `EventPage`, `LeaderboardPage`, `NoticeboardPage`, `LoginPage`).
-- `TkOlympApp/Services/` – instance-based služby pro síťovou komunikaci a business logiku (typicky `I*Service` + `*Implementation`, např. `AuthServiceImplementation`, `EventServiceImplementation`).
-- `TkOlympApp/Helpers/` – pomocné třídy (např. `HtmlHelpers`, `DateHelpers`).
-- `TkOlympApp/Converters/` – XAML konvertory pro vazbu dat.
+| Oblast | Technologie |
+|---|---|
+| Jazyk | Kotlin 2.3.0 |
+| UI | Compose Multiplatform 1.10.0 + Material 3 |
+| Síť | Ktor 2.3.4 (GraphQL přes OkHttp/Darwin) |
+| Serializace | kotlinx-serialization 1.6.0 |
+| Datum/čas | kotlinx-datetime 0.6.0 |
+| Navigace | Jetpack Navigation Compose |
+| Android min SDK | 31 |
+| Android target SDK | 36 |
 
-## Důležité konvence
-- Aplikace používá Dependency Injection (DI) přes `MauiProgram.CreateMauiApp()` (`builder.Services`). Nové služby přidávej jako instance-based (`I*Service` + `*Implementation`) a registruj do DI.
-- GraphQL dotazy a odpovědní DTO často definovány jako interní privátní třídy/recordy uvnitř konkrétní service třídy.
-- `JsonSerializerOptions(JsonSerializerDefaults.Web)` se používá pro konzistentní (de)serializaci.
-- Uživatelské texty a chybová hlášení držíme v češtině.
+---
 
-## Dependency Injection (DI)
+## Architektura
 
-### Kde se DI konfiguruje
+Projekt je rozdělen do dvou modulů:
 
-- Registrace probíhá v `TkOlympApp/MauiProgram.cs` pomocí `builder.Services`.
-- HTTP komunikace používá `IHttpClientFactory` + typed clients (např. `IAuthService`, `IGraphQlClient`).
-- Pages jsou registrované v DI (`AddTransient<SomePage>()`) – umožní to constructor injection.
+### `shared`
+Sdílená business logika — platformově nezávislá. Obsahuje:
+- **Services** — `AuthService`, `UserService`, `EventService`, `PeopleService`, `ClubService`, `AnnouncementService`, `NotificationService`
+- **ViewModels** — jeden ViewModel na každou obrazovku (sdílený mezi Android a iOS)
+- **Network** — `GraphQlClientImpl` (Ktor)
+- **Storage** — `TokenStorage`, `UserStorage`, `OnboardingStorage`, `NotificationStorage`
+- **ServiceLocator** — DI entry point
 
-### Jak přidat novou službu
+### `composeApp`
+Compose UI vrstva (aktuálně Android). Obsahuje pouze tenké obrazovky, veškerá logika je v `shared`.
 
-1. Přidej rozhraní do `TkOlympApp/Services/Abstractions/` (např. `IFooService`).
-2. Implementaci dej do `TkOlympApp/Services/` (např. `FooServiceImplementation`).
-3. Zaregistruj do DI v `TkOlympApp/MauiProgram.cs`.
+**Obrazovky:**
+- Onboarding / Login / Registrace
+- Přehled (Overview)
+- Události (Events, EventDetail)
+- Kalendář + zobrazení kalendáře (kolizní algoritmus)
+- Žebříček (Leaderboard)
+- Nástěnka (Board)
+- Lidé (People, PersonDetail)
+- Skupiny (Groups)
+- Trenéři – lokace (TrainersLocations)
+- Oznámení (Notifications settings)
+- Profil
+- Ostatní / O aplikaci / Ochrana soukromí
 
-Příklad registrace:
+---
 
-```csharp
-builder.Services.AddTransient<IFooService, FooServiceImplementation>();
-```
+## Spuštění
 
-### Jak udělat Page DI-friendly (constructor injection)
-
-- Page zaregistruj do DI:
-
-```csharp
-builder.Services.AddTransient<FooPage>();
-```
-
-- V code-behind přidej konstruktor se závislostmi:
-
-```csharp
-public partial class FooPage : ContentPage
-{
-	private readonly IFooService _foo;
-
-	public FooPage(IFooService foo)
-	{
-		InitializeComponent();
-		_foo = foo;
-	}
-}
-```
-
-### Shell routing + DI
-
-Shell navigace běží přes routy (např. `EventPage?id=123`). Pokud chceš routovanou page vytvářet přes DI (kvůli constructor injection), registruj ji do DI a použij route factory, který resolvuje page z containeru (v projektu je připravený helper `DiRouteFactory`).
-
-Pozn.: Query parametry pro routy řeš standardně přes `[QueryProperty]` nebo zpracování `IQueryAttributable` v page.
-
-Rychlý start (CLI)
-1. Build (Debug):
+### Android
 
 ```bash
-dotnet build TkOlympApp.sln -c Debug
+./gradlew :composeApp:assembleDebug
 ```
 
-2. Publish Android (příklad):
+APK se nachází v `composeApp/build/outputs/apk/debug/`.
+
+Instalace na zařízení/emulátor:
 
 ```bash
-dotnet publish TkOlympApp/TkOlympApp.csproj -f net10.0-android -c Release -o ./publish/android
+adb install composeApp/build/outputs/apk/debug/composeApp-debug.apk
 ```
 
-Výsledné APK najdeš v `TkOlympApp/bin/<Config>/net10.0-android/<arch>/`.
+### iOS
 
-## Kde hledat další příklady
-- Přehled služeb: `TkOlympApp/Services/*.cs`
-- Stránky a navigace: `TkOlympApp/Pages/*` a `TkOlympApp/AppShell.xaml.cs`
-- Pomocné utility: `TkOlympApp/Helpers/*`, `TkOlympApp/Converters/*`
+1. Sestavte Kotlin framework:
+   ```bash
+   ./gradlew :shared:linkDebugFrameworkIosSimulatorArm64
+   ```
+2. Otevřete `iosApp/iosApp.xcodeproj` v Xcode.
+3. Spusťte `Run` (⌘R).
 
-## Poznámka
-- README je záměrně zaměřené na popis projektu a použitých funkcí. Kontakty, informace o AI nebo jiné externí reference nejsou v tomto dokumentu zahrnuty.
+---
 
+## Struktura projektu
 
-## License
-This project is licensed under the MIT License.
-© 2026 Tobias Heneman
+```
+TKOlympApp/
+├── composeApp/                  # Compose UI (Android)
+│   └── src/
+│       ├── androidMain/kotlin/  # Obrazovky, navigace, MainActivity
+│       └── commonMain/kotlin/   # Sdílené UI utility, téma
+├── shared/                      # Sdílená business logika (Android + iOS)
+│   └── src/commonMain/kotlin/com/tkolymp/shared/
+│       ├── auth/                # Autentizace
+│       ├── event/               # Události
+│       ├── people/              # Lidé
+│       ├── club/                # Klub
+│       ├── calendar/            # Kalendář + kolizní algoritmus
+│       ├── announcements/       # Oznámení
+│       ├── notification/        # Notifikace
+│       ├── network/             # GraphQL klient (Ktor)
+│       ├── storage/             # Lokální úložiště
+│       ├── viewmodels/          # ViewModels (sdílené)
+│       └── ServiceLocator.kt    # Dependency injection
+├── iosApp/                      # iOS Swift/SwiftUI host
+└── gradle/
+    └── libs.versions.toml       # Centrální správa závislostí
+```
+
+---
+
+## Přidání závislosti
+
+1. Přidejte verzi a alias do `gradle/libs.versions.toml`.
+2. Odkazujte se na ni přes `libs.<alias>` v příslušném `build.gradle.kts`.
+
+```toml
+# gradle/libs.versions.toml
+[versions]
+myLib = "1.2.3"
+
+[libraries]
+my-lib = { module = "com.example:mylib", version.ref = "myLib" }
+```
+
+---
+
+## Konvence
+
+- Veškerá business logika patří do `shared/src/commonMain` — obrazovky jsou co nejtenčí.
+- Nové služby zakládejte do příslušného subpackage v `com.tkolymp.shared.*`.
+- Platformně specifický kód umístěte do `androidMain` / `iosMain`.
+- Nikdy nepoužívejte hardcoded verze závislostí — pouze aliasy z `libs.versions.toml`.

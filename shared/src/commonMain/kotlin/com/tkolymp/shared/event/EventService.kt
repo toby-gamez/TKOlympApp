@@ -1,0 +1,593 @@
+package com.tkolymp.shared.event
+
+import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.cache.CacheService
+import kotlin.time.Duration.Companion.minutes
+import com.tkolymp.shared.network.IGraphQlClient
+import kotlinx.serialization.json.*
+
+interface IEventService {
+    /**
+     * Fetch event instances between ISO datetimes `startRange` and `endRange`.
+     * `onlyMine` will be sent as a variable to the server so the backend can filter.
+     * Returns a map keyed by date (yyyy-MM-dd) with a list of instances for that day.
+     */
+    suspend fun fetchEventsGroupedByDay(
+        startRangeIso: String,
+        endRangeIso: String,
+        onlyMine: Boolean = false,
+        first: Int = 200,
+        offset: Int = 0,
+        onlyType: String? = null,
+        cacheNamespace: String? = null
+    ): Map<String, List<EventInstance>>
+
+    /**
+     * Fetch full event object (raw JsonObject) by id using the EventFull fragment.
+     * Returns the `event` JsonObject from the GraphQL response or null on error.
+     */
+    suspend fun fetchEventById(id: BigInt): JsonObject?
+
+    // Register many registrations at once. Accepts an array of registration objects
+    // matching the server input shape (each is a JsonObject with personId/coupleId and lessons array).
+    // Returns the raw GraphQL response element or null on network error.
+    suspend fun registerToEventMany(registrations: JsonArray): JsonElement?
+
+    // Set lesson demand for a single registration/trainer pair.
+    suspend fun setLessonDemand(registrationId: String, trainerId: Int, lessonCount: Int): Boolean
+
+    // Delete an event registration by id. Returns the raw GraphQL response element or null on network error.
+    suspend fun deleteEventRegistration(registrationId: String): kotlinx.serialization.json.JsonElement?
+}
+
+// Notes: GraphQL types
+// - `id` is BigInt (use `BigInt` alias)
+// - `since`, `until`, `updatedAt` are Datetime (use `DateTime` alias)
+typealias BigInt = Long
+typealias DateTime = String
+
+data class EventInstance(
+    val id: BigInt,
+    val isCancelled: Boolean,
+    val since: DateTime?,
+    val until: DateTime?,
+    val updatedAt: DateTime?,
+    val event: Event?
+)
+
+data class Cohort(val id: BigInt?, val name: String?, val colorRgb: String?)
+
+data class TargetCohort(val cohortId: BigInt?, val cohort: Cohort?)
+
+data class Person(val id: BigInt?, val name: String?, val firstName: String?, val lastName: String?)
+
+data class SimpleName(val firstName: String?, val lastName: String?)
+
+data class Couple(val id: BigInt?, val man: SimpleName?, val woman: SimpleName?)
+
+data class Registration(val id: BigInt?, val person: Person?, val couple: Couple?)
+
+data class Location(val id: BigInt?, val name: String?)
+
+data class Event(
+    val id: BigInt?,
+    val name: String?,
+    val description: String?,
+    val type: String?,
+    val locationText: String?,
+    val isRegistrationOpen: Boolean,
+    val isVisible: Boolean,
+    val isPublic: Boolean,
+    val eventTrainersList: List<String>,
+    val eventTargetCohortsList: List<TargetCohort>,
+    val eventRegistrationsList: List<Registration>,
+    val location: Location?
+)
+
+class EventService(
+    private val client: IGraphQlClient = ServiceLocator.graphQlClient,
+    private val cache: CacheService = ServiceLocator.cacheService
+) : IEventService {
+    private val json = Json { ignoreUnknownKeys = true }
+
+    private val eventByIdQuery = """
+            query Event(${'$'}id: BigInt!) {
+                event(id: ${'$'}id) {
+                    id
+                    type
+                    summary
+                    description
+                    name
+                    capacity
+                    remainingPersonSpots
+                    remainingLessons
+                    location {
+                        id
+                        name
+                        __typename
+                    }
+                    locationText
+                    isLocked
+                    isVisible
+                    isPublic
+                    enableNotes
+                    eventTrainersList {
+                        id
+                        name
+                        personId
+                        lessonsOffered
+                        lessonsRemaining
+                        __typename
+                    }
+                    eventInstancesList(orderBy: SINCE_ASC) {
+                        id
+                        since
+                        until
+                        isCancelled
+                        trainersList {
+                            id
+                            personId
+                            person {
+                                id
+                                name
+                                __typename
+                            }
+                            __typename
+                        }
+                        attendanceSummaryList {
+                            count
+                            status
+                            __typename
+                        }
+                        eventInstanceTrainersByInstanceIdList {
+                            id
+                            personId
+                            __typename
+                        }
+                        __typename
+                    }
+                    eventTargetCohortsList {
+                        id
+                        cohort {
+                            id
+                            name
+                            colorRgb
+                            __typename
+                        }
+                        __typename
+                    }
+                    myRegistrationsList {
+                        id
+                        note
+                        eventId
+                        personId
+                        person {
+                            id
+                            name
+                            firstName
+                            lastName
+                            __typename
+                        }
+                        coupleId
+                        couple {
+                            id
+                            status
+                            since
+                            until
+                            woman {
+                                id
+                                name
+                                firstName
+                                lastName
+                                __typename
+                            }
+                            man {
+                                id
+                                name
+                                firstName
+                                lastName
+                                __typename
+                            }
+                            __typename
+                        }
+                        eventLessonDemandsByRegistrationIdList {
+                            id
+                            lessonCount
+                            trainerId
+                            __typename
+                        }
+                        createdAt
+                        __typename
+                    }
+                    eventRegistrationsList {
+                        id
+                        note
+                        eventId
+                        personId
+                        person {
+                            id
+                            name
+                            firstName
+                            lastName
+                            __typename
+                        }
+                        coupleId
+                        couple {
+                            id
+                            status
+                            since
+                            until
+                            woman {
+                                id
+                                name
+                                firstName
+                                lastName
+                                __typename
+                            }
+                            man {
+                                id
+                                name
+                                firstName
+                                lastName
+                                __typename
+                            }
+                            __typename
+                        }
+                        eventLessonDemandsByRegistrationIdList {
+                            id
+                            lessonCount
+                            trainerId
+                            __typename
+                        }
+                        createdAt
+                        __typename
+                    }
+                    eventExternalRegistrationsList {
+                        id
+                        birthDate
+                        nationality
+                        note
+                        phone
+                        prefixTitle
+                        suffixTitle
+                        taxIdentificationNumber
+                        updatedAt
+                        createdAt
+                        email
+                        eventId
+                        firstName
+                        lastName
+                        __typename
+                    }
+                    eventRegistrations(first: 3) {
+                        totalCount
+                        nodes {
+                            id
+                            note
+                            eventId
+                            personId
+                            person {
+                                id
+                                name
+                                firstName
+                                lastName
+                                __typename
+                            }
+                            coupleId
+                            couple {
+                                id
+                                status
+                                since
+                                until
+                                woman {
+                                    id
+                                    name
+                                    firstName
+                                    lastName
+                                    __typename
+                                }
+                                man {
+                                    id
+                                    name
+                                    firstName
+                                    lastName
+                                    __typename
+                                }
+                                __typename
+                            }
+                            eventLessonDemandsByRegistrationIdList {
+                                id
+                                lessonCount
+                                trainerId
+                                __typename
+                            }
+                            createdAt
+                            __typename
+                        }
+                        __typename
+                    }
+                    __typename
+                }
+            }
+    """.trimIndent()
+
+        private val query = """
+                query MyQuery(
+                    $${"startRange"}: Datetime!,
+                    $${"endRange"}: Datetime!,
+                    $${"first"}: Int,
+                    $${"offset"}: Int,
+                    $${"onlyType"}: EventType,
+                    $${"onlyMine"}: Boolean
+                ) {
+                    eventInstancesForRangeList(startRange: $${"startRange"}, endRange: $${"endRange"}, first: $${"first"}, offset: $${"offset"}, onlyType: $${"onlyType"}, onlyMine: $${"onlyMine"}) {
+                        id
+                        isCancelled
+                        since
+                        until
+                        updatedAt
+                        event {
+                            id
+                            description
+                            name
+                            type
+                            locationText
+                            isRegistrationOpen
+                            isVisible
+                            isPublic
+                            eventTrainersList { name }
+                            eventTargetCohortsList { cohortId cohort { id name colorRgb } }
+                            eventRegistrationsList {
+                                id
+                                person { id name firstName lastName }
+                                couple { id man { firstName lastName } woman { firstName lastName } }
+                            }
+                            location { id name }
+                        }
+                    }
+                }
+        """.trimIndent()
+
+    override suspend fun fetchEventsGroupedByDay(
+        startRangeIso: String,
+        endRangeIso: String,
+        onlyMine: Boolean,
+        first: Int,
+        offset: Int,
+        onlyType: String?,
+        cacheNamespace: String?
+    ): Map<String, List<EventInstance>> {
+        val ns = cacheNamespace ?: "events"
+        val cacheKey = "${ns}_${startRangeIso}_${endRangeIso}_${onlyMine}_${first}_${offset}_${onlyType}"
+            val cached = try {
+                cache.get<Map<String, List<EventInstance>>>(cacheKey)
+            } catch (t: Throwable) {
+                println("EventService.fetchEventsGroupedByDay: cache.get failed for $cacheKey: ${t.message}")
+                null
+            }
+            if (cached != null) {
+                println("EventService.fetchEventsGroupedByDay: cache HIT for $cacheKey")
+                return cached
+            } else {
+                println("EventService.fetchEventsGroupedByDay: cache MISS for $cacheKey")
+            }
+        val variables = buildJsonObject {
+            put("startRange", JsonPrimitive(startRangeIso))
+            put("endRange", JsonPrimitive(endRangeIso))
+            put("first", JsonPrimitive(first))
+            put("offset", JsonPrimitive(offset))
+            put("onlyMine", JsonPrimitive(onlyMine))
+            if (onlyType != null) put("onlyType", JsonPrimitive(onlyType))
+        }
+
+        val resp = try {
+            client.post(query, variables)
+        } catch (ex: Exception) {
+            return emptyMap()
+        }
+
+        val instances = mutableListOf<EventInstance>()
+
+        val data = resp.jsonObject["data"]?.jsonObject
+        val listElem = data?.get("eventInstancesForRangeList") ?: return emptyMap()
+
+        if (listElem is JsonNull) return emptyMap()
+
+        val array = when (listElem) {
+            is JsonArray -> listElem
+            else -> return emptyMap()
+        }
+
+        array.forEach { el ->
+            if (el !is JsonObject) return@forEach
+            val obj = el
+            val idPrim = obj["id"]?.jsonPrimitive ?: return@forEach
+            val id = idPrim.longOrNull ?: idPrim.contentOrNull?.toLongOrNull() ?: return@forEach
+            val isCancelled = obj["isCancelled"]?.jsonPrimitive?.booleanOrNull ?: false
+            val since = obj["since"]?.jsonPrimitive?.contentOrNull
+            val until = obj["until"]?.jsonPrimitive?.contentOrNull
+            val updatedAt = obj["updatedAt"]?.jsonPrimitive?.contentOrNull
+
+            val eventObj = obj["event"]?.jsonObject
+            val event = eventObj?.let { e ->
+                // parse id for event (may be BigInt as string)
+                val evIdPrim = e["id"]?.jsonPrimitive
+                val evId = evIdPrim?.longOrNull ?: evIdPrim?.contentOrNull?.toLongOrNull()
+
+                val trainers = (e["eventTrainersList"] as? JsonArray)?.mapNotNull { it as? JsonObject }?.mapNotNull { it["name"]?.jsonPrimitive?.contentOrNull } ?: emptyList()
+
+                val targetCohorts = (e["eventTargetCohortsList"] as? JsonArray)?.mapNotNull { item ->
+                    val o = item as? JsonObject ?: return@mapNotNull null
+                    val cohortIdPrim = o["cohortId"]?.jsonPrimitive
+                    val cohortId = cohortIdPrim?.longOrNull ?: cohortIdPrim?.contentOrNull?.toLongOrNull()
+                    val cohortObj = o["cohort"] as? JsonObject
+                    val cohort = cohortObj?.let { c ->
+                        val cidPrim = c["id"]?.jsonPrimitive
+                        val cid = cidPrim?.longOrNull ?: cidPrim?.contentOrNull?.toLongOrNull()
+                        Cohort(cid, c["name"]?.jsonPrimitive?.contentOrNull, c["colorRgb"]?.jsonPrimitive?.contentOrNull)
+                    }
+                    TargetCohort(cohortId, cohort)
+                } ?: emptyList()
+
+                val registrations = (e["eventRegistrationsList"] as? JsonArray)?.mapNotNull { item ->
+                    val o = item as? JsonObject ?: return@mapNotNull null
+                    val ridPrim = o["id"]?.jsonPrimitive
+                    val rid = ridPrim?.longOrNull ?: ridPrim?.contentOrNull?.toLongOrNull()
+
+                    val personObj = o["person"] as? JsonObject
+                    val person = personObj?.let { p ->
+                        val pidPrim = p["id"]?.jsonPrimitive
+                        val pid = pidPrim?.longOrNull ?: pidPrim?.contentOrNull?.toLongOrNull()
+                        Person(pid, p["name"]?.jsonPrimitive?.contentOrNull, p["firstName"]?.jsonPrimitive?.contentOrNull, p["lastName"]?.jsonPrimitive?.contentOrNull)
+                    }
+
+                    val coupleObj = o["couple"] as? JsonObject
+                    val couple = coupleObj?.let { c ->
+                        val cidPrim = c["id"]?.jsonPrimitive
+                        val cid = cidPrim?.longOrNull ?: cidPrim?.contentOrNull?.toLongOrNull()
+                        val manObj = c["man"] as? JsonObject
+                        val womanObj = c["woman"] as? JsonObject
+                        val man = manObj?.let { m -> SimpleName(m["firstName"]?.jsonPrimitive?.contentOrNull, m["lastName"]?.jsonPrimitive?.contentOrNull) }
+                        val woman = womanObj?.let { w -> SimpleName(w["firstName"]?.jsonPrimitive?.contentOrNull, w["lastName"]?.jsonPrimitive?.contentOrNull) }
+                        Couple(cid, man, woman)
+                    }
+
+                    Registration(rid, person, couple)
+                } ?: emptyList()
+
+                val locationObj = e["location"] as? JsonObject
+                val location = locationObj?.let { l ->
+                    val lidPrim = l["id"]?.jsonPrimitive
+                    val lid = lidPrim?.longOrNull ?: lidPrim?.contentOrNull?.toLongOrNull()
+                    Location(lid, l["name"]?.jsonPrimitive?.contentOrNull)
+                }
+
+                Event(
+                    id = evId,
+                    name = e["name"]?.jsonPrimitive?.contentOrNull,
+                    description = e["description"]?.jsonPrimitive?.contentOrNull,
+                    type = e["type"]?.jsonPrimitive?.contentOrNull,
+                    locationText = e["locationText"]?.jsonPrimitive?.contentOrNull,
+                    isRegistrationOpen = e["isRegistrationOpen"]?.jsonPrimitive?.booleanOrNull ?: false,
+                    isVisible = e["isVisible"]?.jsonPrimitive?.booleanOrNull ?: false,
+                    isPublic = e["isPublic"]?.jsonPrimitive?.booleanOrNull ?: false,
+                    eventTrainersList = trainers,
+                    eventTargetCohortsList = targetCohorts,
+                    eventRegistrationsList = registrations,
+                    location = location
+                )
+            }
+
+            instances += EventInstance(id, isCancelled, since, until, updatedAt, event)
+        }
+
+        // Group by date string (yyyy-MM-dd) taken from `since` (left of 'T')
+        val grouped = instances.groupBy { inst ->
+            val s = inst.since ?: inst.until ?: inst.updatedAt ?: ""
+            val datePart = s.substringBefore('T').ifEmpty { s }
+            datePart.ifEmpty { "unknown" }
+        }
+
+        // Trigger notification processing (best-effort)
+        try {
+            val allInstances = instances.toList()
+            try {
+                ServiceLocator.notificationService.processEvents(allInstances)
+            } catch (_: Throwable) {
+                // ignore notification scheduling errors
+            }
+        } catch (_: Throwable) { }
+
+        val result = grouped.entries.sortedBy { it.key }.associate { it.key to it.value }
+        try {
+            println("EventService.fetchEventsGroupedByDay: fetched ${instances.size} instances, storing ${result.size} grouped days into cache key=$cacheKey")
+            cache.put(cacheKey, result, ttl = 3.minutes)
+        } catch (t: Throwable) {
+            println("EventService.fetchEventsGroupedByDay: cache.put failed: ${t.message}")
+        }
+        return result
+    }
+
+    override suspend fun fetchEventById(id: BigInt): JsonObject? {
+        val cacheKey = "event_${id}"
+        cache.get<JsonObject>(cacheKey)?.let { return it }
+
+        val variables = buildJsonObject { put("id", JsonPrimitive(id)) }
+        val resp = try {
+            client.post(eventByIdQuery, variables)
+        } catch (ex: Exception) {
+            return null
+        }
+
+        val data = resp.jsonObject["data"]?.jsonObject ?: return null
+        val ev = data["event"]
+        val obj = (ev as? JsonObject)
+        if (obj != null) {
+            try { cache.put(cacheKey, obj, ttl = 5.minutes) } catch (_: Throwable) { }
+        }
+        return obj
+    }
+
+    override suspend fun registerToEventMany(registrations: JsonArray): JsonElement? {
+        val mutation = """mutation RegisterToEvent(${'$'}input: RegisterToEventManyInput!) { registerToEventMany(input: ${'$'}input) { eventRegistrations { id } } }"""
+        val variables = buildJsonObject {
+            put("input", buildJsonObject {
+                put("registrations", registrations)
+                put("clientMutationId", JsonPrimitive(kotlin.random.Random.Default.nextLong().toString()))
+            })
+        }
+
+        val resp = try {
+            client.post(mutation, variables)
+        } catch (ex: Exception) {
+            return null
+        }
+
+        // Do not automatically clear caches on mutations; caches are per-consumer and
+        // should expire by TTL or be invalidated explicitly by callers when needed.
+        return resp
+    }
+
+    override suspend fun setLessonDemand(registrationId: String, trainerId: Int, lessonCount: Int): Boolean {
+        val mutation = """mutation SetLessonDemand(${'$'}input: SetLessonDemandInput!) { setLessonDemand(input: ${'$'}input) { eventLessonDemand { id } } }"""
+        val variables = buildJsonObject {
+            put("input", buildJsonObject {
+                put("registrationId", JsonPrimitive(registrationId))
+                put("trainerId", JsonPrimitive(trainerId))
+                put("lessonCount", JsonPrimitive(lessonCount))
+                put("clientMutationId", JsonPrimitive(kotlin.random.Random.Default.nextLong().toString()))
+            })
+        }
+
+        val resp = try {
+            client.post(mutation, variables)
+        } catch (ex: Exception) {
+            return false
+        }
+
+        val data = resp.jsonObject["data"]?.jsonObject
+        val created = data?.get("setLessonDemand")?.jsonObject?.get("eventLessonDemand")
+        val ok = created != null
+        // Do not clear caches here; let consumers decide when to refresh their own cache.
+        return ok
+    }
+
+    override suspend fun deleteEventRegistration(registrationId: String): kotlinx.serialization.json.JsonElement? {
+        val mutation = """mutation CancelReg(${'$'}input: CancelRegistrationInput!) { cancelRegistration(input: ${'$'}input) { clientMutationId } }"""
+        val variables = buildJsonObject {
+            put("input", buildJsonObject {
+                put("registrationId", JsonPrimitive(registrationId))
+                put("clientMutationId", JsonPrimitive(kotlin.random.Random.Default.nextLong().toString()))
+            })
+        }
+
+        val resp = try {
+            client.post(mutation, variables)
+        } catch (ex: Exception) {
+            return null
+        }
+
+        // No global cache clear performed.
+        return resp
+    }
+}
