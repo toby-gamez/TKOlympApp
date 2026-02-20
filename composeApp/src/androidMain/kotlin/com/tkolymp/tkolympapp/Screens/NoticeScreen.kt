@@ -146,7 +146,7 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
                     Text(a.title ?: "(bez názvu)", style = MaterialTheme.typography.titleLarge)
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             val authorName = listOfNotNull(a.author?.uJmeno, a.author?.uPrijmeni).joinToString(" ").trim()
                             if (authorName.isNotBlank()) {
@@ -176,7 +176,7 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
 
                     if (!a.body.isNullOrBlank()) {
                         Spacer(modifier = Modifier.height(8.dp))
-                        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+                        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
                             Column(modifier = Modifier.padding(12.dp)) {
                                 val bodySizeSp = MaterialTheme.typography.bodyMedium.fontSize.value
                                 val onBackgroundArgb = MaterialTheme.colorScheme.onBackground.toArgb()

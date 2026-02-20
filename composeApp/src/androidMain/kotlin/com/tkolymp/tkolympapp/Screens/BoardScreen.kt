@@ -94,8 +94,7 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
                                 .clickable {
                                     a.id.toLongOrNull()?.let { nid -> onOpenNotice(nid) }
                                 },
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                            shape = RoundedCornerShape(16.dp)
                         ) {
                             Column(modifier = Modifier.padding(14.dp)) {
                                 Text(a.title ?: "(bez názvu)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)

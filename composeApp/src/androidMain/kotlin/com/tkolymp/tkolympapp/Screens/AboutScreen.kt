@@ -70,7 +70,7 @@ fun AboutScreen(onBack: () -> Unit = {}) {
             Text("TK Olymp", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 8.dp, bottom = 4.dp))
             Text("Verze ${versionName ?: "?"} (Build ${versionCode ?: "?"})", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 12.dp))
 
-            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(text = "Popis aplikace", style = MaterialTheme.typography.labelLarge)
                     Divider(modifier = Modifier.padding(vertical = 8.dp))
@@ -78,7 +78,7 @@ fun AboutScreen(onBack: () -> Unit = {}) {
                 }
             }
 
-            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
                 Text("Licenční informace", style = MaterialTheme.typography.labelLarge)
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
@@ -86,7 +86,7 @@ fun AboutScreen(onBack: () -> Unit = {}) {
                 }
             }
 
-            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(text = "Autoři a přispěvatelé", style = MaterialTheme.typography.labelLarge)
                     Divider(modifier = Modifier.padding(vertical = 8.dp))

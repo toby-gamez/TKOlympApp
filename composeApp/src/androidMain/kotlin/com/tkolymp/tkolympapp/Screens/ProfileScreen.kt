@@ -345,7 +345,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                         else -> otherList.add(k to v)
                     }
                 }
-        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(12.dp)) {
                 Text("O mně", style = MaterialTheme.typography.labelLarge)
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
@@ -358,7 +358,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         }
 
         // Address card — show all available address subfields
-        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(12.dp)) {
                 Text("Adresa", style = MaterialTheme.typography.labelLarge)
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
@@ -388,7 +388,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         }
 
         // Active couples card (prefer activeCouplesList data)
-        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(12.dp)) {
                 Text("Aktivní páry", style = MaterialTheme.typography.labelLarge)
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
@@ -405,7 +405,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         }
 
         // Groups (cohorts) card - styled like PersonPage
-        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(12.dp)) {
                 Text("Tréninkové skupiny", style = MaterialTheme.typography.labelLarge)
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
@@ -446,7 +446,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
 
         // Category cards (visible, not hidden in details)
         if (personalList.isNotEmpty()) {
-            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text("Osobní údaje", style = MaterialTheme.typography.labelLarge)
                     Divider(modifier = Modifier.padding(vertical = 8.dp))
@@ -462,7 +462,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         }
 
         if (contactList.isNotEmpty()) {
-            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text("Kontakty", style = MaterialTheme.typography.labelLarge)
                     Divider(modifier = Modifier.padding(vertical = 8.dp))
@@ -478,7 +478,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         }
 
         if (externalList.isNotEmpty()) {
-            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text("Externí identifikace", style = MaterialTheme.typography.labelLarge)
                     Divider(modifier = Modifier.padding(vertical = 8.dp))
@@ -494,7 +494,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         }
 
         if (otherList.isNotEmpty()) {
-            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text("Ostatní detaily", style = MaterialTheme.typography.labelLarge)
                     Divider(modifier = Modifier.padding(vertical = 8.dp))

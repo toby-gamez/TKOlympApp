@@ -136,8 +136,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 12.dp)
                     .clickable { onProfileClick() },
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                shape = RoundedCornerShape(20.dp)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -222,7 +221,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                             if (item == "Žebříček") onLeaderboardClick()
                         },
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -289,7 +288,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                             if (item == "Zásady ochrany osobních údajů") onPrivacyClick()
                         },
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,

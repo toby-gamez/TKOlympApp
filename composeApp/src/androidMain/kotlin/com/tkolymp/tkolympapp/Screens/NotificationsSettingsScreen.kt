@@ -178,7 +178,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                     .fillMaxWidth()
                                     .padding(vertical = 8.dp),
                                 shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                                
                             ) {
                                 Row(
                                     modifier = Modifier

@@ -235,8 +235,7 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) 
                                 .fillMaxWidth()
                                 .padding(horizontal = 4.dp, vertical = 4.dp)
                                 .clickable { onPersonClick(p.id) },
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                            shape = RoundedCornerShape(16.dp)
                         ) {
                             Row(modifier = Modifier
                                 .fillMaxWidth()
