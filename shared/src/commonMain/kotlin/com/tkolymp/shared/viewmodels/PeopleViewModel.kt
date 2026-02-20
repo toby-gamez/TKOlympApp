@@ -30,7 +30,8 @@ class PeopleViewModel(
     }
 
     fun updateSearch(query: String) {
-        val filtered = if (query.isBlank()) _state.value.people else _state.value.people.filter { it.toString().contains(query, true) }
-        _state.value = _state.value.copy(searchQuery = query, filteredPeople = filtered)
+        val q = query.trim()
+        val filtered = if (q.isBlank()) _state.value.people else _state.value.people.filter { it.toString().trim().contains(q, true) }
+        _state.value = _state.value.copy(searchQuery = q, filteredPeople = filtered)
     }
 }

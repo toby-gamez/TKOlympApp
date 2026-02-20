@@ -235,7 +235,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                             modifier = Modifier
                                 .size(44.dp)
                                 .clip(CircleShape)
-                                .background(Color.White)
+                                .background(MaterialTheme.colorScheme.surface)
                         ) {
                             Icon(
                                 imageVector = icon,
@@ -302,7 +302,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                             modifier = Modifier
                                 .size(44.dp)
                                 .clip(CircleShape)
-                                .background(Color.White)
+                                .background(MaterialTheme.colorScheme.surface)
                         ) {
                             Icon(
                                 imageVector = icon,

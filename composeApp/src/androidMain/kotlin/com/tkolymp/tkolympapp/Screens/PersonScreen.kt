@@ -81,6 +81,9 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
             val fullName = if (!p.suffixTitle.isNullOrBlank()) "$baseName, ${p.suffixTitle}" else baseName
             Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(fullName.ifBlank { p.id }, style = MaterialTheme.typography.headlineSmall)
+                if (p.isTrainer == true) {
+                    Text("trenér", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp))
+                }
             }
 
             // Basic Info card
@@ -104,7 +107,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                         }
                         Text("Pohlaví: $genderLabel", style = MaterialTheme.typography.bodySmall)
                     }
-                    p.isTrainer?.let { Text("Trenér: ${if (it) "ano" else "ne"}", style = MaterialTheme.typography.bodySmall) }
+                    // trainer badge is shown under the name header; do not duplicate here
                 }
             }
 
