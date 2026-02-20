@@ -1,39 +1,129 @@
-This is a Kotlin Multiplatform project targeting Android, iOS.
+# TKOlympApp
 
-* [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-    folder is the appropriate location.
-
-* [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
-
-* [/shared](./shared/src) is for the code that will be shared between all targets in the project.
-  The most important subfolder is [commonMain](./shared/src/commonMain/kotlin). If preferred, you
-  can add code to the platform-specific folders here too.
-
-### Build and Run Android Application
-
-To build and run the development version of the Android app, use the run configuration from the run widget
-in your IDE’s toolbar or build it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:assembleDebug
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:assembleDebug
-  ```
-
-### Build and Run iOS Application
-
-To build and run the development version of the iOS app, use the run configuration from the run widget
-in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+Mobilní aplikace pro TK Olymp — tenisový klub. Postavena na **Kotlin Multiplatform** s **Compose Multiplatform** UI, cílí na Android a iOS z jediné sdílené codebase.
 
 ---
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+## Technologie
+
+| Oblast | Technologie |
+|---|---|
+| Jazyk | Kotlin 2.3.0 |
+| UI | Compose Multiplatform 1.10.0 + Material 3 |
+| Síť | Ktor 2.3.4 (GraphQL přes OkHttp/Darwin) |
+| Serializace | kotlinx-serialization 1.6.0 |
+| Datum/čas | kotlinx-datetime 0.6.0 |
+| Navigace | Jetpack Navigation Compose |
+| Android min SDK | 31 |
+| Android target SDK | 36 |
+
+---
+
+## Architektura
+
+Projekt je rozdělen do dvou modulů:
+
+### `shared`
+Sdílená business logika — platformově nezávislá. Obsahuje:
+- **Services** — `AuthService`, `UserService`, `EventService`, `PeopleService`, `ClubService`, `AnnouncementService`, `NotificationService`
+- **ViewModels** — jeden ViewModel na každou obrazovku (sdílený mezi Android a iOS)
+- **Network** — `GraphQlClientImpl` (Ktor)
+- **Storage** — `TokenStorage`, `UserStorage`, `OnboardingStorage`, `NotificationStorage`
+- **ServiceLocator** — DI entry point
+
+### `composeApp`
+Compose UI vrstva (aktuálně Android). Obsahuje pouze tenké obrazovky, veškerá logika je v `shared`.
+
+**Obrazovky:**
+- Onboarding / Login / Registrace
+- Přehled (Overview)
+- Události (Events, EventDetail)
+- Kalendář + zobrazení kalendáře (kolizní algoritmus)
+- Žebříček (Leaderboard)
+- Nástěnka (Board)
+- Lidé (People, PersonDetail)
+- Skupiny (Groups)
+- Trenéři – lokace (TrainersLocations)
+- Oznámení (Notifications settings)
+- Profil
+- Ostatní / O aplikaci / Ochrana soukromí
+
+---
+
+## Spuštění
+
+### Android
+
+```bash
+./gradlew :composeApp:assembleDebug
+```
+
+APK se nachází v `composeApp/build/outputs/apk/debug/`.
+
+Instalace na zařízení/emulátor:
+
+```bash
+adb install composeApp/build/outputs/apk/debug/composeApp-debug.apk
+```
+
+### iOS
+
+1. Sestavte Kotlin framework:
+   ```bash
+   ./gradlew :shared:linkDebugFrameworkIosSimulatorArm64
+   ```
+2. Otevřete `iosApp/iosApp.xcodeproj` v Xcode.
+3. Spusťte `Run` (⌘R).
+
+---
+
+## Struktura projektu
+
+```
+TKOlympApp/
+├── composeApp/                  # Compose UI (Android)
+│   └── src/
+│       ├── androidMain/kotlin/  # Obrazovky, navigace, MainActivity
+│       └── commonMain/kotlin/   # Sdílené UI utility, téma
+├── shared/                      # Sdílená business logika (Android + iOS)
+│   └── src/commonMain/kotlin/com/tkolymp/shared/
+│       ├── auth/                # Autentizace
+│       ├── event/               # Události
+│       ├── people/              # Lidé
+│       ├── club/                # Klub
+│       ├── calendar/            # Kalendář + kolizní algoritmus
+│       ├── announcements/       # Oznámení
+│       ├── notification/        # Notifikace
+│       ├── network/             # GraphQL klient (Ktor)
+│       ├── storage/             # Lokální úložiště
+│       ├── viewmodels/          # ViewModels (sdílené)
+│       └── ServiceLocator.kt    # Dependency injection
+├── iosApp/                      # iOS Swift/SwiftUI host
+└── gradle/
+    └── libs.versions.toml       # Centrální správa závislostí
+```
+
+---
+
+## Přidání závislosti
+
+1. Přidejte verzi a alias do `gradle/libs.versions.toml`.
+2. Odkazujte se na ni přes `libs.<alias>` v příslušném `build.gradle.kts`.
+
+```toml
+# gradle/libs.versions.toml
+[versions]
+myLib = "1.2.3"
+
+[libraries]
+my-lib = { module = "com.example:mylib", version.ref = "myLib" }
+```
+
+---
+
+## Konvence
+
+- Veškerá business logika patří do `shared/src/commonMain` — obrazovky jsou co nejtenčí.
+- Nové služby zakládejte do příslušného subpackage v `com.tkolymp.shared.*`.
+- Platformně specifický kód umístěte do `androidMain` / `iosMain`.
+- Nikdy nepoužívejte hardcoded verze závislostí — pouze aliasy z `libs.versions.toml`.
