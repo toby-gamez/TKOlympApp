@@ -42,20 +42,21 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.viewmodels.OnboardingViewModel
-import com.tkolymp.tkolympapp.Screens.OnboardingScreen
-import com.tkolymp.tkolympapp.Screens.CalendarViewScreen
 import com.tkolymp.tkolympapp.Screens.AboutScreen
-import com.tkolymp.tkolympapp.Screens.PeopleScreen
-import com.tkolymp.tkolympapp.Screens.TrainersLocationsScreen
+import com.tkolymp.tkolympapp.Screens.CalendarViewScreen
 import com.tkolymp.tkolympapp.Screens.GroupsScreen
 import com.tkolymp.tkolympapp.Screens.LeaderboardScreen
 import com.tkolymp.tkolympapp.Screens.NotificationsSettingsScreen
+import com.tkolymp.tkolympapp.Screens.OnboardingScreen
+import com.tkolymp.tkolympapp.Screens.PeopleScreen
+import com.tkolymp.tkolympapp.Screens.TrainersLocationsScreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import ui.theme.AppTheme
@@ -645,6 +646,8 @@ fun AppNavHost(
                         registrations = registrations,
                         myPersonId = myPersonIdState.value,
                         myCoupleIds = myCoupleIdsState.value,
+                        // show note input if event declares `enableNotes` true
+                        enableNotes = (ev["enableNotes"] as? kotlinx.serialization.json.JsonPrimitive)?.booleanOrNull ?: false,
                         onClose = { navController.navigateUp() },
                         onRegister = { regs ->
                             coroutineScope.launch {
@@ -656,6 +659,7 @@ fun AppNavHost(
                                             if (r.personId != null) put("personId", JsonPrimitive(r.personId))
                                             if (r.coupleId != null) put("coupleId", JsonPrimitive(r.coupleId))
                                             put("lessons", JsonArray(r.lessons.map { l -> buildJsonObject { put("trainerId", JsonPrimitive(l.trainerId)); put("lessonCount", JsonPrimitive(l.lessonCount)) } }))
+                                            if (r.note != null) put("note", JsonPrimitive(r.note))
                                         }
                                     }
                                     val resp = withContext(Dispatchers.IO) {
@@ -694,6 +698,15 @@ fun AppNavHost(
                                         regResultMessage.value = "Uloženo"
                                     } else {
                                         regResultMessage.value = "Chyba při ukládání"
+                                    }
+                                } catch (_: Exception) {}
+                            }
+                        },
+                        onSetNote = { registrationId, note ->
+                            coroutineScope.launch {
+                                try {
+                                    withContext(Dispatchers.IO) {
+                                        ServiceLocator.eventService.setRegistrationNote(registrationId, note)
                                     }
                                 } catch (_: Exception) {}
                             }

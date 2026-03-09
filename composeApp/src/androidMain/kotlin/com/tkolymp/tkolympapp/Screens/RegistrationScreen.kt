@@ -27,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -47,6 +48,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.viewmodels.RegistrationViewModel
+import com.tkolymp.shared.registration.filterOwnedRegistrations
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -79,7 +81,7 @@ sealed class RegMode {
 }
 
 data class LessonInput(val trainerId: Int, val lessonCount: Int)
-data class RegistrationInput(val personId: String?, val coupleId: String?, val lessons: List<LessonInput>)
+data class RegistrationInput(val personId: String?, val coupleId: String?, val lessons: List<LessonInput>, val note: String? = null)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,10 +95,12 @@ fun RegistrationScreen(
     // optional display names: if provided the UI will show these instead of generic labels
     myPersonName: String? = null,
     myCoupleNames: Map<String, String> = emptyMap(),
+    enableNotes: Boolean = false,
     onClose: () -> Unit,
     onRegister: (List<RegistrationInput>) -> Unit,
     onSetLessonDemand: (String, Int, Int) -> Unit,
-    onDelete: (String) -> Unit
+    onDelete: (String) -> Unit,
+    onSetNote: ((String, String) -> Unit)? = null
 ) {
     Scaffold(
         topBar = {
@@ -259,6 +263,19 @@ fun RegistrationScreen(
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
+                        // Optional note input (visible only when event allows notes)
+                        val noteState = remember { mutableStateOf("") }
+                        if (enableNotes) {
+                            OutlinedTextField(
+                                value = noteState.value,
+                                onValueChange = { noteState.value = it },
+                                label = { Text("Poznámka (volitelné)") },
+                                placeholder = { Text("Poznámka k registraci") },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+
                         Text("Vyberte trenéry a počet lekcí:", style = MaterialTheme.typography.bodyMedium)
                         Spacer(modifier = Modifier.height(6.dp))
 
@@ -325,7 +342,8 @@ fun RegistrationScreen(
                                     LessonInput(trainerId, cnt)
                                 } else null
                             }
-                            val regInput = RegistrationInput(registrant.first, registrant.second, lessons)
+                            val noteToSend = noteState.value.takeIf { it.isNotBlank() }
+                            val regInput = RegistrationInput(registrant.first, registrant.second, lessons, note = noteToSend)
                             try {
                                 onRegister(listOf(regInput))
                                 onClose()
@@ -347,9 +365,14 @@ fun RegistrationScreen(
                     Spacer(modifier = Modifier.height(6.dp))
 
                         val selectedRegId = remember { mutableStateOf<String?>(null) }
+                        // registrations that belong to current user
+                        val ownedRegistrations = remember(registrations, myPersonId, myCoupleIds) {
+                            filterOwnedRegistrations(registrations, myPersonId, myCoupleIds)
+                        }
+
                         // helper to compute initial counts for a registration id
                         fun computeInitCountsFor(regId: String): MutableList<Int> {
-                            val reg = registrations.firstOrNull { (it as? JsonObject)?.get("id")?.jsonPrimitive?.contentOrNull == regId } as? JsonObject
+                            val reg = ownedRegistrations.firstOrNull { (it as? JsonObject)?.get("id")?.jsonPrimitive?.contentOrNull == regId } as? JsonObject
                             val demands = reg?.get("eventLessonDemandsByRegistrationIdList").asJsonArrayOrNull()
                             return trainers.map { t ->
                                 val tId = (t as? JsonObject)?.get("id")?.jsonPrimitive?.intOrNull
@@ -358,11 +381,10 @@ fun RegistrationScreen(
                             }.toMutableList()
                         }
 
-                        // keep editable counts per registration so edits persist when switching
                         val countsByReg = remember {
                             val map = mutableStateMapOf<String, androidx.compose.runtime.snapshots.SnapshotStateList<Int>>()
-                            // prepopulate for all registrations so switching doesn't recompute
-                            registrations.forEach { rEl ->
+                            // prepopulate only for owned registrations so switching doesn't recompute
+                            ownedRegistrations.forEach { rEl ->
                                 val r = rEl as? JsonObject
                                 val rid = r?.get("id")?.jsonPrimitive?.contentOrNull
                                 if (rid != null) {
@@ -378,10 +400,10 @@ fun RegistrationScreen(
                         Column {
                             // fetch display names for registrations (person/couple) and show them
                             val regDisplayNames = remember { mutableStateMapOf<String, String>() }
-                            LaunchedEffect(registrations) {
+                            LaunchedEffect(registrations, myPersonId, myCoupleIds) {
                                 try {
                                     val svc = ServiceLocator.peopleService
-                                    registrations.forEach { rEl ->
+                                    filterOwnedRegistrations(registrations, myPersonId, myCoupleIds).forEach { rEl ->
                                         val r = rEl as? JsonObject
                                         val rid = r?.get("id")?.jsonPrimitive?.contentOrNull
                                         if (rid != null) {
@@ -398,8 +420,7 @@ fun RegistrationScreen(
                                 } catch (_: Throwable) {
                                 }
                             }
-
-                            registrations.forEach { rEl ->
+                            ownedRegistrations.forEach { rEl ->
                                 val r = rEl as? JsonObject
                                 val rid = r?.get("id")?.jsonPrimitive?.contentOrNull
                                 val labelFromJson = r?.get("person").asJsonObjectOrNull()?.get("name")?.jsonPrimitive?.contentOrNull
@@ -425,9 +446,23 @@ fun RegistrationScreen(
                         val selectedId = selectedRegId.value
                         val showEditError = remember { mutableStateOf<String?>(null) }
                         if (selectedId != null) {
+                            // pre-populate note from the selected registration JSON
+                            val editNoteState = remember { mutableStateOf("") }
+                            LaunchedEffect(selectedId) {
+                                val reg = ownedRegistrations.firstOrNull {
+                                    (it as? JsonObject)?.get("id")?.jsonPrimitive?.contentOrNull == selectedId
+                                } as? JsonObject
+                                editNoteState.value = reg?.get("note")?.jsonPrimitive?.contentOrNull ?: ""
+                            }
                             Text("Upravit nároky na lekce:", style = MaterialTheme.typography.bodyMedium)
                             // ensure counts exist for this registration
-                            val countsState = countsByReg[selectedId]!!
+                            val sid = selectedId
+                            val countsState = countsByReg.getOrPut(sid) {
+                                val init = computeInitCountsFor(sid)
+                                val st = mutableStateListOf<Int>()
+                                init.forEach { st.add(it) }
+                                st
+                            }
                             trainers.forEachIndexed { idx, tEl ->
                                 val tObj = tEl as? JsonObject
                                 val tIdStr = tObj?.get("id")?.jsonPrimitive?.contentOrNull ?: idx.toString()
@@ -460,6 +495,16 @@ fun RegistrationScreen(
                             }
 
                             Spacer(modifier = Modifier.height(12.dp))
+                            if (enableNotes) {
+                                OutlinedTextField(
+                                    value = editNoteState.value,
+                                    onValueChange = { editNoteState.value = it },
+                                    label = { Text("Poznámka (volitelné)") },
+                                    placeholder = { Text("Poznámka k registraci") },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
                             Button(onClick = {
                                 showEditError.value = null
                                 try {
@@ -469,6 +514,7 @@ fun RegistrationScreen(
                                         val trainerId = (trainers[i] as? JsonObject)?.get("id")?.jsonPrimitive?.intOrNull ?: i
                                         onSetLessonDemand(regId!!, trainerId, cnt)
                                     }
+                                    if (enableNotes) onSetNote?.invoke(selectedId, editNoteState.value)
                                     onClose()
                                 } catch (t: Throwable) {
                                     Log.e("RegScreen", "SetLessonDemand failed", t)
@@ -490,13 +536,18 @@ fun RegistrationScreen(
                         Spacer(modifier = Modifier.height(6.dp))
                         val selectedReg = remember { mutableStateOf<String?>(null) }
                         val showDeleteError = remember { mutableStateOf<String?>(null) }
+                        // only registrations that belong to current user
+                        val ownedRegistrations = remember(registrations, myPersonId, myCoupleIds) {
+                            filterOwnedRegistrations(registrations, myPersonId, myCoupleIds)
+                        }
                         Column {
                             // fetch display names for registrations (person/couple) and show them
                             val regDisplayNames = remember { mutableStateMapOf<String, String>() }
-                            LaunchedEffect(registrations) {
+                            LaunchedEffect(ownedRegistrations) {
                                 try {
                                     val svc = ServiceLocator.peopleService
-                                    registrations.forEach { rEl ->
+                                    // Only fetch display names for registrations that belong to current user
+                                    ownedRegistrations.forEach { rEl ->
                                         val r = rEl as? JsonObject
                                         val rid = r?.get("id")?.jsonPrimitive?.contentOrNull
                                         if (rid != null) {
@@ -514,7 +565,7 @@ fun RegistrationScreen(
                                 }
                             }
 
-                            registrations.forEach { rEl ->
+                            ownedRegistrations.forEach { rEl ->
                                 val r = rEl as? JsonObject
                                 val rid = r?.get("id")?.jsonPrimitive?.contentOrNull
                                 val labelFromJson = r?.get("person").asJsonObjectOrNull()?.get("name")?.jsonPrimitive?.contentOrNull
@@ -555,9 +606,15 @@ fun RegistrationScreen(
                                     TextButton(onClick = {
                                         showConfirmDelete.value = false
                                         showDeleteError.value = null
-                                        selectedReg.value?.let {
+                                        selectedReg.value?.let { selId ->
+                                            // verify ownership before deleting
+                                            val owned = ownedRegistrations.firstOrNull { (it as? JsonObject)?.get("id")?.jsonPrimitive?.contentOrNull == selId } != null
+                                            if (!owned) {
+                                                showDeleteError.value = "Můžete mazat jen svoje registrace"
+                                                return@TextButton
+                                            }
                                             try {
-                                                onDelete(it)
+                                                onDelete(selId)
                                                 onClose()
                                             } catch (t: Throwable) {
                                                 Log.e("RegScreen", "Delete failed", t)

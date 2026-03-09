@@ -110,7 +110,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
 
         SwipeToReload(
             isRefreshing = state.isLoading,
-            onRefresh = { scope.launch { viewModel.loadEvent(eventId) } },
+            onRefresh = { scope.launch { viewModel.loadEvent(eventId, forceRefresh = true) } },
             modifier = Modifier.padding(padding)
         ) {
             if (ev == null) {

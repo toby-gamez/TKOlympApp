@@ -26,7 +26,7 @@ interface IEventService {
      * Fetch full event object (raw JsonObject) by id using the EventFull fragment.
      * Returns the `event` JsonObject from the GraphQL response or null on error.
      */
-    suspend fun fetchEventById(id: BigInt): JsonObject?
+    suspend fun fetchEventById(id: BigInt, forceRefresh: Boolean = false): JsonObject?
 
     // Register many registrations at once. Accepts an array of registration objects
     // matching the server input shape (each is a JsonObject with personId/coupleId and lessons array).
@@ -38,6 +38,9 @@ interface IEventService {
 
     // Delete an event registration by id. Returns the raw GraphQL response element or null on network error.
     suspend fun deleteEventRegistration(registrationId: String): kotlinx.serialization.json.JsonElement?
+
+    // Update the note on an existing registration. Returns true on success.
+    suspend fun setRegistrationNote(registrationId: String, note: String): Boolean
 }
 
 // Notes: GraphQL types
@@ -508,9 +511,11 @@ class EventService(
         return result
     }
 
-    override suspend fun fetchEventById(id: BigInt): JsonObject? {
+    override suspend fun fetchEventById(id: BigInt, forceRefresh: Boolean): JsonObject? {
         val cacheKey = "event_${id}"
-        cache.get<JsonObject>(cacheKey)?.let { return it }
+        if (!forceRefresh) {
+            cache.get<JsonObject>(cacheKey)?.let { return it }
+        }
 
         val variables = buildJsonObject { put("id", JsonPrimitive(id)) }
         val resp = try {
@@ -570,6 +575,20 @@ class EventService(
         val ok = created != null
         // Do not clear caches here; let consumers decide when to refresh their own cache.
         return ok
+    }
+
+    override suspend fun setRegistrationNote(registrationId: String, note: String): Boolean {
+        val mutation = """mutation EditRegistration(${'$'}input: EditRegistrationInput!) { editRegistration(input: ${'$'}input) { clientMutationId } }"""
+        val variables = buildJsonObject {
+            put("input", buildJsonObject {
+                put("registrationId", JsonPrimitive(registrationId))
+                put("note", JsonPrimitive(note))
+                put("clientMutationId", JsonPrimitive(kotlin.random.Random.Default.nextLong().toString()))
+            })
+        }
+        val resp = try { client.post(mutation, variables) } catch (ex: Exception) { return false }
+        val data = resp.jsonObject["data"]?.jsonObject
+        return data?.get("editRegistration")?.jsonObject?.get("clientMutationId") != null
     }
 
     override suspend fun deleteEventRegistration(registrationId: String): kotlinx.serialization.json.JsonElement? {
