@@ -372,7 +372,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                     }) { Text("Smazat") }
                 },
                 dismissButton = {
-                    Button(onClick = {
+                    TextButton(onClick = {
                         showDeleteConfirm = false; deletingRuleId = null
                     }) { Text("Zrušit") }
                 }
