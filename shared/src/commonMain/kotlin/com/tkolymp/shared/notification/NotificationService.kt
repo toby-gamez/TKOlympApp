@@ -10,9 +10,16 @@ class NotificationService(
     suspend fun initializeIfNeeded() {
         val existing = storage.getSettings()
         if (existing == null) {
+            val defaultRule = NotificationRule(
+                id = "default-rule",
+                name = "Výchozí pravidlo",
+                enabled = true,
+                filterType = FilterType.ALL,
+                timesBeforeMinutes = listOf(15)
+            )
             val default = NotificationSettings(
                 globalEnabled = true,
-                rules = listOf()
+                rules = listOf(defaultRule)
             )
             storage.saveSettings(default)
         }

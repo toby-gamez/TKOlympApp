@@ -11,5 +11,9 @@ class OnboardingViewModel(
 
     suspend fun completeOnboarding() {
         onboardingStorage.setOnboardingCompleted()
+        // Seed the default notification rule exactly once on first run
+        try {
+            ServiceLocator.notificationService.initializeIfNeeded()
+        } catch (_: Throwable) {}
     }
 }
