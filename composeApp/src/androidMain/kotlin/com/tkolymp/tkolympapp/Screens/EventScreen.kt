@@ -82,7 +82,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
     val showAllInstances = remember { mutableStateOf(false) }
 
     LaunchedEffect(eventId) {
-        viewModel.loadEvent(eventId)
+        viewModel.loadEvent(eventId, forceRefresh = true)
     }
 
     val ev = state.eventJson

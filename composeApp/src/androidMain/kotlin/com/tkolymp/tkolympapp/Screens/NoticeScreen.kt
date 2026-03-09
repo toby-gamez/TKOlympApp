@@ -14,13 +14,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -101,7 +100,7 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
     val state by viewModel.state.collectAsState()
 
     LaunchedEffect(announcementId) {
-        viewModel.load(announcementId)
+        viewModel.load(announcementId, forceRefresh = true)
     }
 
     // Keep content visible during loading; SwipeToReload handles the refresh indicator.
@@ -124,7 +123,7 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
         val scope = rememberCoroutineScope()
         SwipeToReload(
             isRefreshing = state.isLoading,
-            onRefresh = { scope.launch { viewModel.load(announcementId) } },
+            onRefresh = { scope.launch { viewModel.load(announcementId, forceRefresh = true) } },
             modifier = Modifier.padding(padding)
         ) {
             if (a == null) {

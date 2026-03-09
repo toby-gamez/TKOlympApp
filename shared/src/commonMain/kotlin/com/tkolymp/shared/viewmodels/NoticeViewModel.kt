@@ -23,11 +23,11 @@ class NoticeViewModel(
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    fun load(announcementId: Long) {
+    fun load(announcementId: Long, forceRefresh: Boolean = false) {
         _state.value = _state.value.copy(isLoading = true, error = null)
         scope.launch {
             try {
-                val a = try { announcementService.getAnnouncementById(announcementId) } catch (_: Throwable) { null }
+                val a = try { announcementService.getAnnouncementById(announcementId, forceRefresh) } catch (_: Throwable) { null }
                 if (a == null) {
                     _state.value = _state.value.copy(isLoading = false, error = "Oznámení nenalezeno")
                 } else {

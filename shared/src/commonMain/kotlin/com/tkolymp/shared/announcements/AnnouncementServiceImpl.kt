@@ -61,9 +61,9 @@ class AnnouncementServiceImpl(private val cache: CacheService = ServiceLocator.c
         query MyQuery(${'$'}id: BigInt!) { announcement(id: ${'$'}id) { id title body createdAt updatedAt isVisible author { uJmeno uPrijmeni } } }
     """.trimIndent()
 
-    override suspend fun getAnnouncementById(id: Long): Announcement? {
+    override suspend fun getAnnouncementById(id: Long, forceRefresh: Boolean): Announcement? {
         val cacheKey = "announcement_${'$'}id"
-        cache.get<Announcement>(cacheKey)?.let { return it }
+        if (!forceRefresh) cache.get<Announcement>(cacheKey)?.let { return it }
         val variables = buildJsonObject { put("id", JsonPrimitive(id)) }
         val resp = ServiceLocator.graphQlClient.post(singleQuery, variables)
         val data = resp.jsonObject["data"] ?: return null

@@ -1,4 +1,3 @@
-
 package com.tkolymp.tkolympapp
 
 import android.text.Html
@@ -74,7 +73,7 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
 
             LaunchedEffect(state.selectedTab) {
                 // load announcements whenever selected tab changes
-                scope.launch { viewModel.loadAnnouncements(forceRefresh = false) }
+                viewModel.loadAnnouncements(forceRefresh = true)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
