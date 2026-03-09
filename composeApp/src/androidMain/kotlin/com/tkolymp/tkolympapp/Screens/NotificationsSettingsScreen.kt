@@ -1,6 +1,9 @@
 package com.tkolymp.tkolympapp.Screens
 
 import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,6 +23,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -38,6 +42,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -50,6 +55,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -62,12 +68,18 @@ import com.tkolymp.tkolympapp.SwipeToReload
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val json = remember { Json { prettyPrint = true; ignoreUnknownKeys = true } }
+    var menuExpanded by remember { mutableStateOf(false) }
     var availableLocations by remember { mutableStateOf<List<String>>(emptyList()) }
     var availableTrainers by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     val availableTypes = listOf("CAMP", "LESSON", "GROUP", "RESERVATION", "HOLIDAY")
@@ -138,9 +150,66 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
         }
     }
 
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        if (uri != null) {
+            scope.launch {
+                try {
+                    val settings = NotificationSettings(globalEnabled = globalEnabled, rules = rules.toList())
+                    val jsonStr = json.encodeToString(settings)
+                    context.contentResolver.openOutputStream(uri)?.use { it.write(jsonStr.toByteArray(Charsets.UTF_8)) }
+                    Toast.makeText(context, "Export úspěšný", Toast.LENGTH_SHORT).show()
+                } catch (t: Throwable) {
+                    Log.e("NotificationsSettings", "Export failed", t)
+                    Toast.makeText(context, "Export selhal", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    val importLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            scope.launch {
+                try {
+                    val jsonStr = context.contentResolver.openInputStream(uri)?.use { it.readBytes().toString(Charsets.UTF_8) }
+                    if (jsonStr != null) {
+                        val imported = json.decodeFromString<NotificationSettings>(jsonStr)
+                        rules.clear()
+                        rules.addAll(imported.rules)
+                        globalEnabled = imported.globalEnabled
+                        persist()
+                        Toast.makeText(context, "Import úspěšný (${imported.rules.size} pravidel)", Toast.LENGTH_SHORT).show()
+                    }
+                } catch (t: Throwable) {
+                    Log.e("NotificationsSettings", "Import failed", t)
+                    Toast.makeText(context, "Import selhal: ${t.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
     Scaffold(
         topBar = { TopAppBar(title = { Text("Nastavení notifikací") }, navigationIcon = {
             IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = "Zpět") }
+        }, actions = {
+            Box {
+                IconButton(onClick = { menuExpanded = true }) {
+                    Icon(Icons.Default.MoreVert, contentDescription = "Více")
+                }
+                DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                    DropdownMenuItem(
+                        text = { Text("Exportovat (JSON)") },
+                        onClick = { menuExpanded = false; exportLauncher.launch("notification_settings.json") }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Importovat (JSON)") },
+                        onClick = { menuExpanded = false; importLauncher.launch(arrayOf("application/json", "text/plain")) }
+                    )
+                }
+            }
         }) },
         floatingActionButton = {
             FloatingActionButton(onClick = { editRule = null; showDialog = true }) {
@@ -171,6 +240,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                             onCheckedChange = { globalEnabled = it; persist() })
                     }
 
+                    Box(modifier = Modifier.fillMaxSize()) {
                     LazyColumn(modifier = Modifier.fillMaxSize()) {
                         items(rules, key = { it.id }) { r ->
                             Card(
@@ -262,6 +332,21 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                             }
                         }
                     }
+                    if (rules.isEmpty()) {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text("Žádná pravidla", style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                "žádná oznámení",
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+                    }
+                    } // end Box
 
                     Button(onClick = onBack, modifier = Modifier.padding(top = 12.dp)) {
                         Text("Zpět")
@@ -506,7 +591,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                             modifier = Modifier.fillMaxWidth().padding(12.dp),
                             horizontalArrangement = Arrangement.End
                         ) {
-                            Button(onClick = { showDialog = false }) { Text("Zrušit") }
+                            TextButton(onClick = { showDialog = false }) { Text("Zrušit") }
                             Spacer(modifier = Modifier.padding(6.dp))
                             Button(onClick = {
                                 // parse single time + unit
