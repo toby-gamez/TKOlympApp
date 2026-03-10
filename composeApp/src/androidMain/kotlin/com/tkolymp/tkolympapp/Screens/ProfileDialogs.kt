@@ -1,7 +1,5 @@
 package com.tkolymp.tkolympapp
 
-// using Material3 DatePickerDialog
- 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -44,6 +42,202 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+
+
+// using Material3 DatePickerDialog
+
+// ISO 3166-1 numeric → Czech country name (Czech Republic first, rest Czech-alphabetically)
+internal val NATIONALITY_OPTIONS: List<Pair<String, String>> = listOf(
+    "203" to "Česká republika",
+    "703" to "Slovensko",
+    "40"  to "Rakousko",
+    "276" to "Německo",
+    "348" to "Maďarsko",
+    "4"   to "Afghánistán",
+    "8"   to "Albánie",
+    "12"  to "Alžírsko",
+    "20"  to "Andorra",
+    "24"  to "Angola",
+    "28"  to "Antigua a Barbuda",
+    "32"  to "Argentina",
+    "51"  to "Arménie",
+    "36"  to "Austrálie",
+    "31"  to "Ázerbájdžán",
+    "44"  to "Bahamy",
+    "48"  to "Bahrajn",
+    "50"  to "Bangladéš",
+    "52"  to "Barbados",
+    "56"  to "Belgie",
+    "84"  to "Belize",
+    "204" to "Benin",
+    "112" to "Bělorusko",
+    "64"  to "Bhútán",
+    "68"  to "Bolívie",
+    "70"  to "Bosna a Hercegovina",
+    "72"  to "Botswana",
+    "76"  to "Brazílie",
+    "96"  to "Brunej",
+    "100" to "Bulharsko",
+    "854" to "Burkina Faso",
+    "108" to "Burundi",
+    "148" to "Čad",
+    "499" to "Černá Hora",
+    "152" to "Chile",
+    "156" to "Čína",
+    "191" to "Chorvatsko",
+    "208" to "Dánsko",
+    "180" to "Demokratická republika Kongo",
+    "212" to "Dominika",
+    "214" to "Dominikánská republika",
+    "262" to "Džibutsko",
+    "218" to "Ekvádor",
+    "818" to "Egypt",
+    "222" to "Salvador",
+    "232" to "Eritrea",
+    "233" to "Estonsko",
+    "231" to "Etiopie",
+    "242" to "Fidži",
+    "608" to "Filipíny",
+    "246" to "Finsko",
+    "250" to "Francie",
+    "266" to "Gabon",
+    "270" to "Gambie",
+    "288" to "Ghana",
+    "308" to "Grenada",
+    "300" to "Řecko",
+    "268" to "Gruzie",
+    "320" to "Guatemala",
+    "324" to "Guinea",
+    "624" to "Guinea-Bissau",
+    "328" to "Guyana",
+    "332" to "Haiti",
+    "340" to "Honduras",
+    "356" to "Indie",
+    "360" to "Indonésie",
+    "368" to "Irák",
+    "364" to "Írán",
+    "372" to "Irsko",
+    "352" to "Island",
+    "376" to "Izrael",
+    "380" to "Itálie",
+    "388" to "Jamajka",
+    "392" to "Japonsko",
+    "887" to "Jemen",
+    "710" to "Jihoafrická republika",
+    "400" to "Jordánsko",
+    "410" to "Jižní Korea",
+    "132" to "Kapverdy",
+    "116" to "Kambodža",
+    "120" to "Kamerun",
+    "124" to "Kanada",
+    "398" to "Kazachstán",
+    "404" to "Keňa",
+    "296" to "Kiribati",
+    "170" to "Kolumbie",
+    "174" to "Komory",
+    "178" to "Kongo",
+    "192" to "Kuba",
+    "414" to "Kuvajt",
+    "196" to "Kypr",
+    "417" to "Kyrgyzstán",
+    "418" to "Laos",
+    "426" to "Lesotho",
+    "422" to "Libanon",
+    "430" to "Libérie",
+    "434" to "Libye",
+    "438" to "Lichtenštejnsko",
+    "440" to "Litva",
+    "428" to "Lotyšsko",
+    "442" to "Lucembursko",
+    "450" to "Madagaskar",
+    "458" to "Malajsie",
+    "454" to "Malawi",
+    "462" to "Maledivy",
+    "466" to "Mali",
+    "470" to "Malta",
+    "504" to "Maroko",
+    "584" to "Marshallovy ostrovy",
+    "478" to "Mauritánie",
+    "480" to "Mauricius",
+    "484" to "Mexiko",
+    "583" to "Mikronésie",
+    "498" to "Moldavsko",
+    "492" to "Monako",
+    "496" to "Mongolsko",
+    "508" to "Mosambik",
+    "807" to "Severní Makedonie",
+    "516" to "Namibie",
+    "520" to "Nauru",
+    "524" to "Nepál",
+    "562" to "Niger",
+    "566" to "Nigérie",
+    "558" to "Nikaragua",
+    "528" to "Nizozemsko",
+    "578" to "Norsko",
+    "554" to "Nový Zéland",
+    "512" to "Omán",
+    "586" to "Pákistán",
+    "585" to "Palau",
+    "591" to "Panama",
+    "598" to "Papua Nová Guinea",
+    "600" to "Paraguay",
+    "604" to "Peru",
+    "384" to "Pobřeží slonoviny",
+    "616" to "Polsko",
+    "620" to "Portugalsko",
+    "634" to "Katar",
+    "642" to "Rumunsko",
+    "643" to "Rusko",
+    "646" to "Rwanda",
+    "674" to "San Marino",
+    "682" to "Saúdská Arábie",
+    "686" to "Senegal",
+    "690" to "Seychely",
+    "694" to "Sierra Leone",
+    "702" to "Singapur",
+    "408" to "Severní Korea",
+    "705" to "Slovinsko",
+    "706" to "Somálsko",
+    "688" to "Srbsko",
+    "144" to "Srí Lanka",
+    "140" to "Středoafrická republika",
+    "729" to "Súdán",
+    "597" to "Surinam",
+    "748" to "Svazijsko",
+    "662" to "Svatá Lucie",
+    "659" to "Svatý Kryštof a Nevis",
+    "678" to "Svatý Tomáš a Princův ostrov",
+    "670" to "Svatý Vincenc a Grenadiny",
+    "760" to "Sýrie",
+    "90"  to "Šalamounovy ostrovy",
+    "724" to "Španělsko",
+    "752" to "Švédsko",
+    "756" to "Švýcarsko",
+    "762" to "Tádžikistán",
+    "158" to "Tchaj-wan",
+    "764" to "Thajsko",
+    "626" to "Východní Timor (Timor-Leste)",
+    "768" to "Togo",
+    "776" to "Tonga",
+    "780" to "Trinidad a Tobago",
+    "788" to "Tunisko",
+    "792" to "Turecko",
+    "795" to "Turkmenistán",
+    "798" to "Tuvalu",
+    "800" to "Uganda",
+    "804" to "Ukrajina",
+    "858" to "Uruguay",
+    "860" to "Uzbekistán",
+    "548" to "Vanuatu",
+    "336" to "Vatikán",
+    "862" to "Venezuela",
+    "704" to "Vietnam",
+    "894" to "Zambie",
+    "716" to "Zimbabwe",
+    "784" to "Spojené arabské emiráty",
+    "826" to "Spojené království",
+    "840" to "Spojené státy americké",
+)
 
 @Composable
 fun ChangePasswordDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
@@ -137,7 +331,8 @@ fun ChangePersonalDataDialog(
     var csts by remember(initialCstsId) { mutableStateOf(initialCstsId) }
     var wdsf by remember(initialWdsfId) { mutableStateOf(initialWdsfId) }
     var nid by remember(initialNationalIdNumber) { mutableStateOf(initialNationalIdNumber) }
-    var nationality by remember(initialNationality) { mutableStateOf(initialNationality) }
+    // nationality stored as ISO 3166-1 numeric ID; display Czech name
+    var nationalityId by remember(initialNationality) { mutableStateOf(initialNationality) }
     var street by remember(initialStreet) { mutableStateOf(initialStreet) }
     var city by remember(initialCity) { mutableStateOf(initialCity) }
     var postal by remember(initialPostal) { mutableStateOf(initialPostal) }
@@ -208,7 +403,37 @@ fun ChangePersonalDataDialog(
                 TextField(value = csts, onValueChange = { csts = it }, label = { Text("ČSTS ID") }, singleLine = true)
                 TextField(value = wdsf, onValueChange = { wdsf = it }, label = { Text("WDSF ID") }, singleLine = true)
                 TextField(value = nid, onValueChange = { nid = it }, label = { Text("Rodné číslo") }, singleLine = true)
-                TextField(value = nationality, onValueChange = { nationality = it }, label = { Text("Národnost") }, singleLine = true)
+                // Nationality dropdown (ISO 3166-1 numeric ID stored, Czech name displayed; read-only, select only)
+                var nationalityExpanded by remember { mutableStateOf(false) }
+                val nationalityDisplay = NATIONALITY_OPTIONS.find { it.first == nationalityId }?.second ?: nationalityId
+                ExposedDropdownMenuBox(
+                    expanded = nationalityExpanded,
+                    onExpandedChange = { nationalityExpanded = it }
+                ) {
+                    TextField(
+                        value = nationalityDisplay,
+                        onValueChange = {},
+                        label = { Text("Národnost") },
+                        singleLine = true,
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = nationalityExpanded) },
+                        modifier = Modifier.fillMaxWidth().menuAnchor()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = nationalityExpanded,
+                        onDismissRequest = { nationalityExpanded = false }
+                    ) {
+                        NATIONALITY_OPTIONS.forEach { (id, name) ->
+                            DropdownMenuItem(
+                                text = { Text(name) },
+                                onClick = {
+                                    nationalityId = id
+                                    nationalityExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
                 androidx.compose.material3.Divider(modifier = Modifier.padding(vertical = 6.dp))
                 Text("Kontakty", style = MaterialTheme.typography.labelSmall)
                 TextField(value = phone, onValueChange = { phone = it }, label = { Text("Telefon") }, singleLine = true)
@@ -303,7 +528,7 @@ fun ChangePersonalDataDialog(
                                 firstName = first,
                                 lastName = last,
                                 nationalIdNumber = nid,
-                                nationality = nationality,
+                                nationality = nationalityId,
                                 phone = phone,
                                 wdsfId = wdsf,
                                 prefixTitle = prefix,
@@ -325,7 +550,7 @@ fun ChangePersonalDataDialog(
                             val ok = try { ServiceLocator.userService.updatePerson(pid, req) } catch (ex: Throwable) { false }
                             if (ok) {
                                 onSave(
-                                    first.trim(), last.trim(), bio.trim(), email.trim(), prefix.trim(), suffix.trim(), csts.trim(), wdsf.trim(), nid.trim(), nationality.trim(),
+                                    first.trim(), last.trim(), bio.trim(), email.trim(), prefix.trim(), suffix.trim(), csts.trim(), wdsf.trim(), nid.trim(), nationalityId.trim(),
                                     street.trim(), city.trim(), postal.trim(), region.trim(), district.trim(), conscription.trim(), orientation.trim(),
                                     phone.trim(), mobile.trim(), birth.trim(), gender.trim()
                                 )

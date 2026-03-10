@@ -275,6 +275,12 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                         }
                     }
 
+                    // Nationality: ISO 3166-1 numeric ID → Czech country name
+                    if (key.equals("nationality", ignoreCase = true)) {
+                        val name = NATIONALITY_OPTIONS.find { it.first == v }?.second
+                        if (name != null) return name
+                    }
+
                     return v
                 }
 
