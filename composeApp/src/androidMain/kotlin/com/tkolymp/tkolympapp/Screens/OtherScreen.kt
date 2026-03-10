@@ -109,7 +109,7 @@ private fun formatDateString(raw: String): String? {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {}, onTrainersClick: () -> Unit = {}, onGroupsClick: () -> Unit = {}, onLeaderboardClick: () -> Unit = {}, onAboutClick: () -> Unit = {}, onPrivacyClick: () -> Unit = {}, onNotificationsClick: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
+fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {}, onTrainersClick: () -> Unit = {}, onGroupsClick: () -> Unit = {}, onLeaderboardClick: () -> Unit = {}, onAboutClick: () -> Unit = {}, onPrivacyClick: () -> Unit = {}, onNotificationsClick: () -> Unit = {}, onLanguagesClick: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
     val viewModel = remember { OtherViewModel() }
     val state by viewModel.state.collectAsState()
     var showDebug by remember { mutableStateOf(false) }
@@ -282,7 +282,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 4.dp)
                         .clickable {
-                            if (item == "Jazyky") {}
+                            if (item == "Jazyky") onLanguagesClick()
                             if (item == "O aplikaci") onAboutClick()
                             if (item == "Nastavení notifikací") onNotificationsClick()
                             if (item == "Zásady ochrany osobních údajů") onPrivacyClick()

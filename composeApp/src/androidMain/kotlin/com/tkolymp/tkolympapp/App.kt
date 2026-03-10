@@ -231,8 +231,39 @@ fun AppNavHost(
                 onAboutClick = { navController.navigate("about") },
                 onPrivacyClick = { navController.navigate("privacy") },
                 onNotificationsClick = { navController.navigate("notifications") },
+                onLanguagesClick = { navController.navigate("languages") },
                 bottomPadding = bottomPadding
             )
+        }
+
+        composable(
+            route = "languages",
+            enterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            popEnterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            }
+        ) {
+            com.tkolymp.tkolympapp.Screens.LanguageScreen(onBack = { navController.navigateUp() })
         }
 
         composable(

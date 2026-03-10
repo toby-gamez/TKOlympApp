@@ -67,6 +67,7 @@ suspend fun initNetworking(context: Context, baseUrl: String) {
     ServiceLocator.userService = userSvc
     ServiceLocator.clubService = clubSvc
     ServiceLocator.onboardingStorage = OnboardingStorage(context)
+    ServiceLocator.languageStorage = com.tkolymp.shared.storage.LanguageStorage(context)
 
     auth.initialize()
 }

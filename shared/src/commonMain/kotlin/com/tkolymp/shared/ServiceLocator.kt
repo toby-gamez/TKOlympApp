@@ -14,6 +14,7 @@ import com.tkolymp.shared.notification.INotificationScheduler
 import com.tkolymp.shared.notification.NotificationService
 import com.tkolymp.shared.cache.CacheService
 import com.tkolymp.shared.storage.OnboardingStorage
+import com.tkolymp.shared.storage.LanguageStorage
 
 object ServiceLocator {
     lateinit var graphQlClient: IGraphQlClient
@@ -34,4 +35,7 @@ object ServiceLocator {
 
     // Onboarding
     lateinit var onboardingStorage: OnboardingStorage
+
+    // Language
+    lateinit var languageStorage: LanguageStorage
 }
