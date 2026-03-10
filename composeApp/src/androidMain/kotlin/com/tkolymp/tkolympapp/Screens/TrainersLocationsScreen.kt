@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.TrainersLocationsViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
 import kotlinx.coroutines.launch
@@ -57,10 +58,10 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
 
     Scaffold(topBar = {
         TopAppBar(
-            title = { Text("Trenéři a tréninkové prostory") },
+            title = { Text(AppStrings.current.trainersAndSpaces) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
-                    Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Zpět")
+                    Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = AppStrings.current.back)
                 }
             }
         )
@@ -77,13 +78,13 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                 }
             } else if (club == null || (club.locations.isEmpty() && club.trainers.isEmpty())) {
                 Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                    Text("Žádná data")
+                    Text(AppStrings.current.noData)
                 }
             } else {
                 LazyColumn(modifier = Modifier) {
             // Locations header
             item {
-                Text("Tréninkové prostory", modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(AppStrings.current.trainingSpaces, modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
 
             // show locations except explicit "ZRUŠENO"
@@ -114,19 +115,19 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                         
                     ) {
                         Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(imageVector = Icons.Filled.Place, contentDescription = "Tréninkové prostory", modifier = Modifier.size(28.dp))
+                            Icon(imageVector = Icons.Filled.Place, contentDescription = AppStrings.current.trainingSpaces, modifier = Modifier.size(28.dp))
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(text = loc.name ?: "(bez názvu)", style = MaterialTheme.typography.bodyLarge)
                         }
                     }
                 }
             } else {
-                item { Text("Žádné tréninkové prostory", modifier = Modifier.padding(16.dp)) }
+                item { Text(AppStrings.current.noTrainingSpaces, modifier = Modifier.padding(16.dp)) }
             }
 
             // Trainers header
             item {
-                Text("Trenéři", modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(AppStrings.current.trainers, modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
 
             // helper to format price
@@ -161,7 +162,7 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                     ) {
                         Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(imageVector = Icons.Filled.Person, contentDescription = "Trenér", modifier = Modifier.size(28.dp))
+                                Icon(imageVector = Icons.Filled.Person, contentDescription = AppStrings.current.trainer, modifier = Modifier.size(28.dp))
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column {
                                     val p = t.person
@@ -184,7 +185,7 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                     }
                 }
             } else {
-                item { Text("Žádní trenéři", modifier = Modifier.padding(16.dp)) }
+                item { Text(AppStrings.current.noTrainers, modifier = Modifier.padding(16.dp)) }
             }
         }
     }

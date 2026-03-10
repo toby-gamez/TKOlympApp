@@ -41,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.EventViewModel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonArray
@@ -95,11 +96,11 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Událost") },
+                    title = { Text(AppStrings.current.event) },
                     navigationIcon = {
                         onBack?.let {
                             IconButton(onClick = it) {
-                                Icon(Icons.Default.ArrowBack, contentDescription = "Zpět")
+                                Icon(Icons.Default.ArrowBack, contentDescription = AppStrings.current.back)
                             }
                         }
                     }
@@ -115,7 +116,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
         ) {
             if (ev == null) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Žádná událost k zobrazení", modifier = Modifier.padding(16.dp))
+                    Text(AppStrings.current.noEventToShow, modifier = Modifier.padding(16.dp))
                 }
                 } else {
                 // compute event-derived values only when `ev` is non-null
@@ -163,18 +164,18 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
             Column(modifier = Modifier.padding(12.dp)) {
                 val displayType = translateEventType(type)
                 if (!displayType.isNullOrBlank()) {
-                    Text("Typ: $displayType", style = MaterialTheme.typography.bodyMedium)
+                    Text("${AppStrings.current.eventType}: $displayType", style = MaterialTheme.typography.bodyMedium)
                     Spacer(modifier = Modifier.height(4.dp))
                 }
                 if (!locationName.isNullOrBlank()) {
-                    Text("Místo: $locationName", style = MaterialTheme.typography.bodyMedium)
+                    Text("${AppStrings.current.place}: $locationName", style = MaterialTheme.typography.bodyMedium)
                     Spacer(modifier = Modifier.height(4.dp))
                 }
                 if (firstDate != null || lastDate != null) {
                     val dateText = when {
                         firstDate != null && lastDate != null && firstDate != lastDate -> 
-                            "Termín: ${formatTimesWithDateAlways(firstDate, null)} - ${formatTimesWithDateAlways(lastDate, null)}"
-                        firstDate != null -> "Termín: ${formatTimesWithDateAlways(firstDate, lastDate)}"
+                            "${AppStrings.current.term}: ${formatTimesWithDateAlways(firstDate, null)} - ${formatTimesWithDateAlways(lastDate, null)}"
+                        firstDate != null -> "${AppStrings.current.term}: ${formatTimesWithDateAlways(firstDate, lastDate)}"
                         else -> ""
                     }
                     if (dateText.isNotBlank()) {
@@ -183,7 +184,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                     }
                 }
                 if (instances.isNotEmpty()) {
-                    Text("Počet termínů: ${instances.size}", style = MaterialTheme.typography.bodySmall)
+                    Text("${AppStrings.current.dateCount}: ${instances.size}", style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -197,7 +198,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Text("Termíny události", style = MaterialTheme.typography.titleMedium)
+                    Text(AppStrings.current.eventDates, style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(6.dp))
                     
                     val instancesToShow = if (showAllInstances.value || instances.size <= 3) {
@@ -218,7 +219,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                             style = MaterialTheme.typography.bodySmall)
                         
                         if (!instLocation.isNullOrBlank() && instLocation != locationName) {
-                            Text("   Místo: $instLocation", 
+                            Text("   ${AppStrings.current.place}: $instLocation", 
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 ))
@@ -228,12 +229,12 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                     if (instances.size > 3 && !showAllInstances.value) {
                         Spacer(modifier = Modifier.height(8.dp))
                         TextButton(onClick = { showAllInstances.value = true }) {
-                            Text("Zobrazit všech ${instances.size} termínů")
+                            Text("${AppStrings.current.showAll.replace("vše", "všech")} ${instances.size} ${AppStrings.current.eventDates.lowercase()}")
                         }
                     } else if (instances.size > 3 && showAllInstances.value) {
                         Spacer(modifier = Modifier.height(8.dp))
                         TextButton(onClick = { showAllInstances.value = false }) {
-                            Text("Zobrazit méně")
+                            Text(AppStrings.current.showLess)
                         }
                     }
                 }
@@ -247,12 +248,12 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
-                Text("O události", style = MaterialTheme.typography.titleMedium)
+                Text(AppStrings.current.aboutEvent, style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(6.dp))
-                Text("Viditelné: ${if (isVisible) "Ano" else "Ne"}", style = MaterialTheme.typography.bodySmall)
-                Text("Veřejné: ${if (isPublic) "Ano" else "Ne"}", style = MaterialTheme.typography.bodySmall)
-                Text("Registrace: ${if (isLocked) "Uzavřeno" else "Otevřeno"}", style = MaterialTheme.typography.bodySmall)
-                Text("Poznámky povoleny: ${if (enableNotes) "Ano" else "Ne"}", style = MaterialTheme.typography.bodySmall)
+                Text("${AppStrings.current.isVisible}: ${if (isVisible) AppStrings.current.yes else AppStrings.current.no}", style = MaterialTheme.typography.bodySmall)
+                Text("${AppStrings.current.isPublic}: ${if (isPublic) AppStrings.current.yes else AppStrings.current.no}", style = MaterialTheme.typography.bodySmall)
+                Text("${AppStrings.current.registration}: ${if (isLocked) AppStrings.current.registrationClosed else AppStrings.current.registrationOpen}", style = MaterialTheme.typography.bodySmall)
+                Text("${AppStrings.current.notesAllowed}: ${if (enableNotes) AppStrings.current.yes else AppStrings.current.no}", style = MaterialTheme.typography.bodySmall)
                 // --- Registration action buttons visibility logic (from MAUI EventViewModel.LoadEventAsync) ---
                 // If event is locked, treat registrations as closed regardless of the explicit flag
                 val isRegistrationOpen = if (isLocked) false else (ev.bool("isRegistrationOpen") ?: true)
@@ -306,7 +307,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                     Column(modifier = Modifier.fillMaxWidth()) {
                         if (registerButtonVisible) {
                             Button(onClick = { onOpenRegistration?.invoke("register", null) }, modifier = Modifier.fillMaxWidth()) {
-                                Text("Zapsat se")
+                                Text(AppStrings.current.register)
                             }
                             Spacer(modifier = Modifier.height(6.dp))
                         }
@@ -320,14 +321,14 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                                         onClick = { onOpenRegistration?.invoke("register", null) },
                                         modifier = Modifier.widthIn(max = 300.dp).padding(end = 112.dp)
                                     ) {
-                                        Text("Zapsat dalšího")
+                                        Text(AppStrings.current.registerAnother)
                                     }
                                     Row(modifier = Modifier.align(Alignment.CenterEnd), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                         FilledTonalButton(onClick = { onOpenRegistration?.invoke("edit", null) }) {
-                                            Icon(Icons.Default.Edit, contentDescription = "Upravit registraci")
+                                            Icon(Icons.Default.Edit, contentDescription = AppStrings.current.editRegistration)
                                         }
                                         FilledTonalButton(onClick = { onOpenRegistration?.invoke("delete", null) }) {
-                                            Icon(Icons.Default.Delete, contentDescription = "Smazat registraci")
+                                            Icon(Icons.Default.Delete, contentDescription = AppStrings.current.deleteRegistration)
                                         }
                                     }
                                 }
@@ -336,7 +337,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                                 // Fallback: show edit as full-width if applicable
                                 if (editRegistrationButtonVisible) {
                                     Button(onClick = { onOpenRegistration?.invoke("edit", null) }, modifier = Modifier.fillMaxWidth()) {
-                                        Text("Upravit registraci")
+                                        Text(AppStrings.current.editRegistration)
                                     }
                                     Spacer(modifier = Modifier.height(6.dp))
                                 }
@@ -346,7 +347,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                                     onClick = { onOpenRegistration?.invoke("delete", null) },
                                     modifier = if (deleteFullWidth) Modifier.fillMaxWidth() else Modifier.fillMaxWidth()
                                 ) {
-                                    Text("Smazat registraci")
+                                    Text(AppStrings.current.deleteRegistration)
                                 }
                             }
                         }
@@ -393,16 +394,16 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Text("Kapacita", style = MaterialTheme.typography.titleMedium)
+                    Text(AppStrings.current.capacity, style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(6.dp))
                     val registeredCount = registrations.size + externalRegistrations.size
                     if (capacity != null && capacity > 0) {
-                        Text("Registrováno: $registeredCount / $capacity míst", style = MaterialTheme.typography.bodySmall)
+                        Text("${AppStrings.current.registeredCount}: $registeredCount / $capacity ${AppStrings.current.capacity}", style = MaterialTheme.typography.bodySmall)
                     } else if (registeredCount > 0) {
-                        Text("Registrováno: $registeredCount míst", style = MaterialTheme.typography.bodySmall)
+                        Text("${AppStrings.current.registeredCount}: $registeredCount ${AppStrings.current.capacity}", style = MaterialTheme.typography.bodySmall)
                     }
                     if (remainingLessons != null) {
-                        Text("Zbývající lekce: $remainingLessons", style = MaterialTheme.typography.bodySmall)
+                        Text("${AppStrings.current.remainingLessons}: $remainingLessons", style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
@@ -416,7 +417,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Text("Trenéři", style = MaterialTheme.typography.titleMedium)
+                    Text(AppStrings.current.trainers, style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(6.dp))
                     val trainerNames = trainers.mapNotNull { trainerEl ->
                         val trainer = trainerEl.asJsonObjectOrNull() ?: return@mapNotNull null
@@ -443,7 +444,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Text("Cílové skupiny", style = MaterialTheme.typography.titleMedium)
+                    Text(AppStrings.current.targetGroups, style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(6.dp))
                     val cohortNames = cohorts.mapNotNull { cohortEl ->
                         cohortEl.asJsonObjectOrNull()
@@ -464,10 +465,10 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
                 val totalCount = registrations.size + externalRegistrations.size
-                Text("Přihlášení účastníci ($totalCount)", style = MaterialTheme.typography.titleMedium)
+                Text("${AppStrings.current.participants} ($totalCount)", style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(6.dp))
                 if (totalCount == 0) {
-                    Text("Žádní přihlášení účastníci", style = MaterialTheme.typography.bodySmall.copy(
+                    Text(AppStrings.current.noParticipants, style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     ))
                 } else {

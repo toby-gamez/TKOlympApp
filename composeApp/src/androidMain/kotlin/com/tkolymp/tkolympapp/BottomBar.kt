@@ -12,6 +12,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.tkolymp.shared.language.AppStrings
 
 @Composable
 fun AppBottomBar(current: String, onSelect: (String) -> Unit, modifier: Modifier = Modifier) {
@@ -20,31 +21,31 @@ fun AppBottomBar(current: String, onSelect: (String) -> Unit, modifier: Modifier
             selected = current == "overview",
             onClick = { onSelect("overview") },
             icon = { Icon(Icons.Default.Home, contentDescription = null) },
-            label = { Text("Přehled") }
+            label = { Text(AppStrings.current.overview) }
         )
         NavigationBarItem(
             selected = current == "calendar",
             onClick = { onSelect("calendar") },
             icon = { Icon(Icons.Default.CalendarToday, contentDescription = null) },
-            label = { Text("Kalendář") }
+            label = { Text(AppStrings.current.calendar) }
         )
         NavigationBarItem(
             selected = current == "board",
             onClick = { onSelect("board") },
             icon = { Icon(Icons.Default.Dashboard, contentDescription = null) },
-            label = { Text("Nástěnka") }
+            label = { Text(AppStrings.current.board) }
         )
         NavigationBarItem(
             selected = current == "events",
             onClick = { onSelect("events") },
             icon = { Icon(Icons.Default.Event, contentDescription = null) },
-            label = { Text("Akce") }
+            label = { Text(AppStrings.current.events) }
         )
         NavigationBarItem(
             selected = current == "other",
             onClick = { onSelect("other") },
             icon = { Icon(Icons.Default.MoreHoriz, contentDescription = null) },
-            label = { Text("Ostatní") }
+            label = { Text(AppStrings.current.other) }
         )
     }
 }

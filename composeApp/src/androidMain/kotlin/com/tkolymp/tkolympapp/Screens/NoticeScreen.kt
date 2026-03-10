@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.graphics.drawable.DrawableCompat
 import com.tkolymp.shared.viewmodels.NoticeViewModel
+import com.tkolymp.shared.language.AppStrings
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
@@ -109,11 +110,11 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Oznámení") },
+                title = { Text(AppStrings.current.announcement) },
                 navigationIcon = {
                     onBack?.let {
                         IconButton(onClick = it) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Zpět")
+                            Icon(Icons.Default.ArrowBack, contentDescription = AppStrings.current.back)
                         }
                     }
                 }
@@ -134,7 +135,7 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Text("Žádné oznámení k zobrazení", modifier = Modifier.padding(16.dp))
+                    Text(AppStrings.current.noAnnouncementToShow, modifier = Modifier.padding(16.dp))
                 }
             } else {
                 Column(modifier = Modifier
@@ -149,7 +150,7 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             val authorName = listOfNotNull(a.author?.uJmeno, a.author?.uPrijmeni).joinToString(" ").trim()
                             if (authorName.isNotBlank()) {
-                                Text("Autor: $authorName", style = MaterialTheme.typography.bodySmall)
+                                Text("${AppStrings.current.author}: $authorName", style = MaterialTheme.typography.bodySmall)
                                 Spacer(modifier = Modifier.height(4.dp))
                             }
                             fun formatIso(iso: String?): String? {
@@ -165,10 +166,10 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
                             }
 
                             formatIso(a.createdAt)?.let { f ->
-                                Text("Vytvořeno: $f", style = MaterialTheme.typography.bodySmall)
+                                Text("${AppStrings.current.createdAt}: $f", style = MaterialTheme.typography.bodySmall)
                             }
                             formatIso(a.updatedAt)?.let { f ->
-                                Text("Aktualizováno: $f", style = MaterialTheme.typography.bodySmall)
+                                Text("${AppStrings.current.updatedAt}: $f", style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
@@ -217,8 +218,8 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
         state.error?.let { err ->
             AlertDialog(
                 onDismissRequest = { viewModel.clearError() },
-                confirmButton = { TextButton(onClick = { viewModel.clearError() }) { Text("OK") } },
-                title = { Text("Chyba") },
+                confirmButton = { TextButton(onClick = { viewModel.clearError() }) { Text(AppStrings.current.ok) } },
+                title = { Text(AppStrings.current.error) },
                 text = { Text(err ?: "Neznámá chyba") }
             )
         }

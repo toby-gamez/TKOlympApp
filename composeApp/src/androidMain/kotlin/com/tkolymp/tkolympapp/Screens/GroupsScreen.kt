@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.tkolymp.shared.club.ClubService
 import com.tkolymp.shared.club.Cohort
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.tkolympapp.SwipeToReload
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -62,10 +63,10 @@ fun GroupsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Tréninkové skupiny") },
+                title = { Text(AppStrings.current.trainingGroups) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Zpět")
+                        Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = AppStrings.current.back)
                     }
                 }
             )

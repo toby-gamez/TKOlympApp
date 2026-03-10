@@ -52,6 +52,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.viewmodels.OtherViewModel
+import com.tkolymp.shared.language.AppStrings
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -60,6 +61,9 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import kotlin.coroutines.cancellation.CancellationException
+
+private enum class MainItem { PEOPLE, TRAINERS, GROUPS, LEADERBOARD }
+private enum class SettingsItem { LANGUAGES, ABOUT, NOTIFICATIONS, PRIVACY }
 
 // Helper: do not surface internal/cancellation/compose runtime messages to the UI
 private fun shouldShowErrorMessage(msg: String?): Boolean {
@@ -119,7 +123,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Ostatní") }) }
+        topBar = { TopAppBar(title = { Text(AppStrings.current.other) }) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -153,7 +157,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Person,
-                            contentDescription = "Profile",
+                            contentDescription = AppStrings.current.myProfile,
                             tint = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.size(32.dp)
                         )
@@ -163,7 +167,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = state.name ?: "Můj účet",
+                            text = state.name ?: AppStrings.current.myAccount,
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -196,29 +200,37 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
 
             // První sekce - Členové a klub
             Text(
-                text = "Členové a klub",
+                text = AppStrings.current.membersAndClub,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp)
             )
 
             val mainItems = listOf(
-                Pair("Lidé", Icons.Filled.People),
-                Pair("Trenéři a tréninkové prostory", Icons.Filled.FitnessCenter),
-                Pair("Tréninkové skupiny", Icons.Filled.Groups),
-                Pair("Žebříček", Icons.Filled.EmojiEvents)
+                Pair(MainItem.PEOPLE, Icons.Filled.People),
+                Pair(MainItem.TRAINERS, Icons.Filled.FitnessCenter),
+                Pair(MainItem.GROUPS, Icons.Filled.Groups),
+                Pair(MainItem.LEADERBOARD, Icons.Filled.EmojiEvents)
             )
 
             mainItems.forEach { (item, icon) ->
+                val label = when (item) {
+                    MainItem.PEOPLE -> AppStrings.current.people
+                    MainItem.TRAINERS -> AppStrings.current.trainersAndSpaces
+                    MainItem.GROUPS -> AppStrings.current.trainingGroups
+                    MainItem.LEADERBOARD -> AppStrings.current.leaderboard
+                }
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 4.dp)
                         .clickable {
-                            if (item == "Lidé") onPeopleClick()
-                            if (item == "Trenéři a tréninkové prostory") onTrainersClick()
-                            if (item == "Tréninkové skupiny") onGroupsClick()
-                            if (item == "Žebříček") onLeaderboardClick()
+                            when (item) {
+                                MainItem.PEOPLE -> onPeopleClick()
+                                MainItem.TRAINERS -> onTrainersClick()
+                                MainItem.GROUPS -> onGroupsClick()
+                                MainItem.LEADERBOARD -> onLeaderboardClick()
+                            }
                         },
                     shape = RoundedCornerShape(16.dp),
                     
@@ -238,14 +250,14 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                         ) {
                             Icon(
                                 imageVector = icon,
-                                contentDescription = item,
+                                contentDescription = label,
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(22.dp)
                             )
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         Text(
-                            text = item,
+                            text = label,
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Medium,
                             modifier = Modifier.weight(1f)
@@ -263,29 +275,37 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
 
             // Druhá sekce - Aplikace
             Text(
-                text = "Aplikace",
+                text = AppStrings.current.appSection,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp)
             )
 
             val settingsItems = listOf(
-                Pair("Jazyky", Icons.Filled.Language),
-                Pair("O aplikaci", Icons.Filled.Info),
-                Pair("Nastavení notifikací", Icons.Filled.Notifications),
-                Pair("Zásady ochrany osobních údajů", Icons.Filled.Security)
+                Pair(SettingsItem.LANGUAGES, Icons.Filled.Language),
+                Pair(SettingsItem.ABOUT, Icons.Filled.Info),
+                Pair(SettingsItem.NOTIFICATIONS, Icons.Filled.Notifications),
+                Pair(SettingsItem.PRIVACY, Icons.Filled.Security)
             )
 
             settingsItems.forEach { (item, icon) ->
+                val label = when (item) {
+                    SettingsItem.LANGUAGES -> AppStrings.current.languages
+                    SettingsItem.ABOUT -> AppStrings.current.aboutApp
+                    SettingsItem.NOTIFICATIONS -> AppStrings.current.notificationSettings
+                    SettingsItem.PRIVACY -> AppStrings.current.privacyPolicy
+                }
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 4.dp)
                         .clickable {
-                            if (item == "Jazyky") onLanguagesClick()
-                            if (item == "O aplikaci") onAboutClick()
-                            if (item == "Nastavení notifikací") onNotificationsClick()
-                            if (item == "Zásady ochrany osobních údajů") onPrivacyClick()
+                            when (item) {
+                                SettingsItem.LANGUAGES -> onLanguagesClick()
+                                SettingsItem.ABOUT -> onAboutClick()
+                                SettingsItem.NOTIFICATIONS -> onNotificationsClick()
+                                SettingsItem.PRIVACY -> onPrivacyClick()
+                            }
                         },
                     shape = RoundedCornerShape(16.dp),
                     
@@ -305,14 +325,14 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                         ) {
                             Icon(
                                 imageVector = icon,
-                                contentDescription = item,
+                                contentDescription = label,
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(22.dp)
                             )
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         Text(
-                            text = item,
+                            text = label,
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Medium,
                             modifier = Modifier.weight(1f)

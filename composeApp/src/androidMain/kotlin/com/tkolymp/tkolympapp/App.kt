@@ -41,6 +41,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.language.AppLanguage
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.OnboardingViewModel
 import com.tkolymp.tkolympapp.Screens.AboutScreen
 import com.tkolymp.tkolympapp.Screens.CalendarViewScreen
@@ -78,6 +80,11 @@ fun App() {
             LaunchedEffect(Unit) {
                 try {
                     com.tkolymp.shared.initNetworking(ctx, "https://api.rozpisovnik.cz/graphql")
+                    // Restore saved language before anything renders
+                    try {
+                        val code = ServiceLocator.languageStorage.getLanguageCode()
+                        if (code != null) AppStrings.setLanguage(AppLanguage.fromCode(code))
+                    } catch (_: Throwable) {}
                     val has = try { com.tkolymp.shared.ServiceLocator.authService.hasToken() } catch (_: Throwable) { false }
                     // Show onboarding only on first launch (persisted in onboarding storage)
                     val onboardingVm = OnboardingViewModel()

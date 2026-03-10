@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.BoardViewModel
 import kotlinx.coroutines.launch
 
@@ -48,11 +49,11 @@ import kotlinx.coroutines.launch
 fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
     val viewModel = remember { BoardViewModel() }
     val state by viewModel.state.collectAsState()
-    val tabs = listOf("Aktuality", "Stálá nástěnka")
+    val tabs = listOf(AppStrings.current.news, AppStrings.current.permanentBoard)
     val scope = rememberCoroutineScope()
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Nástěnka") }) }
+        topBar = { TopAppBar(title = { Text(AppStrings.current.board) }) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -121,9 +122,9 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
                 AlertDialog(
                     onDismissRequest = { viewModel.clearError() },
                     confirmButton = {
-                        TextButton(onClick = { viewModel.clearError() }) { Text("OK") }
+                        TextButton(onClick = { viewModel.clearError() }) { Text(AppStrings.current.ok) }
                     },
-                    title = { Text("Chyba při načítání příspěvků") },
+                    title = { Text(AppStrings.current.errorLoadingAnnouncements) },
                     text = { Text(state.error ?: "Neznámá chyba") }
                 )
             }

@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.tkolymp.shared.language.AppStrings
 import androidx.core.content.pm.PackageInfoCompat
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,10 +51,10 @@ fun AboutScreen(onBack: () -> Unit = {}) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("O aplikaci") },
+                title = { Text(AppStrings.current.aboutApp) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Zpět")
+                        Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = AppStrings.current.back)
                     }
                 }
             )
@@ -68,7 +69,7 @@ fun AboutScreen(onBack: () -> Unit = {}) {
             horizontalAlignment = Alignment.Start
         ) {
             Text("TK Olymp", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 8.dp, bottom = 4.dp))
-            Text("Verze ${versionName ?: "?"} (Build ${versionCode ?: "?"})", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 12.dp))
+            Text("${AppStrings.current.appVersion} ${versionName ?: "?"} (Build ${versionCode ?: "?"})", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 12.dp))
 
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
@@ -80,7 +81,7 @@ fun AboutScreen(onBack: () -> Unit = {}) {
 
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                Text("Licenční informace", style = MaterialTheme.typography.labelLarge)
+                Text(AppStrings.current.licenseInfo, style = MaterialTheme.typography.labelLarge)
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
                     Text(text = "Tento projekt může obsahovat třetí strany knihoven; ověřte licence v závislostech.", modifier = Modifier.padding(top = 6.dp))
                 }

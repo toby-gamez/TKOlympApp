@@ -44,6 +44,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tkolymp.shared.viewmodels.OnboardingViewModel
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.tkolympapp.ui.brandLightPrimary
 import kotlinx.coroutines.launch
 
@@ -53,29 +54,17 @@ private data class OnboardingPage(
     val description: String,
 )
 
-private val pages = listOf(
-    OnboardingPage(
-        icon = Icons.Filled.EmojiEvents,
-        title = "Vítejte v TK Olymp",
-        description = "Aplikace tanečního klubu TK Olymp – vše na jednom místě pro závodníky, rodiče i trenéry."
-    ),
-    OnboardingPage(
-        icon = Icons.Filled.CalendarMonth,
-        title = "Závody & Události",
-        description = "Sledujte nadcházející závody, přihlašujte se na akce a mějte přehled o kalendáři klubu."
-    ),
-    OnboardingPage(
-        icon = Icons.Filled.Groups,
-        title = "Klub na dosah",
-        description = "Prohlédněte si žebříčky, nástěnku a profily členů. Přihlaste se a začněte hned teď."
-    ),
-)
-
 @Composable
 fun OnboardingScreen(
     viewModel: OnboardingViewModel = OnboardingViewModel(),
     onFinish: () -> Unit
 ) {
+    val strings = AppStrings.current
+    val pages = listOf(
+        OnboardingPage(icon = Icons.Filled.EmojiEvents, title = strings.onboardingTitle1, description = strings.onboardingDesc1),
+        OnboardingPage(icon = Icons.Filled.CalendarMonth, title = strings.onboardingTitle2, description = strings.onboardingDesc2),
+        OnboardingPage(icon = Icons.Filled.Groups, title = strings.onboardingTitle3, description = strings.onboardingDesc3),
+    )
     val pagerState = rememberPagerState(pageCount = { pages.size })
     val scope = rememberCoroutineScope()
     val isLastPage = pagerState.currentPage == pages.lastIndex
@@ -149,7 +138,7 @@ fun OnboardingScreen(
             )
         ) {
             Text(
-                text = if (isLastPage) "Začít" else "Další",
+                text = if (isLastPage) strings.start else strings.next,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold
             )

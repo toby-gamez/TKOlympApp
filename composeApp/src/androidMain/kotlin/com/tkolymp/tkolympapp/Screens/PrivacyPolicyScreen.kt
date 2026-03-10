@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import com.tkolymp.shared.language.AppStrings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,10 +26,10 @@ fun PrivacyPolicyScreen(onBack: () -> Unit = {}) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Zásady ochrany osobních údajů") },
+                title = { Text(AppStrings.current.privacyPolicy) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Zpět")
+                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = AppStrings.current.back)
                     }
                 }
             )

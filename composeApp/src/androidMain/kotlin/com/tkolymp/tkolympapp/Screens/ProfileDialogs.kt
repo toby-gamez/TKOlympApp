@@ -36,6 +36,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.language.AppStrings
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
@@ -247,15 +248,16 @@ fun ChangePasswordDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
     var error by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
     val ctx = LocalContext.current
+    val strings = AppStrings.current
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Změnit heslo") },
+        title = { Text(strings.changePassword) },
         text = {
             Column(modifier = Modifier.heightIn(max = 220.dp).verticalScroll(rememberScrollState())) {
-                Text("Heslo musí mít alespoň 8 znaků.")
-                TextField(value = newPass, onValueChange = { newPass = it }, label = { Text("Nové heslo") })
-                TextField(value = confirm, onValueChange = { confirm = it }, label = { Text("Potvrzení hesla") })
+                Text(strings.passwordMinLength)
+                TextField(value = newPass, onValueChange = { newPass = it }, label = { Text(strings.newPassword) })
+                TextField(value = confirm, onValueChange = { confirm = it }, label = { Text(strings.confirmPassword) })
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                 if (loading) CircularProgressIndicator()
             }
@@ -264,8 +266,8 @@ fun ChangePasswordDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
             TextButton(onClick = {
                 // validation
                 error = null
-                if (newPass.length < 8) { error = "Heslo musí mít alespoň 8 znaků"; return@TextButton }
-                if (newPass != confirm) { error = "Hesla se neshodují"; return@TextButton }
+                if (newPass.length < 8) { error = strings.passwordMinLength; return@TextButton }
+                if (newPass != confirm) { error = strings.passwordsMismatch; return@TextButton }
 
                 scope.launch {
                     loading = true
@@ -276,22 +278,22 @@ fun ChangePasswordDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
                                 onSuccess()
                             } else {
                                 val apiErr = try { ServiceLocator.userService.getLastApiError() } catch (_: Throwable) { null }
-                                error = if (!apiErr.isNullOrBlank()) "Změna hesla selhala: $apiErr" else "Změna hesla selhala"
+                                error = if (!apiErr.isNullOrBlank()) "${strings.changePasswordFailed}: $apiErr" else strings.changePasswordFailed
                             }
                         } catch (ex: Throwable) {
                             val causeMsg = generateSequence(ex.cause) { it.cause }
                                 .mapNotNull { it.message }
                                 .firstOrNull()
                             val msg = ex.message ?: ex.toString()
-                            error = "Změna hesla selhala: ${causeMsg ?: msg}"
+                            error = "${strings.changePasswordFailed}: ${causeMsg ?: msg}"
                         }
                     } finally {
                         loading = false
                     }
                 }
-            }) { Text("Potvrdit") }
+            }) { Text(strings.confirm) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Zrušit") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(strings.cancel) } }
     )
 }
 
@@ -365,19 +367,18 @@ fun ChangePersonalDataDialog(
     }
     var birthDisplay by remember(birthIso) { mutableStateOf(formatDisplayDate(birthIso)) }
 
-    // Gender selection: display Czech labels but send MAN/WOMAN/UNSPECIFIED
-    val genderMap = mapOf("muž" to "MAN", "žena" to "WOMAN", "nespecifikováno" to "UNSPECIFIED")
-    fun isoToLabel(g: String?): String {
-        if (g.isNullOrBlank()) return "nespecifikováno"
-        val up = g.uppercase()
-        return when (up) {
-            "MAN" -> "muž"
-            "WOMAN" -> "žena"
-            "UNSPECIFIED" -> "nespecifikováno"
-            else -> g
-        }
+    // Gender: display localized labels but send MAN/WOMAN/UNSPECIFIED to API
+    val strings = AppStrings.current
+    fun isoToLabel(g: String?): String = when (g?.uppercase()) {
+        "MAN" -> strings.genderMale
+        "WOMAN" -> strings.genderFemale
+        else -> strings.genderUnspecified
     }
-    fun labelToIso(label: String): String = genderMap[label] ?: label.uppercase()
+    fun labelToIso(label: String): String = when (label) {
+        strings.genderMale -> "MAN"
+        strings.genderFemale -> "WOMAN"
+        else -> "UNSPECIFIED"
+    }
 
     var birth by remember { mutableStateOf(birthIso) }
     var showDatePicker by remember { mutableStateOf(false) }
@@ -391,18 +392,18 @@ fun ChangePersonalDataDialog(
 
     androidx.compose.material3.AlertDialog(
         onDismissRequest = { if (!saving) onDismiss() },
-        title = { Text("Upravit osobní údaje") },
+        title = { Text(strings.editPersonalData) },
         text = {
             Column(modifier = Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
-                TextField(value = first, onValueChange = { first = it }, label = { Text("Jméno") }, singleLine = true)
-                TextField(value = last, onValueChange = { last = it }, label = { Text("Příjmení") }, singleLine = true)
-                TextField(value = prefix, onValueChange = { prefix = it }, label = { Text("Titul před") }, singleLine = true)
-                TextField(value = suffix, onValueChange = { suffix = it }, label = { Text("Titul za") }, singleLine = true)
-                TextField(value = bio, onValueChange = { bio = it }, label = { Text("Bio") })
-                TextField(value = email, onValueChange = { email = it }, label = { Text("Email") }, singleLine = true)
-                TextField(value = csts, onValueChange = { csts = it }, label = { Text("ČSTS ID") }, singleLine = true)
-                TextField(value = wdsf, onValueChange = { wdsf = it }, label = { Text("WDSF ID") }, singleLine = true)
-                TextField(value = nid, onValueChange = { nid = it }, label = { Text("Rodné číslo") }, singleLine = true)
+                TextField(value = first, onValueChange = { first = it }, label = { Text(strings.firstName) }, singleLine = true)
+                TextField(value = last, onValueChange = { last = it }, label = { Text(strings.lastName) }, singleLine = true)
+                TextField(value = prefix, onValueChange = { prefix = it }, label = { Text(strings.prefixTitle) }, singleLine = true)
+                TextField(value = suffix, onValueChange = { suffix = it }, label = { Text(strings.suffixTitle) }, singleLine = true)
+                TextField(value = bio, onValueChange = { bio = it }, label = { Text(strings.aboutMe) })
+                TextField(value = email, onValueChange = { email = it }, label = { Text(strings.email) }, singleLine = true)
+                TextField(value = csts, onValueChange = { csts = it }, label = { Text(strings.cstsId) }, singleLine = true)
+                TextField(value = wdsf, onValueChange = { wdsf = it }, label = { Text(strings.wdsfId) }, singleLine = true)
+                TextField(value = nid, onValueChange = { nid = it }, label = { Text(strings.personalId) }, singleLine = true)
                 // Nationality dropdown (ISO 3166-1 numeric ID stored, Czech name displayed; read-only, select only)
                 var nationalityExpanded by remember { mutableStateOf(false) }
                 val nationalityDisplay = NATIONALITY_OPTIONS.find { it.first == nationalityId }?.second ?: nationalityId
@@ -413,7 +414,7 @@ fun ChangePersonalDataDialog(
                     TextField(
                         value = nationalityDisplay,
                         onValueChange = {},
-                        label = { Text("Národnost") },
+                        label = { Text(strings.nationality) },
                         singleLine = true,
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = nationalityExpanded) },
@@ -435,16 +436,16 @@ fun ChangePersonalDataDialog(
                     }
                 }
                 androidx.compose.material3.Divider(modifier = Modifier.padding(vertical = 6.dp))
-                Text("Kontakty", style = MaterialTheme.typography.labelSmall)
-                TextField(value = phone, onValueChange = { phone = it }, label = { Text("Telefon") }, singleLine = true)
-                TextField(value = mobile, onValueChange = { mobile = it }, label = { Text("Mobil") }, singleLine = true)
+                Text(strings.contacts, style = MaterialTheme.typography.labelSmall)
+                TextField(value = phone, onValueChange = { phone = it }, label = { Text(strings.phone) }, singleLine = true)
+                TextField(value = mobile, onValueChange = { mobile = it }, label = { Text(strings.mobile) }, singleLine = true)
                             val focusManager = LocalFocusManager.current
                             // Date picker field (read-only) with explicit IconButton to open Material3 DatePickerDialog
                             Row(modifier = Modifier.fillMaxWidth()) {
                                 TextField(
                                     value = birthDisplay,
                                     onValueChange = { /* read-only */ },
-                                    label = { Text("Datum narození") },
+                                    label = { Text(strings.birthDate) },
                                     singleLine = true,
                                     readOnly = true,
                                     modifier = Modifier.fillMaxWidth(0.85f)
@@ -454,7 +455,7 @@ fun ChangePersonalDataDialog(
                                     focusManager.clearFocus()
                                     showDatePicker = true
                                 }) {
-                                    Icon(imageVector = Icons.Default.CalendarToday, contentDescription = "Vybrat datum")
+                                    Icon(imageVector = Icons.Default.CalendarToday, contentDescription = strings.selectDate)
                                 }
                             }
                             if (showDatePicker) {
@@ -468,7 +469,7 @@ fun ChangePersonalDataDialog(
                                             birthDisplay = formatDisplayDate(birthIso)
                                         }
                                         showDatePicker = false
-                                    }) { Text("OK") }
+                                    }) { Text(strings.ok) }
                                 }) {
                                     DatePicker(state = datePickerState)
                                 }
@@ -480,16 +481,15 @@ fun ChangePersonalDataDialog(
                     TextField(
                         value = gender,
                         onValueChange = { /* no-op */ },
-                        label = { Text("Pohlaví") },
+                        label = { Text(strings.gender) },
                         singleLine = true,
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = genderExpanded) },
                         modifier = Modifier.fillMaxWidth().menuAnchor()
                     )
                     DropdownMenu(expanded = genderExpanded, onDismissRequest = { genderExpanded = false }) {
-                        listOf("muž", "žena", "nespecifikováno").forEach { opt ->
+                        listOf(strings.genderMale, strings.genderFemale, strings.genderUnspecified).forEach { opt ->
                             DropdownMenuItem(text = { Text(opt) }, onClick = {
-                                println("[ProfileDialogs] Gender selected: $opt")
                                 gender = opt
                                 genderExpanded = false
                             })
@@ -497,14 +497,14 @@ fun ChangePersonalDataDialog(
                     }
                 }
                 androidx.compose.material3.Divider(modifier = Modifier.padding(vertical = 6.dp))
-                Text("Adresa", style = MaterialTheme.typography.labelSmall)
-                TextField(value = street, onValueChange = { street = it }, label = { Text("Ulice") }, singleLine = true)
-                TextField(value = city, onValueChange = { city = it }, label = { Text("Město") }, singleLine = true)
-                TextField(value = postal, onValueChange = { postal = it }, label = { Text("PSČ") }, singleLine = true)
-                TextField(value = region, onValueChange = { region = it }, label = { Text("Kraj / region") }, singleLine = true)
-                TextField(value = district, onValueChange = { district = it }, label = { Text("Okres / district") }, singleLine = true)
-                TextField(value = conscription, onValueChange = { conscription = it }, label = { Text("Číslo popisné (conscription)") }, singleLine = true)
-                TextField(value = orientation, onValueChange = { orientation = it }, label = { Text("Číslo orientační (orientation)") }, singleLine = true)
+                Text(strings.address, style = MaterialTheme.typography.labelSmall)
+                TextField(value = street, onValueChange = { street = it }, label = { Text(strings.street) }, singleLine = true)
+                TextField(value = city, onValueChange = { city = it }, label = { Text(strings.city) }, singleLine = true)
+                TextField(value = postal, onValueChange = { postal = it }, label = { Text(strings.zip) }, singleLine = true)
+                TextField(value = region, onValueChange = { region = it }, label = { Text(strings.region) }, singleLine = true)
+                TextField(value = district, onValueChange = { district = it }, label = { Text(strings.district) }, singleLine = true)
+                TextField(value = conscription, onValueChange = { conscription = it }, label = { Text(strings.conscriptionNumber) }, singleLine = true)
+                TextField(value = orientation, onValueChange = { orientation = it }, label = { Text(strings.orientationNumber) }, singleLine = true)
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                 if (saving) androidx.compose.material3.CircularProgressIndicator()
             }
@@ -512,13 +512,13 @@ fun ChangePersonalDataDialog(
         confirmButton = {
             TextButton(onClick = {
                 error = null
-                if (email.isNotBlank() && !email.contains("@")) { error = "Neplatný email"; return@TextButton }
+                if (email.isNotBlank() && !email.contains("@")) { error = strings.invalidEmail; return@TextButton }
                 scope.launch {
                     saving = true
                     try {
                         val pid = try { ServiceLocator.userService.getCachedPersonId() } catch (_: Throwable) { null }
                         if (pid.isNullOrBlank()) {
-                            error = "Nelze určit ID uživatele"
+                            error = strings.cannotDetermineUserId
                         } else {
                             val genderIso = labelToIso(gender)
                             val req = com.tkolymp.shared.user.PersonUpdateRequest(
@@ -556,21 +556,21 @@ fun ChangePersonalDataDialog(
                                 )
                                 try { ServiceLocator.userService.fetchAndStorePersonDetails(pid) } catch (_: Throwable) { }
                                 try { ServiceLocator.authService.initialize() } catch (_: Throwable) { }
-                                try { android.widget.Toast.makeText(ctx, "Údaje uloženy", android.widget.Toast.LENGTH_SHORT).show() } catch (_: Throwable) { }
+                                try { android.widget.Toast.makeText(ctx, strings.dataSaved, android.widget.Toast.LENGTH_SHORT).show() } catch (_: Throwable) { }
                                 onDismiss()
                             } else {
                                 val apiErr = try { ServiceLocator.userService.getLastApiError() } catch (_: Throwable) { null }
-                                error = "Uložení selhalo: ${apiErr ?: "neznámá chyba"}"
+                                error = "${strings.saveFailed}: ${apiErr ?: "neznámá chyba"}"
                             }
                         }
                     } catch (ex: Throwable) {
-                        error = ex.message ?: "Uložení selhalo"
+                        error = ex.message ?: strings.saveFailed
                     } finally {
                         saving = false
                     }
                 }
-            }) { Text("Uložit") }
+            }) { Text(strings.save) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Zrušit") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(strings.cancel) } }
     )
 }

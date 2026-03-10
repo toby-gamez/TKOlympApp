@@ -41,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tkolymp.shared.language.AppLanguage
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.LanguageViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,10 +57,10 @@ fun LanguageScreen(onBack: () -> Unit = {}) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Jazyky") },
+                title = { Text(AppStrings.current.languages) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Zpět")
+                        Icon(Icons.Filled.ArrowBack, contentDescription = AppStrings.current.back)
                     }
                 }
             )
@@ -74,7 +75,7 @@ fun LanguageScreen(onBack: () -> Unit = {}) {
             verticalArrangement = Arrangement.Top
         ) {
             Text(
-                text = "Vyberte jazyk aplikace",
+                text = AppStrings.current.selectLanguage,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 12.dp)
@@ -156,7 +157,7 @@ fun LanguageScreen(onBack: () -> Unit = {}) {
                         if (isSelected) {
                             Icon(
                                 imageVector = Icons.Filled.Check,
-                                contentDescription = "Vybráno",
+                                contentDescription = AppStrings.current.selected,
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(22.dp)
                             )

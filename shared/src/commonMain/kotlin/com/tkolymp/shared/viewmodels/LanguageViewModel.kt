@@ -2,6 +2,7 @@ package com.tkolymp.shared.viewmodels
 
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.language.AppLanguage
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.storage.LanguageStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,6 +30,7 @@ class LanguageViewModel(
         scope.launch {
             val code = try { languageStorage.getLanguageCode() } catch (_: Throwable) { null }
             val language = if (code != null) AppLanguage.fromCode(code) else AppLanguage.CS
+            AppStrings.setLanguage(language)
             _state.value = _state.value.copy(selectedLanguage = language)
         }
     }
@@ -37,6 +39,7 @@ class LanguageViewModel(
         scope.launch {
             try {
                 languageStorage.saveLanguageCode(language.code)
+                AppStrings.setLanguage(language)
                 _state.value = _state.value.copy(selectedLanguage = language)
             } catch (e: Throwable) {
                 _state.value = _state.value.copy(error = e.message)

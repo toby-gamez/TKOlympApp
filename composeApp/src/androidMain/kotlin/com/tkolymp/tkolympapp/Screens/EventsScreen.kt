@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.EventsViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -39,7 +40,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
     var selectedTab by rememberSaveable { mutableStateOf(0) }
-    val tabs = listOf("Naplánováno", "Proběhlé")
+    val tabs = listOf(AppStrings.current.planned, AppStrings.current.past)
 
     val viewModel = remember { EventsViewModel() }
     val state by viewModel.state.collectAsState()
@@ -55,7 +56,7 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Akce") }) }
+        topBar = { TopAppBar(title = { Text(AppStrings.current.events) }) }
     ) { padding ->
             SwipeToReload(
             isRefreshing = state.isLoading,
@@ -95,14 +96,14 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
 
                     if (planned.isEmpty()) {
                         Spacer(modifier = Modifier.height(12.dp))
-                        Text("Žádné naplánované akce", style = MaterialTheme.typography.bodyMedium)
+                        Text(AppStrings.current.noEventsPlanned, style = MaterialTheme.typography.bodyMedium)
                     }
 
                     planned.forEach { (date, list) ->
                         Column(modifier = Modifier.padding(vertical = 6.dp)) {
                             val header = when (date) {
-                                today.format(fmt) -> "dnes"
-                                today.plusDays(1).format(fmt) -> "zítra"
+                                today.format(fmt) -> AppStrings.current.today.lowercase()
+                                today.plusDays(1).format(fmt) -> AppStrings.current.tomorrow.lowercase()
                                 else -> {
                                     val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
                                     if (ld == null) date else {
@@ -153,14 +154,14 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
 
                     if (past.isEmpty()) {
                         Spacer(modifier = Modifier.height(12.dp))
-                        Text("Žádné proběhlé akce", style = MaterialTheme.typography.bodyMedium)
+                        Text(AppStrings.current.noPastEvents, style = MaterialTheme.typography.bodyMedium)
                     }
 
                     past.forEach { (date, list) ->
                         Column(modifier = Modifier.padding(vertical = 6.dp)) {
                             val header = when (date) {
-                                today.format(fmt) -> "dnes"
-                                today.plusDays(1).format(fmt) -> "zítra"
+                                today.format(fmt) -> AppStrings.current.today.lowercase()
+                                today.plusDays(1).format(fmt) -> AppStrings.current.tomorrow.lowercase()
                                 else -> {
                                     val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
                                     if (ld == null) date else {
@@ -204,8 +205,8 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
             state.error?.let { err ->
                 AlertDialog(
                     onDismissRequest = { viewModel.clearError() },
-                    confirmButton = { TextButton(onClick = { viewModel.clearError() }) { Text("OK") } },
-                    title = { Text("Chyba při načítání akcí") },
+                    confirmButton = { TextButton(onClick = { viewModel.clearError() }) { Text(AppStrings.current.ok) } },
+                    title = { Text(AppStrings.current.errorLoadingEvents) },
                     text = { Text(err) }
                 )
             }

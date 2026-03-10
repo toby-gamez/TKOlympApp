@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.viewmodels.LeaderboardViewModel
+import com.tkolymp.shared.language.AppStrings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
@@ -63,8 +64,8 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Žebříček") }, navigationIcon = {
-            Icon(Icons.Filled.ArrowBack, contentDescription = "Back", modifier = Modifier
+        topBar = { TopAppBar(title = { Text(AppStrings.current.leaderboardTitle) }, navigationIcon = {
+            Icon(Icons.Filled.ArrowBack, contentDescription = AppStrings.current.back, modifier = Modifier
                 .clickable { onBack() }
                 .padding(12.dp))
         }) }
@@ -77,7 +78,7 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
             Box(modifier = Modifier.fillMaxSize()) {
                 when {
                     state.isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-                    state.error != null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(state.error ?: "Chyba") }
+                    state.error != null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(state.error ?: AppStrings.current.error) }
                     else -> {
                         val entries = state.rankings.filterIsInstance<com.tkolymp.shared.people.ScoreboardEntry>()
                         LazyColumn(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Top) {

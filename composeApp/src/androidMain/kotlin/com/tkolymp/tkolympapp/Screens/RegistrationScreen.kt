@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.RegistrationViewModel
 import com.tkolymp.shared.registration.filterOwnedRegistrations
 import kotlinx.coroutines.launch
@@ -105,10 +106,10 @@ fun RegistrationScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(when (mode) { is RegMode.Register -> "Zapsat se"; is RegMode.Edit -> "Upravit registraci"; is RegMode.Delete -> "Smazat registraci" }) },
+                title = { Text(when (mode) { is RegMode.Register -> AppStrings.current.register; is RegMode.Edit -> AppStrings.current.editRegistration; is RegMode.Delete -> AppStrings.current.deleteRegistration }) },
                 navigationIcon = {
                     IconButton(onClick = onClose) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Zpět")
+                        Icon(Icons.Default.ArrowBack, contentDescription = AppStrings.current.back)
                     }
                 }
             )
@@ -173,7 +174,7 @@ fun RegistrationScreen(
             is RegMode.Register -> {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(12.dp)) {
-                        Text("Vyberte, koho registrujete:", style = MaterialTheme.typography.bodyMedium)
+                        Text(AppStrings.current.selectRegistrant, style = MaterialTheme.typography.bodyMedium)
                         Spacer(modifier = Modifier.height(6.dp))
                         // compute already-registered person/couple ids so we don't offer them for new registration
                         val registeredPersonIds = remember(registrations) {
@@ -269,14 +270,14 @@ fun RegistrationScreen(
                             OutlinedTextField(
                                 value = noteState.value,
                                 onValueChange = { noteState.value = it },
-                                label = { Text("Poznámka (volitelné)") },
-                                placeholder = { Text("Poznámka k registraci") },
+                                label = { Text(AppStrings.current.noteOptional) },
+                                placeholder = { Text(AppStrings.current.registrationNote) },
                                 modifier = Modifier.fillMaxWidth()
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                         }
 
-                        Text("Vyberte trenéry a počet lekcí:", style = MaterialTheme.typography.bodyMedium)
+                        Text(AppStrings.current.selectTrainersAndLessons, style = MaterialTheme.typography.bodyMedium)
                         Spacer(modifier = Modifier.height(6.dp))
 
                         // Maintain local counts per trainer (observable list so element changes update instantly)
@@ -324,7 +325,7 @@ fun RegistrationScreen(
                         val showSelectError = remember { mutableStateOf(false) }
                         val showRegisterError = remember { mutableStateOf<String?>(null) }
                         if (showSelectError.value) {
-                            Text("Vyberte někoho k registraci", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                            Text(AppStrings.current.noRegistrationSelected, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                             Spacer(modifier = Modifier.height(8.dp))
                         }
                         Button(onClick = {
@@ -351,7 +352,7 @@ fun RegistrationScreen(
                                 Log.e("RegScreen", "Register failed", t)
                                 showRegisterError.value = t.message ?: "Chyba při registraci"
                             }
-                        }, modifier = Modifier.fillMaxWidth()) { Text("Potvrdit registraci") }
+                        }, modifier = Modifier.fillMaxWidth()) { Text(AppStrings.current.confirmRegistrationTitle) }
                         if (!showRegisterError.value.isNullOrBlank()) {
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(showRegisterError.value!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
@@ -361,7 +362,7 @@ fun RegistrationScreen(
             }
             is RegMode.Edit -> {
                 Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).padding(12.dp)) {
-                    Text("Vyberte svou registraci:", style = MaterialTheme.typography.bodyMedium)
+                    Text(AppStrings.current.selectRegistration, style = MaterialTheme.typography.bodyMedium)
                     Spacer(modifier = Modifier.height(6.dp))
 
                         val selectedRegId = remember { mutableStateOf<String?>(null) }
@@ -454,7 +455,7 @@ fun RegistrationScreen(
                                 } as? JsonObject
                                 editNoteState.value = reg?.get("note")?.jsonPrimitive?.contentOrNull ?: ""
                             }
-                            Text("Upravit nároky na lekce:", style = MaterialTheme.typography.bodyMedium)
+                            Text(AppStrings.current.editLessonClaims, style = MaterialTheme.typography.bodyMedium)
                             // ensure counts exist for this registration
                             val sid = selectedId
                             val countsState = countsByReg.getOrPut(sid) {
@@ -499,8 +500,8 @@ fun RegistrationScreen(
                                 OutlinedTextField(
                                     value = editNoteState.value,
                                     onValueChange = { editNoteState.value = it },
-                                    label = { Text("Poznámka (volitelné)") },
-                                    placeholder = { Text("Poznámka k registraci") },
+                                    label = { Text(AppStrings.current.noteOptional) },
+                                    placeholder = { Text(AppStrings.current.registrationNote) },
                                     modifier = Modifier.fillMaxWidth()
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
@@ -532,7 +533,7 @@ fun RegistrationScreen(
             is RegMode.Delete -> {
                 Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                     Column(modifier = Modifier.padding(12.dp)) {
-                        Text("Vyberte registraci k odstranění:", style = MaterialTheme.typography.bodyMedium)
+                        Text(AppStrings.current.selectToDelete, style = MaterialTheme.typography.bodyMedium)
                         Spacer(modifier = Modifier.height(6.dp))
                         val selectedReg = remember { mutableStateOf<String?>(null) }
                         val showDeleteError = remember { mutableStateOf<String?>(null) }
@@ -595,13 +596,13 @@ fun RegistrationScreen(
                             },
                             modifier = Modifier.fillMaxWidth(),
                             enabled = selectedReg.value != null
-                        ) { Text("Smazat vybranou registraci") }
+                        ) { Text(AppStrings.current.deleteSelectedRegistration) }
 
                         if (showConfirmDelete.value) {
                             AlertDialog(
                                 onDismissRequest = { showConfirmDelete.value = false },
-                                title = { Text("Potvrzení smazání") },
-                                text = { Text("Opravdu chcete smazat vybranou registraci?") },
+                                title = { Text(AppStrings.current.deleteRegistrationConfirmTitle) },
+                                text = { Text(AppStrings.current.deleteRegistrationConfirmText) },
                                 confirmButton = {
                                     TextButton(onClick = {
                                         showConfirmDelete.value = false
@@ -610,7 +611,7 @@ fun RegistrationScreen(
                                             // verify ownership before deleting
                                             val owned = ownedRegistrations.firstOrNull { (it as? JsonObject)?.get("id")?.jsonPrimitive?.contentOrNull == selId } != null
                                             if (!owned) {
-                                                showDeleteError.value = "Můžete mazat jen svoje registrace"
+                                                showDeleteError.value = AppStrings.current.noRegistrationOwned
                                                 return@TextButton
                                             }
                                             try {
@@ -621,10 +622,10 @@ fun RegistrationScreen(
                                                 showDeleteError.value = t.message ?: "Chyba při mazání"
                                             }
                                         }
-                                    }) { Text("Smazat") }
+                                    }) { Text(AppStrings.current.delete) }
                                 },
                                 dismissButton = {
-                                    TextButton(onClick = { showConfirmDelete.value = false }) { Text("Zrušit") }
+                                    TextButton(onClick = { showConfirmDelete.value = false }) { Text(AppStrings.current.cancel) }
                                 }
                             )
                         }

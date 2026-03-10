@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.notification.FilterType
 import com.tkolymp.shared.notification.NotificationRule
 import com.tkolymp.shared.notification.NotificationSettings
@@ -83,13 +84,13 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
     var availableLocations by remember { mutableStateOf<List<String>>(emptyList()) }
     var availableTrainers by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     val availableTypes = listOf("CAMP", "LESSON", "GROUP", "RESERVATION", "HOLIDAY")
-    // display labels for types (Czech)
+    // display labels for types
     val typeLabels = mapOf(
-        "LESSON" to "lekce",
-        "CAMP" to "soustředění",
-        "GROUP" to "společná",
-        "RESERVATION" to "nabídka",
-        "HOLIDAY" to "prázdniny"
+        "LESSON" to AppStrings.current.eventTypeLesson,
+        "CAMP" to AppStrings.current.eventTypeCamp,
+        "GROUP" to AppStrings.current.eventTypeGroup,
+        "RESERVATION" to AppStrings.current.eventTypeReservation,
+        "HOLIDAY" to AppStrings.current.eventTypeHoliday
     )
     var rules = remember { mutableStateListOf<NotificationRule>() }
     var globalEnabled by remember { mutableStateOf(true) }
@@ -159,10 +160,10 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                     val settings = NotificationSettings(globalEnabled = globalEnabled, rules = rules.toList())
                     val jsonStr = json.encodeToString(settings)
                     context.contentResolver.openOutputStream(uri)?.use { it.write(jsonStr.toByteArray(Charsets.UTF_8)) }
-                    Toast.makeText(context, "Export úspěšný", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, AppStrings.current.exportSuccessful, Toast.LENGTH_SHORT).show()
                 } catch (t: Throwable) {
                     Log.e("NotificationsSettings", "Export failed", t)
-                    Toast.makeText(context, "Export selhal", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, AppStrings.current.exportFailed, Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -181,19 +182,19 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                         rules.addAll(imported.rules)
                         globalEnabled = imported.globalEnabled
                         persist()
-                        Toast.makeText(context, "Import úspěšný (${imported.rules.size} pravidel)", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "${AppStrings.current.importSuccessful} (${imported.rules.size})", Toast.LENGTH_SHORT).show()
                     }
                 } catch (t: Throwable) {
                     Log.e("NotificationsSettings", "Import failed", t)
-                    Toast.makeText(context, "Import selhal: ${t.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, "${AppStrings.current.importFailed}: ${t.message}", Toast.LENGTH_LONG).show()
                 }
             }
         }
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Nastavení notifikací") }, navigationIcon = {
-            IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = "Zpět") }
+        topBar = { TopAppBar(title = { Text(AppStrings.current.notificationSettings) }, navigationIcon = {
+            IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, contentDescription = AppStrings.current.back) }
         }, actions = {
             Box {
                 IconButton(onClick = { menuExpanded = true }) {
@@ -201,11 +202,11 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                 }
                 DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
                     DropdownMenuItem(
-                        text = { Text("Exportovat (JSON)") },
+                        text = { Text(AppStrings.current.exportJson) },
                         onClick = { menuExpanded = false; exportLauncher.launch("notification_settings.json") }
                     )
                     DropdownMenuItem(
-                        text = { Text("Importovat (JSON)") },
+                        text = { Text(AppStrings.current.importJson) },
                         onClick = { menuExpanded = false; importLauncher.launch(arrayOf("application/json", "text/plain")) }
                     )
                 }
@@ -213,7 +214,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
         }) },
         floatingActionButton = {
             FloatingActionButton(onClick = { editRule = null; showDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Přidat")
+                Icon(Icons.Default.Add, contentDescription = AppStrings.current.addRule)
             }
         }
     ) { inner ->
@@ -234,7 +235,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Globálně zapnuto")
+                        Text(AppStrings.current.globallyEnabled)
                         Switch(
                             checked = globalEnabled,
                             onCheckedChange = { globalEnabled = it; persist() })
@@ -259,11 +260,11 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
                                         val title =
-                                            if (r.name.isNotBlank()) r.name else if (r.filterType == FilterType.ALL) "Všechny události" else "Pravidlo"
+                                            if (r.name.isNotBlank()) r.name else if (r.filterType == FilterType.ALL) AppStrings.current.allEventsFilter else AppStrings.current.rule
                                         Text(text = title)
                                         if (r.filterType == FilterType.ALL) {
                                             Text(
-                                                text = "Všechny události",
+                                                text = AppStrings.current.allEventsFilter,
                                                 style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
                                                 modifier = Modifier.padding(top = 4.dp)
                                             )
@@ -272,7 +273,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                                 text = "Místa: ${
                                                     if (r.locations.isNotEmpty()) r.locations.joinToString(
                                                         ", "
-                                                    ) else "(vše)"
+                                                    ) else AppStrings.current.allLocations
                                                 }",
                                                 style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
                                                 modifier = Modifier.padding(top = 4.dp)
@@ -280,7 +281,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                             val trainerDisplay =
                                                 if (r.trainers.isNotEmpty()) r.trainers.map { t ->
                                                     if (t.contains("::")) t.substringAfter("::") else t
-                                                }.joinToString(", ") else "(vše)"
+                                                }.joinToString(", ") else AppStrings.current.allTrainers
                                             Text(
                                                 text = "Trenéři: $trainerDisplay",
                                                 style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
@@ -289,7 +290,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                             Text(
                                                 text = "Typy: ${
                                                     if (r.types.isNotEmpty()) r.types.map { typeLabels[it] ?: it }
-                                                        .joinToString(", ") else "(vše)"
+                                                        .joinToString(", ") else AppStrings.current.allTypes
                                                 }",
                                                 style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
                                                 modifier = Modifier.padding(top = 2.dp)
@@ -315,7 +316,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                         }) {
                                             Icon(
                                                 Icons.Default.Edit,
-                                                contentDescription = "Upravit"
+                                                contentDescription = AppStrings.current.edit
                                             )
                                         }
                                         IconButton(onClick = {
@@ -324,7 +325,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                         }) {
                                             Icon(
                                                 Icons.Default.Delete,
-                                                contentDescription = "Smazat"
+                                                contentDescription = AppStrings.current.delete
                                             )
                                         }
                                     }
@@ -338,9 +339,9 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text("Žádná pravidla", style = MaterialTheme.typography.titleMedium)
+                            Text(AppStrings.current.noRules, style = MaterialTheme.typography.titleMedium)
                             Text(
-                                "žádná oznámení",
+                                AppStrings.current.noRulesDescription,
                                 style = MaterialTheme.typography.bodySmall,
                                 modifier = Modifier.padding(top = 4.dp)
                             )
@@ -349,7 +350,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                     } // end Box
 
                     Button(onClick = onBack, modifier = Modifier.padding(top = 12.dp)) {
-                        Text("Zpět")
+                        Text(AppStrings.current.back)
                     }
                 }
             }
@@ -359,8 +360,8 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
             val toDeleteId = deletingRuleId
             AlertDialog(
                 onDismissRequest = { showDeleteConfirm = false; deletingRuleId = null },
-                title = { Text("Smazat pravidlo") },
-                text = { Text("Opravdu chcete smazat toto pravidlo?") },
+                title = { Text(AppStrings.current.deleteRuleConfirmTitle) },
+                text = { Text(AppStrings.current.deleteRuleConfirmText) },
                 confirmButton = {
                     Button(onClick = {
                         if (toDeleteId != null) {
@@ -369,12 +370,12 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                         }
                         showDeleteConfirm = false
                         deletingRuleId = null
-                    }) { Text("Smazat") }
+                    }) { Text(AppStrings.current.delete) }
                 },
                 dismissButton = {
                     TextButton(onClick = {
                         showDeleteConfirm = false; deletingRuleId = null
-                    }) { Text("Zrušit") }
+                    }) { Text(AppStrings.current.cancel) }
                 }
             )
         }
@@ -427,8 +428,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                 )
             }
             var timeUnitExpanded by remember { mutableStateOf(false) }
-            val timeUnits = listOf("minuty", "hodiny")
-            var timeUnit by remember(dialogExisting) { mutableStateOf("minuty") }
+            var isHours by remember(dialogExisting) { mutableStateOf(false) }
             var ruleName by remember(dialogExisting) { mutableStateOf(dialogExisting?.name ?: "") }
 
             Dialog(
@@ -437,7 +437,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
             ) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     Column(modifier = Modifier.fillMaxSize()) {
-                        TopAppBar(title = { Text(if (dialogExisting == null) "Přidat pravidlo" else "Upravit pravidlo") })
+                        TopAppBar(title = { Text(if (dialogExisting == null) AppStrings.current.addRule else AppStrings.current.editRuleTitle) })
                         Column(
                             modifier = Modifier
                                 .weight(1f)
@@ -446,12 +446,12 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                             OutlinedTextField(
                                 value = ruleName,
                                 onValueChange = { ruleName = it },
-                                label = { Text("Název pravidla") },
+                                label = { Text(AppStrings.current.ruleNameLabel) },
                                 modifier = Modifier.fillMaxWidth()
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             // Filter type selector using chips
-                            Text("Typ filtru:")
+                            Text(AppStrings.current.filterTypeLabel)
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -464,9 +464,9 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                     FilterType.BY_TYPE
                                 ).forEach { t ->
                                     val label = when (t) {
-                                        FilterType.BY_LOCATION -> "Místo"
-                                        FilterType.BY_TRAINER -> "Trenér"
-                                        FilterType.BY_TYPE -> "Typ"
+                                        FilterType.BY_LOCATION -> AppStrings.current.place
+                                        FilterType.BY_TRAINER -> AppStrings.current.trainer
+                                        FilterType.BY_TYPE -> AppStrings.current.eventType
                                         else -> t.name
                                     }
                                     FilterChip(
@@ -483,27 +483,26 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                 OutlinedTextField(
                                     value = timeValue,
                                     onValueChange = { timeValue = it },
-                                    label = { Text("Čas předem") },
+                                    label = { Text(AppStrings.current.timeAheadLabel) },
                                     modifier = Modifier.weight(1f)
                                 )
                                 Box {
-                                    Button(onClick = { timeUnitExpanded = true }) { Text(timeUnit) }
+                                    Button(onClick = { timeUnitExpanded = true }) { Text(if (isHours) AppStrings.current.hoursUnit else AppStrings.current.minutesUnit) }
                                     DropdownMenu(
                                         expanded = timeUnitExpanded,
                                         onDismissRequest = { timeUnitExpanded = false }) {
-                                        timeUnits.forEach { u ->
-                                            DropdownMenuItem(
-                                                text = { Text(u) },
-                                                onClick = {
-                                                    timeUnit = u; timeUnitExpanded = false
-                                                })
-                                        }
+                                        DropdownMenuItem(
+                                            text = { Text(AppStrings.current.minutesUnit) },
+                                            onClick = { isHours = false; timeUnitExpanded = false })
+                                        DropdownMenuItem(
+                                            text = { Text(AppStrings.current.hoursUnit) },
+                                            onClick = { isHours = true; timeUnitExpanded = false })
                                     }
                                 }
                             }
 
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text("Nebo vyber z dostupných hodnot:")
+                            Text(AppStrings.current.orPickFromValues)
                             when (selType) {
                                 FilterType.BY_LOCATION -> {
                                     LazyColumn(
@@ -591,12 +590,12 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                             modifier = Modifier.fillMaxWidth().padding(12.dp),
                             horizontalArrangement = Arrangement.End
                         ) {
-                            TextButton(onClick = { showDialog = false }) { Text("Zrušit") }
+                            TextButton(onClick = { showDialog = false }) { Text(AppStrings.current.cancel) }
                             Spacer(modifier = Modifier.padding(6.dp))
                             Button(onClick = {
                                 // parse single time + unit
                                 val tv = timeValue.trim().toIntOrNull() ?: 60
-                                val minutes = if (timeUnit == "hodiny") tv * 60 else tv
+                                val minutes = if (isHours) tv * 60 else tv
                                 val times = listOf(minutes)
                                 val existing = dialogExisting
 
@@ -636,7 +635,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                 }
                                 persist()
                                 showDialog = false
-                            }) { Text("Uložit") }
+                            }) { Text(AppStrings.current.save) }
                         }
                     }
                 }

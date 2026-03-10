@@ -67,6 +67,7 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoUnit
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.tkolympapp.SwipeToReload
 
 private enum class SortMode { ALPHABETICAL, BIRTHDAY }
@@ -94,15 +95,15 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) 
 
     Scaffold(topBar = {
         TopAppBar(
-            title = { Text("Lidé") },
+            title = { Text(AppStrings.current.people) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
-                    Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Zpět")
+                    Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = AppStrings.current.back)
                 }
             },
             actions = {
                 IconButton(onClick = { showSearch = !showSearch }) {
-                    Icon(imageVector = Icons.Filled.Search, contentDescription = "Hledat")
+                    Icon(imageVector = Icons.Filled.Search, contentDescription = AppStrings.current.search)
                 }
             }
         )
@@ -137,10 +138,10 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) 
                         IconButton(onClick = {
                             if (searchQuery.isNotBlank()) searchQuery = "" else showSearch = false
                         }) {
-                            Icon(imageVector = Icons.Filled.Close, contentDescription = "Zavřít")
+                            Icon(imageVector = Icons.Filled.Close, contentDescription = AppStrings.current.cancel)
                         }
                     },
-                    placeholder = { Text("Hledat podle jména nebo příjmení") }
+                    placeholder = { Text(AppStrings.current.searchByName) }
                 )
             }
 
@@ -149,11 +150,11 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) 
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = { sortMode = SortMode.ALPHABETICAL }) {
-                    Text("Abecedně", color = if (sortMode == SortMode.ALPHABETICAL) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                    Text(AppStrings.current.alphabetically, color = if (sortMode == SortMode.ALPHABETICAL) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 TextButton(onClick = { sortMode = SortMode.BIRTHDAY }) {
-                    Text("Narozeniny", color = if (sortMode == SortMode.BIRTHDAY) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                    Text(AppStrings.current.birthdays, color = if (sortMode == SortMode.BIRTHDAY) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
                 }
             }
 
@@ -182,7 +183,7 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) 
                     FilterChip(
                         selected = selectedGroups.isEmpty() || selectedGroups.size == groups.size,
                         onClick = { selectedGroups = emptySet() },
-                        label = { Text("Vše") }
+                        label = { Text(AppStrings.current.all) }
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     groups.forEach { (id, name) ->
@@ -226,7 +227,7 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) 
             // manual refresh removed; initial load happens in LaunchedEffect
 
             if (displayed.isEmpty()) {
-                Text("Žádní lidé k zobrazení.", modifier = Modifier.padding(16.dp))
+                Text(AppStrings.current.noPeopleToShow, modifier = Modifier.padding(16.dp))
             } else {
                 LazyColumn(modifier = Modifier.padding(4.dp)) {
                     items(displayed) { p ->

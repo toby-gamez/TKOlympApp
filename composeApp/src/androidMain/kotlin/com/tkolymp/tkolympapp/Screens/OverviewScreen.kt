@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.OverviewViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -52,7 +53,7 @@ fun OverviewScreen(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Přehled") })
+            TopAppBar(title = { Text(AppStrings.current.overview) })
         }
     ) { padding ->
         val scrollState = rememberScrollState()
@@ -93,7 +94,7 @@ fun OverviewScreen(
             // Trainings section (grouped by day, styled like Calendar)
             Spacer(modifier = Modifier.height(8.dp))
             Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("Nejbližší tréninky", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(AppStrings.current.upcomingTrainings, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
             val limitedTrainings = trainings.sortedBy { it.since ?: it.updatedAt ?: "" }
             val trainingsMapByDay = limitedTrainings.groupBy { inst ->
@@ -113,7 +114,7 @@ fun OverviewScreen(
                             CircularProgressIndicator()
                         }
                     } else {
-                        Text("Zatím jste si nic nenaplánovali", modifier = Modifier.padding(vertical = 6.dp))
+                        Text(AppStrings.current.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
                     }
                 } else {
                     val fmt = DateTimeFormatter.ISO_LOCAL_DATE
@@ -141,8 +142,8 @@ fun OverviewScreen(
                         val list = trainingsMapByDay[date] ?: emptyList()
                         Column(modifier = Modifier.padding(vertical = 6.dp)) {
                             val header = when (date) {
-                                todayKey -> "dnes"
-                                LocalDate.now().plusDays(1).format(fmt) -> "zítra"
+                                todayKey -> AppStrings.current.today.lowercase()
+                                LocalDate.now().plusDays(1).format(fmt) -> AppStrings.current.tomorrow.lowercase()
                                 else -> {
                                     val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
                                     if (ld == null) date else {
@@ -186,14 +187,14 @@ fun OverviewScreen(
             Row(modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 2.dp), horizontalArrangement = Arrangement.Center) {
-                TextButton(onClick = onOpenCalendar) { Text(if (trainingsEmpty) "Podívat se na ostatní" else "Více") }
+                TextButton(onClick = onOpenCalendar) { Text(if (trainingsEmpty) AppStrings.current.browseOthers else AppStrings.current.more) }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
             // Board announcements (styled like BoardScreen)
             Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("Něco z nástěnky", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(AppStrings.current.fromTheBoard, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
             Column(modifier = Modifier.padding(horizontal = 12.dp)) {
                 if (announcements.isEmpty()) {
@@ -207,7 +208,7 @@ fun OverviewScreen(
                             CircularProgressIndicator()
                         }
                     } else {
-                        Text("Zatím jste si nic nenaplánovali", modifier = Modifier.padding(vertical = 6.dp))
+                        Text(AppStrings.current.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
                     }
                 } else {
                     announcements.forEach { a ->
@@ -248,14 +249,14 @@ fun OverviewScreen(
             Row(modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 2.dp), horizontalArrangement = Arrangement.Center) {
-                TextButton(onClick = onOpenBoard) { Text(if (boardEmpty) "Podívat se na ostatní" else "Více") }
+                TextButton(onClick = onOpenBoard) { Text(if (boardEmpty) AppStrings.current.browseOthers else AppStrings.current.more) }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
             // Camps section (styled like Calendar)
             Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("Nejbližší soustředění", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(AppStrings.current.upcomingCamps, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
             val limitedCamps = camps.sortedBy { it.since ?: it.updatedAt ?: "" }.take(2)
             val campsMapByDay = limitedCamps.groupBy { inst ->
@@ -275,7 +276,7 @@ fun OverviewScreen(
                             CircularProgressIndicator()
                         }
                     } else {
-                        Text("Zatím jste si nic nenaplánovali", modifier = Modifier.padding(vertical = 6.dp))
+                        Text(AppStrings.current.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
                     }
                 } else {
                     val fmt = DateTimeFormatter.ISO_LOCAL_DATE
@@ -284,8 +285,8 @@ fun OverviewScreen(
                     campsMapByDay.forEach { (date, list) ->
                         Column(modifier = Modifier.padding(vertical = 6.dp)) {
                             val header = when (date) {
-                                todayKey -> "dnes"
-                                LocalDate.now().plusDays(1).format(fmt) -> "zítra"
+                                todayKey -> AppStrings.current.today.lowercase()
+                                LocalDate.now().plusDays(1).format(fmt) -> AppStrings.current.tomorrow.lowercase()
                                 else -> {
                                     val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
                                     if (ld == null) date else {
@@ -309,7 +310,7 @@ fun OverviewScreen(
             Row(modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 2.dp), horizontalArrangement = Arrangement.Center) {
-                TextButton(onClick = onOpenEvents) { Text(if (campsEmpty) "Podívat se na ostatní" else "Více") }
+                TextButton(onClick = onOpenEvents) { Text(if (campsEmpty) AppStrings.current.browseOthers else AppStrings.current.more) }
             }
 
             if (state.isLoading) {
@@ -331,11 +332,11 @@ private fun OverviewSection(
 ) {
     Row(modifier = Modifier.padding(horizontal = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(title, style = MaterialTheme.typography.titleMedium)
-        TextButton(onClick = onMore) { Text(if (items.isEmpty()) "Podívat se na ostatní" else "Více") }
+        TextButton(onClick = onMore) { Text(if (items.isEmpty()) AppStrings.current.browseOthers else AppStrings.current.more) }
     }
     Column(modifier = Modifier.padding(horizontal = 12.dp)) {
         if (items.isEmpty()) {
-            Text("Zatím jste si nic nenaplánovali", modifier = Modifier.padding(vertical = 6.dp))
+            Text(AppStrings.current.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
         } else {
             items.forEach { (id, label) ->
                 Text(

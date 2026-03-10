@@ -42,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.ProfileViewModel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -211,11 +212,11 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Můj profil") },
+                title = { Text(AppStrings.current.myProfile) },
                 navigationIcon = {
                     onBack?.let {
                         IconButton(onClick = it) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Zpět")
+                            Icon(Icons.Default.ArrowBack, contentDescription = AppStrings.current.back)
                         }
                     }
                 }
@@ -310,23 +311,23 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
 
                 // Labeling and categorization
                 val labelMap = mapOf(
-                    "email" to "Email",
-                    "address" to "Adresa",
-                    "isTrainer" to "Trenér",
-                    "mobilePhone" to "Telefon",
-                    "phone" to "Telefon",
-                    "workPhone" to "Telefon (služ.)",
-                    "birthDate" to "Datum narození",
-                    "gender" to "Pohlaví",
-                    "nationality" to "Státní příslušnost",
-                    "username" to "Uživatelské jméno",
+                    "email" to AppStrings.current.email,
+                    "address" to AppStrings.current.address,
+                    "isTrainer" to AppStrings.current.trainer,
+                    "mobilePhone" to AppStrings.current.mobile,
+                    "phone" to AppStrings.current.phone,
+                    "workPhone" to AppStrings.current.workPhone,
+                    "birthDate" to AppStrings.current.birthDate,
+                    "gender" to AppStrings.current.gender,
+                    "nationality" to AppStrings.current.nationality,
+                    "username" to AppStrings.current.username,
                     "id" to "ID",
-                    "personalId" to "Rodné číslo",
-                    "nationalIdNumber" to "Rodné číslo",
-                    "passportNumber" to "Číslo pasu",
-                    "idNumber" to "Číslo dokladu",
-                    "wdsfId" to "WDSF ID",
-                    "cstsId" to "ČSTS IDT"
+                    "personalId" to AppStrings.current.personalId,
+                    "nationalIdNumber" to AppStrings.current.personalId,
+                    "passportNumber" to AppStrings.current.passportNumber,
+                    "idNumber" to AppStrings.current.idNumber,
+                    "wdsfId" to AppStrings.current.wdsfId,
+                    "cstsId" to AppStrings.current.cstsId
                 )
 
                 fun humanizeKey(k: String): String {
@@ -353,12 +354,12 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                 }
         Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(12.dp)) {
-                Text("O mně", style = MaterialTheme.typography.labelLarge)
+                Text(AppStrings.current.aboutMe, style = MaterialTheme.typography.labelLarge)
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
                 if (!bioText.isNullOrBlank()) {
                     Text(bioText!!, style = MaterialTheme.typography.bodyMedium)
                 } else {
-                    Text("Bio není dostupné.", style = MaterialTheme.typography.bodySmall)
+                    Text(AppStrings.current.bioNotAvailable, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -366,19 +367,19 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         // Address card — show all available address subfields
         Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(12.dp)) {
-                Text("Adresa", style = MaterialTheme.typography.labelLarge)
+                Text(AppStrings.current.address, style = MaterialTheme.typography.labelLarge)
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
                 if (addressFields.isNotEmpty()) {
                     addressFields.forEach { (k, v) ->
                         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.Start) {
                             val label = when (k) {
-                                "street" -> "Ulice"
-                                "city" -> "Město"
-                                "postalCode" -> "PSČ"
-                                "region" -> "Kraj"
-                                "district" -> "Okres"
-                                "conscriptionNumber" -> "Číslo popisné"
-                                "orientationNumber" -> "Číslo orientační"
+                                "street" -> AppStrings.current.street
+                                "city" -> AppStrings.current.city
+                                "postalCode" -> AppStrings.current.zip
+                                "region" -> AppStrings.current.region
+                                "district" -> AppStrings.current.district
+                                "conscriptionNumber" -> AppStrings.current.conscriptionNumber
+                                "orientationNumber" -> AppStrings.current.orientationNumber
                                 else -> k
                             }
                             Text("$label:", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(end = 8.dp))
@@ -388,7 +389,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                 } else if (!addrText.isNullOrBlank()) {
                     Text(addrText!!, style = MaterialTheme.typography.bodyMedium)
                 } else {
-                    Text("Adresa není dostupná.", style = MaterialTheme.typography.bodySmall)
+                    Text(AppStrings.current.addressNotAvailable, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -396,7 +397,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         // Active couples card (prefer activeCouplesList data)
         Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(12.dp)) {
-                Text("Aktivní páry", style = MaterialTheme.typography.labelLarge)
+                Text(AppStrings.current.activeCouple, style = MaterialTheme.typography.labelLarge)
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
                 if (activeCoupleNames.isNotEmpty()) {
                     Column {
@@ -405,7 +406,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                         }
                     }
                 } else {
-                    Text("Žádné aktivní páry.", style = MaterialTheme.typography.bodySmall)
+                    Text(AppStrings.current.noActiveCouples, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -413,7 +414,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         // Groups (cohorts) card - styled like PersonPage
         Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(12.dp)) {
-                Text("Tréninkové skupiny", style = MaterialTheme.typography.labelLarge)
+                Text(AppStrings.current.trainingGroups, style = MaterialTheme.typography.labelLarge)
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
                 if (cohortItems.isNotEmpty()) {
                     Column {
@@ -429,8 +430,8 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                                     Row(modifier = Modifier.fillMaxWidth()) {
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(text = item.name, style = MaterialTheme.typography.titleSmall)
-                                            if (!since.isNullOrBlank()) Text("Od: ${since}", style = MaterialTheme.typography.labelSmall)
-                                            if (!until.isNullOrBlank()) Text("Do: ${until}", style = MaterialTheme.typography.labelSmall)
+                                            if (!since.isNullOrBlank()) Text("${AppStrings.current.dateFrom}: ${since}", style = MaterialTheme.typography.labelSmall)
+                                            if (!until.isNullOrBlank()) Text("${AppStrings.current.dateTo}: ${until}", style = MaterialTheme.typography.labelSmall)
                                         }
                                         Box(modifier = Modifier
                                             .width(28.dp)
@@ -445,7 +446,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                         }
                     }
                 } else {
-                    Text("Žádné skupiny.", style = MaterialTheme.typography.bodySmall)
+                    Text(AppStrings.current.noGroupsToShow, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -454,7 +455,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         if (personalList.isNotEmpty()) {
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Text("Osobní údaje", style = MaterialTheme.typography.labelLarge)
+                    Text(AppStrings.current.personalData, style = MaterialTheme.typography.labelLarge)
                     Divider(modifier = Modifier.padding(vertical = 8.dp))
                     personalList.forEach { (k, v) ->
                         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.Start) {
@@ -470,7 +471,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         if (contactList.isNotEmpty()) {
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Text("Kontakty", style = MaterialTheme.typography.labelLarge)
+                    Text(AppStrings.current.contacts, style = MaterialTheme.typography.labelLarge)
                     Divider(modifier = Modifier.padding(vertical = 8.dp))
                     contactList.forEach { (k, v) ->
                         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.Start) {
@@ -486,7 +487,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         if (externalList.isNotEmpty()) {
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Text("Externí identifikace", style = MaterialTheme.typography.labelLarge)
+                    Text(AppStrings.current.externalIdSection, style = MaterialTheme.typography.labelLarge)
                     Divider(modifier = Modifier.padding(vertical = 8.dp))
                     externalList.forEach { (k, v) ->
                         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.Start) {
@@ -502,7 +503,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         if (otherList.isNotEmpty()) {
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Text("Ostatní detaily", style = MaterialTheme.typography.labelLarge)
+                    Text(AppStrings.current.otherDetails, style = MaterialTheme.typography.labelLarge)
                     Divider(modifier = Modifier.padding(vertical = 8.dp))
                     otherList.forEach { (k, v) ->
                         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.Start) {

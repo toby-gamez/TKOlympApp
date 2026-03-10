@@ -39,6 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tkolymp.shared.viewmodels.LoginViewModel
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.tkolympapp.ui.brandLightPrimary
 import kotlinx.coroutines.launch
 
@@ -97,7 +98,7 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
             OutlinedTextField(
                 value = state.username,
                 onValueChange = { viewModel.updateUsername(it) },
-                label = { Text("E-mail nebo přihlašovací jméno") },
+                label = { Text(AppStrings.current.emailOrUsername) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true
@@ -106,7 +107,7 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
             OutlinedTextField(
                 value = state.password,
                 onValueChange = { viewModel.updatePassword(it) },
-                label = { Text("Heslo") },
+                label = { Text(AppStrings.current.password) },
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation(),
                 shape = RoundedCornerShape(12.dp),
@@ -137,7 +138,7 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text("Přihlásit se", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    Text(AppStrings.current.login, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
 
@@ -150,7 +151,7 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Zapomenuté heslo?",
+                        text = AppStrings.current.forgotPassword,
                         color = MaterialTheme.colorScheme.primary,
                         textAlign = TextAlign.Center
                     )

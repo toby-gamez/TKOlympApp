@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.calendar.CalendarUtils
 import com.tkolymp.shared.calendar.CalendarViewModel
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.calendar.EventLayoutData
 import com.tkolymp.shared.calendar.ViewMode
 import com.tkolymp.shared.event.Event
@@ -89,11 +90,11 @@ fun CalendarViewScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Timeline") },
+                title = { Text(AppStrings.current.timeline) },
                 navigationIcon = {
                     onBack?.let {
                         IconButton(onClick = it) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Zpět")
+                            Icon(Icons.Default.ArrowBack, contentDescription = AppStrings.current.back)
                         }
                     }
                 }
@@ -133,7 +134,7 @@ fun CalendarViewScreen(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "Chyba při načítání",
+                            text = AppStrings.current.errorLoadingEvents,
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.error
                         )
@@ -144,7 +145,7 @@ fun CalendarViewScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(onClick = { scope.launch { viewModel.loadEvents() } }) {
-                            Text("Zkusit znovu")
+                            Text(AppStrings.current.retry)
                         }
                     }
                 }
@@ -195,7 +196,7 @@ internal fun CalendarTopBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onPreviousClick) {
-                Icon(Icons.Default.ChevronLeft, "Předchozí")
+                Icon(Icons.Default.ChevronLeft, AppStrings.current.previous)
             }
             
             Text(
@@ -206,7 +207,7 @@ internal fun CalendarTopBar(
             )
             
             IconButton(onClick = onNextClick) {
-                Icon(Icons.Default.ChevronRight, "Další")
+                Icon(Icons.Default.ChevronRight, AppStrings.current.next)
             }
         }
         
@@ -229,9 +230,9 @@ internal fun CalendarTopBar(
                         label = {
                             Text(
                                 when (mode) {
-                                    ViewMode.DAY -> "Den"
-                                    ViewMode.THREE_DAY -> "3 dny"
-                                    ViewMode.WEEK -> "Týden"
+                                    ViewMode.DAY -> AppStrings.current.viewModeDay
+                                    ViewMode.THREE_DAY -> AppStrings.current.viewModeThreeDays
+                                    ViewMode.WEEK -> AppStrings.current.viewModeWeek
                                 }
                             )
                         }
@@ -245,13 +246,13 @@ internal fun CalendarTopBar(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TextButton(onClick = onTodayClick) {
-                    Text("Dnes")
+                    Text(AppStrings.current.today)
                 }
 
                 FilterChip(
                     selected = showOnlyMine,
                     onClick = onToggleOnlyMine,
-                    label = { Text("Moje") }
+                    label = { Text(AppStrings.current.mine) }
                 )
             }
         }
@@ -540,9 +541,10 @@ internal fun TimelineEventCard(
     val isLesson = event.type?.equals("lesson", ignoreCase = true) == true
     
     // For lessons, get couple name or "VOLNO"
-    val coupleInfo = remember(event.event, isLesson) {
+    val freeLesson = AppStrings.current.freeLesson
+    val coupleInfo = remember(event.event, isLesson, freeLesson) {
         if (isLesson) {
-            getCoupleInfo(event.event)
+            getCoupleInfo(event.event, freeLesson)
         } else null
     }
     
@@ -660,14 +662,14 @@ internal data class CoupleInfo(
 )
 
 /**
- * Get couple info from event - returns couple name or "VOLNO" if no registrations
+ * Get couple info from event - returns couple name or free label if no registrations
  */
-internal fun getCoupleInfo(event: Event?): CoupleInfo? {
+internal fun getCoupleInfo(event: Event?, freeLabel: String = "VOLNO"): CoupleInfo? {
     if (event == null) return null
     
     // Check if there are any registrations
     if (event.eventRegistrationsList.isEmpty()) {
-        return CoupleInfo("VOLNO", true)
+        return CoupleInfo(freeLabel, true)
     }
     
     // Try to get first registration with couple
@@ -681,12 +683,12 @@ internal fun getCoupleInfo(event: Event?): CoupleInfo? {
         return if (!manLastName.isNullOrBlank() && !womanLastName.isNullOrBlank()) {
             CoupleInfo("$manLastName - $womanLastName", false)
         } else {
-            CoupleInfo("VOLNO", true)
+            CoupleInfo(freeLabel, true)
         }
     }
     
     // No couple, show as free
-    return CoupleInfo("VOLNO", true)
+    return CoupleInfo(freeLabel, true)
 }
 
 /**
