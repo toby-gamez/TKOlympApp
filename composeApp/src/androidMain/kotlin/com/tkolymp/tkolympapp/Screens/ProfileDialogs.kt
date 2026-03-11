@@ -10,6 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -69,11 +70,11 @@ fun ChangePasswordDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
             }
         },
         confirmButton = {
-            TextButton(onClick = {
+            Button(onClick = {
                 // validation
                 error = null
-                if (newPass.length < 8) { error = strings.passwordMinLength; return@TextButton }
-                if (newPass != confirm) { error = strings.passwordsMismatch; return@TextButton }
+                if (newPass.length < 8) { error = strings.passwordMinLength; return@Button }
+                if (newPass != confirm) { error = strings.passwordsMismatch; return@Button }
 
                 scope.launch {
                     loading = true
@@ -267,7 +268,7 @@ fun ChangePersonalDataDialog(
                             }
                             if (showDatePicker) {
                                 DatePickerDialog(onDismissRequest = { showDatePicker = false }, confirmButton = {
-                                    TextButton(onClick = {
+                                    Button(onClick = {
                                         val selMillis = datePickerState.selectedDateMillis
                                         if (selMillis != null) {
                                             val sel = Instant.ofEpochMilli(selMillis).atZone(ZoneId.systemDefault()).toLocalDate()
@@ -317,9 +318,9 @@ fun ChangePersonalDataDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = {
+            Button(onClick = {
                 error = null
-                if (email.isNotBlank() && !email.contains("@")) { error = strings.invalidEmail; return@TextButton }
+                if (email.isNotBlank() && !email.contains("@")) { error = strings.invalidEmail; return@Button }
                 scope.launch {
                     saving = true
                     try {
