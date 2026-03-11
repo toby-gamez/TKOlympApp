@@ -16,7 +16,10 @@ enum class AppLanguage(
     BRAINROT("en_au", "Brainrot", "🧠", isBrainrot = true);
 
     companion object {
-        fun fromCode(code: String): AppLanguage =
-            entries.find { it.code == code } ?: CS
+        fun fromCode(code: String): AppLanguage {
+            // "uk" is the standard ISO 639-1 code for Ukrainian; map to our internal "ua"
+            val normalized = if (code == "uk") "ua" else code
+            return entries.find { it.code == normalized } ?: CS
+        }
     }
 }

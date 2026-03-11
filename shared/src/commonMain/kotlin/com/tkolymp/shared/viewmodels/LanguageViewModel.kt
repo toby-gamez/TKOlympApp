@@ -3,6 +3,7 @@ package com.tkolymp.shared.viewmodels
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.language.AppLanguage
 import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.shared.language.getDeviceLanguageCode
 import com.tkolymp.shared.storage.LanguageStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,8 +29,13 @@ class LanguageViewModel(
 
     fun load() {
         scope.launch {
-            val code = try { languageStorage.getLanguageCode() } catch (_: Throwable) { null }
-            val language = if (code != null) AppLanguage.fromCode(code) else AppLanguage.CS
+            val savedCode = try { languageStorage.getLanguageCode() } catch (_: Throwable) { null }
+            val language = if (savedCode != null) {
+                AppLanguage.fromCode(savedCode)
+            } else {
+                // No saved preference – use the device language, fall back to CS if unsupported
+                AppLanguage.fromCode(getDeviceLanguageCode())
+            }
             AppStrings.setLanguage(language)
             _state.value = _state.value.copy(selectedLanguage = language)
         }

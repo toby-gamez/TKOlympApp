@@ -2,6 +2,7 @@ package com.tkolymp.tkolympapp
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -41,8 +42,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.tkolymp.shared.ServiceLocator
+import androidx.compose.runtime.collectAsState
 import com.tkolymp.shared.language.AppLanguage
 import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.shared.language.getDeviceLanguageCode
 import com.tkolymp.shared.viewmodels.OnboardingViewModel
 import com.tkolymp.tkolympapp.Screens.AboutScreen
 import com.tkolymp.tkolympapp.Screens.CalendarViewScreen
@@ -68,22 +71,28 @@ import ui.theme.AppTheme
 @Preview
 fun App() {
     AppTheme {
+        val currentLanguage by AppStrings.languageFlow.collectAsState()
+
         var loggedIn by remember { mutableStateOf<Boolean?>(null) }
         var showOnboarding by remember { mutableStateOf<Boolean?>(null) }
         var weekOffset by remember { mutableIntStateOf(0) }
-        val navController = rememberNavController()
-        val currentBackStackEntry by navController.currentBackStackEntryAsState()
-        val currentRoute = currentBackStackEntry?.destination?.route
 
         val ctx = LocalContext.current
         if (!LocalInspectionMode.current) {
             LaunchedEffect(Unit) {
                 try {
                     com.tkolymp.shared.initNetworking(ctx, "https://api.rozpisovnik.cz/graphql")
-                    // Restore saved language before anything renders
+                    // Restore saved language, or fall back to device language on first launch
                     try {
                         val code = ServiceLocator.languageStorage.getLanguageCode()
-                        if (code != null) AppStrings.setLanguage(AppLanguage.fromCode(code))
+                        val language = if (code != null) {
+                            AppLanguage.fromCode(code)
+                        } else {
+                            val detected = AppLanguage.fromCode(getDeviceLanguageCode())
+                            ServiceLocator.languageStorage.saveLanguageCode(detected.code)
+                            detected
+                        }
+                        AppStrings.setLanguage(language)
                     } catch (_: Throwable) {}
                     val has = try { com.tkolymp.shared.ServiceLocator.authService.hasToken() } catch (_: Throwable) { false }
                     // Show onboarding only on first launch (persisted in onboarding storage)
@@ -101,6 +110,11 @@ fun App() {
             if (loggedIn == null) loggedIn = false
             if (showOnboarding == null) showOnboarding = true
         }
+
+        Crossfade(targetState = currentLanguage, animationSpec = tween(600), label = "languageTransition") { _ ->
+        val navController = rememberNavController()
+        val currentBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentRoute = currentBackStackEntry?.destination?.route
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -163,6 +177,7 @@ fun App() {
                 }
             }
         }
+        } // end Crossfade(currentLanguage)
     }
 }
 

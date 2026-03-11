@@ -14,6 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.tkolymp.shared.language.AppLanguage
+import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.shared.language.getDeviceLanguageCode
 import kotlinx.coroutines.launch
 
 @SuppressLint("InvalidFragmentVersionForActivityResult")
@@ -25,6 +28,17 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+
+        // Apply language synchronously before first composition so every screen
+        // (including OnboardingScreen) already sees the correct language.
+        val prefs = getSharedPreferences("tkolymp_prefs", Context.MODE_PRIVATE)
+        val savedCode = prefs.getString("language_code", null)
+        val language = if (savedCode != null) {
+            AppLanguage.fromCode(savedCode)
+        } else {
+            AppLanguage.fromCode(getDeviceLanguageCode())
+        }
+        AppStrings.setLanguage(language)
 
         // Create notification channel
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
