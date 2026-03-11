@@ -15,7 +15,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.ui.Alignment as ComposeAlignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -65,7 +65,7 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
 
     Scaffold(
         topBar = { TopAppBar(title = { Text(AppStrings.current.leaderboardTitle) }, navigationIcon = {
-            Icon(Icons.Filled.ArrowBack, contentDescription = AppStrings.current.back, modifier = Modifier
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.back, modifier = Modifier
                 .clickable { onBack() }
                 .padding(12.dp))
         }) }

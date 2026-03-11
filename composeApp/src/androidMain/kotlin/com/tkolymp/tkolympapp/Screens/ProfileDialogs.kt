@@ -16,6 +16,7 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
@@ -418,7 +419,7 @@ fun ChangePersonalDataDialog(
                         singleLine = true,
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = nationalityExpanded) },
-                        modifier = Modifier.fillMaxWidth().menuAnchor()
+                        modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                     )
                     ExposedDropdownMenu(
                         expanded = nationalityExpanded,
@@ -435,7 +436,7 @@ fun ChangePersonalDataDialog(
                         }
                     }
                 }
-                androidx.compose.material3.Divider(modifier = Modifier.padding(vertical = 6.dp))
+                androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
                 Text(strings.contacts, style = MaterialTheme.typography.labelSmall)
                 TextField(value = phone, onValueChange = { phone = it }, label = { Text(strings.phone) }, singleLine = true)
                 TextField(value = mobile, onValueChange = { mobile = it }, label = { Text(strings.mobile) }, singleLine = true)
@@ -485,7 +486,7 @@ fun ChangePersonalDataDialog(
                         singleLine = true,
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = genderExpanded) },
-                        modifier = Modifier.fillMaxWidth().menuAnchor()
+                        modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                     )
                     DropdownMenu(expanded = genderExpanded, onDismissRequest = { genderExpanded = false }) {
                         listOf(strings.genderMale, strings.genderFemale, strings.genderUnspecified).forEach { opt ->
@@ -496,7 +497,7 @@ fun ChangePersonalDataDialog(
                         }
                     }
                 }
-                androidx.compose.material3.Divider(modifier = Modifier.padding(vertical = 6.dp))
+                androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
                 Text(strings.address, style = MaterialTheme.typography.labelSmall)
                 TextField(value = street, onValueChange = { street = it }, label = { Text(strings.street) }, singleLine = true)
                 TextField(value = city, onValueChange = { city = it }, label = { Text(strings.city) }, singleLine = true)

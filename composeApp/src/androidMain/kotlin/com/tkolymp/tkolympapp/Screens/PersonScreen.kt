@@ -14,10 +14,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -60,7 +60,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
 
     Scaffold(topBar = {
         TopAppBar(title = { Text(AppStrings.current.person) }, navigationIcon = {
-            IconButton(onClick = onBack) { Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = AppStrings.current.back) }
+            IconButton(onClick = onBack) { Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.back) }
         })
     }) { padding ->
         val scope = rememberCoroutineScope()
@@ -90,7 +90,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(8.dp)) {
                     Text(AppStrings.current.basicInfo, style = MaterialTheme.typography.labelLarge)
-                    Divider(modifier = Modifier.padding(vertical = 6.dp))
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
                     p.birthDate?.let { bd ->
                         val bdText = formatDateStringSmall(bd) ?: bd
                         Text("${AppStrings.current.birthDate}: $bdText", style = MaterialTheme.typography.bodySmall)
@@ -116,7 +116,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                 Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                     Column(modifier = Modifier.padding(8.dp)) {
                         Text(AppStrings.current.aboutMe, style = MaterialTheme.typography.labelLarge)
-                        Divider(modifier = Modifier.padding(vertical = 6.dp))
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
                         Text(bio, style = MaterialTheme.typography.bodyMedium)
                     }
                 }
@@ -128,7 +128,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                 Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                     Column(modifier = Modifier.padding(8.dp)) {
                         Text(AppStrings.current.trainingGroups, style = MaterialTheme.typography.labelLarge)
-                        Divider(modifier = Modifier.padding(vertical = 6.dp))
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
                         Column {
                             visibleGroups.forEach { mem ->
                                     val c = mem.cohort ?: return@forEach
@@ -176,7 +176,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                 Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                     Column(modifier = Modifier.padding(12.dp)) {
                         Text(AppStrings.current.activeCouple, style = MaterialTheme.typography.labelLarge)
-                        Divider(modifier = Modifier.padding(vertical = 8.dp))
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                         p.activeCouplesList.forEach { c ->
                             Card(modifier = Modifier
                                 .fillMaxWidth()

@@ -17,7 +17,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -114,7 +114,7 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
                 navigationIcon = {
                     onBack?.let {
                         IconButton(onClick = it) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = AppStrings.current.back)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.back)
                         }
                     }
                 }
@@ -158,7 +158,7 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
                                 return try {
                                     val inst = Instant.parse(iso)
                                     val zdt = inst.atZone(ZoneId.systemDefault())
-                                    val fmt = DateTimeFormatter.ofPattern("d. M. yyyy HH:mm").withLocale(Locale("cs"))
+                                    val fmt = DateTimeFormatter.ofPattern("d. M. yyyy HH:mm").withLocale(Locale.forLanguageTag("cs"))
                                     fmt.format(zdt)
                                 } catch (ex: DateTimeParseException) {
                                     iso

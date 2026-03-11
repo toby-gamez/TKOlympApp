@@ -24,14 +24,13 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ViewTimeline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -42,7 +41,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -56,12 +54,12 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.event.EventInstance
+import com.tkolymp.shared.language.AppStrings
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import com.tkolymp.tkolympapp.SwipeToReload
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -172,8 +170,6 @@ fun CalendarScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
                 val grouped = calState.eventsByDay
                 val todayKey = baseToday.format(fmt)
                 val visibleDates = mutableListOf<String>()
@@ -198,7 +194,7 @@ fun CalendarScreen(
                                     if (ld == null) date else {
                                         val now = LocalDate.now()
                                         val pattern = if (ld.year == now.year) "EEEE, d. MMMM" else "EEEE, d. MMMM yyyy"
-                                        ld.format(DateTimeFormatter.ofPattern(pattern, Locale("cs")))
+                                        ld.format(DateTimeFormatter.ofPattern(pattern, Locale.forLanguageTag("cs")))
                                     }
                                 }
                             }
@@ -244,17 +240,6 @@ fun CalendarScreen(
                 text = { Text(err) }
             )
         }
-    }
-}
-
-@Composable
-internal fun PrimaryTabRow(
-    selectedTabIndex: Int,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
-) {
-    TabRow(selectedTabIndex = selectedTabIndex, modifier = modifier) {
-        content()
     }
 }
 

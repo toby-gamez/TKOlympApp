@@ -1,10 +1,11 @@
 package com.tkolymp.tkolympapp
 
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SwipeToReload(
     isRefreshing: Boolean,
@@ -12,8 +13,11 @@ fun SwipeToReload(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
-    val state = rememberSwipeRefreshState(isRefreshing)
-    SwipeRefresh(state = state, onRefresh = onRefresh, modifier = modifier) {
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = onRefresh,
+        modifier = modifier
+    ) {
         content()
     }
 }

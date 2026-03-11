@@ -20,14 +20,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -94,7 +94,7 @@ fun CalendarViewScreen(
                 navigationIcon = {
                     onBack?.let {
                         IconButton(onClick = it) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = AppStrings.current.back)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.back)
                         }
                     }
                 }
@@ -119,7 +119,7 @@ fun CalendarViewScreen(
             onToggleOnlyMine = { scope.launch { viewModel.toggleShowOnlyMine() } }
         )
         
-        Divider()
+        HorizontalDivider()
 
         // Timeline view wrapped in swipe-to-refresh — keep UI visible during refresh
         SwipeToReload(
@@ -446,7 +446,7 @@ internal fun MultiDayTimelineView(
                     }
                     
                     // Divider between days
-                    Divider(
+                    HorizontalDivider(
                         modifier = Modifier
                             .width(1.dp)
                             .height(totalHeight + dayHeaderHeight),
