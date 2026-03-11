@@ -30,6 +30,7 @@ val StringsEn = Strings(
     ok = "OK",
     retry = "Retry",
     logout = "Log Out",
+    confirmLogoutText = "Are you sure you want to log out?",
     edit = "Edit",
     showLess = "Show Less",
     showAll = "Show All",

@@ -30,6 +30,7 @@ val StringsVi = Strings(
     ok = "OK",
     retry = "Thử lại",
     logout = "Đăng xuất",
+    confirmLogoutText = "Bạn có chắc chắn muốn đăng xuất không?",
     edit = "Chỉnh sửa",
     showLess = "Hiển thị ít hơn",
     showAll = "Hiển thị tất cả",

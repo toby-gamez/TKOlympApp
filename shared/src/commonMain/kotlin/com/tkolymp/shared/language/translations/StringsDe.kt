@@ -30,6 +30,7 @@ val StringsDe = Strings(
     ok = "OK",
     retry = "Erneut versuchen",
     logout = "Abmelden",
+    confirmLogoutText = "Möchten Sie sich wirklich abmelden?",
     edit = "Bearbeiten",
     showLess = "Weniger anzeigen",
     showAll = "Alle anzeigen",

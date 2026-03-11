@@ -30,6 +30,7 @@ val StringsSk = Strings(
     ok = "OK",
     retry = "Skúsiť znova",
     logout = "Odhlásiť",
+    confirmLogoutText = "Naozaj sa chcete odhlásiť?",
     edit = "Upraviť",
     showLess = "Zobraziť menej",
     showAll = "Zobraziť všetko",

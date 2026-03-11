@@ -297,7 +297,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                             )
                                         }
                                         Text(
-                                            text = "${r.timesBeforeMinutes.joinToString(", ")} min předem",
+                                            text = "${r.timesBeforeMinutes.joinToString(", ")} ${AppStrings.current.minutesBefore}",
                                             style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
                                             modifier = Modifier.padding(top = 6.dp)
                                         )

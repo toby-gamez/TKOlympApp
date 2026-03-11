@@ -16,9 +16,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.TextButton
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -527,7 +529,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                     onClick = { showChangePassDialog = true },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Změnit heslo")
+                    Text(AppStrings.current.changePassword)
                 }
 
                 if (showChangePassDialog) {
@@ -546,7 +548,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                     onClick = { showEditPersonal = true },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Změnit osobní data")
+                    Text(AppStrings.current.changePersonalData)
                 }
 
                 if (showEditPersonal) {
@@ -612,14 +614,34 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                 }
         }
 
-        Button(onClick = {
-            scope.launch {
-                try { ServiceLocator.tokenStorage.clear() } catch (_: Throwable) {}
-                try { ServiceLocator.userService.clear() } catch (_: Throwable) {}
-                onLogout()
-            }
-        }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
-            Text("Odhlásit")
+        var showLogoutConfirm by remember { mutableStateOf(false) }
+
+        if (showLogoutConfirm) {
+            AlertDialog(
+                onDismissRequest = { showLogoutConfirm = false },
+                title = { Text(AppStrings.current.logout) },
+                text = { Text(AppStrings.current.confirmLogoutText) },
+                confirmButton = {
+                    Button(onClick = {
+                        showLogoutConfirm = false
+                        scope.launch {
+                            try { ServiceLocator.tokenStorage.clear() } catch (_: Throwable) {}
+                            try { ServiceLocator.userService.clear() } catch (_: Throwable) {}
+                            onLogout()
+                        }
+                    }) { Text(AppStrings.current.logout) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showLogoutConfirm = false }) { Text(AppStrings.current.cancel) }
+                }
+            )
+        }
+
+        Button(
+            onClick = { showLogoutConfirm = true },
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+        ) {
+            Text(AppStrings.current.logout)
         }
     }
     }

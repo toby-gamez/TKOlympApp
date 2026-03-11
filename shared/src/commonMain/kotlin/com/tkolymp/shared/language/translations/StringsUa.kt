@@ -30,6 +30,7 @@ val StringsUa = Strings(
     ok = "OK",
     retry = "Спробувати знову",
     logout = "Вийти",
+    confirmLogoutText = "Ви дійсно хочете вийти?",
     edit = "Редагувати",
     showLess = "Показати менше",
     showAll = "Показати все",

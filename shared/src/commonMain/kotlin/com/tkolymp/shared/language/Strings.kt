@@ -36,6 +36,7 @@ data class Strings(
     val ok: String,
     val retry: String,
     val logout: String,
+    val confirmLogoutText: String,
     val edit: String,
     val showLess: String,
     val showAll: String,
