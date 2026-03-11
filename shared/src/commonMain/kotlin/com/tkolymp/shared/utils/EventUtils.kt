@@ -1,6 +1,7 @@
 package com.tkolymp.shared.utils
 
 import com.tkolymp.shared.event.Event
+import com.tkolymp.shared.language.AppStrings
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -9,12 +10,13 @@ import kotlinx.datetime.toLocalDateTime
 
 fun translateEventType(type: String?): String? {
     if (type.isNullOrBlank()) return null
+    val s = AppStrings.current
     return when (type.trim().lowercase()) {
-        "group" -> "společná"
-        "lesson" -> "lekce"
-        "holiday" -> "prázdniny"
-        "rezervation" -> "nabídka"
-        "camp" -> "soustředění"
+        "group" -> s.eventTypeGroup
+        "lesson" -> s.eventTypeLesson
+        "holiday" -> s.eventTypeHoliday
+        "rezervation" -> s.eventTypeReservation
+        "camp" -> s.eventTypeCamp
         else -> type
     }
 }

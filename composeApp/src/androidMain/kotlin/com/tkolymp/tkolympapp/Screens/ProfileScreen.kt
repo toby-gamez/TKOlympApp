@@ -245,8 +245,8 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
 
                     // Booleans
                     when {
-                        v.equals("true", ignoreCase = true) -> return "ano"
-                        v.equals("false", ignoreCase = true) -> return "ne"
+                        v.equals("true", ignoreCase = true) -> return AppStrings.current.yes
+                        v.equals("false", ignoreCase = true) -> return AppStrings.current.no
                     }
 
                     // Birth date formatting (try several ISO-like formats)
@@ -271,9 +271,9 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                     val up = v.uppercase()
                     if (key.equals("gender", ignoreCase = true) || up in setOf("MAN", "WOMAN", "UNSPECIFIED")) {
                         return when (up) {
-                            "MAN" -> "muž"
-                            "WOMAN" -> "žena"
-                            else -> "nevybráno"
+                            "MAN" -> AppStrings.current.genderMale
+                            "WOMAN" -> AppStrings.current.genderFemale
+                            else -> AppStrings.current.genderUnspecified
                         }
                     }
 
