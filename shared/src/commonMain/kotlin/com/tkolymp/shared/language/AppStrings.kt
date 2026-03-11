@@ -20,10 +20,13 @@ import com.tkolymp.shared.language.translations.StringsVi
  */
 object AppStrings {
     private var _current: Strings = StringsCs
+    private var _currentLanguage: AppLanguage = AppLanguage.CS
     val current: Strings get() = _current
+    val currentLanguage: AppLanguage get() = _currentLanguage
 
     fun setLanguage(language: AppLanguage) {
         _current = forLanguage(language)
+        _currentLanguage = language
     }
 
     fun forLanguage(language: AppLanguage): Strings = when (language) {

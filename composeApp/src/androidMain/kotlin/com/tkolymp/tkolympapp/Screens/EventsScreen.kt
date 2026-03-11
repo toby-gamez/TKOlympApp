@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.EventsViewModel
+import com.tkolymp.tkolympapp.toLocale
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -109,7 +110,7 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                                     if (ld == null) date else {
                                         val nowYear = LocalDate.now().year
                                         val pattern = if (ld.year == nowYear) "d. MMMM" else "d. MMMM yyyy"
-                                        ld.format(java.time.format.DateTimeFormatter.ofPattern(pattern, java.util.Locale.forLanguageTag("cs")))
+                                        ld.format(java.time.format.DateTimeFormatter.ofPattern(pattern, AppStrings.currentLanguage.toLocale()))
                                     }
                                 }
                             }
@@ -167,7 +168,7 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                                     if (ld == null) date else {
                                         val nowYear = LocalDate.now().year
                                         val pattern = if (ld.year == nowYear) "d. MMMM" else "d. MMMM yyyy"
-                                        ld.format(java.time.format.DateTimeFormatter.ofPattern(pattern, java.util.Locale.forLanguageTag("cs")))
+                                        ld.format(java.time.format.DateTimeFormatter.ofPattern(pattern, AppStrings.currentLanguage.toLocale()))
                                     }
                                 }
                             }

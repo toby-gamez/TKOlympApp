@@ -56,10 +56,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.event.EventInstance
 import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.tkolympapp.toLocale
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -194,7 +194,7 @@ fun CalendarScreen(
                                     if (ld == null) date else {
                                         val now = LocalDate.now()
                                         val pattern = if (ld.year == now.year) "EEEE, d. MMMM" else "EEEE, d. MMMM yyyy"
-                                        ld.format(DateTimeFormatter.ofPattern(pattern, Locale.forLanguageTag("cs")))
+                                        ld.format(DateTimeFormatter.ofPattern(pattern, AppStrings.currentLanguage.toLocale()))
                                     }
                                 }
                             }

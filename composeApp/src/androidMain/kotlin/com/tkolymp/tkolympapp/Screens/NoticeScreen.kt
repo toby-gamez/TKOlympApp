@@ -42,12 +42,12 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.graphics.drawable.DrawableCompat
 import com.tkolymp.shared.viewmodels.NoticeViewModel
 import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.tkolympapp.toLocale
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
-import java.util.Locale
 
 // Try to tint selection handles/cursor via reflection; best-effort and silently fails on unsupported platforms.
 private fun tintTextViewSelectionHandles(tv: TextView, color: Int) {
@@ -158,7 +158,7 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
                                 return try {
                                     val inst = Instant.parse(iso)
                                     val zdt = inst.atZone(ZoneId.systemDefault())
-                                    val fmt = DateTimeFormatter.ofPattern("d. M. yyyy HH:mm").withLocale(Locale.forLanguageTag("cs"))
+                                    val fmt = DateTimeFormatter.ofPattern("d. M. yyyy HH:mm").withLocale(AppStrings.currentLanguage.toLocale())
                                     fmt.format(zdt)
                                 } catch (ex: DateTimeParseException) {
                                     iso
