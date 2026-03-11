@@ -250,6 +250,7 @@ val StringsUa = Strings(
     errorLoadingProfile = "Помилка завантаження профілю",
     errorLoadingNames = "Помилка завантаження імен",
     errorLoadingClub = "Помилка завантаження клубу",
+    couple = "пара",
     about = AboutStrings(
         appDescriptionTitle = "Опис додатку",
         appDescriptionText = "Цей додаток показує розклади, новини та інформацію про тренерів і приміщення. Він підключений до віддаленого API та використовує локальні сповіщення про нові новини та події.",

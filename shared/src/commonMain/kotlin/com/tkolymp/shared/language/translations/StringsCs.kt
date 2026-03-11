@@ -250,6 +250,7 @@ val StringsCs = Strings(
     errorLoadingProfile = "Chyba při načítání profilu",
     errorLoadingNames = "Chyba při načítání jmen",
     errorLoadingClub = "Chyba při načítání klubu",
+    couple = "pár",
     about = AboutStrings(
         appDescriptionTitle = "Popis aplikace",
         appDescriptionText = "Tato aplikace zobrazuje rozvrhy, aktuality a informace o trenérech a prostorách. Je napojena na vzdálené API a využívá lokální notifikace pro upozornění na nové aktuality a události.",

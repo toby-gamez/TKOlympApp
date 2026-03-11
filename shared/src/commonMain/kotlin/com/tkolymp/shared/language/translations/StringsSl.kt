@@ -250,6 +250,7 @@ val StringsSl = Strings(
     errorLoadingProfile = "Napaka pri nalaganju profila",
     errorLoadingNames = "Napaka pri nalaganju imen",
     errorLoadingClub = "Napaka pri nalaganju kluba",
+    couple = "par",
     about = AboutStrings(
         appDescriptionTitle = "Opis aplikacije",
         appDescriptionText = "Ta aplikacija prikazuje urnike, novosti in informacije o trenerjih in prostorih. Povezana je z oddaljenim API-jem in uporablja lokalna obvestila za nova sporočila in dogodke.",

@@ -250,6 +250,7 @@ val StringsVi = Strings(
     errorLoadingProfile = "Lỗi khi tải hồ sơ",
     errorLoadingNames = "Lỗi khi tải tên",
     errorLoadingClub = "Lỗi khi tải thông tin câu lạc bộ",
+    couple = "cặp đôi",
     about = AboutStrings(
         appDescriptionTitle = "Mô tả ứng dụng",
         appDescriptionText = "Ứng dụng này hiển thị lịch học, thông báo và thông tin về huấn luyện viên và địa điểm. Nó kết nối với API từ xa và sử dụng thông báo cục bộ cho các thông báo và sự kiện mới.",

@@ -250,6 +250,7 @@ val StringsSk = Strings(
     errorLoadingProfile = "Chyba pri načítaní profilu",
     errorLoadingNames = "Chyba pri načítaní mien",
     errorLoadingClub = "Chyba pri načítaní klubu",
+    couple = "pár",
     about = AboutStrings(
         appDescriptionTitle = "Popis aplikácie",
         appDescriptionText = "Táto aplikácia zobrazuje rozvrhy, aktuality a informácie o tréneroch a priestoroch. Je napojená na vzdialené API a využíva lokálne notifikácie pre upozornenia na nové aktuality a udalosti.",

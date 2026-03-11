@@ -251,6 +251,7 @@ val StringsBrainrot = Strings(
     errorLoadingProfile = "Profile flopped fr",
     errorLoadingNames = "Names won't load bestie",
     errorLoadingClub = "Club info flopped fr",
+    couple = "duo",
     about = AboutStrings(
         appDescriptionTitle = "App lowdown fr",
         appDescriptionText = "This app is bussin fr — shows training sched, tea from the board, trainers and venues no cap. Connected to the API rizz and sends notifs about new stuff fr.",

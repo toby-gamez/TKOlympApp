@@ -250,6 +250,7 @@ val StringsEn = Strings(
     errorLoadingProfile = "Error loading profile",
     errorLoadingNames = "Error loading names",
     errorLoadingClub = "Error loading club",
+    couple = "couple",
     about = AboutStrings(
         appDescriptionTitle = "App description",
         appDescriptionText = "This app shows schedules, announcements, and information about coaches and venues. It connects to a remote API and uses local notifications for new announcements and events.",

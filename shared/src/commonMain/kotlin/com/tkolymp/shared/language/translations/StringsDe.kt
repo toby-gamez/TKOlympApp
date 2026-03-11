@@ -250,6 +250,7 @@ val StringsDe = Strings(
     errorLoadingProfile = "Fehler beim Laden des Profils",
     errorLoadingNames = "Fehler beim Laden der Namen",
     errorLoadingClub = "Fehler beim Laden des Vereins",
+    couple = "Paar",
     about = AboutStrings(
         appDescriptionTitle = "App-Beschreibung",
         appDescriptionText = "Diese App zeigt Stundenpläne, Neuigkeiten und Informationen über Trainer und Räume. Sie ist mit einer Remote-API verbunden und nutzt lokale Benachrichtigungen für neue Neuigkeiten und Veranstaltungen.",

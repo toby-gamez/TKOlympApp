@@ -318,6 +318,7 @@ data class Strings(
     val errorLoadingProfile: String,
     val errorLoadingNames: String,
     val errorLoadingClub: String,
+    val couple: String,
 
     // --- About screen ---
     val about: AboutStrings,

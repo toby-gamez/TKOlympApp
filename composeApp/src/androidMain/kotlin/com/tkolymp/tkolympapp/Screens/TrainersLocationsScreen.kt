@@ -136,10 +136,11 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                 val isWhole = amount.rem(1.0) == 0.0
                 val amtStr = if (isWhole) amount.toInt().toString() else String.format("%.2f", amount)
                 val cur = currency?.uppercase()
+                val c = AppStrings.current.couple
                 return when (cur) {
-                    "EUR" -> "$amtStr € /pár, 45'"
-                    "USD" -> "$$amtStr /pár, 45'"
-                    else -> "$amtStr,- /pár, 45'"
+                    "EUR" -> "$amtStr € /$c, 45'"
+                    "USD" -> "$$amtStr /$c, 45'"
+                    else -> "$amtStr,- /$c, 45'"
                 }
             }
 
