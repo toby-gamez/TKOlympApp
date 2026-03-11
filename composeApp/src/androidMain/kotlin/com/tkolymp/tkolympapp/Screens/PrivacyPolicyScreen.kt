@@ -42,42 +42,42 @@ fun PrivacyPolicyScreen(onBack: () -> Unit = {}) {
                 .verticalScroll(scrollState)
                 .padding(16.dp)
         ) {
-            Text("Datum účinnosti: 24. prosince 2025", style = MaterialTheme.typography.bodySmall)
-            Text("\nStručné shrnutí", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
-            Text("Aplikace TkOlymp je klientem služby poskytované na https://api.rozpisovnik.cz. Shromažďujeme pouze nezbytná data pro provoz aplikace (autentizace, zobrazení událostí, oznámení a profilové informace).", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
+            Text(AppStrings.current.privacy.effectiveDate, style = MaterialTheme.typography.bodySmall)
+            Text(AppStrings.current.privacy.summaryTitle, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
+            Text(AppStrings.current.privacy.summaryText, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
 
-            Text("\n1) Jaká data shromažďujeme", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
-            Text("• Autentizační token (JWT): ukládán lokálně ve zabezpečeném úložišti zařízení pro autorizaci volání API (viz AuthService).", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
-            Text("\n• Data z API: události, instance, oznámení, informace o uživatelích/skupinách a žebříčky — načítají se dynamicky z GraphQL API podle vašeho přihlášení.", style = MaterialTheme.typography.bodyMedium)
-            Text("\n• Volitelná data: pokud v aplikaci vyplníte profilové údaje nebo upravíte nastavení, budou použita ke zlepšení uživatelské zkušenosti.", style = MaterialTheme.typography.bodyMedium)
+            Text(AppStrings.current.privacy.section1Title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
+            Text(AppStrings.current.privacy.section1Bullet1, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
+            Text(AppStrings.current.privacy.section1Bullet2, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
+            Text(AppStrings.current.privacy.section1Bullet3, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
 
-            Text("\n2) Kde a jak jsou data uložena", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
-            Text("• Síťové požadavky směřují na https://api.rozpisovnik.cz/graphql. Aplikace nevyvytváří vlastní centrální úložiště dat mimo poskytovatele API.", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
-            Text("\n• JWT je uložen v SecureStorage (platformní zabezpečené úložiště).", style = MaterialTheme.typography.bodyMedium)
+            Text(AppStrings.current.privacy.section2Title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
+            Text(AppStrings.current.privacy.section2Bullet1, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
+            Text(AppStrings.current.privacy.section2Bullet2, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
 
-            Text("\n3) Účel zpracování", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
-            Text("Data používáme pro: autentizaci, autorizaci, zobrazování vašich událostí, odesílání a přijímání notifikací, správu žebříčků a dalších funkcí, které očekáváte od klienta služby.", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
+            Text(AppStrings.current.privacy.section3Title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
+            Text(AppStrings.current.privacy.section3Text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
 
-            Text("\n4) Sdílení a zpracování třetími stranami", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
-            Text("• Data nejsou prodávána ani sdílena s třetími stranami pro marketing bez vašeho souhlasu. Sdílíme pouze s poskytovatelem API a s nezbytnými systémovými službami (např. mapy), pokud je použijete.", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
-            Text("\n• Notifikace jsou zprostředkovány platformními službami (Android/iOS) přes NotificationManagerService nebo nativní rozhraní.", style = MaterialTheme.typography.bodyMedium)
+            Text(AppStrings.current.privacy.section4Title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
+            Text(AppStrings.current.privacy.section4Bullet1, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
+            Text(AppStrings.current.privacy.section4Bullet2, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
 
-            Text("\n5) Oprávnění a lokální přístup", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
-            Text("Aplikace vyžaduje jen nezbytná oprávnění (např. pro zobrazování map nebo příjem notifikací). Nepřistupujeme k vašim kontaktům, fotogaleriím ani dalším citlivým zdrojům bez výslovného povolení.", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
+            Text(AppStrings.current.privacy.section5Title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
+            Text(AppStrings.current.privacy.section5Text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
 
-            Text("\n6) Jak dlouho data uchováváme", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
-            Text("JWT je uchováván po dobu platnosti tokenu nebo dokud se odhlásíte/nesmažete účet. Data na straně API se řídí politikou poskytovatele API; aplikace neprovádí dlouhodobé lokální ukládání citlivých dat bez souhlasu.", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
+            Text(AppStrings.current.privacy.section6Title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
+            Text(AppStrings.current.privacy.section6Text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
 
-            Text("\n7) Vaše práva", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
-            Text("Máte právo požadovat přístup ke svým údajům, opravu nebo smazání. Pro tyto požadavky kontaktujte správce služby nebo použijte kontaktní kanály poskytovatele API.", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
+            Text(AppStrings.current.privacy.section7Title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
+            Text(AppStrings.current.privacy.section7Text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
 
-            Text("\n8) Změny zásad", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
-            Text("Zásady mohou být aktualizovány. O významných změnách budeme informovat v aplikaci nebo přes notifikaci. Doporučujeme občas zkontrolovat datum účinnosti.", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
+            Text(AppStrings.current.privacy.section8Title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
+            Text(AppStrings.current.privacy.section8Text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
 
-            Text("\nKontakt", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
-            Text("Máte-li dotaz k ochraně osobních údajů nebo žádost o výmaz, kontaktujte správce služby: tkolymp.cz/kontakt", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
+            Text(AppStrings.current.privacy.contactTitle, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
+            Text(AppStrings.current.privacy.contactText, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
 
-            Text("\nTechnické detaily: implementace autentizace a volání GraphQL najdete v `Services/AuthService.cs` a `Services/EventServices.cs`. Notifikace spravuje `NotificationManagerService`.", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 12.dp))
+            Text(AppStrings.current.privacy.technicalNote, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 12.dp))
         }
     }
 }

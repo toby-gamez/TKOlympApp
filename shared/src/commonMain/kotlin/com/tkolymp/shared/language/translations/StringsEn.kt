@@ -1,5 +1,7 @@
 package com.tkolymp.shared.language.translations
 
+import com.tkolymp.shared.language.AboutStrings
+import com.tkolymp.shared.language.PrivacyStrings
 import com.tkolymp.shared.language.Strings
 
 val StringsEn = Strings(
@@ -248,4 +250,41 @@ val StringsEn = Strings(
     errorLoadingProfile = "Error loading profile",
     errorLoadingNames = "Error loading names",
     errorLoadingClub = "Error loading club",
+    about = AboutStrings(
+        appDescriptionTitle = "App description",
+        appDescriptionText = "This app shows schedules, announcements, and information about coaches and venues. It connects to a remote API and uses local notifications for new announcements and events.",
+        appLicenseText = "This project may contain third-party libraries; check licenses in dependencies.",
+        authorsAndContributors = "Authors and contributors",
+        leadDeveloperRole = " - lead developer",
+        translatorRole = " - translator, supporter and helper",
+        brainrotDisclaimer = "Disclaimer: The 'Brainrot' language is a fun variant of the original app, spiced up with some 'brainrot' humor. It's all for fun and shouldn't be taken seriously.",
+    ),
+    privacy = PrivacyStrings(
+        effectiveDate = "Effective date: December 24, 2025",
+        summaryTitle = "Brief summary",
+        summaryText = "The TK Olymp app is a client of the service provided at api.rozpisovnik.cz. We collect only the data necessary to operate the app (authentication, event display, notifications and profile information).",
+        section1Title = "1) What data we collect",
+        section1Bullet1 = "• Authentication token (JWT): stored locally in the device's secure storage to authorize API calls.",
+        section1Bullet2 = "• API data: events, instances, announcements, user/group information and leaderboards — loaded dynamically from the GraphQL API based on your login.",
+        section1Bullet3 = "• Optional data: if you fill in profile details or change settings in the app, they will be used to improve the user experience.",
+        section2Title = "2) Where and how data is stored",
+        section2Bullet1 = "• Network requests go to api.rozpisovnik.cz/graphql. The app does not maintain its own central data storage outside the API provider.",
+        section2Bullet2 = "• JWT is stored in SecureStorage (platform secure storage).",
+        section3Title = "3) Purpose of processing",
+        section3Text = "We use data for: authentication, authorization, displaying your events, sending and receiving notifications, leaderboard management and other features you expect from a service client.",
+        section4Title = "4) Sharing and third-party processing",
+        section4Bullet1 = "• Data is not sold or shared with third parties for marketing without your consent. We share only with the API provider and necessary system services (e.g. maps) if you use them.",
+        section4Bullet2 = "• Notifications are mediated by platform services (Android/iOS) via NotificationManagerService or native interfaces.",
+        section5Title = "5) Permissions and local access",
+        section5Text = "The app requires only necessary permissions (e.g. for displaying maps or receiving notifications). We do not access your contacts, photo gallery or other sensitive resources without explicit permission.",
+        section6Title = "6) How long we retain data",
+        section6Text = "JWT is retained for the token's validity period or until you log out/delete your account. API-side data is governed by the API provider's policy; the app does not perform long-term local storage of sensitive data without consent.",
+        section7Title = "7) Your rights",
+        section7Text = "You have the right to request access to your data, correction or deletion. For these requests, contact the service administrator or use the API provider's contact channels.",
+        section8Title = "8) Policy changes",
+        section8Text = "The policy may be updated. We will notify you of significant changes in the app or via notification. We recommend occasionally checking the effective date.",
+        contactTitle = "Contact",
+        contactText = "If you have a question about data protection or a deletion request, contact the service administrator: tkolymp.cz/kontakt",
+        technicalNote = "Technical details: authentication implementation and GraphQL calls can be found in AuthService and EventServices. Notifications are managed by NotificationManagerService.",
+    ),
 )

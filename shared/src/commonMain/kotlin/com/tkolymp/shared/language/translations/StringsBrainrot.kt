@@ -1,5 +1,7 @@
 package com.tkolymp.shared.language.translations
 
+import com.tkolymp.shared.language.AboutStrings
+import com.tkolymp.shared.language.PrivacyStrings
 import com.tkolymp.shared.language.Strings
 
 /** Brainrot "language" (en_au) — no cap fr fr 🧠 */
@@ -249,4 +251,41 @@ val StringsBrainrot = Strings(
     errorLoadingProfile = "Profile flopped fr",
     errorLoadingNames = "Names won't load bestie",
     errorLoadingClub = "Club info flopped fr",
+    about = AboutStrings(
+        appDescriptionTitle = "App lowdown fr",
+        appDescriptionText = "This app is bussin fr — shows training sched, tea from the board, trainers and venues no cap. Connected to the API rizz and sends notifs about new stuff fr.",
+        appLicenseText = "This project might have third-party libs, check the deps for license rizz.",
+        authorsAndContributors = "The mains and contributors fr",
+        leadDeveloperRole = " - main dev no cap",
+        translatorRole = " - translator, supporter and helper fr",
+        brainrotDisclaimer = "Disclaimer: 'Brainrot' lang is a vibe check version of the OG app, lowkey spiced with brainrot humor fr fr. It's all fun no cap, don't take it srsly bestie.",
+    ),
+    privacy = PrivacyStrings(
+        effectiveDate = "Effective date: December 24, 2025 no cap",
+        summaryTitle = "The TL;DR fr",
+        summaryText = "TK Olymp app is a client of the api.rozpisovnik.cz rizz. We only collect the bare minimum data to keep the app bussin (auth, events, notifs and profile info).",
+        section1Title = "1) What data we yoink",
+        section1Bullet1 = "• Auth token (JWT): stored locally in the secure storage fr, to authorize API calls no cap.",
+        section1Bullet2 = "• API data: events, instances, announcements, user/group info and leaderboards — loaded dynamically from the GraphQL API based on your login bestie.",
+        section1Bullet3 = "• Optional data: if you fill in profile stuff or tweak settings, it'll be used to make the UX more bussin.",
+        section2Title = "2) Where the data lives fr",
+        section2Bullet1 = "• Network requests go to api.rozpisovnik.cz/graphql. The app has no central storage outside the API provider no cap.",
+        section2Bullet2 = "• JWT is stored in SecureStorage (the platform's secure vault fr).",
+        section3Title = "3) Why we process it",
+        section3Text = "Data gets used for: auth, authorization, showing your events, sending and receiving notifs, leaderboard management and all the other bussin features fr.",
+        section4Title = "4) Sharing and third-party rizz",
+        section4Bullet1 = "• Data is not sold or shared with third parties for marketing without your consent no cap. We only share with the API provider and necessary system services (e.g. maps) if you use them.",
+        section4Bullet2 = "• Notifications are mediated by platform services (Android/iOS) via NotificationManagerService or native interfaces fr.",
+        section5Title = "5) Permissions and local access",
+        section5Text = "App only asks for the necessary permissions fr (e.g. for maps or notifs). We don't access your contacts, gallery or other sensitive stuff without explicit permission bestie.",
+        section6Title = "6) How long we hold the data",
+        section6Text = "JWT is kept for the token validity period or until you log out/delete your account. API-side data follows the API provider's policy; app doesn't do long-term local storage of sensitive data without consent no cap.",
+        section7Title = "7) Your rights fr",
+        section7Text = "You have the right to request access, correction or deletion of your data bestie. Hit up the service admin or use the API provider's contact channels for that.",
+        section8Title = "8) Policy changes",
+        section8Text = "Policy may be updated fr. We'll notify you of big changes in the app or via notif. We recommend checking the effective date occasionally bestie.",
+        contactTitle = "Contact fr",
+        contactText = "If you have a data protection question or deletion request, hit up the service admin: tkolymp.cz/kontakt",
+        technicalNote = "Technical drip: auth implementation and GraphQL calls are in AuthService and EventServices. Notifs are managed by NotificationManagerService fr.",
+    ),
 )

@@ -1,5 +1,7 @@
 package com.tkolymp.shared.language.translations
 
+import com.tkolymp.shared.language.AboutStrings
+import com.tkolymp.shared.language.PrivacyStrings
 import com.tkolymp.shared.language.Strings
 
 val StringsDe = Strings(
@@ -248,4 +250,41 @@ val StringsDe = Strings(
     errorLoadingProfile = "Fehler beim Laden des Profils",
     errorLoadingNames = "Fehler beim Laden der Namen",
     errorLoadingClub = "Fehler beim Laden des Vereins",
+    about = AboutStrings(
+        appDescriptionTitle = "App-Beschreibung",
+        appDescriptionText = "Diese App zeigt Stundenpläne, Neuigkeiten und Informationen über Trainer und Räume. Sie ist mit einer Remote-API verbunden und nutzt lokale Benachrichtigungen für neue Neuigkeiten und Veranstaltungen.",
+        appLicenseText = "Dieses Projekt kann Bibliotheken von Drittanbietern enthalten; überprüfen Sie die Lizenzen in den Abhängigkeiten.",
+        authorsAndContributors = "Autoren und Mitwirkende",
+        leadDeveloperRole = " - Hauptentwickler",
+        translatorRole = " - Übersetzer, Unterstützer und Helfer",
+        brainrotDisclaimer = "Haftungsausschluss: Die 'Brainrot'-Sprache ist eine spaßige Variante der ursprünglichen App mit etwas 'Brainrot'-Humor. Es dient nur zur Unterhaltung und sollte nicht ernst genommen werden.",
+    ),
+    privacy = PrivacyStrings(
+        effectiveDate = "Gültigkeitsdatum: 24. Dezember 2025",
+        summaryTitle = "Kurze Zusammenfassung",
+        summaryText = "Die TK-Olymp-App ist ein Client des Dienstes unter api.rozpisovnik.cz. Wir erfassen nur die für den Betrieb der App erforderlichen Daten (Authentifizierung, Ereignisanzeige, Benachrichtigungen und Profilinformationen).",
+        section1Title = "1) Welche Daten wir erfassen",
+        section1Bullet1 = "• Authentifizierungstoken (JWT): lokal im sicheren Gerätespeicher gespeichert, um API-Aufrufe zu autorisieren.",
+        section1Bullet2 = "• API-Daten: Ereignisse, Instanzen, Ankündigungen, Benutzer-/Gruppeninformationen und Ranglisten — dynamisch aus der GraphQL-API basierend auf Ihrer Anmeldung geladen.",
+        section1Bullet3 = "• Optionale Daten: Wenn Sie in der App Profildaten ausfüllen oder Einstellungen ändern, werden diese zur Verbesserung der Benutzererfahrung verwendet.",
+        section2Title = "2) Wo und wie Daten gespeichert werden",
+        section2Bullet1 = "• Netzwerkanfragen gehen an api.rozpisovnik.cz/graphql. Die App unterhält keine eigene zentrale Datenspeicherung außerhalb des API-Anbieters.",
+        section2Bullet2 = "• JWT wird im SecureStorage (plattformsicherer Speicher) gespeichert.",
+        section3Title = "3) Zweck der Verarbeitung",
+        section3Text = "Wir verwenden Daten für: Authentifizierung, Autorisierung, Anzeige Ihrer Ereignisse, Senden und Empfangen von Benachrichtigungen, Ranglisten-Verwaltung und andere Funktionen, die Sie von einem Dienst-Client erwarten.",
+        section4Title = "4) Weitergabe und Drittanbieterverarbeitung",
+        section4Bullet1 = "• Daten werden nicht ohne Ihre Zustimmung für Marketing an Dritte verkauft oder weitergegeben. Wir teilen nur mit dem API-Anbieter und notwendigen Systemdiensten (z. B. Karten), wenn Sie diese nutzen.",
+        section4Bullet2 = "• Benachrichtigungen werden über Plattformdienste (Android/iOS) über den NotificationManagerService oder native Schnittstellen vermittelt.",
+        section5Title = "5) Berechtigungen und lokaler Zugriff",
+        section5Text = "Die App benötigt nur notwendige Berechtigungen (z. B. für die Anzeige von Karten oder den Empfang von Benachrichtigungen). Wir greifen ohne ausdrückliche Genehmigung nicht auf Ihre Kontakte, Fotogalerie oder andere sensible Ressourcen zu.",
+        section6Title = "6) Wie lange wir Daten aufbewahren",
+        section6Text = "JWT wird für die Gültigkeitsdauer des Tokens oder bis Sie sich abmelden/Ihr Konto löschen aufbewahrt. API-seitige Daten unterliegen der Richtlinie des API-Anbieters; die App führt ohne Zustimmung keine langfristige lokale Speicherung sensibler Daten durch.",
+        section7Title = "7) Ihre Rechte",
+        section7Text = "Sie haben das Recht, Zugang zu Ihren Daten, Berichtigung oder Löschung zu verlangen. Wenden Sie sich für diese Anfragen an den Dienstadministrator oder nutzen Sie die Kontaktkanäle des API-Anbieters.",
+        section8Title = "8) Änderungen der Richtlinie",
+        section8Text = "Die Richtlinie kann aktualisiert werden. Wir werden Sie über wesentliche Änderungen in der App oder per Benachrichtigung informieren. Wir empfehlen, das Gültigkeitsdatum gelegentlich zu überprüfen.",
+        contactTitle = "Kontakt",
+        contactText = "Wenn Sie eine Frage zum Datenschutz oder einen Löschungsantrag haben, wenden Sie sich an den Dienstadministrator: tkolymp.cz/kontakt",
+        technicalNote = "Technische Details: Authentifizierungsimplementierung und GraphQL-Aufrufe finden Sie in AuthService und EventServices. Benachrichtigungen werden vom NotificationManagerService verwaltet.",
+    ),
 )

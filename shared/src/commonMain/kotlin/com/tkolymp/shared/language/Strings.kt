@@ -318,4 +318,10 @@ data class Strings(
     val errorLoadingProfile: String,
     val errorLoadingNames: String,
     val errorLoadingClub: String,
+
+    // --- About screen ---
+    val about: AboutStrings,
+
+    // --- Privacy policy screen ---
+    val privacy: PrivacyStrings,
 )

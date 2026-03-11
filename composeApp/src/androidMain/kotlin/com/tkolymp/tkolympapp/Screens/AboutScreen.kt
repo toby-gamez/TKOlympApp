@@ -73,9 +73,9 @@ fun AboutScreen(onBack: () -> Unit = {}) {
 
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Text(text = "Popis aplikace", style = MaterialTheme.typography.labelLarge)
+                    Text(text = AppStrings.current.about.appDescriptionTitle, style = MaterialTheme.typography.labelLarge)
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                    Text(text = "Tato aplikace zobrazuje rozvrhy, aktuality a informace o trenérech a prostorách. Je napojena na vzdálené API a využívá lokální notifikace pro upozornění na nové aktuality a události.", modifier = Modifier.padding(top = 6.dp))
+                    Text(text = AppStrings.current.about.appDescriptionText, modifier = Modifier.padding(top = 6.dp))
                 }
             }
 
@@ -83,25 +83,25 @@ fun AboutScreen(onBack: () -> Unit = {}) {
                 Column(modifier = Modifier.padding(12.dp)) {
                 Text(AppStrings.current.licenseInfo, style = MaterialTheme.typography.labelLarge)
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                    Text(text = "Tento projekt může obsahovat třetí strany knihoven; ověřte licence v závislostech.", modifier = Modifier.padding(top = 6.dp))
+                    Text(text = AppStrings.current.about.appLicenseText, modifier = Modifier.padding(top = 6.dp))
                 }
             }
 
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Text(text = "Autoři a přispěvatelé", style = MaterialTheme.typography.labelLarge)
+                    Text(text = AppStrings.current.about.authorsAndContributors, style = MaterialTheme.typography.labelLarge)
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                     Text(
                         text = buildAnnotatedString {
                             withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) { append("Tobias Heneman") }
-                            append(" - hlavní vývojář")
+                            append(AppStrings.current.about.leadDeveloperRole)
                         },
                         modifier = Modifier.padding(top = 6.dp)
                     )
                     Text(
                         text = buildAnnotatedString {
                             withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) { append("Filip Cani Canibal") }
-                            append(" - překladatel, podporovatel a pomocník")
+                            append(AppStrings.current.about.translatorRole)
                         },
                         modifier = Modifier.padding(top = 4.dp)
                     )
@@ -109,7 +109,7 @@ fun AboutScreen(onBack: () -> Unit = {}) {
             }
 
             Text(
-                text = "Prohlášení: 'Brainrot' jazyk je zábavnou obměnou původní aplikace, obohacenou o trochu 'brainrot' humoru. Je to všechno pro zábavu a nemá být brán vážně.",
+                text = AppStrings.current.about.brainrotDisclaimer,
                 fontStyle = FontStyle.Italic,
                 fontSize = 14.sp,
                 modifier = Modifier.padding(top = 12.dp)

@@ -1,5 +1,7 @@
 package com.tkolymp.shared.language.translations
 
+import com.tkolymp.shared.language.AboutStrings
+import com.tkolymp.shared.language.PrivacyStrings
 import com.tkolymp.shared.language.Strings
 
 val StringsVi = Strings(
@@ -248,4 +250,41 @@ val StringsVi = Strings(
     errorLoadingProfile = "Lỗi khi tải hồ sơ",
     errorLoadingNames = "Lỗi khi tải tên",
     errorLoadingClub = "Lỗi khi tải thông tin câu lạc bộ",
+    about = AboutStrings(
+        appDescriptionTitle = "Mô tả ứng dụng",
+        appDescriptionText = "Ứng dụng này hiển thị lịch học, thông báo và thông tin về huấn luyện viên và địa điểm. Nó kết nối với API từ xa và sử dụng thông báo cục bộ cho các thông báo và sự kiện mới.",
+        appLicenseText = "Dự án này có thể chứa thư viện của bên thứ ba; kiểm tra giấy phép trong các phụ thuộc.",
+        authorsAndContributors = "Tác giả và cộng tác viên",
+        leadDeveloperRole = " - nhà phát triển chính",
+        translatorRole = " - dịch giả, người ủng hộ và người hỗ trợ",
+        brainrotDisclaimer = "Tuyên bố: Ngôn ngữ 'Brainrot' là biến thể vui nhộn của ứng dụng gốc, được làm phong phú với chút hài hước 'brainrot'. Tất cả chỉ để vui và không nên hiểu nghĩa nghiêm túc.",
+    ),
+    privacy = PrivacyStrings(
+        effectiveDate = "Ngày có hiệu lực: 24 tháng 12 năm 2025",
+        summaryTitle = "Tóm tắt ngắn gọn",
+        summaryText = "Ứng dụng TK Olymp là khách hàng của dịch vụ tại api.rozpisovnik.cz. Chúng tôi chỉ thu thập dữ liệu cần thiết để vận hành ứng dụng (xác thực, hiển thị sự kiện, thông báo và thông tin hồ sơ).",
+        section1Title = "1) Dữ liệu chúng tôi thu thập",
+        section1Bullet1 = "• Mã thông báo xác thực (JWT): được lưu trữ cục bộ trong bộ nhớ an toàn của thiết bị để ủy quyền các lệnh gọi API.",
+        section1Bullet2 = "• Dữ liệu từ API: sự kiện, phiên bản, thông báo, thông tin người dùng/nhóm và bảng xếp hạng — được tải động từ GraphQL API dựa trên đăng nhập của bạn.",
+        section1Bullet3 = "• Dữ liệu tùy chọn: nếu bạn điền thông tin hồ sơ hoặc thay đổi cài đặt trong ứng dụng, chúng sẽ được sử dụng để cải thiện trải nghiệm người dùng.",
+        section2Title = "2) Dữ liệu được lưu trữ ở đâu và như thế nào",
+        section2Bullet1 = "• Các yêu cầu mạng đến api.rozpisovnik.cz/graphql. Ứng dụng không duy trì kho lưu trữ dữ liệu trung tâm riêng bên ngoài nhà cung cấp API.",
+        section2Bullet2 = "• JWT được lưu trong SecureStorage (bộ nhớ an toàn của nền tảng).",
+        section3Title = "3) Mục đích xử lý",
+        section3Text = "Chúng tôi sử dụng dữ liệu cho: xác thực, ủy quyền, hiển thị sự kiện của bạn, gửi và nhận thông báo, quản lý bảng xếp hạng và các tính năng khác mà bạn mong đợi từ khách hàng dịch vụ.",
+        section4Title = "4) Chia sẻ và xử lý của bên thứ ba",
+        section4Bullet1 = "• Dữ liệu không được bán hoặc chia sẻ với bên thứ ba cho mục đích tiếp thị mà không có sự đồng ý của bạn. Chúng tôi chỉ chia sẻ với nhà cung cấp API và các dịch vụ hệ thống cần thiết (ví dụ: bản đồ) nếu bạn sử dụng chúng.",
+        section4Bullet2 = "• Thông báo được trung gian bởi các dịch vụ nền tảng (Android/iOS) thông qua NotificationManagerService hoặc giao diện gốc.",
+        section5Title = "5) Quyền và truy cập cục bộ",
+        section5Text = "Ứng dụng chỉ yêu cầu các quyền cần thiết (ví dụ: để hiển thị bản đồ hoặc nhận thông báo). Chúng tôi không truy cập danh bạ, thư viện ảnh hoặc các tài nguyên nhạy cảm khác của bạn mà không có sự cho phép rõ ràng.",
+        section6Title = "6) Chúng tôi lưu giữ dữ liệu bao lâu",
+        section6Text = "JWT được lưu giữ trong thời gian hiệu lực của mã thông báo hoặc cho đến khi bạn đăng xuất/xóa tài khoản. Dữ liệu phía API được điều chỉnh bởi chính sách của nhà cung cấp API; ứng dụng không lưu trữ cục bộ lâu dài dữ liệu nhạy cảm mà không có sự đồng ý.",
+        section7Title = "7) Quyền của bạn",
+        section7Text = "Bạn có quyền yêu cầu truy cập vào dữ liệu của mình, chỉnh sửa hoặc xóa. Để biết các yêu cầu này, hãy liên hệ với quản trị viên dịch vụ hoặc sử dụng các kênh liên hệ của nhà cung cấp API.",
+        section8Title = "8) Thay đổi chính sách",
+        section8Text = "Chính sách có thể được cập nhật. Chúng tôi sẽ thông báo cho bạn về những thay đổi quan trọng trong ứng dụng hoặc qua thông báo. Chúng tôi khuyên bạn nên kiểm tra ngày có hiệu lực thỉnh thoảng.",
+        contactTitle = "Liên hệ",
+        contactText = "Nếu bạn có thắc mắc về bảo vệ dữ liệu hoặc yêu cầu xóa, hãy liên hệ với quản trị viên dịch vụ: tkolymp.cz/kontakt",
+        technicalNote = "Chi tiết kỹ thuật: triển khai xác thực và các lệnh gọi GraphQL có thể được tìm thấy trong AuthService và EventServices. Thông báo được quản lý bởi NotificationManagerService.",
+    ),
 )

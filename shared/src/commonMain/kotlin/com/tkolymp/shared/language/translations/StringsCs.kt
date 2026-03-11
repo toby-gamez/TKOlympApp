@@ -1,5 +1,7 @@
 package com.tkolymp.shared.language.translations
 
+import com.tkolymp.shared.language.AboutStrings
+import com.tkolymp.shared.language.PrivacyStrings
 import com.tkolymp.shared.language.Strings
 
 val StringsCs = Strings(
@@ -248,4 +250,41 @@ val StringsCs = Strings(
     errorLoadingProfile = "Chyba při načítání profilu",
     errorLoadingNames = "Chyba při načítání jmen",
     errorLoadingClub = "Chyba při načítání klubu",
+    about = AboutStrings(
+        appDescriptionTitle = "Popis aplikace",
+        appDescriptionText = "Tato aplikace zobrazuje rozvrhy, aktuality a informace o trenérech a prostorách. Je napojena na vzdálené API a využívá lokální notifikace pro upozornění na nové aktuality a události.",
+        appLicenseText = "Tento projekt může obsahovat knihovny třetích stran; ověřte licence v závislostech.",
+        authorsAndContributors = "Autoři a přispěvatelé",
+        leadDeveloperRole = " - hlavní vývojář",
+        translatorRole = " - překladatel, podporovatel a pomocník",
+        brainrotDisclaimer = "Prohlášení: 'Brainrot' jazyk je zábavnou obměnou původní aplikace, obohacenou o trochu 'brainrot' humoru. Je to všechno pro zábavu a nemá být brán vážně.",
+    ),
+    privacy = PrivacyStrings(
+        effectiveDate = "Datum účinnosti: 24. prosince 2025",
+        summaryTitle = "Stručné shrnutí",
+        summaryText = "Aplikace TK Olymp je klientem služby poskytované na api.rozpisovnik.cz. Shromažďujeme pouze nezbytná data pro provoz aplikace (autentizace, zobrazení událostí, oznámení a profilové informace).",
+        section1Title = "1) Jaká data shromažďujeme",
+        section1Bullet1 = "• Autentizační token (JWT): ukládán lokálně ve zabezpečeném úložišti zařízení pro autorizaci volání API.",
+        section1Bullet2 = "• Data z API: události, instance, oznámení, informace o uživatelích/skupinách a žebříčky — načítají se dynamicky z GraphQL API podle vašeho přihlášení.",
+        section1Bullet3 = "• Volitelná data: pokud v aplikaci vyplníte profilové údaje nebo upravíte nastavení, budou použita ke zlepšení uživatelské zkušenosti.",
+        section2Title = "2) Kde a jak jsou data uložena",
+        section2Bullet1 = "• Síťové požadavky směřují na api.rozpisovnik.cz/graphql. Aplikace nevytváří vlastní centrální úložiště dat mimo poskytovatele API.",
+        section2Bullet2 = "• JWT je uložen v SecureStorage (platformní zabezpečené úložiště).",
+        section3Title = "3) Účel zpracování",
+        section3Text = "Data používáme pro: autentizaci, autorizaci, zobrazování vašich událostí, odesílání a přijímání notifikací, správu žebříčků a dalších funkcí, které očekáváte od klienta služby.",
+        section4Title = "4) Sdílení a zpracování třetími stranami",
+        section4Bullet1 = "• Data nejsou prodávána ani sdílena s třetími stranami pro marketing bez vašeho souhlasu. Sdílíme pouze s poskytovatelem API a s nezbytnými systémovými službami (např. mapy), pokud je použijete.",
+        section4Bullet2 = "• Notifikace jsou zprostředkovány platformními službami (Android/iOS) přes NotificationManagerService nebo nativní rozhraní.",
+        section5Title = "5) Oprávnění a lokální přístup",
+        section5Text = "Aplikace vyžaduje jen nezbytná oprávnění (např. pro zobrazování map nebo příjem notifikací). Nepřistupujeme k vašim kontaktům, fotogaleriím ani dalším citlivým zdrojům bez výslovného povolení.",
+        section6Title = "6) Jak dlouho data uchováváme",
+        section6Text = "JWT je uchováván po dobu platnosti tokenu nebo dokud se odhlásíte/nesmažete účet. Data na straně API se řídí politikou poskytovatele API; aplikace neprovádí dlouhodobé lokální ukládání citlivých dat bez souhlasu.",
+        section7Title = "7) Vaše práva",
+        section7Text = "Máte právo požadovat přístup ke svým údajům, opravu nebo smazání. Pro tyto požadavky kontaktujte správce služby nebo použijte kontaktní kanály poskytovatele API.",
+        section8Title = "8) Změny zásad",
+        section8Text = "Zásady mohou být aktualizovány. O významných změnách budeme informovat v aplikaci nebo přes notifikaci. Doporučujeme občas zkontrolovat datum účinnosti.",
+        contactTitle = "Kontakt",
+        contactText = "Máte-li dotaz k ochraně osobních údajů nebo žádost o výmaz, kontaktujte správce služby: tkolymp.cz/kontakt",
+        technicalNote = "Technické detaily: implementace autentizace a volání GraphQL najdete v AuthService a EventServices. Notifikace spravuje NotificationManagerService.",
+    ),
 )
