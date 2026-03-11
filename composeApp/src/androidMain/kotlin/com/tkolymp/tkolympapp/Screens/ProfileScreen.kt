@@ -43,6 +43,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.shared.language.NationalityHelper
 import com.tkolymp.shared.viewmodels.ProfileViewModel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -276,9 +277,9 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                         }
                     }
 
-                    // Nationality: ISO 3166-1 numeric ID → Czech country name
+                    // Nationality: ISO 3166-1 numeric ID → localized country name
                     if (key.equals("nationality", ignoreCase = true)) {
-                        val name = NATIONALITY_OPTIONS.find { it.first == v }?.second
+                        val name = NationalityHelper.getNationalityOptions(AppStrings.currentLanguage).find { it.first == v }?.second
                         if (name != null) return name
                     }
 
