@@ -74,9 +74,9 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
             SwipeToReload(
                 isRefreshing = state.isLoading,
                 onRefresh = { scope.launch { viewModel.loadAnnouncements(forceRefresh = true) } },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f).fillMaxWidth()
             ) {
-                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
                     val announcements = state.currentAnnouncements.filterIsInstance<com.tkolymp.shared.announcements.Announcement>()
                     announcements.forEach { a ->
                         Card(
