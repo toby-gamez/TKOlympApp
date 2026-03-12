@@ -5,6 +5,8 @@ import com.tkolymp.shared.auth.IAuthService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 data class LoginState(
     val username: String = "",
@@ -21,6 +23,7 @@ class LoginViewModel() {
         get() = ServiceLocator.userService
     private val _state = MutableStateFlow(LoginState())
     val state: StateFlow<LoginState> = _state.asStateFlow()
+    private val loginMutex = Mutex()
 
     fun updateUsername(value: String) {
         _state.value = _state.value.copy(username = value, error = null)
@@ -30,8 +33,7 @@ class LoginViewModel() {
         _state.value = _state.value.copy(password = value, error = null)
     }
 
-    suspend fun login(): Boolean {
-        if (_state.value.isLoading) return false
+    suspend fun login(): Boolean = loginMutex.withLock {
         _state.value = _state.value.copy(isLoading = true, error = null)
         return try {
             val ok = authService.login(_state.value.username, _state.value.password)

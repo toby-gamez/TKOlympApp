@@ -15,7 +15,7 @@ Aplikace slouží českému tanečnímu klubu TK Olymp jako mobilní klient pro 
 |-----------|--------------|------|
 | 🔴 Kritická | 2 | vyřešeno |
 | 🟠 Vysoká | 4 | vyřešeno |
-| 🟡 Střední | 5 | 1 vyřešeno, 4 čeká |
+| 🟡 Střední | 5 | 5 vyřešeno |
 | 🟢 Nízká | 3 | čeká |
 
 ---
@@ -387,7 +387,7 @@ Všechny položky jsou uloženy jako `kSecClassGenericPassword` s `kSecAttrServi
 
 ---
 
-### S-5 — Potenciální race condition při dvojitém loginu
+### S-5 — ~~Potenciální race condition při dvojitém loginu~~ ✅ vyřešeno
 
 **Soubor:** [shared/src/commonMain/kotlin/com/tkolymp/shared/viewmodels/LoginViewModel.kt](shared/src/commonMain/kotlin/com/tkolymp/shared/viewmodels/LoginViewModel.kt)
 
@@ -426,8 +426,6 @@ suspend fun login(): Boolean = loginMutex.withLock {
 | `accompanist-swiperefresh` | `0.30.1` | Deprecated — nahradit nativním Compose `PullRefresh` |
 | `androidx.compose:compose-bom` | `2024.10.00` | Aktualizovat na nejnovější stabilní |
 
-**Poznámka k `agp = "9.1.0"`:** Tato verze Android Gradle Pluginu neexistuje jako stabilní release (aktuálně 8.x). Ověřte, zda se nejedná o překlep, jinak může dojít k resolution problémům při buildu.
-
 ---
 
 ### N-2 — ProGuard chybí pravidla pro OkHttp
@@ -455,30 +453,3 @@ Pokud je záměrem notifikovat i po restartu zařízení, přidat:
 <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 ```
 
----
-
-## Prioritizovaný plán nápravy
-
-| Priorita | Akce | Komplexnost |
-|----------|------|-------------|
-| **1. Týden** | K-1: Přejít na `EncryptedSharedPreferences` pro token i user data | Střední |
-| **1. Týden** | K-2: Nastavit `android:allowBackup="false"` nebo exclusion rules | Nízká |
-| **2. Týden** | V-3: Odstranit všechny `println` logy | Nízká |
-| **2. Týden** | V-4: Nahradit string interpolaci GraphQL proměnnými | Střední |
-| **3. Týden** | V-2: Implementovat certificate pinning | Střední |
-| **3. Týden** | S-3: Odebrat nepoužitou biometric závislost | Trivial |
-| **4. Týden** | S-1: Přidat JWT expiry check + auto-refresh | Střední |
-| **4. Týden** | S-2: Přesunout config do BuildConfig | Nízká |
-| **Průběžně** | N-1: Aktualizovat závislosti | Nízká |
-| **Průběžně** | N-2: Doplnit ProGuard pravidla | Trivial |
-| **Před iOS** | S-4: Implementovat iOS Keychain storage | ✅ Hotovo |
-
----
-
-## Závěr
-
-Nejzávažnějším problémem je kombinace **K-1 + K-2 + V-1**: JWT token a GDPR-citlivá osobní data (rodné číslo, adresa) jsou uložena v plaintextu a jsou extrahovatelná bez rootu jediným příkazem `adb backup`. Toto je nutné řešit jako první, protože porušení je přímé a triviálně zneužitelné.
-
-Zbývající nálezy jsou standardní pro KMP aplikaci ve vývoji — jsou řešitelné a neukazují na systémové architektonické problémy.
-
-> Tento audit pokrývá statickou analýzu zdrojového kódu. Doporučuje se doplnit o dynamické testování (DAST) se zachytáváním provozu (Burp Suite / mitmproxy) a review serverové části API.
