@@ -62,7 +62,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.calendar.CalendarUtils
-import com.tkolymp.shared.calendar.CalendarViewModel
+import com.tkolymp.shared.calendar.CalendarViewViewModel
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.calendar.EventLayoutData
 import com.tkolymp.shared.calendar.ViewMode
@@ -80,7 +80,7 @@ import kotlinx.datetime.todayIn
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarViewScreen(
-    viewModel: CalendarViewModel = remember { CalendarViewModel() },
+    viewModel: CalendarViewViewModel = remember { CalendarViewViewModel() },
     onEventClick: (Long) -> Unit = {},
     onBack: (() -> Unit)? = null
 ) {

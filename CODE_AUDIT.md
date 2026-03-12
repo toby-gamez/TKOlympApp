@@ -27,7 +27,7 @@
 
 ## 1. Architektura a KMP struktura
 
-### 1.1 Screens jsou jen Android, ne cross-platform ❌ KRITICKÉ
+### 1.1 Screens jsou jen Android, ne cross-platform ❌ KRITICKÉ - DONE
 
 Veškeré obrazovky leží v:
 ```
@@ -69,7 +69,7 @@ iOS dostane pouze prázdný SwiftUI shell (`ContentView.swift`). Žádné sdíle
 
 ---
 
-### 1.2 CalendarViewModel zduplikován ❌ VYSOKÉ
+### 1.2 CalendarViewModel zduplikován ❌ VYSOKÉ - DONE
 
 Existují dvě oddělené implementace stejné třídy:
 
