@@ -15,7 +15,7 @@ Aplikace slouží českému tanečnímu klubu TK Olymp jako mobilní klient pro 
 |-----------|--------------|------|
 | 🔴 Kritická | 2 | vyřešeno |
 | 🟠 Vysoká | 4 | vyřešeno |
-| 🟡 Střední | 5 | čeká |
+| 🟡 Střední | 5 | 1 vyřešeno, 4 čeká |
 | 🟢 Nízká | 3 | čeká |
 
 ---
@@ -373,23 +373,17 @@ Závislost je přítomna, ale žádný kód ji nepoužívá. Komentář v `share
 
 ---
 
-### S-4 — Chybějící `actual` implementace pro iOS secure storage
+### S-4 — ~~Chybějící `actual` implementace pro iOS secure storage~~ ✅ vyřešeno
 
 **Adresář:** `shared/src/iosMain/`
 
-Pro `TokenStorage`, `UserStorage` a `NotificationStorage` neexistují `actual` implementace. Pokud bude iOS app někdy dokončena, existuje riziko, že vývojáři sáhnou po nejjednodušším řešení — `NSUserDefaults` — které je:
-- synchronizováno s iCloud
-- extrahovatelné přes iTunes zálohu
-- v starších iOS verzích čitelné pro jiné aplikace
+Implementovány `actual` třídy používající **iOS Keychain** (`Security.framework`) pro všechna tři úložiště:
 
-**Řešení:**  
-Při implementaci iOS storage použít **iOS Keychain** (přes `Security.framework`) pro JWT a citlivé user data:
+- [shared/src/iosMain/kotlin/com/tkolymp/shared/storage/TokenStorage.ios.kt](shared/src/iosMain/kotlin/com/tkolymp/shared/storage/TokenStorage.ios.kt) — JWT token přes `kSecClassGenericPassword`
+- [shared/src/iosMain/kotlin/com/tkolymp/shared/storage/UserStorage.ios.kt](shared/src/iosMain/kotlin/com/tkolymp/shared/storage/UserStorage.ios.kt) — `person_id`, `couple_ids`, `current_user_json`, `person_details_json` (rodné číslo, adresa)
+- [shared/src/iosMain/kotlin/com/tkolymp/shared/notification/NotificationStorage.ios.kt](shared/src/iosMain/kotlin/com/tkolymp/shared/notification/NotificationStorage.ios.kt) — nastavení a naplánované notifikace
 
-```swift
-// Nebo použít KMP wrapper knihovnu, např. KeychainAccess přes cinterop
-```
-
-Pro KMP je doporučen wrapper jako [multiplatform-settings](https://github.com/russhwolf/multiplatform-settings) s Keychain backendem pro iOS.
+Všechny položky jsou uloženy jako `kSecClassGenericPassword` s `kSecAttrService = "com.tkolymp.tkolympapp"`. Data jsou šifrována iOS Keychainem (AES-256) a **nejsou** synchronizována s iCloud ani extrahovatelná přes iTunes zálohu (na rozdíl od NSUserDefaults).
 
 ---
 
@@ -477,7 +471,7 @@ Pokud je záměrem notifikovat i po restartu zařízení, přidat:
 | **4. Týden** | S-2: Přesunout config do BuildConfig | Nízká |
 | **Průběžně** | N-1: Aktualizovat závislosti | Nízká |
 | **Průběžně** | N-2: Doplnit ProGuard pravidla | Trivial |
-| **Před iOS** | S-4: Implementovat iOS Keychain storage | Vysoká |
+| **Před iOS** | S-4: Implementovat iOS Keychain storage | ✅ Hotovo |
 
 ---
 
