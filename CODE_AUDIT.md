@@ -84,7 +84,7 @@ Dvě třídy se stejným názvem v různých packages — nejasné, která se sk
 
 ---
 
-### 1.3 Mrtvý kód z KMP šablony ❌ NÍZKÉ
+### 1.3 Mrtvý kód z KMP šablony ❌ NÍZKÉ - DONE
 
 Soubory jsou pozůstatky vygenerované KMP šablony bez jakéhokoli využití:
 
