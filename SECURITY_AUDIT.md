@@ -16,7 +16,7 @@ Aplikace slouží českému tanečnímu klubu TK Olymp jako mobilní klient pro 
 | 🔴 Kritická | 2 | vyřešeno |
 | 🟠 Vysoká | 4 | vyřešeno |
 | 🟡 Střední | 5 | 5 vyřešeno |
-| 🟢 Nízká | 3 | čeká |
+| 🟢 Nízká | 3 | 1 vyřešeno, 2 čeká |
 
 ---
 
@@ -415,16 +415,18 @@ suspend fun login(): Boolean = loginMutex.withLock {
 
 ---
 
-### N-1 — Zastaralé závislosti
+### ~~N-1 — Zastaralé závislosti~~ ✅ vyřešeno
 
 **Soubor:** [gradle/libs.versions.toml](gradle/libs.versions.toml)
 
-| Závislost | Aktuální | Doporučená |
-|-----------|----------|------------|
-| `ktor` | `2.3.4` | `3.1.x` (Ktor 2.x přechází do LTS módu) |
-| `kotlinx-serialization` | `1.6.0` | `1.7.x` |
-| `accompanist-swiperefresh` | `0.30.1` | Deprecated — nahradit nativním Compose `PullRefresh` |
-| `androidx.compose:compose-bom` | `2024.10.00` | Aktualizovat na nejnovější stabilní |
+| Závislost | Bylo | Nyní |
+|-----------|------|------|
+| `ktor` | `2.3.4` | `3.1.1` |
+| `kotlinx-serialization` | `1.6.0` | `1.7.3` |
+| `accompanist-swiperefresh` | `0.30.1` (deprecated) | odstraněno — žádné použití ve zdrojovém kódu |
+| `androidx.compose:compose-bom` | `2024.10.00` | `2025.01.00` |
+
+Verze `kotlinx-serialization-json` v bloku `dependencies {}` v `composeApp/build.gradle.kts` byla sjednocena s aliasem z toml (odstraněno hardcoded versionování).
 
 ---
 

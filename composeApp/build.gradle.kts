@@ -18,7 +18,6 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
-            implementation("com.google.accompanist:accompanist-swiperefresh:0.30.1")
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -80,8 +79,8 @@ android {
 
 dependencies {
     debugImplementation(libs.compose.uiTooling)
-    implementation(platform("androidx.compose:compose-bom:2024.10.00"))
+    implementation(platform("androidx.compose:compose-bom:2025.01.00"))
     implementation("androidx.compose.material:material-icons-extended")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
+    implementation(libs.kotlinx.serialization.json)
 }
 
