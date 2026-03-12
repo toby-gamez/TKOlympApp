@@ -1,6 +1,6 @@
-package com.tkolymp.tkolympapp
+package com.tkolymp.tkolympapp.screens
+import com.tkolymp.tkolympapp.SwipeToReload
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -46,6 +46,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.RegistrationViewModel
@@ -141,7 +142,7 @@ fun RegistrationScreen(
                             // when `myPersonName`/`myCoupleNames` were provided to the screen.
                             regViewModel.loadNames(trainers, myPersonId, myCoupleIds, null, emptyMap())
                         } catch (t: Throwable) {
-                            Log.e("RegScreen", "lifecycle refresh loadNames failed", t)
+                            Logger.d("RegScreen", "lifecycle refresh loadNames failed: ${t.message}")
                         }
                     }
                 }
@@ -159,7 +160,7 @@ fun RegistrationScreen(
                 try {
                     regViewModel.loadNames(trainers, myPersonId, myCoupleIds, myPersonName, myCoupleNames)
                 } catch (t: Throwable) {
-                    Log.e("RegScreen", "refresh loadNames failed", t)
+                    Logger.d("RegScreen", "refresh loadNames failed: ${t.message}")
                 }
             }
         }, modifier = Modifier.padding(padding)) {
@@ -305,7 +306,7 @@ fun RegistrationScreen(
                                         val old = counts.getOrNull(idx) ?: 0
                                         val newVal = (old - 1).coerceAtLeast(0)
                                         if (idx < counts.size) counts[idx] = newVal else counts.add(newVal)
-                                        Log.d("RegScreen", "Register mode: trainer=$idx old=$old new=$newVal")
+                                        Logger.d("RegScreen", "Register mode: trainer=$idx old=$old new=$newVal")
                                     }) { Icon(Icons.Default.Remove, contentDescription = "Snížit") }
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text("${counts[idx]}", modifier = Modifier.padding(8.dp))
@@ -315,7 +316,7 @@ fun RegistrationScreen(
                                             ?.let { if (it < 0) Int.MAX_VALUE else it } ?: Int.MAX_VALUE)
                                         val newVal = (old + 1).coerceAtMost(maxForTrainer)
                                         if (idx < counts.size) counts[idx] = newVal else counts.add(newVal)
-                                        Log.d("RegScreen", "Register mode: trainer=$idx old=$old max=$maxForTrainer new=$newVal")
+                                        Logger.d("RegScreen", "Register mode: trainer=$idx old=$old max=$maxForTrainer new=$newVal")
                                     }) { Icon(Icons.Default.Add, contentDescription = "Přidat") }
                                 }
                             }
@@ -349,7 +350,7 @@ fun RegistrationScreen(
                                 onRegister(listOf(regInput))
                                 onClose()
                             } catch (t: Throwable) {
-                                Log.e("RegScreen", "Register failed", t)
+                                Logger.d("RegScreen", "Register failed: ${t.message}")
                                 showRegisterError.value = t.message ?: "Chyba při registraci"
                             }
                         }, modifier = Modifier.fillMaxWidth()) { Text(AppStrings.current.confirmRegistrationTitle) }
@@ -489,7 +490,7 @@ fun RegistrationScreen(
                                                 ?.let { if (it < 0) Int.MAX_VALUE else it } ?: Int.MAX_VALUE)
                                             val newVal = (old + 1).coerceAtMost(maxForTrainer)
                                             if (idx < countsState.size) countsState[idx] = newVal else countsState.add(newVal)
-                                            Log.d("RegScreen", "Edit mode: reg=$selectedId trainer=$idx old=$old max=$maxForTrainer new=$newVal")
+                                            Logger.d("RegScreen", "Edit mode: reg=$selectedId trainer=$idx old=$old max=$maxForTrainer new=$newVal")
                                         }) { Icon(Icons.Default.Add, contentDescription = "Přidat") }
                                     }
                                 }
@@ -518,7 +519,7 @@ fun RegistrationScreen(
                                     if (enableNotes) onSetNote?.invoke(selectedId, editNoteState.value)
                                     onClose()
                                 } catch (t: Throwable) {
-                                    Log.e("RegScreen", "SetLessonDemand failed", t)
+                                    Logger.d("RegScreen", "SetLessonDemand failed: ${t.message}")
                                     showEditError.value = t.message ?: "Chyba při ukládání změn"
                                 }
                             }, modifier = Modifier.fillMaxWidth()) { Text("Uložit změny") }
@@ -618,7 +619,7 @@ fun RegistrationScreen(
                                                 onDelete(selId)
                                                 onClose()
                                             } catch (t: Throwable) {
-                                                Log.e("RegScreen", "Delete failed", t)
+                                                Logger.d("RegScreen", "Delete failed: ${t.message}")
                                                 showDeleteError.value = t.message ?: "Chyba při mazání"
                                             }
                                         }

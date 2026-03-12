@@ -1,6 +1,6 @@
-package com.tkolymp.tkolympapp
+package com.tkolymp.tkolympapp.screens
+import com.tkolymp.tkolympapp.SwipeToReload
 
-import android.text.Html
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.shared.utils.formatHtmlContent
 import com.tkolymp.shared.viewmodels.BoardViewModel
 import kotlinx.coroutines.launch
 
@@ -96,7 +97,7 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
                                     Text(authorName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                                 Spacer(modifier = Modifier.height(6.dp))
-                                val plainBody = Html.fromHtml(a.body ?: "", Html.FROM_HTML_MODE_LEGACY).toString()
+                                val plainBody = formatHtmlContent(a.body ?: "")
                                 Text(
                                     plainBody,
                                     style = MaterialTheme.typography.bodyMedium,

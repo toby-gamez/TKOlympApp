@@ -1,4 +1,6 @@
-package com.tkolymp.tkolympapp
+package com.tkolymp.tkolympapp.screens
+import com.tkolymp.tkolympapp.SwipeToReload
+import kotlinx.datetime.toLocalDateTime
 
 // Biometric support removed — no FragmentActivity import
 import androidx.compose.foundation.background
@@ -41,7 +43,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.language.AppStrings
@@ -52,10 +53,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
 
 data class CohortDisplay(val name: String, val colorRgb: String?, val since: String?, val until: String?)
 
@@ -76,7 +73,6 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         var currentUserFields by remember { mutableStateOf<List<Pair<String,String>>>(emptyList()) }
     var addressFields by remember { mutableStateOf<List<Pair<String,String>>>(emptyList()) }
     val scope = rememberCoroutineScope()
-    val ctx = LocalContext.current
     val refreshTriggerState = remember { mutableStateOf(0) }
 
     // Use ProfileViewModel to load cached user/person JSON and couple IDs
@@ -113,14 +109,14 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                 if (cohorts is kotlinx.serialization.json.JsonArray) {
                     fun fmtDate(s: String?): String? {
                         if (s.isNullOrBlank()) return null
-                        val fmt = DateTimeFormatter.ofPattern("dd.MM.yyyy")
                         try {
-                            val ld = LocalDate.parse(s)
-                            return ld.format(fmt)
+                            val ld = kotlinx.datetime.LocalDate.parse(s)
+                            return "${ld.dayOfMonth.toString().padStart(2,'0')}.${ld.monthNumber.toString().padStart(2,'0')}.${ld.year}"
                         } catch (_: Exception) {}
                         try {
-                            val odt = OffsetDateTime.parse(s)
-                            return odt.toLocalDate().format(fmt)
+                            val inst = kotlinx.datetime.Instant.parse(s)
+                            val ld = inst.toLocalDateTime(kotlinx.datetime.TimeZone.UTC).date
+                            return "${ld.dayOfMonth.toString().padStart(2,'0')}.${ld.monthNumber.toString().padStart(2,'0')}.${ld.year}"
                         } catch (_: Exception) {}
                         val m = Regex("(\\d{4})-(\\d{2})-(\\d{2})").find(s)
                         if (m != null) return "${m.groupValues[3]}.${m.groupValues[2]}.${m.groupValues[1]}"
@@ -253,18 +249,15 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
 
                     // Birth date formatting (try several ISO-like formats)
                     if (key.equals("birthDate", ignoreCase = true)) {
-                        val fmt = DateTimeFormatter.ofPattern("dd.MM.yyyy")
                         try {
-                            val ld = LocalDate.parse(v)
-                            return ld.format(fmt)
-                        } catch (_: DateTimeParseException) {
-                        }
+                            val ld = kotlinx.datetime.LocalDate.parse(v)
+                            return "${ld.dayOfMonth.toString().padStart(2,'0')}.${ld.monthNumber.toString().padStart(2,'0')}.${ld.year}"
+                        } catch (_: Exception) {}
                         try {
-                            val odt = OffsetDateTime.parse(v)
-                            return odt.toLocalDate().format(fmt)
-                        } catch (_: DateTimeParseException) {
-                        }
-                        // Fallback simple regex YYYY-MM-DD
+                            val inst = kotlinx.datetime.Instant.parse(v)
+                            val ld = inst.toLocalDateTime(kotlinx.datetime.TimeZone.UTC).date
+                            return "${ld.dayOfMonth.toString().padStart(2,'0')}.${ld.monthNumber.toString().padStart(2,'0')}.${ld.year}"
+                        } catch (_: Exception) {}
                         val m = Regex("(\\d{4})-(\\d{2})-(\\d{2})").find(v)
                         if (m != null) return "${m.groupValues[3]}.${m.groupValues[2]}.${m.groupValues[1]}"
                     }

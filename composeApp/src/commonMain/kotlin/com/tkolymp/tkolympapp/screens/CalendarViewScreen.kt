@@ -1,4 +1,4 @@
-package com.tkolymp.tkolympapp.Screens
+package com.tkolymp.tkolympapp.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -44,6 +44,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import com.tkolymp.tkolympapp.SwipeToReload
+import com.tkolymp.tkolympapp.formatTimes
+import com.tkolymp.tkolympapp.formatTimesWithDate
+import com.tkolymp.tkolympapp.formatTimesWithDateAlways
+import com.tkolymp.tkolympapp.durationMinutes
+import com.tkolymp.tkolympapp.translateEventType
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier

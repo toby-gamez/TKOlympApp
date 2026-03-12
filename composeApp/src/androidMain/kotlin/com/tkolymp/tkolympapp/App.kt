@@ -47,14 +47,29 @@ import com.tkolymp.shared.language.AppLanguage
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.language.getDeviceLanguageCode
 import com.tkolymp.shared.viewmodels.OnboardingViewModel
-import com.tkolymp.tkolympapp.Screens.AboutScreen
-import com.tkolymp.tkolympapp.Screens.CalendarViewScreen
-import com.tkolymp.tkolympapp.Screens.GroupsScreen
-import com.tkolymp.tkolympapp.Screens.LeaderboardScreen
-import com.tkolymp.tkolympapp.Screens.NotificationsSettingsScreen
-import com.tkolymp.tkolympapp.Screens.OnboardingScreen
-import com.tkolymp.tkolympapp.Screens.PeopleScreen
-import com.tkolymp.tkolympapp.Screens.TrainersLocationsScreen
+import com.tkolymp.tkolympapp.screens.AboutScreen
+import com.tkolymp.tkolympapp.screens.BoardScreen
+import com.tkolymp.tkolympapp.screens.CalendarScreen
+import com.tkolymp.tkolympapp.screens.CalendarViewScreen
+import com.tkolymp.tkolympapp.screens.EventScreen
+import com.tkolymp.tkolympapp.screens.EventsScreen
+import com.tkolymp.tkolympapp.screens.GroupsScreen
+import com.tkolymp.tkolympapp.screens.LanguageScreen
+import com.tkolymp.tkolympapp.screens.LeaderboardScreen
+import com.tkolymp.tkolympapp.screens.LoginScreen
+import com.tkolymp.tkolympapp.screens.NoticeScreen
+import com.tkolymp.tkolympapp.screens.NotificationsSettingsScreen
+import com.tkolymp.tkolympapp.screens.OnboardingScreen
+import com.tkolymp.tkolympapp.screens.OtherScreen
+import com.tkolymp.tkolympapp.screens.OverviewScreen
+import com.tkolymp.tkolympapp.screens.PeopleScreen
+import com.tkolymp.tkolympapp.screens.PersonScreen
+import com.tkolymp.tkolympapp.screens.PrivacyPolicyScreen
+import com.tkolymp.tkolympapp.screens.ProfileScreen
+import com.tkolymp.tkolympapp.screens.RegMode
+import com.tkolymp.tkolympapp.screens.RegistrationScreen
+import com.tkolymp.tkolympapp.screens.TrainersLocationsScreen
+import androidx.core.content.pm.PackageInfoCompat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -285,7 +300,7 @@ fun AppNavHost(
                 )
             }
         ) {
-            com.tkolymp.tkolympapp.Screens.LanguageScreen(onBack = { navController.navigateUp() })
+            LanguageScreen(onBack = { navController.navigateUp() })
         }
 
         composable(
@@ -345,7 +360,13 @@ fun AppNavHost(
                 )
             }
         ) {
-            AboutScreen(onBack = { navController.navigateUp() })
+            val ctx = LocalContext.current
+            val pkgInfo = try { ctx.packageManager.getPackageInfo(ctx.packageName, 0) } catch (_: Throwable) { null }
+            AboutScreen(
+                onBack = { navController.navigateUp() },
+                appVersionName = pkgInfo?.versionName,
+                appVersionCode = pkgInfo?.let { PackageInfoCompat.getLongVersionCode(it) }
+            )
         }
 
         composable(
@@ -528,7 +549,7 @@ fun AppNavHost(
         ) { backStackEntry ->
             val personId = backStackEntry.arguments?.getString("personId")
             personId?.let { pid ->
-                com.tkolymp.tkolympapp.Screens.PersonScreen(
+                PersonScreen(
                     personId = pid,
                     onBack = { navController.navigateUp() },
                     onOpenCouple = { /* no-op for now */ }

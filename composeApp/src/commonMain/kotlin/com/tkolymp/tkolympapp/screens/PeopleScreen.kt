@@ -1,4 +1,13 @@
-package com.tkolymp.tkolympapp.Screens
+package com.tkolymp.tkolympapp.screens
+import com.tkolymp.shared.utils.formatShortDate
+import com.tkolymp.shared.utils.parseToLocal
+import com.tkolymp.tkolympapp.util.normalizeForSearch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
+import kotlinx.datetime.todayIn
 
 // no manual refresh button
  
@@ -35,7 +44,6 @@ import androidx.compose.material3.TextField
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import java.text.Normalizer
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -59,14 +67,6 @@ import com.tkolymp.shared.people.Person
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
-import java.time.Instant
-import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
-import java.time.temporal.ChronoUnit
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.tkolympapp.SwipeToReload
 
@@ -207,12 +207,6 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) 
                         .filter { it.isVisible != false }
                         .any { it.id?.let { id -> selectedGroups.contains(id) } == true }
                 }
-                fun normalizeForSearch(s: String?): String {
-                    if (s.isNullOrBlank()) return ""
-                    val n = Normalizer.normalize(s, Normalizer.Form.NFD)
-                    return n.replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "").lowercase()
-                }
-
                 val searched = if (searchQuery.isBlank()) filtered else filtered.filter { p ->
                     val q = normalizeForSearch(searchQuery.trim())
                     listOf(p.firstName, p.lastName)
@@ -310,91 +304,42 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) 
     }
 }
 
-internal fun parseColorOrDefault(hex: String?): Color {
-    if (hex.isNullOrBlank()) return Color.Gray
-    return try {
-        var s = hex.trim()
-        if (!s.startsWith("#")) s = "#" + s
-        Color(android.graphics.Color.parseColor(s))
-    } catch (e: Exception) {
-        Color.Gray
-    }
-}
-
 internal fun formatDateString(raw: String?): String? {
     if (raw.isNullOrBlank()) return null
     val s = raw.trim()
     val datePrefix = Regex("\\d{4}-\\d{2}-\\d{2}").find(s)?.value
-    val formatterOut = DateTimeFormatter.ofPattern("d. M. yyyy")
-    try {
-        if (datePrefix != null && datePrefix.length == 10) {
-            val ld = LocalDate.parse(datePrefix)
-            return ld.format(formatterOut)
-        }
-        val odt = OffsetDateTime.parse(s)
-        return odt.toLocalDate().format(formatterOut)
-    } catch (_: DateTimeParseException) {
-    }
-    try {
-        val zdt = ZonedDateTime.parse(s)
-        return zdt.toLocalDate().format(formatterOut)
-    } catch (_: DateTimeParseException) {
-    }
-    try {
-        val instant = Instant.parse(s)
-        val ld = instant.atZone(ZoneId.systemDefault()).toLocalDate()
-        return ld.format(formatterOut)
-    } catch (_: DateTimeParseException) {
-    }
-    return null
+    val ld = if (datePrefix != null) {
+        try { LocalDate.parse(datePrefix) } catch (_: Exception) { null }
+    } else {
+        parseToLocal(s)?.date
+    } ?: return null
+    return formatShortDate(ld)
 }
 
 internal fun daysUntilNextBirthday(raw: String?): Int {
     if (raw.isNullOrBlank()) return Int.MAX_VALUE
     val s = raw.trim()
     val datePrefix = Regex("\\d{4}-\\d{2}-\\d{2}").find(s)?.value
-    val today = LocalDate.now()
-    val ld: LocalDate = try {
-        if (datePrefix != null && datePrefix.length == 10) {
-            LocalDate.parse(datePrefix)
-        } else {
-            try {
-                OffsetDateTime.parse(s).toLocalDate()
-            } catch (_: DateTimeParseException) {
-                try {
-                    ZonedDateTime.parse(s).toLocalDate()
-                } catch (_: DateTimeParseException) {
-                    try {
-                        Instant.parse(s).atZone(ZoneId.systemDefault()).toLocalDate()
-                    } catch (_: DateTimeParseException) {
-                        return Int.MAX_VALUE
-                    }
-                }
-            }
-        }
-    } catch (_: Exception) {
-        return Int.MAX_VALUE
-    }
+    val ld = if (datePrefix != null) {
+        try { LocalDate.parse(datePrefix) } catch (_: Exception) { null }
+    } else {
+        parseToLocal(s)?.date
+    } ?: return Int.MAX_VALUE
 
-    val month = ld.monthValue
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val month = ld.monthNumber
     val day = ld.dayOfMonth
     val candidate = try {
-        LocalDate.of(today.year, month, day)
+        LocalDate(today.year, month, day)
     } catch (_: Exception) {
-        // handle Feb 29 on non-leap years by using Feb 28
-        if (month == 2 && day == 29) LocalDate.of(today.year, 2, 28) else return Int.MAX_VALUE
+        if (month == 2 && day == 29) LocalDate(today.year, 2, 28) else return Int.MAX_VALUE
     }
 
-    var next = if (candidate.isBefore(today)) candidate.plusYears(1) else candidate
-    // ensure next exists (leap-year edge-case)
-    if (next.monthValue == 2 && next.dayOfMonth == 29) {
-        // if target year isn't leap, shift to Feb 28
-        if (!java.time.Year.isLeap(next.year.toLong())) next = LocalDate.of(next.year, 2, 28)
+    var next = if (candidate < today) candidate.plus(1, DateTimeUnit.YEAR) else candidate
+    if (next.monthNumber == 2 && next.dayOfMonth == 29) {
+        val y = next.year
+        val isLeap = (y % 4 == 0 && (y % 100 != 0 || y % 400 == 0))
+        if (!isLeap) next = LocalDate(y, 2, 28)
     }
-
-    return try {
-        ChronoUnit.DAYS.between(today, next).toInt()
-    } catch (_: Exception) {
-        Int.MAX_VALUE
-    }
+    return (next.toEpochDays() - today.toEpochDays()).toInt()
 }

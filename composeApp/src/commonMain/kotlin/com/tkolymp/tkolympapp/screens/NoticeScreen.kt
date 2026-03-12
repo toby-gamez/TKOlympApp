@@ -1,11 +1,13 @@
-package com.tkolymp.tkolympapp
+package com.tkolymp.tkolympapp.screens
+import com.tkolymp.tkolympapp.SwipeToReload
+import com.tkolymp.shared.utils.formatShortDateTime
+import com.tkolymp.shared.utils.parseToLocal
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
 
-import android.graphics.PorterDuff
-import android.graphics.drawable.Drawable
-import android.text.Html
-import android.text.method.LinkMovementMethod
-import android.util.TypedValue
-import android.widget.TextView
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -36,63 +38,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.toArgb
+import com.tkolymp.tkolympapp.platform.HtmlText
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.graphics.drawable.DrawableCompat
 import com.tkolymp.shared.viewmodels.NoticeViewModel
 import com.tkolymp.shared.language.AppStrings
-import com.tkolymp.tkolympapp.toLocale
 import kotlinx.coroutines.launch
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
-
-// Try to tint selection handles/cursor via reflection; best-effort and silently fails on unsupported platforms.
-private fun tintTextViewSelectionHandles(tv: TextView, color: Int) {
-    try {
-        val editorField = TextView::class.java.getDeclaredField("mEditor")
-        editorField.isAccessible = true
-        val editor = editorField.get(tv) ?: return
-        val handleNames = arrayOf("mSelectHandleLeft", "mSelectHandleRight", "mSelectHandleCenter")
-                for (name in handleNames) {
-            try {
-                val f = editor.javaClass.getDeclaredField(name)
-                f.isAccessible = true
-                val d = f.get(editor) as? Drawable
-                if (d != null) {
-                    val wrapped = DrawableCompat.wrap(d.mutate())
-                    DrawableCompat.setTint(wrapped, color)
-                    DrawableCompat.setTintMode(wrapped, PorterDuff.Mode.SRC_IN)
-                    f.set(editor, wrapped)
-                }
-            } catch (_: Throwable) {
-            }
-        }
-
-        // Cursor drawable (array) in Editor
-        try {
-            val cursorField = editor.javaClass.getDeclaredField("mCursorDrawable")
-            cursorField.isAccessible = true
-            val c = cursorField.get(editor) as? Array<Drawable?>
-            if (!c.isNullOrEmpty()) {
-                for (i in c.indices) {
-                    val d = c[i]
-                    if (d != null) {
-                        val wrapped = DrawableCompat.wrap(d.mutate())
-                        DrawableCompat.setTint(wrapped, color)
-                        DrawableCompat.setTintMode(wrapped, PorterDuff.Mode.SRC_IN)
-                        c[i] = wrapped
-                    }
-                }
-                cursorField.set(editor, c)
-            }
-        } catch (_: Throwable) {
-        }
-    } catch (_: Throwable) {
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -155,14 +105,8 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
                             }
                             fun formatIso(iso: String?): String? {
                                 if (iso.isNullOrBlank()) return null
-                                return try {
-                                    val inst = Instant.parse(iso)
-                                    val zdt = inst.atZone(ZoneId.systemDefault())
-                                    val fmt = DateTimeFormatter.ofPattern("d. M. yyyy HH:mm").withLocale(AppStrings.currentLanguage.toLocale())
-                                    fmt.format(zdt)
-                                } catch (ex: DateTimeParseException) {
-                                    iso
-                                }
+                                val ldt = parseToLocal(iso) ?: return iso
+                                return formatShortDateTime(ldt.date, ldt.hour, ldt.minute)
                             }
 
                             formatIso(a.createdAt)?.let { f ->
@@ -179,34 +123,13 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
                         Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
                             Column(modifier = Modifier.padding(12.dp)) {
                                 val bodySizeSp = MaterialTheme.typography.bodyMedium.fontSize.value
-                                val onBackgroundArgb = MaterialTheme.colorScheme.onBackground.toArgb()
-                                val primaryArgb = MaterialTheme.colorScheme.primary.toArgb()
-                                val secondaryArgb = MaterialTheme.colorScheme.secondary.toArgb()
-                                // make a translucent version of primary for selection highlight (approx 20% alpha)
-                                val selectionHighlightArgb = (primaryArgb and 0x00FFFFFF) or (0x33 shl 24)
-
-                                AndroidView(
+                                HtmlText(
+                                    html = a.body ?: "",
                                     modifier = Modifier.fillMaxWidth(),
-                                    factory = { ctx ->
-                                        TextView(ctx).apply {
-                                            setTextIsSelectable(true)
-                                            linksClickable = true
-                                            movementMethod = LinkMovementMethod.getInstance()
-                                        }
-                                    },
-                                    update = { tv ->
-                                        val sp = Html.fromHtml(a.body ?: "", Html.FROM_HTML_MODE_LEGACY)
-                                        tv.text = sp
-                                        tv.setTextSize(
-                                            TypedValue.COMPLEX_UNIT_SP,
-                                            bodySizeSp
-                                        )
-                                        tv.setTextColor(onBackgroundArgb)
-                                        tv.setLinkTextColor(primaryArgb)
-                                        tv.setHighlightColor(selectionHighlightArgb)
-                                        tv.highlightColor = selectionHighlightArgb
-                                        tintTextViewSelectionHandles(tv, primaryArgb)
-                                    }
+                                    textColor = MaterialTheme.colorScheme.onBackground,
+                                    linkColor = MaterialTheme.colorScheme.primary,
+                                    textSizeSp = bodySizeSp,
+                                    selectable = true
                                 )
                             }
                         }

@@ -1,4 +1,4 @@
-package com.tkolymp.tkolympapp.Screens
+package com.tkolymp.tkolympapp.screens
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,7 +22,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
@@ -32,21 +31,10 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tkolymp.shared.language.AppStrings
-import androidx.core.content.pm.PackageInfoCompat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AboutScreen(onBack: () -> Unit = {}) {
-    val ctx = LocalContext.current
-    val pkgManager = ctx.packageManager
-    val pkgName = ctx.packageName
-    var versionName: String? = null
-    var versionCode: Long? = null
-    try {
-        val pi = pkgManager.getPackageInfo(pkgName, 0)
-        versionName = pi.versionName
-        versionCode = PackageInfoCompat.getLongVersionCode(pi)
-    } catch (_: Throwable) { }
+fun AboutScreen(onBack: () -> Unit = {}, appVersionName: String? = null, appVersionCode: Long? = null) {
 
     Scaffold(
         topBar = {
@@ -69,7 +57,7 @@ fun AboutScreen(onBack: () -> Unit = {}) {
             horizontalAlignment = Alignment.Start
         ) {
             Text("TK Olymp", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 8.dp, bottom = 4.dp))
-            Text("${AppStrings.current.appVersion} ${versionName ?: "?"} (Build ${versionCode ?: "?"})", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 12.dp))
+            Text("${AppStrings.current.appVersion} ${appVersionName ?: "?"} (Build ${appVersionCode ?: "?"})", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 12.dp))
 
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {

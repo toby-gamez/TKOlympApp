@@ -1,9 +1,5 @@
-package com.tkolymp.tkolympapp.Screens
+package com.tkolymp.tkolympapp.screens
 
-import android.util.Log
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,7 +19,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -55,7 +50,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import com.tkolymp.shared.Logger
+import com.tkolymp.tkolympapp.platform.NotificationExportImportButton
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -66,21 +62,21 @@ import com.tkolymp.shared.notification.NotificationRule
 import com.tkolymp.shared.notification.NotificationSettings
 import com.tkolymp.shared.viewmodels.NotificationsSettingsViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
     val json = remember { Json { prettyPrint = true; ignoreUnknownKeys = true } }
-    var menuExpanded by remember { mutableStateOf(false) }
     var availableLocations by remember { mutableStateOf<List<String>>(emptyList()) }
     var availableTrainers by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     val availableTypes = listOf("CAMP", "LESSON", "GROUP", "RESERVATION", "HOLIDAY")
@@ -141,53 +137,12 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                 try {
                     svc.updateSettings(settings)
                 } catch (t: Throwable) {
-                    Log.e("NotificationsSettings", "Failed to update settings", t)
+                    Logger.d("NotificationsSettings", "Failed to update settings: ${t.message}")
                 }
             } catch (e: UninitializedPropertyAccessException) {
-                Log.w("NotificationsSettings", "notificationService not initialized: ${e.message}")
+                Logger.d("NotificationsSettings", "notificationService not initialized: ${e.message}")
             } catch (t: Throwable) {
-                Log.e("NotificationsSettings", "Unexpected error persisting settings", t)
-            }
-        }
-    }
-
-    val exportLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument("application/json")
-    ) { uri ->
-        if (uri != null) {
-            scope.launch {
-                try {
-                    val settings = NotificationSettings(globalEnabled = globalEnabled, rules = rules.toList())
-                    val jsonStr = json.encodeToString(settings)
-                    context.contentResolver.openOutputStream(uri)?.use { it.write(jsonStr.toByteArray(Charsets.UTF_8)) }
-                    Toast.makeText(context, AppStrings.current.exportSuccessful, Toast.LENGTH_SHORT).show()
-                } catch (t: Throwable) {
-                    Log.e("NotificationsSettings", "Export failed", t)
-                    Toast.makeText(context, AppStrings.current.exportFailed, Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-
-    val importLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument()
-    ) { uri ->
-        if (uri != null) {
-            scope.launch {
-                try {
-                    val jsonStr = context.contentResolver.openInputStream(uri)?.use { it.readBytes().toString(Charsets.UTF_8) }
-                    if (jsonStr != null) {
-                        val imported = json.decodeFromString<NotificationSettings>(jsonStr)
-                        rules.clear()
-                        rules.addAll(imported.rules)
-                        globalEnabled = imported.globalEnabled
-                        persist()
-                        Toast.makeText(context, "${AppStrings.current.importSuccessful} (${imported.rules.size})", Toast.LENGTH_SHORT).show()
-                    }
-                } catch (t: Throwable) {
-                    Log.e("NotificationsSettings", "Import failed", t)
-                    Toast.makeText(context, "${AppStrings.current.importFailed}: ${t.message}", Toast.LENGTH_LONG).show()
-                }
+                Logger.d("NotificationsSettings", "Unexpected error persisting settings: ${t.message}")
             }
         }
     }
@@ -196,21 +151,19 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
         topBar = { TopAppBar(title = { Text(AppStrings.current.notificationSettings) }, navigationIcon = {
             IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.back) }
         }, actions = {
-            Box {
-                IconButton(onClick = { menuExpanded = true }) {
-                    Icon(Icons.Default.MoreVert, contentDescription = "Více")
-                }
-                DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
-                    DropdownMenuItem(
-                        text = { Text(AppStrings.current.exportJson) },
-                        onClick = { menuExpanded = false; exportLauncher.launch("notification_settings.json") }
-                    )
-                    DropdownMenuItem(
-                        text = { Text(AppStrings.current.importJson) },
-                        onClick = { menuExpanded = false; importLauncher.launch(arrayOf("application/json", "text/plain")) }
-                    )
-                }
-            }
+            NotificationExportImportButton(
+                onGetExportJson = {
+                    json.encodeToString(NotificationSettings(globalEnabled = globalEnabled, rules = rules.toList()))
+                },
+                onImportJson = { jsonStr ->
+                    val imported = json.decodeFromString<NotificationSettings>(jsonStr)
+                    rules.clear()
+                    rules.addAll(imported.rules)
+                    globalEnabled = imported.globalEnabled
+                    persist()
+                },
+                onMessage = {}
+            )
         }) },
         floatingActionButton = {
             FloatingActionButton(onClick = { editRule = null; showDialog = true }) {
@@ -609,7 +562,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
 
                                 if (existing == null) {
                                     val nr = NotificationRule(
-                                        id = UUID.randomUUID().toString(),
+                                        id = Clock.System.now().toEpochMilliseconds().toString(),
                                         name = ruleName,
                                         enabled = true,
                                         filterType = selType,

@@ -1,4 +1,11 @@
-package com.tkolymp.tkolympapp
+package com.tkolymp.tkolympapp.screens
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import com.tkolymp.shared.utils.formatShortDate
+import com.tkolymp.shared.utils.parseToLocal
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
 
 // coroutine helpers not needed here; avoid importing isActive directly
 import androidx.compose.foundation.background
@@ -53,13 +60,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.viewmodels.OtherViewModel
 import com.tkolymp.shared.language.AppStrings
-import java.time.Instant
-import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
 import kotlin.coroutines.cancellation.CancellationException
 
 private enum class MainItem { PEOPLE, TRAINERS, GROUPS, LEADERBOARD }
@@ -83,32 +83,13 @@ private fun shouldShowError(t: Throwable?): Boolean {
 
 private fun formatDateString(raw: String): String? {
     val s = raw.trim()
-    // Quick extract if value contains a date-like prefix
     val datePrefix = Regex("\\d{4}-\\d{2}-\\d{2}").find(s)?.value
-    val formatterOut = DateTimeFormatter.ofPattern("d. M. yyyy")
-    try {
-        // Try plain local date
-        if (datePrefix != null && datePrefix.length == 10) {
-            val ld = LocalDate.parse(datePrefix)
-            return ld.format(formatterOut)
-        }
-        // Try ISO local date-time / offset
-        val odt = OffsetDateTime.parse(s)
-        return odt.toLocalDate().format(formatterOut)
-    } catch (_: DateTimeParseException) {
-    }
-    try {
-        val zdt = ZonedDateTime.parse(s)
-        return zdt.toLocalDate().format(formatterOut)
-    } catch (_: DateTimeParseException) {
-    }
-    try {
-        val instant = Instant.parse(s)
-        val ld = instant.atZone(ZoneId.systemDefault()).toLocalDate()
-        return ld.format(formatterOut)
-    } catch (_: DateTimeParseException) {
-    }
-    return null
+    val ld = if (datePrefix != null) {
+        try { LocalDate.parse(datePrefix) } catch (_: Exception) { null }
+    } else {
+        parseToLocal(s)?.date
+    } ?: return null
+    return formatShortDate(ld)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

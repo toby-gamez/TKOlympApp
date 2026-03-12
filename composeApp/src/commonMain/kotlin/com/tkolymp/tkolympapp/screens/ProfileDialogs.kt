@@ -1,4 +1,15 @@
-package com.tkolymp.tkolympapp
+package com.tkolymp.tkolympapp.screens
+import com.tkolymp.shared.utils.parseToLocal
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.toInstant
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -34,18 +45,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.language.NationalityHelper
 import kotlinx.coroutines.launch
-import java.time.Instant
-import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 @Composable
 fun ChangePasswordDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
@@ -54,7 +59,6 @@ fun ChangePasswordDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
-    val ctx = LocalContext.current
     val strings = AppStrings.current
 
     AlertDialog(
@@ -154,23 +158,16 @@ fun ChangePersonalDataDialog(
     // Birth date handling: keep ISO value for API and user-friendly display
     fun parseToLocalDate(s: String?): LocalDate? {
         if (s.isNullOrBlank()) return null
-        try {
-            return LocalDate.parse(s)
-        } catch (_: Exception) {}
-        try {
-            val odt = OffsetDateTime.parse(s)
-            return odt.toLocalDate()
-        } catch (_: Exception) {}
-        val m = Regex("(\\d{4})-(\\d{2})-(\\d{2})").find(s)
-        if (m != null) return LocalDate.of(m.groupValues[1].toInt(), m.groupValues[2].toInt(), m.groupValues[3].toInt())
-        return null
+        val datePrefix = Regex("\\d{4}-\\d{2}-\\d{2}").find(s.trim())?.value
+        if (datePrefix != null) return try { LocalDate.parse(datePrefix) } catch (_: Exception) { null }
+        return parseToLocal(s)?.date
     }
 
     val initialLocal = parseToLocalDate(initialBirthDate)
     var birthIso by remember(initialBirthDate) { mutableStateOf(initialLocal?.toString() ?: initialBirthDate) }
     fun formatDisplayDate(iso: String?): String {
         val ld = parseToLocalDate(iso) ?: return iso ?: ""
-        return try { ld.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) } catch (_: Exception) { ld.toString() }
+        return try { "${ld.dayOfMonth.toString().padStart(2,'0')}.${ld.monthNumber.toString().padStart(2,'0')}.${ld.year}" } catch (_: Exception) { ld.toString() }
     }
     var birthDisplay by remember(birthIso) { mutableStateOf(formatDisplayDate(birthIso)) }
 
@@ -189,12 +186,13 @@ fun ChangePersonalDataDialog(
 
     var birth by remember { mutableStateOf(birthIso) }
     var showDatePicker by remember { mutableStateOf(false) }
-    val initialMillis = parseToLocalDate(birth)?.atStartOfDay()?.atZone(ZoneId.systemDefault())?.toInstant()?.toEpochMilli()
+    val initialMillis: Long? = parseToLocalDate(birth)?.let { ld ->
+        LocalDateTime(ld, LocalTime(0, 0)).toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+    }
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
     var gender by remember(initialGender) { mutableStateOf(isoToLabel(initialGender)) }
     var saving by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
-    val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
 
     androidx.compose.material3.AlertDialog(
@@ -271,7 +269,7 @@ fun ChangePersonalDataDialog(
                                     Button(onClick = {
                                         val selMillis = datePickerState.selectedDateMillis
                                         if (selMillis != null) {
-                                            val sel = Instant.ofEpochMilli(selMillis).atZone(ZoneId.systemDefault()).toLocalDate()
+                                            val sel = Instant.fromEpochMilliseconds(selMillis).toLocalDateTime(TimeZone.currentSystemDefault()).date
                                             birthIso = sel.toString()
                                             birth = birthIso
                                             birthDisplay = formatDisplayDate(birthIso)
@@ -364,7 +362,6 @@ fun ChangePersonalDataDialog(
                                 )
                                 try { ServiceLocator.userService.fetchAndStorePersonDetails(pid) } catch (_: Throwable) { }
                                 try { ServiceLocator.authService.initialize() } catch (_: Throwable) { }
-                                try { android.widget.Toast.makeText(ctx, strings.dataSaved, android.widget.Toast.LENGTH_SHORT).show() } catch (_: Throwable) { }
                                 onDismiss()
                             } else {
                                 val apiErr = try { ServiceLocator.userService.getLastApiError() } catch (_: Throwable) { null }

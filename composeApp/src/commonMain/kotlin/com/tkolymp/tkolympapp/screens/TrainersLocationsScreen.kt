@@ -1,8 +1,5 @@
-package com.tkolymp.tkolympapp.Screens
+package com.tkolymp.tkolympapp.screens
 
-import android.content.ActivityNotFoundException
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -37,7 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.language.AppStrings
@@ -50,7 +47,7 @@ import kotlinx.coroutines.launch
 fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
     val vm = remember { TrainersLocationsViewModel() }
     val state by vm.state.collectAsState()
-    val ctx = LocalContext.current
+    val uriHandler = LocalUriHandler.current
 
     LaunchedEffect(Unit) { vm.load() }
 
@@ -101,15 +98,14 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                             .clickable {
                             val q = loc.name ?: return@clickable
-                            val geoUri = Uri.parse("geo:0,0?q=${Uri.encode(q)}")
-                            val intent = Intent(Intent.ACTION_VIEW, geoUri)
-                            try {
-                                ctx.startActivity(intent)
-                            } catch (ae: ActivityNotFoundException) {
-                                val web = Uri.parse("https://www.google.com/maps/search/?api=1&query=${Uri.encode(q)}")
-                                val i2 = Intent(Intent.ACTION_VIEW, web)
-                                try { ctx.startActivity(i2) } catch (_: Exception) { }
-                            } catch (_: Exception) { }
+                            val encoded = q.map { c ->
+                                when {
+                                    c.isLetterOrDigit() || c in "-_.~" -> c.toString()
+                                    c == ' ' -> "+"
+                                    else -> "%${c.code.toString(16).uppercase()}"
+                                }
+                            }.joinToString("")
+                            try { uriHandler.openUri("https://www.google.com/maps/search/?api=1&query=$encoded") } catch (_: Exception) { }
                         },
                         shape = RoundedCornerShape(16.dp),
                         

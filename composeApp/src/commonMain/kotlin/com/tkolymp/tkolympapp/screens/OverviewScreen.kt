@@ -1,6 +1,15 @@
-package com.tkolymp.tkolympapp
+package com.tkolymp.tkolympapp.screens
+import com.tkolymp.tkolympapp.SwipeToReload
+import com.tkolymp.shared.utils.formatFullCalendarDate
+import com.tkolymp.shared.utils.formatHtmlContent
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
+import kotlinx.datetime.todayIn
 
-import android.text.Html
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -36,10 +45,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.OverviewViewModel
-import com.tkolymp.tkolympapp.toLocale
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,16 +68,18 @@ fun OverviewScreen(
         val scope = rememberCoroutineScope()
 
         LaunchedEffect(Unit) {
-            val startIso = LocalDate.now().toString() + "T00:00:00Z"
-            val endIso = LocalDate.now().plusYears(1).toString() + "T23:59:59Z"
+            val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+            val startIso = today.toString() + "T00:00:00Z"
+            val endIso = today.plus(365, DateTimeUnit.DAY).toString() + "T23:59:59Z"
             viewModel.loadOverview(startIso, endIso, forceRefresh = false)
         }
 
         SwipeToReload(
             isRefreshing = state.isLoading,
             onRefresh = { scope.launch {
-                val startIso = LocalDate.now().toString() + "T00:00:00Z"
-                val endIso = LocalDate.now().plusYears(1).toString() + "T23:59:59Z"
+                val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+                val startIso = today.toString() + "T00:00:00Z"
+                val endIso = today.plus(365, DateTimeUnit.DAY).toString() + "T23:59:59Z"
                 viewModel.loadOverview(startIso, endIso, forceRefresh = true)
             } },
             modifier = Modifier.padding(top = padding.calculateTopPadding(), bottom = bottomPadding)
@@ -117,20 +125,19 @@ fun OverviewScreen(
                         Text(AppStrings.current.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
                     }
                 } else {
-                    val fmt = DateTimeFormatter.ISO_LOCAL_DATE
-                    val todayKey = LocalDate.now().format(fmt)
+                    val todayKey = Clock.System.todayIn(TimeZone.currentSystemDefault()).toString()
 
                     // Show only one day: prefer today (only if it has future events), otherwise the next training day
                     val sortedKeys = trainingsMapByDay.keys.sorted()
-                    val nowInstant = java.time.Instant.now()
+                    val nowInstant = Clock.System.now()
                     val selectedKey = run {
                         if (sortedKeys.isEmpty()) null
                         else if (sortedKeys.contains(todayKey)) {
                             val todayList = trainingsMapByDay[todayKey] ?: emptyList()
                             val hasFutureToday = todayList.any { inst ->
                                 val timeStr = inst.until ?: inst.since ?: inst.updatedAt ?: ""
-                                val instInstant = try { java.time.Instant.parse(timeStr) } catch (_: Exception) { null }
-                                instInstant?.isAfter(nowInstant) == true
+                                val instInstant = try { Instant.parse(timeStr) } catch (_: Exception) { null }
+                                instInstant != null && instInstant > nowInstant
                             }
                             if (hasFutureToday) todayKey else sortedKeys.find { it > todayKey } ?: sortedKeys.firstOrNull()
                         } else {
@@ -141,16 +148,14 @@ fun OverviewScreen(
                     selectedKey?.let { date ->
                         val list = trainingsMapByDay[date] ?: emptyList()
                         Column(modifier = Modifier.padding(vertical = 6.dp)) {
+                            val now = Clock.System.todayIn(TimeZone.currentSystemDefault())
                             val header = when (date) {
                                 todayKey -> AppStrings.current.today.lowercase()
-                                LocalDate.now().plusDays(1).format(fmt) -> AppStrings.current.tomorrow.lowercase()
+                                now.plus(1, DateTimeUnit.DAY).toString() -> AppStrings.current.tomorrow.lowercase()
                                 else -> {
                                     val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
-                                    if (ld == null) date else {
-                                        val now = LocalDate.now()
-                                        val pattern = if (ld.year == now.year) "EEEE, d. MMMM" else "EEEE, d. MMMM yyyy"
-                                        ld.format(DateTimeFormatter.ofPattern(pattern, AppStrings.currentLanguage.toLocale()))
-                                    }
+                                    if (ld == null) date else
+                                        formatFullCalendarDate(ld, AppStrings.currentLanguage.code, ld.year != now.year)
                                 }
                             }
                             Text(header, style = MaterialTheme.typography.titleMedium)
@@ -231,7 +236,7 @@ fun OverviewScreen(
                                         Text(authorName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                     Spacer(modifier = Modifier.height(4.dp))
-                                    var plainBody = Html.fromHtml(a.body ?: "", Html.FROM_HTML_MODE_LEGACY).toString()
+                                    var plainBody = formatHtmlContent(a.body ?: "")
                                     if (plainBody.isNotBlank()) plainBody = plainBody.trimEnd() + "..."
                                     Text(
                                         plainBody,
@@ -279,21 +284,18 @@ fun OverviewScreen(
                         Text(AppStrings.current.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
                     }
                 } else {
-                    val fmt = DateTimeFormatter.ISO_LOCAL_DATE
-                    val todayKey = LocalDate.now().format(fmt)
+                    val todayKey = Clock.System.todayIn(TimeZone.currentSystemDefault()).toString()
 
                     campsMapByDay.forEach { (date, list) ->
                         Column(modifier = Modifier.padding(vertical = 6.dp)) {
+                            val now = Clock.System.todayIn(TimeZone.currentSystemDefault())
                             val header = when (date) {
                                 todayKey -> AppStrings.current.today.lowercase()
-                                LocalDate.now().plusDays(1).format(fmt) -> AppStrings.current.tomorrow.lowercase()
+                                now.plus(1, DateTimeUnit.DAY).toString() -> AppStrings.current.tomorrow.lowercase()
                                 else -> {
                                     val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
-                                    if (ld == null) date else {
-                                        val now = LocalDate.now()
-                                        val pattern = if (ld.year == now.year) "EEEE, d. MMMM" else "EEEE, d. MMMM yyyy"
-                                        ld.format(DateTimeFormatter.ofPattern(pattern, AppStrings.currentLanguage.toLocale()))
-                                    }
+                                    if (ld == null) date else
+                                        formatFullCalendarDate(ld, AppStrings.currentLanguage.code, ld.year != now.year)
                                 }
                             }
                             Text(header, style = MaterialTheme.typography.titleMedium)

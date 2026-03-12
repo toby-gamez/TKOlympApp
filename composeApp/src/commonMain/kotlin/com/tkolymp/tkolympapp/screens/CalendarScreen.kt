@@ -1,6 +1,19 @@
 
 
-package com.tkolymp.tkolympapp
+package com.tkolymp.tkolympapp.screens
+import com.tkolymp.tkolympapp.SwipeToReload
+import com.tkolymp.tkolympapp.formatTimes
+import com.tkolymp.tkolympapp.formatTimesWithDate
+import com.tkolymp.tkolympapp.formatTimesWithDateAlways
+import com.tkolymp.tkolympapp.durationMinutes
+import com.tkolymp.tkolympapp.translateEventType
+import com.tkolymp.shared.utils.formatFullCalendarDate
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
+import kotlinx.datetime.todayIn
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -56,10 +69,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.event.EventInstance
 import com.tkolymp.shared.language.AppStrings
-import com.tkolymp.tkolympapp.toLocale
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,11 +92,10 @@ fun CalendarScreen(
     LaunchedEffect(weekOffset) { if (localWeekOffset != weekOffset) localWeekOffset = weekOffset }
 
     // compute week range anchored on today (do not search for start of week)
-    val baseToday = LocalDate.now()
-    val weekStart = baseToday.plusWeeks(localWeekOffset.toLong())
+    val baseToday = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val weekStart = baseToday.plus(localWeekOffset * 7, DateTimeUnit.DAY)
     val today = weekStart
-    val endDay = weekStart.plusDays(6)
-    val fmt = DateTimeFormatter.ISO_LOCAL_DATE
+    val endDay = weekStart.plus(6, DateTimeUnit.DAY)
     val startIso = today.toString() + "T00:00:00Z"
     val endIso = endDay.toString() + "T23:59:59Z"
 
@@ -97,8 +106,8 @@ fun CalendarScreen(
     LaunchedEffect(selectedTab, localWeekOffset) {
         val onlyMine = selectedTab == 0
         // recompute start/end inside effect to match current localWeekOffset (start = today)
-        val t = LocalDate.now().plusWeeks(localWeekOffset.toLong())
-        val e = t.plusDays(6)
+        val t = Clock.System.todayIn(TimeZone.currentSystemDefault()).plus(localWeekOffset * 7, DateTimeUnit.DAY)
+        val e = t.plus(6, DateTimeUnit.DAY)
         val sIso = t.toString() + "T00:00:00Z"
         val eIso = e.toString() + "T23:59:59Z"
         val forceRefresh = prevSelectedTab.value != selectedTab || prevWeekOffset.value != localWeekOffset
@@ -144,8 +153,8 @@ fun CalendarScreen(
             onRefresh = {
                 scope.launch {
                     val onlyMine = selectedTab == 0
-                    val t = LocalDate.now().plusWeeks(localWeekOffset.toLong())
-                    val e = t.plusDays(7)
+                    val t = Clock.System.todayIn(TimeZone.currentSystemDefault()).plus(localWeekOffset * 7, DateTimeUnit.DAY)
+                    val e = t.plus(7, DateTimeUnit.DAY)
                     val sIso = t.toString() + "T00:00:00Z"
                     val eIso = e.toString() + "T23:59:59Z"
                     calendarViewModel.load(sIso, eIso, onlyMine, forceRefresh = true)
@@ -171,12 +180,12 @@ fun CalendarScreen(
                 }
 
                 val grouped = calState.eventsByDay
-                val todayKey = baseToday.format(fmt)
+                val todayKey = baseToday.toString()
                 val visibleDates = mutableListOf<String>()
                 var dd = today
-                while (!dd.isAfter(endDay)) {
-                    visibleDates += dd.format(fmt)
-                    dd = dd.plusDays(1)
+                while (dd <= endDay) {
+                    visibleDates += dd.toString()
+                    dd = dd.plus(1, DateTimeUnit.DAY)
                 }
 
                 Column(modifier = Modifier
@@ -188,13 +197,12 @@ fun CalendarScreen(
                         Column(modifier = Modifier.padding(8.dp)) {
                             val header = when (date) {
                                 todayKey -> AppStrings.current.today.lowercase()
-                                baseToday.plusDays(1).format(fmt) -> AppStrings.current.tomorrow.lowercase()
+                                baseToday.plus(1, DateTimeUnit.DAY).toString() -> AppStrings.current.tomorrow.lowercase()
                                 else -> {
                                     val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
                                     if (ld == null) date else {
-                                        val now = LocalDate.now()
-                                        val pattern = if (ld.year == now.year) "EEEE, d. MMMM" else "EEEE, d. MMMM yyyy"
-                                        ld.format(DateTimeFormatter.ofPattern(pattern, AppStrings.currentLanguage.toLocale()))
+                                        val now = Clock.System.todayIn(TimeZone.currentSystemDefault())
+                                        formatFullCalendarDate(ld, AppStrings.currentLanguage.code, ld.year != now.year)
                                     }
                                 }
                             }
@@ -246,10 +254,10 @@ fun CalendarScreen(
 internal fun parseColorOrDefault(hex: String?): Color {
     if (hex.isNullOrBlank()) return Color.Gray
     return try {
-        var s = hex.trim()
-        if (!s.startsWith("#")) s = "#" + s
-        Color(android.graphics.Color.parseColor(s))
-    } catch (e: Exception) {
+        var s = hex.trim().trimStart('#')
+        if (s.length == 6) s = "FF$s"
+        Color(s.toLong(16).toInt())
+    } catch (_: Exception) {
         Color.Gray
     }
 }

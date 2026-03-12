@@ -1,4 +1,4 @@
-package com.tkolymp.tkolympapp.Screens
+package com.tkolymp.tkolympapp.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

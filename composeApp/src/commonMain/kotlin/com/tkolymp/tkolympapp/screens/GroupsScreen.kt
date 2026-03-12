@@ -1,7 +1,5 @@
-package com.tkolymp.tkolympapp.Screens
+package com.tkolymp.tkolympapp.screens
 
-import android.text.Html
-import android.widget.TextView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -41,10 +39,9 @@ import com.tkolymp.shared.viewmodels.GroupsViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
+import com.tkolymp.tkolympapp.platform.HtmlText
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import com.tkolymp.shared.club.ClubService
 import com.tkolymp.shared.club.Cohort
 import com.tkolymp.shared.language.AppStrings
@@ -110,26 +107,16 @@ fun GroupsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                             if (!cohort.description.isNullOrBlank()) {
                                 val raw = cohort.description ?: ""
                                 val cleaned = raw.lines().map { it.trim() }.filter { it.isNotEmpty() }.joinToString("\n").trim()
-                                val textColor = MaterialTheme.colorScheme.onSurface.toArgb()
-                                val linkColor = MaterialTheme.colorScheme.primary.toArgb()
-                                AndroidView(factory = { ctx ->
-                                    TextView(ctx).apply {
-                                        setText(Html.fromHtml(cleaned, Html.FROM_HTML_MODE_LEGACY))
-                                        setTextColor(textColor)
-                                        setLinkTextColor(linkColor)
-                                    }
-                                }, update = { tv ->
-                                    tv.text = Html.fromHtml(cleaned, Html.FROM_HTML_MODE_LEGACY)
-                                    tv.setTextColor(textColor)
-                                    tv.setLinkTextColor(linkColor)
-                                }, modifier = Modifier.padding(top = 6.dp))
+                                HtmlText(
+                                    html = cleaned,
+                                    textColor = MaterialTheme.colorScheme.onSurface,
+                                    linkColor = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(top = 6.dp)
+                                )
                             }
                         }
 
-                        val colorBox = runCatching {
-                            val c = cohort.colorRgb ?: "#CCCCCC"
-                            Color(android.graphics.Color.parseColor(c))
-                        }.getOrNull() ?: MaterialTheme.colorScheme.primary
+                        val colorBox = parseColorOrDefault(cohort.colorRgb ?: "#CCCCCC")
 
                         Box(modifier = Modifier
                             .size(12.dp)

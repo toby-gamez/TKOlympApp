@@ -1,4 +1,11 @@
-package com.tkolymp.tkolympapp.Screens
+package com.tkolymp.tkolympapp.screens
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import com.tkolymp.shared.utils.formatShortDate
+import com.tkolymp.shared.utils.parseToLocal
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -40,13 +47,6 @@ import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.PersonViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
 import kotlinx.coroutines.launch
-import java.time.Instant
-import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -209,26 +209,10 @@ private fun formatDateStringSmall(raw: String?): String? {
     if (raw.isNullOrBlank()) return null
     val s = raw.trim()
     val datePrefix = Regex("\\d{4}-\\d{2}-\\d{2}").find(s)?.value
-    val formatterOut = DateTimeFormatter.ofPattern("d. M. yyyy")
-    try {
-        if (datePrefix != null && datePrefix.length == 10) {
-            val ld = LocalDate.parse(datePrefix)
-            return ld.format(formatterOut)
-        }
-        val odt = OffsetDateTime.parse(s)
-        return odt.toLocalDate().format(formatterOut)
-    } catch (_: DateTimeParseException) {
-    }
-    try {
-        val zdt = ZonedDateTime.parse(s)
-        return zdt.toLocalDate().format(formatterOut)
-    } catch (_: DateTimeParseException) {
-    }
-    try {
-        val instant = Instant.parse(s)
-        val ld = instant.atZone(ZoneId.systemDefault()).toLocalDate()
-        return ld.format(formatterOut)
-    } catch (_: DateTimeParseException) {
-    }
-    return null
+    val ld = if (datePrefix != null) {
+        try { LocalDate.parse(datePrefix) } catch (_: Exception) { null }
+    } else {
+        parseToLocal(s)?.date
+    } ?: return null
+    return formatShortDate(ld)
 }

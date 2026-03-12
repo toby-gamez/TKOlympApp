@@ -1,4 +1,4 @@
-package com.tkolymp.tkolympapp
+package com.tkolymp.tkolympapp.screens
 
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Column

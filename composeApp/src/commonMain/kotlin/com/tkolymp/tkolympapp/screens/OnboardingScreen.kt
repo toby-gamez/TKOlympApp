@@ -1,4 +1,4 @@
-package com.tkolymp.tkolympapp.Screens
+package com.tkolymp.tkolympapp.screens
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
@@ -21,9 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Groups
-import androidx.compose.foundation.Image
-import androidx.compose.ui.res.painterResource
-import com.tkolymp.tkolympapp.R
+import com.tkolymp.tkolympapp.platform.AppLogo
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -36,7 +34,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -163,12 +160,7 @@ private fun OnboardingPageContent(page: OnboardingPage, pageIndex: Int) {
                 .background(brandLightPrimary())
         ) {
             if (pageIndex == 0) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                    contentDescription = null,
-                    modifier = Modifier.size(96.dp),
-                    contentScale = ContentScale.Fit
-                )
+                AppLogo(size = 96.dp)
             } else {
                 Icon(
                     imageVector = page.icon,

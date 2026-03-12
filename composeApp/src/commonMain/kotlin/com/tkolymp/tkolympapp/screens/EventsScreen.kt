@@ -1,4 +1,13 @@
-package com.tkolymp.tkolympapp
+package com.tkolymp.tkolympapp.screens
+import com.tkolymp.tkolympapp.SwipeToReload
+import com.tkolymp.shared.utils.formatMonthDay
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.todayIn
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -32,10 +41,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.EventsViewModel
-import com.tkolymp.tkolympapp.toLocale
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,8 +52,7 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
     val viewModel = remember { EventsViewModel() }
     val state by viewModel.state.collectAsState()
 
-    val today = LocalDate.now()
-    val fmt = DateTimeFormatter.ISO_LOCAL_DATE
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
 
     val scope = rememberCoroutineScope()
     LaunchedEffect(selectedTab) {
@@ -91,8 +96,8 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                 if (selectedTab == 0) {
                     // Naplánováno: today..future (ascending)
                     val planned = grouped.filter { (dateStr, _) ->
-                        val d = try { LocalDate.parse(dateStr, fmt) } catch (_: Exception) { null }
-                        d != null && !d.isBefore(today)
+                        val d = try { LocalDate.parse(dateStr) } catch (_: Exception) { null }
+                        d != null && d >= today
                     }.entries.sortedBy { it.key }.associate { it.key to it.value }
 
                     if (planned.isEmpty()) {
@@ -103,15 +108,12 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                     planned.forEach { (date, list) ->
                         Column(modifier = Modifier.padding(vertical = 6.dp)) {
                             val header = when (date) {
-                                today.format(fmt) -> AppStrings.current.today.lowercase()
-                                today.plusDays(1).format(fmt) -> AppStrings.current.tomorrow.lowercase()
+                                today.toString() -> AppStrings.current.today.lowercase()
+                                today.plus(1, DateTimeUnit.DAY).toString() -> AppStrings.current.tomorrow.lowercase()
                                 else -> {
                                     val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
-                                    if (ld == null) date else {
-                                        val nowYear = LocalDate.now().year
-                                        val pattern = if (ld.year == nowYear) "d. MMMM" else "d. MMMM yyyy"
-                                        ld.format(java.time.format.DateTimeFormatter.ofPattern(pattern, AppStrings.currentLanguage.toLocale()))
-                                    }
+                                    if (ld == null) date else
+                                        formatMonthDay(ld, AppStrings.currentLanguage.code, ld.year != today.year)
                                 }
                             }
                             Text(header, style = MaterialTheme.typography.titleMedium)
@@ -145,12 +147,12 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
 
                 } else {
                     // Proběhlé: yesterday -> past (descending)
-                    val yesterday = today.minusDays(1)
+                    val yesterday = today.minus(1, DateTimeUnit.DAY)
                     val past = grouped.filter { (dateStr, _) ->
-                        val d = try { LocalDate.parse(dateStr, fmt) } catch (_: Exception) { null }
-                        d != null && !d.isAfter(yesterday)
+                        val d = try { LocalDate.parse(dateStr) } catch (_: Exception) { null }
+                        d != null && d <= yesterday
                     }.toList().sortedByDescending { (dateStr, _) ->
-                        try { LocalDate.parse(dateStr, fmt) } catch (_: Exception) { LocalDate.MIN }
+                        try { LocalDate.parse(dateStr) } catch (_: Exception) { LocalDate(1, 1, 1) }
                     }
 
                     if (past.isEmpty()) {
@@ -161,15 +163,12 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                     past.forEach { (date, list) ->
                         Column(modifier = Modifier.padding(vertical = 6.dp)) {
                             val header = when (date) {
-                                today.format(fmt) -> AppStrings.current.today.lowercase()
-                                today.plusDays(1).format(fmt) -> AppStrings.current.tomorrow.lowercase()
+                                today.toString() -> AppStrings.current.today.lowercase()
+                                today.plus(1, DateTimeUnit.DAY).toString() -> AppStrings.current.tomorrow.lowercase()
                                 else -> {
                                     val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
-                                    if (ld == null) date else {
-                                        val nowYear = LocalDate.now().year
-                                        val pattern = if (ld.year == nowYear) "d. MMMM" else "d. MMMM yyyy"
-                                        ld.format(java.time.format.DateTimeFormatter.ofPattern(pattern, AppStrings.currentLanguage.toLocale()))
-                                    }
+                                    if (ld == null) date else
+                                        formatMonthDay(ld, AppStrings.currentLanguage.code, ld.year != today.year)
                                 }
                             }
                             Text(header, style = MaterialTheme.typography.titleMedium)
