@@ -8,7 +8,7 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlinx.serialization.json.*
 
-class GraphQlClientImpl(private val httpClient: HttpClient, private val endpoint: String) : IGraphQlClient {
+class GraphQlClientImpl(private val httpClient: HttpClient, private val endpoint: String, private val tenantId: String) : IGraphQlClient {
     private val json = Json { ignoreUnknownKeys = true }
 
     override suspend fun post(query: String, variables: JsonObject?): JsonElement {
@@ -22,7 +22,7 @@ class GraphQlClientImpl(private val httpClient: HttpClient, private val endpoint
         Logger.d("GraphQlClient", "posting to $endpoint, tokenPresent=${token != null}")
         val resp: JsonElement = httpClient.post(endpoint) {
             contentType(ContentType.Application.Json)
-            header("x-tenant-id", "1")
+            header("x-tenant-id", tenantId)
             if (token != null) header("Authorization", "Bearer $token")
             setBody(body)
         }.body()

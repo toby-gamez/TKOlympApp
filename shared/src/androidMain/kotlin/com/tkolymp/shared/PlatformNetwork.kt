@@ -28,7 +28,7 @@ private val certificatePinner = CertificatePinner.Builder()
     .add("api.rozpisovnik.cz", "sha256/iFvwVyJSxnQdyaUvUERIf+8qk7gRze3612JMwoO3zdU=")  // Let's Encrypt E8 intermediate
     .build()
 
-suspend fun initNetworking(context: Context, baseUrl: String) {
+suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String = "1") {
     Logger.isDebugEnabled = context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0
 
     val storage = TokenStorage(context)
@@ -48,7 +48,7 @@ suspend fun initNetworking(context: Context, baseUrl: String) {
         }
     }
 
-    val gql = GraphQlClientImpl(client, baseUrl)
+    val gql = GraphQlClientImpl(client, baseUrl, tenantId)
     val auth = AuthService(storage, gql)
     val cache = com.tkolymp.shared.cache.CacheService()
 

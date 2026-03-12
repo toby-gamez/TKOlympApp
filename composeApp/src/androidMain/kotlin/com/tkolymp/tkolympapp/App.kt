@@ -81,7 +81,7 @@ fun App() {
         if (!LocalInspectionMode.current) {
             LaunchedEffect(Unit) {
                 try {
-                    com.tkolymp.shared.initNetworking(ctx, "https://api.rozpisovnik.cz/graphql")
+                    com.tkolymp.shared.initNetworking(ctx, BuildConfig.API_BASE_URL, BuildConfig.TENANT_ID)
                     // Restore saved language, or fall back to device language on first launch
                     try {
                         val code = ServiceLocator.languageStorage.getLanguageCode()
