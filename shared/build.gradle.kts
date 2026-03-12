@@ -30,6 +30,7 @@ kotlin {
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.datetime)
+            implementation(libs.ksafe)
         }
         val androidMain by getting {
             dependencies {
