@@ -14,7 +14,7 @@ Aplikace slouží českému tanečnímu klubu TK Olymp jako mobilní klient pro 
 | Závažnost | Počet nálezů | Stav |
 |-----------|--------------|------|
 | 🔴 Kritická | 2 | vyřešeno |
-| 🟠 Vysoká | 4 | čeká |
+| 🟠 Vysoká | 4 | 1 vyřešeno |
 | 🟡 Střední | 5 | čeká |
 | 🟢 Nízká | 3 | čeká |
 

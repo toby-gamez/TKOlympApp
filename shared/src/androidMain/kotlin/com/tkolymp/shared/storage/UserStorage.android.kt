@@ -1,36 +1,60 @@
 package com.tkolymp.shared.storage
 
 import android.content.Context
+import eu.anifantakis.lib.ksafe.KSafe
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.Json
 
 actual class UserStorage actual constructor(platformContext: Any) {
-    private val ctx = platformContext as Context
-    private val prefs by lazy { ctx.getSharedPreferences("user_prefs", Context.MODE_PRIVATE) }
+    private val context = platformContext as Context
+    private val ksafe = KSafe(context, fileName = "userstore")
 
     actual suspend fun savePersonId(personId: String) {
-        prefs.edit().putString("person_id", personId).apply()
+        ksafe.put("person_id", personId)
     }
 
-    actual suspend fun getPersonId(): String? = prefs.getString("person_id", null)
+    actual suspend fun getPersonId(): String? {
+        val value = ksafe.get("person_id", "")
+        return value.takeIf { it.isNotEmpty() }
+    }
 
     actual suspend fun saveCoupleIds(coupleIds: List<String>) {
-        prefs.edit().putStringSet("couple_ids", coupleIds.toSet()).apply()
+        ksafe.put("couple_ids", Json.encodeToString(ListSerializer(String.serializer()), coupleIds))
     }
 
-    actual suspend fun getCoupleIds(): List<String> = prefs.getStringSet("couple_ids", emptySet())?.toList() ?: emptyList()
+    actual suspend fun getCoupleIds(): List<String> {
+        val value = ksafe.get("couple_ids", "")
+        if (value.isEmpty()) return emptyList()
+        return try {
+            Json.decodeFromString(ListSerializer(String.serializer()), value)
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
 
     actual suspend fun saveCurrentUserJson(json: String) {
-        prefs.edit().putString("current_user_json", json).apply()
+        ksafe.put("current_user_json", json)
     }
 
-    actual suspend fun getCurrentUserJson(): String? = prefs.getString("current_user_json", null)
+    actual suspend fun getCurrentUserJson(): String? {
+        val value = ksafe.get("current_user_json", "")
+        return value.takeIf { it.isNotEmpty() }
+    }
 
     actual suspend fun savePersonDetailsJson(json: String) {
-        prefs.edit().putString("person_details_json", json).apply()
+        ksafe.put("person_details_json", json)
     }
 
-    actual suspend fun getPersonDetailsJson(): String? = prefs.getString("person_details_json", null)
+    actual suspend fun getPersonDetailsJson(): String? {
+        val value = ksafe.get("person_details_json", "")
+        return value.takeIf { it.isNotEmpty() }
+    }
 
     actual suspend fun clear() {
-        prefs.edit().clear().apply()
+        ksafe.delete("person_id")
+        ksafe.delete("couple_ids")
+        ksafe.delete("current_user_json")
+        ksafe.delete("person_details_json")
     }
 }
