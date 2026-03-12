@@ -3,6 +3,7 @@ package com.tkolymp.shared.auth
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.network.IGraphQlClient
 import com.tkolymp.shared.storage.TokenStorage
+import kotlinx.datetime.Clock
 import kotlinx.serialization.json.*
 
 class AuthService(private val storage: TokenStorage, private val client: IGraphQlClient) : IAuthService {
@@ -73,7 +74,25 @@ class AuthService(private val storage: TokenStorage, private val client: IGraphQ
         return false
     }
 
-    override suspend fun hasToken(): Boolean = currentToken != null
+    @OptIn(kotlin.io.encoding.ExperimentalEncodingApi::class)
+    private fun isTokenExpired(token: String): Boolean {
+        return try {
+            val parts = token.split(".")
+            if (parts.size != 3) return true
+            val payload = kotlin.io.encoding.Base64.UrlSafe.decode(parts[1])
+            val jsonObj = json.parseToJsonElement(payload.decodeToString()).jsonObject
+            val exp = jsonObj["exp"]?.jsonPrimitive?.long ?: return true
+            exp < Clock.System.now().epochSeconds
+        } catch (_: Exception) { true }
+    }
+
+    override suspend fun hasToken(): Boolean {
+        val t = currentToken ?: return false
+        if (isTokenExpired(t)) {
+            return refreshJwt()
+        }
+        return true
+    }
 
     override fun getToken(): String? = currentToken
 }
