@@ -89,7 +89,14 @@ class AuthService(private val storage: TokenStorage, private val client: IGraphQ
     override suspend fun hasToken(): Boolean {
         val t = currentToken ?: return false
         if (isTokenExpired(t)) {
-            return refreshJwt()
+            // Try to refresh; if it fails (e.g. offline) keep the session alive so the
+            // app can still work from cache. The server will reject API calls if the token
+            // is truly invalid, but we must not force a login just because there is no
+            // internet connection.
+            val refreshed = refreshJwt()
+            if (!refreshed) {
+                Logger.d("AuthService", "Token expired but refresh failed — keeping session for offline use")
+            }
         }
         return true
     }
