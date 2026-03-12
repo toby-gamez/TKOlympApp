@@ -16,7 +16,7 @@ Aplikace slouží českému tanečnímu klubu TK Olymp jako mobilní klient pro 
 | 🔴 Kritická | 2 | vyřešeno |
 | 🟠 Vysoká | 4 | vyřešeno |
 | 🟡 Střední | 5 | 5 vyřešeno |
-| 🟢 Nízká | 3 | 1 vyřešeno, 2 čeká |
+| 🟢 Nízká | 3 | 3 vyřešeno |
 
 ---
 
@@ -430,7 +430,7 @@ Verze `kotlinx-serialization-json` v bloku `dependencies {}` v `composeApp/build
 
 ---
 
-### N-2 — ProGuard chybí pravidla pro OkHttp
+### ~~N-2 — ProGuard chybí pravidla pro OkHttp~~ ✅ vyřešeno
 
 **Soubor:** [composeApp/proguard-rules.pro](composeApp/proguard-rules.pro)
 
@@ -446,7 +446,7 @@ OkHttp3 poměrně agresivně spoléhá na reflexi a bez explicitních pravidel m
 
 ---
 
-### N-3 — `WAKE_LOCK` oprávnění implicitně vyžadováno AlarmManagerem
+### ~~N-3 — `WAKE_LOCK` oprávnění implicitně vyžadováno AlarmManagerem~~ ✅ vyřešeno
 
 Aplikace používá `AlarmManager` pro notifikace, ale v `AndroidManifest.xml` není deklarováno `RECEIVE_BOOT_COMPLETED` oprávnění. Pokud jsou alarmy nastaveny na `RTC_WAKEUP`, zařízení je buzeno — bez explicitního oprávnění může dojít k nedefinovanému chování na některých zařízeních.
 

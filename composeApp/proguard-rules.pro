@@ -22,3 +22,9 @@
 -keepclassmembers class * implements java.io.Serializable {
     static final long serialVersionUID;
 }
+
+# OkHttp3 rules (uses reflection internally)
+-dontwarn okhttp3.**
+-dontwarn okio.**
+-keep class okhttp3.** { *; }
+-keep interface okhttp3.** { *; }
