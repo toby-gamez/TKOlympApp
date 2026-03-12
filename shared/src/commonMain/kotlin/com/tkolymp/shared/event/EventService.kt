@@ -1,5 +1,6 @@
 package com.tkolymp.shared.event
 
+import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.cache.CacheService
 import kotlin.time.Duration.Companion.minutes
@@ -365,14 +366,14 @@ class EventService(
             val cached = try {
                 cache.get<Map<String, List<EventInstance>>>(cacheKey)
             } catch (t: Throwable) {
-                println("EventService.fetchEventsGroupedByDay: cache.get failed for $cacheKey: ${t.message}")
+                Logger.d("EventService", "fetchEventsGroupedByDay: cache.get failed for $cacheKey: ${t.message}")
                 null
             }
             if (cached != null) {
-                println("EventService.fetchEventsGroupedByDay: cache HIT for $cacheKey")
+                Logger.d("EventService", "fetchEventsGroupedByDay: cache HIT for $cacheKey")
                 return cached
             } else {
-                println("EventService.fetchEventsGroupedByDay: cache MISS for $cacheKey")
+                Logger.d("EventService", "fetchEventsGroupedByDay: cache MISS for $cacheKey")
             }
         val variables = buildJsonObject {
             put("startRange", JsonPrimitive(startRangeIso))
@@ -503,10 +504,10 @@ class EventService(
 
         val result = grouped.entries.sortedBy { it.key }.associate { it.key to it.value }
         try {
-            println("EventService.fetchEventsGroupedByDay: fetched ${instances.size} instances, storing ${result.size} grouped days into cache key=$cacheKey")
+            Logger.d("EventService", "fetchEventsGroupedByDay: fetched ${instances.size} instances, storing ${result.size} grouped days into cache key=$cacheKey")
             cache.put(cacheKey, result, ttl = 3.minutes)
         } catch (t: Throwable) {
-            println("EventService.fetchEventsGroupedByDay: cache.put failed: ${t.message}")
+            Logger.d("EventService", "fetchEventsGroupedByDay: cache.put failed: ${t.message}")
         }
         return result
     }

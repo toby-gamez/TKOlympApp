@@ -1,5 +1,6 @@
 package com.tkolymp.shared.viewmodels
 
+import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.event.EventInstance
 import kotlinx.coroutines.Dispatchers
@@ -22,16 +23,16 @@ class EventsViewModel(
     val state: StateFlow<EventsState> = _state.asStateFlow()
 
     suspend fun loadCampsNextYear(forceRefresh: Boolean = false) {
-        println("EventsViewModel.loadCampsNextYear: forceRefresh=$forceRefresh")
+        Logger.d("EventsViewModel", "loadCampsNextYear: forceRefresh=$forceRefresh")
         _state.value = _state.value.copy(isLoading = true, error = null)
         try {
             // Invalidate events cache only when explicitly requested to avoid unnecessary network calls
             if (forceRefresh) {
                 try {
-                    println("EventsViewModel: invalidating cache prefix camps_")
+                    Logger.d("EventsViewModel", "invalidating cache prefix camps_")
                     ServiceLocator.cacheService.invalidatePrefix("camps_")
                 } catch (t: Throwable) {
-                    println("EventsViewModel: failed to invalidate cache: ${t.message}")
+                    Logger.d("EventsViewModel", "failed to invalidate cache: ${t.message}")
                 }
             }
 

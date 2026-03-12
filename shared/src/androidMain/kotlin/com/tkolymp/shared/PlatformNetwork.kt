@@ -1,6 +1,7 @@
 package com.tkolymp.shared
 
 import android.content.Context
+import com.tkolymp.shared.Logger
 import com.tkolymp.shared.auth.AuthService
 import com.tkolymp.shared.network.GraphQlClientImpl
 import com.tkolymp.shared.storage.TokenStorage
@@ -28,6 +29,8 @@ private val certificatePinner = CertificatePinner.Builder()
     .build()
 
 suspend fun initNetworking(context: Context, baseUrl: String) {
+    Logger.isDebugEnabled = context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0
+
     val storage = TokenStorage(context)
 
     val client = HttpClient(OkHttp) {

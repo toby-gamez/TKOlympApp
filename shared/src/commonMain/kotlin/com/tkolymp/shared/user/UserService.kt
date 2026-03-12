@@ -1,5 +1,6 @@
 package com.tkolymp.shared.user
 
+import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.storage.UserStorage
 import kotlinx.coroutines.sync.Mutex
@@ -185,11 +186,8 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
         else
             "mutation UpdatePerson(\$id: String!, \$patch: PersonPatch!) { updatePerson(input: {id: \$id, patch: \$patch}) { clientMutationId } }"
 
-        // DEBUG: log the outgoing GraphQL query and variables to help troubleshoot missing fields
-        try {
-            println("[UserService] UpdatePerson query: $query")
-            println("[UserService] UpdatePerson variables: ${variables}")
-        } catch (_: Throwable) {}
+        Logger.d("UserService", "UpdatePerson query: $query")
+        Logger.d("UserService", "UpdatePerson variables: $variables")
 
         val resp = try { client.post(query, variables) } catch (ex: Throwable) { lastApiError = ex.message; return false }
         checkAndSetErrors(resp)

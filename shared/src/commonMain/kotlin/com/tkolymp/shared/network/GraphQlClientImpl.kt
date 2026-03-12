@@ -1,5 +1,6 @@
 package com.tkolymp.shared.network
 
+import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import io.ktor.client.*
 import io.ktor.client.call.body
@@ -18,7 +19,7 @@ class GraphQlClientImpl(private val httpClient: HttpClient, private val endpoint
 
         val token = try { ServiceLocator.authService.getToken() } catch (_: Throwable) { null }
 
-        println("GraphQlClientImpl.post: posting to $endpoint, tokenPresent=${token != null}")
+        Logger.d("GraphQlClient", "posting to $endpoint, tokenPresent=${token != null}")
         val resp: JsonElement = httpClient.post(endpoint) {
             contentType(ContentType.Application.Json)
             header("x-tenant-id", "1")

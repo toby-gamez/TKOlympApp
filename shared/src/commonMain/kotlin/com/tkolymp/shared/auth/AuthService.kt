@@ -1,5 +1,6 @@
 package com.tkolymp.shared.auth
 
+import com.tkolymp.shared.Logger
 import com.tkolymp.shared.network.IGraphQlClient
 import com.tkolymp.shared.storage.TokenStorage
 import kotlinx.serialization.json.*
@@ -36,7 +37,7 @@ class AuthService(private val storage: TokenStorage, private val client: IGraphQ
         }
 
         val errors = resp.jsonObject["errors"]?.toString() ?: resp.toString()
-        try { println("Login failed: $errors") } catch (_: Throwable) {}
+        Logger.d("AuthService", "Login failed: $errors")
 
         return false
     }
@@ -47,7 +48,7 @@ class AuthService(private val storage: TokenStorage, private val client: IGraphQ
         val resp = try {
             client.post(query, null)
         } catch (ex: Exception) {
-            try { println("refreshJwt failed: ${ex.message}") } catch (_: Throwable) {}
+            Logger.d("AuthService", "refreshJwt failed: ${ex.message}")
             return false
         }
 
@@ -62,7 +63,7 @@ class AuthService(private val storage: TokenStorage, private val client: IGraphQ
         }
 
         val errors = resp.jsonObject["errors"]?.toString() ?: resp.toString()
-        try { println("refreshJwt failed: $errors") } catch (_: Throwable) {}
+        Logger.d("AuthService", "refreshJwt failed: $errors")
         return false
     }
 
