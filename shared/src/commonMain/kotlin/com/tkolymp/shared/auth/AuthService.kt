@@ -14,12 +14,18 @@ class AuthService(private val storage: TokenStorage, private val client: IGraphQ
     }
 
     override suspend fun login(username: String, password: String): Boolean {
-        val escUsername = username.replace("\\", "\\\\").replace("\"", "\\\"")
-        val escPassword = password.replace("\\", "\\\\").replace("\"", "\\\"")
-        val mutation = "mutation { login(input: {login: \"$escUsername\", passwd: \"$escPassword\"}) { result { jwt } } }"
+        val mutation = """
+            mutation Login(${'$'}login: String!, ${'$'}passwd: String!) {
+                login(input: {login: ${'$'}login, passwd: ${'$'}passwd}) { result { jwt } }
+            }
+        """.trimIndent()
+        val variables = buildJsonObject {
+            put("login", username)
+            put("passwd", password)
+        }
 
         val resp = try {
-            client.post(mutation, null)
+            client.post(mutation, variables)
         } catch (ex: Exception) {
             return false
         }

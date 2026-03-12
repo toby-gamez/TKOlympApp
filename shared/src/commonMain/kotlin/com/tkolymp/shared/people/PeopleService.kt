@@ -67,15 +67,17 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
 
     suspend fun fetchPersonName(personId: String): PersonName? {
         val query = """
-            query MyQuery {
-              person(id: "$personId") {
+            query MyQuery(${'$'}id: BigInt!) {
+              person(id: ${'$'}id) {
                 lastName
                 firstName
               }
             }
         """.trimIndent()
+        val idVar = personId.toLongOrNull()?.let { JsonPrimitive(it) } ?: JsonPrimitive(personId)
+        val variables = buildJsonObject { put("id", idVar) }
 
-        val el: JsonElement = try { client.post(query) } catch (_: Exception) { return null }
+        val el: JsonElement = try { client.post(query, variables) } catch (_: Exception) { return null }
         val personObj = (el as? JsonObject)
             ?.get("data")?.let { it as? JsonObject }
             ?.get("person")?.let { it as? JsonObject }
@@ -93,15 +95,17 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
 
     suspend fun fetchCoupleDisplayName(coupleId: String): String? {
         val query = """
-            query MyQuery {
-              couple(id: "$coupleId") {
+            query MyQuery(${'$'}id: BigInt!) {
+              couple(id: ${'$'}id) {
                 man { lastName firstName }
                 woman { firstName lastName }
               }
             }
         """.trimIndent()
+        val idVar = coupleId.toLongOrNull()?.let { JsonPrimitive(it) } ?: JsonPrimitive(coupleId)
+        val variables = buildJsonObject { put("id", idVar) }
 
-        val el: JsonElement = try { client.post(query) } catch (_: Exception) { return null }
+        val el: JsonElement = try { client.post(query, variables) } catch (_: Exception) { return null }
         val coupleObj = (el as? JsonObject)
             ?.get("data")?.let { it as? JsonObject }
             ?.get("couple")?.let { it as? JsonObject }
