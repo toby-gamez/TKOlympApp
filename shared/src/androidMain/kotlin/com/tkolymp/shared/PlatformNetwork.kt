@@ -67,7 +67,7 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
 
     ServiceLocator.graphQlClient = gql
     // ensure peopleService is available like other services
-    ServiceLocator.peopleService = com.tkolymp.tkolympapp.PeopleService()
+    ServiceLocator.peopleService = com.tkolymp.shared.people.PeopleService()
     ServiceLocator.authService = auth
     ServiceLocator.tokenStorage = storage
     ServiceLocator.eventService = eventSvc

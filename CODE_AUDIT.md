@@ -106,7 +106,7 @@ class Greeting {
 
 ---
 
-### 1.4 Nesprávný package pro PeopleService alias ❌ NÍZKÉ
+### 1.4 Nesprávný package pro PeopleService alias ❌ NÍZKÉ - DONE
 
 `shared/src/commonMain/kotlin/com/tkolymp/tkolympapp/PeopleService.kt` je typealias v package `com.tkolymp.tkolympapp`, přestože reálná implementace žije ve `com.tkolymp.shared.people`. `copilot-instructions.md` toto výslovně zakazuje:
 > *"Do NOT create ad-hoc or 'special' service implementations in other packages (for example `com.tkolymp.tkolympapp`)"*
