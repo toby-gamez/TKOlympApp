@@ -11,12 +11,12 @@
 
 Aplikace slouží českému tanečnímu klubu TK Olymp jako mobilní klient pro správu členů, přihlášky na akce a oznámení. Zpracovává **vysoce citlivá osobní data** (rodná čísla, adresy, telefonní čísla, datum narození, e-maily). Byl nalezen jeden kritický vektor útoku a několik vážných slabých míst v zabezpečení ukládání dat.
 
-| Závažnost | Počet nálezů |
-|-----------|-------------|
-| 🔴 Kritická | 2 |
-| 🟠 Vysoká | 4 |
-| 🟡 Střední | 5 |
-| 🟢 Nízká | 3 |
+| Závažnost | Počet nálezů | Stav |
+|-----------|--------------|------|
+| 🔴 Kritická | 2 | vyřešeno |
+| 🟠 Vysoká | 4 | čeká |
+| 🟡 Střední | 5 | čeká |
+| 🟢 Nízká | 3 | čeká |
 
 ---
 
