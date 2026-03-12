@@ -17,6 +17,15 @@ import io.ktor.client.plugins.contentnegotiation.*
 import java.util.concurrent.TimeUnit
 import kotlinx.serialization.json.Json
 import io.ktor.serialization.kotlinx.json.*
+import okhttp3.CertificatePinner
+
+// Certificate pins for api.rozpisovnik.cz
+// Primary : leaf certificate public key (SHA-256/Base64)
+// Backup  : Let's Encrypt E8 intermediate public key — use as fallback when the leaf is rotated
+private val certificatePinner = CertificatePinner.Builder()
+    .add("api.rozpisovnik.cz", "sha256/Im/lk9HBHiZ1ldzskHrfWIx2FVffonmmSwCb607rwP4=")  // leaf
+    .add("api.rozpisovnik.cz", "sha256/iFvwVyJSxnQdyaUvUERIf+8qk7gRze3612JMwoO3zdU=")  // Let's Encrypt E8 intermediate
+    .build()
 
 suspend fun initNetworking(context: Context, baseUrl: String) {
     val storage = TokenStorage(context)
@@ -27,6 +36,7 @@ suspend fun initNetworking(context: Context, baseUrl: String) {
                 connectTimeout(15, TimeUnit.SECONDS)
                 readTimeout(15, TimeUnit.SECONDS)
                 writeTimeout(15, TimeUnit.SECONDS)
+                certificatePinner(certificatePinner)
             }
         }
 
