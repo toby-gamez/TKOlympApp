@@ -71,6 +71,7 @@ import com.tkolymp.tkolympapp.screens.RegistrationScreen
 import com.tkolymp.tkolympapp.screens.TrainersLocationsScreen
 import androidx.core.content.pm.PackageInfoCompat
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
@@ -109,16 +110,16 @@ fun App() {
                             detected
                         }
                         AppStrings.setLanguage(language)
-                    } catch (_: Throwable) {}
-                    val has = try { com.tkolymp.shared.ServiceLocator.authService.hasToken() } catch (_: Throwable) { false }
+                    } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+                    val has = try { com.tkolymp.shared.ServiceLocator.authService.hasToken() } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
                     // Initialize notification scheduling after networking is ready
                     try { com.tkolymp.shared.ServiceLocator.notificationService.initializeIfNeeded() } catch (_: Exception) {}
                     // Show onboarding only on first launch (persisted in onboarding storage)
                     val onboardingVm = OnboardingViewModel()
-                    val seen = try { onboardingVm.hasSeenOnboarding() } catch (_: Throwable) { false }
+                    val seen = try { onboardingVm.hasSeenOnboarding() } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
                     showOnboarding = !seen
                     loggedIn = has
-                } catch (_: Throwable) {
+                } catch (e: CancellationException) { throw e } catch (e: Exception) {
                     loggedIn = false
                     // still show onboarding if init fails
                     showOnboarding = true
@@ -364,7 +365,7 @@ fun AppNavHost(
             }
         ) {
             val ctx = LocalContext.current
-            val pkgInfo = try { ctx.packageManager.getPackageInfo(ctx.packageName, 0) } catch (_: Throwable) { null }
+            val pkgInfo = try { ctx.packageManager.getPackageInfo(ctx.packageName, 0) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
             AboutScreen(
                 onBack = { navController.navigateUp() },
                 appVersionName = pkgInfo?.versionName,

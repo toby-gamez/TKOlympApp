@@ -1,6 +1,7 @@
 package com.tkolymp.shared.notification
 
 import com.tkolymp.shared.event.EventInstance
+import kotlinx.coroutines.CancellationException
 
 class NotificationService(
     private val storage: NotificationStorage,
@@ -38,7 +39,7 @@ class NotificationService(
 
         // Cancel previously scheduled notifications
         val prev = storage.getScheduledNotifications()
-        prev.forEach { try { scheduler.cancelNotification(it.notificationId) } catch (_: Throwable) {} }
+        prev.forEach { try { scheduler.cancelNotification(it.notificationId) } catch (e: CancellationException) { throw e } catch (_: Exception) {} }
 
         val scheduled = mutableListOf<ScheduledNotification>()
 
@@ -88,7 +89,7 @@ class NotificationService(
                         }
                     }
 
-                    val trigger = try { scheduler.scheduleNotificationAt(nid, titleToShow, "Událost začíná za $minutesBefore minut", since, minutesBefore) } catch (_: Throwable) { null }
+                    val trigger = try { scheduler.scheduleNotificationAt(nid, titleToShow, "Událost začíná za $minutesBefore minut", since, minutesBefore) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                     if (trigger != null) {
                         scheduled += ScheduledNotification(nid, ev.id, titleToShow, trigger)
                     }

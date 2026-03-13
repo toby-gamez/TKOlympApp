@@ -1,6 +1,7 @@
 package com.tkolymp.shared.notification
 
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.coroutines.CancellationException
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
@@ -77,7 +78,7 @@ actual class NotificationStorage actual constructor(platformContext: Any) {
                 val name = rj["name"]?.jsonPrimitive?.contentOrNull ?: ""
                 val enabled = rj["enabled"]?.jsonPrimitive?.booleanOrNull ?: true
                 val filterTypeName = rj["filterType"]?.jsonPrimitive?.contentOrNull ?: "BY_LOCATION"
-                val filterType = try { FilterType.valueOf(filterTypeName) } catch (_: Throwable) { FilterType.BY_LOCATION }
+                val filterType = try { FilterType.valueOf(filterTypeName) } catch (e: CancellationException) { throw e } catch (_: Exception) { FilterType.BY_LOCATION }
                 val locations = rj["locations"]?.jsonArray?.mapNotNull { it.jsonPrimitive.contentOrNull } ?: emptyList()
                 val trainers = rj["trainers"]?.jsonArray?.mapNotNull { it.jsonPrimitive.contentOrNull } ?: emptyList()
                 val types = rj["types"]?.jsonArray?.mapNotNull { it.jsonPrimitive.contentOrNull } ?: emptyList()
@@ -88,7 +89,7 @@ actual class NotificationStorage actual constructor(platformContext: Any) {
                 )
             }
             NotificationSettings(globalEnabled = global, rules = rules)
-        } catch (_: Throwable) { null }
+        } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
     }
 
     actual suspend fun saveScheduledNotifications(list: List<ScheduledNotification>) {
@@ -116,9 +117,9 @@ actual class NotificationStorage actual constructor(platformContext: Any) {
                     val eventName = o["eventName"]?.let { if (it is JsonNull) null else it.jsonPrimitive.contentOrNull }
                     val trigger = o["triggerEpochMs"]?.jsonPrimitive?.longOrNull ?: return@mapNotNull null
                     ScheduledNotification(notificationId = nid, eventId = eventId, eventName = eventName, triggerEpochMs = trigger)
-                } catch (_: Throwable) { null }
+                } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
             }
-        } catch (_: Throwable) { emptyList() }
+        } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
     }
 
     private fun keychainSave(account: String, value: String) {

@@ -3,6 +3,7 @@ package com.tkolymp.shared.viewmodels
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.cache.CacheService
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.Dispatchers
@@ -26,15 +27,15 @@ class BoardViewModel(
     suspend fun loadAnnouncements(forceRefresh: Boolean = false) {
         _state.value = _state.value.copy(isLoading = true, error = null)
         if (forceRefresh) {
-            try { cache.invalidatePrefix("announcements_") } catch (_: Throwable) {}
+            try { cache.invalidatePrefix("announcements_") } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         }
         try {
             val sticky = _state.value.selectedTab == 1
             val list = try {
                 withContext(Dispatchers.Default) { announcementService.getAnnouncements(sticky) }
-            } catch (_: Throwable) { emptyList<com.tkolymp.shared.announcements.Announcement>() }
+            } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList<com.tkolymp.shared.announcements.Announcement>() }
             _state.value = _state.value.copy(currentAnnouncements = list as? List<Any> ?: emptyList(), isLoading = false)
-        } catch (ex: Throwable) {
+        } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání")
         }
     }

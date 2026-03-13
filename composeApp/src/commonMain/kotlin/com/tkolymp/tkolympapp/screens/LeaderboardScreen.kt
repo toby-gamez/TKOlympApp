@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.viewmodels.LeaderboardViewModel
 import com.tkolymp.shared.language.AppStrings
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 import com.tkolymp.tkolympapp.SwipeToReload
@@ -65,7 +66,7 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
         // try to load current person id for highlighting
         try {
             currentPersonId.value = withContext(Dispatchers.IO) { com.tkolymp.shared.ServiceLocator.userService.getCachedPersonId() }
-        } catch (_: Throwable) { /* ignore */ }
+        } catch (e: CancellationException) { throw e } catch (_: Exception) { /* ignore */ }
     }
 
     Scaffold(

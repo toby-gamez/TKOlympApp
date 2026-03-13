@@ -2,6 +2,7 @@ package com.tkolymp.shared.viewmodels
 
 import com.tkolymp.shared.ServiceLocator
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -22,9 +23,9 @@ class PeopleViewModel(
     suspend fun loadPeople() {
         _state.value = _state.value.copy(isLoading = true, error = null)
         try {
-            val list = try { peopleService.fetchPeople() } catch (_: Throwable) { emptyList<com.tkolymp.shared.people.Person>() }
+            val list = try { peopleService.fetchPeople() } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList<com.tkolymp.shared.people.Person>() }
             _state.value = _state.value.copy(people = list as? List<Any> ?: emptyList(), filteredPeople = list as? List<Any> ?: emptyList(), isLoading = false)
-        } catch (ex: Throwable) {
+        } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání lidí")
         }
     }

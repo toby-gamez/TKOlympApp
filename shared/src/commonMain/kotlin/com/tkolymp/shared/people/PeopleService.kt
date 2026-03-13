@@ -1,6 +1,7 @@
 package com.tkolymp.shared.people
 
 import com.tkolymp.shared.ServiceLocator
+import kotlinx.coroutines.CancellationException
 import com.tkolymp.shared.cache.CacheService
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -145,7 +146,7 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
         try {
             val cached: List<Person>? = cache.get(cacheKey)
             if (cached != null) return cached
-        } catch (_: Throwable) {}
+        } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         val query = """
             query MyQuery {
                 people {
@@ -197,7 +198,7 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
 
             Person(id, first, last, prefix, suffix, birth, memberships)
         }
-        try { cache.put(cacheKey, result, ttl = 10.minutes) } catch (_: Throwable) {}
+        try { cache.put(cacheKey, result, ttl = 10.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         return result
     }
 
@@ -206,7 +207,7 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
             try {
                 val cached: PersonDetails? = cache.get(cacheKey)
                 if (cached != null) return cached
-            } catch (_: Throwable) {}
+            } catch (e: CancellationException) { throw e } catch (_: Exception) {}
                 // use GraphQL variable for person id and pass it via `variables` to the client
                 val query = """
                         query PersonBasic(${'$'}id: BigInt!) {
@@ -305,7 +306,7 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
             } ?: emptyList()
 
             val pd = PersonDetails(id, first, last, prefix, suffix, birth, bio, csts, email, gender, isTrainer, phone, wdsf, couplesArr, memberships, el)
-            try { cache.put(cacheKey, pd, ttl = 15.minutes) } catch (_: Throwable) {}
+            try { cache.put(cacheKey, pd, ttl = 15.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
             return pd
         }
 
@@ -315,7 +316,7 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
             try {
                 val cached: List<ScoreboardEntry>? = cache.get(cacheKey)
                 if (cached != null) return cached
-            } catch (_: Throwable) {}
+            } catch (e: CancellationException) { throw e } catch (_: Exception) {}
             val query = """
                     query Scoreboard(${'$'}cohortId: BigInt, ${'$'}since: Date, ${'$'}until: Date) {
                         scoreboardEntriesList(cohortId: ${'$'}cohortId, since: ${'$'}since, until: ${'$'}until) {
@@ -358,7 +359,7 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                 val last = personObj?.get("lastName")?.jsonPrimitive?.contentOrNull
                 ScoreboardEntry(ranking, personId, first, last, total, lesson, group, event, manual)
             }
-            try { cache.put(cacheKey, res, ttl = 15.minutes) } catch (_: Throwable) {}
+            try { cache.put(cacheKey, res, ttl = 15.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
             return res
         }
 

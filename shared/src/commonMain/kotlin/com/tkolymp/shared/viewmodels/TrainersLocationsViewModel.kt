@@ -2,6 +2,7 @@ package com.tkolymp.shared.viewmodels
 
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.club.ClubData
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,12 +26,12 @@ class TrainersLocationsViewModel(
         try {
             val d = try {
                 withContext(Dispatchers.Default) { clubService.fetchClubData() }
-            } catch (ex: Throwable) {
+            } catch (e: CancellationException) { throw e } catch (ex: Exception) {
                 _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání klubu")
                 return
             }
             _state.value = _state.value.copy(clubData = d, isLoading = false)
-        } catch (ex: Throwable) {
+        } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání")
         }
     }

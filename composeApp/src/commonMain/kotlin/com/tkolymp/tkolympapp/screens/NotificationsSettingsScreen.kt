@@ -66,6 +66,7 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.decodeFromString
@@ -101,10 +102,10 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
         // load vm settings and UI data in parallel
         try {
             viewModel.loadSettings()
-        } catch (_: Throwable) {}
+        } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         try {
             val svc = ServiceLocator.notificationService
-            val settings = try { svc.getSettings() } catch (_: Throwable) { null }
+            val settings = try { svc.getSettings() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
             settings?.rules?.forEach { rules.add(it) }
             globalEnabled = settings?.globalEnabled ?: true
         } catch (_: UninitializedPropertyAccessException) {
@@ -126,7 +127,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                     if (trimmed.isNotBlank()) Pair(id, trimmed) else null
                 }
             }.distinct()
-        } catch (_: Throwable) { /* ignore */ }
+        } catch (e: CancellationException) { throw e } catch (_: Exception) { /* ignore */ }
     }
 
     fun persist() {
@@ -136,12 +137,12 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                 val settings = NotificationSettings(globalEnabled = globalEnabled, rules = rules.toList())
                 try {
                     svc.updateSettings(settings)
-                } catch (t: Throwable) {
+                } catch (e: CancellationException) { throw e } catch (t: Exception) {
                     Logger.d("NotificationsSettings", "Failed to update settings: ${t.message}")
                 }
             } catch (e: UninitializedPropertyAccessException) {
                 Logger.d("NotificationsSettings", "notificationService not initialized: ${e.message}")
-            } catch (t: Throwable) {
+            } catch (e: CancellationException) { throw e } catch (t: Exception) {
                 Logger.d("NotificationsSettings", "Unexpected error persisting settings: ${t.message}")
             }
         }

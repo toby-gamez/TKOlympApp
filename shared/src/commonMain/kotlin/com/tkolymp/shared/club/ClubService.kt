@@ -1,6 +1,7 @@
 package com.tkolymp.shared.club
 
 import com.tkolymp.shared.ServiceLocator
+import kotlinx.coroutines.CancellationException
 import com.tkolymp.shared.cache.CacheService
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -38,7 +39,7 @@ class ClubService(private val client: IGraphQlClient = ServiceLocator.graphQlCli
         try {
             val cached: ClubData? = cache.get(cacheKey)
             if (cached != null) return cached
-        } catch (_: Throwable) {}
+        } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         val query = """
             query Query {
               tenantLocationsList { name }
@@ -110,7 +111,7 @@ class ClubService(private val client: IGraphQlClient = ServiceLocator.graphQlCli
         }
 
         val cd = ClubData(locations, trainers, cohorts, el)
-        try { cache.put(cacheKey, cd, ttl = 10.minutes) } catch (_: Throwable) {}
+        try { cache.put(cacheKey, cd, ttl = 10.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         return cd
     }
 }

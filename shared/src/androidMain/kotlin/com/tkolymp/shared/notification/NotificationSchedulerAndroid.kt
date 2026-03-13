@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import kotlinx.coroutines.CancellationException
 
 class NotificationSchedulerAndroid(private val platformContext: Any) : INotificationScheduler {
     private val context = platformContext as Context
@@ -38,10 +39,10 @@ class NotificationSchedulerAndroid(private val platformContext: Any) : INotifica
     override suspend fun scheduleNotificationAt(notificationId: String, title: String?, text: String?, isoDateTime: String, minutesBefore: Int): Long? {
         val instant = try {
             java.time.OffsetDateTime.parse(isoDateTime).toInstant()
-        } catch (ex: Throwable) {
+        } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             try {
                 java.time.Instant.parse(isoDateTime)
-            } catch (ex2: Throwable) {
+            } catch (e: CancellationException) { throw e } catch (ex2: Exception) {
                 return null
             }
         }

@@ -1,6 +1,7 @@
 package com.tkolymp.shared.announcements
 
 import com.tkolymp.shared.ServiceLocator
+import kotlinx.coroutines.CancellationException
 import com.tkolymp.shared.cache.CacheService
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.serialization.json.*
@@ -47,11 +48,11 @@ class AnnouncementServiceImpl(private val cache: CacheService = ServiceLocator.c
                         isVisible = isVisible,
                         author = author
                     )
-                } catch (t: Throwable) {
+                } catch (e: CancellationException) { throw e } catch (t: Exception) {
                     null
                 }
             }
-            try { cache.put(cacheKey, result, ttl = 2.minutes) } catch (_: Throwable) {}
+            try { cache.put(cacheKey, result, ttl = 2.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
             return result
         }
         return emptyList()
@@ -95,8 +96,8 @@ class AnnouncementServiceImpl(private val cache: CacheService = ServiceLocator.c
                 isVisible = isVisible,
                 author = author
             )
-            try { cache.put(cacheKey, announcement, ttl = 5.minutes) } catch (_: Throwable) {}
+            try { cache.put(cacheKey, announcement, ttl = 5.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
             announcement
-        } catch (_: Throwable) { null }
+        } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
     }
 }

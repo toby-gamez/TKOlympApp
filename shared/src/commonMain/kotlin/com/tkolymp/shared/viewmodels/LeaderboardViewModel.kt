@@ -2,6 +2,7 @@ package com.tkolymp.shared.viewmodels
 
 import com.tkolymp.shared.ServiceLocator
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -21,9 +22,9 @@ class LeaderboardViewModel(
         _state.value = _state.value.copy(isLoading = true, error = null)
         try {
             val until = "2100-01-01"
-            val list = try { peopleService.fetchScoreboard(null, "2025-09-01", until) } catch (_: Throwable) { emptyList<com.tkolymp.shared.people.ScoreboardEntry>() }
+            val list = try { peopleService.fetchScoreboard(null, "2025-09-01", until) } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList<com.tkolymp.shared.people.ScoreboardEntry>() }
             _state.value = _state.value.copy(rankings = list as? List<Any> ?: emptyList(), isLoading = false)
-        } catch (ex: Throwable) {
+        } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání žebříčku")
         }
     }

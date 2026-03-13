@@ -2,6 +2,7 @@ package com.tkolymp.shared.viewmodels
 
 import com.tkolymp.shared.ServiceLocator
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,18 +28,18 @@ class EventViewModel(
     suspend fun loadEvent(eventId: Long, forceRefresh: Boolean = false) {
         _state.value = _state.value.copy(isLoading = true, error = null)
         try {
-            val ev = try { withContext(Dispatchers.IO) { eventService.fetchEventById(eventId, forceRefresh) } } catch (ex: Throwable) { null }
+            val ev = try { withContext(Dispatchers.IO) { eventService.fetchEventById(eventId, forceRefresh) } } catch (e: CancellationException) { throw e } catch (ex: Exception) { null }
             var myPerson: String? = null
             var myCouples: List<String> = emptyList()
             try {
                 withContext(Dispatchers.IO) {
-                    myPerson = try { userService.getCachedPersonId() } catch (_: Throwable) { null }
-                    myCouples = try { userService.getCachedCoupleIds() } catch (_: Throwable) { emptyList() }
+                    myPerson = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                    myCouples = try { userService.getCachedCoupleIds() } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
                 }
-            } catch (_: Throwable) {}
+            } catch (e: CancellationException) { throw e } catch (_: Exception) {}
 
             _state.value = _state.value.copy(eventJson = ev, myPersonId = myPerson, myCoupleIds = myCouples, isLoading = false)
-        } catch (ex: Throwable) {
+        } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání události")
         }
     }

@@ -3,6 +3,7 @@ package com.tkolymp.shared.viewmodels
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.utils.asJsonObjectOrNull
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,33 +36,33 @@ class RegistrationViewModel(
                             val tIdStr = tObj?.get("id")?.jsonPrimitive?.contentOrNull ?: idx.toString()
                             val personRef = tObj?.get("person")?.asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
                                 ?: tObj?.get("personId")?.jsonPrimitive?.contentOrNull
-                            val fetched = if (!personRef.isNullOrBlank()) try { peopleService.fetchPersonDisplayName(personRef, false) } catch (_: Throwable) { null } else null
+                            val fetched = if (!personRef.isNullOrBlank()) try { peopleService.fetchPersonDisplayName(personRef, false) } catch (e: CancellationException) { throw e } catch (_: Exception) { null } else null
                             if (!fetched.isNullOrBlank()) trainerMap[tIdStr] = fetched
-                        } catch (_: Throwable) {}
+                        } catch (e: CancellationException) { throw e } catch (_: Exception) {}
                     }
                 }
-            } catch (_: Throwable) {}
+            } catch (e: CancellationException) { throw e } catch (_: Exception) {}
 
             var personName = myPersonNameHint
             val coupleNames = myCoupleNamesHint.toMutableMap()
                 try {
                 withContext(Dispatchers.Default) {
                     if (personName.isNullOrBlank() && myPersonId != null) {
-                        personName = try { peopleService.fetchPersonDisplayName(myPersonId, true) } catch (_: Throwable) { null }
+                        personName = try { peopleService.fetchPersonDisplayName(myPersonId, true) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                     }
                     myCoupleIds.forEach { cid ->
                         if (coupleNames[cid].isNullOrBlank()) {
                             try {
                                 val fetched = peopleService.fetchCoupleDisplayName(cid)
                                 if (!fetched.isNullOrBlank()) coupleNames[cid] = fetched
-                            } catch (_: Throwable) {}
+                            } catch (e: CancellationException) { throw e } catch (_: Exception) {}
                         }
                     }
                 }
-            } catch (_: Throwable) {}
+            } catch (e: CancellationException) { throw e } catch (_: Exception) {}
 
             _state.value = _state.value.copy(trainerNames = trainerMap, myPersonName = personName, myCoupleNames = coupleNames, isLoading = false)
-        } catch (ex: Throwable) {
+        } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání jmen")
         }
     }

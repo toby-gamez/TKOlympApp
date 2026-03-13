@@ -10,6 +10,7 @@ import com.tkolymp.shared.people.CoupleMember
 import com.tkolymp.shared.people.PersonDetails
 import com.tkolymp.shared.storage.UserStorage
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.*
 
@@ -31,7 +32,7 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
         try {
             val errors = resp.jsonObject["errors"]
             lastApiError = errors?.toString()
-        } catch (_: Throwable) {
+        } catch (e: CancellationException) { throw e } catch (e: Exception) {
             lastApiError = null
         }
     }
@@ -46,12 +47,12 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
 
     suspend fun fetchAndStorePersonId(): String? {
         val query = "query MyQuery { userProxiesList { person { id } } }"
-        val resp = try { client.post(query, null) } catch (ex: Throwable) { lastApiError = ex.message; return null }
+        val resp = try { client.post(query, null) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return null }
         checkAndSetErrors(resp)
         val personId = try {
             val arr = resp.jsonObject["data"]?.jsonObject?.get("userProxiesList")?.jsonArray
             arr?.firstOrNull()?.jsonObject?.get("person")?.jsonObject?.get("id")?.jsonPrimitive?.contentOrNull
-        } catch (_: Throwable) { null }
+        } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
 
         if (personId != null) storage.savePersonId(personId)
         return personId
@@ -60,7 +61,7 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
     suspend fun fetchAndStoreCurrentUser(versionId: String): JsonObject? {
         val query = "query MyQuery(\$versionId: String!) { getCurrentUser(versionId: \$versionId) { uEmail uJmeno uLogin createdAt id lastActiveAt lastLogin tenantId uPrijmeni updatedAt } }"
         val variables = buildJsonObject { put("versionId", JsonPrimitive(versionId)) }
-        val resp = try { client.post(query, variables) } catch (ex: Throwable) { lastApiError = ex.message; return null }
+        val resp = try { client.post(query, variables) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return null }
         checkAndSetErrors(resp)
         val data = resp.jsonObject["data"]?.jsonObject?.get("getCurrentUser")?.jsonObject
         if (data != null) storage.saveCurrentUserJson(data.toString())
@@ -69,7 +70,7 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
 
     suspend fun fetchAndStoreActiveCouples(): List<String> {
         val query = "query kveri { users { nodes { userProxiesList { person { activeCouplesList { id man { firstName lastName } woman { firstName lastName } } cohortMembershipsList { cohort { id colorRgb name } } } } } } }"
-        val resp = try { client.post(query, null) } catch (ex: Throwable) { lastApiError = ex.message; return emptyList() }
+        val resp = try { client.post(query, null) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return emptyList() }
         checkAndSetErrors(resp)
         val ids = mutableListOf<String>()
         try {
@@ -83,7 +84,7 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
                     }
                 }
             }
-        } catch (_: Throwable) {}
+        } catch (e: CancellationException) { throw e } catch (_: Exception) {}
 
         storage.saveCoupleIds(ids)
         return ids
@@ -101,13 +102,13 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
         if (idLong != null) {
             query = "query MyQuery(\$id: BigInt!) { $baseSelection }"
             variables = buildJsonObject { put("id", JsonPrimitive(idLong)) }
-            resp = try { client.post(query, variables) } catch (ex: Throwable) { lastApiError = ex.message; return null }
+            resp = try { client.post(query, variables) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return null }
             checkAndSetErrors(resp)
         } else {
             // fallback to string variable if id is not numeric
             query = "query MyQuery(\$id: String!) { $baseSelection }"
             variables = buildJsonObject { put("id", JsonPrimitive(personId)) }
-            resp = try { client.post(query, variables) } catch (ex: Throwable) { lastApiError = ex.message; return null }
+            resp = try { client.post(query, variables) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return null }
             checkAndSetErrors(resp)
         }
 
@@ -151,12 +152,12 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
             AddressDetails(street = a["street"]?.jsonPrimitive?.contentOrNull, city = a["city"]?.jsonPrimitive?.contentOrNull, postalCode = a["postalCode"]?.jsonPrimitive?.contentOrNull, region = a["region"]?.jsonPrimitive?.contentOrNull, district = a["district"]?.jsonPrimitive?.contentOrNull, conscriptionNumber = a["conscriptionNumber"]?.jsonPrimitive?.contentOrNull, orientationNumber = a["orientationNumber"]?.jsonPrimitive?.contentOrNull)
         }
         PersonDetails(id = id, firstName = p["firstName"]?.jsonPrimitive?.contentOrNull, lastName = p["lastName"]?.jsonPrimitive?.contentOrNull, prefixTitle = p["prefixTitle"]?.jsonPrimitive?.contentOrNull, suffixTitle = p["suffixTitle"]?.jsonPrimitive?.contentOrNull, birthDate = p["birthDate"]?.jsonPrimitive?.contentOrNull, bio = p["bio"]?.jsonPrimitive?.contentOrNull, cstsId = p["cstsId"]?.jsonPrimitive?.contentOrNull, email = p["email"]?.jsonPrimitive?.contentOrNull, gender = p["gender"]?.jsonPrimitive?.contentOrNull, isTrainer = p["isTrainer"]?.jsonPrimitive?.contentOrNull?.let { it == "true" }, phone = p["phone"]?.jsonPrimitive?.contentOrNull, wdsfId = p["wdsfId"]?.jsonPrimitive?.contentOrNull, activeCouplesList = couplesArr, cohortMembershipsList = memberships, rawResponse = Json.parseToJsonElement(jsonStr), address = address, nationality = p["nationality"]?.jsonPrimitive?.contentOrNull, nationalIdNumber = p["nationalIdNumber"]?.jsonPrimitive?.contentOrNull)
-    } catch (_: Throwable) { null }
+    } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
 
     private fun parseStoredCurrentUser(jsonStr: String): CurrentUser? = try {
         val u = Json.parseToJsonElement(jsonStr).jsonObject
         CurrentUser(id = u["id"]?.jsonPrimitive?.contentOrNull, uEmail = u["uEmail"]?.jsonPrimitive?.contentOrNull, uJmeno = u["uJmeno"]?.jsonPrimitive?.contentOrNull, uLogin = u["uLogin"]?.jsonPrimitive?.contentOrNull, uPrijmeni = u["uPrijmeni"]?.jsonPrimitive?.contentOrNull)
-    } catch (_: Throwable) { null }
+    } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
 
     suspend fun getLastApiError(): String? = lastApiError
 
@@ -166,11 +167,11 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
         // Insert the password directly into the mutation (backend expects a simple string).
         val esc = newPass.replace("\\", "\\\\").replace("\"", "\\\"")
         val query = "mutation { changePassword(input: {newPass: \"$esc\"}) { clientMutationId } }"
-        val resp = try { client.post(query, null) } catch (ex: Throwable) { lastApiError = ex.message; return false }
+        val resp = try { client.post(query, null) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return false }
         checkAndSetErrors(resp)
-        val errors = try { resp.jsonObject["errors"] } catch (_: Throwable) { null }
+        val errors = try { resp.jsonObject["errors"] } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
         if (errors != null) return false
-        val data = try { resp.jsonObject["data"]?.jsonObject?.get("changePassword") } catch (_: Throwable) { null }
+        val data = try { resp.jsonObject["data"]?.jsonObject?.get("changePassword") } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
         return data != null
     }
 
@@ -240,16 +241,16 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
         Logger.d("UserService", "UpdatePerson query: $query")
         Logger.d("UserService", "UpdatePerson variables: $variables")
 
-        val resp = try { client.post(query, variables) } catch (ex: Throwable) { lastApiError = ex.message; return false }
+        val resp = try { client.post(query, variables) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return false }
         checkAndSetErrors(resp)
-        val errors = try { resp.jsonObject["errors"] } catch (_: Throwable) { null }
+        val errors = try { resp.jsonObject["errors"] } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
         if (errors != null) return false
-        val data = try { resp.jsonObject["data"]?.jsonObject?.get("updatePerson") } catch (_: Throwable) { null }
+        val data = try { resp.jsonObject["data"]?.jsonObject?.get("updatePerson") } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
         if (data != null) {
             // refresh cached person details so UI reads the updated data
             try {
                 fetchAndStorePersonDetails(personId)
-            } catch (_: Throwable) { }
+            } catch (e: CancellationException) { throw e } catch (_: Exception) { }
         }
         return data != null
     }

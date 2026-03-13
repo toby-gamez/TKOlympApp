@@ -2,6 +2,7 @@ package com.tkolymp.shared.viewmodels
 
 import com.tkolymp.shared.ServiceLocator
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,14 +40,14 @@ class OtherViewModel(
         _state.value = _state.value.copy(isLoading = true, error = null)
         scope.launch {
             try {
-                val raw = try { userService.getCachedCurrentUserJson() } catch (_: Throwable) { null }
-                val pid = try { userService.getCachedPersonId() } catch (_: Throwable) { null }
-                val cids = try { userService.getCachedCoupleIds() } catch (_: Throwable) { emptyList<String>() }
-                var personDetails = try { userService.getCachedPersonDetailsJson() } catch (_: Throwable) { null }
+                val raw = try { userService.getCachedCurrentUserJson() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                val pid = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                val cids = try { userService.getCachedCoupleIds() } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList<String>() }
+                var personDetails = try { userService.getCachedPersonDetailsJson() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
 
                 if (personDetails.isNullOrBlank() && !pid.isNullOrBlank()) {
-                    try { userService.fetchAndStorePersonDetails(pid) } catch (_: Throwable) { }
-                    personDetails = try { userService.getCachedPersonDetailsJson() } catch (_: Throwable) { null }
+                    try { userService.fetchAndStorePersonDetails(pid) } catch (e: CancellationException) { throw e } catch (_: Exception) { }
+                    personDetails = try { userService.getCachedPersonDetailsJson() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                 }
 
                 // parse simple fields
@@ -66,7 +67,7 @@ class OtherViewModel(
                         name = listOfNotNull(jmeno?.takeIf { it.isNotBlank() }, prijmeni?.takeIf { it.isNotBlank() }).joinToString(" ")
                         subtitle = obj["uLogin"]?.toString()?.replace("\"", "")
                     }
-                } catch (_: Throwable) { }
+                } catch (e: CancellationException) { throw e } catch (_: Exception) { }
 
                 try {
                     personDetails?.let {
@@ -89,7 +90,7 @@ class OtherViewModel(
                             name = if (!personSuffix.isNullOrBlank()) "$base, ${personSuffix}" else base
                         }
                     }
-                } catch (_: Throwable) { }
+                } catch (e: CancellationException) { throw e } catch (_: Exception) { }
 
                 _state.value = _state.value.copy(
                     name = name,
@@ -105,7 +106,7 @@ class OtherViewModel(
                     personSuffix = personSuffix,
                     isLoading = false
                 )
-            } catch (ex: Throwable) {
+            } catch (e: CancellationException) { throw e } catch (ex: Exception) {
                 _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání")
             }
         }

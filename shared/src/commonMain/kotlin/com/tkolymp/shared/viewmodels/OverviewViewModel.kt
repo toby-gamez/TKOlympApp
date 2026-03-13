@@ -3,6 +3,7 @@ package com.tkolymp.shared.viewmodels
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.cache.CacheService
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.Dispatchers
@@ -29,8 +30,8 @@ class OverviewViewModel(
     suspend fun loadOverview(startIso: String = "1970-01-01T00:00:00Z", endIso: String = "2100-01-01T00:00:00Z", forceRefresh: Boolean = false) {
         _state.value = _state.value.copy(isLoading = true, error = null)
         if (forceRefresh) {
-            try { cache.invalidatePrefix("overview_") } catch (_: Throwable) {}
-            try { cache.invalidatePrefix("announcements_") } catch (_: Throwable) {}
+            try { cache.invalidatePrefix("overview_") } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+            try { cache.invalidatePrefix("announcements_") } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         }
         try {
             val events = try {
@@ -38,14 +39,14 @@ class OverviewViewModel(
                     eventService.fetchEventsGroupedByDay(startIso, endIso, onlyMine = true, first = 200, cacheNamespace = "overview_")
                 }
                 grouped.values.flatten()
-            } catch (_: Throwable) { emptyList<Any>() }
+            } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList<Any>() }
 
             val announcements = try {
                 withContext(Dispatchers.Default) { announcementService.getAnnouncements(false) }.take(3)
-            } catch (_: Throwable) { emptyList<Any>() }
+            } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList<Any>() }
 
-            val pid = try { userService.getCachedPersonId() } catch (_: Throwable) { null }
-            val cids = try { userService.getCachedCoupleIds() } catch (_: Throwable) { emptyList<String>() }
+            val pid = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+            val cids = try { userService.getCachedCoupleIds() } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList<String>() }
 
             _state.value = _state.value.copy(
                 upcomingEvents = events as? List<Any> ?: emptyList(),
@@ -54,7 +55,7 @@ class OverviewViewModel(
                 myCoupleIds = cids,
                 isLoading = false
             )
-        } catch (ex: Throwable) {
+        } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání přehledu")
         }
     }

@@ -52,6 +52,7 @@ import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.RegistrationViewModel
 import com.tkolymp.shared.registration.filterOwnedRegistrations
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
@@ -136,15 +137,15 @@ fun RegistrationScreen(
                 if (event == Lifecycle.Event.ON_RESUME) {
                     scope.launch {
                         try {
-                            try { ServiceLocator.cacheService.invalidatePrefix("person_") } catch (_: Throwable) {}
-                            try { ServiceLocator.cacheService.invalidate("people_all") } catch (_: Throwable) {}
-                        } catch (_: Throwable) {}
+                            try { ServiceLocator.cacheService.invalidatePrefix("person_") } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+                            try { ServiceLocator.cacheService.invalidate("people_all") } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+                        } catch (e: CancellationException) { throw e } catch (_: Exception) {}
                         try {
                             // Force fresh fetch of person/couple names on lifecycle resume by
                             // not passing local hints. This ensures register mode updates even
                             // when `myPersonName`/`myCoupleNames` were provided to the screen.
                             regViewModel.loadNames(trainers, myPersonId, myCoupleIds, null, emptyMap())
-                        } catch (t: Throwable) {
+                        } catch (e: CancellationException) { throw e } catch (t: Exception) {
                             Logger.d("RegScreen", "lifecycle refresh loadNames failed: ${t.message}")
                         }
                     }
@@ -157,12 +158,12 @@ fun RegistrationScreen(
         SwipeToReload(isRefreshing = regState.isLoading, onRefresh = {
             scope.launch {
                 try {
-                    try { ServiceLocator.cacheService.invalidatePrefix("person_") } catch (_: Throwable) {}
-                    try { ServiceLocator.cacheService.invalidate("people_all") } catch (_: Throwable) {}
-                } catch (_: Throwable) {}
+                    try { ServiceLocator.cacheService.invalidatePrefix("person_") } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+                    try { ServiceLocator.cacheService.invalidate("people_all") } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+                } catch (e: CancellationException) { throw e } catch (_: Exception) {}
                 try {
                     regViewModel.loadNames(trainers, myPersonId, myCoupleIds, myPersonName, myCoupleNames)
-                } catch (t: Throwable) {
+                } catch (e: CancellationException) { throw e } catch (t: Exception) {
                     Logger.d("RegScreen", "refresh loadNames failed: ${t.message}")
                 }
             }
@@ -215,16 +216,16 @@ fun RegistrationScreen(
                             try {
                                 val svc = ServiceLocator.peopleService
                                 if (!myPersonId.isNullOrBlank()) {
-                                    val fetched = try { svc.fetchPersonDisplayName(myPersonId, true) } catch (_: Throwable) { null }
+                                    val fetched = try { svc.fetchPersonDisplayName(myPersonId, true) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                                     if (!fetched.isNullOrBlank()) personNameState.value = fetched
                                 }
                                 myCoupleIds.forEach { cid ->
                                     if (coupleNamesState[cid].isNullOrBlank()) {
-                                        val fetched = try { svc.fetchCoupleDisplayName(cid) } catch (_: Throwable) { null }
+                                        val fetched = try { svc.fetchCoupleDisplayName(cid) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                                         if (!fetched.isNullOrBlank()) coupleNamesState[cid] = fetched
                                     }
                                 }
-                            } catch (_: Throwable) {
+                            } catch (e: CancellationException) { throw e } catch (e: Exception) {
                             }
                         }
 
@@ -356,7 +357,7 @@ fun RegistrationScreen(
                             try {
                                 onRegister(listOf(regInput))
                                 onClose()
-                            } catch (t: Throwable) {
+                            } catch (e: CancellationException) { throw e } catch (t: Exception) {
                                 Logger.d("RegScreen", "Register failed: ${t.message}")
                                 showRegisterError.value = t.message ?: "Chyba při registraci"
                             }
@@ -419,14 +420,14 @@ fun RegistrationScreen(
                                             val personId = r?.get("person").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
                                             val coupleId = r?.get("couple").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
                                             val fetched = when {
-                                                !personId.isNullOrBlank() -> try { svc.fetchPersonDisplayName(personId, false) } catch (_: Throwable) { null }
-                                                !coupleId.isNullOrBlank() -> try { svc.fetchCoupleDisplayName(coupleId) } catch (_: Throwable) { null }
+                                                !personId.isNullOrBlank() -> try { svc.fetchPersonDisplayName(personId, false) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                                                !coupleId.isNullOrBlank() -> try { svc.fetchCoupleDisplayName(coupleId) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                                                 else -> null
                                             }
                                             if (!fetched.isNullOrBlank()) regDisplayNames[rid] = fetched
                                         }
                                     }
-                                } catch (_: Throwable) {
+                                } catch (e: CancellationException) { throw e } catch (e: Exception) {
                                 }
                             }
                             ownedRegistrations.forEach { rEl ->
@@ -529,7 +530,7 @@ fun RegistrationScreen(
                                     }
                                     if (enableNotes) onSetNote?.invoke(selectedId, editNoteState.value)
                                     onClose()
-                                } catch (t: Throwable) {
+                                } catch (e: CancellationException) { throw e } catch (t: Exception) {
                                     Logger.d("RegScreen", "SetLessonDemand failed: ${t.message}")
                                     showEditError.value = t.message ?: "Chyba při ukládání změn"
                                 }
@@ -567,14 +568,14 @@ fun RegistrationScreen(
                                             val personId = r?.get("person").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
                                             val coupleId = r?.get("couple").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
                                             val fetched = when {
-                                                !personId.isNullOrBlank() -> try { svc.fetchPersonDisplayName(personId, false) } catch (_: Throwable) { null }
-                                                !coupleId.isNullOrBlank() -> try { svc.fetchCoupleDisplayName(coupleId) } catch (_: Throwable) { null }
+                                                !personId.isNullOrBlank() -> try { svc.fetchPersonDisplayName(personId, false) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                                                !coupleId.isNullOrBlank() -> try { svc.fetchCoupleDisplayName(coupleId) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                                                 else -> null
                                             }
                                             if (!fetched.isNullOrBlank()) regDisplayNames[rid] = fetched
                                         }
                                     }
-                                } catch (_: Throwable) {
+                                } catch (e: CancellationException) { throw e } catch (e: Exception) {
                                 }
                             }
 
@@ -629,7 +630,7 @@ fun RegistrationScreen(
                                             try {
                                                 onDelete(selId)
                                                 onClose()
-                                            } catch (t: Throwable) {
+                                            } catch (e: CancellationException) { throw e } catch (t: Exception) {
                                                 Logger.d("RegScreen", "Delete failed: ${t.message}")
                                                 showDeleteError.value = t.message ?: "Chyba při mazání"
                                             }

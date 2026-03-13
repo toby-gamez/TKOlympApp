@@ -51,6 +51,7 @@ import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.language.NationalityHelper
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
 
 @Composable
 fun ChangePasswordDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
@@ -88,10 +89,10 @@ fun ChangePasswordDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
                             if (result) {
                                 onSuccess()
                             } else {
-                                val apiErr = try { ServiceLocator.userService.getLastApiError() } catch (_: Throwable) { null }
+                                val apiErr = try { ServiceLocator.userService.getLastApiError() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                                 error = if (!apiErr.isNullOrBlank()) "${strings.changePasswordFailed}: $apiErr" else strings.changePasswordFailed
                             }
-                        } catch (ex: Throwable) {
+                        } catch (e: CancellationException) { throw e } catch (ex: Exception) {
                             val causeMsg = generateSequence(ex.cause) { it.cause }
                                 .mapNotNull { it.message }
                                 .firstOrNull()
@@ -322,7 +323,7 @@ fun ChangePersonalDataDialog(
                 scope.launch {
                     saving = true
                     try {
-                        val pid = try { ServiceLocator.userService.getCachedPersonId() } catch (_: Throwable) { null }
+                        val pid = try { ServiceLocator.userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                         if (pid.isNullOrBlank()) {
                             error = strings.cannotDetermineUserId
                         } else {
@@ -352,23 +353,23 @@ fun ChangePersonalDataDialog(
                                     orientationNumber = orientation
                                 )
                             )
-                            try { println("[ProfileScreen] Sending PersonUpdateRequest: $req") } catch (_: Throwable) {}
-                            val ok = try { ServiceLocator.userService.updatePerson(pid, req) } catch (ex: Throwable) { false }
+                            try { println("[ProfileScreen] Sending PersonUpdateRequest: $req") } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+                            val ok = try { ServiceLocator.userService.updatePerson(pid, req) } catch (e: CancellationException) { throw e } catch (ex: Exception) { false }
                             if (ok) {
                                 onSave(
                                     first.trim(), last.trim(), bio.trim(), email.trim(), prefix.trim(), suffix.trim(), csts.trim(), wdsf.trim(), nid.trim(), nationalityId.trim(),
                                     street.trim(), city.trim(), postal.trim(), region.trim(), district.trim(), conscription.trim(), orientation.trim(),
                                     phone.trim(), mobile.trim(), birth.trim(), gender.trim()
                                 )
-                                try { ServiceLocator.userService.fetchAndStorePersonDetails(pid) } catch (_: Throwable) { }
-                                try { ServiceLocator.authService.initialize() } catch (_: Throwable) { }
+                                try { ServiceLocator.userService.fetchAndStorePersonDetails(pid) } catch (e: CancellationException) { throw e } catch (_: Exception) { }
+                                try { ServiceLocator.authService.initialize() } catch (e: CancellationException) { throw e } catch (_: Exception) { }
                                 onDismiss()
                             } else {
-                                val apiErr = try { ServiceLocator.userService.getLastApiError() } catch (_: Throwable) { null }
+                                val apiErr = try { ServiceLocator.userService.getLastApiError() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                                 error = "${strings.saveFailed}: ${apiErr ?: "neznámá chyba"}"
                             }
                         }
-                    } catch (ex: Throwable) {
+                    } catch (e: CancellationException) { throw e } catch (ex: Exception) {
                         error = ex.message ?: strings.saveFailed
                     } finally {
                         saving = false

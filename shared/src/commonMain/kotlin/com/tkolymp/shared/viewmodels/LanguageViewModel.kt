@@ -6,6 +6,7 @@ import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.language.getDeviceLanguageCode
 import com.tkolymp.shared.storage.LanguageStorage
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +30,7 @@ class LanguageViewModel(
 
     fun load() {
         scope.launch {
-            val savedCode = try { languageStorage.getLanguageCode() } catch (_: Throwable) { null }
+            val savedCode = try { languageStorage.getLanguageCode() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
             val language = if (savedCode != null) {
                 AppLanguage.fromCode(savedCode)
             } else {
@@ -47,7 +48,7 @@ class LanguageViewModel(
                 languageStorage.saveLanguageCode(language.code)
                 AppStrings.setLanguage(language)
                 _state.value = _state.value.copy(selectedLanguage = language)
-            } catch (e: Throwable) {
+            } catch (e: CancellationException) { throw e } catch (e: Exception) {
                 _state.value = _state.value.copy(error = e.message)
             }
         }

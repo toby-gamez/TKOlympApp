@@ -3,6 +3,7 @@ package com.tkolymp.shared.viewmodels
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.auth.IAuthService
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
@@ -42,18 +43,18 @@ class LoginViewModel() {
                 return false
             }
 
-            val personId = try { userService.fetchAndStorePersonId() } catch (_: Throwable) { null }
+            val personId = try { userService.fetchAndStorePersonId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
             if (personId == null) {
                 _state.value = _state.value.copy(isLoading = false, error = "Nelze získat personId po přihlášení")
                 return false
             }
 
-            try { userService.fetchAndStoreActiveCouples() } catch (_: Throwable) {}
-            try { userService.fetchAndStorePersonDetails(personId) } catch (_: Throwable) {}
+            try { userService.fetchAndStoreActiveCouples() } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+            try { userService.fetchAndStorePersonDetails(personId) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
 
             _state.value = _state.value.copy(isLoading = false, error = null)
             true
-        } catch (ex: Throwable) {
+        } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při přihlášení")
             false
         }

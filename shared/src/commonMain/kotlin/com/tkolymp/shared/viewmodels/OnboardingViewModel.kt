@@ -1,6 +1,7 @@
 package com.tkolymp.shared.viewmodels
 
 import com.tkolymp.shared.ServiceLocator
+import kotlinx.coroutines.CancellationException
 import com.tkolymp.shared.storage.OnboardingStorage
 
 class OnboardingViewModel(
@@ -14,6 +15,6 @@ class OnboardingViewModel(
         // Seed the default notification rule exactly once on first run
         try {
             ServiceLocator.notificationService.initializeIfNeeded()
-        } catch (_: Throwable) {}
+        } catch (e: CancellationException) { throw e } catch (_: Exception) {}
     }
 }

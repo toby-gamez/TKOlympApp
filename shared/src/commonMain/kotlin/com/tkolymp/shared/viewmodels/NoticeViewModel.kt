@@ -2,6 +2,7 @@ package com.tkolymp.shared.viewmodels
 
 import com.tkolymp.shared.ServiceLocator
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,13 +28,13 @@ class NoticeViewModel(
         _state.value = _state.value.copy(isLoading = true, error = null)
         scope.launch {
             try {
-                val a = try { announcementService.getAnnouncementById(announcementId, forceRefresh) } catch (_: Throwable) { null }
+                val a = try { announcementService.getAnnouncementById(announcementId, forceRefresh) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                 if (a == null) {
                     _state.value = _state.value.copy(isLoading = false, error = "Oznámení nenalezeno")
                 } else {
                     _state.value = _state.value.copy(announcement = a, isLoading = false)
                 }
-            } catch (ex: Throwable) {
+            } catch (e: CancellationException) { throw e } catch (ex: Exception) {
                 _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání")
             }
         }

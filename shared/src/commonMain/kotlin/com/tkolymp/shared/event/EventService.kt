@@ -1,6 +1,7 @@
 package com.tkolymp.shared.event
 
 import com.tkolymp.shared.Logger
+import kotlinx.coroutines.CancellationException
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.cache.CacheService
 import kotlin.time.Duration.Companion.minutes
@@ -365,7 +366,7 @@ class EventService(
         val cacheKey = "${ns}_${startRangeIso}_${endRangeIso}_${onlyMine}_${first}_${offset}_${onlyType}"
             val cached = try {
                 cache.get<Map<String, List<EventInstance>>>(cacheKey)
-            } catch (t: Throwable) {
+            } catch (e: CancellationException) { throw e } catch (t: Exception) {
                 Logger.d("EventService", "fetchEventsGroupedByDay: cache.get failed for $cacheKey: ${t.message}")
                 null
             }
@@ -497,16 +498,16 @@ class EventService(
             val allInstances = instances.toList()
             try {
                 ServiceLocator.notificationService.processEvents(allInstances)
-            } catch (_: Throwable) {
+            } catch (e: CancellationException) { throw e } catch (e: Exception) {
                 // ignore notification scheduling errors
             }
-        } catch (_: Throwable) { }
+        } catch (e: CancellationException) { throw e } catch (_: Exception) { }
 
         val result = grouped.entries.sortedBy { it.key }.associate { it.key to it.value }
         try {
             Logger.d("EventService", "fetchEventsGroupedByDay: fetched ${instances.size} instances, storing ${result.size} grouped days into cache key=$cacheKey")
             cache.put(cacheKey, result, ttl = 3.minutes)
-        } catch (t: Throwable) {
+        } catch (e: CancellationException) { throw e } catch (t: Exception) {
             Logger.d("EventService", "fetchEventsGroupedByDay: cache.put failed: ${t.message}")
         }
         return result
@@ -529,7 +530,7 @@ class EventService(
         val ev = data["event"]
         val obj = (ev as? JsonObject)
         if (obj != null) {
-            try { cache.put(cacheKey, obj, ttl = 5.minutes) } catch (_: Throwable) { }
+            try { cache.put(cacheKey, obj, ttl = 5.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) { }
         }
         return obj
     }

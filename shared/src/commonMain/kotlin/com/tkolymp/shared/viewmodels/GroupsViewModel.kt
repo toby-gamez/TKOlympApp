@@ -2,6 +2,7 @@ package com.tkolymp.shared.viewmodels
 
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.club.Cohort
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,13 +24,13 @@ class GroupsViewModel(
     suspend fun load() {
         _state.value = _state.value.copy(isLoading = true, error = null)
         try {
-            val d = try { withContext(Dispatchers.Default) { clubService.fetchClubData() } } catch (ex: Throwable) { null }
+            val d = try { withContext(Dispatchers.Default) { clubService.fetchClubData() } } catch (e: CancellationException) { throw e } catch (ex: Exception) { null }
             if (d == null) {
                 _state.value = _state.value.copy(isLoading = false, error = "Chyba při načítání dat")
             } else {
                 _state.value = _state.value.copy(cohorts = d.cohorts, isLoading = false)
             }
-        } catch (ex: Throwable) {
+        } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání")
         }
     }

@@ -8,7 +8,6 @@
 
 ## Obsah
 
-2. [ServiceLocator Anti-Pattern](#2-servicelocator-anti-pattern)
 3. [Spolykané výjimky a CancellationException](#3-spolykané-výjimky-a-cancellationexception)
 4. [Type Safety](#4-type-safety)
 5. [Hardcoded řetězce navzdory i18n systému](#5-hardcoded-řetězce-navzdory-i18n-systému)
@@ -21,84 +20,6 @@
 12. [Pojmenování](#12-pojmenování)
 13. [Shrnutí a prioritizace](#13-shrnutí-a-prioritizace)
 14. [Akční plán](#14-akční-plán)
-
----
-
-## 2. ServiceLocator Anti-Pattern
-
-**Soubor**: `shared/src/commonMain/kotlin/com/tkolymp/shared/ServiceLocator.kt`
-
-```kotlin
-object ServiceLocator {
-    lateinit var graphQlClient: IGraphQlClient
-    lateinit var authService: IAuthService
-    lateinit var tokenStorage: TokenStorage
-    lateinit var eventService: IEventService
-    lateinit var userStorage: UserStorage
-    lateinit var userService: UserService
-    lateinit var announcementService: IAnnouncementService
-    lateinit var peopleService: PeopleService
-    lateinit var clubService: ClubService
-    lateinit var cacheService: CacheService
-    lateinit var notificationStorage: NotificationStorage
-    lateinit var notificationScheduler: INotificationScheduler
-    lateinit var notificationService: NotificationService
-    lateinit var onboardingStorage: OnboardingStorage
-    lateinit var languageStorage: LanguageStorage
-}
-```
-
-### Problémy
-
-**a) Globální mutable state**  
-Všech 15 závislostí je `lateinit var`. Kdokoli z kódu je může za runtime přepsat. Není zde žádný mechanismus izolace.
-
-**b) Neinicializované závislosti crashují**  
-`UninitializedPropertyAccessException` se v kódu explicitně zachytává jako workaround:
-
-```kotlin
-// MainActivity.kt — antipattern workaround
-try {
-    ServiceLocator.notificationService.initializeIfNeeded()
-} catch (_: UninitializedPropertyAccessException) {
-    // service not registered yet
-}
-```
-
-Správná architektura (DI container, constructor injection) by tento typ chyby znemožnil na compile-time.
-
-**c) Kruhová závislost v síťové vrstvě**  
-`GraphQlClientImpl` volá `ServiceLocator.authService.getToken()` přímo uvnitř HTTP requestu:
-
-```kotlin
-// GraphQlClientImpl.kt
-override suspend fun post(query: String, variables: JsonObject?): JsonElement {
-    // ...
-    val token = try { ServiceLocator.authService.getToken() } catch (_: Throwable) { null }
-    // ...
-}
-```
-
-Network layer závísí na auth vrstvě přes globální singleton. Tím vzniká implicitní kruhová závislost: `AuthService` → `GraphQlClient` → `ServiceLocator.authService` (sám sebe). Správně: token by měl být injektován jako `() -> String?` lambda nebo přes `AuthTokenProvider` interface.
-
-**d) Netestovatelné**  
-Není možné psát unit testy bez refaktoru. Mockování závislostí vyžaduje buď reflection nebo ruční přiřazení do globálního singletonu.
-
-**e) Není thread-safe**  
-Souběžná inicializace z více vláken (Android main thread vs. background coroutine) může vést k race condition při čtení `lateinit` polí.
-
-**Doporučená oprava**: Přesunout na constructor injection. V KMP prostředí bez DI frameworku stačí jednoduchý `AppContainer`:
-
-```kotlin
-class AppContainer(platformContext: Any) {
-    val tokenStorage = TokenStorage(platformContext)
-    val graphQlClient: IGraphQlClient by lazy { GraphQlClientImpl(...) }
-    val authService: IAuthService by lazy { AuthService(tokenStorage, graphQlClient) }
-    // ...
-}
-```
-
-Instance `AppContainer` se předá ViewModelům při jejich vytváření.
 
 ---
 
@@ -574,8 +495,7 @@ shared/src/commonMain/kotlin/com/tkolymp/shared/viewmodels/CalendarViewModel.kt 
 | Priorita | # | Oblast | Soubory |
 |---|---|---|---|
 | 🔴 KRITICKÉ | 1 | Zachycení `CancellationException` | `LoginViewModel`, `OverviewViewModel`, `EventViewModel`, `CalendarViewModel`, `ProfileViewModel` |
-| 🔴 KRITICKÉ | 2 | ServiceLocator kruhová závislost + bez thread-safety | `ServiceLocator.kt`, `GraphQlClientImpl.kt` |
-| 🟠 VYSOKÉ | 3 | `List<Any>` v `OverviewState` | `OverviewViewModel.kt`, `OverviewScreen.kt` |
+|  VYSOKÉ | 3 | `List<Any>` v `OverviewState` | `OverviewViewModel.kt`, `OverviewScreen.kt` |
 | 🟠 VYSOKÉ | 4 | ViewModely bez lifecycle (`viewModelScope`) | všechny `/viewmodels/*.kt` |
 | 🟡 STŘEDNÍ | 5 | Hardcoded texty v `shared/commonMain` (notifikace, chyby) | `NotificationService.kt`, `LoginViewModel.kt` |
 | 🟡 STŘEDNÍ | 6 | Hardcoded verze v build.gradle mimo toml | `shared/build.gradle.kts`, `composeApp/build.gradle.kts` |
@@ -601,9 +521,7 @@ shared/src/commonMain/kotlin/com/tkolymp/shared/viewmodels/CalendarViewModel.kt 
 
 ### Sprint 2 — Větší architekturní změny (3–5 dní)
 
-5. **AppContainer místo ServiceLocator** — constructor injection bez globálního mutable state
-
-6. **Lifecycle ViewModely** — přidat `androidx.lifecycle.ViewModel` dědění, `viewModelScope`
+5. **Lifecycle ViewModely** — přidat `androidx.lifecycle.ViewModel` dědění, `viewModelScope`
 
 7. **i18n chybějící klíče** — přidat error messages a notifikační texty do všech `Strings*.kt`
 

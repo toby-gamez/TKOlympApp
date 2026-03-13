@@ -50,6 +50,7 @@ import com.tkolymp.shared.people.PersonDetails
 import com.tkolymp.shared.user.CurrentUser
 import com.tkolymp.shared.viewmodels.ProfileViewModel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -456,8 +457,8 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                     ChangePasswordDialog(onDismiss = { showChangePassDialog = false }, onSuccess = {
                         // clear storage and navigate to login
                         scope.launch {
-                            try { ServiceLocator.tokenStorage.clear() } catch (_: Throwable) {}
-                            try { ServiceLocator.userService.clear() } catch (_: Throwable) {}
+                            try { ServiceLocator.tokenStorage.clear() } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+                            try { ServiceLocator.userService.clear() } catch (e: CancellationException) { throw e } catch (_: Exception) {}
                             showChangePassDialog = false
                             onLogout()
                         }
@@ -516,8 +517,8 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                     Button(onClick = {
                         showLogoutConfirm = false
                         scope.launch {
-                            try { ServiceLocator.tokenStorage.clear() } catch (_: Throwable) {}
-                            try { ServiceLocator.userService.clear() } catch (_: Throwable) {}
+                            try { ServiceLocator.tokenStorage.clear() } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+                            try { ServiceLocator.userService.clear() } catch (e: CancellationException) { throw e } catch (_: Exception) {}
                             onLogout()
                         }
                     }) { Text(AppStrings.current.logout) }
