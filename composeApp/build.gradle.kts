@@ -1,4 +1,9 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
+
+val localProps = Properties().apply {
+    rootProject.file("local.properties").takeIf { it.exists() }?.reader()?.use { load(it) }
+}
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -58,8 +63,8 @@ android {
         buildConfig = true
     }
     defaultConfig {
-        buildConfigField("String", "API_BASE_URL", "\"https://api.rozpisovnik.cz/graphql\"")
-        buildConfigField("String", "TENANT_ID", "\"1\"")
+        buildConfigField("String", "API_BASE_URL", "\"${localProps["api.base.url"] ?: ""}\"")
+        buildConfigField("String", "TENANT_ID", "\"${localProps["tenant.id"] ?: ""}\"") 
     }
     buildTypes {
         getByName("release") {

@@ -18,53 +18,6 @@
 
 ## 9. Build konfigurace
 
-### 9.1 Hardcoded verze mimo `libs.versions.toml` ❌ STŘEDNÍ
-
-**`shared/build.gradle.kts`**:
-```kotlin
-implementation("androidx.core:core-ktx:1.9.0")  // ❌ hardcoded, navíc zastaralá verze (catalog má 1.17.0)
-```
-
-**`composeApp/build.gradle.kts`**:
-```kotlin
-implementation(platform("androidx.compose:compose-bom:2025.01.00"))  // ❌ hardcoded, nepoužívá alias
-implementation("androidx.compose.material:material-icons-extended")   // ❌ bez verze (závisí na BOM, ale nedefinováno v toml)
-```
-
-**Dopad**: `core-ktx:1.9.0` v `shared` a `core-ktx:1.17.0` v toml — dvě různé verze stejné library v jednom projektu způsobují dependency conflict.
-
-### 9.2 Citlivá data přímo v `build.gradle.kts` ❌ STŘEDNÍ
-
-```kotlin
-// composeApp/build.gradle.kts — committed v repozitáři
-buildConfigField("String", "API_BASE_URL", "\"https://api.rozpisovnik.cz/graphql\"")
-buildConfigField("String", "TENANT_ID", "\"1\"")
-```
-
-Produkční URL a tenant ID jsou viditelné v git historii. Správně by měly být v `local.properties`:
-
-```properties
-# local.properties (v .gitignore)
-api.base.url=https://api.rozpisovnik.cz/graphql
-tenant.id=1
-```
-
-```kotlin
-// build.gradle.kts
-val localProps = Properties().apply { load(rootProject.file("local.properties").reader()) }
-buildConfigField("String", "API_BASE_URL", "\"${localProps["api.base.url"]}\"")
-```
-
-### 9.3 Nepoužívaná závislost v katalogu ❌ NÍZKÉ
-
-```toml
-# libs.versions.toml
-roomKtx = "2.8.4"
-androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }
-```
-
-Room není nigde importován ani použit. Přidává zbytečný dependency overhead a mate čtenáře.
-
 ### 9.4 Alpha verze navigace v produkci ❌ NÍZKÉ
 
 ```toml

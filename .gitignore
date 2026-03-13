@@ -47,3 +47,4 @@ composeApp/.cxx/*
 .kotlin/sessions/*
 composeApp/build.gradle.kts
 .vscode/*
+local.properties
