@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.event.EventInstance
+import com.tkolymp.shared.utils.DateRangeConstants
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -39,8 +40,8 @@ class EventsViewModel(
             }
 
             // Use a broad fixed range (multiplatform-safe) to fetch upcoming camps
-            val startIso = "2023-01-01T00:00:00Z"
-            val endIso = "2100-01-01T23:59:59Z"
+            val startIso = DateRangeConstants.FAR_PAST
+            val endIso = DateRangeConstants.FAR_FUTURE
             val map = try { withContext(Dispatchers.IO) { eventService.fetchEventsGroupedByDay(startIso, endIso, false, 500, 0, "CAMP", cacheNamespace = "camps_") } } catch (e: CancellationException) { throw e } catch (ex: Exception) { emptyMap<String, List<EventInstance>>() }
             val filtered = map.mapValues { entry -> entry.value.filter { it.event?.isVisible != false } }.filterValues { it.isNotEmpty() }
             _state.value = _state.value.copy(eventsByDay = filtered, isLoading = false)

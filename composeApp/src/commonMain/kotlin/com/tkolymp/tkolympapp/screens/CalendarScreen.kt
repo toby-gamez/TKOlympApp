@@ -2,11 +2,11 @@
 
 package com.tkolymp.tkolympapp.screens
 import com.tkolymp.tkolympapp.SwipeToReload
-import com.tkolymp.tkolympapp.formatTimes
-import com.tkolymp.tkolympapp.formatTimesWithDate
-import com.tkolymp.tkolympapp.formatTimesWithDateAlways
-import com.tkolymp.tkolympapp.durationMinutes
-import com.tkolymp.tkolympapp.translateEventType
+import com.tkolymp.shared.utils.formatTimes
+import com.tkolymp.shared.utils.formatTimesWithDate
+import com.tkolymp.shared.utils.formatTimesWithDateAlways
+import com.tkolymp.shared.utils.durationMinutes
+import com.tkolymp.shared.utils.translateEventType
 import com.tkolymp.shared.utils.formatFullCalendarDate
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit

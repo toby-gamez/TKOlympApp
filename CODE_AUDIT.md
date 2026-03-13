@@ -8,8 +8,6 @@
 
 ## Obsah
 
-7. [CacheService — nadbytečný mutex](#7-cacheservice--nadbytečný-mutex)
-8. [Duplicitní kód](#8-duplicitní-kód)
 9. [Build konfigurace](#9-build-konfigurace)
 10. [Bezpečnost](#10-bezpečnost)
 11. [Logger](#11-logger)
@@ -17,76 +15,6 @@
 13. [Shrnutí a prioritizace](#13-shrnutí-a-prioritizace)
 14. [Akční plán](#14-akční-plán)
 
-## 7. CacheService — nadbytečný mutex
-
-**Soubor**: `shared/src/commonMain/kotlin/com/tkolymp/shared/cache/CacheService.kt`
-
-```kotlin
-class CacheService {
-    private val cache = mutableMapOf<String, CacheEntry<*>>()
-    private val mutex = Mutex()
-    private val cacheDispatcher = Dispatchers.Default.limitedParallelism(1)  // ← sériové provádění
-
-    suspend fun <T> get(key: String): T? = withContext(cacheDispatcher) {
-        mutex.withLock {   // ← REDUNDANTNÍ! cacheDispatcher již garantuje sériovost
-            // ...
-        }
-    }
-}
-```
-
-`limitedParallelism(1)` garantuje, že se nikdy nevykonávají dvě operace souběžně. Přidaný `Mutex` je tedy redundantní a přidává zbytečný overhead (lock contention, memory).
-
-**Další problémy**:
-- Žádný **size limit** — cache může neomezeně růst v paměti při intenzivním používání
-- Žádná **LRU eviction policy** — staré záznamy zůstávají dokud neexpirují TTL
-- Cache je **in-memory only** — restart aplikace smaže všechna cached data
-
-**Oprava**:
-```kotlin
-// Odstranit mutex, ponechat pouze cacheDispatcher
-suspend fun <T> get(key: String): T? = withContext(cacheDispatcher) {
-    // žádný mutex.withLock {} potřeba
-    val entry = cache[key] as? CacheEntry<T>
-    // ...
-}
-```
-
----
-
-## 8. Duplicitní kód
-
-### 8.2 Hardcoded ISO date ranges jsou nekonzistentní ❌ NÍZKÉ
-
-```kotlin
-// EventsViewModel.kt
-val startIso = "2023-01-01T00:00:00Z"   // ← z minulosti?
-val endIso = "2100-01-01T23:59:59Z"
-
-// OverviewViewModel.kt defaultní parametry
-startIso: String = "1970-01-01T00:00:00Z"  // ← Unix epoch?
-endIso: String = "2100-01-01T00:00:00Z"
-```
-
-Tři různé "open past" hodnoty (`2023`, `1970`, dynamicky počítaný `LocalDate.now()`) pro stejný záměr. Mělo by být definováno jako konstanty:
-
-```kotlin
-object DateRangeConstants {
-    const val FAR_PAST = "1970-01-01T00:00:00Z"
-    const val FAR_FUTURE = "2100-01-01T00:00:00Z"
-}
-```
-
-### 8.3 Duplicitní `EventUtils.kt` ❌ NÍZKÉ
-
-```
-composeApp/src/commonMain/kotlin/com/tkolymp/tkolympapp/EventUtils.kt
-shared/src/commonMain/kotlin/com/tkolymp/shared/utils/EventUtils.kt
-```
-
-Dvě implementace utility. Pokud leží business logika v `composeApp/commonMain`, je nedostupná pro `shared` modul a iOS.
-
----
 
 ## 9. Build konfigurace
 

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.announcements.Announcement
+import com.tkolymp.shared.utils.DateRangeConstants
 import com.tkolymp.shared.cache.CacheService
 import com.tkolymp.shared.event.EventInstance
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,7 +32,7 @@ class OverviewViewModel(
     private val _state = MutableStateFlow(OverviewState())
     val state: StateFlow<OverviewState> = _state.asStateFlow()
 
-    suspend fun loadOverview(startIso: String = "1970-01-01T00:00:00Z", endIso: String = "2100-01-01T00:00:00Z", forceRefresh: Boolean = false) {
+    suspend fun loadOverview(startIso: String = DateRangeConstants.FAR_PAST, endIso: String = DateRangeConstants.FAR_FUTURE, forceRefresh: Boolean = false) {
         _state.value = _state.value.copy(isLoading = true, error = null)
         if (forceRefresh) {
             try { cache.invalidatePrefix("overview_") } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("OverviewViewModel", "cache invalidation failed: ${e.message}") }
