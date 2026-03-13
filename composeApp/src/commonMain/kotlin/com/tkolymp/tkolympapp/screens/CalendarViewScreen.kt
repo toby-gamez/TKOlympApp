@@ -42,6 +42,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.formatTimes
@@ -80,7 +81,7 @@ import kotlinx.datetime.todayIn
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarViewScreen(
-    viewModel: CalendarViewViewModel = remember { CalendarViewViewModel() },
+    viewModel: CalendarViewViewModel = viewModel(),
     onEventClick: (Long) -> Unit = {},
     onBack: (() -> Unit)? = null
 ) {

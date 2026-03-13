@@ -31,6 +31,7 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.datetime)
             implementation(libs.ksafe)
+            implementation(libs.androidx.lifecycle.viewmodel)
         }
         val androidMain by getting {
             dependencies {

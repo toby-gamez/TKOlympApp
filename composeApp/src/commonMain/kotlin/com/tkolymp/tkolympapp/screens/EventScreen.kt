@@ -43,6 +43,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -63,7 +64,7 @@ import com.tkolymp.shared.utils.bool
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration: ((String, String?) -> Unit)? = null) {
-    val viewModel = remember { EventViewModel() }
+    val viewModel = viewModel<EventViewModel>()
     val state by viewModel.state.collectAsState()
     val showAllInstances = remember { mutableStateOf(false) }
 

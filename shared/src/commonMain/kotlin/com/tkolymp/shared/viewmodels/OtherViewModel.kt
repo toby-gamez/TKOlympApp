@@ -1,10 +1,9 @@
 package com.tkolymp.shared.viewmodels
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.tkolymp.shared.ServiceLocator
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,15 +29,13 @@ data class OtherState(
 
 class OtherViewModel(
     private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService
-) {
+) : ViewModel() {
     private val _state = MutableStateFlow(OtherState())
     val state: StateFlow<OtherState> = _state.asStateFlow()
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-
     fun load() {
         _state.value = _state.value.copy(isLoading = true, error = null)
-        scope.launch {
+        viewModelScope.launch {
             try {
                 val raw = try { userService.getCachedCurrentUserJson() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                 val pid = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }

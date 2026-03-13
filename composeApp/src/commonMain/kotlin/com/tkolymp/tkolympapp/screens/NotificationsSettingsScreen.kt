@@ -46,6 +46,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -91,7 +92,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
     )
     var rules = remember { mutableStateListOf<NotificationRule>() }
     var globalEnabled by remember { mutableStateOf(true) }
-    val viewModel = remember { NotificationsSettingsViewModel() }
+    val viewModel = viewModel<NotificationsSettingsViewModel>()
     val vmState by viewModel.state.collectAsState()
     var showDialog by remember { mutableStateOf(false) }
     var editRule by remember { mutableStateOf<NotificationRule?>(null) }

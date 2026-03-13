@@ -53,6 +53,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -95,7 +96,7 @@ private fun formatDateString(raw: String): String? {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {}, onTrainersClick: () -> Unit = {}, onGroupsClick: () -> Unit = {}, onLeaderboardClick: () -> Unit = {}, onAboutClick: () -> Unit = {}, onPrivacyClick: () -> Unit = {}, onNotificationsClick: () -> Unit = {}, onLanguagesClick: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
-    val viewModel = remember { OtherViewModel() }
+    val viewModel = viewModel<OtherViewModel>()
     val state by viewModel.state.collectAsState()
     var showDebug by remember { mutableStateOf(false) }
 

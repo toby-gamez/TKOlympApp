@@ -1,5 +1,6 @@
 package com.tkolymp.shared.viewmodels
 
+import androidx.lifecycle.ViewModel
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +23,7 @@ data class EventState(
 class EventViewModel(
     private val eventService: com.tkolymp.shared.event.IEventService = ServiceLocator.eventService,
     private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService
-) {
+) : ViewModel() {
     private val _state = MutableStateFlow(EventState())
     val state: StateFlow<EventState> = _state.asStateFlow()
 

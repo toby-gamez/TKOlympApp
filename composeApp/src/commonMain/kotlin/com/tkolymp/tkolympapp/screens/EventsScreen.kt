@@ -32,6 +32,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -49,7 +50,7 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
     var selectedTab by rememberSaveable { mutableStateOf(0) }
     val tabs = listOf(AppStrings.current.planned, AppStrings.current.past)
 
-    val viewModel = remember { EventsViewModel() }
+    val viewModel = viewModel<EventsViewModel>()
     val state by viewModel.state.collectAsState()
 
     val today = Clock.System.todayIn(TimeZone.currentSystemDefault())

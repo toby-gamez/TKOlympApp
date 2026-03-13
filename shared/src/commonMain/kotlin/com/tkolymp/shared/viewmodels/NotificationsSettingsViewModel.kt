@@ -1,5 +1,6 @@
 package com.tkolymp.shared.viewmodels
 
+import androidx.lifecycle.ViewModel
 import com.tkolymp.shared.ServiceLocator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.CancellationException
@@ -14,7 +15,7 @@ data class NotificationsSettingsState(
 
 class NotificationsSettingsViewModel(
     private val notificationService: com.tkolymp.shared.notification.NotificationService = ServiceLocator.notificationService
-) {
+) : ViewModel() {
     private val _state = MutableStateFlow(NotificationsSettingsState())
     val state: StateFlow<NotificationsSettingsState> = _state.asStateFlow()
 

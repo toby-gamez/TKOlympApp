@@ -1,5 +1,6 @@
 package com.tkolymp.shared.viewmodels
 
+import androidx.lifecycle.ViewModel
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.auth.IAuthService
 import com.tkolymp.shared.Logger
@@ -18,7 +19,7 @@ data class LoginState(
     override val error: String? = null
 ) : ViewModelState
 
-class LoginViewModel() {
+class LoginViewModel() : ViewModel() {
     private val authService: IAuthService
         get() = ServiceLocator.authService
 

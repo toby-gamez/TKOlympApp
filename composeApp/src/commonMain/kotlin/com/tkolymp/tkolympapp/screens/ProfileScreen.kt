@@ -38,6 +38,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -137,7 +138,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
     val refreshTriggerState = remember { mutableStateOf(0) }
 
     // Use ProfileViewModel to load cached user/person JSON and couple IDs
-    val profileViewModel = remember { ProfileViewModel() }
+    val profileViewModel = viewModel<ProfileViewModel>()
     val profileState by profileViewModel.state.collectAsState()
     LaunchedEffect(refreshTriggerState.value) { profileViewModel.load() }
     LaunchedEffect(profileState) {

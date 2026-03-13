@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,7 +42,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(onSuccess: () -> Unit = {}) {
-    val viewModel = remember { LoginViewModel() }
+    val viewModel = viewModel<LoginViewModel>()
     val state by viewModel.state.collectAsState()
     val scope = rememberCoroutineScope()
 

@@ -39,6 +39,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -123,7 +124,7 @@ fun RegistrationScreen(
         // cache trainer display names (shared across modes) — moved to shared ViewModel
         val showLessonSelection = eventType?.trim()?.lowercase().let { it == "camp" || it == "rezervation" }
 
-        val regViewModel = remember { RegistrationViewModel() }
+        val regViewModel = viewModel<RegistrationViewModel>()
         val regState by regViewModel.state.collectAsState()
         LaunchedEffect(Unit) {
             regViewModel.loadNames(trainers, myPersonId, myCoupleIds, myPersonName, myCoupleNames)

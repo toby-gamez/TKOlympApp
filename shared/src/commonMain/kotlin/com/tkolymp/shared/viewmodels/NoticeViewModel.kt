@@ -1,10 +1,9 @@
 package com.tkolymp.shared.viewmodels
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.tkolymp.shared.ServiceLocator
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,15 +17,13 @@ data class NoticeState(
 
 class NoticeViewModel(
     private val announcementService: com.tkolymp.shared.announcements.IAnnouncementService = ServiceLocator.announcementService
-) {
+) : ViewModel() {
     private val _state = MutableStateFlow(NoticeState())
     val state: StateFlow<NoticeState> = _state.asStateFlow()
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-
     fun load(announcementId: Long, forceRefresh: Boolean = false) {
         _state.value = _state.value.copy(isLoading = true, error = null)
-        scope.launch {
+        viewModelScope.launch {
             try {
                 val a = try { announcementService.getAnnouncementById(announcementId, forceRefresh) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                 if (a == null) {

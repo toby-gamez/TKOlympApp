@@ -53,6 +53,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -84,7 +85,7 @@ fun CalendarScreen(
     var localWeekOffset by rememberSaveable { mutableIntStateOf(weekOffset) }
     val tabs = listOf(AppStrings.current.mine, AppStrings.current.all)
     // moved data loading into shared CalendarViewModel
-    val calendarViewModel = remember { com.tkolymp.shared.viewmodels.CalendarViewModel() }
+    val calendarViewModel = viewModel<com.tkolymp.shared.viewmodels.CalendarViewModel>()
     val calState by calendarViewModel.state.collectAsState()
     val scope = rememberCoroutineScope()
 

@@ -1,5 +1,6 @@
 package com.tkolymp.shared.viewmodels
 
+import androidx.lifecycle.ViewModel
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.utils.asJsonObjectOrNull
 import kotlinx.coroutines.Dispatchers
@@ -20,7 +21,7 @@ data class RegistrationState(
 
 class RegistrationViewModel(
     private val peopleService: com.tkolymp.shared.people.PeopleService = ServiceLocator.peopleService
-) {
+) : ViewModel() {
     private val _state = MutableStateFlow(RegistrationState())
     val state: StateFlow<RegistrationState> = _state.asStateFlow()
 

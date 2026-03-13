@@ -1,5 +1,6 @@
 package com.tkolymp.shared.viewmodels
 
+import androidx.lifecycle.ViewModel
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.people.PersonDetails
@@ -22,7 +23,7 @@ data class ProfileState(
 
 class ProfileViewModel(
     private val userService: UserService = ServiceLocator.userService
-) {
+) : ViewModel() {
     private val _state = MutableStateFlow(ProfileState())
     val state: StateFlow<ProfileState> = _state.asStateFlow()
 

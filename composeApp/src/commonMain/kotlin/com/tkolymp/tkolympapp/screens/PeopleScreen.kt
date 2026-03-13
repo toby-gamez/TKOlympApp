@@ -56,6 +56,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -74,7 +75,7 @@ private enum class SortMode { ALPHABETICAL, BIRTHDAY }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) {
-    val viewModel = remember { PeopleViewModel() }
+    val viewModel = viewModel<PeopleViewModel>()
     val state by viewModel.state.collectAsState()
     var sortMode by remember { mutableStateOf<SortMode>(SortMode.ALPHABETICAL) }
     var showSearch by remember { mutableStateOf(false) }

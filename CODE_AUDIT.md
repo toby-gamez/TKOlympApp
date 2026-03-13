@@ -22,54 +22,6 @@
 
 ## 6. ViewModel Design
 
-### 6.1 ViewModely nejsou `androidx.lifecycle.ViewModel` ❌ VYSOKÉ
-
-Všechna ViewModely jsou prosté Kotlin třídy:
-
-```kotlin
-// LoginViewModel.kt
-class LoginViewModel() {  // žádné dědění z ViewModel
-```
-
-Coroutiny jsou spouštěny v screen:
-
-```kotlin
-// LoginScreen.kt
-val scope = rememberCoroutineScope()
-// ...
-scope.launch {
-    val ok = viewModel.login()
-    if (ok) onSuccess()
-}
-```
-
-**Dopad na Android**:
-
-| Problém | Důsledek |
-|---|---|
-| Žádný `viewModelScope` | Coroutiny nejsou automaticky zrušeny po navigation/rotation |
-| Žádný `SavedStateHandle` | State se neobnoví po process death |
-| Žádná lifecycle awareness | ViewModel žije tak dlouho, jak si ho screen pamatuje přes `remember {}` — toto nestačí |
-| Back stack neuchovává data | Návrat na obrazovku vynutí nové načtení dat |
-
-**Doporučená oprava** pro KMP:
-- Použít `androidx.lifecycle.ViewModel` v `composeApp/androidMain`
-- Pro KMP sdílené ViewModely zvážit `org.jetbrains.androidx.lifecycle:lifecycle-viewmodel` (Compose Multiplatform lifecycle)
-
-```kotlin
-// S Compose Multiplatform lifecycle:
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-
-class LoginViewModel : ViewModel() {
-    fun login() {
-        viewModelScope.launch {
-            // automaticky zrušeno při destroy ViewModelu
-        }
-    }
-}
-```
-
 ### 6.2 `initialize()` voláno opakovaně ❌ STŘEDNÍ
 
 ```kotlin

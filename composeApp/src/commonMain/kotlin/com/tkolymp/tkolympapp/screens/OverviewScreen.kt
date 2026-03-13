@@ -37,6 +37,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -63,7 +64,7 @@ fun OverviewScreen(
         }
     ) { padding ->
         val scrollState = rememberScrollState()
-        val viewModel = remember { OverviewViewModel() }
+        val viewModel = viewModel<OverviewViewModel>()
         val state by viewModel.state.collectAsState()
         val scope = rememberCoroutineScope()
 

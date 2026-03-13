@@ -1,5 +1,6 @@
 package com.tkolymp.shared.viewmodels
 
+import androidx.lifecycle.ViewModel
 import com.tkolymp.shared.ServiceLocator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.CancellationException
@@ -16,7 +17,7 @@ data class PeopleState(
 
 class PeopleViewModel(
     private val peopleService: com.tkolymp.shared.people.PeopleService = ServiceLocator.peopleService
-) {
+) : ViewModel() {
     private val _state = MutableStateFlow(PeopleState())
     val state: StateFlow<PeopleState> = _state.asStateFlow()
 

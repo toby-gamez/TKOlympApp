@@ -1,5 +1,6 @@
 package com.tkolymp.shared.viewmodels
 
+import androidx.lifecycle.ViewModel
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.announcements.Announcement
@@ -26,7 +27,7 @@ class OverviewViewModel(
     private val announcementService: com.tkolymp.shared.announcements.IAnnouncementService = ServiceLocator.announcementService,
     private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService,
     private val cache: CacheService = ServiceLocator.cacheService
-) {
+) : ViewModel() {
     private val _state = MutableStateFlow(OverviewState())
     val state: StateFlow<OverviewState> = _state.asStateFlow()
 

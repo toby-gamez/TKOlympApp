@@ -1,5 +1,6 @@
 package com.tkolymp.shared.viewmodels
 
+import androidx.lifecycle.ViewModel
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.cache.CacheService
@@ -23,7 +24,7 @@ class CalendarViewModel(
     private val eventService: com.tkolymp.shared.event.IEventService = ServiceLocator.eventService,
     private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService,
     private val cache: CacheService = ServiceLocator.cacheService
-) {
+) : ViewModel() {
     private val _state = MutableStateFlow(CalendarState())
     val state: StateFlow<CalendarState> = _state.asStateFlow()
 

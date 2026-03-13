@@ -1,5 +1,6 @@
 package com.tkolymp.shared.viewmodels
 
+import androidx.lifecycle.ViewModel
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.cache.CacheService
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +21,7 @@ data class BoardState(
 class BoardViewModel(
     private val announcementService: com.tkolymp.shared.announcements.IAnnouncementService = ServiceLocator.announcementService,
     private val cache: CacheService = ServiceLocator.cacheService
-) {
+) : ViewModel() {
     private val _state = MutableStateFlow(BoardState())
     val state: StateFlow<BoardState> = _state.asStateFlow()
 

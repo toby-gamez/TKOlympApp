@@ -34,6 +34,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,7 +48,7 @@ import com.tkolymp.shared.viewmodels.LanguageViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LanguageScreen(onBack: () -> Unit = {}) {
-    val viewModel = remember { LanguageViewModel() }
+    val viewModel = viewModel<LanguageViewModel>()
     val state by viewModel.state.collectAsState()
 
     LaunchedEffect(Unit) {

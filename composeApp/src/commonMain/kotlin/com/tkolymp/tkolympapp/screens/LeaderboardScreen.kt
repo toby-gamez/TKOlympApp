@@ -39,6 +39,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,7 +57,7 @@ import com.tkolymp.tkolympapp.SwipeToReload
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
-    val viewModel = remember { LeaderboardViewModel() }
+    val viewModel = viewModel<LeaderboardViewModel>()
     val state by viewModel.state.collectAsState()
     val currentPersonId = remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()

@@ -1,5 +1,6 @@
 package com.tkolymp.shared.calendar
 
+import androidx.lifecycle.ViewModel
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.event.IEventService
 import com.tkolymp.shared.user.UserService
@@ -15,7 +16,7 @@ import kotlinx.datetime.*
 class CalendarViewViewModel(
     private val eventService: IEventService = ServiceLocator.eventService,
     private val userService: UserService = ServiceLocator.userService
-) {
+) : ViewModel() {
     private val _state = MutableStateFlow(
         CalendarViewState(
             selectedDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),

@@ -1,14 +1,13 @@
 package com.tkolymp.shared.viewmodels
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.language.AppLanguage
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.language.getDeviceLanguageCode
 import com.tkolymp.shared.storage.LanguageStorage
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,14 +21,12 @@ data class LanguageState(
 
 class LanguageViewModel(
     private val languageStorage: LanguageStorage = ServiceLocator.languageStorage
-) {
+) : ViewModel() {
     private val _state = MutableStateFlow(LanguageState())
     val state: StateFlow<LanguageState> = _state.asStateFlow()
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-
     fun load() {
-        scope.launch {
+        viewModelScope.launch {
             val savedCode = try { languageStorage.getLanguageCode() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
             val language = if (savedCode != null) {
                 AppLanguage.fromCode(savedCode)
@@ -43,7 +40,7 @@ class LanguageViewModel(
     }
 
     fun selectLanguage(language: AppLanguage) {
-        scope.launch {
+        viewModelScope.launch {
             try {
                 languageStorage.saveLanguageCode(language.code)
                 AppStrings.setLanguage(language)

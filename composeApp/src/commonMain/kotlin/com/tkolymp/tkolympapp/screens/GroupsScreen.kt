@@ -31,6 +31,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
@@ -50,7 +51,7 @@ import com.tkolymp.tkolympapp.SwipeToReload
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroupsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
-    val vm = remember { GroupsViewModel() }
+    val vm = viewModel<GroupsViewModel>()
     val state by vm.state.collectAsState()
     LaunchedEffect(Unit) { vm.load() }
 

@@ -1,5 +1,6 @@
 package com.tkolymp.shared.viewmodels
 
+import androidx.lifecycle.ViewModel
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.club.Cohort
 import kotlinx.coroutines.CancellationException
@@ -17,7 +18,7 @@ data class GroupsState(
 
 class GroupsViewModel(
     private val clubService: com.tkolymp.shared.club.ClubService = ServiceLocator.clubService
-) {
+) : ViewModel() {
     private val _state = MutableStateFlow(GroupsState())
     val state: StateFlow<GroupsState> = _state.asStateFlow()
 

@@ -1,12 +1,13 @@
 package com.tkolymp.shared.viewmodels
 
+import androidx.lifecycle.ViewModel
 import com.tkolymp.shared.ServiceLocator
 import kotlinx.coroutines.CancellationException
 import com.tkolymp.shared.storage.OnboardingStorage
 
 class OnboardingViewModel(
     private val onboardingStorage: OnboardingStorage = ServiceLocator.onboardingStorage
-) {
+) : ViewModel() {
     suspend fun hasSeenOnboarding(): Boolean =
         onboardingStorage.hasSeenOnboarding()
 
