@@ -92,11 +92,11 @@ fun OverviewScreen(
                 horizontalAlignment = Alignment.Start
             ) {
 
-            val trainings = state.upcomingEvents.filterIsInstance<com.tkolymp.shared.event.EventInstance>()
+            val trainings = state.upcomingEvents
             val camps = trainings.filter { it.event?.type?.contains("CAMP", ignoreCase = true) == true }
             val trainingItems = remember(trainings) { trainings.take(2).map { Pair(it.id, it.event?.name ?: "(bez názvu)") } }
             val campItems = remember(camps) { camps.take(2).map { Pair(it.id, it.event?.name ?: "(bez názvu)") } }
-            val announcements = state.recentAnnouncements.filterIsInstance<com.tkolymp.shared.announcements.Announcement>()
+            val announcements = state.recentAnnouncements
 
             // Trainings section (styled like Calendar)
             // Trainings section (grouped by day, styled like Calendar)

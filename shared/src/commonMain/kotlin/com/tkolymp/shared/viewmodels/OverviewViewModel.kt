@@ -2,7 +2,9 @@ package com.tkolymp.shared.viewmodels
 
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.announcements.Announcement
 import com.tkolymp.shared.cache.CacheService
+import com.tkolymp.shared.event.EventInstance
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.StateFlow
@@ -11,8 +13,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 data class OverviewState(
-    val upcomingEvents: List<Any> = emptyList(),
-    val recentAnnouncements: List<Any> = emptyList(),
+    val upcomingEvents: List<EventInstance> = emptyList(),
+    val recentAnnouncements: List<Announcement> = emptyList(),
     val myPersonId: String? = null,
     val myCoupleIds: List<String> = emptyList(),
     override val isLoading: Boolean = false,
@@ -40,18 +42,18 @@ class OverviewViewModel(
                     eventService.fetchEventsGroupedByDay(startIso, endIso, onlyMine = true, first = 200, cacheNamespace = "overview_")
                 }
                 grouped.values.flatten()
-            } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("OverviewViewModel", "fetchEvents failed: ${e.message}"); emptyList<Any>() }
+            } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("OverviewViewModel", "fetchEvents failed: ${e.message}"); emptyList<EventInstance>() }
 
             val announcements = try {
                 withContext(Dispatchers.Default) { announcementService.getAnnouncements(false) }.take(3)
-            } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("OverviewViewModel", "getAnnouncements failed: ${e.message}"); emptyList<Any>() }
+            } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("OverviewViewModel", "getAnnouncements failed: ${e.message}"); emptyList<Announcement>() }
 
             val pid = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("OverviewViewModel", "getCachedPersonId failed: ${e.message}"); null }
             val cids = try { userService.getCachedCoupleIds() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("OverviewViewModel", "getCachedCoupleIds failed: ${e.message}"); emptyList<String>() }
 
             _state.value = _state.value.copy(
-                upcomingEvents = events as? List<Any> ?: emptyList(),
-                recentAnnouncements = announcements as? List<Any> ?: emptyList(),
+                upcomingEvents = events,
+                recentAnnouncements = announcements,
                 myPersonId = pid,
                 myCoupleIds = cids,
                 isLoading = false

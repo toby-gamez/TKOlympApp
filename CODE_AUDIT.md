@@ -95,7 +95,7 @@ try {
 
 ## 4. Type Safety
 
-### 4.1 `List<Any>` v OverviewState ❌ VYSOKÉ
+### 4.1 `List<Any>` v OverviewState ❌ VYSOKÉ - DONE
 
 ```kotlin
 // OverviewViewModel.kt
