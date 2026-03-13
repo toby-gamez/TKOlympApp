@@ -8,42 +8,11 @@
 
 ## Obsah
 
-9. [Build konfigurace](#9-build-konfigurace)
 10. [Bezpečnost](#10-bezpečnost)
 11. [Logger](#11-logger)
 12. [Pojmenování](#12-pojmenování)
 13. [Shrnutí a prioritizace](#13-shrnutí-a-prioritizace)
 14. [Akční plán](#14-akční-plán)
-
-
-## 9. Build konfigurace
-
-### 9.4 Alpha verze navigace v produkci ❌ NÍZKÉ
-
-```toml
-androidx-navigation = "2.8.0-alpha10"  # ❌ alpha v produkčním buildu
-```
-
-Stable verze Navigation Compose je již dostupná (`2.8.x` stable). Alpha API se může měnit bez zpětné kompatibility.
-
-### 9.5 Zbytečná závislost `compose-uiToolingPreview` v commonMain ❌ NÍZKÉ
-
-```kotlin
-// composeApp/build.gradle.kts
-commonMain.dependencies {
-    implementation(libs.compose.uiToolingPreview)  // ❌ UI tooling patří do debugImplementation
-}
-androidMain.dependencies {
-    implementation(libs.compose.uiToolingPreview)  // ❌ duplicitní
-}
-```
-
-`ui-tooling-preview` je development nástroj, neměl by být v `implementation` (přijde do release APK). Správně:
-```kotlin
-debugImplementation(libs.compose.uiTooling)
-```
-
----
 
 ## 10. Bezpečnost
 
