@@ -56,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -278,12 +279,25 @@ internal fun SingleDayTimelineView(
     val minuteHeight = 1.dp // Height per minute
     val hourHeight = 60.dp // 60 minutes
     val totalHeight = hourHeight * 24 // 24 hours
-    
-    // Auto-scroll to morning (7 AM) on first display
+
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+    val density = LocalDensity.current
+
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+    val viewportHeightPx = with(density) { maxHeight.toPx() }
+
+    // Auto-scroll: center current time for today, or 7 AM for other days
     LaunchedEffect(selectedDate) {
-        scrollState.scrollTo((7 * 60 * minuteHeight.value).toInt())
+        val targetMinute = if (selectedDate == today) {
+            now.hour * 60 + now.minute
+        } else {
+            7 * 60
+        }
+        val positionPx = with(density) { (minuteHeight * targetMinute).toPx() }
+        scrollState.scrollTo((positionPx - viewportHeightPx / 2).coerceAtLeast(0f).toInt())
     }
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -338,6 +352,7 @@ internal fun SingleDayTimelineView(
             }
         }
     }
+    }
 }
 
 /**
@@ -356,12 +371,25 @@ internal fun MultiDayTimelineView(
     val totalHeight = hourHeight * 24
     val dayWidth = 200.dp
     val dayHeaderHeight = 40.dp // Fixed height for day headers
-    
-    // Auto-scroll to morning
+
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+    val density = LocalDensity.current
+
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+    val viewportHeightPx = with(density) { maxHeight.toPx() }
+
+    // Auto-scroll: center current time if today is visible, or 7 AM otherwise
     LaunchedEffect(dates) {
-        verticalScrollState.scrollTo((7 * 60 * minuteHeight.value).toInt())
+        val targetMinute = if (today in dates) {
+            now.hour * 60 + now.minute
+        } else {
+            7 * 60
+        }
+        val positionPx = with(density) { (minuteHeight * targetMinute).toPx() }
+        verticalScrollState.scrollTo((positionPx - viewportHeightPx / 2).coerceAtLeast(0f).toInt())
     }
-    
+
     Row(
         modifier = Modifier
             .fillMaxSize()
@@ -461,6 +489,7 @@ internal fun MultiDayTimelineView(
                 }
             }
         }
+    }
     }
 }
 
