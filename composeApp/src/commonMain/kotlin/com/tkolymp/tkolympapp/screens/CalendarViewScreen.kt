@@ -63,7 +63,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.calendar.CalendarUtils
-import com.tkolymp.shared.calendar.CalendarViewViewModel
+import com.tkolymp.shared.viewmodels.CalendarViewViewModel
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.calendar.EventLayoutData
 import com.tkolymp.shared.calendar.ViewMode

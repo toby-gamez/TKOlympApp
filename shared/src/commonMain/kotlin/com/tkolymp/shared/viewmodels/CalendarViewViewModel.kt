@@ -1,7 +1,12 @@
-package com.tkolymp.shared.calendar
+package com.tkolymp.shared.viewmodels
 
 import androidx.lifecycle.ViewModel
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.calendar.CalendarUtils
+import com.tkolymp.shared.calendar.CalendarViewState
+import com.tkolymp.shared.calendar.CollisionDetectionAlgorithm
+import com.tkolymp.shared.calendar.EventLayoutData
+import com.tkolymp.shared.calendar.ViewMode
 import com.tkolymp.shared.event.IEventService
 import com.tkolymp.shared.user.UserService
 import kotlinx.coroutines.flow.MutableStateFlow
