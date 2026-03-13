@@ -111,6 +111,8 @@ fun App() {
                         AppStrings.setLanguage(language)
                     } catch (_: Throwable) {}
                     val has = try { com.tkolymp.shared.ServiceLocator.authService.hasToken() } catch (_: Throwable) { false }
+                    // Initialize notification scheduling after networking is ready
+                    try { com.tkolymp.shared.ServiceLocator.notificationService.initializeIfNeeded() } catch (_: Exception) {}
                     // Show onboarding only on first launch (persisted in onboarding storage)
                     val onboardingVm = OnboardingViewModel()
                     val seen = try { onboardingVm.hasSeenOnboarding() } catch (_: Throwable) { false }

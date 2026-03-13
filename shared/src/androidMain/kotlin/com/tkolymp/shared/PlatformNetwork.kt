@@ -2,6 +2,7 @@ package com.tkolymp.shared
 
 import android.content.Context
 import com.tkolymp.shared.Logger
+import com.tkolymp.shared.AppContainer
 import com.tkolymp.shared.auth.AuthService
 import com.tkolymp.shared.network.GraphQlClientImpl
 import com.tkolymp.shared.storage.TokenStorage
@@ -48,39 +49,44 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
         }
     }
 
-    val gql = GraphQlClientImpl(client, baseUrl, tenantId)
+    // Bootstrap: GraphQlClientImpl needs a token provider, but AuthService hasn't been
+    // created yet. Capture AuthService reference via a mutable lambda that is closed
+    // over after AuthService is constructed — avoids the circular ServiceLocator dependency.
+    var authRef: AuthService? = null
+    val gql = GraphQlClientImpl(client, baseUrl, tenantId, tokenProvider = { authRef?.getToken() })
     val auth = AuthService(storage, gql)
+    authRef = auth  // close the loop
+
     val cache = com.tkolymp.shared.cache.CacheService()
-
-    // register cache early so default parameters that reference ServiceLocator.cacheService
-    // do not throw UninitializedPropertyAccessException
-    ServiceLocator.cacheService = cache
-
     val eventSvc = EventService(gql, cache)
     val announcementSvc = com.tkolymp.shared.announcements.AnnouncementServiceImpl(cache)
     val userStorage = UserStorage(context)
     val userSvc = UserService(gql, userStorage)
-    val clubSvc = com.tkolymp.shared.club.ClubService(gql)
+    val clubSvc = com.tkolymp.shared.club.ClubService(gql, cache)
+    val peopleSvc = com.tkolymp.shared.people.PeopleService(gql, cache)
     val notificationStorage = NotificationStorage(context)
     val notificationScheduler = NotificationSchedulerAndroid(context)
     val notificationSvc = NotificationService(notificationStorage, notificationScheduler, eventSvc)
 
-    ServiceLocator.graphQlClient = gql
-    // ensure peopleService is available like other services
-    ServiceLocator.peopleService = com.tkolymp.shared.people.PeopleService()
-    ServiceLocator.authService = auth
-    ServiceLocator.tokenStorage = storage
-    ServiceLocator.eventService = eventSvc
-    ServiceLocator.cacheService = cache
-    ServiceLocator.notificationStorage = notificationStorage
-    ServiceLocator.notificationScheduler = notificationScheduler
-    ServiceLocator.notificationService = notificationSvc
-    ServiceLocator.announcementService = announcementSvc
-    ServiceLocator.userStorage = userStorage
-    ServiceLocator.userService = userSvc
-    ServiceLocator.clubService = clubSvc
-    ServiceLocator.onboardingStorage = OnboardingStorage(context)
-    ServiceLocator.languageStorage = com.tkolymp.shared.storage.LanguageStorage(context)
+    val container = AppContainer(
+        tokenStorage = storage,
+        graphQlClient = gql,
+        authService = auth,
+        cacheService = cache,
+        eventService = eventSvc,
+        userStorage = userStorage,
+        userService = userSvc,
+        announcementService = announcementSvc,
+        peopleService = peopleSvc,
+        clubService = clubSvc,
+        notificationStorage = notificationStorage,
+        notificationScheduler = notificationScheduler,
+        notificationService = notificationSvc,
+        onboardingStorage = OnboardingStorage(context),
+        languageStorage = com.tkolymp.shared.storage.LanguageStorage(context),
+    )
+
+    ServiceLocator.init(container)
 
     auth.initialize()
 }

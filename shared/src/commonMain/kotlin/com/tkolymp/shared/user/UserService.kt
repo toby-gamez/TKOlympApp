@@ -250,7 +250,6 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
             try {
                 fetchAndStorePersonDetails(personId)
             } catch (_: Throwable) { }
-            try { ServiceLocator.authService.initialize() } catch (_: Throwable) { }
         }
         return data != null
     }

@@ -27,8 +27,6 @@ class EventViewModel(
     suspend fun loadEvent(eventId: Long, forceRefresh: Boolean = false) {
         _state.value = _state.value.copy(isLoading = true, error = null)
         try {
-            try { withContext(Dispatchers.IO) { ServiceLocator.authService.initialize() } } catch (_: Throwable) {}
-
             val ev = try { withContext(Dispatchers.IO) { eventService.fetchEventById(eventId, forceRefresh) } } catch (ex: Throwable) { null }
             var myPerson: String? = null
             var myCouples: List<String> = emptyList()

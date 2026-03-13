@@ -13,12 +13,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
 import com.tkolymp.shared.language.AppLanguage
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.language.getDeviceLanguageCode
 import com.tkolymp.shared.storage.LanguageStorage
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 @SuppressLint("InvalidFragmentVersionForActivityResult")
@@ -52,17 +50,6 @@ class MainActivity : ComponentActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val granted = ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) == android.content.pm.PackageManager.PERMISSION_GRANTED
             if (!granted) requestNotificationPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-        }
-
-        // Initialize notification service if available
-        lifecycleScope.launch {
-            try {
-                try {
-                    com.tkolymp.shared.ServiceLocator.notificationService.initializeIfNeeded()
-                } catch (_: UninitializedPropertyAccessException) {
-                    // service not registered yet
-                }
-            } catch (_: Throwable) {}
         }
 
         setContent {
