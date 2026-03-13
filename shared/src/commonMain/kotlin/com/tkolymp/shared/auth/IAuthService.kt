@@ -5,5 +5,5 @@ interface IAuthService {
     suspend fun login(username: String, password: String): Boolean
     suspend fun refreshJwt(): Boolean
     suspend fun hasToken(): Boolean
-    fun getToken(): String?
+    suspend fun getToken(): String?
 }

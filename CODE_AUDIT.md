@@ -8,86 +8,10 @@
 
 ## Obsah
 
-10. [Bezpečnost](#10-bezpečnost)
 11. [Logger](#11-logger)
 12. [Pojmenování](#12-pojmenování)
 13. [Shrnutí a prioritizace](#13-shrnutí-a-prioritizace)
 14. [Akční plán](#14-akční-plán)
-
-## 10. Bezpečnost
-
-### 10.1 Žádný Certificate Pinning ⚠️ STŘEDNÍ
-
-Ktor klient (`GraphQlClientImpl`) nekonfiguruje certificate pinning pro `api.rozpisovnik.cz`. Man-in-the-Middle útok na veřejné WiFi je teoreticky možný — útočník může zachytit JWT tokeny i GraphQL odpovědi.
-
-**Doporučení** pro produkční aplikaci s citlivými uživatelskými daty:
-```kotlin
-// PlatformNetwork.kt (Android)
-HttpClient(OkHttp) {
-    engine {
-        config {
-            certificatePinner(
-                CertificatePinner.Builder()
-                    .add("api.rozpisovnik.cz", "sha256/HASH_CERTIFIKATU")
-                    .build()
-            )
-        }
-    }
-}
-```
-
-### 10.3 JWT token v in-memory proměnné ⚠️ NÍZKÉ
-
-```kotlin
-// AuthService.kt
-private var currentToken: String? = null
-```
-
-Token je cached v paměti vedle secure storage. Při memory dump (root device, debug build) je přístupný. Akceptovatelné pro produkci, ale stojí za vědomí.
-
----
-
-## 11. Logger
-
-**Soubor**: `shared/src/commonMain/kotlin/com/tkolymp/shared/Logger.kt`
-
-```kotlin
-object Logger {
-    var isDebugEnabled = false  // ❌ var — kdokoli může přepnout
-    fun d(tag: String, msg: String) {
-        if (isDebugEnabled) println("[$tag] $msg")  // ❌ println místo android.util.Log
-    }
-}
-```
-
-**Problémy**:
-
-| Problém | Dopad |
-|---|---|
-| `println()` místo `Log.d()` | Výstup není kategorizován v Android logcatu (žádný tag/PID filtr) |
-| `var isDebugEnabled` | Mutable globální state — může být omylem zapnutý v release buildu |
-| Chybí automatická detekce debug buildu | Logování musí být ručně zapnuto někde v inicializaci |
-| Chybí úrovně `warn`, `error` | Všechno stejná priorita — není možné filtrovat jen chyby |
-| Žádné výchozí zapnutí pro debug | V aktuálním kódu se nikde `isDebugEnabled = true` nenastavuje pro debug buildy |
-
-**Doporučená oprava**:
-```kotlin
-// shared/commonMain
-expect object Logger {
-    fun d(tag: String, msg: String)
-    fun w(tag: String, msg: String)
-    fun e(tag: String, msg: String, throwable: Throwable? = null)
-}
-
-// shared/androidMain
-actual object Logger {
-    actual fun d(tag: String, msg: String) = if (BuildConfig.DEBUG) Log.d(tag, msg) else Unit
-    actual fun e(tag: String, msg: String, throwable: Throwable?) = Log.e(tag, msg, throwable)
-    // ...
-}
-```
-
----
 
 ## 12. Pojmenování
 
@@ -117,17 +41,18 @@ shared/src/commonMain/kotlin/com/tkolymp/shared/viewmodels/CalendarViewModel.kt 
 
 ## 13. Shrnutí a prioritizace
 
-| Priorita | # | Oblast | Soubory |
-|---|---|---|---|
-| 🔴 KRITICKÉ | 1 | Zachycení `CancellationException` | `LoginViewModel`, `OverviewViewModel`, `EventViewModel`, `CalendarViewModel`, `ProfileViewModel` |
-|  VYSOKÉ | 3 | `List<Any>` v `OverviewState` | `OverviewViewModel.kt`, `OverviewScreen.kt` |
-| 🟠 VYSOKÉ | 4 | ViewModely bez lifecycle (`viewModelScope`) | všechny `/viewmodels/*.kt` |
-| 🟡 STŘEDNÍ | 5 | Hardcoded texty v `shared/commonMain` (notifikace, chyby) | `NotificationService.kt`, `LoginViewModel.kt` |
-| 🟡 STŘEDNÍ | 6 | Hardcoded verze v build.gradle mimo toml | `shared/build.gradle.kts`, `composeApp/build.gradle.kts` |
-| 🟢 NÍZKÉ | 7 | Logger (`println`, mutable, žádné úrovně) | `Logger.kt` |
-| 🟢 NÍZKÉ | 8 | Package naming (`Screens` s velkým S) | `Screens/` |
-| 🟢 NÍZKÉ | 9 | Nepoužívaná Room dependency | `libs.versions.toml` |
-| 🟢 NÍZKÉ | 10 | Alpha verze navigace | `libs.versions.toml` |
+| Priorita | # | Oblast | Soubory | Stav |
+|---|---|---|---|---|
+| 🔴 KRITICKÉ | 1 | Zachycení `CancellationException` | `LoginViewModel`, `OverviewViewModel`, `EventViewModel`, `CalendarViewModel`, `ProfileViewModel` | — |
+|  VYSOKÉ | 3 | `List<Any>` v `OverviewState` | `OverviewViewModel.kt`, `OverviewScreen.kt` | — |
+| 🟠 VYSOKÉ | 4 | ViewModely bez lifecycle (`viewModelScope`) | všechny `/viewmodels/*.kt` | — |
+| 🟡 STŘEDNÍ | 5 | Hardcoded texty v `shared/commonMain` (notifikace, chyby) | `NotificationService.kt`, `LoginViewModel.kt` | — |
+| 🟡 STŘEDNÍ | 6 | Hardcoded verze v build.gradle mimo toml | `shared/build.gradle.kts`, `composeApp/build.gradle.kts` | — |
+| ✅ VYŘEŠENO | 10.1 | Certificate Pinning (Android) | `PlatformNetwork.kt` | ✅ |
+| 🟢 NÍZKÉ | 7 | Logger (`println`, mutable, žádné úrovně) | `Logger.kt` | ✅ |
+| ✅ VYŘEŠENO | 8 | Package naming (`Screens` s velkým S) | `screens/` (commonMain) | ✅ |
+| 🟢 NÍZKÉ | 9 | Nepoužívaná Room dependency | `libs.versions.toml` | — |
+| 🟢 NÍZKÉ | 10 | Alpha verze navigace | `libs.versions.toml` | — |
 
 ---
 

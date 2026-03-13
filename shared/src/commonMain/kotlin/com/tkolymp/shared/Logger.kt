@@ -1,9 +1,7 @@
 package com.tkolymp.shared
 
-object Logger {
-    var isDebugEnabled = false
-
-    fun d(tag: String, msg: String) {
-        if (isDebugEnabled) println("[$tag] $msg")
-    }
+expect object Logger {
+    fun d(tag: String, msg: String)
+    fun w(tag: String, msg: String)
+    fun e(tag: String, msg: String, throwable: Throwable? = null)
 }

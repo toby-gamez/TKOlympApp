@@ -8,10 +8,9 @@ import kotlinx.serialization.json.*
 
 class AuthService(private val storage: TokenStorage, private val client: IGraphQlClient) : IAuthService {
     private val json = Json { ignoreUnknownKeys = true }
-    private var currentToken: String? = null
 
     override suspend fun initialize() {
-        currentToken = storage.getToken()
+        // Token lives only in secure storage; no in-memory cache needed.
     }
 
     override suspend fun login(username: String, password: String): Boolean {
@@ -39,7 +38,6 @@ class AuthService(private val storage: TokenStorage, private val client: IGraphQ
 
         if (!token.isNullOrBlank()) {
             storage.saveToken(token)
-            currentToken = token
             return true
         }
 
@@ -65,7 +63,6 @@ class AuthService(private val storage: TokenStorage, private val client: IGraphQ
 
         if (!token.isNullOrBlank()) {
             storage.saveToken(token)
-            currentToken = token
             return true
         }
 
@@ -87,7 +84,7 @@ class AuthService(private val storage: TokenStorage, private val client: IGraphQ
     }
 
     override suspend fun hasToken(): Boolean {
-        val t = currentToken ?: return false
+        val t = storage.getToken() ?: return false
         if (isTokenExpired(t)) {
             // Try to refresh; if it fails (e.g. offline) keep the session alive so the
             // app can still work from cache. The server will reject API calls if the token
@@ -101,5 +98,5 @@ class AuthService(private val storage: TokenStorage, private val client: IGraphQ
         return true
     }
 
-    override fun getToken(): String? = currentToken
+    override suspend fun getToken(): String? = storage.getToken()
 }

@@ -30,8 +30,6 @@ private val certificatePinner = CertificatePinner.Builder()
     .build()
 
 suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String = "1") {
-    Logger.isDebugEnabled = context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0
-
     val storage = TokenStorage(context)
 
     val client = HttpClient(OkHttp) {
