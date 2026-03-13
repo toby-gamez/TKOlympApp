@@ -34,6 +34,7 @@ class BoardViewModel(
             val sticky = _state.value.selectedTab == 1
             val list = try {
                 withContext(Dispatchers.Default) { announcementService.getAnnouncements(sticky) }
+                    .sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }
             } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList<com.tkolymp.shared.announcements.Announcement>() }
             _state.value = _state.value.copy(currentAnnouncements = list as? List<Any> ?: emptyList(), isLoading = false)
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {

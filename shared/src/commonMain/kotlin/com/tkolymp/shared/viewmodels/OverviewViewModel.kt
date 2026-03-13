@@ -47,7 +47,9 @@ class OverviewViewModel(
             } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("OverviewViewModel", "fetchEvents failed: ${e.message}"); emptyList<EventInstance>() }
 
             val announcements = try {
-                withContext(Dispatchers.Default) { announcementService.getAnnouncements(false) }.take(3)
+                withContext(Dispatchers.Default) { announcementService.getAnnouncements(false) }
+                    .sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }
+                    .take(3)
             } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("OverviewViewModel", "getAnnouncements failed: ${e.message}"); emptyList<Announcement>() }
 
             val pid = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("OverviewViewModel", "getCachedPersonId failed: ${e.message}"); null }
