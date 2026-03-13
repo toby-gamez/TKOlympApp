@@ -1,5 +1,6 @@
 package com.tkolymp.shared.viewmodels
 
+import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.cache.CacheService
 import com.tkolymp.shared.event.EventInstance
@@ -29,7 +30,7 @@ class CalendarViewModel(
     suspend fun load(startIso: String, endIso: String, onlyMine: Boolean, forceRefresh: Boolean = false) {
         _state.value = _state.value.copy(isLoading = true, error = null)
         if (forceRefresh) {
-            try { cache.invalidatePrefix("calendar_") } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+            try { cache.invalidatePrefix("calendar_") } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("CalendarViewModel", "cache invalidation failed: ${e.message}") }
         }
         try {
             val map = try {
@@ -41,8 +42,8 @@ class CalendarViewModel(
                 return
             }
 
-            val pid = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
-            val cids = try { userService.getCachedCoupleIds() } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
+            val pid = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("CalendarViewModel", "getCachedPersonId failed: ${e.message}"); null }
+            val cids = try { userService.getCachedCoupleIds() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("CalendarViewModel", "getCachedCoupleIds failed: ${e.message}"); emptyList() }
 
             _state.value = _state.value.copy(eventsByDay = map, myPersonId = pid, myCoupleIds = cids, isLoading = false)
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {

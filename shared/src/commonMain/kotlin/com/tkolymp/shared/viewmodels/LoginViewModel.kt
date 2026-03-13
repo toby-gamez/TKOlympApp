@@ -2,6 +2,7 @@ package com.tkolymp.shared.viewmodels
 
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.auth.IAuthService
+import com.tkolymp.shared.Logger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.StateFlow
@@ -43,14 +44,14 @@ class LoginViewModel() {
                 return false
             }
 
-            val personId = try { userService.fetchAndStorePersonId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+            val personId = try { userService.fetchAndStorePersonId() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("LoginViewModel", "fetchAndStorePersonId failed: ${e.message}"); null }
             if (personId == null) {
                 _state.value = _state.value.copy(isLoading = false, error = "Nelze získat personId po přihlášení")
                 return false
             }
 
-            try { userService.fetchAndStoreActiveCouples() } catch (e: CancellationException) { throw e } catch (_: Exception) {}
-            try { userService.fetchAndStorePersonDetails(personId) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+            try { userService.fetchAndStoreActiveCouples() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("LoginViewModel", "fetchAndStoreActiveCouples failed: ${e.message}") }
+            try { userService.fetchAndStorePersonDetails(personId) } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("LoginViewModel", "fetchAndStorePersonDetails failed: ${e.message}") }
 
             _state.value = _state.value.copy(isLoading = false, error = null)
             true

@@ -1,5 +1,6 @@
 package com.tkolymp.shared.viewmodels
 
+import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.people.PersonDetails
 import com.tkolymp.shared.user.CurrentUser
@@ -29,23 +30,23 @@ class ProfileViewModel(
         _state.value = _state.value.copy(isLoading = true, error = null)
         try {
             withContext(Dispatchers.Default) {
-                val pid = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                val pid = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("ProfileViewModel", "getCachedPersonId failed: ${e.message}"); null }
 
                 if (!pid.isNullOrBlank()) {
-                    val cachedPersonJson = try { userService.getCachedPersonDetailsJson() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                    val cachedPersonJson = try { userService.getCachedPersonDetailsJson() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("ProfileViewModel", "getCachedPersonDetailsJson failed: ${e.message}"); null }
                     val needsRefetch = cachedPersonJson.isNullOrBlank() || !(
                         cachedPersonJson.contains("activeCouplesList") &&
                             cachedPersonJson.contains("cohortMembershipsList") &&
                             (cachedPersonJson.contains("email") || cachedPersonJson.contains("uEmail"))
                         )
                     if (needsRefetch) {
-                        try { userService.fetchAndStorePersonDetails(pid) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+                        try { userService.fetchAndStorePersonDetails(pid) } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("ProfileViewModel", "fetchAndStorePersonDetails failed: ${e.message}") }
                     }
                 }
 
-                val person = try { userService.getCachedPersonDetails() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
-                val currentUser = try { userService.getCachedCurrentUser() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
-                val coupleIds = try { userService.getCachedCoupleIds() } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
+                val person = try { userService.getCachedPersonDetails() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("ProfileViewModel", "getCachedPersonDetails failed: ${e.message}"); null }
+                val currentUser = try { userService.getCachedCurrentUser() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("ProfileViewModel", "getCachedCurrentUser failed: ${e.message}"); null }
+                val coupleIds = try { userService.getCachedCoupleIds() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("ProfileViewModel", "getCachedCoupleIds failed: ${e.message}"); emptyList() }
 
                 _state.value = _state.value.copy(person = person, currentUser = currentUser, coupleIds = coupleIds, isLoading = false)
             }

@@ -25,7 +25,7 @@
 
 ## 3. Spolykané výjimky a CancellationException
 
-### 3.1 Zachycení CancellationException ❌ KRITICKÉ
+### 3.1 Zachycení CancellationException ❌ KRITICKÉ - DONE
 
 Projekt je doslova posypán prázdnými catch bloky zachytávajícími `Throwable`:
 
@@ -70,7 +70,7 @@ try { withContext(Dispatchers.IO) { ServiceLocator.authService.initialize() } } 
 }
 ```
 
-### 3.2 Přílišné mlčení chybových stavů ❌ STŘEDNÍ
+### 3.2 Přílišné mlčení chybových stavů ✅ DONE
 
 Mnoho chybových cest skrývá informaci totálně:
 

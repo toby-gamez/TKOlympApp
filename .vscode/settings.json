@@ -1,6 +1,7 @@
 {
     "chat.tools.terminal.autoApprove": {
         "adb": true,
-        "tee": true
+        "tee": true,
+        "wait": true
     }
 }

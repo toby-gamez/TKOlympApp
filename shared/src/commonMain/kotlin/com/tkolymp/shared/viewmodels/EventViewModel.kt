@@ -1,5 +1,6 @@
 package com.tkolymp.shared.viewmodels
 
+import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
@@ -28,15 +29,15 @@ class EventViewModel(
     suspend fun loadEvent(eventId: Long, forceRefresh: Boolean = false) {
         _state.value = _state.value.copy(isLoading = true, error = null)
         try {
-            val ev = try { withContext(Dispatchers.IO) { eventService.fetchEventById(eventId, forceRefresh) } } catch (e: CancellationException) { throw e } catch (ex: Exception) { null }
+            val ev = try { withContext(Dispatchers.IO) { eventService.fetchEventById(eventId, forceRefresh) } } catch (e: CancellationException) { throw e } catch (ex: Exception) { Logger.d("EventViewModel", "fetchEventById($eventId) failed: ${ex.message}"); null }
             var myPerson: String? = null
             var myCouples: List<String> = emptyList()
             try {
                 withContext(Dispatchers.IO) {
-                    myPerson = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
-                    myCouples = try { userService.getCachedCoupleIds() } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
+                    myPerson = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("EventViewModel", "getCachedPersonId failed: ${e.message}"); null }
+                    myCouples = try { userService.getCachedCoupleIds() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("EventViewModel", "getCachedCoupleIds failed: ${e.message}"); emptyList() }
                 }
-            } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+            } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("EventViewModel", "failed to read user cache: ${e.message}") }
 
             _state.value = _state.value.copy(eventJson = ev, myPersonId = myPerson, myCoupleIds = myCouples, isLoading = false)
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
