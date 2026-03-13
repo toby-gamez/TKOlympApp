@@ -2,10 +2,24 @@ package com.tkolymp.shared.user
 
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.people.ActiveCouple
+import com.tkolymp.shared.people.AddressDetails
+import com.tkolymp.shared.people.Cohort
+import com.tkolymp.shared.people.CohortMembership
+import com.tkolymp.shared.people.CoupleMember
+import com.tkolymp.shared.people.PersonDetails
 import com.tkolymp.shared.storage.UserStorage
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.*
+
+data class CurrentUser(
+    val id: String?,
+    val uEmail: String?,
+    val uJmeno: String?,
+    val uLogin: String?,
+    val uPrijmeni: String?
+)
 
 class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient = ServiceLocator.graphQlClient,
                   private val storage: UserStorage = ServiceLocator.userStorage) {
@@ -106,6 +120,43 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
     suspend fun getCachedCoupleIds(): List<String> = storage.getCoupleIds()
     suspend fun getCachedCurrentUserJson(): String? = storage.getCurrentUserJson()
     suspend fun getCachedPersonDetailsJson(): String? = storage.getPersonDetailsJson()
+
+    suspend fun getCachedPersonDetails(): PersonDetails? {
+        val json = storage.getPersonDetailsJson() ?: return null
+        return parseStoredPersonDetails(json)
+    }
+
+    suspend fun getCachedCurrentUser(): CurrentUser? {
+        val json = storage.getCurrentUserJson() ?: return null
+        return parseStoredCurrentUser(json)
+    }
+
+    private fun parseStoredPersonDetails(jsonStr: String): PersonDetails? = try {
+        val p = Json.parseToJsonElement(jsonStr).jsonObject
+        val id = p["id"]?.jsonPrimitive?.contentOrNull ?: return null
+        val couplesArr = (p["activeCouplesList"] as? JsonArray)?.mapNotNull { cEl ->
+            val cObj = cEl as? JsonObject ?: return@mapNotNull null
+            val cid = cObj["id"]?.jsonPrimitive?.contentOrNull
+            val manObj = cObj["man"] as? JsonObject
+            val womanObj = cObj["woman"] as? JsonObject
+            ActiveCouple(cid, CoupleMember(manObj?.get("firstName")?.jsonPrimitive?.contentOrNull, manObj?.get("lastName")?.jsonPrimitive?.contentOrNull), CoupleMember(womanObj?.get("firstName")?.jsonPrimitive?.contentOrNull, womanObj?.get("lastName")?.jsonPrimitive?.contentOrNull))
+        } ?: emptyList()
+        val memberships = (p["cohortMembershipsList"] as? JsonArray)?.mapNotNull { mEl ->
+            val mObj = mEl as? JsonObject ?: return@mapNotNull null
+            val cohortObj = mObj["cohort"] as? JsonObject
+            CohortMembership(Cohort(cohortObj?.get("id")?.jsonPrimitive?.contentOrNull, cohortObj?.get("name")?.jsonPrimitive?.contentOrNull, cohortObj?.get("colorRgb")?.jsonPrimitive?.contentOrNull, cohortObj?.get("isVisible")?.jsonPrimitive?.contentOrNull?.let { it == "true" }), mObj["since"]?.jsonPrimitive?.contentOrNull, mObj["until"]?.jsonPrimitive?.contentOrNull)
+        } ?: emptyList()
+        val addrObj = p["address"] as? JsonObject
+        val address = addrObj?.let { a ->
+            AddressDetails(street = a["street"]?.jsonPrimitive?.contentOrNull, city = a["city"]?.jsonPrimitive?.contentOrNull, postalCode = a["postalCode"]?.jsonPrimitive?.contentOrNull, region = a["region"]?.jsonPrimitive?.contentOrNull, district = a["district"]?.jsonPrimitive?.contentOrNull, conscriptionNumber = a["conscriptionNumber"]?.jsonPrimitive?.contentOrNull, orientationNumber = a["orientationNumber"]?.jsonPrimitive?.contentOrNull)
+        }
+        PersonDetails(id = id, firstName = p["firstName"]?.jsonPrimitive?.contentOrNull, lastName = p["lastName"]?.jsonPrimitive?.contentOrNull, prefixTitle = p["prefixTitle"]?.jsonPrimitive?.contentOrNull, suffixTitle = p["suffixTitle"]?.jsonPrimitive?.contentOrNull, birthDate = p["birthDate"]?.jsonPrimitive?.contentOrNull, bio = p["bio"]?.jsonPrimitive?.contentOrNull, cstsId = p["cstsId"]?.jsonPrimitive?.contentOrNull, email = p["email"]?.jsonPrimitive?.contentOrNull, gender = p["gender"]?.jsonPrimitive?.contentOrNull, isTrainer = p["isTrainer"]?.jsonPrimitive?.contentOrNull?.let { it == "true" }, phone = p["phone"]?.jsonPrimitive?.contentOrNull, wdsfId = p["wdsfId"]?.jsonPrimitive?.contentOrNull, activeCouplesList = couplesArr, cohortMembershipsList = memberships, rawResponse = Json.parseToJsonElement(jsonStr), address = address, nationality = p["nationality"]?.jsonPrimitive?.contentOrNull, nationalIdNumber = p["nationalIdNumber"]?.jsonPrimitive?.contentOrNull)
+    } catch (_: Throwable) { null }
+
+    private fun parseStoredCurrentUser(jsonStr: String): CurrentUser? = try {
+        val u = Json.parseToJsonElement(jsonStr).jsonObject
+        CurrentUser(id = u["id"]?.jsonPrimitive?.contentOrNull, uEmail = u["uEmail"]?.jsonPrimitive?.contentOrNull, uJmeno = u["uJmeno"]?.jsonPrimitive?.contentOrNull, uLogin = u["uLogin"]?.jsonPrimitive?.contentOrNull, uPrijmeni = u["uPrijmeni"]?.jsonPrimitive?.contentOrNull)
+    } catch (_: Throwable) { null }
 
     suspend fun getLastApiError(): String? = lastApiError
 

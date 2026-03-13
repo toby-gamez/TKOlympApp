@@ -17,7 +17,9 @@ import androidx.lifecycle.lifecycleScope
 import com.tkolymp.shared.language.AppLanguage
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.language.getDeviceLanguageCode
+import com.tkolymp.shared.storage.LanguageStorage
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 @SuppressLint("InvalidFragmentVersionForActivityResult")
 class MainActivity : ComponentActivity() {
@@ -31,8 +33,7 @@ class MainActivity : ComponentActivity() {
 
         // Apply language synchronously before first composition so every screen
         // (including OnboardingScreen) already sees the correct language.
-        val prefs = getSharedPreferences("tkolymp_prefs", Context.MODE_PRIVATE)
-        val savedCode = prefs.getString("language_code", null)
+        val savedCode = runBlocking { LanguageStorage(this@MainActivity).getLanguageCode() }
         val language = if (savedCode != null) {
             AppLanguage.fromCode(savedCode)
         } else {

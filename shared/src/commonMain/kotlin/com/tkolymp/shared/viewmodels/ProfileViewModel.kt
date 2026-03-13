@@ -1,6 +1,10 @@
 package com.tkolymp.shared.viewmodels
 
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.people.PersonDetails
+import com.tkolymp.shared.user.CurrentUser
+import com.tkolymp.shared.user.UserService
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -8,15 +12,15 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 data class ProfileState(
-    val userJson: String? = null,
-    val personJson: String? = null,
+    val person: PersonDetails? = null,
+    val currentUser: CurrentUser? = null,
     val coupleIds: List<String> = emptyList(),
     override val isLoading: Boolean = false,
     override val error: String? = null
 ) : ViewModelState
 
 class ProfileViewModel(
-    private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService
+    private val userService: UserService = ServiceLocator.userService
 ) {
     private val _state = MutableStateFlow(ProfileState())
     val state: StateFlow<ProfileState> = _state.asStateFlow()
@@ -25,27 +29,29 @@ class ProfileViewModel(
         _state.value = _state.value.copy(isLoading = true, error = null)
         try {
             withContext(Dispatchers.Default) {
-                val userJson = try { userService.getCachedCurrentUserJson() } catch (_: Throwable) { null }
-                val cachedPerson = try { userService.getCachedPersonDetailsJson() } catch (_: Throwable) { null }
-                val pid = try { userService.getCachedPersonId() } catch (_: Throwable) { null }
+                val pid = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
 
                 if (!pid.isNullOrBlank()) {
-                    val needsRefetch = cachedPerson.isNullOrBlank() || !(
-                        cachedPerson.contains("activeCouplesList") &&
-                            cachedPerson.contains("cohortMembershipsList") &&
-                            (cachedPerson.contains("email") || cachedPerson.contains("uEmail"))
+                    val cachedPersonJson = try { userService.getCachedPersonDetailsJson() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                    val needsRefetch = cachedPersonJson.isNullOrBlank() || !(
+                        cachedPersonJson.contains("activeCouplesList") &&
+                            cachedPersonJson.contains("cohortMembershipsList") &&
+                            (cachedPersonJson.contains("email") || cachedPersonJson.contains("uEmail"))
                         )
                     if (needsRefetch) {
-                        try { userService.fetchAndStorePersonDetails(pid) } catch (_: Throwable) {}
+                        try { userService.fetchAndStorePersonDetails(pid) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
                     }
                 }
 
-                val personJson = try { userService.getCachedPersonDetailsJson() } catch (_: Throwable) { null }
-                val coupleIds = try { userService.getCachedCoupleIds() } catch (_: Throwable) { emptyList() }
+                val person = try { userService.getCachedPersonDetails() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                val currentUser = try { userService.getCachedCurrentUser() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                val coupleIds = try { userService.getCachedCoupleIds() } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
 
-                _state.value = _state.value.copy(userJson = userJson, personJson = personJson, coupleIds = coupleIds, isLoading = false)
+                _state.value = _state.value.copy(person = person, currentUser = currentUser, coupleIds = coupleIds, isLoading = false)
             }
-        } catch (ex: Throwable) {
+        } catch (e: CancellationException) {
+            throw e
+        } catch (ex: Exception) {
             _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání profilu")
         }
     }

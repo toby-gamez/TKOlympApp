@@ -30,6 +30,16 @@ data class Person(
 data class CoupleMember(val firstName: String?, val lastName: String?)
 data class ActiveCouple(val id: String?, val man: CoupleMember?, val woman: CoupleMember?)
 
+data class AddressDetails(
+    val street: String? = null,
+    val city: String? = null,
+    val postalCode: String? = null,
+    val region: String? = null,
+    val district: String? = null,
+    val conscriptionNumber: String? = null,
+    val orientationNumber: String? = null
+)
+
 data class PersonDetails(
     val id: String,
     val firstName: String?,
@@ -46,7 +56,10 @@ data class PersonDetails(
     val wdsfId: String?,
     val activeCouplesList: List<ActiveCouple>,
     val cohortMembershipsList: List<CohortMembership>,
-    val rawResponse: JsonElement? = null
+    val rawResponse: JsonElement? = null,
+    val address: AddressDetails? = null,
+    val nationality: String? = null,
+    val nationalIdNumber: String? = null
 )
 
 data class ScoreboardEntry(

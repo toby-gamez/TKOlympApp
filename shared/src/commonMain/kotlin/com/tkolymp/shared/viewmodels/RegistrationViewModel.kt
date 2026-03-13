@@ -1,6 +1,7 @@
 package com.tkolymp.shared.viewmodels
 
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.utils.asJsonObjectOrNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,7 +33,7 @@ class RegistrationViewModel(
                         try {
                             val tObj = tEl as? kotlinx.serialization.json.JsonObject
                             val tIdStr = tObj?.get("id")?.jsonPrimitive?.contentOrNull ?: idx.toString()
-                            val personRef = tObj?.get("person")?.jsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
+                            val personRef = tObj?.get("person")?.asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
                                 ?: tObj?.get("personId")?.jsonPrimitive?.contentOrNull
                             val fetched = if (!personRef.isNullOrBlank()) try { peopleService.fetchPersonDisplayName(personRef, false) } catch (_: Throwable) { null } else null
                             if (!fetched.isNullOrBlank()) trainerMap[tIdStr] = fetched
@@ -65,13 +66,3 @@ class RegistrationViewModel(
         }
     }
 }
-
-// small helper to avoid inline casts in common code
-private fun kotlinx.serialization.json.JsonElement?.jsonObjectOrNull(): kotlinx.serialization.json.JsonObject? = try {
-    when {
-        this == null -> null
-        this is kotlinx.serialization.json.JsonNull -> null
-        this is kotlinx.serialization.json.JsonObject -> this
-        else -> null
-    }
-} catch (_: Throwable) { null }

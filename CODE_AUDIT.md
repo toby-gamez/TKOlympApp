@@ -8,7 +8,6 @@
 
 ## Obsah
 
-1. [Architektura a KMP struktura](#1-architektura-a-kmp-struktura)
 2. [ServiceLocator Anti-Pattern](#2-servicelocator-anti-pattern)
 3. [Spolykané výjimky a CancellationException](#3-spolykané-výjimky-a-cancellationexception)
 4. [Type Safety](#4-type-safety)
@@ -22,102 +21,6 @@
 12. [Pojmenování](#12-pojmenování)
 13. [Shrnutí a prioritizace](#13-shrnutí-a-prioritizace)
 14. [Akční plán](#14-akční-plán)
-
----
-
-## 1. Architektura a KMP struktura
-
-### 1.1 Screens jsou jen Android, ne cross-platform ❌ KRITICKÉ - DONE
-
-Veškeré obrazovky leží v:
-```
-composeApp/src/androidMain/kotlin/com/tkolymp/tkolympapp/Screens/
-    AboutScreen.kt
-    BoardScreen.kt
-    CalendarScreen.kt
-    CalendarViewScreen.kt
-    EventScreen.kt
-    EventsScreen.kt
-    GroupsScreen.kt
-    LanguageScreen.kt
-    LeaderboardScreen.kt
-    LoginScreen.kt
-    NoticeScreen.kt
-    NotificationsSettingsScreen.kt
-    OnboardingScreen.kt
-    OtherScreen.kt
-    OverviewScreen.kt
-    PeopleScreen.kt
-    PersonScreen.kt
-    PrivacyPolicyScreen.kt
-    ProfileDialogs.kt
-    ProfileScreen.kt
-    RegistrationScreen.kt
-    TrainersLocationsScreen.kt
-    TrainersLocationsScreen.kt
-```
-
-Přičemž `copilot-instructions.md` **explicitně říká**:
-> *"the screens must be as small as possible, all logic is cross-platform"*  
-> *"UI components go into `composeApp/src/commonMain/kotlin` if they target all Compose platforms"*
-
-iOS dostane pouze prázdný SwiftUI shell (`ContentView.swift`). Žádné sdílené Compose UI neexistuje — celý základ pro Compose Multiplatform je tím nevyužit.
-
-**Dopad**: Jakákoli změna UI se musí duplikovat pro iOS ručně v Swiftu. Projekt si platí za KMP, ale nedostává žádný benefit sdíleného UI.
-
-**Oprava**: Přesunout composable funkce do `composeApp/src/commonMain/kotlin/com/tkolymp/tkolympapp/screens/` (malé s). Soubory jako `App.kt`, `BottomBar.kt`, `SwipeToReload.kt` by také měly být v `commonMain`, pokud neobsahují platform-specific API.
-
----
-
-### 1.2 CalendarViewModel zduplikován ❌ VYSOKÉ - DONE
-
-Existují dvě oddělené implementace stejné třídy:
-
-```
-shared/src/commonMain/kotlin/com/tkolymp/shared/calendar/CalendarViewModel.kt
-shared/src/commonMain/kotlin/com/tkolymp/shared/viewmodels/CalendarViewModel.kt
-```
-
-Dvě třídy se stejným názvem v různých packages — nejasné, která se skutečně používá v produkci. Jedna z nich bude postupně zastarávat bez povšimnutí.
-
-**Oprava**: Smazat `shared/calendar/CalendarViewModel.kt`, pokud se nepoužívá. Ověřit importy ve screenech a sjednotit na jedinou implementaci v `shared/viewmodels/`.
-
----
-
-### 1.3 Mrtvý kód z KMP šablony ❌ NÍZKÉ - DONE
-
-Soubory jsou pozůstatky vygenerované KMP šablony bez jakéhokoli využití:
-
-```
-shared/src/commonMain/kotlin/com/tkolymp/tkolympapp/Greeting.kt
-shared/src/commonMain/kotlin/com/tkolymp/tkolympapp/Platform.kt
-shared/src/androidMain/kotlin/com/tkolymp/tkolympapp/Platform.android.kt
-shared/src/iosMain/kotlin/com/tkolymp/tkolympapp/Platform.ios.kt
-```
-
-```kotlin
-// Greeting.kt — nikdo nevolá
-class Greeting {
-    fun greet(): String = "Hello, ${getPlatform().name}!"
-}
-```
-
-**Oprava**: Smazat všechny čtyři soubory.
-
----
-
-### 1.4 Nesprávný package pro PeopleService alias ❌ NÍZKÉ - DONE
-
-`shared/src/commonMain/kotlin/com/tkolymp/tkolympapp/PeopleService.kt` je typealias v package `com.tkolymp.tkolympapp`, přestože reálná implementace žije ve `com.tkolymp.shared.people`. `copilot-instructions.md` toto výslovně zakazuje:
-> *"Do NOT create ad-hoc or 'special' service implementations in other packages (for example `com.tkolymp.tkolympapp`)"*
-
-```kotlin
-// PeopleService.kt — slouží jen jako alias, neměl by existovat
-package com.tkolymp.tkolympapp
-typealias PeopleService = SharedPeopleService
-```
-
-**Oprava**: Smazat soubor. Všechna volání přesunout na přímý import `com.tkolymp.shared.people.PeopleService`.
 
 ---
 
@@ -302,29 +205,6 @@ data class OverviewState(
 )
 ```
 
-### 4.2 JSON jako `String?` v ProfileState ❌ STŘEDNÍ
-
-```kotlin
-// ProfileViewModel.kt
-data class ProfileState(
-    val userJson: String? = null,    // ❌ surový JSON string
-    val personJson: String? = null,  // ❌ surový JSON string
-    // ...
-)
-```
-
-ViewModel uloží JSON jako `String`, screen pak znovu parsuje JSON do `JsonObject` a z něj tahá hodnoty ručně. Tím dochází ke dvojité serializaci/deserializaci a celý type-checking je přesunut do runtime.
-
-**Oprava**: Deserializovat na doménové modely (`PersonDetails`, `UserDetails`) přímo ve ViewModelu:
-
-```kotlin
-data class ProfileState(
-    val person: PersonDetails? = null,
-    val coupleIds: List<String> = emptyList(),
-    // ...
-)
-```
-
 ### 4.3 Přístup k JSON přes lokální lambda v EventScreen ❌ NÍZKÉ
 
 ```kotlin
@@ -480,26 +360,6 @@ suspend fun <T> get(key: String): T? = withContext(cacheDispatcher) {
 
 ## 8. Duplicitní kód
 
-### 8.1 `jsonObjectOrNull()` extension definována na 3 místech ❌ STŘEDNÍ
-
-**Výskyt 1** — `EventScreen.kt` (lokální funkce uvnitř composable):
-```kotlin
-private fun JsonElement?.asJsonObjectOrNull(): JsonObject? = try { ... } catch (_: Exception) { null }
-private fun JsonElement?.asJsonArrayOrNull(): JsonArray? = try { ... } catch (_: Exception) { null }
-```
-
-**Výskyt 2** — `RegistrationViewModel.kt` (private extension):
-```kotlin
-private fun JsonElement?.jsonObjectOrNull(): JsonObject? = try { ... } catch (_: Throwable) { null }
-```
-
-**Výskyt 3** — `EventScreen.kt` lokální `fun JsonObject.str()`, `fun JsonObject.int()` lambda.
-
-Tyto utility patří do sdíleného souboru v `shared/commonMain`:
-```
-shared/src/commonMain/kotlin/com/tkolymp/shared/utils/JsonExtensions.kt
-```
-
 ### 8.2 Hardcoded ISO date ranges jsou nekonzistentní ❌ NÍZKÉ
 
 ```kotlin
@@ -630,23 +490,6 @@ HttpClient(OkHttp) {
 }
 ```
 
-### 10.2 Duplicitní inicializace jazyka — potenciální desync ⚠️ STŘEDNÍ
-
-`MainActivity` čte `SharedPreferences` přímo:
-```kotlin
-val prefs = getSharedPreferences("tkolymp_prefs", Context.MODE_PRIVATE)
-val savedCode = prefs.getString("language_code", null)
-```
-
-`App.kt` nezávisle volá:
-```kotlin
-val code = ServiceLocator.languageStorage.getLanguageCode()
-```
-
-`LanguageStorage.android.kt` používá KSafe s jiným souborem (`tkolymp_lang`), takže existují **dva oddělené úložiště** pro stejnou hodnotu. Pokud jazyk změní jeden path, druhý zůstane neaktuální → při restartu aplikace se jazz může resetovat.
-
-**Oprava**: Odstranit přímé čtení `SharedPreferences` z `MainActivity`, ponechat pouze `LanguageStorage`.
-
 ### 10.3 JWT token v in-memory proměnné ⚠️ NÍZKÉ
 
 ```kotlin
@@ -730,22 +573,16 @@ shared/src/commonMain/kotlin/com/tkolymp/shared/viewmodels/CalendarViewModel.kt 
 
 | Priorita | # | Oblast | Soubory |
 |---|---|---|---|
-| 🔴 KRITICKÉ | 1 | Screens v `androidMain` místo `commonMain` | 22 souborů v `Screens/` |
-| 🔴 KRITICKÉ | 2 | Zachycení `CancellationException` | `LoginViewModel`, `OverviewViewModel`, `EventViewModel`, `CalendarViewModel`, `ProfileViewModel` |
-| 🔴 KRITICKÉ | 3 | ServiceLocator kruhová závislost + bez thread-safety | `ServiceLocator.kt`, `GraphQlClientImpl.kt` |
-| 🟠 VYSOKÉ | 4 | `List<Any>` v `OverviewState` | `OverviewViewModel.kt`, `OverviewScreen.kt` |
-| 🟠 VYSOKÉ | 5 | JSON string místo doménových modelů v `ProfileState` | `ProfileViewModel.kt`, `ProfileScreen.kt` |
-| 🟠 VYSOKÉ | 6 | ViewModely bez lifecycle (`viewModelScope`) | všechny `/viewmodels/*.kt` |
-| 🟡 STŘEDNÍ | 7 | Hardcoded texty v `shared/commonMain` (notifikace, chyby) | `NotificationService.kt`, `LoginViewModel.kt` |
-| 🟡 STŘEDNÍ | 8 | Duplicitní `JsonObjectOrNull` extension | `EventScreen.kt`, `RegistrationViewModel.kt` |
-| 🟡 STŘEDNÍ | 9 | Hardcoded verze v build.gradle mimo toml | `shared/build.gradle.kts`, `composeApp/build.gradle.kts` |
-| 🟡 STŘEDNÍ | 10 | Duplicitní CalendarViewModel | `calendar/CalendarViewModel.kt` vs `viewmodels/CalendarViewModel.kt` |
-| 🟡 STŘEDNÍ | 11 | Duplicitní inicializace jazyka (2 storage) | `MainActivity.kt`, `App.kt` |
-| 🟢 NÍZKÉ | 12 | Logger (`println`, mutable, žádné úrovně) | `Logger.kt` |
-| 🟢 NÍZKÉ | 13 | Package naming (`Screens` s velkým S) | `Screens/` |
-| 🟢 NÍZKÉ | 14 | Mrtvý kód z KMP šablony | `Greeting.kt`, `Platform.kt` a aktuals |
-| 🟢 NÍZKÉ | 15 | Nepoužívaná Room dependency | `libs.versions.toml` |
-| 🟢 NÍZKÉ | 16 | Alpha verze navigace | `libs.versions.toml` |
+| 🔴 KRITICKÉ | 1 | Zachycení `CancellationException` | `LoginViewModel`, `OverviewViewModel`, `EventViewModel`, `CalendarViewModel`, `ProfileViewModel` |
+| 🔴 KRITICKÉ | 2 | ServiceLocator kruhová závislost + bez thread-safety | `ServiceLocator.kt`, `GraphQlClientImpl.kt` |
+| 🟠 VYSOKÉ | 3 | `List<Any>` v `OverviewState` | `OverviewViewModel.kt`, `OverviewScreen.kt` |
+| 🟠 VYSOKÉ | 4 | ViewModely bez lifecycle (`viewModelScope`) | všechny `/viewmodels/*.kt` |
+| 🟡 STŘEDNÍ | 5 | Hardcoded texty v `shared/commonMain` (notifikace, chyby) | `NotificationService.kt`, `LoginViewModel.kt` |
+| 🟡 STŘEDNÍ | 6 | Hardcoded verze v build.gradle mimo toml | `shared/build.gradle.kts`, `composeApp/build.gradle.kts` |
+| 🟢 NÍZKÉ | 7 | Logger (`println`, mutable, žádné úrovně) | `Logger.kt` |
+| 🟢 NÍZKÉ | 8 | Package naming (`Screens` s velkým S) | `Screens/` |
+| 🟢 NÍZKÉ | 9 | Nepoužívaná Room dependency | `libs.versions.toml` |
+| 🟢 NÍZKÉ | 10 | Alpha verze navigace | `libs.versions.toml` |
 
 ---
 
@@ -756,35 +593,21 @@ shared/src/commonMain/kotlin/com/tkolymp/shared/viewmodels/CalendarViewModel.kt 
 1. **CancellationException fix** — přidat `catch (e: CancellationException) { throw e }` před každý `catch (_: Throwable)` v celém projektu  
    *Minimální změna, maximální dopad na stabilitu*
 
-2. **Smazat mrtvý kód** — `Greeting.kt`, `Platform.kt`, `PeopleService.kt` alias
+2. **`List<Any>` → `List<EventInstance>`** v `OverviewState`
 
-3. **`List<Any>` → `List<EventInstance>`** v `OverviewState`
+3. **Opravit verze v build.gradle** — přidat `core-ktx` do `libs.versions.toml`, odstranit hardcoded verze
 
-4. **Opravit verze v build.gradle** — přidat `core-ktx` do `libs.versions.toml`, odstranit hardcoded verze
+4. **Redundantní mutex v CacheService** — odstranit `mutex.withLock {}` (ponechat `cacheDispatcher`)
 
-5. **Redundantní mutex v CacheService** — odstranit `mutex.withLock {}` (ponechat `cacheDispatcher`)
+### Sprint 2 — Větší architekturní změny (3–5 dní)
 
-### Sprint 2 — Střední refaktory (1–2 dny)
+5. **AppContainer místo ServiceLocator** — constructor injection bez globálního mutable state
 
-6. **Přesunout Screens do `commonMain`** — přesunout všechny composable screens z `androidMain/Screens/` do `composeApp/commonMain/screens/` (malé s); odebrat Android-specific imports
+6. **Lifecycle ViewModely** — přidat `androidx.lifecycle.ViewModel` dědění, `viewModelScope`
 
-7. **ProfileState domain models** — deserializovat JSON na `PersonDetails` ve ViewModelu, ne v screenu
+7. **i18n chybějící klíče** — přidat error messages a notifikační texty do všech `Strings*.kt`
 
-8. **JsonExtensions utility** — vytvořit `shared/utils/JsonExtensions.kt` se sdílenými extension funkcemi
-
-9. **Sjednotit CalendarViewModel** — smazat duplikát, ověřit co se používá
-
-10. **Opravit inicializaci jazyka** — odstranit `SharedPreferences` z `MainActivity`, ponechat pouze `LanguageStorage`
-
-### Sprint 3 — Větší architekturní změny (3–5 dní)
-
-11. **AppContainer místo ServiceLocator** — constructor injection bez globálního mutable state
-
-12. **Lifecycle ViewModely** — přidat `androidx.lifecycle.ViewModel` dědění, `viewModelScope`
-
-13. **i18n chybějící klíče** — přidat error messages a notifikační texty do všech `Strings*.kt`
-
-14. **API URL do `local.properties`** — přidat Secrets Gradle Plugin
+8. **API URL do `local.properties`** — přidat Secrets Gradle Plugin
 
 ---
 

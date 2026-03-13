@@ -53,34 +53,12 @@ import com.tkolymp.shared.viewmodels.EventViewModel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.booleanOrNull
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.intOrNull
-import kotlinx.serialization.json.jsonPrimitive
-
-private fun JsonElement?.asJsonObjectOrNull(): JsonObject? = try {
-    when {
-        this == null -> null
-        this is JsonNull -> null
-        this is JsonObject -> this
-        else -> null
-    }
-} catch (_: Exception) {
-    null
-}
-
-private fun JsonElement?.asJsonArrayOrNull(): JsonArray? = try {
-    when {
-        this == null -> null
-        this is JsonNull -> null
-        this is JsonArray -> this
-        else -> null
-    }
-} catch (_: Exception) {
-    null
-}
+import com.tkolymp.shared.utils.asJsonObjectOrNull
+import com.tkolymp.shared.utils.asJsonArrayOrNull
+import com.tkolymp.shared.utils.str
+import com.tkolymp.shared.utils.int
+import com.tkolymp.shared.utils.bool
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,10 +73,6 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
 
     val ev = state.eventJson
     // registration navigation handled by App NavHost via `onOpenRegistration`
-
-    fun JsonObject.str(key: String) = try { this[key]?.jsonPrimitive?.contentOrNull } catch (_: Exception) { null }
-    fun JsonObject.int(key: String) = try { this[key]?.jsonPrimitive?.intOrNull } catch (_: Exception) { null }
-    fun JsonObject.bool(key: String) = try { this[key]?.jsonPrimitive?.booleanOrNull } catch (_: Exception) { null }
 
         Scaffold(
             topBar = {
