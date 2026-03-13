@@ -305,7 +305,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                     if (userRegistered) isRegistrationOpen else false
                 }
 
-                val editRegistrationButtonVisible = true
+                val editRegistrationButtonVisible = !type.equals("lesson", ignoreCase = true) && !type.equals("group", ignoreCase = true)
                 val deleteFullWidth = trainerCount == 1
 
                 // --- Render buttons stacked under the event info ---

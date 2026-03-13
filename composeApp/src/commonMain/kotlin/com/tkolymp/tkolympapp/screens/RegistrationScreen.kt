@@ -98,6 +98,7 @@ fun RegistrationScreen(
     myPersonName: String? = null,
     myCoupleNames: Map<String, String> = emptyMap(),
     enableNotes: Boolean = false,
+    eventType: String? = null,
     onClose: () -> Unit,
     onRegister: (List<RegistrationInput>) -> Unit,
     onSetLessonDemand: (String, Int, Int) -> Unit,
@@ -119,6 +120,8 @@ fun RegistrationScreen(
         val scope = rememberCoroutineScope()
 
         // cache trainer display names (shared across modes) — moved to shared ViewModel
+        val showLessonSelection = eventType?.trim()?.lowercase().let { it == "camp" || it == "rezervation" }
+
         val regViewModel = remember { RegistrationViewModel() }
         val regState by regViewModel.state.collectAsState()
         LaunchedEffect(Unit) {
@@ -278,9 +281,6 @@ fun RegistrationScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                         }
 
-                        Text(AppStrings.current.selectTrainersAndLessons, style = MaterialTheme.typography.bodyMedium)
-                        Spacer(modifier = Modifier.height(6.dp))
-
                         // Maintain local counts per trainer (observable list so element changes update instantly)
                         val counts = remember {
                             val list = mutableStateListOf<Int>()
@@ -288,38 +288,45 @@ fun RegistrationScreen(
                             list
                         }
 
-                        trainers.forEachIndexed { idx, tEl ->
-                            val tObj = tEl as? JsonObject
-                            val tIdStr = tObj?.get("id")?.jsonPrimitive?.contentOrNull ?: idx.toString()
-                            val tName = tObj?.get("name")?.jsonPrimitive?.contentOrNull
-                                ?: regState.trainerNames[tIdStr]
-                                ?: "Trenér #$idx"
-                            Row(modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Start
-                            ) {
-                                Text(tName, modifier = Modifier.weight(1f))
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    IconButton(onClick = {
-                                        val old = counts.getOrNull(idx) ?: 0
-                                        val newVal = (old - 1).coerceAtLeast(0)
-                                        if (idx < counts.size) counts[idx] = newVal else counts.add(newVal)
-                                        Logger.d("RegScreen", "Register mode: trainer=$idx old=$old new=$newVal")
-                                    }) { Icon(Icons.Default.Remove, contentDescription = "Snížit") }
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text("${counts[idx]}", modifier = Modifier.padding(8.dp))
-                                    IconButton(onClick = {
-                                        val old = counts.getOrNull(idx) ?: 0
-                                        val maxForTrainer = (tObj?.get("lessonsRemaining")?.jsonPrimitive?.intOrNull
-                                            ?.let { if (it < 0) Int.MAX_VALUE else it } ?: Int.MAX_VALUE)
-                                        val newVal = (old + 1).coerceAtMost(maxForTrainer)
-                                        if (idx < counts.size) counts[idx] = newVal else counts.add(newVal)
-                                        Logger.d("RegScreen", "Register mode: trainer=$idx old=$old max=$maxForTrainer new=$newVal")
-                                    }) { Icon(Icons.Default.Add, contentDescription = "Přidat") }
+                        if (showLessonSelection) {
+                            Text(AppStrings.current.selectTrainersAndLessons, style = MaterialTheme.typography.bodyMedium)
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            trainers.forEachIndexed { idx, tEl ->
+                                val tObj = tEl as? JsonObject
+                                val tIdStr = tObj?.get("id")?.jsonPrimitive?.contentOrNull ?: idx.toString()
+                                val tName = tObj?.get("name")?.jsonPrimitive?.contentOrNull
+                                    ?: regState.trainerNames[tIdStr]
+                                    ?: "Trenér #$idx"
+                                Row(modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Start
+                                ) {
+                                    Text(tName, modifier = Modifier.weight(1f))
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        IconButton(onClick = {
+                                            val old = counts.getOrNull(idx) ?: 0
+                                            val newVal = (old - 1).coerceAtLeast(0)
+                                            if (idx < counts.size) counts[idx] = newVal else counts.add(newVal)
+                                            Logger.d("RegScreen", "Register mode: trainer=$idx old=$old new=$newVal")
+                                        }) { Icon(Icons.Default.Remove, contentDescription = "Snížit") }
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("${counts[idx]}", modifier = Modifier.padding(8.dp))
+                                        IconButton(onClick = {
+                                            val old = counts.getOrNull(idx) ?: 0
+                                            val maxForTrainer = (tObj?.get("lessonsRemaining")?.jsonPrimitive?.intOrNull
+                                                ?.let { if (it < 0) Int.MAX_VALUE else it } ?: Int.MAX_VALUE)
+                                            val newVal = (old + 1).coerceAtMost(maxForTrainer)
+                                            if (idx < counts.size) counts[idx] = newVal else counts.add(newVal)
+                                            Logger.d("RegScreen", "Register mode: trainer=$idx old=$old max=$maxForTrainer new=$newVal")
+                                        }) { Icon(Icons.Default.Add, contentDescription = "Přidat") }
+                                    }
                                 }
                             }
+
+                            Spacer(modifier = Modifier.height(12.dp))
                         }
 
                         Spacer(modifier = Modifier.height(12.dp))
@@ -456,8 +463,7 @@ fun RegistrationScreen(
                                 } as? JsonObject
                                 editNoteState.value = reg?.get("note")?.jsonPrimitive?.contentOrNull ?: ""
                             }
-                            Text(AppStrings.current.editLessonClaims, style = MaterialTheme.typography.bodyMedium)
-                            // ensure counts exist for this registration
+                            // ensure counts exist for this registration (needed even when hidden to send updates)
                             val sid = selectedId
                             val countsState = countsByReg.getOrPut(sid) {
                                 val init = computeInitCountsFor(sid)
@@ -465,38 +471,43 @@ fun RegistrationScreen(
                                 init.forEach { st.add(it) }
                                 st
                             }
-                            trainers.forEachIndexed { idx, tEl ->
-                                val tObj = tEl as? JsonObject
-                                val tIdStr = tObj?.get("id")?.jsonPrimitive?.contentOrNull ?: idx.toString()
-                                val tName = tObj?.get("name")?.jsonPrimitive?.contentOrNull ?: regState.trainerNames[tIdStr] ?: "Trenér #$idx"
-                                Row(modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 6.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Start
-                                ) {
-                                    Text(tName, modifier = Modifier.weight(1f))
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        IconButton(onClick = {
-                                            val old = countsState.getOrNull(idx) ?: 0
-                                            val newVal = (old - 1).coerceAtLeast(0)
-                                            if (idx < countsState.size) countsState[idx] = newVal else countsState.add(newVal)
-                                        }) { Icon(Icons.Default.Remove, contentDescription = "Snížit") }
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text("${countsState.getOrNull(idx) ?: 0}", modifier = Modifier.padding(8.dp))
-                                        IconButton(onClick = {
-                                            val old = countsState.getOrNull(idx) ?: 0
-                                            val maxForTrainer = (tObj?.get("lessonsRemaining")?.jsonPrimitive?.intOrNull
-                                                ?.let { if (it < 0) Int.MAX_VALUE else it } ?: Int.MAX_VALUE)
-                                            val newVal = (old + 1).coerceAtMost(maxForTrainer)
-                                            if (idx < countsState.size) countsState[idx] = newVal else countsState.add(newVal)
-                                            Logger.d("RegScreen", "Edit mode: reg=$selectedId trainer=$idx old=$old max=$maxForTrainer new=$newVal")
-                                        }) { Icon(Icons.Default.Add, contentDescription = "Přidat") }
+
+                            if (showLessonSelection) {
+                                Text(AppStrings.current.editLessonClaims, style = MaterialTheme.typography.bodyMedium)
+                                trainers.forEachIndexed { idx, tEl ->
+                                    val tObj = tEl as? JsonObject
+                                    val tIdStr = tObj?.get("id")?.jsonPrimitive?.contentOrNull ?: idx.toString()
+                                    val tName = tObj?.get("name")?.jsonPrimitive?.contentOrNull ?: regState.trainerNames[tIdStr] ?: "Trenér #$idx"
+                                    Row(modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Start
+                                    ) {
+                                        Text(tName, modifier = Modifier.weight(1f))
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            IconButton(onClick = {
+                                                val old = countsState.getOrNull(idx) ?: 0
+                                                val newVal = (old - 1).coerceAtLeast(0)
+                                                if (idx < countsState.size) countsState[idx] = newVal else countsState.add(newVal)
+                                            }) { Icon(Icons.Default.Remove, contentDescription = "Snížit") }
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text("${countsState.getOrNull(idx) ?: 0}", modifier = Modifier.padding(8.dp))
+                                            IconButton(onClick = {
+                                                val old = countsState.getOrNull(idx) ?: 0
+                                                val maxForTrainer = (tObj?.get("lessonsRemaining")?.jsonPrimitive?.intOrNull
+                                                    ?.let { if (it < 0) Int.MAX_VALUE else it } ?: Int.MAX_VALUE)
+                                                val newVal = (old + 1).coerceAtMost(maxForTrainer)
+                                                if (idx < countsState.size) countsState[idx] = newVal else countsState.add(newVal)
+                                                Logger.d("RegScreen", "Edit mode: reg=$selectedId trainer=$idx old=$old max=$maxForTrainer new=$newVal")
+                                            }) { Icon(Icons.Default.Add, contentDescription = "Přidat") }
+                                        }
                                     }
                                 }
+
+                                Spacer(modifier = Modifier.height(12.dp))
                             }
 
-                            Spacer(modifier = Modifier.height(12.dp))
                             if (enableNotes) {
                                 OutlinedTextField(
                                     value = editNoteState.value,
@@ -510,9 +521,9 @@ fun RegistrationScreen(
                             Button(onClick = {
                                 showEditError.value = null
                                 try {
-                                    // call onSetLessonDemand for each trainer using countsState
+                                    // call onSetLessonDemand for each trainer using countsState (only for camp/rezervation)
                                     val regId = selectedId
-                                    countsState.forEachIndexed { i, cnt ->
+                                    if (showLessonSelection) countsState.forEachIndexed { i, cnt ->
                                         val trainerId = (trainers[i] as? JsonObject)?.get("id")?.jsonPrimitive?.intOrNull ?: i
                                         onSetLessonDemand(regId!!, trainerId, cnt)
                                     }

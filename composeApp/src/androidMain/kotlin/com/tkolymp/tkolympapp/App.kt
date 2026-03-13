@@ -78,6 +78,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import ui.theme.AppTheme
 
@@ -722,6 +723,7 @@ fun AppNavHost(
                         myCoupleIds = myCoupleIdsState.value,
                         // show note input if event declares `enableNotes` true
                         enableNotes = (ev["enableNotes"] as? kotlinx.serialization.json.JsonPrimitive)?.booleanOrNull ?: false,
+                        eventType = (ev["type"] as? kotlinx.serialization.json.JsonPrimitive)?.contentOrNull,
                         onClose = { navController.navigateUp() },
                         onRegister = { regs ->
                             coroutineScope.launch {
