@@ -17,7 +17,7 @@ ktor = "3.1.1"
 kotlinx-serialization = "1.7.3"
 kotlinx-datetime = "0.6.0"
 material3 = "1.10.0-alpha05"
-roomKtx = "2.8.4"
+compose-android-bom = "2025.01.00"
 ksafe = "1.7.0"
 
 [libraries]
@@ -46,7 +46,8 @@ ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx
 ktor-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
-androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }
+compose-android-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-android-bom" }
+compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 ksafe = { module = "eu.anifantakis:ksafe", version.ref = "ksafe" }
 
 [plugins]

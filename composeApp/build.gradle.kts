@@ -79,8 +79,8 @@ android {
 
 dependencies {
     debugImplementation(libs.compose.uiTooling)
-    implementation(platform("androidx.compose:compose-bom:2025.01.00"))
-    implementation("androidx.compose.material:material-icons-extended")
+    implementation(platform(libs.compose.android.bom))
+    implementation(libs.compose.material.icons.extended)
     implementation(libs.kotlinx.serialization.json)
 }
 
