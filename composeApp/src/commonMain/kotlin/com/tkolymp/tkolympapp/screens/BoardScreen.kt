@@ -90,7 +90,7 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
                             shape = RoundedCornerShape(16.dp)
                         ) {
                             Column(modifier = Modifier.padding(14.dp)) {
-                                Text(a.title ?: "(bez názvu)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                                Text(a.title ?: AppStrings.current.noName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                                 val authorName = listOfNotNull(a.author?.uJmeno, a.author?.uPrijmeni).joinToString(" ").trim()
                                 if (authorName.isNotEmpty()) {
                                     Spacer(modifier = Modifier.height(2.dp))

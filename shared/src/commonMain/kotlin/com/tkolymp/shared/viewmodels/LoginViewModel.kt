@@ -3,6 +3,7 @@ package com.tkolymp.shared.viewmodels
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.auth.IAuthService
 import com.tkolymp.shared.Logger
+import com.tkolymp.shared.language.AppStrings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.StateFlow
@@ -40,13 +41,13 @@ class LoginViewModel() {
         return try {
             val ok = authService.login(_state.value.username, _state.value.password)
             if (!ok) {
-                _state.value = _state.value.copy(isLoading = false, error = "Přihlášení selhalo")
+                _state.value = _state.value.copy(isLoading = false, error = AppStrings.current.errorLogin)
                 return false
             }
 
             val personId = try { userService.fetchAndStorePersonId() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("LoginViewModel", "fetchAndStorePersonId failed: ${e.message}"); null }
             if (personId == null) {
-                _state.value = _state.value.copy(isLoading = false, error = "Nelze získat personId po přihlášení")
+                _state.value = _state.value.copy(isLoading = false, error = AppStrings.current.errorLoginPersonId)
                 return false
             }
 

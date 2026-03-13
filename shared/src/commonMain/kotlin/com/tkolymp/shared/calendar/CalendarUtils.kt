@@ -3,6 +3,7 @@ package com.tkolymp.shared.calendar
 import com.tkolymp.shared.event.BigInt
 import com.tkolymp.shared.event.Event
 import com.tkolymp.shared.event.EventInstance
+import com.tkolymp.shared.language.AppStrings
 import kotlinx.datetime.*
 
 /**
@@ -27,9 +28,9 @@ object CalendarUtils {
         val title = when {
             !event?.name.isNullOrBlank() -> event?.name!!
             event?.type?.equals("lesson", ignoreCase = true) == true -> {
-                event.eventTrainersList.firstOrNull()?.takeIf { it.isNotBlank() } ?: "Bez názvu"
+                event.eventTrainersList.firstOrNull()?.takeIf { it.isNotBlank() } ?: AppStrings.current.noName
             }
-            else -> "Bez názvu"
+            else -> AppStrings.current.noName
         }
         
         // Determine if this is "my" event

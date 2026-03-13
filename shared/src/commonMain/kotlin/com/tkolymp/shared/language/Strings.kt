@@ -321,6 +321,16 @@ data class Strings(
     val errorLoadingClub: String,
     val couple: String,
 
+    // --- UI Fallbacks ---
+    val noName: String,
+
+    // --- Login ---
+    val loginSubtitle: String,
+
+    // --- Notifications ---
+    val defaultRuleName: String,
+    val notificationEventStartsIn: String,
+
     // --- About screen ---
     val about: AboutStrings,
 

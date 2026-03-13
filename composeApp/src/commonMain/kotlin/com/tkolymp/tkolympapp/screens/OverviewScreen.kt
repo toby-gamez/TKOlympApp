@@ -94,8 +94,8 @@ fun OverviewScreen(
 
             val trainings = state.upcomingEvents
             val camps = trainings.filter { it.event?.type?.contains("CAMP", ignoreCase = true) == true }
-            val trainingItems = remember(trainings) { trainings.take(2).map { Pair(it.id, it.event?.name ?: "(bez názvu)") } }
-            val campItems = remember(camps) { camps.take(2).map { Pair(it.id, it.event?.name ?: "(bez názvu)") } }
+            val trainingItems = remember(trainings) { trainings.take(2).map { Pair(it.id, it.event?.name ?: AppStrings.current.noName) } }
+            val campItems = remember(camps) { camps.take(2).map { Pair(it.id, it.event?.name ?: AppStrings.current.noName) } }
             val announcements = state.recentAnnouncements
 
             // Trainings section (styled like Calendar)
@@ -229,7 +229,7 @@ fun OverviewScreen(
                                 
                             ) {
                                 Column(modifier = Modifier.padding(14.dp)) {
-                                    Text(a.title ?: "(bez názvu)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                                    Text(a.title ?: AppStrings.current.noName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                                     val authorName = listOfNotNull(a.author?.uJmeno, a.author?.uPrijmeni).joinToString(" ").trim()
                                     if (authorName.isNotEmpty()) {
                                         Spacer(modifier = Modifier.height(4.dp))

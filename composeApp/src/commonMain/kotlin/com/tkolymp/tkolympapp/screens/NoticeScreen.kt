@@ -93,7 +93,7 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
                     .verticalScroll(rememberScrollState())
                     .padding(12.dp)
                 ) {
-                    Text(a.title ?: "(bez názvu)", style = MaterialTheme.typography.titleLarge)
+                    Text(a.title ?: AppStrings.current.noName, style = MaterialTheme.typography.titleLarge)
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {

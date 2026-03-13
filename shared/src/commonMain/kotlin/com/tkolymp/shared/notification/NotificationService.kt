@@ -1,6 +1,7 @@
 package com.tkolymp.shared.notification
 
 import com.tkolymp.shared.event.EventInstance
+import com.tkolymp.shared.language.AppStrings
 import kotlinx.coroutines.CancellationException
 
 class NotificationService(
@@ -13,7 +14,7 @@ class NotificationService(
         if (existing == null) {
             val defaultRule = NotificationRule(
                 id = "default-rule",
-                name = "Výchozí pravidlo",
+                name = AppStrings.current.defaultRuleName,
                 enabled = true,
                 filterType = FilterType.ALL,
                 timesBeforeMinutes = listOf(15)
@@ -82,14 +83,14 @@ class NotificationService(
                         val evType = ev.type ?: ""
                         if (evType.equals("LESSON", ignoreCase = true)) {
                             val trainers = ev.eventTrainersList ?: emptyList()
-                            if (trainers.isNotEmpty()) trainers.joinToString(", ") else "Lekce"
+                            if (trainers.isNotEmpty()) trainers.joinToString(", ") else AppStrings.current.eventTypeLesson.replaceFirstChar { it.titlecase() }
                         } else {
                             // fallback to event type or generic label
-                            evType.ifEmpty { "Událost" }
+                            evType.ifEmpty { AppStrings.current.event }
                         }
                     }
 
-                    val trigger = try { scheduler.scheduleNotificationAt(nid, titleToShow, "Událost začíná za $minutesBefore minut", since, minutesBefore) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                    val trigger = try { scheduler.scheduleNotificationAt(nid, titleToShow, AppStrings.current.notificationEventStartsIn.replace("{0}", minutesBefore.toString()), since, minutesBefore) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                     if (trigger != null) {
                         scheduled += ScheduledNotification(nid, ev.id, titleToShow, trigger)
                     }

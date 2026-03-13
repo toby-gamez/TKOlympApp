@@ -78,7 +78,7 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                "Přihlaste se do svého účtu",
+                AppStrings.current.loginSubtitle,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center

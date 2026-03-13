@@ -106,9 +106,9 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                 val name = when {
                     !ev.str("name").isNullOrBlank() -> ev.str("name")!!
                     type.equals("lesson", ignoreCase = true) -> {
-                        trainers.firstOrNull()?.asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() } ?: "(bez názvu)"
+                        trainers.firstOrNull()?.asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() } ?: AppStrings.current.noName
                     }
-                    else -> "(bez názvu)"
+                    else -> AppStrings.current.noName
                 }
                 val descr = ev.str("description") ?: ""
                 val summary = ev.str("summary") ?: ""

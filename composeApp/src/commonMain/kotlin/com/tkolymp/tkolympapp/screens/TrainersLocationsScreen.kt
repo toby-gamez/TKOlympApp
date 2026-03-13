@@ -113,7 +113,7 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                         Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(imageVector = Icons.Filled.Place, contentDescription = AppStrings.current.trainingSpaces, modifier = Modifier.size(28.dp))
                             Spacer(modifier = Modifier.width(12.dp))
-                            Text(text = loc.name ?: "(bez názvu)", style = MaterialTheme.typography.bodyLarge)
+                            Text(text = loc.name ?: AppStrings.current.noName, style = MaterialTheme.typography.bodyLarge)
                         }
                     }
                 }
