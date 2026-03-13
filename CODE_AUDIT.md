@@ -8,7 +8,6 @@
 
 ## Obsah
 
-6. [ViewModel Design](#6-viewmodel-design)
 7. [CacheService — nadbytečný mutex](#7-cacheservice--nadbytečný-mutex)
 8. [Duplicitní kód](#8-duplicitní-kód)
 9. [Build konfigurace](#9-build-konfigurace)
@@ -17,33 +16,6 @@
 12. [Pojmenování](#12-pojmenování)
 13. [Shrnutí a prioritizace](#13-shrnutí-a-prioritizace)
 14. [Akční plán](#14-akční-plán)
-
----s
-
-## 6. ViewModel Design
-
-### 6.2 `initialize()` voláno opakovaně ❌ STŘEDNÍ
-
-```kotlin
-// EventViewModel.kt — při každém načtení eventu
-suspend fun loadEvent(eventId: Long, forceRefresh: Boolean = false) {
-    _state.value = _state.value.copy(isLoading = true, error = null)
-    try {
-        try { withContext(Dispatchers.IO) { ServiceLocator.authService.initialize() } } catch (_: Throwable) {}
-        // ...
-    }
-}
-```
-
-`initialize()` čte token ze storage (I/O operace) — zbytečně se volá při každém otevření detailu eventu. Token je již načten při startu aplikace.
-
-**Oprava**: Volat `initialize()` pouze jednou při startu, nikoli v každém ViewModelu.
-
-### 6.3 Nedetekovatelný stav before-init ❌ NÍZKÉ
-
-`remember { LoginViewModel() }` vytváří novou instanci ViewModelu při každé recomposition z `remember` klíče. Pokud se composable zrecomponuje před dokončením přihlašování, stav se resetuje.
-
----
 
 ## 7. CacheService — nadbytečný mutex
 

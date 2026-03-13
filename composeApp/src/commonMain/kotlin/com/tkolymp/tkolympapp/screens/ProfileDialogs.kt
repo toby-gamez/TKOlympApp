@@ -362,7 +362,6 @@ fun ChangePersonalDataDialog(
                                     phone.trim(), mobile.trim(), birth.trim(), gender.trim()
                                 )
                                 try { ServiceLocator.userService.fetchAndStorePersonDetails(pid) } catch (e: CancellationException) { throw e } catch (_: Exception) { }
-                                try { ServiceLocator.authService.initialize() } catch (e: CancellationException) { throw e } catch (_: Exception) { }
                                 onDismiss()
                             } else {
                                 val apiErr = try { ServiceLocator.userService.getLastApiError() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
