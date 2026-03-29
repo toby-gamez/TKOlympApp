@@ -8,7 +8,6 @@ import com.tkolymp.shared.utils.formatTimesWithDateAlways
 import com.tkolymp.shared.utils.durationMinutes
 import com.tkolymp.shared.utils.translateEventType
 import com.tkolymp.shared.utils.formatFullCalendarDate
-import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -93,7 +92,7 @@ fun CalendarScreen(
     LaunchedEffect(weekOffset) { if (localWeekOffset != weekOffset) localWeekOffset = weekOffset }
 
     // compute week range anchored on today (do not search for start of week)
-    val baseToday = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val baseToday = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
     val weekStart = baseToday.plus(localWeekOffset * 7, DateTimeUnit.DAY)
     val today = weekStart
     val endDay = weekStart.plus(6, DateTimeUnit.DAY)
@@ -107,7 +106,7 @@ fun CalendarScreen(
     LaunchedEffect(selectedTab, localWeekOffset) {
         val onlyMine = selectedTab == 0
         // recompute start/end inside effect to match current localWeekOffset (start = today)
-        val t = Clock.System.todayIn(TimeZone.currentSystemDefault()).plus(localWeekOffset * 7, DateTimeUnit.DAY)
+        val t = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault()).plus(localWeekOffset * 7, DateTimeUnit.DAY)
         val e = t.plus(6, DateTimeUnit.DAY)
         val sIso = t.toString() + "T00:00:00Z"
         val eIso = e.toString() + "T23:59:59Z"
@@ -154,7 +153,7 @@ fun CalendarScreen(
             onRefresh = {
                 scope.launch {
                     val onlyMine = selectedTab == 0
-                    val t = Clock.System.todayIn(TimeZone.currentSystemDefault()).plus(localWeekOffset * 7, DateTimeUnit.DAY)
+                    val t = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault()).plus(localWeekOffset * 7, DateTimeUnit.DAY)
                     val e = t.plus(7, DateTimeUnit.DAY)
                     val sIso = t.toString() + "T00:00:00Z"
                     val eIso = e.toString() + "T23:59:59Z"
@@ -202,7 +201,7 @@ fun CalendarScreen(
                                 else -> {
                                     val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
                                     if (ld == null) date else {
-                                        val now = Clock.System.todayIn(TimeZone.currentSystemDefault())
+                                        val now = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
                                         formatFullCalendarDate(ld, AppStrings.currentLanguage.code, ld.year != now.year)
                                     }
                                 }

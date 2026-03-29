@@ -3,24 +3,29 @@ agp = "9.1.0"
 android-compileSdk = "36"
 android-minSdk = "31"
 android-targetSdk = "36"
-androidx-activity = "1.12.2"
+androidx-activity = "1.13.0"
 androidx-appcompat = "1.7.1"
-androidx-core = "1.17.0"
+androidx-core = "1.18.0"
 androidx-espresso = "3.7.0"
-androidx-lifecycle = "2.9.6"
+androidx-lifecycle = "2.10.0"
 androidx-navigation = "2.9.2"
 androidx-testExt = "1.3.0"
-composeMultiplatform = "1.10.0"
+composeMultiplatform = "1.10.3"
+firebaseMessaging = "25.0.1"
 junit = "4.13.2"
-kotlin = "2.3.0"
-ktor = "3.1.1"
-kotlinx-serialization = "1.7.3"
-kotlinx-datetime = "0.6.0"
+kotlin = "2.3.20"
+ktor = "3.4.2"
+kotlinx-serialization = "1.10.0"
+kotlinx-datetime = "0.7.1"
 material3 = "1.10.0-alpha05"
-compose-android-bom = "2025.01.00"
-ksafe = "1.7.0"
+compose-android-bom = "2026.03.01"
+ksafe = "1.7.1"
+google-services = "4.4.4"
+firebase-bom = "34.11.0"
+firebase-analytics = "12.2.0"
 
 [libraries]
+firebase-messaging = { module = "com.google.firebase:firebase-messaging", version.ref = "firebaseMessaging" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-testJunit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 junit = { module = "junit:junit", version.ref = "junit" }
@@ -49,6 +54,8 @@ kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.
 compose-android-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-android-bom" }
 compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 ksafe = { module = "eu.anifantakis:ksafe", version.ref = "ksafe" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom"}
+firebase-analytics = {module = "com.google.firebase:firebase-analytics", version.ref = "firebase-analytics"}
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
@@ -57,3 +64,4 @@ composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMul
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+googleServices = { id = "com.google.gms.google-services", version.ref = "google-services"}

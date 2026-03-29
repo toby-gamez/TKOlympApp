@@ -13,6 +13,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
+import android.util.Log
+import com.google.firebase.messaging.FirebaseMessaging
 import com.tkolymp.shared.language.AppLanguage
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.language.getDeviceLanguageCode
@@ -39,11 +41,23 @@ class MainActivity : ComponentActivity() {
         }
         AppStrings.setLanguage(language)
 
-        // Create notification channel
+        // Create notification channels
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel("tkolymp_events", "Události", NotificationManager.IMPORTANCE_HIGH)
             val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            nm.createNotificationChannel(channel)
+            val channelEvents = NotificationChannel(
+                "tkolymp_events",
+                "Události",
+                NotificationManager.IMPORTANCE_HIGH
+            )
+            nm.createNotificationChannel(channelEvents)
+
+            val channelCoach = NotificationChannel(
+                "coach",
+                "Od trenéra",
+                NotificationManager.IMPORTANCE_HIGH
+            )
+            channelCoach.description = "Důležitá oznámení od trenéra"
+            nm.createNotificationChannel(channelCoach)
         }
 
         // Request runtime notification permission on Android 13+
@@ -55,6 +69,26 @@ class MainActivity : ComponentActivity() {
         setContent {
             App()
         }
+        // Získání a zalogování FCM tokenu
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result
+                Log.d("FCM", "Current token: $token")
+                // TODO: Odeslat token na server
+            } else {
+                Log.w("FCM", "Fetching FCM registration token failed", task.exception)
+            }
+        }
+
+        // Přihlášení k topicu 'all' pro broadcast notifikace
+        FirebaseMessaging.getInstance().subscribeToTopic("all")
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Log.d("FCM", "Subscribed to topic 'all'")
+                } else {
+                    Log.w("FCM", "Topic subscription failed", task.exception)
+                }
+            }
     }
 }
 

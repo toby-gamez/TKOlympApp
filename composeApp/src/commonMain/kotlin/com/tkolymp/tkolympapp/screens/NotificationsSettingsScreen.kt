@@ -63,7 +63,6 @@ import com.tkolymp.shared.notification.NotificationRule
 import com.tkolymp.shared.notification.NotificationSettings
 import com.tkolymp.shared.viewmodels.NotificationsSettingsViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
-import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.coroutines.Dispatchers
@@ -564,7 +563,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
 
                                 if (existing == null) {
                                     val nr = NotificationRule(
-                                        id = Clock.System.now().toEpochMilliseconds().toString(),
+                                        id = kotlin.time.Clock.System.now().toEpochMilliseconds().toString(),
                                         name = ruleName,
                                         enabled = true,
                                         filterType = selType,

@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.googleServices)
 }
 
 kotlin {
@@ -86,5 +87,8 @@ dependencies {
     implementation(platform(libs.compose.android.bom))
     implementation(libs.compose.material.icons.extended)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.firebase.messaging)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
 }
 

@@ -1,7 +1,6 @@
 package com.tkolymp.tkolympapp.screens
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.shared.utils.formatMonthDay
-import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -53,7 +52,7 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
     val viewModel = viewModel<EventsViewModel>()
     val state by viewModel.state.collectAsState()
 
-    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
 
     val scope = rememberCoroutineScope()
     LaunchedEffect(selectedTab) {

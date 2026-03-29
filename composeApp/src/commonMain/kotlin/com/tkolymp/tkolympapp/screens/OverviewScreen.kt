@@ -1,14 +1,4 @@
 package com.tkolymp.tkolympapp.screens
-import com.tkolymp.tkolympapp.SwipeToReload
-import com.tkolymp.shared.utils.formatFullCalendarDate
-import com.tkolymp.shared.utils.formatHtmlContent
-import kotlinx.datetime.Clock
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.Instant
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.plus
-import kotlinx.datetime.todayIn
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,9 +10,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -30,23 +20,31 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.shared.utils.formatFullCalendarDate
+import com.tkolymp.shared.utils.formatHtmlContent
 import com.tkolymp.shared.viewmodels.OverviewViewModel
+import com.tkolymp.tkolympapp.SwipeToReload
 import kotlinx.coroutines.launch
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
+import kotlinx.datetime.todayIn
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,7 +67,7 @@ fun OverviewScreen(
         val scope = rememberCoroutineScope()
 
         LaunchedEffect(Unit) {
-            val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+            val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
             val startIso = today.toString() + "T00:00:00Z"
             val endIso = today.plus(365, DateTimeUnit.DAY).toString() + "T23:59:59Z"
             viewModel.loadOverview(startIso, endIso, forceRefresh = false)
@@ -78,7 +76,7 @@ fun OverviewScreen(
         SwipeToReload(
             isRefreshing = state.isLoading,
             onRefresh = { scope.launch {
-                val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+                val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
                 val startIso = today.toString() + "T00:00:00Z"
                 val endIso = today.plus(365, DateTimeUnit.DAY).toString() + "T23:59:59Z"
                 viewModel.loadOverview(startIso, endIso, forceRefresh = true)
@@ -105,6 +103,7 @@ fun OverviewScreen(
             Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(AppStrings.current.upcomingTrainings, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
+            
             val limitedTrainings = trainings.sortedBy { it.since ?: it.updatedAt ?: "" }
             val trainingsMapByDay = limitedTrainings.groupBy { inst ->
                 val s = inst.since ?: inst.until ?: inst.updatedAt ?: ""
@@ -126,11 +125,11 @@ fun OverviewScreen(
                         Text(AppStrings.current.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
                     }
                 } else {
-                    val todayKey = Clock.System.todayIn(TimeZone.currentSystemDefault()).toString()
+                    val todayKey = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault()).toString()
 
                     // Show only one day: prefer today (only if it has future events), otherwise the next training day
                     val sortedKeys = trainingsMapByDay.keys.sorted()
-                    val nowInstant = Clock.System.now()
+                    val nowInstant = kotlin.time.Clock.System.now()
                     val selectedKey = run {
                         if (sortedKeys.isEmpty()) null
                         else if (sortedKeys.contains(todayKey)) {
@@ -149,7 +148,7 @@ fun OverviewScreen(
                     selectedKey?.let { date ->
                         val list = trainingsMapByDay[date] ?: emptyList()
                         Column(modifier = Modifier.padding(vertical = 6.dp)) {
-                            val now = Clock.System.todayIn(TimeZone.currentSystemDefault())
+                            val now = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
                             val header = when (date) {
                                 todayKey -> AppStrings.current.today.lowercase()
                                 now.plus(1, DateTimeUnit.DAY).toString() -> AppStrings.current.tomorrow.lowercase()
@@ -285,11 +284,11 @@ fun OverviewScreen(
                         Text(AppStrings.current.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
                     }
                 } else {
-                    val todayKey = Clock.System.todayIn(TimeZone.currentSystemDefault()).toString()
+                    val todayKey = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault()).toString()
 
                     campsMapByDay.forEach { (date, list) ->
                         Column(modifier = Modifier.padding(vertical = 6.dp)) {
-                            val now = Clock.System.todayIn(TimeZone.currentSystemDefault())
+                            val now = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
                             val header = when (date) {
                                 todayKey -> AppStrings.current.today.lowercase()
                                 now.plus(1, DateTimeUnit.DAY).toString() -> AppStrings.current.tomorrow.lowercase()

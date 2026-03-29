@@ -12,7 +12,14 @@ import com.tkolymp.shared.user.UserService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.datetime.*
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.todayIn
+import kotlin.time.Clock
 
 /**
  * ViewModel for CalendarView screen
@@ -24,7 +31,7 @@ class CalendarViewViewModel(
 ) : ViewModel() {
     private val _state = MutableStateFlow(
         CalendarViewState(
-            selectedDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+            selectedDate = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault()),
             viewMode = ViewMode.DAY
         )
     )

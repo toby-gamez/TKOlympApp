@@ -3,7 +3,6 @@ package com.tkolymp.shared.cache
 import com.tkolymp.shared.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -13,7 +12,7 @@ data class CacheEntry<T>(
     val timestamp: Instant,
     val ttl: Duration
 ) {
-    fun isValid(): Boolean = Clock.System.now() < timestamp + ttl
+    fun isValid(): Boolean = kotlin.time.Clock.System.now() < timestamp + ttl
 }
 
 class CacheService {
@@ -39,7 +38,7 @@ class CacheService {
 
     suspend fun <T> put(key: String, value: T, ttl: Duration = 5.minutes) = withContext(cacheDispatcher) {
         Logger.d("CacheService", "put: key=$key ttl=${ttl.inWholeMilliseconds}ms")
-        cache[key] = CacheEntry(value, Clock.System.now(), ttl)
+        cache[key] = CacheEntry(value, kotlin.time.Clock.System.now(), ttl)
     }
 
     suspend fun invalidate(key: String) = withContext(cacheDispatcher) {

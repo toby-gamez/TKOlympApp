@@ -70,7 +70,6 @@ import com.tkolymp.shared.calendar.EventLayoutData
 import com.tkolymp.shared.calendar.ViewMode
 import com.tkolymp.shared.event.Event
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -280,8 +279,8 @@ internal fun SingleDayTimelineView(
     val hourHeight = 60.dp // 60 minutes
     val totalHeight = hourHeight * 24 // 24 hours
 
-    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-    val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+    val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val now = kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
     val density = LocalDensity.current
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -372,8 +371,8 @@ internal fun MultiDayTimelineView(
     val dayWidth = 200.dp
     val dayHeaderHeight = 40.dp // Fixed height for day headers
 
-    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-    val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+    val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val now = kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
     val density = LocalDensity.current
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -457,7 +456,7 @@ internal fun MultiDayTimelineView(
                             }
                             
                             // Now line (only for today)
-                            if (date == Clock.System.todayIn(TimeZone.currentSystemDefault())) {
+                            if (date == kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())) {
                                 NowLine(
                                     modifier = Modifier.fillMaxWidth(),
                                     minuteHeight = minuteHeight
@@ -533,7 +532,7 @@ internal fun NowLine(
     modifier: Modifier = Modifier,
     minuteHeight: Dp
 ) {
-    val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+    val now = kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
     val minutesFromMidnight = now.hour * 60 + now.minute
     val offsetDp = minuteHeight * minutesFromMidnight
     
