@@ -265,6 +265,9 @@ val StringsEn = Strings(
         translatorRole = " - translator, supporter and helper",
         brainrotDisclaimer = "Disclaimer: The 'Brainrot' language is a fun variant of the original app, spiced up with some 'brainrot' humor. It's all for fun and shouldn't be taken seriously.",
     ),
+    filterType = "type",
+    filterPlace = "place",
+    filterTrainer = "trainer",
     privacy = PrivacyStrings(
         effectiveDate = "Effective date: December 24, 2025",
         summaryTitle = "Brief summary",

@@ -265,6 +265,9 @@ val StringsSl = Strings(
         translatorRole = " - prevajalec, podpornik in pomočnik",
         brainrotDisclaimer = "Izjava: Jezik 'Brainrot' je zabavna različica prvotne aplikacije, obogatena z nekoliko 'brainrot' humorja. Vse je zgolj za zabavo in ne bi smelo biti jemano resno.",
     ),
+    filterType = "vrsta",
+    filterPlace = "kraj",
+    filterTrainer = "trener",
     privacy = PrivacyStrings(
         effectiveDate = "Datum veljavnosti: 24. december 2025",
         summaryTitle = "Kratki povzetek",

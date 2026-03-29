@@ -10,22 +10,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
@@ -46,16 +45,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.tkolymp.shared.Logger
-import com.tkolymp.tkolympapp.platform.NotificationExportImportButton
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.notification.FilterType
@@ -63,15 +62,13 @@ import com.tkolymp.shared.notification.NotificationRule
 import com.tkolymp.shared.notification.NotificationSettings
 import com.tkolymp.shared.viewmodels.NotificationsSettingsViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
-import kotlinx.coroutines.Dispatchers
+import com.tkolymp.tkolympapp.platform.NotificationExportImportButton
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import com.tkolymp.tkolympapp.components.QuantityInput
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -344,19 +341,13 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                     }
                 )
             }
-            // removed single text filterValue input; selection is via checkboxes
-
             val selectedLocations = remember { mutableStateListOf<String>() }
             val selectedTrainers = remember { mutableStateListOf<String>() }
             val selectedTypes = remember(dialogExisting) {
                 mutableStateListOf<String>().apply {
-                    dialogExisting?.types?.let {
-                        addAll(it)
-                    }
+                    dialogExisting?.types?.let { addAll(it) }
                 }
             }
-
-            // When editing, try to prefill selections. Resolve trainer ids when club data is available.
             LaunchedEffect(dialogExisting, availableTrainers) {
                 selectedLocations.clear()
                 selectedTrainers.clear()
@@ -367,229 +358,215 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                             selectedTrainers.add(s)
                         } else {
                             val matched = availableTrainers.find { it.second == s }
-                            if (matched != null) selectedTrainers.add("${matched.first}::${s}") else selectedTrainers.add(
-                                s
-                            )
+                            if (matched != null) selectedTrainers.add("${matched.first}::${s}") else selectedTrainers.add(s)
                         }
                     }
                 }
             }
-
-            // single time value + unit state (moved outside inner Column so save button can access)
             var timeValue by remember(dialogExisting) {
-                mutableStateOf(
-                    dialogExisting?.timesBeforeMinutes?.firstOrNull()?.toString() ?: "60"
-                )
+                mutableStateOf(dialogExisting?.timesBeforeMinutes?.firstOrNull()?.toString() ?: "60")
             }
-            var timeUnitExpanded by remember { mutableStateOf(false) }
-            var isHours by remember(dialogExisting) { mutableStateOf(false) }
+            var isHours by remember(dialogExisting) {
+                mutableStateOf(dialogExisting?.timesBeforeMinutes?.firstOrNull()?.let { it % 60 == 0 && it != 0 } ?: false)
+            }
             var ruleName by remember(dialogExisting) { mutableStateOf(dialogExisting?.name ?: "") }
-
+            var timeUnitExpanded by remember { mutableStateOf(false) }
+            var lastIsHours by remember { mutableStateOf(isHours) }
             Dialog(
                 onDismissRequest = { showDialog = false },
                 properties = DialogProperties(usePlatformDefaultWidth = false)
             ) {
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        TopAppBar(title = { Text(if (dialogExisting == null) AppStrings.current.addRule else AppStrings.current.editRuleTitle) })
-                        Column(
+                Surface(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(32.dp),
+                    shape = RoundedCornerShape(24.dp),
+                    tonalElevation = 8.dp,
+                    shadowElevation = 16.dp
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp)
+                    ) {
+                        Text(
+                            text = if (dialogExisting == null) AppStrings.current.addRule else AppStrings.current.editRuleTitle,
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+                        OutlinedTextField(
+                            value = ruleName,
+                            onValueChange = { ruleName = it },
+                            label = { Text(AppStrings.current.ruleNameLabel) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        var timeUnit by remember { mutableStateOf(if (isHours) "h" else "min") }
+                        val unitOptions = listOf("min", "h")
+                        QuantityInput(
+                            value = (if (timeUnit == "h") (timeValue.toIntOrNull() ?: 1) else (timeValue.toIntOrNull() ?: 60)),
+                            onValueChange = { v, u ->
+                                timeUnit = u
+                                if (u == "h") {
+                                    timeValue = v.toString()
+                                    isHours = true
+                                } else {
+                                    timeValue = v.toString()
+                                    isHours = false
+                                }
+                            },
+                            units = unitOptions,
+                            defaultUnit = if (isHours) "h" else "min",
+                            label = AppStrings.current.timeAheadLabel,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        // Filter type moved below time input
+                        Text(AppStrings.current.filterTypeLabel, style = MaterialTheme.typography.labelLarge)
+                        Row(
                             modifier = Modifier
-                                .weight(1f)
-                                .padding(16.dp)
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState())
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            OutlinedTextField(
-                                value = ruleName,
-                                onValueChange = { ruleName = it },
-                                label = { Text(AppStrings.current.ruleNameLabel) },
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            // Filter type selector using chips
-                            Text(AppStrings.current.filterTypeLabel)
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .horizontalScroll(rememberScrollState()),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                listOf(
-                                    FilterType.BY_LOCATION,
-                                    FilterType.BY_TRAINER,
-                                    FilterType.BY_TYPE
-                                ).forEach { t ->
-                                    val label = when (t) {
-                                        FilterType.BY_LOCATION -> AppStrings.current.place
-                                        FilterType.BY_TRAINER -> AppStrings.current.trainer
-                                        FilterType.BY_TYPE -> AppStrings.current.eventType
-                                        else -> t.name
-                                    }
-                                    FilterChip(
-                                        selected = (selType == t),
-                                        onClick = { selType = t },
-                                        label = { Text(label) })
+                            listOf(
+                                FilterType.BY_LOCATION,
+                                FilterType.BY_TRAINER,
+                                FilterType.BY_TYPE
+                            ).forEach { t ->
+                                val label = when (t) {
+                                    FilterType.BY_LOCATION -> AppStrings.current.filterPlace
+                                    FilterType.BY_TRAINER -> AppStrings.current.filterTrainer
+                                    FilterType.BY_TYPE -> AppStrings.current.filterType
+                                    else -> t.name
                                 }
-                            }
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                OutlinedTextField(
-                                    value = timeValue,
-                                    onValueChange = { timeValue = it },
-                                    label = { Text(AppStrings.current.timeAheadLabel) },
-                                    modifier = Modifier.weight(1f)
-                                )
-                                Box {
-                                    Button(onClick = { timeUnitExpanded = true }) { Text(if (isHours) AppStrings.current.hoursUnit else AppStrings.current.minutesUnit) }
-                                    DropdownMenu(
-                                        expanded = timeUnitExpanded,
-                                        onDismissRequest = { timeUnitExpanded = false }) {
-                                        DropdownMenuItem(
-                                            text = { Text(AppStrings.current.minutesUnit) },
-                                            onClick = { isHours = false; timeUnitExpanded = false })
-                                        DropdownMenuItem(
-                                            text = { Text(AppStrings.current.hoursUnit) },
-                                            onClick = { isHours = true; timeUnitExpanded = false })
-                                    }
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(AppStrings.current.orPickFromValues)
-                            when (selType) {
-                                FilterType.BY_LOCATION -> {
-                                    LazyColumn(
-                                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-                                    ) {
-                                        items(availableLocations) { loc ->
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth().padding(6.dp),
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Checkbox(
-                                                    checked = selectedLocations.contains(loc),
-                                                    onCheckedChange = {
-                                                        if (it) selectedLocations.add(loc) else selectedLocations.remove(
-                                                            loc
-                                                        )
-                                                    })
-                                                Text(loc)
-                                            }
-                                        }
-                                    }
-                                }
-
-                                FilterType.BY_TRAINER -> {
-                                    LazyColumn(
-                                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-                                    ) {
-                                        items(availableTrainers) { tr ->
-                                            val trId = tr.first
-                                            val trName = tr.second
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth().padding(6.dp),
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                val isChecked = selectedTrainers.any { sel ->
-                                                    if (sel.contains("::")) sel.substringBefore("::") == trId else sel == trName
-                                                }
-                                                Checkbox(
-                                                    checked = isChecked,
-                                                    onCheckedChange = { checked ->
-                                                        if (checked) {
-                                                            selectedTrainers.add("${trId}::${trName}")
-                                                        } else {
-                                                            selectedTrainers.removeAll { sel ->
-                                                                if (sel.contains("::")) sel.substringBefore(
-                                                                    "::"
-                                                                ) == trId else sel == trName
-                                                            }
-                                                        }
-                                                    })
-                                                Text(trName)
-                                            }
-                                        }
-                                    }
-                                }
-
-                                FilterType.BY_TYPE -> {
-                                    LazyColumn(
-                                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-                                    ) {
-                                        items(availableTypes) { tp ->
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth().padding(6.dp),
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Checkbox(
-                                                    checked = selectedTypes.contains(tp),
-                                                    onCheckedChange = {
-                                                        if (it) selectedTypes.add(tp) else selectedTypes.remove(
-                                                            tp
-                                                        )
-                                                    })
-                                                Text(typeLabels[tp] ?: tp)
-                                            }
-                                        }
-                                    }
-                                }
-
-                                else -> { /* nothing */
-                                }
+                                FilterChip(
+                                    selected = (selType == t),
+                                    onClick = { selType = t },
+                                    label = { Text(label) })
                             }
                         }
-
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(AppStrings.current.orPickFromValues, style = MaterialTheme.typography.labelLarge)
+                        when (selType) {
+                            FilterType.BY_LOCATION -> {
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 8.dp)
+                                ) {
+                                    items(availableLocations) { loc ->
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth().padding(6.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Checkbox(
+                                                checked = selectedLocations.contains(loc),
+                                                onCheckedChange = {
+                                                    if (it) selectedLocations.add(loc) else selectedLocations.remove(loc)
+                                                })
+                                            Text(loc)
+                                        }
+                                    }
+                                }
+                            }
+                            FilterType.BY_TRAINER -> {
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 8.dp)
+                                ) {
+                                    items(availableTrainers) { tr ->
+                                        val trId = tr.first
+                                        val trName = tr.second
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth().padding(6.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            val isChecked = selectedTrainers.any { sel ->
+                                                if (sel.contains("::")) sel.substringBefore("::") == trId else sel == trName
+                                            }
+                                            Checkbox(
+                                                checked = isChecked,
+                                                onCheckedChange = { checked ->
+                                                    if (checked) {
+                                                        selectedTrainers.add("${trId}::${trName}")
+                                                    } else {
+                                                        selectedTrainers.removeAll { sel ->
+                                                            if (sel.contains("::")) sel.substringBefore("::") == trId else sel == trName
+                                                        }
+                                                    }
+                                                })
+                                            Text(trName)
+                                        }
+                                    }
+                                }
+                            }
+                            FilterType.BY_TYPE -> {
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 8.dp)
+                                ) {
+                                    items(availableTypes) { tp ->
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth().padding(6.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Checkbox(
+                                                checked = selectedTypes.contains(tp),
+                                                onCheckedChange = {
+                                                    if (it) selectedTypes.add(tp) else selectedTypes.remove(tp)
+                                                })
+                                            Text(typeLabels[tp] ?: tp)
+                                        }
+                                    }
+                                }
+                            }
+                            else -> {}
+                        }
                         Row(
-                            modifier = Modifier.fillMaxWidth().padding(12.dp),
+                            modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
                             horizontalArrangement = Arrangement.End
                         ) {
                             TextButton(onClick = { showDialog = false }) { Text(AppStrings.current.cancel) }
-                            Spacer(modifier = Modifier.padding(6.dp))
-                            Button(onClick = {
-                                // parse single time + unit
-                                val tv = timeValue.trim().toIntOrNull() ?: 60
-                                val minutes = if (isHours) tv * 60 else tv
-                                val times = listOf(minutes)
-                                val existing = dialogExisting
-
-                                // prefer selected checkboxes when present, otherwise empty = match all
-                                val finalLocations =
-                                    if (selectedLocations.isNotEmpty()) selectedLocations.toList() else emptyList()
-                                val finalTrainers =
-                                    if (selectedTrainers.isNotEmpty()) selectedTrainers.toList() else emptyList()
-                                val finalTypes =
-                                    if (selectedTypes.isNotEmpty()) selectedTypes.toList() else emptyList()
-
-                                if (existing == null) {
-                                    val nr = NotificationRule(
-                                        id = kotlin.time.Clock.System.now().toEpochMilliseconds().toString(),
-                                        name = ruleName,
-                                        enabled = true,
-                                        filterType = selType,
-                                        locations = finalLocations,
-                                        trainers = finalTrainers,
-                                        types = finalTypes,
-                                        timesBeforeMinutes = times
-                                    )
-                                    rules.add(nr)
-                                } else {
-                                    val idx = rules.indexOfFirst { it.id == existing.id }
-                                    if (idx >= 0) {
-                                        val updated = existing.copy(
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Button(
+                                onClick = {
+                                    val tv = timeValue.trim().toIntOrNull() ?: 60
+                                    val minutes = if (isHours) tv * 60 else tv
+                                    val times = listOf(minutes)
+                                    val existing = dialogExisting
+                                    val finalLocations = if (selectedLocations.isNotEmpty()) selectedLocations.toList() else emptyList()
+                                    val finalTrainers = if (selectedTrainers.isNotEmpty()) selectedTrainers.toList() else emptyList()
+                                    val finalTypes = if (selectedTypes.isNotEmpty()) selectedTypes.toList() else emptyList()
+                                    if (existing == null) {
+                                        val nr = NotificationRule(
+                                            id = kotlin.time.Clock.System.now().toEpochMilliseconds().toString(),
                                             name = ruleName,
+                                            enabled = true,
                                             filterType = selType,
                                             locations = finalLocations,
                                             trainers = finalTrainers,
                                             types = finalTypes,
                                             timesBeforeMinutes = times
                                         )
-                                        rules[idx] = updated
+                                        rules.add(nr)
+                                    } else {
+                                        val idx = rules.indexOfFirst { it.id == existing.id }
+                                        if (idx >= 0) {
+                                            val updated = existing.copy(
+                                                name = ruleName,
+                                                filterType = selType,
+                                                locations = finalLocations,
+                                                trainers = finalTrainers,
+                                                types = finalTypes,
+                                                timesBeforeMinutes = times
+                                            )
+                                            rules[idx] = updated
+                                        }
                                     }
-                                }
-                                persist()
-                                showDialog = false
-                            }) { Text(AppStrings.current.save) }
+                                    persist()
+                                    showDialog = false
+                                },
+                                shape = RoundedCornerShape(16.dp),
+                                modifier = Modifier.height(48.dp)
+                            ) { Text(AppStrings.current.save) }
                         }
                     }
                 }

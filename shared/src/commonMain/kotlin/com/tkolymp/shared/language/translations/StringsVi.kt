@@ -265,6 +265,9 @@ val StringsVi = Strings(
         translatorRole = " - dịch giả, người ủng hộ và người hỗ trợ",
         brainrotDisclaimer = "Tuyên bố: Ngôn ngữ 'Brainrot' là biến thể vui nhộn của ứng dụng gốc, được làm phong phú với chút hài hước 'brainrot'. Tất cả chỉ để vui và không nên hiểu nghĩa nghiêm túc.",
     ),
+    filterType = "loại",
+    filterPlace = "địa điểm",
+    filterTrainer = "huấn luyện viên",
     privacy = PrivacyStrings(
         effectiveDate = "Ngày có hiệu lực: 24 tháng 12 năm 2025",
         summaryTitle = "Tóm tắt ngắn gọn",

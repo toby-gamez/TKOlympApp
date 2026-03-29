@@ -265,6 +265,9 @@ val StringsUa = Strings(
         translatorRole = " - перекладач, прихильник та помічник",
         brainrotDisclaimer = "Заява: Мова 'Brainrot' — це весела варіація оригінального додатку, збагачена дрібкою 'brainrot' гумору. Все це лише для розваги і не варто сприймати серйозно.",
     ),
+    filterType = "тип",
+    filterPlace = "місце",
+    filterTrainer = "тренер",
     privacy = PrivacyStrings(
         effectiveDate = "Дата набрання чинності: 24 грудня 2025 р.",
         summaryTitle = "Короткий підсумок",

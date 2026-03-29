@@ -13,6 +13,12 @@ data class Strings(
     val events: String,
     val other: String,
 
+
+    // --- Filters ---
+    val filterType: String,
+    val filterPlace: String,
+    val filterTrainer: String,
+
     // --- OtherScreen sections ---
     val membersAndClub: String,
     val appSection: String,
@@ -336,4 +342,5 @@ data class Strings(
 
     // --- Privacy policy screen ---
     val privacy: PrivacyStrings,
+
 )

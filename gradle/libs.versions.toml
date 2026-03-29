@@ -23,6 +23,7 @@ ksafe = "1.7.1"
 google-services = "4.4.4"
 firebase-bom = "34.11.0"
 firebase-analytics = "12.2.0"
+foundation = "1.10.6"
 
 [libraries]
 firebase-messaging = { module = "com.google.firebase:firebase-messaging", version.ref = "firebaseMessaging" }
@@ -56,6 +57,7 @@ compose-material-icons-extended = { group = "androidx.compose.material", name = 
 ksafe = { module = "eu.anifantakis:ksafe", version.ref = "ksafe" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom"}
 firebase-analytics = {module = "com.google.firebase:firebase-analytics", version.ref = "firebase-analytics"}
+androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
