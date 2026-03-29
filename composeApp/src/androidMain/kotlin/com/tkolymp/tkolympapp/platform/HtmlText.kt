@@ -1,18 +1,24 @@
 package com.tkolymp.tkolympapp.platform
 
-import android.graphics.PorterDuff
-import android.graphics.drawable.Drawable
-import android.text.Html
-import android.text.method.LinkMovementMethod
-import android.util.TypedValue
-import android.widget.TextView
+import android.annotation.SuppressLint
+import android.webkit.WebResourceRequest
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.graphics.drawable.DrawableCompat
 
+@SuppressLint("SetJavaScriptEnabled")
 @Composable
 actual fun HtmlText(
     html: String,
@@ -22,51 +28,92 @@ actual fun HtmlText(
     textSizeSp: Float,
     selectable: Boolean
 ) {
-    val textArgb = if (textColor == Color.Unspecified) null else textColor.toArgb()
-    val linkArgb = if (linkColor == Color.Unspecified) null else linkColor.toArgb()
+    var contentHeightPx by remember { mutableStateOf(0) }
+    val density = LocalDensity.current
+    val sizedModifier = modifier
+
     AndroidView(
-        modifier = modifier,
+        modifier = sizedModifier,
         factory = { ctx ->
-            TextView(ctx).apply {
-                if (selectable) setTextIsSelectable(true)
-                if (selectable) {
-                    this.linksClickable = true
-                    this.movementMethod = LinkMovementMethod.getInstance()
+            WebView(ctx).apply {
+                // JS needed only for height measurement; no addJavascriptInterface used
+                settings.javaScriptEnabled = true
+                settings.domStorageEnabled = false
+                settings.allowFileAccess = false
+                settings.allowContentAccess = false
+                isScrollContainer = false
+                isVerticalScrollBarEnabled = false
+                isHorizontalScrollBarEnabled = false
+                setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                if (!selectable) {
+                    // Disable all scrolling/touch events if not selectable
+                    setOnTouchListener { _, _ -> true }
+                }
+                webViewClient = object : WebViewClient() {
+                    override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                        // open links in external browser
+                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, request.url)
+                        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                        try { ctx.startActivity(intent) } catch (_: Throwable) {}
+                        return true
+                    }
+
+                    override fun onPageFinished(view: WebView, url: String) {
+                        // measure full document height and update Compose state
+                        view.evaluateJavascript("document.body.scrollHeight") { result ->
+                            val cssHeight = result?.replace("\"", "")?.toIntOrNull() ?: return@evaluateJavascript
+                            if (cssHeight > 0) {
+                                val px = (cssHeight * resources.displayMetrics.density).toInt()
+                                contentHeightPx = px
+                            }
+                        }
+                    }
                 }
             }
         },
-        update = { tv ->
-            tv.text = Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY)
-            tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSizeSp)
-            if (textArgb != null) tv.setTextColor(textArgb)
-            if (linkArgb != null) tv.setLinkTextColor(linkArgb)
-            if (selectable && linkArgb != null) {
-                val selectionHighlight = (linkArgb and 0x00FFFFFF) or (0x33 shl 24)
-                tv.setHighlightColor(selectionHighlight)
-                tintTextViewHandles(tv, linkArgb)
+        update = { wv ->
+            val textHex = colorToHex(textColor, "#000000")
+            val linkHex = colorToHex(linkColor, "#0088CC")
+            // Remove all inline styles from HTML (for text)
+            val htmlNoInline = html.replace(Regex("<([a-zA-Z0-9]+)([^>]*?) style=\\\".*?\\\"([^>]*?)>", RegexOption.IGNORE_CASE)) {
+                "<" + it.groupValues[1] + it.groupValues[2] + it.groupValues[3] + ">"
             }
+                        val selectionColor = if (selectable) {
+                                // Use a semi-transparent version of linkColor or fallback
+                                val argb = linkColor.takeIf { it != Color.Unspecified }?.toArgb() ?: 0xFF0088CC.toInt()
+                                val rgb = String.format("#%06X", 0xFFFFFF and argb)
+                                val alpha = "40" // ~25% opacity
+                                "::selection { background: $rgb$alpha; }"
+                        } else ""
+                        val styledHtml = """
+                                <!DOCTYPE html>
+                                <html>
+                                <head>
+                                <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+                                <style>
+                                    body { margin:0; padding:0; font-size:${textSizeSp}px; color:${textHex}; background:transparent; word-wrap:break-word; }
+                                    a { color:${linkHex}; }
+                                    img, picture, video {
+                                        width: 100% !important;
+                                        max-width: 100% !important;
+                                        height: auto !important;
+                                        display: block;
+                                        margin: 0 auto;
+                                        border-radius: 10px;
+                                    }
+                                    $selectionColor
+                                </style>
+                                </head>
+                                <body>$htmlNoInline</body>
+                                </html>
+                        """.trimIndent()
+            wv.loadDataWithBaseURL(null, styledHtml, "text/html", "UTF-8", null)
         }
     )
 }
 
-private fun tintTextViewHandles(tv: TextView, color: Int) {
-    try {
-        val editorField = TextView::class.java.getDeclaredField("mEditor")
-        editorField.isAccessible = true
-        val editor = editorField.get(tv) ?: return
-        val handleNames = arrayOf("mSelectHandleLeft", "mSelectHandleRight", "mSelectHandleCenter")
-        for (name in handleNames) {
-            try {
-                val f = editor.javaClass.getDeclaredField(name)
-                f.isAccessible = true
-                val d = f.get(editor) as? Drawable
-                if (d != null) {
-                    val wrapped = DrawableCompat.wrap(d.mutate())
-                    DrawableCompat.setTint(wrapped, color)
-                    DrawableCompat.setTintMode(wrapped, PorterDuff.Mode.SRC_IN)
-                    f.set(editor, wrapped)
-                }
-            } catch (_: Throwable) {}
-        }
-    } catch (_: Throwable) {}
+private fun colorToHex(color: Color, fallback: String): String {
+    if (color == Color.Unspecified) return fallback
+    val argb = color.toArgb()
+    return String.format("#%06X", 0xFFFFFF and argb)
 }

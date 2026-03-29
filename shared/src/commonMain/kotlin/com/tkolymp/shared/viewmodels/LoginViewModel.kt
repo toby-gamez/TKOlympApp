@@ -54,6 +54,7 @@ class LoginViewModel() : ViewModel() {
 
             try { userService.fetchAndStoreActiveCouples() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("LoginViewModel", "fetchAndStoreActiveCouples failed: ${e.message}") }
             try { userService.fetchAndStorePersonDetails(personId) } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("LoginViewModel", "fetchAndStorePersonDetails failed: ${e.message}") }
+            try { userService.fetchAndStoreCurrentUser("1.0") } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("LoginViewModel", "fetchAndStoreCurrentUser failed: ${e.message}") }
 
             _state.value = _state.value.copy(isLoading = false, error = null)
             true

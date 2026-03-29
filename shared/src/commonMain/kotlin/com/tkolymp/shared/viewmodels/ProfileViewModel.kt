@@ -34,8 +34,9 @@ class ProfileViewModel(
                 val pid = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("ProfileViewModel", "getCachedPersonId failed: ${e.message}"); null }
 
                 if (!pid.isNullOrBlank()) {
+                    val cachedPerson = try { userService.getCachedPersonDetails() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("ProfileViewModel", "getCachedPersonDetails (pre-check) failed: ${e.message}"); null }
                     val cachedPersonJson = try { userService.getCachedPersonDetailsJson() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("ProfileViewModel", "getCachedPersonDetailsJson failed: ${e.message}"); null }
-                    val needsRefetch = cachedPersonJson.isNullOrBlank() || !(
+                    val needsRefetch = cachedPerson == null || cachedPersonJson.isNullOrBlank() || !(
                         cachedPersonJson.contains("activeCouplesList") &&
                             cachedPersonJson.contains("cohortMembershipsList") &&
                             (cachedPersonJson.contains("email") || cachedPersonJson.contains("uEmail"))

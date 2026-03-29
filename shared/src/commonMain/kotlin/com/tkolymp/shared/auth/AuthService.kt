@@ -27,24 +27,29 @@ class AuthService(private val storage: TokenStorage, private val client: IGraphQ
         val resp = try {
             client.post(mutation, variables)
         } catch (ex: Exception) {
+            Logger.d("AuthService", "Login request failed: ${ex.message}")
             return false
         }
 
-        val token = resp.jsonObject["data"]
-            ?.jsonObject?.get("login")
-            ?.jsonObject?.get("result")
-            ?.jsonObject?.get("jwt")
-            ?.jsonPrimitive?.contentOrNull
+        return try {
+            val token = resp.jsonObject["data"]
+                ?.jsonObject?.get("login")
+                ?.jsonObject?.get("result")
+                ?.jsonObject?.get("jwt")
+                ?.jsonPrimitive?.contentOrNull
 
-        if (!token.isNullOrBlank()) {
-            storage.saveToken(token)
-            return true
+            if (!token.isNullOrBlank()) {
+                storage.saveToken(token)
+                true
+            } else {
+                val errors = resp.jsonObject["errors"]?.toString() ?: resp.toString()
+                Logger.d("AuthService", "Login failed: $errors")
+                false
+            }
+        } catch (ex: Exception) {
+            Logger.d("AuthService", "Login response parse failed: ${ex.message}")
+            false
         }
-
-        val errors = resp.jsonObject["errors"]?.toString() ?: resp.toString()
-        Logger.d("AuthService", "Login failed: $errors")
-
-        return false
     }
 
     override suspend fun refreshJwt(): Boolean {
