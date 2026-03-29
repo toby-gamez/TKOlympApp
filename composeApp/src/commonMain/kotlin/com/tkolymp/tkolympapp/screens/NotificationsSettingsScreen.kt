@@ -80,11 +80,11 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
     val availableTypes = listOf("CAMP", "LESSON", "GROUP", "RESERVATION", "HOLIDAY")
     // display labels for types
     val typeLabels = mapOf(
-        "LESSON" to AppStrings.current.eventTypeLesson,
-        "CAMP" to AppStrings.current.eventTypeCamp,
-        "GROUP" to AppStrings.current.eventTypeGroup,
-        "RESERVATION" to AppStrings.current.eventTypeReservation,
-        "HOLIDAY" to AppStrings.current.eventTypeHoliday
+        "LESSON" to AppStrings.current.events.eventTypeLesson,
+        "CAMP" to AppStrings.current.events.eventTypeCamp,
+        "GROUP" to AppStrings.current.events.eventTypeGroup,
+        "RESERVATION" to AppStrings.current.events.eventTypeReservation,
+        "HOLIDAY" to AppStrings.current.events.eventTypeHoliday
     )
     var rules = remember { mutableStateListOf<NotificationRule>() }
     var globalEnabled by remember { mutableStateOf(true) }
@@ -146,8 +146,8 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text(AppStrings.current.notificationSettings) }, navigationIcon = {
-            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.back) }
+        topBar = { TopAppBar(title = { Text(AppStrings.current.otherScreen.notificationSettings) }, navigationIcon = {
+            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back) }
         }, actions = {
             NotificationExportImportButton(
                 onGetExportJson = {
@@ -165,7 +165,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
         }) },
         floatingActionButton = {
             FloatingActionButton(onClick = { editRule = null; showDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = AppStrings.current.addRule)
+                Icon(Icons.Default.Add, contentDescription = AppStrings.current.notifications.addRule)
             }
         }
     ) { inner ->
@@ -186,7 +186,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(AppStrings.current.globallyEnabled)
+                        Text(AppStrings.current.notifications.globallyEnabled)
                         Switch(
                             checked = globalEnabled,
                             onCheckedChange = { globalEnabled = it; persist() })
@@ -211,11 +211,11 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
                                         val title =
-                                            if (r.name.isNotBlank()) r.name else if (r.filterType == FilterType.ALL) AppStrings.current.allEventsFilter else AppStrings.current.rule
+                                            if (r.name.isNotBlank()) r.name else if (r.filterType == FilterType.ALL) AppStrings.current.notifications.allEventsFilter else AppStrings.current.misc.rule
                                         Text(text = title)
                                         if (r.filterType == FilterType.ALL) {
                                             Text(
-                                                text = AppStrings.current.allEventsFilter,
+                                                text = AppStrings.current.notifications.allEventsFilter,
                                                 style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
                                                 modifier = Modifier.padding(top = 4.dp)
                                             )
@@ -224,7 +224,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                                 text = "Místa: ${
                                                     if (r.locations.isNotEmpty()) r.locations.joinToString(
                                                         ", "
-                                                    ) else AppStrings.current.allLocations
+                                                    ) else AppStrings.current.notifications.allLocations
                                                 }",
                                                 style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
                                                 modifier = Modifier.padding(top = 4.dp)
@@ -232,7 +232,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                             val trainerDisplay =
                                                 if (r.trainers.isNotEmpty()) r.trainers.map { t ->
                                                     if (t.contains("::")) t.substringAfter("::") else t
-                                                }.joinToString(", ") else AppStrings.current.allTrainers
+                                                }.joinToString(", ") else AppStrings.current.notifications.allTrainers
                                             Text(
                                                 text = "Trenéři: $trainerDisplay",
                                                 style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
@@ -241,14 +241,14 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                             Text(
                                                 text = "Typy: ${
                                                     if (r.types.isNotEmpty()) r.types.map { typeLabels[it] ?: it }
-                                                        .joinToString(", ") else AppStrings.current.allTypes
+                                                        .joinToString(", ") else AppStrings.current.notifications.allTypes
                                                 }",
                                                 style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
                                                 modifier = Modifier.padding(top = 2.dp)
                                             )
                                         }
                                         Text(
-                                            text = "${r.timesBeforeMinutes.joinToString(", ")} ${AppStrings.current.minutesBefore}",
+                                            text = "${r.timesBeforeMinutes.joinToString(", ")} ${AppStrings.current.notifications.minutesBefore}",
                                             style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
                                             modifier = Modifier.padding(top = 6.dp)
                                         )
@@ -267,7 +267,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                         }) {
                                             Icon(
                                                 Icons.Default.Edit,
-                                                contentDescription = AppStrings.current.edit
+                                                contentDescription = AppStrings.current.commonActions.edit
                                             )
                                         }
                                         IconButton(onClick = {
@@ -276,7 +276,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                         }) {
                                             Icon(
                                                 Icons.Default.Delete,
-                                                contentDescription = AppStrings.current.delete
+                                                contentDescription = AppStrings.current.commonActions.delete
                                             )
                                         }
                                     }
@@ -290,9 +290,9 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text(AppStrings.current.noRules, style = MaterialTheme.typography.titleMedium)
+                            Text(AppStrings.current.notifications.noRules, style = MaterialTheme.typography.titleMedium)
                             Text(
-                                AppStrings.current.noRulesDescription,
+                                AppStrings.current.notifications.noRulesDescription,
                                 style = MaterialTheme.typography.bodySmall,
                                 modifier = Modifier.padding(top = 4.dp)
                             )
@@ -301,7 +301,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                     } // end Box
 
                     Button(onClick = onBack, modifier = Modifier.padding(top = 12.dp)) {
-                        Text(AppStrings.current.back)
+                        Text(AppStrings.current.commonActions.back)
                     }
                 }
             }
@@ -311,8 +311,8 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
             val toDeleteId = deletingRuleId
             AlertDialog(
                 onDismissRequest = { showDeleteConfirm = false; deletingRuleId = null },
-                title = { Text(AppStrings.current.deleteRuleConfirmTitle) },
-                text = { Text(AppStrings.current.deleteRuleConfirmText) },
+                title = { Text(AppStrings.current.notifications.deleteRuleConfirmTitle) },
+                text = { Text(AppStrings.current.notifications.deleteRuleConfirmText) },
                 confirmButton = {
                     Button(onClick = {
                         if (toDeleteId != null) {
@@ -321,12 +321,12 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                         }
                         showDeleteConfirm = false
                         deletingRuleId = null
-                    }) { Text(AppStrings.current.delete) }
+                    }) { Text(AppStrings.current.commonActions.delete) }
                 },
                 dismissButton = {
                     TextButton(onClick = {
                         showDeleteConfirm = false; deletingRuleId = null
-                    }) { Text(AppStrings.current.cancel) }
+                    }) { Text(AppStrings.current.commonActions.cancel) }
                 }
             )
         }
@@ -390,14 +390,14 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                             .padding(24.dp)
                     ) {
                         Text(
-                            text = if (dialogExisting == null) AppStrings.current.addRule else AppStrings.current.editRuleTitle,
+                            text = if (dialogExisting == null) AppStrings.current.notifications.addRule else AppStrings.current.notifications.editRuleTitle,
                             style = MaterialTheme.typography.titleLarge,
                             modifier = Modifier.padding(bottom = 12.dp)
                         )
                         OutlinedTextField(
                             value = ruleName,
                             onValueChange = { ruleName = it },
-                            label = { Text(AppStrings.current.ruleNameLabel) },
+                            label = { Text(AppStrings.current.notifications.ruleNameLabel) },
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(modifier = Modifier.height(12.dp))
@@ -417,11 +417,11 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                             },
                             units = unitOptions,
                             defaultUnit = if (isHours) "h" else "min",
-                            label = AppStrings.current.timeAheadLabel,
+                            label = AppStrings.current.notifications.timeAheadLabel,
                             modifier = Modifier.fillMaxWidth()
                         )
                         // Filter type moved below time input
-                        Text(AppStrings.current.filterTypeLabel, style = MaterialTheme.typography.labelLarge)
+                        Text(AppStrings.current.notifications.filterTypeLabel, style = MaterialTheme.typography.labelLarge)
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -435,9 +435,9 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                 FilterType.BY_TYPE
                             ).forEach { t ->
                                 val label = when (t) {
-                                    FilterType.BY_LOCATION -> AppStrings.current.filterPlace
-                                    FilterType.BY_TRAINER -> AppStrings.current.filterTrainer
-                                    FilterType.BY_TYPE -> AppStrings.current.filterType
+                                    FilterType.BY_LOCATION -> AppStrings.current.filters.filterPlace
+                                    FilterType.BY_TRAINER -> AppStrings.current.filters.filterTrainer
+                                    FilterType.BY_TYPE -> AppStrings.current.filters.filterType
                                     else -> t.name
                                 }
                                 FilterChip(
@@ -448,7 +448,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(AppStrings.current.orPickFromValues, style = MaterialTheme.typography.labelLarge)
+                        Text(AppStrings.current.notifications.orPickFromValues, style = MaterialTheme.typography.labelLarge)
                         when (selType) {
                             FilterType.BY_LOCATION -> {
                                 LazyColumn(
@@ -524,7 +524,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                             modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
                             horizontalArrangement = Arrangement.End
                         ) {
-                            TextButton(onClick = { showDialog = false }) { Text(AppStrings.current.cancel) }
+                            TextButton(onClick = { showDialog = false }) { Text(AppStrings.current.commonActions.cancel) }
                             Spacer(modifier = Modifier.width(12.dp))
                             Button(
                                 onClick = {
@@ -566,7 +566,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                 },
                                 shape = RoundedCornerShape(16.dp),
                                 modifier = Modifier.height(48.dp)
-                            ) { Text(AppStrings.current.save) }
+                            ) { Text(AppStrings.current.commonActions.save) }
                         }
                     }
                 }

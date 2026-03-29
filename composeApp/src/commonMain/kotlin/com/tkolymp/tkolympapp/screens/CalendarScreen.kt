@@ -82,7 +82,7 @@ fun CalendarScreen(
 ) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     var localWeekOffset by rememberSaveable { mutableIntStateOf(weekOffset) }
-    val tabs = listOf(AppStrings.current.mine, AppStrings.current.all)
+    val tabs = listOf(AppStrings.current.people.mine, AppStrings.current.commonActions.all)
     // moved data loading into shared CalendarViewModel
     val calendarViewModel = viewModel<com.tkolymp.shared.viewmodels.CalendarViewModel>()
     val calState by calendarViewModel.state.collectAsState()
@@ -121,7 +121,7 @@ fun CalendarScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(AppStrings.current.calendar) },
+                title = { Text(AppStrings.current.navigation.calendar) },
                 actions = {
                     onNavigateTimeline?.let {
                         IconButton(onClick = it) {
@@ -137,7 +137,7 @@ fun CalendarScreen(
                     TextButton(onClick = {
                         localWeekOffset = 0
                         onWeekOffsetChange(0)
-                    }) { Text(AppStrings.current.today) }
+                    }) { Text(AppStrings.current.timeline.today) }
                     IconButton(onClick = {
                         localWeekOffset = localWeekOffset + 1
                         onWeekOffsetChange(localWeekOffset)
@@ -196,8 +196,8 @@ fun CalendarScreen(
                         val list = grouped[date] ?: return@forEach
                         Column(modifier = Modifier.padding(8.dp)) {
                             val header = when (date) {
-                                todayKey -> AppStrings.current.today.lowercase()
-                                baseToday.plus(1, DateTimeUnit.DAY).toString() -> AppStrings.current.tomorrow.lowercase()
+                                todayKey -> AppStrings.current.timeline.today.lowercase()
+                                baseToday.plus(1, DateTimeUnit.DAY).toString() -> AppStrings.current.timeline.tomorrow.lowercase()
                                 else -> {
                                     val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
                                     if (ld == null) date else {
@@ -242,9 +242,9 @@ fun CalendarScreen(
             AlertDialog(
                 onDismissRequest = { calendarViewModel.clearError() },
                 confirmButton = {
-                    TextButton(onClick = { calendarViewModel.clearError() }) { Text(AppStrings.current.ok) }
+                    TextButton(onClick = { calendarViewModel.clearError() }) { Text(AppStrings.current.commonActions.ok) }
                 },
-                title = { Text(AppStrings.current.errorLoadingEvents) },
+                title = { Text(AppStrings.current.events.errorLoadingEvents) },
                 text = { Text(err) }
             )
         }
@@ -279,7 +279,7 @@ internal fun LessonView(
             Row(modifier = Modifier.fillMaxWidth()) {
                 Text(trainerName, style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.weight(1f))
-                Text(AppStrings.current.lessonLabel, style = MaterialTheme.typography.labelSmall)
+                Text(AppStrings.current.eventCalendarTabs.lessonLabel, style = MaterialTheme.typography.labelSmall)
             }
 
             val groupLocation = instances.mapNotNull { inst ->

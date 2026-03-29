@@ -58,10 +58,10 @@ fun LanguageScreen(onBack: () -> Unit = {}) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(AppStrings.current.languages) },
+                title = { Text(AppStrings.current.otherScreen.languages) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
                     }
                 }
             )
@@ -76,7 +76,7 @@ fun LanguageScreen(onBack: () -> Unit = {}) {
             verticalArrangement = Arrangement.Top
         ) {
             Text(
-                text = AppStrings.current.selectLanguage,
+                text = AppStrings.current.languageScreen.selectLanguage,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 12.dp)
@@ -158,7 +158,7 @@ fun LanguageScreen(onBack: () -> Unit = {}) {
                         if (isSelected) {
                             Icon(
                                 imageVector = Icons.Filled.Check,
-                                contentDescription = AppStrings.current.selected,
+                                contentDescription = AppStrings.current.dialogs.selected,
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(22.dp)
                             )

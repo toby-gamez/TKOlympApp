@@ -22,31 +22,31 @@ fun AppBottomBar(current: String, onSelect: (String) -> Unit, modifier: Modifier
             selected = current == "overview",
             onClick = { onSelect("overview") },
             icon = { Icon(Icons.Default.Home, contentDescription = null) },
-            label = { Text(AppStrings.current.overview) }
+            label = { Text(AppStrings.current.navigation.overview) }
         )
         NavigationBarItem(
             selected = current == "calendar",
             onClick = { onSelect("calendar") },
             icon = { Icon(Icons.Default.CalendarToday, contentDescription = null) },
-            label = { Text(AppStrings.current.calendar) }
+            label = { Text(AppStrings.current.navigation.calendar) }
         )
         NavigationBarItem(
             selected = current == "board",
             onClick = { onSelect("board") },
             icon = { Icon(Icons.Default.Dashboard, contentDescription = null) },
-            label = { Text(AppStrings.current.board) }
+            label = { Text(AppStrings.current.navigation.board) }
         )
         NavigationBarItem(
             selected = current == "events",
             onClick = { onSelect("events") },
             icon = { Icon(Icons.Default.Event, contentDescription = null) },
-            label = { Text(AppStrings.current.events) }
+            label = { Text(AppStrings.current.navigation.events) }
         )
         NavigationBarItem(
             selected = current == "other",
             onClick = { onSelect("other") },
             icon = { Icon(Icons.Default.MoreHoriz, contentDescription = null) },
-            label = { Text(AppStrings.current.other) }
+            label = { Text(AppStrings.current.navigation.other) }
         )
     }
 }

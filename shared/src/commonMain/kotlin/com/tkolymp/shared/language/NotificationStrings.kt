@@ -1,0 +1,28 @@
+package com.tkolymp.shared.language
+
+data class NotificationStrings(
+    val notificationsGloballyEnabled: String,
+    val timeBeforeEvent: String,
+    val ruleName: String,
+    val deleteRule: String,
+    val noRules: String,
+    val orPickFromValues: String,
+    val addRule: String,
+    val editRuleTitle: String,
+    val globallyEnabled: String,
+    val noRulesDescription: String,
+    val allEventsFilter: String,
+    val filterTypeLabel: String,
+    val ruleNameLabel: String,
+    val timeAheadLabel: String,
+    val minutesUnit: String,
+    val hoursUnit: String,
+    val deleteRuleConfirmTitle: String,
+    val deleteRuleConfirmText: String,
+    val allLocations: String,
+    val allTrainers: String,
+    val allTypes: String,
+    val minutesBefore: String,
+    val defaultRuleName: String,
+    val notificationEventStartsIn: String,
+)

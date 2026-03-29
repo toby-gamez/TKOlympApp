@@ -62,8 +62,8 @@ data class CohortDisplay(val name: String, val colorRgb: String?, val since: Str
 private fun formatProfileValue(key: String, value: String): String {
     val v = value.trim()
     when {
-        v.equals("true", ignoreCase = true) -> return AppStrings.current.yes
-        v.equals("false", ignoreCase = true) -> return AppStrings.current.no
+        v.equals("true", ignoreCase = true) -> return AppStrings.current.commonActions.yes
+        v.equals("false", ignoreCase = true) -> return AppStrings.current.commonActions.no
     }
     if (key.equals("birthDate", ignoreCase = true)) {
         val formatted = fmtProfileDate(v)
@@ -71,9 +71,9 @@ private fun formatProfileValue(key: String, value: String): String {
     }
     if (key.equals("gender", ignoreCase = true)) {
         return when (v.uppercase()) {
-            "MAN" -> AppStrings.current.genderMale
-            "WOMAN" -> AppStrings.current.genderFemale
-            else -> AppStrings.current.genderUnspecified
+            "MAN" -> AppStrings.current.gender.genderMale
+            "WOMAN" -> AppStrings.current.gender.genderFemale
+            else -> AppStrings.current.gender.genderUnspecified
         }
     }
     if (key.equals("nationality", ignoreCase = true)) {
@@ -184,11 +184,11 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(AppStrings.current.myProfile) },
+                title = { Text(AppStrings.current.profile.myProfile) },
                 navigationIcon = {
                     onBack?.let {
                         IconButton(onClick = it) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.back)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
                         }
                     }
                 }
@@ -236,23 +236,23 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
 
                 // Labeling and categorization
                 val labelMap = mapOf(
-                    "email" to AppStrings.current.email,
-                    "address" to AppStrings.current.address,
-                    "isTrainer" to AppStrings.current.trainer,
-                    "mobilePhone" to AppStrings.current.mobile,
-                    "phone" to AppStrings.current.phone,
-                    "workPhone" to AppStrings.current.workPhone,
-                    "birthDate" to AppStrings.current.birthDate,
-                    "gender" to AppStrings.current.gender,
-                    "nationality" to AppStrings.current.nationality,
-                    "username" to AppStrings.current.username,
+                    "email" to AppStrings.current.profile.email,
+                    "address" to AppStrings.current.address.address,
+                    "isTrainer" to AppStrings.current.profile.trainer,
+                    "mobilePhone" to AppStrings.current.profile.mobile,
+                    "phone" to AppStrings.current.profile.phone,
+                    "workPhone" to AppStrings.current.extendedProfile.workPhone,
+                    "birthDate" to AppStrings.current.profile.birthDate,
+                    "gender" to AppStrings.current.profile.gender,
+                    "nationality" to AppStrings.current.profile.nationality,
+                    "username" to AppStrings.current.extendedProfile.username,
                     "id" to "ID",
-                    "personalId" to AppStrings.current.personalId,
-                    "nationalIdNumber" to AppStrings.current.personalId,
-                    "passportNumber" to AppStrings.current.passportNumber,
-                    "idNumber" to AppStrings.current.idNumber,
-                    "wdsfId" to AppStrings.current.wdsfId,
-                    "cstsId" to AppStrings.current.cstsId
+                    "personalId" to AppStrings.current.profile.personalId,
+                    "nationalIdNumber" to AppStrings.current.profile.personalId,
+                    "passportNumber" to AppStrings.current.extendedProfile.passportNumber,
+                    "idNumber" to AppStrings.current.extendedProfile.idNumber,
+                    "wdsfId" to AppStrings.current.profile.wdsfId,
+                    "cstsId" to AppStrings.current.profile.cstsId
                 )
 
                 fun humanizeKey(k: String): String {
@@ -279,12 +279,12 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                 }
         Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(12.dp)) {
-                Text(AppStrings.current.aboutMe, style = MaterialTheme.typography.labelLarge)
+                Text(AppStrings.current.profile.aboutMe, style = MaterialTheme.typography.labelLarge)
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 if (!bioText.isNullOrBlank()) {
                     Text(bioText!!, style = MaterialTheme.typography.bodyMedium)
                 } else {
-                    Text(AppStrings.current.bioNotAvailable, style = MaterialTheme.typography.bodySmall)
+                    Text(AppStrings.current.profile.bioNotAvailable, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -292,19 +292,19 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         // Address card — show all available address subfields
         Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(12.dp)) {
-                Text(AppStrings.current.address, style = MaterialTheme.typography.labelLarge)
+                Text(AppStrings.current.address.address, style = MaterialTheme.typography.labelLarge)
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 if (addressFields.isNotEmpty()) {
                     addressFields.forEach { (k, v) ->
                         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.Start) {
                             val label = when (k) {
-                                "street" -> AppStrings.current.street
-                                "city" -> AppStrings.current.city
-                                "postalCode" -> AppStrings.current.zip
-                                "region" -> AppStrings.current.region
-                                "district" -> AppStrings.current.district
-                                "conscriptionNumber" -> AppStrings.current.conscriptionNumber
-                                "orientationNumber" -> AppStrings.current.orientationNumber
+                                "street" -> AppStrings.current.address.street
+                                "city" -> AppStrings.current.address.city
+                                "postalCode" -> AppStrings.current.address.zip
+                                "region" -> AppStrings.current.address.region
+                                "district" -> AppStrings.current.address.district
+                                "conscriptionNumber" -> AppStrings.current.extendedProfile.conscriptionNumber
+                                "orientationNumber" -> AppStrings.current.extendedProfile.orientationNumber
                                 else -> k
                             }
                             Text("$label:", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(end = 8.dp))
@@ -314,7 +314,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                 } else if (!addrText.isNullOrBlank()) {
                     Text(addrText!!, style = MaterialTheme.typography.bodyMedium)
                 } else {
-                    Text(AppStrings.current.addressNotAvailable, style = MaterialTheme.typography.bodySmall)
+                    Text(AppStrings.current.address.addressNotAvailable, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -322,7 +322,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         // Active couples card (prefer activeCouplesList data)
         Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(12.dp)) {
-                Text(AppStrings.current.activeCouple, style = MaterialTheme.typography.labelLarge)
+                Text(AppStrings.current.profile.activeCouple, style = MaterialTheme.typography.labelLarge)
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 if (activeCoupleNames.isNotEmpty()) {
                     Column {
@@ -331,7 +331,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                         }
                     }
                 } else {
-                    Text(AppStrings.current.noActiveCouples, style = MaterialTheme.typography.bodySmall)
+                    Text(AppStrings.current.profile.noActiveCouples, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -339,7 +339,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         // Groups (cohorts) card - styled like PersonPage
         Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(12.dp)) {
-                Text(AppStrings.current.trainingGroups, style = MaterialTheme.typography.labelLarge)
+                Text(AppStrings.current.otherScreen.trainingGroups, style = MaterialTheme.typography.labelLarge)
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 if (cohortItems.isNotEmpty()) {
                     Column {
@@ -355,8 +355,8 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                                     Row(modifier = Modifier.fillMaxWidth()) {
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(text = item.name, style = MaterialTheme.typography.titleSmall)
-                                            if (!since.isNullOrBlank()) Text("${AppStrings.current.dateFrom}: ${since}", style = MaterialTheme.typography.labelSmall)
-                                            if (!until.isNullOrBlank()) Text("${AppStrings.current.dateTo}: ${until}", style = MaterialTheme.typography.labelSmall)
+                                            if (!since.isNullOrBlank()) Text("${AppStrings.current.profile.dateFrom}: ${since}", style = MaterialTheme.typography.labelSmall)
+                                            if (!until.isNullOrBlank()) Text("${AppStrings.current.profile.dateTo}: ${until}", style = MaterialTheme.typography.labelSmall)
                                         }
                                         Box(modifier = Modifier
                                             .width(28.dp)
@@ -371,7 +371,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                         }
                     }
                 } else {
-                    Text(AppStrings.current.noGroupsToShow, style = MaterialTheme.typography.bodySmall)
+                    Text(AppStrings.current.people.noGroupsToShow, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -380,7 +380,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         if (personalList.isNotEmpty()) {
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Text(AppStrings.current.personalData, style = MaterialTheme.typography.labelLarge)
+                    Text(AppStrings.current.profile.personalData, style = MaterialTheme.typography.labelLarge)
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                     personalList.forEach { (k, v) ->
                         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.Start) {
@@ -396,7 +396,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         if (contactList.isNotEmpty()) {
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Text(AppStrings.current.contacts, style = MaterialTheme.typography.labelLarge)
+                    Text(AppStrings.current.profile.contacts, style = MaterialTheme.typography.labelLarge)
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                     contactList.forEach { (k, v) ->
                         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.Start) {
@@ -412,7 +412,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         if (externalList.isNotEmpty()) {
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Text(AppStrings.current.externalIdSection, style = MaterialTheme.typography.labelLarge)
+                    Text(AppStrings.current.profile.externalIdSection, style = MaterialTheme.typography.labelLarge)
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                     externalList.forEach { (k, v) ->
                         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.Start) {
@@ -428,7 +428,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         if (otherList.isNotEmpty()) {
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Text(AppStrings.current.otherDetails, style = MaterialTheme.typography.labelLarge)
+                    Text(AppStrings.current.profile.otherDetails, style = MaterialTheme.typography.labelLarge)
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                     otherList.forEach { (k, v) ->
                         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.Start) {
@@ -451,7 +451,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                     onClick = { showChangePassDialog = true },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(AppStrings.current.changePassword)
+                    Text(AppStrings.current.auth.changePassword)
                 }
 
                 if (showChangePassDialog) {
@@ -470,7 +470,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                     onClick = { showEditPersonal = true },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(AppStrings.current.changePersonalData)
+                    Text(AppStrings.current.profile.changePersonalData)
                 }
 
                 if (showEditPersonal) {
@@ -512,8 +512,8 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
         if (showLogoutConfirm) {
             AlertDialog(
                 onDismissRequest = { showLogoutConfirm = false },
-                title = { Text(AppStrings.current.logout) },
-                text = { Text(AppStrings.current.confirmLogoutText) },
+                title = { Text(AppStrings.current.commonActions.logout) },
+                text = { Text(AppStrings.current.commonActions.confirmLogoutText) },
                 confirmButton = {
                     Button(onClick = {
                         showLogoutConfirm = false
@@ -522,10 +522,10 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                             try { ServiceLocator.userService.clear() } catch (e: CancellationException) { throw e } catch (_: Exception) {}
                             onLogout()
                         }
-                    }) { Text(AppStrings.current.logout) }
+                    }) { Text(AppStrings.current.commonActions.logout) }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showLogoutConfirm = false }) { Text(AppStrings.current.cancel) }
+                    TextButton(onClick = { showLogoutConfirm = false }) { Text(AppStrings.current.commonActions.cancel) }
                 }
             )
         }
@@ -534,7 +534,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
             onClick = { showLogoutConfirm = true },
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
         ) {
-            Text(AppStrings.current.logout)
+            Text(AppStrings.current.commonActions.logout)
         }
     }
     }

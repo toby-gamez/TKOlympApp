@@ -110,10 +110,10 @@ fun RegistrationScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(when (mode) { is RegMode.Register -> AppStrings.current.register; is RegMode.Edit -> AppStrings.current.editRegistration; is RegMode.Delete -> AppStrings.current.deleteRegistration }) },
+                title = { Text(when (mode) { is RegMode.Register -> AppStrings.current.registration.register; is RegMode.Edit -> AppStrings.current.registration.editRegistration; is RegMode.Delete -> AppStrings.current.registration.deleteRegistration }) },
                 navigationIcon = {
                     IconButton(onClick = onClose) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.back)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
                     }
                 }
             )
@@ -180,7 +180,7 @@ fun RegistrationScreen(
             is RegMode.Register -> {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(12.dp)) {
-                        Text(AppStrings.current.selectRegistrant, style = MaterialTheme.typography.bodyMedium)
+                        Text(AppStrings.current.registration.selectRegistrant, style = MaterialTheme.typography.bodyMedium)
                         Spacer(modifier = Modifier.height(6.dp))
                         // compute already-registered person/couple ids so we don't offer them for new registration
                         val registeredPersonIds = remember(registrations) {
@@ -276,8 +276,8 @@ fun RegistrationScreen(
                             OutlinedTextField(
                                 value = noteState.value,
                                 onValueChange = { noteState.value = it },
-                                label = { Text(AppStrings.current.noteOptional) },
-                                placeholder = { Text(AppStrings.current.registrationNote) },
+                                label = { Text(AppStrings.current.registration.noteOptional) },
+                                placeholder = { Text(AppStrings.current.registration.registrationNote) },
                                 modifier = Modifier.fillMaxWidth()
                             )
                             Spacer(modifier = Modifier.height(8.dp))
@@ -291,7 +291,7 @@ fun RegistrationScreen(
                         }
 
                         if (showLessonSelection) {
-                            Text(AppStrings.current.selectTrainersAndLessons, style = MaterialTheme.typography.bodyMedium)
+                            Text(AppStrings.current.registration.selectTrainersAndLessons, style = MaterialTheme.typography.bodyMedium)
                             Spacer(modifier = Modifier.height(6.dp))
 
                             trainers.forEachIndexed { idx, tEl ->
@@ -335,7 +335,7 @@ fun RegistrationScreen(
                         val showSelectError = remember { mutableStateOf(false) }
                         val showRegisterError = remember { mutableStateOf<String?>(null) }
                         if (showSelectError.value) {
-                            Text(AppStrings.current.noRegistrationSelected, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                            Text(AppStrings.current.registration.noRegistrationSelected, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                             Spacer(modifier = Modifier.height(8.dp))
                         }
                         Button(onClick = {
@@ -362,7 +362,7 @@ fun RegistrationScreen(
                                 Logger.d("RegScreen", "Register failed: ${t.message}")
                                 showRegisterError.value = t.message ?: "Chyba při registraci"
                             }
-                        }, modifier = Modifier.fillMaxWidth()) { Text(AppStrings.current.confirmRegistrationTitle) }
+                        }, modifier = Modifier.fillMaxWidth()) { Text(AppStrings.current.registration.confirmRegistrationTitle) }
                         if (!showRegisterError.value.isNullOrBlank()) {
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(showRegisterError.value!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
@@ -372,7 +372,7 @@ fun RegistrationScreen(
             }
             is RegMode.Edit -> {
                 Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).padding(12.dp)) {
-                    Text(AppStrings.current.selectRegistration, style = MaterialTheme.typography.bodyMedium)
+                    Text(AppStrings.current.registration.selectRegistration, style = MaterialTheme.typography.bodyMedium)
                     Spacer(modifier = Modifier.height(6.dp))
 
                         val selectedRegId = remember { mutableStateOf<String?>(null) }
@@ -475,7 +475,7 @@ fun RegistrationScreen(
                             }
 
                             if (showLessonSelection) {
-                                Text(AppStrings.current.editLessonClaims, style = MaterialTheme.typography.bodyMedium)
+                                Text(AppStrings.current.misc.editLessonClaims, style = MaterialTheme.typography.bodyMedium)
                                 trainers.forEachIndexed { idx, tEl ->
                                     val tObj = tEl as? JsonObject
                                     val tIdStr = tObj?.get("id")?.jsonPrimitive?.contentOrNull ?: idx.toString()
@@ -514,8 +514,8 @@ fun RegistrationScreen(
                                 OutlinedTextField(
                                     value = editNoteState.value,
                                     onValueChange = { editNoteState.value = it },
-                                    label = { Text(AppStrings.current.noteOptional) },
-                                    placeholder = { Text(AppStrings.current.registrationNote) },
+                                    label = { Text(AppStrings.current.registration.noteOptional) },
+                                    placeholder = { Text(AppStrings.current.registration.registrationNote) },
                                     modifier = Modifier.fillMaxWidth()
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
@@ -547,7 +547,7 @@ fun RegistrationScreen(
             is RegMode.Delete -> {
                 Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                     Column(modifier = Modifier.padding(12.dp)) {
-                        Text(AppStrings.current.selectToDelete, style = MaterialTheme.typography.bodyMedium)
+                        Text(AppStrings.current.registration.selectToDelete, style = MaterialTheme.typography.bodyMedium)
                         Spacer(modifier = Modifier.height(6.dp))
                         val selectedReg = remember { mutableStateOf<String?>(null) }
                         val showDeleteError = remember { mutableStateOf<String?>(null) }
@@ -610,13 +610,13 @@ fun RegistrationScreen(
                             },
                             modifier = Modifier.fillMaxWidth(),
                             enabled = selectedReg.value != null
-                        ) { Text(AppStrings.current.deleteSelectedRegistration) }
+                        ) { Text(AppStrings.current.registration.deleteSelectedRegistration) }
 
                         if (showConfirmDelete.value) {
                             AlertDialog(
                                 onDismissRequest = { showConfirmDelete.value = false },
-                                title = { Text(AppStrings.current.deleteRegistrationConfirmTitle) },
-                                text = { Text(AppStrings.current.deleteRegistrationConfirmText) },
+                                title = { Text(AppStrings.current.registration.deleteRegistrationConfirmTitle) },
+                                text = { Text(AppStrings.current.registration.deleteRegistrationConfirmText) },
                                 confirmButton = {
                                     TextButton(onClick = {
                                         showConfirmDelete.value = false
@@ -625,7 +625,7 @@ fun RegistrationScreen(
                                             // verify ownership before deleting
                                             val owned = ownedRegistrations.firstOrNull { (it as? JsonObject)?.get("id")?.jsonPrimitive?.contentOrNull == selId } != null
                                             if (!owned) {
-                                                showDeleteError.value = AppStrings.current.noRegistrationOwned
+                                                showDeleteError.value = AppStrings.current.registration.noRegistrationOwned
                                                 return@TextButton
                                             }
                                             try {
@@ -636,10 +636,10 @@ fun RegistrationScreen(
                                                 showDeleteError.value = t.message ?: "Chyba při mazání"
                                             }
                                         }
-                                    }) { Text(AppStrings.current.delete) }
+                                    }) { Text(AppStrings.current.commonActions.delete) }
                                 },
                                 dismissButton = {
-                                    TextButton(onClick = { showConfirmDelete.value = false }) { Text(AppStrings.current.cancel) }
+                                    TextButton(onClick = { showConfirmDelete.value = false }) { Text(AppStrings.current.commonActions.cancel) }
                                 }
                             )
                         }

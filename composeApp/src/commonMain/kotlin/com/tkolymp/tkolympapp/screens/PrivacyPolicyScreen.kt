@@ -26,10 +26,10 @@ fun PrivacyPolicyScreen(onBack: () -> Unit = {}) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(AppStrings.current.privacyPolicy) },
+                title = { Text(AppStrings.current.otherScreen.privacyPolicy) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.back)
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
                     }
                 }
             )

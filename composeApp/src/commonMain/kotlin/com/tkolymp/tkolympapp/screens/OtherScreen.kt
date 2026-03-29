@@ -105,7 +105,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text(AppStrings.current.other) }) }
+        topBar = { TopAppBar(title = { Text(AppStrings.current.navigation.other) }) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -139,7 +139,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Person,
-                            contentDescription = AppStrings.current.myProfile,
+                            contentDescription = AppStrings.current.profile.myProfile,
                             tint = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.size(32.dp)
                         )
@@ -149,7 +149,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = state.name ?: AppStrings.current.myAccount,
+                            text = state.name ?: AppStrings.current.otherScreen.myAccount,
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -182,7 +182,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
 
             // První sekce - Členové a klub
             Text(
-                text = AppStrings.current.membersAndClub,
+                text = AppStrings.current.otherScreen.membersAndClub,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp)
@@ -197,10 +197,10 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
 
             mainItems.forEach { (item, icon) ->
                 val label = when (item) {
-                    MainItem.PEOPLE -> AppStrings.current.people
-                    MainItem.TRAINERS -> AppStrings.current.trainersAndSpaces
-                    MainItem.GROUPS -> AppStrings.current.trainingGroups
-                    MainItem.LEADERBOARD -> AppStrings.current.leaderboard
+                    MainItem.PEOPLE -> AppStrings.current.otherScreen.people
+                    MainItem.TRAINERS -> AppStrings.current.otherScreen.trainersAndSpaces
+                    MainItem.GROUPS -> AppStrings.current.otherScreen.trainingGroups
+                    MainItem.LEADERBOARD -> AppStrings.current.otherScreen.leaderboard
                 }
                 Card(
                     modifier = Modifier
@@ -257,7 +257,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
 
             // Druhá sekce - Aplikace
             Text(
-                text = AppStrings.current.appSection,
+                text = AppStrings.current.otherScreen.appSection,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp)
@@ -272,10 +272,10 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
 
             settingsItems.forEach { (item, icon) ->
                 val label = when (item) {
-                    SettingsItem.LANGUAGES -> AppStrings.current.languages
-                    SettingsItem.ABOUT -> AppStrings.current.aboutApp
-                    SettingsItem.NOTIFICATIONS -> AppStrings.current.notificationSettings
-                    SettingsItem.PRIVACY -> AppStrings.current.privacyPolicy
+                    SettingsItem.LANGUAGES -> AppStrings.current.otherScreen.languages
+                    SettingsItem.ABOUT -> AppStrings.current.otherScreen.aboutApp
+                    SettingsItem.NOTIFICATIONS -> AppStrings.current.otherScreen.notificationSettings
+                    SettingsItem.PRIVACY -> AppStrings.current.otherScreen.privacyPolicy
                 }
                 Card(
                     modifier = Modifier

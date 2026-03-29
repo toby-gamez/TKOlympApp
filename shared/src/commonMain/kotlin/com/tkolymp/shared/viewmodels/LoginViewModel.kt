@@ -42,13 +42,13 @@ class LoginViewModel() : ViewModel() {
         return try {
             val ok = authService.login(_state.value.username, _state.value.password)
             if (!ok) {
-                _state.value = _state.value.copy(isLoading = false, error = AppStrings.current.errorLogin)
+                _state.value = _state.value.copy(isLoading = false, error = AppStrings.current.errorMessages.errorLogin)
                 return false
             }
 
             val personId = try { userService.fetchAndStorePersonId() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("LoginViewModel", "fetchAndStorePersonId failed: ${e.message}"); null }
             if (personId == null) {
-                _state.value = _state.value.copy(isLoading = false, error = AppStrings.current.errorLoginPersonId)
+                _state.value = _state.value.copy(isLoading = false, error = AppStrings.current.errorMessages.errorLoginPersonId)
                 return false
             }
 

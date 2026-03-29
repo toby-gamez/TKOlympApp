@@ -60,8 +60,8 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
     }
 
     Scaffold(topBar = {
-        TopAppBar(title = { Text(AppStrings.current.person) }, navigationIcon = {
-            IconButton(onClick = onBack) { Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.back) }
+        TopAppBar(title = { Text(AppStrings.current.profile.person) }, navigationIcon = {
+            IconButton(onClick = onBack) { Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back) }
         })
     }) { padding ->
         val scope = rememberCoroutineScope()
@@ -69,11 +69,11 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
         SwipeToReload(isRefreshing = state.isLoading, onRefresh = { scope.launch { viewModel.loadPerson(personId) } }, modifier = Modifier.padding(padding)) {
             Column(modifier = Modifier.padding(8.dp).verticalScroll(rememberScrollState())) {
 
-            state.error?.let { Text("${AppStrings.current.errorPrefix} $it", color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(8.dp)) }
+            state.error?.let { Text("${AppStrings.current.registration.errorPrefix} $it", color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(8.dp)) }
 
             val p = state.person as? PersonDetails
             if (p == null) {
-                Text(AppStrings.current.personNotFound, modifier = Modifier.padding(8.dp))
+                Text(AppStrings.current.profile.personNotFound, modifier = Modifier.padding(8.dp))
                 return@Column
             }
 
@@ -83,30 +83,30 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
             Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(fullName.ifBlank { p.id }, style = MaterialTheme.typography.headlineSmall)
                 if (p.isTrainer == true) {
-                    Text(AppStrings.current.trainer, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp))
+                    Text(AppStrings.current.profile.trainer, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp))
                 }
             }
 
             // Basic Info card
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(8.dp)) {
-                    Text(AppStrings.current.basicInfo, style = MaterialTheme.typography.labelLarge)
+                    Text(AppStrings.current.profile.basicInfo, style = MaterialTheme.typography.labelLarge)
                     HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
                     p.birthDate?.let { bd ->
                         val bdText = formatDateStringSmall(bd) ?: bd
-                        Text("${AppStrings.current.birthDate}: $bdText", style = MaterialTheme.typography.bodySmall)
+                        Text("${AppStrings.current.profile.birthDate}: $bdText", style = MaterialTheme.typography.bodySmall)
                     }
-                    p.email?.let { Text("${AppStrings.current.email}: $it", style = MaterialTheme.typography.bodySmall) }
-                    p.cstsId?.let { Text("${AppStrings.current.cstsId}: $it", style = MaterialTheme.typography.bodySmall) }
-                    p.wdsfId?.let { Text("${AppStrings.current.wdsfId}: $it", style = MaterialTheme.typography.bodySmall) }
+                    p.email?.let { Text("${AppStrings.current.profile.email}: $it", style = MaterialTheme.typography.bodySmall) }
+                    p.cstsId?.let { Text("${AppStrings.current.profile.cstsId}: $it", style = MaterialTheme.typography.bodySmall) }
+                    p.wdsfId?.let { Text("${AppStrings.current.profile.wdsfId}: $it", style = MaterialTheme.typography.bodySmall) }
                     p.gender?.let {
                         val genderLabel = when (it) {
-                            "MAN" -> AppStrings.current.genderMale
-                            "WOMAN" -> AppStrings.current.genderFemale
-                            "UNSPECIFIED" -> AppStrings.current.genderUnspecified
+                            "MAN" -> AppStrings.current.gender.genderMale
+                            "WOMAN" -> AppStrings.current.gender.genderFemale
+                            "UNSPECIFIED" -> AppStrings.current.gender.genderUnspecified
                             else -> it.lowercase()
                         }
-                        Text("${AppStrings.current.gender}: $genderLabel", style = MaterialTheme.typography.bodySmall)
+                        Text("${AppStrings.current.profile.gender}: $genderLabel", style = MaterialTheme.typography.bodySmall)
                     }
                     // trainer badge is shown under the name header; do not duplicate here
                 }
@@ -116,7 +116,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
             p.bio?.takeIf { it.isNotBlank() }?.let { bio ->
                 Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                     Column(modifier = Modifier.padding(8.dp)) {
-                        Text(AppStrings.current.aboutMe, style = MaterialTheme.typography.labelLarge)
+                        Text(AppStrings.current.profile.aboutMe, style = MaterialTheme.typography.labelLarge)
                         HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
                         Text(bio, style = MaterialTheme.typography.bodyMedium)
                     }
@@ -128,7 +128,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
             if (visibleGroups.isNotEmpty()) {
                 Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                     Column(modifier = Modifier.padding(8.dp)) {
-                        Text(AppStrings.current.trainingGroups, style = MaterialTheme.typography.labelLarge)
+                        Text(AppStrings.current.otherScreen.trainingGroups, style = MaterialTheme.typography.labelLarge)
                         HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
                         Column {
                             visibleGroups.forEach { mem ->
@@ -149,11 +149,11 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                                                     )
                                                     if (!since.isNullOrBlank()) {
                                                         val sinceLabel = formatDateStringSmall(since) ?: since
-                                                        Text("${AppStrings.current.dateFrom}: $sinceLabel", style = MaterialTheme.typography.labelSmall)
+                                                        Text("${AppStrings.current.profile.dateFrom}: $sinceLabel", style = MaterialTheme.typography.labelSmall)
                                                     }
                                                     if (!until.isNullOrBlank()) {
                                                         val untilLabel = formatDateStringSmall(until) ?: until
-                                                        Text("${AppStrings.current.dateTo}: $untilLabel", style = MaterialTheme.typography.labelSmall)
+                                                        Text("${AppStrings.current.profile.dateTo}: $untilLabel", style = MaterialTheme.typography.labelSmall)
                                                     }
                                                 }
                                                 Box(modifier = Modifier
@@ -176,7 +176,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
             if (p.activeCouplesList.isNotEmpty()) {
                 Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                     Column(modifier = Modifier.padding(12.dp)) {
-                        Text(AppStrings.current.activeCouple, style = MaterialTheme.typography.labelLarge)
+                        Text(AppStrings.current.profile.activeCouple, style = MaterialTheme.typography.labelLarge)
                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                         p.activeCouplesList.forEach { c ->
                             Card(modifier = Modifier

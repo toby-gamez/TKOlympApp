@@ -38,9 +38,9 @@ object CalendarUtils {
         val title = when {
             !event?.name.isNullOrBlank() -> event?.name!!
             event?.type?.equals("lesson", ignoreCase = true) == true -> {
-                event.eventTrainersList.firstOrNull()?.takeIf { it.isNotBlank() } ?: AppStrings.current.noName
+                event.eventTrainersList.firstOrNull()?.takeIf { it.isNotBlank() } ?: AppStrings.current.dialogs.noName
             }
-            else -> AppStrings.current.noName
+            else -> AppStrings.current.dialogs.noName
         }
         
         // Determine if this is "my" event

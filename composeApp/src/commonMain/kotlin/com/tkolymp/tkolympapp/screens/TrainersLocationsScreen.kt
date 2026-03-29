@@ -56,10 +56,10 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
 
     Scaffold(topBar = {
         TopAppBar(
-            title = { Text(AppStrings.current.trainersAndSpaces) },
+            title = { Text(AppStrings.current.otherScreen.trainersAndSpaces) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
-                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.back)
+                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
                 }
             }
         )
@@ -76,13 +76,13 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                 }
             } else if (club == null || (club.locations.isEmpty() && club.trainers.isEmpty())) {
                 Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                    Text(AppStrings.current.noData)
+                    Text(AppStrings.current.commonActions.noData)
                 }
             } else {
                 LazyColumn(modifier = Modifier) {
             // Locations header
             item {
-                Text(AppStrings.current.trainingSpaces, modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(AppStrings.current.people.trainingSpaces, modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
 
             // show locations except explicit "ZRUŠENO"
@@ -112,19 +112,19 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                         
                     ) {
                         Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(imageVector = Icons.Filled.Place, contentDescription = AppStrings.current.trainingSpaces, modifier = Modifier.size(28.dp))
+                            Icon(imageVector = Icons.Filled.Place, contentDescription = AppStrings.current.people.trainingSpaces, modifier = Modifier.size(28.dp))
                             Spacer(modifier = Modifier.width(12.dp))
-                            Text(text = loc.name ?: AppStrings.current.noName, style = MaterialTheme.typography.bodyLarge)
+                            Text(text = loc.name ?: AppStrings.current.dialogs.noName, style = MaterialTheme.typography.bodyLarge)
                         }
                     }
                 }
             } else {
-                item { Text(AppStrings.current.noTrainingSpaces, modifier = Modifier.padding(16.dp)) }
+                item { Text(AppStrings.current.people.noTrainingSpaces, modifier = Modifier.padding(16.dp)) }
             }
 
             // Trainers header
             item {
-                Text(AppStrings.current.trainers, modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(AppStrings.current.profile.trainers, modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
 
             // helper to format price
@@ -133,7 +133,7 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                 val isWhole = amount.rem(1.0) == 0.0
                 val amtStr = if (isWhole) amount.toInt().toString() else String.format("%.2f", amount)
                 val cur = currency?.uppercase()
-                val c = AppStrings.current.couple
+                val c = AppStrings.current.profile.couple
                 return when (cur) {
                     "EUR" -> "$amtStr € /$c, 45'"
                     "USD" -> "$$amtStr /$c, 45'"
@@ -160,7 +160,7 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                     ) {
                         Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(imageVector = Icons.Filled.Person, contentDescription = AppStrings.current.trainer, modifier = Modifier.size(28.dp))
+                                Icon(imageVector = Icons.Filled.Person, contentDescription = AppStrings.current.profile.trainer, modifier = Modifier.size(28.dp))
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column {
                                     val p = t.person
@@ -183,7 +183,7 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                     }
                 }
             } else {
-                item { Text(AppStrings.current.noTrainers, modifier = Modifier.padding(16.dp)) }
+                item { Text(AppStrings.current.people.noTrainers, modifier = Modifier.padding(16.dp)) }
             }
         }
     }

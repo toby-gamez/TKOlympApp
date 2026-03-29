@@ -79,7 +79,7 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                AppStrings.current.loginSubtitle,
+                AppStrings.current.auth.loginSubtitle,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -90,7 +90,7 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
             OutlinedTextField(
                 value = state.username,
                 onValueChange = { viewModel.updateUsername(it) },
-                label = { Text(AppStrings.current.emailOrUsername) },
+                label = { Text(AppStrings.current.auth.emailOrUsername) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true
@@ -99,7 +99,7 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
             OutlinedTextField(
                 value = state.password,
                 onValueChange = { viewModel.updatePassword(it) },
-                label = { Text(AppStrings.current.password) },
+                label = { Text(AppStrings.current.auth.password) },
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation(),
                 shape = RoundedCornerShape(12.dp),
@@ -130,7 +130,7 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text(AppStrings.current.login, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    Text(AppStrings.current.auth.login, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
 
@@ -142,7 +142,7 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = AppStrings.current.forgotPassword,
+                        text = AppStrings.current.auth.forgotPassword,
                         color = MaterialTheme.colorScheme.primary,
                         textAlign = TextAlign.Center
                     )

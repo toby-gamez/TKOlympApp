@@ -58,7 +58,7 @@ fun OverviewScreen(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(AppStrings.current.overview) })
+            TopAppBar(title = { Text(AppStrings.current.navigation.overview) })
         }
     ) { padding ->
         val scrollState = rememberScrollState()
@@ -93,15 +93,15 @@ fun OverviewScreen(
 
             val trainings = state.upcomingEvents
             val camps = trainings.filter { it.event?.type?.contains("CAMP", ignoreCase = true) == true }
-            val trainingItems = remember(trainings) { trainings.take(2).map { Pair(it.id, it.event?.name ?: AppStrings.current.noName) } }
-            val campItems = remember(camps) { camps.take(2).map { Pair(it.id, it.event?.name ?: AppStrings.current.noName) } }
+            val trainingItems = remember(trainings) { trainings.take(2).map { Pair(it.id, it.event?.name ?: AppStrings.current.dialogs.noName) } }
+            val campItems = remember(camps) { camps.take(2).map { Pair(it.id, it.event?.name ?: AppStrings.current.dialogs.noName) } }
             val announcements = state.recentAnnouncements
 
             // Trainings section (styled like Calendar)
             // Trainings section (grouped by day, styled like Calendar)
             Spacer(modifier = Modifier.height(8.dp))
             Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(AppStrings.current.upcomingTrainings, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(AppStrings.current.overview.upcomingTrainings, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
             
             val limitedTrainings = trainings.sortedBy { it.since ?: it.updatedAt ?: "" }
@@ -122,7 +122,7 @@ fun OverviewScreen(
                             CircularProgressIndicator()
                         }
                     } else {
-                        Text(AppStrings.current.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
+                        Text(AppStrings.current.timeline.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
                     }
                 } else {
                     val todayKey = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault()).toString()
@@ -150,8 +150,8 @@ fun OverviewScreen(
                         Column(modifier = Modifier.padding(vertical = 6.dp)) {
                             val now = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
                             val header = when (date) {
-                                todayKey -> AppStrings.current.today.lowercase()
-                                now.plus(1, DateTimeUnit.DAY).toString() -> AppStrings.current.tomorrow.lowercase()
+                                todayKey -> AppStrings.current.timeline.today.lowercase()
+                                now.plus(1, DateTimeUnit.DAY).toString() -> AppStrings.current.timeline.tomorrow.lowercase()
                                 else -> {
                                     val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
                                     if (ld == null) date else
@@ -192,14 +192,14 @@ fun OverviewScreen(
             Row(modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 2.dp), horizontalArrangement = Arrangement.Center) {
-                TextButton(onClick = onOpenCalendar) { Text(if (trainingsEmpty) AppStrings.current.browseOthers else AppStrings.current.more) }
+                TextButton(onClick = onOpenCalendar) { Text(if (trainingsEmpty) AppStrings.current.overview.browseOthers else AppStrings.current.overview.more) }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
             // Board announcements (styled like BoardScreen)
             Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(AppStrings.current.fromTheBoard, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(AppStrings.current.overview.fromTheBoard, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
             Column(modifier = Modifier.padding(horizontal = 12.dp)) {
                 if (announcements.isEmpty()) {
@@ -213,7 +213,7 @@ fun OverviewScreen(
                             CircularProgressIndicator()
                         }
                     } else {
-                        Text(AppStrings.current.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
+                        Text(AppStrings.current.timeline.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
                     }
                 } else {
                     announcements.forEach { a ->
@@ -229,7 +229,7 @@ fun OverviewScreen(
                                 
                             ) {
                                 Column(modifier = Modifier.padding(14.dp)) {
-                                    Text(a.title ?: AppStrings.current.noName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                                    Text(a.title ?: AppStrings.current.dialogs.noName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                                     val authorName = listOfNotNull(a.author?.uJmeno, a.author?.uPrijmeni).joinToString(" ").trim()
                                     if (authorName.isNotEmpty()) {
                                         Spacer(modifier = Modifier.height(4.dp))
@@ -254,14 +254,14 @@ fun OverviewScreen(
             Row(modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 2.dp), horizontalArrangement = Arrangement.Center) {
-                TextButton(onClick = onOpenBoard) { Text(if (boardEmpty) AppStrings.current.browseOthers else AppStrings.current.more) }
+                TextButton(onClick = onOpenBoard) { Text(if (boardEmpty) AppStrings.current.overview.browseOthers else AppStrings.current.overview.more) }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
             // Camps section (styled like Calendar)
             Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(AppStrings.current.upcomingCamps, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(AppStrings.current.overview.upcomingCamps, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
             val limitedCamps = camps.sortedBy { it.since ?: it.updatedAt ?: "" }.take(2)
             val campsMapByDay = limitedCamps.groupBy { inst ->
@@ -281,7 +281,7 @@ fun OverviewScreen(
                             CircularProgressIndicator()
                         }
                     } else {
-                        Text(AppStrings.current.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
+                        Text(AppStrings.current.timeline.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
                     }
                 } else {
                     val todayKey = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault()).toString()
@@ -290,8 +290,8 @@ fun OverviewScreen(
                         Column(modifier = Modifier.padding(vertical = 6.dp)) {
                             val now = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
                             val header = when (date) {
-                                todayKey -> AppStrings.current.today.lowercase()
-                                now.plus(1, DateTimeUnit.DAY).toString() -> AppStrings.current.tomorrow.lowercase()
+                                todayKey -> AppStrings.current.timeline.today.lowercase()
+                                now.plus(1, DateTimeUnit.DAY).toString() -> AppStrings.current.timeline.tomorrow.lowercase()
                                 else -> {
                                     val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
                                     if (ld == null) date else
@@ -312,7 +312,7 @@ fun OverviewScreen(
             Row(modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 2.dp), horizontalArrangement = Arrangement.Center) {
-                TextButton(onClick = onOpenEvents) { Text(if (campsEmpty) AppStrings.current.browseOthers else AppStrings.current.more) }
+                TextButton(onClick = onOpenEvents) { Text(if (campsEmpty) AppStrings.current.overview.browseOthers else AppStrings.current.overview.more) }
             }
 
             if (state.isLoading) {
@@ -334,11 +334,11 @@ private fun OverviewSection(
 ) {
     Row(modifier = Modifier.padding(horizontal = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(title, style = MaterialTheme.typography.titleMedium)
-        TextButton(onClick = onMore) { Text(if (items.isEmpty()) AppStrings.current.browseOthers else AppStrings.current.more) }
+        TextButton(onClick = onMore) { Text(if (items.isEmpty()) AppStrings.current.overview.browseOthers else AppStrings.current.overview.more) }
     }
     Column(modifier = Modifier.padding(horizontal = 12.dp)) {
         if (items.isEmpty()) {
-            Text(AppStrings.current.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
+            Text(AppStrings.current.timeline.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
         } else {
             items.forEach { (id, label) ->
                 Text(

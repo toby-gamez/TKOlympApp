@@ -61,11 +61,11 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(AppStrings.current.announcement) },
+                title = { Text(AppStrings.current.announcements.announcement) },
                 navigationIcon = {
                     onBack?.let {
                         IconButton(onClick = it) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.back)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
                         }
                     }
                 }
@@ -86,7 +86,7 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Text(AppStrings.current.noAnnouncementToShow, modifier = Modifier.padding(16.dp))
+                    Text(AppStrings.current.announcements.noAnnouncementToShow, modifier = Modifier.padding(16.dp))
                 }
             } else {
                 Column(modifier = Modifier
@@ -94,14 +94,14 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
                     .verticalScroll(rememberScrollState())
                     .padding(12.dp)
                 ) {
-                    Text(a.title ?: AppStrings.current.noName, style = MaterialTheme.typography.titleLarge)
+                    Text(a.title ?: AppStrings.current.dialogs.noName, style = MaterialTheme.typography.titleLarge)
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             val authorName = listOfNotNull(a.author?.uJmeno, a.author?.uPrijmeni).joinToString(" ").trim()
                             if (authorName.isNotBlank()) {
-                                Text("${AppStrings.current.author}: $authorName", style = MaterialTheme.typography.bodySmall)
+                                Text("${AppStrings.current.misc.author}: $authorName", style = MaterialTheme.typography.bodySmall)
                                 Spacer(modifier = Modifier.height(4.dp))
                             }
                             fun formatIso(iso: String?): String? {
@@ -111,10 +111,10 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
                             }
 
                             formatIso(a.createdAt)?.let { f ->
-                                Text("${AppStrings.current.createdAt}: $f", style = MaterialTheme.typography.bodySmall)
+                                Text("${AppStrings.current.misc.createdAt}: $f", style = MaterialTheme.typography.bodySmall)
                             }
                             formatIso(a.updatedAt)?.let { f ->
-                                Text("${AppStrings.current.updatedAt}: $f", style = MaterialTheme.typography.bodySmall)
+                                Text("${AppStrings.current.misc.updatedAt}: $f", style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
@@ -142,8 +142,8 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
         state.error?.let { err ->
             AlertDialog(
                 onDismissRequest = { viewModel.clearError() },
-                confirmButton = { TextButton(onClick = { viewModel.clearError() }) { Text(AppStrings.current.ok) } },
-                title = { Text(AppStrings.current.error) },
+                confirmButton = { TextButton(onClick = { viewModel.clearError() }) { Text(AppStrings.current.commonActions.ok) } },
+                title = { Text(AppStrings.current.commonActions.error) },
                 text = { Text(err ?: "Neznámá chyba") }
             )
         }

@@ -90,15 +90,15 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) 
 
     Scaffold(topBar = {
         TopAppBar(
-            title = { Text(AppStrings.current.people) },
+            title = { Text(AppStrings.current.otherScreen.people) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
-                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.back)
+                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
                 }
             },
             actions = {
                 IconButton(onClick = { showSearch = !showSearch }) {
-                    Icon(imageVector = Icons.Filled.Search, contentDescription = AppStrings.current.search)
+                    Icon(imageVector = Icons.Filled.Search, contentDescription = AppStrings.current.commonActions.search)
                 }
             }
         )
@@ -133,10 +133,10 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) 
                         IconButton(onClick = {
                             if (searchQuery.isNotBlank()) searchQuery = "" else showSearch = false
                         }) {
-                            Icon(imageVector = Icons.Filled.Close, contentDescription = AppStrings.current.cancel)
+                            Icon(imageVector = Icons.Filled.Close, contentDescription = AppStrings.current.commonActions.cancel)
                         }
                     },
-                    placeholder = { Text(AppStrings.current.searchByName) }
+                    placeholder = { Text(AppStrings.current.people.searchByName) }
                 )
             }
 
@@ -145,11 +145,11 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) 
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = { sortMode = SortMode.ALPHABETICAL }) {
-                    Text(AppStrings.current.alphabetically, color = if (sortMode == SortMode.ALPHABETICAL) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                    Text(AppStrings.current.people.alphabetically, color = if (sortMode == SortMode.ALPHABETICAL) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 TextButton(onClick = { sortMode = SortMode.BIRTHDAY }) {
-                    Text(AppStrings.current.birthdays, color = if (sortMode == SortMode.BIRTHDAY) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                    Text(AppStrings.current.profile.birthdays, color = if (sortMode == SortMode.BIRTHDAY) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
                 }
             }
 
@@ -178,7 +178,7 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) 
                     FilterChip(
                         selected = selectedGroups.isEmpty() || selectedGroups.size == groups.size,
                         onClick = { selectedGroups = emptySet() },
-                        label = { Text(AppStrings.current.all) }
+                        label = { Text(AppStrings.current.commonActions.all) }
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     groups.forEach { (id, name) ->
@@ -216,7 +216,7 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) 
             // manual refresh removed; initial load happens in LaunchedEffect
 
             if (displayed.isEmpty()) {
-                Text(AppStrings.current.noPeopleToShow, modifier = Modifier.padding(16.dp))
+                Text(AppStrings.current.people.noPeopleToShow, modifier = Modifier.padding(16.dp))
             } else {
                 LazyColumn(modifier = Modifier.padding(4.dp)) {
                     items(displayed) { p ->

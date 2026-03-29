@@ -45,11 +45,11 @@ import kotlinx.coroutines.launch
 fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
     val viewModel = viewModel<BoardViewModel>()
     val state by viewModel.state.collectAsState()
-    val tabs = listOf(AppStrings.current.news, AppStrings.current.permanentBoard)
+    val tabs = listOf(AppStrings.current.boardTabs.news, AppStrings.current.boardTabs.permanentBoard)
     val scope = rememberCoroutineScope()
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text(AppStrings.current.board) }) }
+        topBar = { TopAppBar(title = { Text(AppStrings.current.navigation.board) }) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -91,7 +91,7 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
                             shape = RoundedCornerShape(16.dp)
                         ) {
                             Column(modifier = Modifier.padding(14.dp)) {
-                                Text(a.title ?: AppStrings.current.noName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                                Text(a.title ?: AppStrings.current.dialogs.noName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                                 val authorName = listOfNotNull(a.author?.uJmeno, a.author?.uPrijmeni).joinToString(" ").trim()
                                 if (authorName.isNotEmpty()) {
                                     Spacer(modifier = Modifier.height(2.dp))
@@ -116,9 +116,9 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
                 AlertDialog(
                     onDismissRequest = { viewModel.clearError() },
                     confirmButton = {
-                        TextButton(onClick = { viewModel.clearError() }) { Text(AppStrings.current.ok) }
+                        TextButton(onClick = { viewModel.clearError() }) { Text(AppStrings.current.commonActions.ok) }
                     },
-                    title = { Text(AppStrings.current.errorLoadingAnnouncements) },
+                    title = { Text(AppStrings.current.announcements.errorLoadingAnnouncements) },
                     text = { Text(state.error ?: "Neznámá chyba") }
                 )
             }

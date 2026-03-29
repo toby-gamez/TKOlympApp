@@ -61,10 +61,10 @@ fun GroupsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(AppStrings.current.trainingGroups) },
+                title = { Text(AppStrings.current.otherScreen.trainingGroups) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.back)
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
                     }
                 }
             )
@@ -99,7 +99,7 @@ fun GroupsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                         .padding(12.dp), verticalAlignment = Alignment.Top) {
 
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(text = cohort.name ?: AppStrings.current.noName, style = MaterialTheme.typography.titleMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
+                            Text(text = cohort.name ?: AppStrings.current.dialogs.noName, style = MaterialTheme.typography.titleMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
 
                             if (!cohort.location.isNullOrBlank()) {
                                 Text(text = cohort.location ?: "", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))

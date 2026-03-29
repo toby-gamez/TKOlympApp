@@ -1,0 +1,28 @@
+package com.tkolymp.shared.language
+
+data class RegistrationStrings(
+    val registration: String,
+    val confirmRegistration: String,
+    val deleteRegistration: String,
+    val deleteSelectedRegistration: String,
+    val confirmDeleteRegistration: String,
+    val confirmDeleteRule: String,
+    val registerAnother: String,
+    val register: String,
+    val selectRegistration: String,
+    val selectWhomToRegister: String,
+    val registrationNote: String,
+    val noteOptional: String,
+    val noRegistrationSelected: String,
+    val editRegistration: String,
+    val participants: String,
+    val noParticipants: String,
+    val errorPrefix: String,
+    val selectRegistrant: String,
+    val selectTrainersAndLessons: String,
+    val confirmRegistrationTitle: String,
+    val selectToDelete: String,
+    val deleteRegistrationConfirmTitle: String,
+    val deleteRegistrationConfirmText: String,
+    val noRegistrationOwned: String,
+)

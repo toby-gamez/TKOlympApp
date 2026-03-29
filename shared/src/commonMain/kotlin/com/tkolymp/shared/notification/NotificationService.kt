@@ -14,7 +14,7 @@ class NotificationService(
         if (existing == null) {
             val defaultRule = NotificationRule(
                 id = "default-rule",
-                name = AppStrings.current.defaultRuleName,
+                name = AppStrings.current.notifications.defaultRuleName,
                 enabled = true,
                 filterType = FilterType.ALL,
                 timesBeforeMinutes = listOf(15)
@@ -83,14 +83,14 @@ class NotificationService(
                         val evType = ev.type ?: ""
                         if (evType.equals("LESSON", ignoreCase = true)) {
                             val trainers = ev.eventTrainersList ?: emptyList()
-                            if (trainers.isNotEmpty()) trainers.joinToString(", ") else AppStrings.current.eventTypeLesson.replaceFirstChar { it.titlecase() }
+                            if (trainers.isNotEmpty()) trainers.joinToString(", ") else AppStrings.current.events.eventTypeLesson.replaceFirstChar { it.titlecase() }
                         } else {
                             // fallback to event type or generic label
-                            evType.ifEmpty { AppStrings.current.event }
+                            evType.ifEmpty { AppStrings.current.events.event }
                         }
                     }
 
-                    val trigger = try { scheduler.scheduleNotificationAt(nid, titleToShow, AppStrings.current.notificationEventStartsIn.replace("{0}", minutesBefore.toString()), since, minutesBefore) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                    val trigger = try { scheduler.scheduleNotificationAt(nid, titleToShow, AppStrings.current.notifications.notificationEventStartsIn.replace("{0}", minutesBefore.toString()), since, minutesBefore) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                     if (trigger != null) {
                         scheduled += ScheduledNotification(nid, ev.id, titleToShow, trigger)
                     }

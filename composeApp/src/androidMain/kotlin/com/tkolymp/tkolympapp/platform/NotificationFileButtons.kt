@@ -42,10 +42,10 @@ actual fun NotificationExportImportButton(
                     context.contentResolver.openOutputStream(uri)?.use {
                         it.write(jsonStr.toByteArray(Charsets.UTF_8))
                     }
-                    onMessage(AppStrings.current.exportSuccessful)
+                    onMessage(AppStrings.current.importExport.exportSuccessful)
                 } catch (e: CancellationException) { throw e } catch (t: Exception) {
                     Log.e("NotificationsSettings", "Export failed", t)
-                    onMessage(AppStrings.current.exportFailed)
+                    onMessage(AppStrings.current.importExport.exportFailed)
                 }
             }
         }
@@ -64,7 +64,7 @@ actual fun NotificationExportImportButton(
                     }
                 } catch (e: CancellationException) { throw e } catch (t: Exception) {
                     Log.e("NotificationsSettings", "Import failed", t)
-                    onMessage("${AppStrings.current.importFailed}: ${t.message}")
+                    onMessage("${AppStrings.current.importExport.importFailed}: ${t.message}")
                 }
             }
         }
@@ -75,11 +75,11 @@ actual fun NotificationExportImportButton(
     }
     DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
         DropdownMenuItem(
-            text = { Text(AppStrings.current.exportJson) },
+            text = { Text(AppStrings.current.importExport.exportJson) },
             onClick = { menuExpanded = false; exportLauncher.launch("notification_settings.json") }
         )
         DropdownMenuItem(
-            text = { Text(AppStrings.current.importJson) },
+            text = { Text(AppStrings.current.importExport.importJson) },
             onClick = { menuExpanded = false; importLauncher.launch(arrayOf("application/json", "text/plain")) }
         )
     }

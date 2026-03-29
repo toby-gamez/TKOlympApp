@@ -96,11 +96,11 @@ fun CalendarViewScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(AppStrings.current.timeline) },
+                title = { Text(AppStrings.current.timeline.timeline) },
                 navigationIcon = {
                     onBack?.let {
                         IconButton(onClick = it) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.back)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
                         }
                     }
                 }
@@ -140,7 +140,7 @@ fun CalendarViewScreen(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = AppStrings.current.errorLoadingEvents,
+                            text = AppStrings.current.events.errorLoadingEvents,
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.error
                         )
@@ -151,7 +151,7 @@ fun CalendarViewScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(onClick = { scope.launch { viewModel.loadEvents() } }) {
-                            Text(AppStrings.current.retry)
+                            Text(AppStrings.current.commonActions.retry)
                         }
                     }
                 }
@@ -202,7 +202,7 @@ internal fun CalendarTopBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onPreviousClick) {
-                Icon(Icons.Default.ChevronLeft, AppStrings.current.previous)
+                Icon(Icons.Default.ChevronLeft, AppStrings.current.calendarView.previous)
             }
             
             Text(
@@ -213,7 +213,7 @@ internal fun CalendarTopBar(
             )
             
             IconButton(onClick = onNextClick) {
-                Icon(Icons.Default.ChevronRight, AppStrings.current.next)
+                Icon(Icons.Default.ChevronRight, AppStrings.current.calendarView.next)
             }
         }
         
@@ -236,9 +236,9 @@ internal fun CalendarTopBar(
                         label = {
                             Text(
                                 when (mode) {
-                                    ViewMode.DAY -> AppStrings.current.viewModeDay
-                                    ViewMode.THREE_DAY -> AppStrings.current.viewModeThreeDays
-                                    ViewMode.WEEK -> AppStrings.current.viewModeWeek
+                                    ViewMode.DAY -> AppStrings.current.calendarView.viewModeDay
+                                    ViewMode.THREE_DAY -> AppStrings.current.calendarView.viewModeThreeDays
+                                    ViewMode.WEEK -> AppStrings.current.calendarView.viewModeWeek
                                 }
                             )
                         }
@@ -252,13 +252,13 @@ internal fun CalendarTopBar(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TextButton(onClick = onTodayClick) {
-                    Text(AppStrings.current.today)
+                    Text(AppStrings.current.timeline.today)
                 }
 
                 FilterChip(
                     selected = showOnlyMine,
                     onClick = onToggleOnlyMine,
-                    label = { Text(AppStrings.current.mine) }
+                    label = { Text(AppStrings.current.people.mine) }
                 )
             }
         }
@@ -575,7 +575,7 @@ internal fun TimelineEventCard(
     val isLesson = event.type?.equals("lesson", ignoreCase = true) == true
     
     // For lessons, get couple name or "VOLNO"
-    val freeLesson = AppStrings.current.freeLesson
+    val freeLesson = AppStrings.current.calendarView.freeLesson
     val coupleInfo = remember(event.event, isLesson, freeLesson) {
         if (isLesson) {
             getCoupleInfo(event.event, freeLesson)

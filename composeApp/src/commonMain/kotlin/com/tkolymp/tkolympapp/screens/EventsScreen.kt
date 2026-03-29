@@ -47,7 +47,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
     var selectedTab by rememberSaveable { mutableStateOf(0) }
-    val tabs = listOf(AppStrings.current.planned, AppStrings.current.past)
+    val tabs = listOf(AppStrings.current.eventCalendarTabs.planned, AppStrings.current.eventCalendarTabs.past)
 
     val viewModel = viewModel<EventsViewModel>()
     val state by viewModel.state.collectAsState()
@@ -62,7 +62,7 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text(AppStrings.current.events) }) }
+        topBar = { TopAppBar(title = { Text(AppStrings.current.navigation.events) }) }
     ) { padding ->
             SwipeToReload(
             isRefreshing = state.isLoading,
@@ -102,14 +102,14 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
 
                     if (planned.isEmpty()) {
                         Spacer(modifier = Modifier.height(12.dp))
-                        Text(AppStrings.current.noEventsPlanned, style = MaterialTheme.typography.bodyMedium)
+                        Text(AppStrings.current.events.noEventsPlanned, style = MaterialTheme.typography.bodyMedium)
                     }
 
                     planned.forEach { (date, list) ->
                         Column(modifier = Modifier.padding(vertical = 6.dp)) {
                             val header = when (date) {
-                                today.toString() -> AppStrings.current.today.lowercase()
-                                today.plus(1, DateTimeUnit.DAY).toString() -> AppStrings.current.tomorrow.lowercase()
+                                today.toString() -> AppStrings.current.timeline.today.lowercase()
+                                today.plus(1, DateTimeUnit.DAY).toString() -> AppStrings.current.timeline.tomorrow.lowercase()
                                 else -> {
                                     val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
                                     if (ld == null) date else
@@ -157,14 +157,14 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
 
                     if (past.isEmpty()) {
                         Spacer(modifier = Modifier.height(12.dp))
-                        Text(AppStrings.current.noPastEvents, style = MaterialTheme.typography.bodyMedium)
+                        Text(AppStrings.current.events.noPastEvents, style = MaterialTheme.typography.bodyMedium)
                     }
 
                     past.forEach { (date, list) ->
                         Column(modifier = Modifier.padding(vertical = 6.dp)) {
                             val header = when (date) {
-                                today.toString() -> AppStrings.current.today.lowercase()
-                                today.plus(1, DateTimeUnit.DAY).toString() -> AppStrings.current.tomorrow.lowercase()
+                                today.toString() -> AppStrings.current.timeline.today.lowercase()
+                                today.plus(1, DateTimeUnit.DAY).toString() -> AppStrings.current.timeline.tomorrow.lowercase()
                                 else -> {
                                     val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
                                     if (ld == null) date else
@@ -205,8 +205,8 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
             state.error?.let { err ->
                 AlertDialog(
                     onDismissRequest = { viewModel.clearError() },
-                    confirmButton = { TextButton(onClick = { viewModel.clearError() }) { Text(AppStrings.current.ok) } },
-                    title = { Text(AppStrings.current.errorLoadingEvents) },
+                    confirmButton = { TextButton(onClick = { viewModel.clearError() }) { Text(AppStrings.current.commonActions.ok) } },
+                    title = { Text(AppStrings.current.events.errorLoadingEvents) },
                     text = { Text(err) }
                 )
             }

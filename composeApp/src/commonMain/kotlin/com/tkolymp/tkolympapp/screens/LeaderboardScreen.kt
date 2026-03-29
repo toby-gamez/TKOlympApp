@@ -63,8 +63,8 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text(AppStrings.current.leaderboardTitle) }, navigationIcon = {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.back, modifier = Modifier
+        topBar = { TopAppBar(title = { Text(AppStrings.current.leaderboard.leaderboardTitle) }, navigationIcon = {
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back, modifier = Modifier
                 .clickable { onBack() }
                 .padding(12.dp))
         }) }
@@ -77,7 +77,7 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
             Box(modifier = Modifier.fillMaxSize()) {
                 when {
                     state.isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-                    state.error != null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(state.error ?: AppStrings.current.error) }
+                    state.error != null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(state.error ?: AppStrings.current.commonActions.error) }
                     else -> {
                         val entries = state.rankings.filterIsInstance<com.tkolymp.shared.people.ScoreboardEntry>()
                         LazyColumn(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Top) {

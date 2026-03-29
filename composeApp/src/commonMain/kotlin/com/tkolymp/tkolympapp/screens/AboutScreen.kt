@@ -39,10 +39,10 @@ fun AboutScreen(onBack: () -> Unit = {}, appVersionName: String? = null, appVers
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(AppStrings.current.aboutApp) },
+                title = { Text(AppStrings.current.otherScreen.aboutApp) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.back)
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
                     }
                 }
             )
@@ -57,7 +57,7 @@ fun AboutScreen(onBack: () -> Unit = {}, appVersionName: String? = null, appVers
             horizontalAlignment = Alignment.Start
         ) {
             Text("TK Olymp", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 8.dp, bottom = 4.dp))
-            Text("${AppStrings.current.appVersion} ${appVersionName ?: "?"} (Build ${appVersionCode ?: "?"})", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 12.dp))
+            Text("${AppStrings.current.misc.appVersion} ${appVersionName ?: "?"} (Build ${appVersionCode ?: "?"})", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 12.dp))
 
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
@@ -69,7 +69,7 @@ fun AboutScreen(onBack: () -> Unit = {}, appVersionName: String? = null, appVers
 
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                Text(AppStrings.current.licenseInfo, style = MaterialTheme.typography.labelLarge)
+                Text(AppStrings.current.misc.licenseInfo, style = MaterialTheme.typography.labelLarge)
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                     Text(text = AppStrings.current.about.appLicenseText, modifier = Modifier.padding(top = 6.dp))
                 }
