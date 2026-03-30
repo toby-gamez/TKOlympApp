@@ -10,7 +10,7 @@ import kotlinx.datetime.toLocalDateTime
 
 fun translateEventType(type: String?): String? {
     if (type.isNullOrBlank()) return null
-    val s = AppStrings.current
+    val s = AppStrings.current.events // Accessing the EventStrings group
     return when (type.trim().lowercase()) {
         "group" -> s.eventTypeGroup
         "lesson" -> s.eventTypeLesson

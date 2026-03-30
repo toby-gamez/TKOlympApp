@@ -1,6 +1,34 @@
 package com.tkolymp.shared.language.translations
 
-import com.tkolymp.shared.language.*
+import com.tkolymp.shared.language.AboutStrings
+import com.tkolymp.shared.language.AddressStrings
+import com.tkolymp.shared.language.AnnouncementStrings
+import com.tkolymp.shared.language.AuthStrings
+import com.tkolymp.shared.language.BoardTabStrings
+import com.tkolymp.shared.language.CalendarViewStrings
+import com.tkolymp.shared.language.CommonActionStrings
+import com.tkolymp.shared.language.DialogStrings
+import com.tkolymp.shared.language.ErrorMessageStrings
+import com.tkolymp.shared.language.EventCalendarTabStrings
+import com.tkolymp.shared.language.EventStrings
+import com.tkolymp.shared.language.ExtendedProfileFieldStrings
+import com.tkolymp.shared.language.FilterStrings
+import com.tkolymp.shared.language.GenderStrings
+import com.tkolymp.shared.language.ImportExportStrings
+import com.tkolymp.shared.language.LanguageScreenStrings
+import com.tkolymp.shared.language.LeaderboardStrings
+import com.tkolymp.shared.language.MiscStrings
+import com.tkolymp.shared.language.NavigationStrings
+import com.tkolymp.shared.language.NotificationStrings
+import com.tkolymp.shared.language.OnboardingStrings
+import com.tkolymp.shared.language.OtherScreenStrings
+import com.tkolymp.shared.language.OverviewStrings
+import com.tkolymp.shared.language.PeopleStrings
+import com.tkolymp.shared.language.PrivacyStrings
+import com.tkolymp.shared.language.ProfileStrings
+import com.tkolymp.shared.language.RegistrationStrings
+import com.tkolymp.shared.language.Strings
+import com.tkolymp.shared.language.TimelineStrings
 
 val StringsVi = Strings(
     navigation = NavigationStrings(
@@ -49,17 +77,6 @@ val StringsVi = Strings(
         all = "Tất cả",
         yes = "Có",
         no = "Không",
-    ),
-    auth = AuthStrings(
-        emailOrUsername = "Email hoặc tên đăng nhập",
-        password = "Mật khẩu",
-        newPassword = "Mật khẩu mới",
-        confirmPassword = "Xác nhận mật khẩu",
-        passwordTooShort = "Mật khẩu phải có ít nhất 8 ký tự.",
-        login = "Đăng nhập",
-        changePassword = "Đổi mật khẩu",
-        forgotPassword = "Quên mật khẩu?",
-        loginSubtitle = "Đăng nhập vào tài khoản của bạn",
     ),
     profile = ProfileStrings(
         myProfile = "Hồ sơ của tôi",
@@ -271,13 +288,24 @@ val StringsVi = Strings(
         freeLesson = "TRỐNG",
     ),
     onboarding = OnboardingStrings(
-        onboardingTitle1 = "Chào mừng đến TK Olymp",
-        onboardingDesc1 = "Ứng dụng câu lạc bộ khiêu vũ TK Olymp – tất cả ở một nơi cho vận động viên, phụ huynh và huấn luyện viên.",
-        onboardingTitle2 = "Thi đấu & Sự kiện",
-        onboardingDesc2 = "Theo dõi các cuộc thi sắp tới, đăng ký tham gia sự kiện và nắm được lịch của câu lạc bộ.",
-        onboardingTitle3 = "Câu lạc bộ trong tầm tay",
-        onboardingDesc3 = "Xem bảng xếp hạng, bảng thông báo và hồ sơ thành viên. Đăng nhập và bắt đầu ngay bây giờ.",
+        onboardingTitle1 = "Chào mừng",
+        onboardingDesc1 = "Khám phá ứng dụng của chúng tôi",
+        onboardingTitle2 = "Tính năng",
+        onboardingDesc2 = "Tìm hiểu các tính năng chính",
+        onboardingTitle3 = "Bắt đầu",
+        onboardingDesc3 = "Hãy bắt đầu ngay bây giờ",
         start = "Bắt đầu",
+    ),
+    auth = AuthStrings(
+        emailOrUsername = "Email hoặc tên đăng nhập",
+        password = "Mật khẩu",
+        newPassword = "Mật khẩu mới",
+        confirmPassword = "Xác nhận mật khẩu",
+        passwordTooShort = "Mật khẩu quá ngắn",
+        login = "Đăng nhập",
+        changePassword = "Đổi mật khẩu",
+        forgotPassword = "Quên mật khẩu",
+        loginSubtitle = "Vui lòng đăng nhập để tiếp tục",
     ),
     dialogs = DialogStrings(
         passwordMinLength = "Mật khẩu phải có ít nhất 8 ký tự.",

@@ -67,7 +67,7 @@ fun ChangePasswordDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
         title = { Text(strings.changePassword) },
         text = {
             Column(modifier = Modifier.heightIn(max = 220.dp).verticalScroll(rememberScrollState())) {
-                Text(strings.passwordMinLength)
+                Text(strings.passwordTooShort)
                 TextField(value = newPass, onValueChange = { newPass = it }, label = { Text(strings.newPassword) })
                 TextField(value = confirm, onValueChange = { confirm = it }, label = { Text(strings.confirmPassword) })
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
@@ -288,7 +288,7 @@ fun ChangePersonalDataDialog(
                     TextField(
                         value = gender,
                         onValueChange = { /* no-op */ },
-                        label = { Text(strings.gender) },
+                        label = { Text(strings.profile.gender) },
                         singleLine = true,
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = genderExpanded) },
@@ -304,7 +304,7 @@ fun ChangePersonalDataDialog(
                     }
                 }
                 androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
-                Text(strings.address, style = MaterialTheme.typography.labelSmall)
+                Text(strings.addressLabel, style = MaterialTheme.typography.labelSmall)
                 TextField(value = street, onValueChange = { street = it }, label = { Text(strings.street) }, singleLine = true)
                 TextField(value = city, onValueChange = { city = it }, label = { Text(strings.city) }, singleLine = true)
                 TextField(value = postal, onValueChange = { postal = it }, label = { Text(strings.zip) }, singleLine = true)
