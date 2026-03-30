@@ -33,9 +33,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -55,11 +59,12 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.Logger
-import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.notification.FilterType
 import com.tkolymp.shared.notification.NotificationRule
 import com.tkolymp.shared.notification.NotificationSettings
+import com.tkolymp.shared.notification.ReceivedMessage
+import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.viewmodels.NotificationsSettingsViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.platform.NotificationExportImportButton
@@ -127,6 +132,9 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
         } catch (e: CancellationException) { throw e } catch (_: Exception) { /* ignore */ }
     }
 
+    var selectedTab by remember { mutableStateOf(0) }
+    val coachMessages = remember { mutableStateListOf<ReceivedMessage>() }
+
     fun persist() {
         scope.launch {
             try {
@@ -164,8 +172,10 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
             )
         }) },
         floatingActionButton = {
-            FloatingActionButton(onClick = { editRule = null; showDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = AppStrings.current.notifications.addRule)
+            if (selectedTab == 0) {
+                FloatingActionButton(onClick = { editRule = null; showDialog = true }) {
+                    Icon(Icons.Default.Add, contentDescription = AppStrings.current.notifications.addRule)
+                }
             }
         }
     ) { inner ->
@@ -180,19 +190,67 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                 modifier = Modifier.fillMaxSize()
             ) {
 
-                Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    val tabs = listOf(AppStrings.current.otherScreen.notificationSettings, AppStrings.current.notifications.fromCoach)
+                    TabRow(selectedTabIndex = selectedTab) {
+                        tabs.forEachIndexed { i, t ->
+                            Tab(selected = selectedTab == i, onClick = { selectedTab = i }, text = { Text(t) })
+                        }
+                    }
+                    LaunchedEffect(selectedTab) {
+                        if (selectedTab == 1) {
+                            try {
+                                val storage = ServiceLocator.notificationStorage
+                                val list = try { storage.getReceivedNotifications() } catch (_: Exception) { emptyList() }
+                                coachMessages.clear()
+                                coachMessages.addAll(list)
+                            } catch (_: UninitializedPropertyAccessException) { /* ignore */ }
+                        }
+                    }
+                    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(AppStrings.current.notifications.globallyEnabled)
-                        Switch(
-                            checked = globalEnabled,
-                            onCheckedChange = { globalEnabled = it; persist() })
+                        if (selectedTab == 0) {
+                            Text(AppStrings.current.notifications.globallyEnabled)
+                            Switch(
+                                checked = globalEnabled,
+                                onCheckedChange = { globalEnabled = it; persist() })
+                        } else {
+                            
+                        }
                     }
 
                     Box(modifier = Modifier.fillMaxSize()) {
+                        if (selectedTab == 1) {
+                            if (coachMessages.isEmpty()) {
+                                Column(
+                                    modifier = Modifier.fillMaxSize(),
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(AppStrings.current.notifications.fromCoach, style = MaterialTheme.typography.titleMedium)
+                                }
+                            } else {
+                                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                                    items(coachMessages, key = { it.id }) { msg ->
+                                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(12.dp)) {
+                                            Column(modifier = Modifier.padding(12.dp)) {
+                                                Text(text = msg.title ?: "(bez názvu)")
+                                                Text(text = msg.body ?: "", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp))
+                                                val now = kotlin.time.Clock.System.now().toEpochMilliseconds()
+                                                val mins = ((now - msg.epochMs) / 60000).coerceAtLeast(0)
+                                                Text(text = if (mins < 60) "před ${mins} min" else "před ${mins/60} h", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            // skip rendering the settings list below when coach tab is active
+                        }
+                        if (selectedTab == 0) {
                     LazyColumn(modifier = Modifier.fillMaxSize()) {
                         items(rules, key = { it.id }) { r ->
                             Card(
@@ -302,9 +360,9 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                     }
                     } // end Box
 
-                    Button(onClick = onBack, modifier = Modifier.padding(top = 12.dp)) {
-                        Text(AppStrings.current.commonActions.back)
-                    }
+                    } // end inner padded Column
+
+                    // Back button removed per request (handled by top-level navigation)
                 }
             }
         }
@@ -576,4 +634,4 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                 }
             }
         }
-    }}
+    }}}

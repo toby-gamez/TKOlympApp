@@ -191,6 +191,7 @@ val StringsSl = Strings(
         minutesBefore = "min prej",
         defaultRuleName = "Privzeto pravilo",
         notificationEventStartsIn = "Dogodek se začne čez {0} minut",
+        fromCoach = "Od trenerja",
     ),
     people = PeopleStrings(
         searchByName = "Iskanje po imenu ali priimku",

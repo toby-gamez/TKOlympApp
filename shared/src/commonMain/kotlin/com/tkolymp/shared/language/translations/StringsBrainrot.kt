@@ -192,6 +192,7 @@ val StringsBrainrot = Strings(
         minutesBefore = "mins before",
         defaultRuleName = "Def rule no cap",
         notificationEventStartsIn = "Event bussin in {0} minutes fr",
+        fromCoach = "From gymbro",
     ),
     people = PeopleStrings(
         searchByName = "Search by name fr",

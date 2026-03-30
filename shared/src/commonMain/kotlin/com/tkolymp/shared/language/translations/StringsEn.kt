@@ -191,6 +191,7 @@ val StringsEn = Strings(
         minutesBefore = "min before",
         defaultRuleName = "Default rule",
         notificationEventStartsIn = "Event starts in {0} minutes",
+        fromCoach = "From coach",
     ),
     people = PeopleStrings(
         searchByName = "Search by first or last name",

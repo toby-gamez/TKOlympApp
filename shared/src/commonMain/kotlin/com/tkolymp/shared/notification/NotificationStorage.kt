@@ -5,4 +5,6 @@ expect class NotificationStorage(platformContext: Any) {
     suspend fun getSettings(): NotificationSettings?
     suspend fun saveScheduledNotifications(list: List<ScheduledNotification>)
     suspend fun getScheduledNotifications(): List<ScheduledNotification>
+    suspend fun saveReceivedNotifications(list: List<ReceivedMessage>)
+    suspend fun getReceivedNotifications(): List<ReceivedMessage>
 }

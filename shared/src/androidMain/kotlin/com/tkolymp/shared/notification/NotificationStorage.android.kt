@@ -98,4 +98,39 @@ actual class NotificationStorage actual constructor(platformContext: Any) {
             }
         } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
     }
+
+    actual suspend fun saveReceivedNotifications(list: List<ReceivedMessage>) {
+        val arr = buildJsonArray {
+            list.forEach { rm ->
+                add(buildJsonObject {
+                    put("id", JsonPrimitive(rm.id))
+                    put("title", rm.title?.let { JsonPrimitive(it) } ?: JsonNull)
+                    put("body", rm.body?.let { JsonPrimitive(it) } ?: JsonNull)
+                    put("sender", rm.sender?.let { JsonPrimitive(it) } ?: JsonNull)
+                    put("epochMs", JsonPrimitive(rm.epochMs))
+                })
+            }
+        }
+        val s = arr.toString()
+        prefs.edit().putString("received_notifications", s).apply()
+    }
+
+    actual suspend fun getReceivedNotifications(): List<ReceivedMessage> {
+        val s = prefs.getString("received_notifications", null) ?: return emptyList()
+        return try {
+            val el = json.parseToJsonElement(s)
+            val arr = el.jsonArray
+            arr.mapNotNull { jo ->
+                try {
+                    val o = jo.jsonObject
+                    val id = o["id"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+                    val title = o["title"]?.jsonPrimitive?.contentOrNull
+                    val body = o["body"]?.jsonPrimitive?.contentOrNull
+                    val sender = o["sender"]?.jsonPrimitive?.contentOrNull
+                    val epoch = o["epochMs"]?.jsonPrimitive?.longOrNull ?: return@mapNotNull null
+                    ReceivedMessage(id = id, title = title, body = body, sender = sender, epochMs = epoch)
+                } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+            }
+        } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
+    }
 }

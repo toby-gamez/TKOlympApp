@@ -191,6 +191,7 @@ val StringsUa = Strings(
         minutesBefore = "хв раніше",
         defaultRuleName = "Правило за замовчуванням",
         notificationEventStartsIn = "Захід починається через {0} хвилин",
+        fromCoach = "Від тренера",
     ),
     people = PeopleStrings(
         searchByName = "Пошук за ім'ям або прізвищем",

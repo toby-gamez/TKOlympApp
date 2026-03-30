@@ -190,7 +190,8 @@ val StringsSk = Strings(
         allTypes = "(všetko)",
         minutesBefore = "min vopred",
         defaultRuleName = "Predvolené pravidlo",
-        notificationEventStartsIn = "Udalosť začína za {0} minút",
+           notificationEventStartsIn = "Udalosť začne o {0} minút",
+           fromCoach = "Od trénera",
     ),
     people = PeopleStrings(
         searchByName = "Hľadať podľa mena alebo priezviska",

@@ -122,6 +122,38 @@ actual class NotificationStorage actual constructor(platformContext: Any) {
         } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
     }
 
+    actual suspend fun saveReceivedNotifications(list: List<ReceivedMessage>) {
+        val arr = buildJsonArray {
+            list.forEach { rm ->
+                add(buildJsonObject {
+                    put("id", JsonPrimitive(rm.id))
+                    put("title", rm.title?.let { JsonPrimitive(it) } ?: JsonNull)
+                    put("body", rm.body?.let { JsonPrimitive(it) } ?: JsonNull)
+                    put("sender", rm.sender?.let { JsonPrimitive(it) } ?: JsonNull)
+                    put("epochMs", JsonPrimitive(rm.epochMs))
+                })
+            }
+        }
+        keychainSave("received_notifications", arr.toString())
+    }
+
+    actual suspend fun getReceivedNotifications(): List<ReceivedMessage> {
+        val s = keychainGet("received_notifications") ?: return emptyList()
+        return try {
+            json.parseToJsonElement(s).jsonArray.mapNotNull { jo ->
+                try {
+                    val o = jo.jsonObject
+                    val id = o["id"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+                    val title = o["title"]?.jsonPrimitive?.contentOrNull
+                    val body = o["body"]?.jsonPrimitive?.contentOrNull
+                    val sender = o["sender"]?.jsonPrimitive?.contentOrNull
+                    val epoch = o["epochMs"]?.jsonPrimitive?.longOrNull ?: return@mapNotNull null
+                    ReceivedMessage(id = id, title = title, body = body, sender = sender, epochMs = epoch)
+                } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+            }
+        } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
+    }
+
     private fun keychainSave(account: String, value: String) {
         val data = (value as NSString).dataUsingEncoding(NSUTF8StringEncoding) ?: return
         keychainDelete(account)

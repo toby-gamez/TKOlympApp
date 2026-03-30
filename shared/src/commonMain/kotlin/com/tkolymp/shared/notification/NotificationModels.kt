@@ -29,4 +29,13 @@ data class ScheduledNotification(
     val triggerEpochMs: Long
 )
 
+@kotlinx.serialization.Serializable
+data class ReceivedMessage(
+    val id: String,
+    val title: String? = null,
+    val body: String? = null,
+    val sender: String? = null,
+    val epochMs: Long
+)
+
 enum class FilterType { ALL, BY_LOCATION, BY_TRAINER, BY_TYPE }

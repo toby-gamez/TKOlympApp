@@ -53,10 +53,10 @@ class MainActivity : ComponentActivity() {
 
             val channelCoach = NotificationChannel(
                 "coach",
-                "Od trenéra",
+                AppStrings.current.notifications.fromCoach,
                 NotificationManager.IMPORTANCE_HIGH
             )
-            channelCoach.description = "Důležitá oznámení od trenéra"
+            channelCoach.description = AppStrings.current.notifications.fromCoach
             nm.createNotificationChannel(channelCoach)
         }
 
