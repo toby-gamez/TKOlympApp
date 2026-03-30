@@ -220,35 +220,37 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                                 modifier = Modifier.padding(top = 4.dp)
                                             )
                                         } else {
-                                            Text(
-                                                text = "Místa: ${
-                                                    if (r.locations.isNotEmpty()) r.locations.joinToString(
-                                                        ", "
-                                                    ) else AppStrings.current.notifications.allLocations
-                                                }",
-                                                style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
-                                                modifier = Modifier.padding(top = 4.dp)
-                                            )
-                                            val trainerDisplay =
-                                                if (r.trainers.isNotEmpty()) r.trainers.map { t ->
-                                                    if (t.contains("::")) t.substringAfter("::") else t
-                                                }.joinToString(", ") else AppStrings.current.notifications.allTrainers
-                                            Text(
-                                                text = "Trenéři: $trainerDisplay",
-                                                style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
-                                                modifier = Modifier.padding(top = 2.dp)
-                                            )
-                                            Text(
-                                                text = "Typy: ${
-                                                    if (r.types.isNotEmpty()) r.types.map { typeLabels[it] ?: it }
-                                                        .joinToString(", ") else AppStrings.current.notifications.allTypes
-                                                }",
-                                                style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
-                                                modifier = Modifier.padding(top = 2.dp)
-                                            )
+                                            when (r.filterType) {
+                                                FilterType.BY_LOCATION -> Text(
+                                                    text = "${AppStrings.current.filters.filterPlace}: ${if (r.locations.isNotEmpty()) r.locations.joinToString(", ") else AppStrings.current.notifications.allLocations}",
+                                                    style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+                                                    modifier = Modifier.padding(top = 4.dp)
+                                                )
+                                                FilterType.BY_TRAINER -> {
+                                                    val trainerDisplay = if (r.trainers.isNotEmpty()) r.trainers.map { t ->
+                                                        if (t.contains("::")) t.substringAfter("::") else t
+                                                    }.joinToString(", ") else AppStrings.current.notifications.allTrainers
+                                                    Text(
+                                                        text = "${AppStrings.current.filters.filterTrainer}: $trainerDisplay",
+                                                        style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+                                                        modifier = Modifier.padding(top = 4.dp)
+                                                    )
+                                                }
+                                                FilterType.BY_TYPE -> Text(
+                                                    text = "${AppStrings.current.filters.filterType}: ${if (r.types.isNotEmpty()) r.types.map { typeLabels[it] ?: it }.joinToString(", ") else AppStrings.current.notifications.allTypes}",
+                                                    style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+                                                    modifier = Modifier.padding(top = 4.dp)
+                                                )
+                                                else -> {}
+                                            }
+                                        }
+                                        val beforeSuffix = AppStrings.current.notifications.minutesBefore.substringAfter(" ")
+                                        val timeDisplay = r.timesBeforeMinutes.joinToString(", ") { m ->
+                                            if (m >= 60 && m % 60 == 0) "${m / 60} ${AppStrings.current.notifications.hoursUnit} $beforeSuffix"
+                                            else "$m ${AppStrings.current.notifications.minutesBefore}"
                                         }
                                         Text(
-                                            text = "${r.timesBeforeMinutes.joinToString(", ")} ${AppStrings.current.notifications.minutesBefore}",
+                                            text = timeDisplay,
                                             style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
                                             modifier = Modifier.padding(top = 6.dp)
                                         )
@@ -386,7 +388,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                 ) {
                     Column(
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .fillMaxSize()
                             .padding(24.dp)
                     ) {
                         Text(
@@ -449,6 +451,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                         Spacer(modifier = Modifier.height(12.dp))
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(AppStrings.current.notifications.orPickFromValues, style = MaterialTheme.typography.labelLarge)
+                        Box(modifier = Modifier.weight(1f)) {
                         when (selType) {
                             FilterType.BY_LOCATION -> {
                                 LazyColumn(
@@ -520,6 +523,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                             }
                             else -> {}
                         }
+                        } // end weight Box
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
                             horizontalArrangement = Arrangement.End
