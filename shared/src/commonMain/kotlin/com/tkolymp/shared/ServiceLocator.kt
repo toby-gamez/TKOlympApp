@@ -26,6 +26,8 @@ import com.tkolymp.shared.user.UserService
  */
 object ServiceLocator {
     @Volatile private var _container: AppContainer? = null
+    // Optional platform-provided topic manager (set by platform initializer if available)
+    @Volatile var topicManager: com.tkolymp.shared.notification.ITopicManager? = null
 
     val container: AppContainer
         get() = _container ?: error(

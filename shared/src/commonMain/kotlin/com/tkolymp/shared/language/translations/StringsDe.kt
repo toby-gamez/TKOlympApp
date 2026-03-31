@@ -190,7 +190,11 @@ val StringsDe = Strings(
         allTypes = "(alle)",
         minutesBefore = "Min. vorher",
         defaultRuleName = "Standardregel",
-        notificationEventStartsIn = "Event beginnt in {0} Minuten",
+            notificationEventStartsIn = "Ereignis beginnt in {0} Minuten",
+            channelsListTitle = "Kanäle",
+            generalLabel = "Allgemein",
+            timeAgoMinutes = "vor {0} Min",
+            timeAgoHours = "vor {0} Std",
         fromCoach = "Vom Trainer",
     ),
     people = PeopleStrings(

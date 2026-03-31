@@ -191,7 +191,11 @@ val StringsCs = Strings(
         minutesBefore = "min předem",
         defaultRuleName = "Výchozí pravidlo",
         notificationEventStartsIn = "Událost začíná za {0} minut",
-        fromCoach = "Od trenéra",
+            channelsListTitle = "Seznam kanálů",
+            generalLabel = "Obecné",
+            timeAgoMinutes = "před {0} min",
+            timeAgoHours = "před {0} h",
+        fromCoach = "Od Trenéra",
     ),
     people = PeopleStrings(
         searchByName = "Hledat podle jména nebo příjmení",

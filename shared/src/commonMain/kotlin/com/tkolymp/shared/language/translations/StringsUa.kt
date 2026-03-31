@@ -190,7 +190,11 @@ val StringsUa = Strings(
         allTypes = "(всі)",
         minutesBefore = "хв раніше",
         defaultRuleName = "Правило за замовчуванням",
-        notificationEventStartsIn = "Захід починається через {0} хвилин",
+            notificationEventStartsIn = "Подія почнеться через {0} хвилин",
+            channelsListTitle = "Список каналів",
+            generalLabel = "Загальні",
+            timeAgoMinutes = "{0} хв тому",
+            timeAgoHours = "{0} год тому",
         fromCoach = "Від тренера",
     ),
     people = PeopleStrings(

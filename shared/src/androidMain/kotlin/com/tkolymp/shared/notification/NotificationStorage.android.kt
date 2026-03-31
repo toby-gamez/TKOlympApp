@@ -107,6 +107,7 @@ actual class NotificationStorage actual constructor(platformContext: Any) {
                     put("title", rm.title?.let { JsonPrimitive(it) } ?: JsonNull)
                     put("body", rm.body?.let { JsonPrimitive(it) } ?: JsonNull)
                     put("sender", rm.sender?.let { JsonPrimitive(it) } ?: JsonNull)
+                    put("topic", rm.topic?.let { JsonPrimitive(it) } ?: JsonNull)
                     put("epochMs", JsonPrimitive(rm.epochMs))
                 })
             }
@@ -127,8 +128,9 @@ actual class NotificationStorage actual constructor(platformContext: Any) {
                     val title = o["title"]?.jsonPrimitive?.contentOrNull
                     val body = o["body"]?.jsonPrimitive?.contentOrNull
                     val sender = o["sender"]?.jsonPrimitive?.contentOrNull
+                        val topic = o["topic"]?.jsonPrimitive?.contentOrNull
                     val epoch = o["epochMs"]?.jsonPrimitive?.longOrNull ?: return@mapNotNull null
-                    ReceivedMessage(id = id, title = title, body = body, sender = sender, epochMs = epoch)
+                        ReceivedMessage(id = id, title = title, body = body, sender = sender, topic = topic, epochMs = epoch)
                 } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
             }
         } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }

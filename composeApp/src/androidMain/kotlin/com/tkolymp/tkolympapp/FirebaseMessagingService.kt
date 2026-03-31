@@ -36,10 +36,25 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             val storage = ServiceLocator.notificationStorage
             GlobalScope.launch(Dispatchers.IO) {
                 try {
-                    val now = Clock.System.now().toEpochMilliseconds()
-                    val id = now.toString()
-                    val existing = try { storage.getReceivedNotifications() } catch (_: Exception) { emptyList() }
-                    val newList = listOf(ReceivedMessage(id = id, title = title, body = body, sender = "coach", epochMs = now)) + existing
+                        val now = Clock.System.now().toEpochMilliseconds()
+                        val id = now.toString()
+                        // try to determine topic: RemoteMessage.from may be like "/topics/<id>"
+                        val from = remoteMessage.from
+                        val dataMap = remoteMessage.data
+                        val candidateKeys = listOf("topic", "channel", "group", "group_id", "groupId", "cohort", "cohortId", "topic_id", "topicName", "channelId")
+                        var topic: String? = null
+                        if (from != null && from.startsWith("/topics/")) topic = from.substringAfterLast("/")
+                        if (topic.isNullOrBlank()) {
+                            for (k in candidateKeys) {
+                                val v = dataMap[k]
+                                if (!v.isNullOrBlank()) { topic = v; break }
+                            }
+                        }
+                        if (topic != null) topic = topic.trim()
+                        Log.d("FCM", "Detected topic=$topic from=$from dataKeys=${dataMap.keys}")
+                        val existing = try { storage.getReceivedNotifications() } catch (_: Exception) { emptyList() }
+                        val newList = listOf(ReceivedMessage(id = id, title = title, body = body, sender = "coach", topic = topic, epochMs = now)) + existing
+                        Log.d("FCM", "Saving received message id=$id topic=$topic data=${dataMap}")
                     storage.saveReceivedNotifications(newList)
                 } catch (t: Throwable) {
                     Log.d("FCM", "Failed saving received message: ${t.message}")

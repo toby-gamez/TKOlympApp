@@ -208,7 +208,11 @@ val StringsVi = Strings(
         minutesBefore = "phút trước",
         defaultRuleName = "Quy tắc mặc định",
         notificationEventStartsIn = "Sự kiện bắt đầu trong {0} phút",
-        fromCoach = "Từ huấn luyện viên",
+        channelsListTitle = "Danh sách kênh",
+        generalLabel = "Chung",
+        timeAgoMinutes = "{0} phút trước",
+        timeAgoHours = "{0} giờ trước",
+        fromCoach = "Từ Huấn luyện viên",
     ),
     people = PeopleStrings(
         searchByName = "Tìm kiếm theo tên hoặc họ",

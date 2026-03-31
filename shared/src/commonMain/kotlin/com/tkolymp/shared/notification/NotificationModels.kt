@@ -35,6 +35,7 @@ data class ReceivedMessage(
     val title: String? = null,
     val body: String? = null,
     val sender: String? = null,
+    val topic: String? = null,
     val epochMs: Long
 )
 

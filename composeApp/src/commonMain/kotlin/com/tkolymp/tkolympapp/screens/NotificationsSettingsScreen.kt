@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -133,7 +134,6 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
     }
 
     var selectedTab by remember { mutableStateOf(0) }
-    val coachMessages = remember { mutableStateListOf<ReceivedMessage>() }
 
     fun persist() {
         scope.launch {
@@ -200,11 +200,8 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                     LaunchedEffect(selectedTab) {
                         if (selectedTab == 1) {
                             try {
-                                val storage = ServiceLocator.notificationStorage
-                                val list = try { storage.getReceivedNotifications() } catch (_: Exception) { emptyList() }
-                                coachMessages.clear()
-                                coachMessages.addAll(list)
-                            } catch (_: UninitializedPropertyAccessException) { /* ignore */ }
+                                scope.launch { viewModel.loadUiData() }
+                            } catch (_: Exception) { }
                         }
                     }
                     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
@@ -223,32 +220,78 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                         }
                     }
 
-                    Box(modifier = Modifier.fillMaxSize()) {
+                    Column(modifier = Modifier.fillMaxSize()) {
                         if (selectedTab == 1) {
-                            if (coachMessages.isEmpty()) {
-                                Column(
-                                    modifier = Modifier.fillMaxSize(),
-                                    verticalArrangement = Arrangement.Center,
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
+                            // Combine groups list and coach messages into a single scrollable column
+                            val myGroups = vmState.availableGroups.filter { vmState.myCohortIds.contains(it.first) }
+                            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                                item {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 6.dp)
+                                    ) {
+                                        Text(AppStrings.current.notifications.channelsListTitle, style = MaterialTheme.typography.titleMedium)
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        if (myGroups.isEmpty()) {
+                                            Text(AppStrings.current.people.noGroupsToShow, style = MaterialTheme.typography.bodySmall)
+                                        } else {
+                                            Text(
+                                                text = AppStrings.current.notifications.generalLabel,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                modifier = Modifier.padding(top = 8.dp, bottom = 6.dp)
+                                            )
+                                            myGroups.forEach { g ->
+                                                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                                                    Text(
+                                                        text = g.second,
+                                                        style = MaterialTheme.typography.bodyMedium,
+                                                        color = MaterialTheme.colorScheme.onSurface
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                item {
                                     Text(AppStrings.current.notifications.fromCoach, style = MaterialTheme.typography.titleMedium)
                                 }
-                            } else {
-                                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                                    items(coachMessages, key = { it.id }) { msg ->
+                                if (vmState.coachMessages.isEmpty()) {
+                                    item {
+                                        Column(
+                                            modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                                            verticalArrangement = Arrangement.Center,
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Text(AppStrings.current.notifications.fromCoach, style = MaterialTheme.typography.titleMedium)
+                                        }
+                                    }
+                                } else {
+                                    items(vmState.coachMessages, key = { it.id }) { msg ->
                                         Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(12.dp)) {
                                             Column(modifier = Modifier.padding(12.dp)) {
-                                                Text(text = msg.title ?: "(bez názvu)")
+                                                Text(text = msg.title ?: AppStrings.current.dialogs.noName)
+                                                // show source: if topic == "all" -> "Obecné", else map id to group name
+                                                val source = remember(vmState.availableGroups, msg.topic) {
+                                                    val t = msg.topic ?: "all"
+                                                    if (t == "all") AppStrings.current.notifications.generalLabel else vmState.availableGroups.find { it.first == t }?.second ?: t
+                                                }
+                                                Text(text = source, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp))
                                                 Text(text = msg.body ?: "", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp))
                                                 val now = kotlin.time.Clock.System.now().toEpochMilliseconds()
                                                 val mins = ((now - msg.epochMs) / 60000).coerceAtLeast(0)
-                                                Text(text = if (mins < 60) "před ${mins} min" else "před ${mins/60} h", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp))
+                                                val timeText = if (mins < 60) {
+                                                    AppStrings.current.notifications.timeAgoMinutes.replace("{0}", mins.toString())
+                                                } else {
+                                                    AppStrings.current.notifications.timeAgoHours.replace("{0}", (mins / 60).toString())
+                                                }
+                                                Text(text = timeText, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp))
                                             }
                                         }
                                     }
                                 }
                             }
-                            // skip rendering the settings list below when coach tab is active
                         }
                         if (selectedTab == 0) {
                     LazyColumn(modifier = Modifier.fillMaxSize()) {

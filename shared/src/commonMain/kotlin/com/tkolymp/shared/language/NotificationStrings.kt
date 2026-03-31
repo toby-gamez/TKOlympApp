@@ -25,5 +25,9 @@ data class NotificationStrings(
     val minutesBefore: String,
     val defaultRuleName: String,
     val notificationEventStartsIn: String,
+    val channelsListTitle: String,
+    val generalLabel: String,
+    val timeAgoMinutes: String,
+    val timeAgoHours: String,
     val fromCoach: String,
 )

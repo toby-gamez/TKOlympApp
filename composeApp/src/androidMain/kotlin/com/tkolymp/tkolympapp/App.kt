@@ -99,6 +99,10 @@ fun App() {
             LaunchedEffect(Unit) {
                 try {
                     com.tkolymp.shared.initNetworking(ctx, BuildConfig.API_BASE_URL, BuildConfig.TENANT_ID)
+                    // set platform topic manager to handle FCM topic subscriptions
+                    try {
+                        com.tkolymp.shared.ServiceLocator.topicManager = AndroidTopicManager()
+                    } catch (_: Exception) {}
                     // Restore saved language, or fall back to device language on first launch
                     try {
                         val code = ServiceLocator.languageStorage.getLanguageCode()
