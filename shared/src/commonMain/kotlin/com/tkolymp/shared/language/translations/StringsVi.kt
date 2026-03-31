@@ -212,7 +212,7 @@ val StringsVi = Strings(
         generalLabel = "Chung",
         timeAgoMinutes = "{0} phút trước",
         timeAgoHours = "{0} giờ trước",
-        fromCoach = "Từ Huấn luyện viên",
+        fromCoach = "Từ huấn luyện viên",
     ),
     people = PeopleStrings(
         searchByName = "Tìm kiếm theo tên hoặc họ",

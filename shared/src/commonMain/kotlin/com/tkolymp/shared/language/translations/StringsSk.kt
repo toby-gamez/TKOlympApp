@@ -195,7 +195,7 @@ val StringsSk = Strings(
                 generalLabel = "Všeobecné",
                 timeAgoMinutes = "pred {0} min",
                 timeAgoHours = "pred {0} h",
-           fromCoach = "Od Trénera",
+           fromCoach = "Od trénera",
     ),
     people = PeopleStrings(
         searchByName = "Hľadať podľa mena alebo priezviska",

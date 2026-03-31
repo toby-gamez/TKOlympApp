@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -22,6 +23,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -54,6 +56,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -105,6 +108,9 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
         // load vm settings and UI data in parallel
         try {
             viewModel.loadSettings()
+            // also load cached UI data (groups, my cohort ids, messages) so
+            // we have group lists available even when network/service calls fail
+            try { viewModel.loadUiData() } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         try {
             val svc = ServiceLocator.notificationService
@@ -204,7 +210,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                             } catch (_: Exception) { }
                         }
                     }
-                    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+                    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -231,31 +237,44 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                             .fillMaxWidth()
                                             .padding(vertical = 6.dp)
                                     ) {
-                                        Text(AppStrings.current.notifications.channelsListTitle, style = MaterialTheme.typography.titleMedium)
+                                        Text(AppStrings.current.notifications.channelsListTitle, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                         Spacer(modifier = Modifier.height(8.dp))
                                         if (myGroups.isEmpty()) {
                                             Text(AppStrings.current.people.noGroupsToShow, style = MaterialTheme.typography.bodySmall)
                                         } else {
-                                            Text(
-                                                text = AppStrings.current.notifications.generalLabel,
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = MaterialTheme.colorScheme.onSurface,
-                                                modifier = Modifier.padding(top = 8.dp, bottom = 6.dp)
-                                            )
+                                            Card(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(horizontal = 8.dp,),
+                                                    shape = RoundedCornerShape(16.dp),
+                                                ) {
+                                                Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                                    Icon(imageVector = Icons.Filled.Notifications, contentDescription = AppStrings.current.people.trainingSpaces, modifier = Modifier.size(28.dp))
+                                                    Spacer(modifier = Modifier.width(12.dp))
+                                                    Text(text = AppStrings.current.notifications.generalLabel, style = MaterialTheme.typography.bodyLarge)
+                                                }
+                                            }
                                             myGroups.forEach { g ->
                                                 Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                                                    Text(
-                                                        text = g.second,
-                                                        style = MaterialTheme.typography.bodyMedium,
-                                                        color = MaterialTheme.colorScheme.onSurface
-                                                    )
+                                                    Card(
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .padding(horizontal = 8.dp,),
+                                                        shape = RoundedCornerShape(16.dp),
+                                                    ) {
+                                                        Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                                            Icon(imageVector = Icons.Filled.Notifications, contentDescription = AppStrings.current.people.trainingSpaces, modifier = Modifier.size(28.dp))
+                                                            Spacer(modifier = Modifier.width(12.dp))
+                                                            Text(text = g.second, style = MaterialTheme.typography.bodyLarge)
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
                                     }
                                 }
                                 item {
-                                    Text(AppStrings.current.notifications.fromCoach, style = MaterialTheme.typography.titleMedium)
+                                    Text(AppStrings.current.notifications.fromCoach, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                 }
                                 if (vmState.coachMessages.isEmpty()) {
                                     item {
@@ -277,16 +296,20 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                                     val t = msg.topic ?: "all"
                                                     if (t == "all") AppStrings.current.notifications.generalLabel else vmState.availableGroups.find { it.first == t }?.second ?: t
                                                 }
-                                                Text(text = source, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp))
-                                                Text(text = msg.body ?: "", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp))
-                                                val now = kotlin.time.Clock.System.now().toEpochMilliseconds()
-                                                val mins = ((now - msg.epochMs) / 60000).coerceAtLeast(0)
-                                                val timeText = if (mins < 60) {
-                                                    AppStrings.current.notifications.timeAgoMinutes.replace("{0}", mins.toString())
-                                                } else {
-                                                    AppStrings.current.notifications.timeAgoHours.replace("{0}", (mins / 60).toString())
-                                                }
-                                                Text(text = timeText, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp))
+                                                        // message body
+                                                        Text(text = msg.body ?: "", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp))
+                                                        // show time first, then topic (time, topic)
+                                                        val now = kotlin.time.Clock.System.now().toEpochMilliseconds()
+                                                        val mins = ((now - msg.epochMs) / 60000).coerceAtLeast(0)
+                                                        val timeText = if (mins < 60) {
+                                                            AppStrings.current.notifications.timeAgoMinutes.replace("{0}", mins.toString())
+                                                        } else {
+                                                            AppStrings.current.notifications.timeAgoHours.replace("{0}", (mins / 60).toString())
+                                                        }
+                                                        Row(modifier = Modifier.padding(top = 8.dp)) {
+                                                            Text(text = timeText, style = MaterialTheme.typography.bodySmall)
+                                                            Text(text = ", ${source}", style = MaterialTheme.typography.bodySmall)
+                                                        }
                                             }
                                         }
                                     }
