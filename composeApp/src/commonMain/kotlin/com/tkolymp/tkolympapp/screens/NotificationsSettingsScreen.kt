@@ -31,17 +31,21 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.PrimaryTabRow
 
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -51,6 +55,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -139,7 +145,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
         } catch (e: CancellationException) { throw e } catch (_: Exception) { /* ignore */ }
     }
 
-    var selectedTab by remember { mutableStateOf(0) }
+    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
 
     fun persist() {
         scope.launch {
@@ -198,9 +204,13 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
 
                 Column(modifier = Modifier.fillMaxSize()) {
                     val tabs = listOf(AppStrings.current.otherScreen.notificationSettings, AppStrings.current.notifications.fromCoach)
-                    TabRow(selectedTabIndex = selectedTab) {
+                    PrimaryTabRow(selectedTabIndex = selectedTab, modifier = Modifier.fillMaxWidth()) {
                         tabs.forEachIndexed { i, t ->
-                            Tab(selected = selectedTab == i, onClick = { selectedTab = i }, text = { Text(t) })
+                            Tab(
+                                selected = selectedTab == i,
+                                onClick = { selectedTab = i },
+                                text = { Text(t) }
+                            )
                         }
                     }
                     LaunchedEffect(selectedTab) {
