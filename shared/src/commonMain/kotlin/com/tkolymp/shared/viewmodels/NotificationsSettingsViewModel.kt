@@ -11,6 +11,7 @@ import com.tkolymp.shared.notification.ReceivedMessage
 
 data class NotificationsSettingsState(
     val enabledCategories: Set<String> = emptySet(),
+    val settings: com.tkolymp.shared.notification.NotificationSettings? = null,
     val availableGroups: List<Pair<String, String>> = emptyList(),
     val myCohortIds: Set<String> = emptySet(),
     val coachMessages: List<ReceivedMessage> = emptyList(),
@@ -32,7 +33,7 @@ class NotificationsSettingsViewModel(
         try {
             val settings = try { notificationService.getSettings() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
             val prefs = settings?.rules?.flatMap { rule -> rule.types }.orEmpty().toSet()
-            _state.value = _state.value.copy(enabledCategories = prefs, isLoading = false)
+            _state.value = _state.value.copy(enabledCategories = prefs, settings = settings, isLoading = false)
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání nastavení")
         }
@@ -42,6 +43,22 @@ class NotificationsSettingsViewModel(
         // load visible cohorts/groups and user's cohort ids and received messages
         _state.value = _state.value.copy(isLoading = true, error = null)
         try {
+            // ensure cached person details exist (similar to ProfileViewModel)
+            try {
+                val pid = try { userService.getCachedPersonId() } catch (_: Exception) { null }
+                if (!pid.isNullOrBlank()) {
+                    val cachedPerson = try { userService.getCachedPersonDetails() } catch (_: Exception) { null }
+                    val cachedPersonJson = try { userService.getCachedPersonDetailsJson() } catch (_: Exception) { null }
+                    val needsRefetch = cachedPerson == null || cachedPersonJson.isNullOrBlank() || !(
+                        cachedPersonJson.contains("activeCouplesList") &&
+                            cachedPersonJson.contains("cohortMembershipsList")
+                        )
+                    if (needsRefetch) {
+                        try { userService.fetchAndStorePersonDetails(pid) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+                    }
+                }
+            } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+
             val people = try { peopleService.fetchPeople() } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList<Person>() }
             val groups = people.flatMap { p -> p.cohortMembershipsList.mapNotNull { it.cohort } }
                 .filter { it.isVisible == true }
@@ -82,7 +99,7 @@ class NotificationsSettingsViewModel(
             // naive update: replace rules with a single rule containing selected types
             val newSettings = settings.copy(rules = listOf(com.tkolymp.shared.notification.NotificationRule(id = kotlin.random.Random.Default.nextLong().toString(), name = "types", enabled = true, filterType = com.tkolymp.shared.notification.FilterType.BY_TYPE, locations = listOf(), trainers = listOf(), types = new.toList(), timesBeforeMinutes = listOf(60))))
             notificationService.updateSettings(newSettings)
-            _state.value = _state.value.copy(enabledCategories = new)
+            _state.value = _state.value.copy(enabledCategories = new, settings = newSettings)
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             _state.value = _state.value.copy(error = ex.message ?: "Chyba při aktualizaci")
         }

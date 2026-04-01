@@ -84,6 +84,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import com.tkolymp.tkolympapp.components.QuantityInput
+import kotlinx.coroutines.async
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -111,38 +112,42 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        // load vm settings and UI data in parallel
+        // parallelize independent fetches: settings, ui data, and club data
         try {
-            viewModel.loadSettings()
-            // also load cached UI data (groups, my cohort ids, messages) so
-            // we have group lists available even when network/service calls fail
-            try { viewModel.loadUiData() } catch (e: CancellationException) { throw e } catch (_: Exception) {}
-        } catch (e: CancellationException) { throw e } catch (_: Exception) {}
-        try {
-            val svc = ServiceLocator.notificationService
-            val settings = try { svc.getSettings() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
-            settings?.rules?.forEach { rules.add(it) }
-            globalEnabled = settings?.globalEnabled ?: true
-        } catch (_: UninitializedPropertyAccessException) {
-            // no service
-        }
+            kotlinx.coroutines.coroutineScope {
+                val s1 = async { viewModel.loadSettings() }
+                val s2 = async { viewModel.loadUiData() }
+                val clubDeferred = async(Dispatchers.IO) { ServiceLocator.clubService.fetchClubData() }
 
-        // load club data (locations/trainers)
-            try {
-            val club = withContext(Dispatchers.IO) { ServiceLocator.clubService.fetchClubData() }
-            // exclude placeholder/removed location entries (e.g. "ZRUŠENO")
-            availableLocations = club.locations.mapNotNull { it.name?.trim() }
-                .filter { it.isNotBlank() && !it.equals("ZRUŠENO", ignoreCase = true) }
-                .distinct()
-            availableTrainers = club.trainers.mapNotNull { t ->
-                t.person?.let { p ->
-                    val name = listOfNotNull(p.firstName, p.lastName).joinToString(" ")
-                    val trimmed = name.trim()
-                    val id = p.id ?: return@mapNotNull null
-                    if (trimmed.isNotBlank()) Pair(id, trimmed) else null
+                // await the viewmodel loads first so vmState is populated
+                try { s1.await() } catch (_: Exception) {}
+                try { s2.await() } catch (_: Exception) {}
+
+                val club = try { clubDeferred.await() } catch (_: Exception) { null }
+                if (club != null) {
+                    availableLocations = club.locations.mapNotNull { it.name?.trim() }
+                        .filter { it.isNotBlank() && !it.equals("ZRUŠENO", ignoreCase = true) }
+                        .distinct()
+                    availableTrainers = club.trainers.mapNotNull { t ->
+                        t.person?.let { p ->
+                            val name = listOfNotNull(p.firstName, p.lastName).joinToString(" ")
+                            val trimmed = name.trim()
+                            val id = p.id ?: return@mapNotNull null
+                            if (trimmed.isNotBlank()) Pair(id, trimmed) else null
+                        }
+                    }.distinct()
                 }
-            }.distinct()
-        } catch (e: CancellationException) { throw e } catch (_: Exception) { /* ignore */ }
+            }
+        } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+    }
+
+    // react to ViewModel-provided settings (avoid direct service calls from UI)
+    LaunchedEffect(vmState.settings) {
+        vmState.settings?.let { s ->
+            rules.clear()
+            rules.addAll(s.rules)
+            globalEnabled = s.globalEnabled
+        }
     }
 
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
