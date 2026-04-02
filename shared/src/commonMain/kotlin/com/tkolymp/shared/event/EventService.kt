@@ -493,15 +493,19 @@ class EventService(
             datePart.ifEmpty { "unknown" }
         }
 
-        // Trigger notification processing (best-effort)
-        try {
-            val allInstances = instances.toList()
+        // Trigger notification processing only when fetching the current user's own events.
+        // Calling processEvents with all events (onlyMine=false) would schedule notifications
+        // for every participant, not just the current user.
+        if (onlyMine) {
             try {
-                ServiceLocator.notificationService.processEvents(allInstances)
-            } catch (e: CancellationException) { throw e } catch (e: Exception) {
-                // ignore notification scheduling errors
-            }
-        } catch (e: CancellationException) { throw e } catch (_: Exception) { }
+                val allInstances = instances.toList()
+                try {
+                    ServiceLocator.notificationService.processEvents(allInstances)
+                } catch (e: CancellationException) { throw e } catch (e: Exception) {
+                    // ignore notification scheduling errors
+                }
+            } catch (e: CancellationException) { throw e } catch (_: Exception) { }
+        }
 
         val result = grouped.entries.sortedBy { it.key }.associate { it.key to it.value }
         try {

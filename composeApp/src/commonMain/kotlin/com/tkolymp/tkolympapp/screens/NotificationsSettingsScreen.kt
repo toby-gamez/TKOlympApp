@@ -112,7 +112,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        // parallelize independent fetches: settings, ui data, and club data
+;        // parallelize independent fetches: settings, ui data, and club data
         try {
             kotlinx.coroutines.coroutineScope {
                 val s1 = async { viewModel.loadSettings() }
