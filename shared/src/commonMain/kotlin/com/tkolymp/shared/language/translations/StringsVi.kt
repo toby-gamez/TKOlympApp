@@ -27,6 +27,7 @@ import com.tkolymp.shared.language.PeopleStrings
 import com.tkolymp.shared.language.PrivacyStrings
 import com.tkolymp.shared.language.ProfileStrings
 import com.tkolymp.shared.language.RegistrationStrings
+import com.tkolymp.shared.language.StatsStrings
 import com.tkolymp.shared.language.Strings
 import com.tkolymp.shared.language.TimelineStrings
 
@@ -378,5 +379,34 @@ val StringsVi = Strings(
         contactTitle = "Liên hệ",
         contactText = "Nếu bạn có câu hỏi về bảo vệ dữ liệu hoặc yêu cầu xóa, hãy liên hệ với quản trị viên dịch vụ: tkolymp.cz/kontakt",
         technicalNote = "Chi tiết kỹ thuật: triển khai xác thực và các cuộc gọi GraphQL có thể được tìm thấy trong AuthService và EventServices. Thông báo được quản lý bởi NotificationManagerService.",
+    ),
+    stats = StatsStrings(
+        statsTitle = "Thống kê của tôi",
+        totalSessions = "Tổng buổi tập",
+        totalHours = "Tổng giờ tập",
+        avgPerWeek = "TB/tuần",
+        currentStreak = "Chuỗi",
+        weeksInARow = "tuần liên tiếp",
+        weeklyActivity = "Hoạt động hàng tuần",
+        monthlyBreakdown = "Thống kê theo tháng",
+        typeBreakdown = "Theo loại",
+        trainerBreakdown = "Theo huấn luyện viên",
+        myScore = "Điểm của tôi",
+        totalScore = "Tổng điểm",
+        lessonScore = "Bài học",
+        groupScore = "Nhóm",
+        eventScore = "Sự kiện",
+        manualScore = "Thủ công",
+        currentSeason = "Mùa giải hiện tại",
+        lastSeason = "Mùa giải trước",
+        noData = "Không có thống kê để hiển thị",
+        monthColumn = "Tháng",
+        countColumn = "Số lượng",
+        hoursColumn = "Giờ",
+        sessionsUnit = "buổi",
+        hoursUnit = "giờ",
+        otherTrainers = "khác",
+        weeks = "tuần",
+        noScoreData = "Điểm không khả dụng",
     ),
 )

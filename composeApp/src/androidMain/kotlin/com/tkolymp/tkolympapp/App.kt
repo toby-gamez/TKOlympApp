@@ -56,6 +56,7 @@ import com.tkolymp.tkolympapp.screens.EventsScreen
 import com.tkolymp.tkolympapp.screens.GroupsScreen
 import com.tkolymp.tkolympapp.screens.LanguageScreen
 import com.tkolymp.tkolympapp.screens.LeaderboardScreen
+import com.tkolymp.tkolympapp.screens.StatsScreen
 import com.tkolymp.tkolympapp.screens.LoginScreen
 import com.tkolymp.tkolympapp.screens.NoticeScreen
 import com.tkolymp.tkolympapp.screens.NotificationsSettingsScreen
@@ -273,6 +274,7 @@ fun AppNavHost(
                 onTrainersClick = { navController.navigate("trainers") },
                     onGroupsClick = { navController.navigate("groups") },
                     onLeaderboardClick = { navController.navigate("leaderboard") },
+                    onStatsClick = { navController.navigate("stats") },
                 onAboutClick = { navController.navigate("about") },
                 onPrivacyClick = { navController.navigate("privacy") },
                 onNotificationsClick = { navController.navigate("notifications") },
@@ -435,6 +437,36 @@ fun AppNavHost(
             }
         ) {
             LeaderboardScreen(onBack = { navController.navigateUp() }, bottomPadding = bottomPadding)
+        }
+
+        composable(
+            route = "stats",
+            enterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            popEnterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            }
+        ) {
+            StatsScreen(onBack = { navController.navigateUp() }, bottomPadding = bottomPadding)
         }
 
         composable(

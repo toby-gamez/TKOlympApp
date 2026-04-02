@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -63,7 +64,7 @@ import com.tkolymp.shared.viewmodels.OtherViewModel
 import com.tkolymp.shared.language.AppStrings
 import kotlin.coroutines.cancellation.CancellationException
 
-private enum class MainItem { PEOPLE, TRAINERS, GROUPS, LEADERBOARD }
+private enum class MainItem { PEOPLE, TRAINERS, GROUPS, LEADERBOARD, STATS }
 private enum class SettingsItem { LANGUAGES, ABOUT, NOTIFICATIONS, PRIVACY }
 
 // Helper: do not surface internal/cancellation/compose runtime messages to the UI
@@ -95,7 +96,7 @@ private fun formatDateString(raw: String): String? {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {}, onTrainersClick: () -> Unit = {}, onGroupsClick: () -> Unit = {}, onLeaderboardClick: () -> Unit = {}, onAboutClick: () -> Unit = {}, onPrivacyClick: () -> Unit = {}, onNotificationsClick: () -> Unit = {}, onLanguagesClick: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
+fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {}, onTrainersClick: () -> Unit = {}, onGroupsClick: () -> Unit = {}, onLeaderboardClick: () -> Unit = {}, onStatsClick: () -> Unit = {}, onAboutClick: () -> Unit = {}, onPrivacyClick: () -> Unit = {}, onNotificationsClick: () -> Unit = {}, onLanguagesClick: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
     val viewModel = viewModel<OtherViewModel>()
     val state by viewModel.state.collectAsState()
     var showDebug by remember { mutableStateOf(false) }
@@ -192,7 +193,8 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                 Pair(MainItem.PEOPLE, Icons.Filled.People),
                 Pair(MainItem.TRAINERS, Icons.Filled.FitnessCenter),
                 Pair(MainItem.GROUPS, Icons.Filled.Groups),
-                Pair(MainItem.LEADERBOARD, Icons.Filled.EmojiEvents)
+                Pair(MainItem.LEADERBOARD, Icons.Filled.EmojiEvents),
+                Pair(MainItem.STATS, Icons.Filled.BarChart)
             )
 
             mainItems.forEach { (item, icon) ->
@@ -201,6 +203,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                     MainItem.TRAINERS -> AppStrings.current.otherScreen.trainersAndSpaces
                     MainItem.GROUPS -> AppStrings.current.otherScreen.trainingGroups
                     MainItem.LEADERBOARD -> AppStrings.current.otherScreen.leaderboard
+                    MainItem.STATS -> AppStrings.current.stats.statsTitle
                 }
                 Card(
                     modifier = Modifier
@@ -212,6 +215,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                                 MainItem.TRAINERS -> onTrainersClick()
                                 MainItem.GROUPS -> onGroupsClick()
                                 MainItem.LEADERBOARD -> onLeaderboardClick()
+                                MainItem.STATS -> onStatsClick()
                             }
                         },
                     shape = RoundedCornerShape(16.dp),
