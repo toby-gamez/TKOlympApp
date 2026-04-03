@@ -38,15 +38,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.PrimaryTabRow
-
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
-
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -68,33 +63,26 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.tkolymp.shared.Logger
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.notification.FilterType
 import com.tkolymp.shared.notification.NotificationRule
 import com.tkolymp.shared.notification.NotificationSettings
-import com.tkolymp.shared.notification.ReceivedMessage
-import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.utils.formatTimeAgo
 import com.tkolymp.shared.viewmodels.NotificationsSettingsViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.platform.NotificationExportImportButton
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import com.tkolymp.tkolympapp.components.QuantityInput
-import kotlinx.coroutines.async
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
     val scope = rememberCoroutineScope()
     val json = remember { Json { prettyPrint = true; ignoreUnknownKeys = true } }
-    var availableLocations by remember { mutableStateOf<List<String>>(emptyList()) }
-    var availableTrainers by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     val availableTypes = listOf("CAMP", "LESSON", "GROUP", "RESERVATION", "HOLIDAY")
-    // display labels for types
     val typeLabels = mapOf(
         "LESSON" to AppStrings.current.events.eventTypeLesson,
         "CAMP" to AppStrings.current.events.eventTypeCamp,
@@ -102,8 +90,6 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
         "RESERVATION" to AppStrings.current.events.eventTypeReservation,
         "HOLIDAY" to AppStrings.current.events.eventTypeHoliday
     )
-    var rules = remember { mutableStateListOf<NotificationRule>() }
-    var globalEnabled by remember { mutableStateOf(true) }
     val viewModel = viewModel<NotificationsSettingsViewModel>()
     val vmState by viewModel.state.collectAsState()
     var showDialog by remember { mutableStateOf(false) }
@@ -112,63 +98,19 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-;        // parallelize independent fetches: settings, ui data, and club data
         try {
             kotlinx.coroutines.coroutineScope {
                 val s1 = async { viewModel.loadSettings() }
                 val s2 = async { viewModel.loadUiData() }
-                val clubDeferred = async(Dispatchers.IO) { ServiceLocator.clubService.fetchClubData() }
-
-                // await the viewmodel loads first so vmState is populated
+                val s3 = async { viewModel.loadClubData() }
                 try { s1.await() } catch (_: Exception) {}
                 try { s2.await() } catch (_: Exception) {}
-
-                val club = try { clubDeferred.await() } catch (_: Exception) { null }
-                if (club != null) {
-                    availableLocations = club.locations.mapNotNull { it.name?.trim() }
-                        .filter { it.isNotBlank() && !it.equals("ZRUŠENO", ignoreCase = true) }
-                        .distinct()
-                    availableTrainers = club.trainers.mapNotNull { t ->
-                        t.person?.let { p ->
-                            val name = listOfNotNull(p.firstName, p.lastName).joinToString(" ")
-                            val trimmed = name.trim()
-                            val id = p.id ?: return@mapNotNull null
-                            if (trimmed.isNotBlank()) Pair(id, trimmed) else null
-                        }
-                    }.distinct()
-                }
+                try { s3.await() } catch (_: Exception) {}
             }
-        } catch (e: CancellationException) { throw e } catch (_: Exception) {}
-    }
-
-    // react to ViewModel-provided settings (avoid direct service calls from UI)
-    LaunchedEffect(vmState.settings) {
-        vmState.settings?.let { s ->
-            rules.clear()
-            rules.addAll(s.rules)
-            globalEnabled = s.globalEnabled
-        }
+        } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (_: Exception) {}
     }
 
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
-
-    fun persist() {
-        scope.launch {
-            try {
-                val svc = ServiceLocator.notificationService
-                val settings = NotificationSettings(globalEnabled = globalEnabled, rules = rules.toList())
-                try {
-                    svc.updateSettings(settings)
-                } catch (e: CancellationException) { throw e } catch (t: Exception) {
-                    Logger.d("NotificationsSettings", "Failed to update settings: ${t.message}")
-                }
-            } catch (e: UninitializedPropertyAccessException) {
-                Logger.d("NotificationsSettings", "notificationService not initialized: ${e.message}")
-            } catch (e: CancellationException) { throw e } catch (t: Exception) {
-                Logger.d("NotificationsSettings", "Unexpected error persisting settings: ${t.message}")
-            }
-        }
-    }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text(AppStrings.current.otherScreen.notificationSettings) }, navigationIcon = {
@@ -176,14 +118,11 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
         }, actions = {
             NotificationExportImportButton(
                 onGetExportJson = {
-                    json.encodeToString(NotificationSettings(globalEnabled = globalEnabled, rules = rules.toList()))
+                    json.encodeToString(NotificationSettings(globalEnabled = vmState.globalEnabled, rules = vmState.rules))
                 },
                 onImportJson = { jsonStr ->
                     val imported = json.decodeFromString<NotificationSettings>(jsonStr)
-                    rules.clear()
-                    rules.addAll(imported.rules)
-                    globalEnabled = imported.globalEnabled
-                    persist()
+                    scope.launch { viewModel.importSettings(imported) }
                 },
                 onMessage = {}
             )
@@ -196,254 +135,151 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
             }
         }
     ) { inner ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(inner)
-        ) {
+        Box(modifier = Modifier.fillMaxSize().padding(inner)) {
             SwipeToReload(
                 isRefreshing = vmState.isLoading,
                 onRefresh = { scope.launch { viewModel.loadSettings() } },
                 modifier = Modifier.fillMaxSize()
             ) {
-
                 Column(modifier = Modifier.fillMaxSize()) {
                     val tabs = listOf(AppStrings.current.otherScreen.notificationSettings, AppStrings.current.notifications.fromCoach)
                     PrimaryTabRow(selectedTabIndex = selectedTab, modifier = Modifier.fillMaxWidth()) {
                         tabs.forEachIndexed { i, t ->
-                            Tab(
-                                selected = selectedTab == i,
-                                onClick = { selectedTab = i },
-                                text = { Text(t) }
-                            )
+                            Tab(selected = selectedTab == i, onClick = { selectedTab = i }, text = { Text(t) })
                         }
                     }
                     LaunchedEffect(selectedTab) {
                         if (selectedTab == 1) {
-                            try {
-                                scope.launch { viewModel.loadUiData() }
-                            } catch (_: Exception) { }
+                            scope.launch { viewModel.loadUiData() }
                         }
                     }
                     Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        if (selectedTab == 0) {
-                            Text(AppStrings.current.notifications.globallyEnabled)
-                            Switch(
-                                checked = globalEnabled,
-                                onCheckedChange = { globalEnabled = it; persist() })
-                        } else {
-                            
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (selectedTab == 0) {
+                                Text(AppStrings.current.notifications.globallyEnabled)
+                                Switch(
+                                    checked = vmState.globalEnabled,
+                                    onCheckedChange = { scope.launch { viewModel.setGlobalEnabled(it) } })
+                            }
                         }
-                    }
 
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        if (selectedTab == 1) {
-                            // Combine groups list and coach messages into a single scrollable column
-                            val myGroups = vmState.availableGroups.filter { vmState.myCohortIds.contains(it.first) }
-                            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                                item {
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 6.dp)
-                                    ) {
-                                        Text(AppStrings.current.notifications.channelsListTitle, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        if (myGroups.isEmpty()) {
-                                            Text(AppStrings.current.people.noGroupsToShow, style = MaterialTheme.typography.bodySmall)
-                                        } else {
-                                            Card(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(horizontal = 8.dp,),
-                                                    shape = RoundedCornerShape(16.dp),
-                                                ) {
-                                                Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                                                    Icon(imageVector = Icons.Filled.Notifications, contentDescription = AppStrings.current.people.trainingSpaces, modifier = Modifier.size(28.dp))
-                                                    Spacer(modifier = Modifier.width(12.dp))
-                                                    Text(text = AppStrings.current.notifications.generalLabel, style = MaterialTheme.typography.bodyLarge)
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            if (selectedTab == 1) {
+                                val myGroups = vmState.availableGroups.filter { vmState.myCohortIds.contains(it.first) }
+                                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                                    item {
+                                        Column(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+                                            Text(AppStrings.current.notifications.channelsListTitle, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            if (myGroups.isEmpty()) {
+                                                Text(AppStrings.current.people.noGroupsToShow, style = MaterialTheme.typography.bodySmall)
+                                            } else {
+                                                Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp), shape = RoundedCornerShape(16.dp)) {
+                                                    Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                                        Icon(imageVector = Icons.Filled.Notifications, contentDescription = AppStrings.current.people.trainingSpaces, modifier = Modifier.size(28.dp))
+                                                        Spacer(modifier = Modifier.width(12.dp))
+                                                        Text(text = AppStrings.current.notifications.generalLabel, style = MaterialTheme.typography.bodyLarge)
+                                                    }
                                                 }
-                                            }
-                                            myGroups.forEach { g ->
-                                                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                                                    Card(
-                                                        modifier = Modifier
-                                                            .fillMaxWidth()
-                                                            .padding(horizontal = 8.dp,),
-                                                        shape = RoundedCornerShape(16.dp),
-                                                    ) {
-                                                        Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                                                            Icon(imageVector = Icons.Filled.Notifications, contentDescription = AppStrings.current.people.trainingSpaces, modifier = Modifier.size(28.dp))
-                                                            Spacer(modifier = Modifier.width(12.dp))
-                                                            Text(text = g.second, style = MaterialTheme.typography.bodyLarge)
+                                                myGroups.forEach { g ->
+                                                    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                                                        Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp), shape = RoundedCornerShape(16.dp)) {
+                                                            Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                                                Icon(imageVector = Icons.Filled.Notifications, contentDescription = AppStrings.current.people.trainingSpaces, modifier = Modifier.size(28.dp))
+                                                                Spacer(modifier = Modifier.width(12.dp))
+                                                                Text(text = g.second, style = MaterialTheme.typography.bodyLarge)
+                                                            }
                                                         }
                                                     }
                                                 }
                                             }
                                         }
                                     }
-                                }
-                                item {
-                                    Text(AppStrings.current.notifications.fromCoach, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                                }
-                                if (vmState.coachMessages.isEmpty()) {
                                     item {
-                                        Column(
-                                            modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-                                            verticalArrangement = Arrangement.Center,
-                                            horizontalAlignment = Alignment.CenterHorizontally
-                                        ) {
-                                            Text(AppStrings.current.notifications.fromCoach, style = MaterialTheme.typography.titleMedium)
-                                        }
+                                        Text(AppStrings.current.notifications.fromCoach, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                     }
-                                } else {
-                                    items(vmState.coachMessages, key = { it.id }) { msg ->
-                                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(12.dp)) {
-                                            Column(modifier = Modifier.padding(12.dp)) {
-                                                Text(text = msg.title ?: AppStrings.current.dialogs.noName)
-                                                // show source: if topic == "all" -> "Obecné", else map id to group name
-                                                val source = remember(vmState.availableGroups, msg.topic) {
-                                                    val t = msg.topic ?: "all"
-                                                    if (t == "all") AppStrings.current.notifications.generalLabel else vmState.availableGroups.find { it.first == t }?.second ?: t
+                                    if (vmState.coachMessages.isEmpty()) {
+                                        item {
+                                            Column(modifier = Modifier.fillMaxWidth().padding(top = 12.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+                                                Text(AppStrings.current.notifications.fromCoach, style = MaterialTheme.typography.titleMedium)
+                                            }
+                                        }
+                                    } else {
+                                        items(vmState.coachMessages, key = { it.id }) { msg ->
+                                            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(12.dp)) {
+                                                Column(modifier = Modifier.padding(12.dp)) {
+                                                    Text(text = msg.title ?: AppStrings.current.dialogs.noName)
+                                                    val source = remember(vmState.availableGroups, msg.topic) {
+                                                        val t = msg.topic ?: "all"
+                                                        if (t == "all") AppStrings.current.notifications.generalLabel else vmState.availableGroups.find { it.first == t }?.second ?: t
+                                                    }
+                                                    Text(text = msg.body ?: "", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp))
+                                                    Row(modifier = Modifier.padding(top = 8.dp)) {
+                                                        Text(text = formatTimeAgo(msg.epochMs), style = MaterialTheme.typography.bodySmall)
+                                                        Text(text = ", $source", style = MaterialTheme.typography.bodySmall)
+                                                    }
                                                 }
-                                                        // message body
-                                                        Text(text = msg.body ?: "", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp))
-                                                        // show time first, then topic (time, topic)
-                                                        val now = kotlin.time.Clock.System.now().toEpochMilliseconds()
-                                                        val mins = ((now - msg.epochMs) / 60000).coerceAtLeast(0)
-                                                        val timeText = if (mins < 60) {
-                                                            AppStrings.current.notifications.timeAgoMinutes.replace("{0}", mins.toString())
-                                                        } else {
-                                                            AppStrings.current.notifications.timeAgoHours.replace("{0}", (mins / 60).toString())
-                                                        }
-                                                        Row(modifier = Modifier.padding(top = 8.dp)) {
-                                                            Text(text = timeText, style = MaterialTheme.typography.bodySmall)
-                                                            Text(text = ", ${source}", style = MaterialTheme.typography.bodySmall)
-                                                        }
                                             }
                                         }
                                     }
                                 }
                             }
-                        }
-                        if (selectedTab == 0) {
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        items(rules, key = { it.id }) { r ->
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 8.dp),
-                                shape = RoundedCornerShape(16.dp),
-                                
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(12.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        val title =
-                                            if (r.name.isNotBlank()) r.name else if (r.filterType == FilterType.ALL) AppStrings.current.notifications.allEventsFilter else AppStrings.current.misc.rule
-                                        Text(text = title)
-                                        if (r.filterType == FilterType.ALL) {
-                                            Text(
-                                                text = AppStrings.current.notifications.allEventsFilter,
-                                                style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
-                                                modifier = Modifier.padding(top = 4.dp)
-                                            )
-                                        } else {
-                                            when (r.filterType) {
-                                                FilterType.BY_LOCATION -> Text(
-                                                    text = "${AppStrings.current.filters.filterPlace}: ${if (r.locations.isNotEmpty()) r.locations.joinToString(", ") else AppStrings.current.notifications.allLocations}",
-                                                    style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
-                                                    modifier = Modifier.padding(top = 4.dp)
-                                                )
-                                                FilterType.BY_TRAINER -> {
-                                                    val trainerDisplay = if (r.trainers.isNotEmpty()) r.trainers.map { t ->
-                                                        if (t.contains("::")) t.substringAfter("::") else t
-                                                    }.joinToString(", ") else AppStrings.current.notifications.allTrainers
-                                                    Text(
-                                                        text = "${AppStrings.current.filters.filterTrainer}: $trainerDisplay",
-                                                        style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
-                                                        modifier = Modifier.padding(top = 4.dp)
-                                                    )
+                            if (selectedTab == 0) {
+                                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                                    items(vmState.rules, key = { it.id }) { r ->
+                                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), shape = RoundedCornerShape(16.dp)) {
+                                            Row(modifier = Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    val title = if (r.name.isNotBlank()) r.name else if (r.filterType == FilterType.ALL) AppStrings.current.notifications.allEventsFilter else AppStrings.current.misc.rule
+                                                    Text(text = title)
+                                                    if (r.filterType == FilterType.ALL) {
+                                                        Text(text = AppStrings.current.notifications.allEventsFilter, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
+                                                    } else {
+                                                        when (r.filterType) {
+                                                            FilterType.BY_LOCATION -> Text(text = "${AppStrings.current.filters.filterPlace}: ${if (r.locations.isNotEmpty()) r.locations.joinToString(", ") else AppStrings.current.notifications.allLocations}", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
+                                                            FilterType.BY_TRAINER -> {
+                                                                val trainerDisplay = if (r.trainers.isNotEmpty()) r.trainers.map { t -> if (t.contains("::")) t.substringAfter("::") else t }.joinToString(", ") else AppStrings.current.notifications.allTrainers
+                                                                Text(text = "${AppStrings.current.filters.filterTrainer}: $trainerDisplay", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
+                                                            }
+                                                            FilterType.BY_TYPE -> Text(text = "${AppStrings.current.filters.filterType}: ${if (r.types.isNotEmpty()) r.types.map { typeLabels[it] ?: it }.joinToString(", ") else AppStrings.current.notifications.allTypes}", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
+                                                            else -> {}
+                                                        }
+                                                    }
+                                                    val beforeSuffix = AppStrings.current.notifications.minutesBefore.substringAfter(" ")
+                                                    val timeDisplay = r.timesBeforeMinutes.joinToString(", ") { m ->
+                                                        if (m >= 60 && m % 60 == 0) "${m / 60} ${AppStrings.current.notifications.hoursUnit} $beforeSuffix"
+                                                        else "$m ${AppStrings.current.notifications.minutesBefore}"
+                                                    }
+                                                    Text(text = timeDisplay, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp))
                                                 }
-                                                FilterType.BY_TYPE -> Text(
-                                                    text = "${AppStrings.current.filters.filterType}: ${if (r.types.isNotEmpty()) r.types.map { typeLabels[it] ?: it }.joinToString(", ") else AppStrings.current.notifications.allTypes}",
-                                                    style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
-                                                    modifier = Modifier.padding(top = 4.dp)
-                                                )
-                                                else -> {}
+                                                Row {
+                                                    Switch(checked = r.enabled, onCheckedChange = { new ->
+                                                        scope.launch { viewModel.toggleRule(r.id, new) }
+                                                    })
+                                                    IconButton(onClick = { editRule = r; showDialog = true }) {
+                                                        Icon(Icons.Default.Edit, contentDescription = AppStrings.current.commonActions.edit)
+                                                    }
+                                                    IconButton(onClick = { deletingRuleId = r.id; showDeleteConfirm = true }) {
+                                                        Icon(Icons.Default.Delete, contentDescription = AppStrings.current.commonActions.delete)
+                                                    }
+                                                }
                                             }
                                         }
-                                        val beforeSuffix = AppStrings.current.notifications.minutesBefore.substringAfter(" ")
-                                        val timeDisplay = r.timesBeforeMinutes.joinToString(", ") { m ->
-                                            if (m >= 60 && m % 60 == 0) "${m / 60} ${AppStrings.current.notifications.hoursUnit} $beforeSuffix"
-                                            else "$m ${AppStrings.current.notifications.minutesBefore}"
-                                        }
-                                        Text(
-                                            text = timeDisplay,
-                                            style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
-                                            modifier = Modifier.padding(top = 6.dp)
-                                        )
                                     }
-
-                                    Row {
-                                        Switch(checked = r.enabled, onCheckedChange = { new ->
-                                            val idx = rules.indexOfFirst { it.id == r.id }
-                                            if (idx >= 0) {
-                                                rules[idx] = r.copy(enabled = new)
-                                                persist()
-                                            }
-                                        })
-                                        IconButton(onClick = {
-                                            editRule = r; showDialog = true
-                                        }) {
-                                            Icon(
-                                                Icons.Default.Edit,
-                                                contentDescription = AppStrings.current.commonActions.edit
-                                            )
-                                        }
-                                        IconButton(onClick = {
-                                            deletingRuleId = r.id
-                                            showDeleteConfirm = true
-                                        }) {
-                                            Icon(
-                                                Icons.Default.Delete,
-                                                contentDescription = AppStrings.current.commonActions.delete
-                                            )
-                                        }
+                                }
+                                if (vmState.rules.isEmpty()) {
+                                    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(AppStrings.current.notifications.noRules, style = MaterialTheme.typography.titleMedium)
+                                        Text(AppStrings.current.notifications.noRulesDescription, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
                                     }
                                 }
                             }
                         }
                     }
-                    if (rules.isEmpty()) {
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(AppStrings.current.notifications.noRules, style = MaterialTheme.typography.titleMedium)
-                            Text(
-                                AppStrings.current.notifications.noRulesDescription,
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
-                        }
-                    }
-                    } // end Box
-
-                    } // end inner padded Column
-
-                    // Back button removed per request (handled by top-level navigation)
                 }
             }
         }
@@ -456,18 +292,12 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                 text = { Text(AppStrings.current.notifications.deleteRuleConfirmText) },
                 confirmButton = {
                     Button(onClick = {
-                        if (toDeleteId != null) {
-                            rules.removeAll { it.id == toDeleteId }
-                            persist()
-                        }
-                        showDeleteConfirm = false
-                        deletingRuleId = null
+                        if (toDeleteId != null) scope.launch { viewModel.deleteRule(toDeleteId) }
+                        showDeleteConfirm = false; deletingRuleId = null
                     }) { Text(AppStrings.current.commonActions.delete) }
                 },
                 dismissButton = {
-                    TextButton(onClick = {
-                        showDeleteConfirm = false; deletingRuleId = null
-                    }) { Text(AppStrings.current.commonActions.cancel) }
+                    TextButton(onClick = { showDeleteConfirm = false; deletingRuleId = null }) { Text(AppStrings.current.commonActions.cancel) }
                 }
             )
         }
@@ -475,21 +305,17 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
         if (showDialog) {
             val dialogExisting = editRule
             var selType by remember(dialogExisting) {
-                mutableStateOf(
-                    when (dialogExisting?.filterType) {
-                        FilterType.ALL, null -> FilterType.BY_LOCATION
-                        else -> dialogExisting.filterType
-                    }
-                )
+                mutableStateOf(when (dialogExisting?.filterType) {
+                    FilterType.ALL, null -> FilterType.BY_LOCATION
+                    else -> dialogExisting.filterType
+                })
             }
             val selectedLocations = remember { mutableStateListOf<String>() }
             val selectedTrainers = remember { mutableStateListOf<String>() }
             val selectedTypes = remember(dialogExisting) {
-                mutableStateListOf<String>().apply {
-                    dialogExisting?.types?.let { addAll(it) }
-                }
+                mutableStateListOf<String>().apply { dialogExisting?.types?.let { addAll(it) } }
             }
-            LaunchedEffect(dialogExisting, availableTrainers) {
+            LaunchedEffect(dialogExisting, vmState.availableTrainers) {
                 selectedLocations.clear()
                 selectedTrainers.clear()
                 dialogExisting?.locations?.let { selectedLocations.addAll(it) }
@@ -498,49 +324,20 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                         if (s.contains("::")) {
                             selectedTrainers.add(s)
                         } else {
-                            val matched = availableTrainers.find { it.second == s }
-                            if (matched != null) selectedTrainers.add("${matched.first}::${s}") else selectedTrainers.add(s)
+                            val matched = vmState.availableTrainers.find { it.second == s }
+                            if (matched != null) selectedTrainers.add("${matched.first}::$s") else selectedTrainers.add(s)
                         }
                     }
                 }
             }
-            var timeValue by remember(dialogExisting) {
-                mutableStateOf(dialogExisting?.timesBeforeMinutes?.firstOrNull()?.toString() ?: "60")
-            }
-            var isHours by remember(dialogExisting) {
-                mutableStateOf(dialogExisting?.timesBeforeMinutes?.firstOrNull()?.let { it % 60 == 0 && it != 0 } ?: false)
-            }
+            var timeValue by remember(dialogExisting) { mutableStateOf(dialogExisting?.timesBeforeMinutes?.firstOrNull()?.toString() ?: "60") }
+            var isHours by remember(dialogExisting) { mutableStateOf(dialogExisting?.timesBeforeMinutes?.firstOrNull()?.let { it % 60 == 0 && it != 0 } ?: false) }
             var ruleName by remember(dialogExisting) { mutableStateOf(dialogExisting?.name ?: "") }
-            var timeUnitExpanded by remember { mutableStateOf(false) }
-            var lastIsHours by remember { mutableStateOf(isHours) }
-            Dialog(
-                onDismissRequest = { showDialog = false },
-                properties = DialogProperties(usePlatformDefaultWidth = false)
-            ) {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(32.dp),
-                    shape = RoundedCornerShape(24.dp),
-                    tonalElevation = 8.dp,
-                    shadowElevation = 16.dp
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(24.dp)
-                    ) {
-                        Text(
-                            text = if (dialogExisting == null) AppStrings.current.notifications.addRule else AppStrings.current.notifications.editRuleTitle,
-                            style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier.padding(bottom = 12.dp)
-                        )
-                        OutlinedTextField(
-                            value = ruleName,
-                            onValueChange = { ruleName = it },
-                            label = { Text(AppStrings.current.notifications.ruleNameLabel) },
-                            modifier = Modifier.fillMaxWidth()
-                        )
+            Dialog(onDismissRequest = { showDialog = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+                Surface(modifier = Modifier.fillMaxSize().padding(32.dp), shape = RoundedCornerShape(24.dp), tonalElevation = 8.dp, shadowElevation = 16.dp) {
+                    Column(modifier = Modifier.fillMaxSize().padding(24.dp)) {
+                        Text(text = if (dialogExisting == null) AppStrings.current.notifications.addRule else AppStrings.current.notifications.editRuleTitle, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 12.dp))
+                        OutlinedTextField(value = ruleName, onValueChange = { ruleName = it }, label = { Text(AppStrings.current.notifications.ruleNameLabel) }, modifier = Modifier.fillMaxWidth())
                         Spacer(modifier = Modifier.height(12.dp))
                         var timeUnit by remember { mutableStateOf(if (isHours) "h" else "min") }
                         val unitOptions = listOf("min", "h")
@@ -548,163 +345,90 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                             value = (if (timeUnit == "h") (timeValue.toIntOrNull() ?: 1) else (timeValue.toIntOrNull() ?: 60)),
                             onValueChange = { v, u ->
                                 timeUnit = u
-                                if (u == "h") {
-                                    timeValue = v.toString()
-                                    isHours = true
-                                } else {
-                                    timeValue = v.toString()
-                                    isHours = false
-                                }
+                                timeValue = v.toString()
+                                isHours = (u == "h")
                             },
                             units = unitOptions,
                             defaultUnit = if (isHours) "h" else "min",
                             label = AppStrings.current.notifications.timeAheadLabel,
                             modifier = Modifier.fillMaxWidth()
                         )
-                        // Filter type moved below time input
                         Text(AppStrings.current.notifications.filterTypeLabel, style = MaterialTheme.typography.labelLarge)
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .horizontalScroll(rememberScrollState())
-                                .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            listOf(
-                                FilterType.BY_LOCATION,
-                                FilterType.BY_TRAINER,
-                                FilterType.BY_TYPE
-                            ).forEach { t ->
+                        Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf(FilterType.BY_LOCATION, FilterType.BY_TRAINER, FilterType.BY_TYPE).forEach { t ->
                                 val label = when (t) {
                                     FilterType.BY_LOCATION -> AppStrings.current.filters.filterPlace
                                     FilterType.BY_TRAINER -> AppStrings.current.filters.filterTrainer
                                     FilterType.BY_TYPE -> AppStrings.current.filters.filterType
                                     else -> t.name
                                 }
-                                FilterChip(
-                                    selected = (selType == t),
-                                    onClick = { selType = t },
-                                    label = { Text(label) })
+                                FilterChip(selected = (selType == t), onClick = { selType = t }, label = { Text(label) })
                             }
                         }
                         Spacer(modifier = Modifier.height(12.dp))
-                        Spacer(modifier = Modifier.height(8.dp))
                         Text(AppStrings.current.notifications.orPickFromValues, style = MaterialTheme.typography.labelLarge)
                         Box(modifier = Modifier.weight(1f)) {
-                        when (selType) {
-                            FilterType.BY_LOCATION -> {
-                                LazyColumn(
-                                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 8.dp)
-                                ) {
-                                    items(availableLocations) { loc ->
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth().padding(6.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Checkbox(
-                                                checked = selectedLocations.contains(loc),
-                                                onCheckedChange = {
-                                                    if (it) selectedLocations.add(loc) else selectedLocations.remove(loc)
-                                                })
-                                            Text(loc)
-                                        }
-                                    }
-                                }
-                            }
-                            FilterType.BY_TRAINER -> {
-                                LazyColumn(
-                                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 8.dp)
-                                ) {
-                                    items(availableTrainers) { tr ->
-                                        val trId = tr.first
-                                        val trName = tr.second
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth().padding(6.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            val isChecked = selectedTrainers.any { sel ->
-                                                if (sel.contains("::")) sel.substringBefore("::") == trId else sel == trName
+                            when (selType) {
+                                FilterType.BY_LOCATION -> {
+                                    LazyColumn(modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 8.dp)) {
+                                        items(vmState.availableLocations) { loc ->
+                                            Row(modifier = Modifier.fillMaxWidth().padding(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                                                Checkbox(checked = selectedLocations.contains(loc), onCheckedChange = { if (it) selectedLocations.add(loc) else selectedLocations.remove(loc) })
+                                                Text(loc)
                                             }
-                                            Checkbox(
-                                                checked = isChecked,
-                                                onCheckedChange = { checked ->
-                                                    if (checked) {
-                                                        selectedTrainers.add("${trId}::${trName}")
-                                                    } else {
-                                                        selectedTrainers.removeAll { sel ->
-                                                            if (sel.contains("::")) sel.substringBefore("::") == trId else sel == trName
-                                                        }
-                                                    }
-                                                })
-                                            Text(trName)
                                         }
                                     }
                                 }
-                            }
-                            FilterType.BY_TYPE -> {
-                                LazyColumn(
-                                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 8.dp)
-                                ) {
-                                    items(availableTypes) { tp ->
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth().padding(6.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Checkbox(
-                                                checked = selectedTypes.contains(tp),
-                                                onCheckedChange = {
-                                                    if (it) selectedTypes.add(tp) else selectedTypes.remove(tp)
+                                FilterType.BY_TRAINER -> {
+                                    LazyColumn(modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 8.dp)) {
+                                        items(vmState.availableTrainers) { tr ->
+                                            val trId = tr.first; val trName = tr.second
+                                            Row(modifier = Modifier.fillMaxWidth().padding(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                                                val isChecked = selectedTrainers.any { sel -> if (sel.contains("::")) sel.substringBefore("::") == trId else sel == trName }
+                                                Checkbox(checked = isChecked, onCheckedChange = { checked ->
+                                                    if (checked) selectedTrainers.add("${trId}::${trName}")
+                                                    else selectedTrainers.removeAll { sel -> if (sel.contains("::")) sel.substringBefore("::") == trId else sel == trName }
                                                 })
-                                            Text(typeLabels[tp] ?: tp)
+                                                Text(trName)
+                                            }
                                         }
                                     }
                                 }
+                                FilterType.BY_TYPE -> {
+                                    LazyColumn(modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 8.dp)) {
+                                        items(availableTypes) { tp ->
+                                            Row(modifier = Modifier.fillMaxWidth().padding(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                                                Checkbox(checked = selectedTypes.contains(tp), onCheckedChange = { if (it) selectedTypes.add(tp) else selectedTypes.remove(tp) })
+                                                Text(typeLabels[tp] ?: tp)
+                                            }
+                                        }
+                                    }
+                                }
+                                else -> {}
                             }
-                            else -> {}
                         }
-                        } // end weight Box
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                            horizontalArrangement = Arrangement.End
-                        ) {
+                        Row(modifier = Modifier.fillMaxWidth().padding(top = 16.dp), horizontalArrangement = Arrangement.End) {
                             TextButton(onClick = { showDialog = false }) { Text(AppStrings.current.commonActions.cancel) }
                             Spacer(modifier = Modifier.width(12.dp))
                             Button(
                                 onClick = {
                                     val tv = timeValue.trim().toIntOrNull() ?: 60
                                     val minutes = if (isHours) tv * 60 else tv
-                                    val times = listOf(minutes)
-                                    val existing = dialogExisting
-                                    val finalLocations = if (selectedLocations.isNotEmpty()) selectedLocations.toList() else emptyList()
-                                    val finalTrainers = if (selectedTrainers.isNotEmpty()) selectedTrainers.toList() else emptyList()
-                                    val finalTypes = if (selectedTypes.isNotEmpty()) selectedTypes.toList() else emptyList()
-                                    if (existing == null) {
-                                        val nr = NotificationRule(
+                                    val finalLocations = selectedLocations.toList()
+                                    val finalTrainers = selectedTrainers.toList()
+                                    val finalTypes = selectedTypes.toList()
+                                    val rule = if (dialogExisting == null) {
+                                        NotificationRule(
                                             id = kotlin.time.Clock.System.now().toEpochMilliseconds().toString(),
-                                            name = ruleName,
-                                            enabled = true,
+                                            name = ruleName, enabled = true,
                                             filterType = selType,
-                                            locations = finalLocations,
-                                            trainers = finalTrainers,
-                                            types = finalTypes,
-                                            timesBeforeMinutes = times
+                                            locations = finalLocations, trainers = finalTrainers, types = finalTypes,
+                                            timesBeforeMinutes = listOf(minutes)
                                         )
-                                        rules.add(nr)
                                     } else {
-                                        val idx = rules.indexOfFirst { it.id == existing.id }
-                                        if (idx >= 0) {
-                                            val updated = existing.copy(
-                                                name = ruleName,
-                                                filterType = selType,
-                                                locations = finalLocations,
-                                                trainers = finalTrainers,
-                                                types = finalTypes,
-                                                timesBeforeMinutes = times
-                                            )
-                                            rules[idx] = updated
-                                        }
+                                        dialogExisting.copy(name = ruleName, filterType = selType, locations = finalLocations, trainers = finalTrainers, types = finalTypes, timesBeforeMinutes = listOf(minutes))
                                     }
-                                    persist()
+                                    scope.launch { viewModel.addOrUpdateRule(rule) }
                                     showDialog = false
                                 },
                                 shape = RoundedCornerShape(16.dp),
@@ -715,4 +439,5 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                 }
             }
         }
-    }}}
+    }
+}

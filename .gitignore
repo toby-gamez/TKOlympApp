@@ -49,3 +49,4 @@ composeApp/build.gradle.kts
 .vscode/*
 local.properties
 composeApp/google-services.json
+.kotlin/errors/*

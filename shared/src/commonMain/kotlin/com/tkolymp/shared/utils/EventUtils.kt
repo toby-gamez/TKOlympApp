@@ -241,3 +241,12 @@ fun formatBirthDateString(raw: String?): String? {
     } ?: return null
     return formatShortDate(ld)
 }
+
+fun formatTimeAgo(epochMs: Long, nowMs: Long = Clock.System.now().toEpochMilliseconds()): String {
+    val mins = ((nowMs - epochMs) / 60000).coerceAtLeast(0)
+    return if (mins < 60) {
+        AppStrings.current.notifications.timeAgoMinutes.replace("{0}", mins.toString())
+    } else {
+        AppStrings.current.notifications.timeAgoHours.replace("{0}", (mins / 60).toString())
+    }
+}
