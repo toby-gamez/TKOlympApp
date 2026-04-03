@@ -1,16 +1,20 @@
 package com.tkolymp.tkolympapp.screens
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -18,6 +22,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -30,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -54,11 +60,19 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
     val currentPersonId = remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
 
+    // people map used for cohort lookup and group chips
+    val peopleById = remember { mutableStateOf<Map<String, com.tkolymp.shared.people.Person>>(emptyMap()) }
+    var selectedGroups by remember { mutableStateOf<Set<String>>(emptySet()) }
+
     LaunchedEffect(Unit) {
         viewModel.loadLeaderboard()
-        // try to load current person id for highlighting
+        // try to load current person id for highlighting and cached people for cohort info
         try {
             currentPersonId.value = withContext(Dispatchers.IO) { com.tkolymp.shared.ServiceLocator.userService.getCachedPersonId() }
+        } catch (e: CancellationException) { throw e } catch (_: Exception) { /* ignore */ }
+        try {
+            val ppl = withContext(Dispatchers.IO) { com.tkolymp.shared.ServiceLocator.peopleService.fetchPeople() }
+            peopleById.value = ppl.associateBy { it.id }
         } catch (e: CancellationException) { throw e } catch (_: Exception) { /* ignore */ }
     }
 
@@ -75,47 +89,100 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
             modifier = Modifier.padding(top = padding.calculateTopPadding(), bottom = bottomPadding)
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
+                // build cohort group list from loaded people
+                val groups = remember(peopleById.value) {
+                    peopleById.value.values
+                        .flatMap { p -> p.cohortMembershipsList.mapNotNull { it.cohort } }
+                        .mapNotNull { c -> if (c.isVisible == false) null else c.id?.let { id -> id to (c.name ?: id) } }
+                        .distinctBy { it.first }
+                }
+
+                // compute displayed entries filtered by selected groups (client-side filtering)
+                val entries = state.rankings.filterIsInstance<com.tkolymp.shared.people.ScoreboardEntry>()
+                val displayed = remember(entries, selectedGroups, peopleById.value, groups) {
+                    if (selectedGroups.isEmpty() || selectedGroups.size == groups.size) entries
+                    else entries.filter { item ->
+                        val pid = item.personId ?: return@filter false
+                        val person = peopleById.value[pid] ?: return@filter false
+                        person.cohortMembershipsList
+                            .mapNotNull { it.cohort }
+                            .filter { it.isVisible != false }
+                            .any { it.id?.let { id -> selectedGroups.contains(id) } == true }
+                    }
+                }
+
                 when {
                     state.isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
                     state.error != null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(state.error ?: AppStrings.current.commonActions.error) }
                     else -> {
-                        val entries = state.rankings.filterIsInstance<com.tkolymp.shared.people.ScoreboardEntry>()
-                        LazyColumn(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Top) {
-                            itemsIndexed(entries) { index, item ->
-                                val rank = (item.ranking ?: (index + 1))
-                                val isTop = rank in 1..3
-                                val colors = when (rank) {
-                                    1 -> CardDefaults.cardColors(containerColor = Color(0xFFFFD700).copy(alpha = 0.12f))
-                                    2 -> CardDefaults.cardColors(containerColor = Color(0xFFC0C0C0).copy(alpha = 0.12f))
-                                    3 -> CardDefaults.cardColors(containerColor = Color(0xFFCD7F32).copy(alpha = 0.12f))
-                                    else -> CardDefaults.cardColors()
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            // filter chips (All + per-cohort)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                                    FilterChip(
+                                        selected = selectedGroups.isEmpty() || selectedGroups.size == groups.size,
+                                        onClick = { selectedGroups = emptySet() },
+                                        label = { Text(AppStrings.current.commonActions.all) }
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    groups.forEach { (id, name) ->
+                                        FilterChip(
+                                            selected = selectedGroups.contains(id),
+                                            onClick = {
+                                                selectedGroups = if (selectedGroups.contains(id)) selectedGroups - id else selectedGroups + id
+                                            },
+                                            label = { Text(name) }
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                    }
                                 }
+                            }
 
-                                Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 8.dp, vertical = 4.dp),
-                                    shape = RoundedCornerShape(16.dp),
-                                    colors = colors
-                                ) {
-                                    Row(modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(12.dp), verticalAlignment = ComposeAlignment.CenterVertically) {
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            val name = listOfNotNull(item.personFirstName, item.personLastName).joinToString(" ")
-                                            val isCurrent = item.personId != null && item.personId == currentPersonId.value
-                                            Text(
-                                                text = "${rank}. $name",
-                                                style = if (isTop) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge,
-                                                fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
-                                                color = MaterialTheme.colorScheme.onSurface
-                                            )
-                                        }
+                            LazyColumn(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Top) {
+                                itemsIndexed(displayed) { index, item ->
+                                    val rank = (item.ranking ?: (index + 1))
+                                    val isTop = rank in 1..3
+                                    val colors = when (rank) {
+                                        1 -> CardDefaults.cardColors(containerColor = Color(0xFFFFD700).copy(alpha = 0.12f))
+                                        2 -> CardDefaults.cardColors(containerColor = Color(0xFFC0C0C0).copy(alpha = 0.12f))
+                                        3 -> CardDefaults.cardColors(containerColor = Color(0xFFCD7F32).copy(alpha = 0.12f))
+                                        else -> CardDefaults.cardColors()
+                                    }
 
-                                        Column(modifier = Modifier.wrapContentWidth(align = ComposeAlignment.End), horizontalAlignment = ComposeAlignment.End) {
-                                            val total = item.totalScore
-                                            val totalText = total?.let { if (it % 1.0 == 0.0) it.toInt().toString() else String.format("%.1f", it) } ?: "-"
-                                            Text(text = totalText, style = MaterialTheme.typography.titleMedium)
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                                        shape = RoundedCornerShape(16.dp),
+                                        colors = colors
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(12.dp),
+                                            verticalAlignment = ComposeAlignment.CenterVertically
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                val name = listOfNotNull(item.personFirstName, item.personLastName).joinToString(" ")
+                                                val isCurrent = item.personId != null && item.personId == currentPersonId.value
+                                                Text(
+                                                    text = "${rank}. $name",
+                                                    style = if (isTop) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge,
+                                                    fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
+                                                    color = MaterialTheme.colorScheme.onSurface
+                                                )
+                                            }
+
+                                            Column(modifier = Modifier.wrapContentWidth(align = ComposeAlignment.End), horizontalAlignment = ComposeAlignment.End) {
+                                                val total = item.totalScore
+                                                val totalText = total?.let { if (it % 1.0 == 0.0) it.toInt().toString() else String.format("%.1f", it) } ?: "-"
+                                                Text(text = totalText, style = MaterialTheme.typography.titleMedium)
+                                            }
                                         }
                                     }
                                 }
