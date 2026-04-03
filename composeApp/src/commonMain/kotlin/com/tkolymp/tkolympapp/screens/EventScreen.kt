@@ -158,7 +158,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                         Text("${index + 1}. ${formatTimesWithDateAlways(since, until)}", 
                             style = MaterialTheme.typography.bodySmall)
                         
-                        if (!instLocation.isNullOrBlank() && instLocation != locationName) {
+                        if (!instLocation.isNullOrBlank() && instLocation != state.locationName) {
                             Text("   ${AppStrings.current.events.place}: $instLocation", 
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -282,7 +282,8 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
         }
 
         // Kapacita
-        if ((state.capacity != null && state.capacity > 0) || state.remainingLessons != null) {
+        val capacity = state.capacity
+        if ((capacity != null && capacity > 0) || state.remainingLessons != null) {
             Spacer(modifier = Modifier.height(8.dp))
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -292,8 +293,8 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                     Text(AppStrings.current.events.capacity, style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(6.dp))
                     val registeredCount = state.registrations.size + state.externalRegistrations.size
-                    if (state.capacity != null && state.capacity > 0) {
-                        Text("${AppStrings.current.events.registeredCount}: $registeredCount / ${state.capacity} ${AppStrings.current.events.capacity}", style = MaterialTheme.typography.bodySmall)
+                    if (capacity != null && capacity > 0) {
+                        Text("${AppStrings.current.events.registeredCount}: $registeredCount / $capacity ${AppStrings.current.events.capacity}", style = MaterialTheme.typography.bodySmall)
                     } else if (registeredCount > 0) {
                         Text("${AppStrings.current.events.registeredCount}: $registeredCount ${AppStrings.current.events.capacity}", style = MaterialTheme.typography.bodySmall)
                     }
