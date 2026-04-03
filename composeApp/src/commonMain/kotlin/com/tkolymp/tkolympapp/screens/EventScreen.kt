@@ -236,51 +236,10 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                 Text("${AppStrings.current.events.isPublic}: ${if (isPublic) AppStrings.current.commonActions.yes else AppStrings.current.commonActions.no}", style = MaterialTheme.typography.bodySmall)
                 Text("${AppStrings.current.registration.registration}: ${if (isLocked) AppStrings.current.events.registrationClosed else AppStrings.current.events.registrationOpen}", style = MaterialTheme.typography.bodySmall)
                 Text("${AppStrings.current.events.notesAllowed}: ${if (enableNotes) AppStrings.current.commonActions.yes else AppStrings.current.commonActions.no}", style = MaterialTheme.typography.bodySmall)
-                // --- Registration action buttons visibility logic (from MAUI EventViewModel.LoadEventAsync) ---
-                // If event is locked, treat registrations as closed regardless of the explicit flag
-                val isRegistrationOpen = if (isLocked) false else (ev.bool("isRegistrationOpen") ?: true)
-
                 val trainerCount = trainers.size
-
-                val userRegistered = registrations.any { regEl ->
-                    val reg = regEl.asJsonObjectOrNull() ?: return@any false
-                    val personId = reg["person"].asJsonObjectOrNull()?.str("id")
-                    val coupleId = reg["couple"].asJsonObjectOrNull()?.str("id")
-                    (personId != null && personId == state.myPersonId) || (coupleId != null && state.myCoupleIds.contains(coupleId))
-                }
-
-                val isPast = try {
-                    val now = java.time.Instant.now()
-                    when {
-                        lastDate != null -> java.time.OffsetDateTime.parse(lastDate).toInstant().isBefore(now)
-                        firstDate != null -> java.time.OffsetDateTime.parse(firstDate).toInstant().plus(java.time.Duration.ofDays(1)).isBefore(now)
-                        else -> false
-                    }
-                } catch (_: Exception) {
-                    false
-                }
-
-                // Defaults (pre-load)
-                val registerButtonVisibleDefault = false
-                val registrationActionsRowVisibleDefault = false
-                val editRegistrationButtonVisibleDefault = true
-                val deleteButtonColumnDefault = 1
-                val deleteButtonColumnSpanDefault = 1
-
-                // Final visibility rules
-                val registerButtonVisible = if (isPast) {
-                    false
-                } else {
-                    if (userRegistered) false else isRegistrationOpen
-                }
-
-                val registrationActionsRowVisible = if (isPast) {
-                    false
-                } else {
-                    if (userRegistered) isRegistrationOpen else false
-                }
-
-                val editRegistrationButtonVisible = !type.equals("lesson", ignoreCase = true) && !type.equals("group", ignoreCase = true)
+                val registerButtonVisible = state.registerButtonVisible
+                val registrationActionsRowVisible = state.registrationActionsRowVisible
+                val editRegistrationButtonVisible = state.editRegistrationButtonVisible
                 val deleteFullWidth = trainerCount == 1
 
                 // --- Render buttons stacked under the event info ---
