@@ -27,6 +27,17 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.material3.TextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -38,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.utils.formatHtmlContent
 import com.tkolymp.shared.viewmodels.BoardViewModel
+import com.tkolymp.tkolympapp.util.normalizeForSearch
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,8 +60,29 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
     val tabs = listOf(AppStrings.current.boardTabs.news, AppStrings.current.boardTabs.permanentBoard)
     val scope = rememberCoroutineScope()
 
+    var showSearch by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    LaunchedEffect(showSearch) {
+        if (showSearch) {
+            focusRequester.requestFocus()
+            keyboardController?.show()
+        }
+    }
+
     Scaffold(
-        topBar = { TopAppBar(title = { Text(AppStrings.current.navigation.board) }) }
+        topBar = {
+            TopAppBar(
+                title = { Text(AppStrings.current.navigation.board) },
+                actions = {
+                    IconButton(onClick = { showSearch = !showSearch }) {
+                        Icon(imageVector = if (showSearch) Icons.Filled.Close else Icons.Filled.Search, contentDescription = AppStrings.current.commonActions.search)
+                    }
+                }
+            )
+        }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -65,8 +98,33 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
                         onClick = { viewModel.selectTab(index) },
                         text = { Text(title) }
                     )
+
                 }
+
             }
+
+            if (showSearch) {
+                TextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                        .focusRequester(focusRequester),
+                    singleLine = true,
+                    leadingIcon = { Icon(imageVector = Icons.Filled.Search, contentDescription = null) },
+                    trailingIcon = {
+                        IconButton(onClick = {
+                            if (searchQuery.isNotBlank()) searchQuery = "" else showSearch = false
+                        }) {
+                            Icon(imageVector = Icons.Filled.Close, contentDescription = AppStrings.current.commonActions.cancel)
+                        }
+                    },
+                    placeholder = { Text(AppStrings.current.commonActions.search) }
+                )
+            }
+
+            
 
             LaunchedEffect(state.selectedTab) {
                 // load announcements whenever selected tab changes
@@ -80,7 +138,16 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
             ) {
                 Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
                     val announcements = state.currentAnnouncements.filterIsInstance<com.tkolymp.shared.announcements.Announcement>()
-                    announcements.forEach { a ->
+                    val filtered = announcements.filter { a ->
+                        val q = searchQuery.trim()
+                        if (q.isBlank()) return@filter true
+                        val nq = normalizeForSearch(q)
+                        val titleOk = a.title?.let { normalizeForSearch(it).contains(nq) } == true
+                        val bodyText = formatHtmlContent(a.body ?: "")
+                        val bodyOk = normalizeForSearch(bodyText).contains(nq)
+                        titleOk || bodyOk
+                    }
+                    filtered.forEach { a ->
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -122,6 +189,8 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
                     text = { Text(state.error ?: "Neznámá chyba") }
                 )
             }
+
+            
         }
     }
 }
