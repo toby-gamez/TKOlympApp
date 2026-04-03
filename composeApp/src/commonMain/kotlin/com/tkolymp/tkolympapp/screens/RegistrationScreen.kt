@@ -48,7 +48,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.tkolymp.shared.Logger
-import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.RegistrationViewModel
 import com.tkolymp.shared.registration.filterOwnedRegistrations
@@ -121,7 +120,7 @@ fun RegistrationScreen(
         val regViewModel = viewModel<RegistrationViewModel>()
         val regState by regViewModel.state.collectAsState()
         LaunchedEffect(Unit) {
-            regViewModel.loadNames(trainers, myPersonId, myCoupleIds, myPersonName, myCoupleNames)
+            regViewModel.loadNames(trainers, registrations, myPersonId, myCoupleIds, myPersonName, myCoupleNames)
         }
 
         // Ensure we refresh every time the screen becomes visible (ON_RESUME).
@@ -132,7 +131,7 @@ fun RegistrationScreen(
                 if (event == Lifecycle.Event.ON_RESUME) {
                     scope.launch {
                         try {
-                            regViewModel.invalidateAndRefresh(trainers, myPersonId, myCoupleIds)
+                            regViewModel.invalidateAndRefresh(trainers, registrations, myPersonId, myCoupleIds)
                         } catch (e: CancellationException) { throw e } catch (t: Exception) {
                             Logger.d("RegScreen", "lifecycle refresh failed: ${t.message}")
                         }
@@ -146,7 +145,7 @@ fun RegistrationScreen(
         SwipeToReload(isRefreshing = regState.isLoading, onRefresh = {
             scope.launch {
                 try {
-                    regViewModel.invalidateAndRefresh(trainers, myPersonId, myCoupleIds)
+                    regViewModel.invalidateAndRefresh(trainers, registrations, myPersonId, myCoupleIds)
                 } catch (e: CancellationException) { throw e } catch (t: Exception) {
                     Logger.d("RegScreen", "refresh failed: ${t.message}")
                 }
@@ -374,34 +373,12 @@ fun RegistrationScreen(
                         }
 
                         Column {
-                            // fetch display names for registrations (person/couple) and show them
-                            val regDisplayNames = remember { mutableStateMapOf<String, String>() }
-                            LaunchedEffect(registrations, myPersonId, myCoupleIds) {
-                                try {
-                                    val svc = ServiceLocator.peopleService
-                                    filterOwnedRegistrations(registrations, myPersonId, myCoupleIds).forEach { rEl ->
-                                        val r = rEl as? JsonObject
-                                        val rid = r?.get("id")?.jsonPrimitive?.contentOrNull
-                                        if (rid != null) {
-                                            val personId = r?.get("person").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
-                                            val coupleId = r?.get("couple").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
-                                            val fetched = when {
-                                                !personId.isNullOrBlank() -> try { svc.fetchPersonDisplayName(personId, false) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
-                                                !coupleId.isNullOrBlank() -> try { svc.fetchCoupleDisplayName(coupleId) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
-                                                else -> null
-                                            }
-                                            if (!fetched.isNullOrBlank()) regDisplayNames[rid] = fetched
-                                        }
-                                    }
-                                } catch (e: CancellationException) { throw e } catch (e: Exception) {
-                                }
-                            }
                             ownedRegistrations.forEach { rEl ->
                                 val r = rEl as? JsonObject
                                 val rid = r?.get("id")?.jsonPrimitive?.contentOrNull
                                 val labelFromJson = r?.get("person").asJsonObjectOrNull()?.get("name")?.jsonPrimitive?.contentOrNull
                                     ?: r?.get("couple").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
-                                val label = regDisplayNames[rid ?: ""] ?: labelFromJson ?: "#${rid ?: "?"}"
+                                val label = regState.registrationDisplayNames[rid ?: ""] ?: labelFromJson ?: "#${rid ?: "?"}"
                                 Row(modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(vertical = 4.dp)
@@ -521,36 +498,12 @@ fun RegistrationScreen(
                             filterOwnedRegistrations(registrations, myPersonId, myCoupleIds)
                         }
                         Column {
-                            // fetch display names for registrations (person/couple) and show them
-                            val regDisplayNames = remember { mutableStateMapOf<String, String>() }
-                            LaunchedEffect(ownedRegistrations) {
-                                try {
-                                    val svc = ServiceLocator.peopleService
-                                    // Only fetch display names for registrations that belong to current user
-                                    ownedRegistrations.forEach { rEl ->
-                                        val r = rEl as? JsonObject
-                                        val rid = r?.get("id")?.jsonPrimitive?.contentOrNull
-                                        if (rid != null) {
-                                            val personId = r?.get("person").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
-                                            val coupleId = r?.get("couple").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
-                                            val fetched = when {
-                                                !personId.isNullOrBlank() -> try { svc.fetchPersonDisplayName(personId, false) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
-                                                !coupleId.isNullOrBlank() -> try { svc.fetchCoupleDisplayName(coupleId) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
-                                                else -> null
-                                            }
-                                            if (!fetched.isNullOrBlank()) regDisplayNames[rid] = fetched
-                                        }
-                                    }
-                                } catch (e: CancellationException) { throw e } catch (e: Exception) {
-                                }
-                            }
-
                             ownedRegistrations.forEach { rEl ->
                                 val r = rEl as? JsonObject
                                 val rid = r?.get("id")?.jsonPrimitive?.contentOrNull
                                 val labelFromJson = r?.get("person").asJsonObjectOrNull()?.get("name")?.jsonPrimitive?.contentOrNull
                                     ?: r?.get("couple").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
-                                val label = regDisplayNames[rid ?: ""] ?: labelFromJson ?: "#${rid ?: "?"}"
+                                val label = regState.registrationDisplayNames[rid ?: ""] ?: labelFromJson ?: "#${rid ?: "?"}"
                                 Row(modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(vertical = 4.dp)

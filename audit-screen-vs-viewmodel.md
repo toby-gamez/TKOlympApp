@@ -22,7 +22,7 @@ Co patří do VM nebo shared:
 - ~~**Display name fetching**: `LaunchedEffect` volající `ServiceLocator.peopleService.fetchPersonDisplayName()` přímo z UI — Register mode~~ ✅ Odstraněno (ViewModel `loadNames` + sync LaunchedEffect postačuje)
 - ~~**Cache invalidation** na `ON_RESUME`: `ServiceLocator.cacheService.invalidatePrefix("person_")` — přímé volání service z obrazovky~~ ✅ Přesunuto do `RegistrationViewModel.invalidateAndRefresh()`
 - **`computeInitCountsFor(regId)`** — pure funkce parsující JSON demands
-- Display name fetching v Edit/Delete mode — `LaunchedEffect` stále volá `ServiceLocator.peopleService` přímo (2× zbývá)
+- ~~**Display name fetching v Edit/Delete mode** — `LaunchedEffect` volající `ServiceLocator.peopleService` přímo z UI (2×)~~ ✅ Přesunuto do `RegistrationViewModel.loadNames()` (`registrationDisplayNames` v state)
 
 ---
 
