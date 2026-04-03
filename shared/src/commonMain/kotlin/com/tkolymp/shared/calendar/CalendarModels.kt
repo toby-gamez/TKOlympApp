@@ -71,3 +71,38 @@ data class TimeRange(
     val start: LocalDateTime,
     val end: LocalDateTime
 )
+
+/**
+ * Couple info for lessons
+ */
+data class CoupleInfo(
+    val displayName: String,
+    val isFree: Boolean
+)
+
+/**
+ * Get couple info from event - returns couple name or free label if no registrations
+ */
+fun getCoupleInfo(event: Event?, freeLabel: String = "VOLNO"): CoupleInfo? {
+    if (event == null) return null
+
+    if (event.eventRegistrationsList.isEmpty()) {
+        return CoupleInfo(freeLabel, true)
+    }
+
+    val registration = event.eventRegistrationsList.firstOrNull { it.couple != null }
+    val couple = registration?.couple
+
+    if (couple != null) {
+        val manLastName = couple.man?.lastName
+        val womanLastName = couple.woman?.lastName
+
+        return if (!manLastName.isNullOrBlank() && !womanLastName.isNullOrBlank()) {
+            CoupleInfo("$manLastName - $womanLastName", false)
+        } else {
+            CoupleInfo(freeLabel, true)
+        }
+    }
+
+    return CoupleInfo(freeLabel, true)
+}

@@ -67,7 +67,7 @@ import com.tkolymp.tkolympapp.screens.PeopleScreen
 import com.tkolymp.tkolympapp.screens.PersonScreen
 import com.tkolymp.tkolympapp.screens.PrivacyPolicyScreen
 import com.tkolymp.tkolympapp.screens.ProfileScreen
-import com.tkolymp.tkolympapp.screens.RegMode
+import com.tkolymp.shared.registration.RegMode
 import com.tkolymp.tkolympapp.screens.RegistrationScreen
 import com.tkolymp.tkolympapp.screens.TrainersLocationsScreen
 import androidx.core.content.pm.PackageInfoCompat

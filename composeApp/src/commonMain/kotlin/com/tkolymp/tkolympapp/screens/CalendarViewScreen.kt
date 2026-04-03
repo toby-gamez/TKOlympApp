@@ -69,6 +69,9 @@ import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.calendar.EventLayoutData
 import com.tkolymp.shared.calendar.ViewMode
 import com.tkolymp.shared.event.Event
+import com.tkolymp.shared.calendar.CoupleInfo
+import com.tkolymp.shared.calendar.getCoupleInfo
+import com.tkolymp.tkolympapp.util.parseEventColor
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -687,72 +690,4 @@ internal fun TimelineEventCard(
     }
 }
 
-/**
- * Couple info for lessons
- */
-internal data class CoupleInfo(
-    val displayName: String,
-    val isFree: Boolean
-)
 
-/**
- * Get couple info from event - returns couple name or free label if no registrations
- */
-internal fun getCoupleInfo(event: Event?, freeLabel: String = "VOLNO"): CoupleInfo? {
-    if (event == null) return null
-    
-    // Check if there are any registrations
-    if (event.eventRegistrationsList.isEmpty()) {
-        return CoupleInfo(freeLabel, true)
-    }
-    
-    // Try to get first registration with couple
-    val registration = event.eventRegistrationsList.firstOrNull { it.couple != null }
-    val couple = registration?.couple
-    
-    if (couple != null) {
-        val manLastName = couple.man?.lastName
-        val womanLastName = couple.woman?.lastName
-        
-        return if (!manLastName.isNullOrBlank() && !womanLastName.isNullOrBlank()) {
-            CoupleInfo("$manLastName - $womanLastName", false)
-        } else {
-            CoupleInfo(freeLabel, true)
-        }
-    }
-    
-    // No couple, show as free
-    return CoupleInfo(freeLabel, true)
-}
-
-/**
- * Parse event color from string
- */
-@Composable
-internal fun parseEventColor(colorRgb: String?, type: String?): Color {
-    // Special handling for lessons - use very light gray in light mode and dark gray in dark mode
-    if (colorRgb == "lesson" || type?.equals("lesson", ignoreCase = true) == true) {
-        return if (isSystemInDarkTheme()) Color(0xFF303030) else Color(0xFFF5F5F5)
-    }
-
-    if (colorRgb.isNullOrBlank()) {
-        return Color(0xFFADD8E6) // Light blue default
-    }
-
-    return try {
-        val hex = if (colorRgb.startsWith("#")) {
-            colorRgb.substring(1)
-        } else {
-            colorRgb
-        }
-
-        val rgb = hex.toLong(16)
-        Color(
-            red = ((rgb shr 16) and 0xFF).toInt(),
-            green = ((rgb shr 8) and 0xFF).toInt(),
-            blue = (rgb and 0xFF).toInt()
-        )
-    } catch (e: Exception) {
-        Color(0xFFADD8E6)
-    }
-}

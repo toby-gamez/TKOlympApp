@@ -25,6 +25,12 @@ class RegistrationViewModel(
     private val _state = MutableStateFlow(RegistrationState())
     val state: StateFlow<RegistrationState> = _state.asStateFlow()
 
+    suspend fun invalidateAndRefresh(trainers: JsonArray, myPersonId: String?, myCoupleIds: List<String>) {
+        try { ServiceLocator.cacheService.invalidatePrefix("person_") } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+        try { ServiceLocator.cacheService.invalidate("people_all") } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+        loadNames(trainers, myPersonId, myCoupleIds, null, emptyMap())
+    }
+
     suspend fun loadNames(trainers: JsonArray, myPersonId: String?, myCoupleIds: List<String>, myPersonNameHint: String?, myCoupleNamesHint: Map<String, String>) {
         _state.value = _state.value.copy(isLoading = true, error = null)
         try {

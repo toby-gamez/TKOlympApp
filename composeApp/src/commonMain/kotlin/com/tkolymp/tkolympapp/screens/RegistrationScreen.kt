@@ -52,6 +52,9 @@ import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.RegistrationViewModel
 import com.tkolymp.shared.registration.filterOwnedRegistrations
+import com.tkolymp.shared.registration.RegMode
+import com.tkolymp.shared.registration.LessonInput
+import com.tkolymp.shared.registration.RegistrationInput
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.JsonArray
@@ -77,15 +80,6 @@ private fun kotlinx.serialization.json.JsonElement?.asJsonArrayOrNull(): JsonArr
         else -> null
     }
 } catch (_: Exception) { null }
-
-sealed class RegMode {
-    object Register : RegMode()
-    object Edit : RegMode()
-    object Delete : RegMode()
-}
-
-data class LessonInput(val trainerId: Int, val lessonCount: Int)
-data class RegistrationInput(val personId: String?, val coupleId: String?, val lessons: List<LessonInput>, val note: String? = null)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -138,16 +132,9 @@ fun RegistrationScreen(
                 if (event == Lifecycle.Event.ON_RESUME) {
                     scope.launch {
                         try {
-                            try { ServiceLocator.cacheService.invalidatePrefix("person_") } catch (e: CancellationException) { throw e } catch (_: Exception) {}
-                            try { ServiceLocator.cacheService.invalidate("people_all") } catch (e: CancellationException) { throw e } catch (_: Exception) {}
-                        } catch (e: CancellationException) { throw e } catch (_: Exception) {}
-                        try {
-                            // Force fresh fetch of person/couple names on lifecycle resume by
-                            // not passing local hints. This ensures register mode updates even
-                            // when `myPersonName`/`myCoupleNames` were provided to the screen.
-                            regViewModel.loadNames(trainers, myPersonId, myCoupleIds, null, emptyMap())
+                            regViewModel.invalidateAndRefresh(trainers, myPersonId, myCoupleIds)
                         } catch (e: CancellationException) { throw e } catch (t: Exception) {
-                            Logger.d("RegScreen", "lifecycle refresh loadNames failed: ${t.message}")
+                            Logger.d("RegScreen", "lifecycle refresh failed: ${t.message}")
                         }
                     }
                 }
@@ -159,13 +146,9 @@ fun RegistrationScreen(
         SwipeToReload(isRefreshing = regState.isLoading, onRefresh = {
             scope.launch {
                 try {
-                    try { ServiceLocator.cacheService.invalidatePrefix("person_") } catch (e: CancellationException) { throw e } catch (_: Exception) {}
-                    try { ServiceLocator.cacheService.invalidate("people_all") } catch (e: CancellationException) { throw e } catch (_: Exception) {}
-                } catch (e: CancellationException) { throw e } catch (_: Exception) {}
-                try {
-                    regViewModel.loadNames(trainers, myPersonId, myCoupleIds, myPersonName, myCoupleNames)
+                    regViewModel.invalidateAndRefresh(trainers, myPersonId, myCoupleIds)
                 } catch (e: CancellationException) { throw e } catch (t: Exception) {
-                    Logger.d("RegScreen", "refresh loadNames failed: ${t.message}")
+                    Logger.d("RegScreen", "refresh failed: ${t.message}")
                 }
             }
         }, modifier = Modifier.padding(padding)) {
@@ -211,24 +194,6 @@ fun RegistrationScreen(
                         // local observable display name state (start with provided names if any)
                         val personNameState = remember { androidx.compose.runtime.mutableStateOf<String?>(myPersonName) }
                         val coupleNamesState = remember { mutableStateMapOf<String, String>().apply { putAll(myCoupleNames) } }
-
-                        // Fetch fresh person / couple display names directly (like Edit/Delete)
-                        LaunchedEffect(myPersonId, myCoupleIds) {
-                            try {
-                                val svc = ServiceLocator.peopleService
-                                if (!myPersonId.isNullOrBlank()) {
-                                    val fetched = try { svc.fetchPersonDisplayName(myPersonId, true) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
-                                    if (!fetched.isNullOrBlank()) personNameState.value = fetched
-                                }
-                                myCoupleIds.forEach { cid ->
-                                    if (coupleNamesState[cid].isNullOrBlank()) {
-                                        val fetched = try { svc.fetchCoupleDisplayName(cid) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
-                                        if (!fetched.isNullOrBlank()) coupleNamesState[cid] = fetched
-                                    }
-                                }
-                            } catch (e: CancellationException) { throw e } catch (e: Exception) {
-                            }
-                        }
 
                         // populate local hints from shared ViewModel state
                         LaunchedEffect(myPersonId, myCoupleIds, regState) {

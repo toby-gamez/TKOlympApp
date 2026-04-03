@@ -20,7 +20,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.TextButton
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
@@ -44,20 +43,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.language.NationalityHelper
-import com.tkolymp.shared.people.PersonDetails
-import com.tkolymp.shared.user.CurrentUser
+import com.tkolymp.shared.user.fmtProfileDate
 import com.tkolymp.shared.viewmodels.ProfileViewModel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.CancellationException
-import kotlinx.datetime.Instant
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
-
-data class CohortDisplay(val name: String, val colorRgb: String?, val since: String?, val until: String?)
 
 private fun formatProfileValue(key: String, value: String): String {
     val v = value.trim()
@@ -83,101 +73,16 @@ private fun formatProfileValue(key: String, value: String): String {
     return v
 }
 
-private fun fmtProfileDate(s: String?): String? {
-    if (s.isNullOrBlank()) return null
-    try {
-        val ld = LocalDate.parse(s)
-        return "${ld.dayOfMonth.toString().padStart(2,'0')}.${ld.monthNumber.toString().padStart(2,'0')}.${ld.year}"
-    } catch (_: Exception) {}
-    try {
-        val inst = Instant.parse(s)
-        val ld = inst.toLocalDateTime(TimeZone.UTC).date
-        return "${ld.dayOfMonth.toString().padStart(2,'0')}.${ld.monthNumber.toString().padStart(2,'0')}.${ld.year}"
-    } catch (_: Exception) {}
-    val m = Regex("""(\d{4})-(\d{2})-(\d{2})""").find(s)
-    if (m != null) return "${m.groupValues[3]}.${m.groupValues[2]}.${m.groupValues[1]}"
-    return s
-}
-
-private fun buildPersonFieldList(person: PersonDetails?): List<Pair<String, String>> {
-    person ?: return emptyList()
-    return buildList {
-        person.birthDate?.let { add("birthDate" to it) }
-        person.gender?.let { add("gender" to it) }
-        person.nationality?.let { add("nationality" to it) }
-        person.nationalIdNumber?.let { add("nationalIdNumber" to it) }
-        person.phone?.let { add("phone" to it) }
-        person.wdsfId?.let { add("wdsfId" to it) }
-        person.cstsId?.let { add("cstsId" to it) }
-        person.isTrainer?.let { add("isTrainer" to it.toString()) }
-    }
-}
-
-private fun buildCurrentUserFieldList(currentUser: CurrentUser?): List<Pair<String, String>> {
-    currentUser ?: return emptyList()
-    return buildList {
-        currentUser.uLogin?.let { add("username" to it) }
-        currentUser.uEmail?.let { add("email" to it) }
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
-    var titleText by remember { mutableStateOf<String?>(null) }
-    var bioText by remember { mutableStateOf<String?>(null) }
-    var addrText by remember { mutableStateOf<String?>(null) }
-    var emailText by remember { mutableStateOf<String?>(null) }
-    var coupleIds by remember { mutableStateOf<List<String>>(emptyList()) }
-    var activeCoupleNames by remember { mutableStateOf<List<String>>(emptyList()) }
-    var cohortItems by remember { mutableStateOf<List<CohortDisplay>>(emptyList()) }
-        var personFields by remember { mutableStateOf<List<Pair<String,String>>>(emptyList()) }
-        var currentUserFields by remember { mutableStateOf<List<Pair<String,String>>>(emptyList()) }
-    var addressFields by remember { mutableStateOf<List<Pair<String,String>>>(emptyList()) }
     val scope = rememberCoroutineScope()
     val refreshTriggerState = remember { mutableStateOf(0) }
 
-    // Use ProfileViewModel to load cached user/person JSON and couple IDs
     val profileViewModel = viewModel<ProfileViewModel>()
     val profileState by profileViewModel.state.collectAsState()
+    val derived = profileState.derived
     LaunchedEffect(refreshTriggerState.value) { profileViewModel.load() }
-    LaunchedEffect(profileState) {
-        val person = profileState.person
-        val currentUser = profileState.currentUser
-        coupleIds = profileState.coupleIds
-
-        activeCoupleNames = person?.activeCouplesList?.mapNotNull { couple ->
-            val man = listOfNotNull(couple.man?.firstName, couple.man?.lastName).joinToString(" ").takeIf { it.isNotBlank() }
-            val woman = listOfNotNull(couple.woman?.firstName, couple.woman?.lastName).joinToString(" ").takeIf { it.isNotBlank() }
-            listOfNotNull(man, woman).joinToString(" - ").takeIf { it.isNotBlank() }
-        }?.takeIf { it.isNotEmpty() } ?: coupleIds.map { "#$it" }
-
-        cohortItems = person?.cohortMembershipsList?.mapNotNull { m ->
-            val cohort = m.cohort ?: return@mapNotNull null
-            val name = cohort.name ?: return@mapNotNull null
-            CohortDisplay(name, cohort.colorRgb, fmtProfileDate(m.since), fmtProfileDate(m.until))
-        } ?: emptyList()
-
-        titleText = listOfNotNull(person?.prefixTitle, person?.firstName, person?.lastName).joinToString(" ").takeIf { it.isNotBlank() }
-        bioText = person?.bio?.takeIf { it.isNotBlank() }
-        emailText = person?.email?.takeIf { it.isNotBlank() } ?: currentUser?.uEmail?.takeIf { it.isNotBlank() }
-        addressFields = person?.address?.let { a ->
-            buildList {
-                a.street?.let { add("street" to it) }
-                a.city?.let { add("city" to it) }
-                a.postalCode?.let { add("postalCode" to it) }
-                a.region?.let { add("region" to it) }
-                a.district?.let { add("district" to it) }
-                a.conscriptionNumber?.let { add("conscriptionNumber" to it) }
-                a.orientationNumber?.let { add("orientationNumber" to it) }
-            }
-        } ?: emptyList()
-        addrText = person?.address?.let { a ->
-            listOfNotNull(a.street, a.city, a.postalCode).joinToString(", ").takeIf { it.isNotBlank() }
-        }
-        personFields = buildPersonFieldList(person)
-        currentUserFields = buildCurrentUserFieldList(currentUser)
-    }
 
     val outerScroll = rememberScrollState()
 
@@ -210,30 +115,16 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
             horizontalAlignment = Alignment.Start
         ) {
 
-                val displayName = titleText ?: profileState.currentUser?.uLogin
+                val displayName = derived.titleText ?: profileState.currentUser?.uLogin
                 Column(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(displayName ?: "Uživatel", style = MaterialTheme.typography.headlineSmall)
                 }
                 // show email under name if available
-                emailText?.let {
+                derived.emailText?.let {
                     Column(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(it, style = MaterialTheme.typography.bodySmall)
                     }
                 }
-                // Merge personFields and currentUserFields but exclude keys shown elsewhere
-                val mergedFields = remember(personFields, currentUserFields, addrText, titleText, bioText) {
-                val map = linkedMapOf<String, String>()
-                val excluded = setOf(
-                    "prefixTitle", "firstName", "lastName", "bio", "address",
-                    "activeCouplesList", "cohortMembershipsList"
-                )
-
-                personFields.forEach { (k, v) -> if (k !in excluded && v.isNotBlank()) map[k] = v }
-                currentUserFields.forEach { (k, v) -> if (k !in excluded && !map.containsKey(k) && v.isNotBlank()) map[k] = v }
-
-                map
-                }
-
                 // Labeling and categorization
                 val labelMap = mapOf(
                     "email" to AppStrings.current.profile.email,
@@ -260,29 +151,16 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                     return spaced.split(' ').joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
                 }
 
-                val personalKeys = setOf("birthDate", "gender", "nationality", "maritalStatus", "placeOfBirth")
-                val contactKeys = setOf("email", "mobilePhone", "phone", "workPhone")
-                val externalKeys = setOf("personalId", "idNumber", "passportNumber", "externalId", "ico", "dic")
-
-                val personalList = mutableListOf<Pair<String, String>>()
-                val contactList = mutableListOf<Pair<String, String>>()
-                val externalList = mutableListOf<Pair<String, String>>()
-                val otherList = mutableListOf<Pair<String, String>>()
-
-                mergedFields.forEach { (k, v) ->
-                    when {
-                        k in personalKeys -> personalList.add(k to v)
-                        k in contactKeys -> contactList.add(k to v)
-                        k in externalKeys -> externalList.add(k to v)
-                        else -> otherList.add(k to v)
-                    }
-                }
+                val personalList = derived.personalList
+                val contactList = derived.contactList
+                val externalList = derived.externalList
+                val otherList = derived.otherList
         Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(12.dp)) {
                 Text(AppStrings.current.profile.aboutMe, style = MaterialTheme.typography.labelLarge)
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                if (!bioText.isNullOrBlank()) {
-                    Text(bioText!!, style = MaterialTheme.typography.bodyMedium)
+                if (!derived.bioText.isNullOrBlank()) {
+                    Text(derived.bioText!!, style = MaterialTheme.typography.bodyMedium)
                 } else {
                     Text(AppStrings.current.profile.bioNotAvailable, style = MaterialTheme.typography.bodySmall)
                 }
@@ -294,8 +172,8 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
             Column(modifier = Modifier.padding(12.dp)) {
                 Text(AppStrings.current.address.address, style = MaterialTheme.typography.labelLarge)
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                if (addressFields.isNotEmpty()) {
-                    addressFields.forEach { (k, v) ->
+                if (derived.addressFields.isNotEmpty()) {
+                    derived.addressFields.forEach { (k, v) ->
                         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.Start) {
                             val label = when (k) {
                                 "street" -> AppStrings.current.address.street
@@ -311,8 +189,8 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                             Text(formatProfileValue(k, v), style = MaterialTheme.typography.bodySmall)
                         }
                     }
-                } else if (!addrText.isNullOrBlank()) {
-                    Text(addrText!!, style = MaterialTheme.typography.bodyMedium)
+                } else if (!derived.addrText.isNullOrBlank()) {
+                    Text(derived.addrText!!, style = MaterialTheme.typography.bodyMedium)
                 } else {
                     Text(AppStrings.current.address.addressNotAvailable, style = MaterialTheme.typography.bodySmall)
                 }
@@ -324,9 +202,9 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
             Column(modifier = Modifier.padding(12.dp)) {
                 Text(AppStrings.current.profile.activeCouple, style = MaterialTheme.typography.labelLarge)
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                if (activeCoupleNames.isNotEmpty()) {
+                if (derived.activeCoupleNames.isNotEmpty()) {
                     Column {
-                        activeCoupleNames.forEach { name ->
+                        derived.activeCoupleNames.forEach { name ->
                             Text(name, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(vertical = 2.dp))
                         }
                     }
@@ -341,9 +219,9 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
             Column(modifier = Modifier.padding(12.dp)) {
                 Text(AppStrings.current.otherScreen.trainingGroups, style = MaterialTheme.typography.labelLarge)
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                if (cohortItems.isNotEmpty()) {
+                if (derived.cohortItems.isNotEmpty()) {
                     Column {
-                        cohortItems.forEach { item ->
+                        derived.cohortItems.forEach { item ->
                             val color = try { parseColorOrDefault(item.colorRgb) } catch (_: Exception) { androidx.compose.ui.graphics.Color.Gray }
                             Card(modifier = Modifier
                                 .fillMaxWidth()
@@ -458,8 +336,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                     ChangePasswordDialog(onDismiss = { showChangePassDialog = false }, onSuccess = {
                         // clear storage and navigate to login
                         scope.launch {
-                            try { ServiceLocator.tokenStorage.clear() } catch (e: CancellationException) { throw e } catch (_: Exception) {}
-                            try { ServiceLocator.userService.clear() } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+                            profileViewModel.logout()
                             showChangePassDialog = false
                             onLogout()
                         }
@@ -518,8 +395,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                     Button(onClick = {
                         showLogoutConfirm = false
                         scope.launch {
-                            try { ServiceLocator.tokenStorage.clear() } catch (e: CancellationException) { throw e } catch (_: Exception) {}
-                            try { ServiceLocator.userService.clear() } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+                            profileViewModel.logout()
                             onLogout()
                         }
                     }) { Text(AppStrings.current.commonActions.logout) }
