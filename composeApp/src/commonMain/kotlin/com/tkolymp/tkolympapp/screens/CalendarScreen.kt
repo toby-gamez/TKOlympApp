@@ -8,11 +8,7 @@ import com.tkolymp.shared.utils.formatTimesWithDateAlways
 import com.tkolymp.shared.utils.durationMinutes
 import com.tkolymp.shared.utils.translateEventType
 import com.tkolymp.shared.utils.formatFullCalendarDate
-import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.plus
-import kotlinx.datetime.todayIn
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -51,7 +47,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -91,29 +86,8 @@ fun CalendarScreen(
     // allow internal control of week offset when parent doesn't provide a handler
     LaunchedEffect(weekOffset) { if (localWeekOffset != weekOffset) localWeekOffset = weekOffset }
 
-    // compute week range anchored on today (do not search for start of week)
-    val baseToday = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
-    val weekStart = baseToday.plus(localWeekOffset * 7, DateTimeUnit.DAY)
-    val today = weekStart
-    val endDay = weekStart.plus(6, DateTimeUnit.DAY)
-    val startIso = today.toString() + "T00:00:00Z"
-    val endIso = endDay.toString() + "T23:59:59Z"
-
-    // initialize to different values so the first load is treated as a change
-    // and will force a refresh (forceRefresh = true) on first composition
-    val prevSelectedTab = remember { androidx.compose.runtime.mutableStateOf(selectedTab + 1) }
-    val prevWeekOffset = remember { androidx.compose.runtime.mutableStateOf(localWeekOffset + 1) }
     LaunchedEffect(selectedTab, localWeekOffset) {
-        val onlyMine = selectedTab == 0
-        // recompute start/end inside effect to match current localWeekOffset (start = today)
-        val t = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault()).plus(localWeekOffset * 7, DateTimeUnit.DAY)
-        val e = t.plus(6, DateTimeUnit.DAY)
-        val sIso = t.toString() + "T00:00:00Z"
-        val eIso = e.toString() + "T23:59:59Z"
-        val forceRefresh = prevSelectedTab.value != selectedTab || prevWeekOffset.value != localWeekOffset
-        calendarViewModel.load(sIso, eIso, onlyMine, forceRefresh = forceRefresh)
-        prevSelectedTab.value = selectedTab
-        prevWeekOffset.value = localWeekOffset
+        calendarViewModel.load(localWeekOffset, selectedTab == 0)
     }
 
     // user id / couple ids are provided by calendar viewmodel state
@@ -152,12 +126,7 @@ fun CalendarScreen(
             isRefreshing = calState.isLoading,
             onRefresh = {
                 scope.launch {
-                    val onlyMine = selectedTab == 0
-                    val t = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault()).plus(localWeekOffset * 7, DateTimeUnit.DAY)
-                    val e = t.plus(7, DateTimeUnit.DAY)
-                    val sIso = t.toString() + "T00:00:00Z"
-                    val eIso = e.toString() + "T23:59:59Z"
-                    calendarViewModel.load(sIso, eIso, onlyMine, forceRefresh = true)
+                    calendarViewModel.load(localWeekOffset, selectedTab == 0, forceRefresh = true)
                 }
             },
             modifier = Modifier.padding(top = padding.calculateTopPadding(), bottom = bottomPadding)
@@ -179,49 +148,33 @@ fun CalendarScreen(
                     }
                 }
 
-                val grouped = calState.eventsByDay
-                val todayKey = baseToday.toString()
-                val visibleDates = mutableListOf<String>()
-                var dd = today
-                while (dd <= endDay) {
-                    visibleDates += dd.toString()
-                    dd = dd.plus(1, DateTimeUnit.DAY)
-                }
-
                 Column(modifier = Modifier
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
                 ) {
-                    visibleDates.forEach { date ->
-                        val list = grouped[date] ?: return@forEach
+                    calState.visibleDates.forEach { date ->
+                        val lessonsByTrainer = calState.lessonsByTrainerByDay[date] ?: emptyMap()
+                        val otherList = calState.otherEventsByDay[date] ?: emptyList()
+                        if (lessonsByTrainer.isEmpty() && otherList.isEmpty()) return@forEach
                         Column(modifier = Modifier.padding(8.dp)) {
                             val header = when (date) {
-                                todayKey -> AppStrings.current.timeline.today.lowercase()
-                                baseToday.plus(1, DateTimeUnit.DAY).toString() -> AppStrings.current.timeline.tomorrow.lowercase()
+                                calState.todayString -> AppStrings.current.timeline.today.lowercase()
+                                calState.tomorrowString -> AppStrings.current.timeline.tomorrow.lowercase()
                                 else -> {
                                     val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
                                     if (ld == null) date else {
-                                        val now = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
-                                        formatFullCalendarDate(ld, AppStrings.currentLanguage.code, ld.year != now.year)
+                                        val todayYear = try { LocalDate.parse(calState.todayString).year } catch (_: Exception) { -1 }
+                                        formatFullCalendarDate(ld, AppStrings.currentLanguage.code, ld.year != todayYear)
                                     }
                                 }
                             }
                             Text(header, style = MaterialTheme.typography.titleMedium)
                             Spacer(modifier = Modifier.height(4.dp))
 
-                            val lessons = list.filter {
-                                it.event?.type?.equals("lesson", ignoreCase = true) == true &&
-                                        !it.event?.eventTrainersList.isNullOrEmpty() &&
-                                        !it.event?.eventTrainersList?.firstOrNull().isNullOrBlank()
-                            }
-                            val other = list - lessons
-
-                            val lessonsByTrainer = lessons.groupBy { it.event?.eventTrainersList?.firstOrNull()!!.trim() }
-
                             lessonsByTrainer.forEach { (trainer, instances) ->
                                 LessonView(
                                     trainerName = trainer,
-                                    instances = instances.sortedBy { it.since },
+                                    instances = instances,
                                     isAllTab = (selectedTab == 1),
                                     myPersonId = calState.myPersonId,
                                     myCoupleIds = calState.myCoupleIds,
@@ -229,7 +182,7 @@ fun CalendarScreen(
                                 )
                             }
 
-                            other.sortedBy { it.since }.forEach { item ->
+                            otherList.forEach { item ->
                                 RenderSingleEventCard(item = item, onEventClick = { id: Long -> onOpenEvent(id) })
                             }
                         }

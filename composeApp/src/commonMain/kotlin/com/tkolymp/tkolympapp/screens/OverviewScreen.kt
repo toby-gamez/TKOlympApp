@@ -28,7 +28,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,19 +37,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
-import com.tkolymp.shared.people.Person
 import com.tkolymp.shared.utils.formatFullCalendarDate
 import com.tkolymp.shared.utils.formatHtmlContent
 import com.tkolymp.shared.viewmodels.OverviewViewModel
-import com.tkolymp.shared.viewmodels.PeopleViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
 import kotlinx.coroutines.launch
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.plus
-import kotlinx.datetime.todayIn
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,20 +65,12 @@ fun OverviewScreen(
         val scope = rememberCoroutineScope()
 
         LaunchedEffect(Unit) {
-            val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
-            val startIso = today.toString() + "T00:00:00Z"
-            val endIso = today.plus(365, DateTimeUnit.DAY).toString() + "T23:59:59Z"
-            viewModel.loadOverview(startIso, endIso, forceRefresh = false)
+            viewModel.loadOverview(forceRefresh = false)
         }
 
         SwipeToReload(
             isRefreshing = state.isLoading,
-            onRefresh = { scope.launch {
-                val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
-                val startIso = today.toString() + "T00:00:00Z"
-                val endIso = today.plus(365, DateTimeUnit.DAY).toString() + "T23:59:59Z"
-                viewModel.loadOverview(startIso, endIso, forceRefresh = true)
-            } },
+            onRefresh = { scope.launch { viewModel.loadOverview(forceRefresh = true) } },
             modifier = Modifier.padding(top = padding.calculateTopPadding(), bottom = bottomPadding)
         ) {
             Column(
@@ -97,113 +81,54 @@ fun OverviewScreen(
                 horizontalAlignment = Alignment.Start
             ) {
 
-            val trainings = state.upcomingEvents
-            val camps = trainings.filter { it.event?.type?.contains("CAMP", ignoreCase = true) == true }
-            val trainingItems = remember(trainings) { trainings.take(2).map { Pair(it.id, it.event?.name ?: AppStrings.current.dialogs.noName) } }
-            val campItems = remember(camps) { camps.take(2).map { Pair(it.id, it.event?.name ?: AppStrings.current.dialogs.noName) } }
             val announcements = state.recentAnnouncements
 
-            // Trainings section (styled like Calendar)
             // Trainings section (grouped by day, styled like Calendar)
             Spacer(modifier = Modifier.height(8.dp))
             Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(AppStrings.current.overview.upcomingTrainings, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
-            
-            val limitedTrainings = trainings.sortedBy { it.since ?: it.updatedAt ?: "" }
-            val trainingsMapByDay = limitedTrainings.groupBy { inst ->
-                val s = inst.since ?: inst.until ?: inst.updatedAt ?: ""
-                s.substringBefore('T').ifEmpty { s }
-            }.entries.sortedBy { it.key }.associate { it.key to it.value }
 
             Column(modifier = Modifier.padding(horizontal = 12.dp)) {
-                if (trainingsMapByDay.isEmpty()) {
-                    if (state.isLoading) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 12.dp),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
-                    } else {
-                        Text(AppStrings.current.timeline.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
-                    }
+                if (state.trainingSelectedDate == null && !state.isLoading) {
+                    Text(AppStrings.current.timeline.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
+                } else if (state.trainingSelectedDate == null) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) { CircularProgressIndicator() }
                 } else {
-                    val todayKey = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault()).toString()
+                    val date = state.trainingSelectedDate!!
+                    Column(modifier = Modifier.padding(vertical = 6.dp)) {
+                        val header = dateHeader(date, state.todayString, state.tomorrowString)
+                        Text(header, style = MaterialTheme.typography.titleMedium)
+                        Spacer(modifier = Modifier.height(4.dp))
 
-                    // Show only one day: prefer today (only if it has future events), otherwise the next training day
-                    val sortedKeys = trainingsMapByDay.keys.sorted()
-                    val nowInstant = kotlin.time.Clock.System.now()
-                    val selectedKey = run {
-                        if (sortedKeys.isEmpty()) null
-                        else if (sortedKeys.contains(todayKey)) {
-                            val todayList = trainingsMapByDay[todayKey] ?: emptyList()
-                            val hasFutureToday = todayList.any { inst ->
-                                val timeStr = inst.until ?: inst.since ?: inst.updatedAt ?: ""
-                                val instInstant = try { Instant.parse(timeStr) } catch (_: Exception) { null }
-                                instInstant != null && instInstant > nowInstant
-                            }
-                            if (hasFutureToday) todayKey else sortedKeys.find { it > todayKey } ?: sortedKeys.firstOrNull()
-                        } else {
-                            sortedKeys.find { it > todayKey } ?: sortedKeys.firstOrNull()
+                        state.trainingLessonsByTrainer.forEach { (trainer, instances) ->
+                            LessonView(
+                                trainerName = trainer,
+                                instances = instances,
+                                isAllTab = false,
+                                myPersonId = state.myPersonId,
+                                myCoupleIds = state.myCoupleIds,
+                                onEventClick = { id: Long -> onOpenEvent(id) }
+                            )
                         }
-                    }
-
-                    selectedKey?.let { date ->
-                        val list = trainingsMapByDay[date] ?: emptyList()
-                        Column(modifier = Modifier.padding(vertical = 6.dp)) {
-                            val now = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
-                            val header = when (date) {
-                                todayKey -> AppStrings.current.timeline.today.lowercase()
-                                now.plus(1, DateTimeUnit.DAY).toString() -> AppStrings.current.timeline.tomorrow.lowercase()
-                                else -> {
-                                    val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
-                                    if (ld == null) date else
-                                        formatFullCalendarDate(ld, AppStrings.currentLanguage.code, ld.year != now.year)
-                                }
-                            }
-                            Text(header, style = MaterialTheme.typography.titleMedium)
-                            Spacer(modifier = Modifier.height(4.dp))
-
-                            val lessons = list.filter {
-                                it.event?.type?.equals("lesson", ignoreCase = true) == true &&
-                                        !it.event?.eventTrainersList.isNullOrEmpty() &&
-                                        !it.event?.eventTrainersList?.firstOrNull().isNullOrBlank()
-                            }
-                            val other = list - lessons
-
-                            val lessonsByTrainer = lessons.groupBy { it.event?.eventTrainersList?.firstOrNull()!!.trim() }
-
-                            lessonsByTrainer.forEach { (trainer, instances) ->
-                                LessonView(
-                                    trainerName = trainer,
-                                    instances = instances.sortedBy { it.since },
-                                    isAllTab = false,
-                                    myPersonId = state.myPersonId,
-                                    myCoupleIds = state.myCoupleIds,
-                                    onEventClick = { id: Long -> onOpenEvent(id) }
-                                )
-                            }
-
-                            other.sortedBy { it.since }.forEach { item ->
-                                RenderSingleEventCard(item = item, onEventClick = { id: Long -> onOpenEvent(id) })
-                            }
+                        state.trainingOtherEvents.forEach { item ->
+                            RenderSingleEventCard(item = item, onEventClick = { id: Long -> onOpenEvent(id) })
                         }
                     }
                 }
             }
-            val trainingsEmpty = trainingsMapByDay.isEmpty()
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 2.dp), horizontalArrangement = Arrangement.Center) {
-                TextButton(onClick = onOpenCalendar) { Text(if (trainingsEmpty) AppStrings.current.overview.browseOthers else AppStrings.current.overview.more) }
+            Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.Center) {
+                TextButton(onClick = onOpenCalendar) {
+                    Text(if (state.trainingSelectedDate == null) AppStrings.current.overview.browseOthers else AppStrings.current.overview.more)
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Board announcements (styled like BoardScreen)
+            // Board announcements
             Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(AppStrings.current.overview.fromTheBoard, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
@@ -211,13 +136,9 @@ fun OverviewScreen(
                 if (announcements.isEmpty()) {
                     if (state.isLoading) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 12.dp),
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
                             horizontalArrangement = Arrangement.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
+                        ) { CircularProgressIndicator() }
                     } else {
                         Text(AppStrings.current.timeline.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
                     }
@@ -232,7 +153,6 @@ fun OverviewScreen(
                                         a.id.toLongOrNull()?.let { nid -> onOpenNotice(nid) }
                                     },
                                 shape = RoundedCornerShape(16.dp),
-                                
                             ) {
                                 Column(modifier = Modifier.padding(14.dp)) {
                                     Text(a.title ?: AppStrings.current.dialogs.noName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
@@ -256,118 +176,71 @@ fun OverviewScreen(
                     }
                 }
             }
-            val boardEmpty = announcements.isEmpty()
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 2.dp), horizontalArrangement = Arrangement.Center) {
-                TextButton(onClick = onOpenBoard) { Text(if (boardEmpty) AppStrings.current.overview.browseOthers else AppStrings.current.overview.more) }
+            Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.Center) {
+                TextButton(onClick = onOpenBoard) {
+                    Text(if (announcements.isEmpty()) AppStrings.current.overview.browseOthers else AppStrings.current.overview.more)
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Camps section (styled like Calendar)
+            // Camps section
             Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(AppStrings.current.overview.upcomingCamps, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
-            val limitedCamps = camps.sortedBy { it.since ?: it.updatedAt ?: "" }.take(2)
-            val campsMapByDay = limitedCamps.groupBy { inst ->
-                val s = inst.since ?: inst.until ?: inst.updatedAt ?: ""
-                s.substringBefore('T').ifEmpty { s }
-            }.entries.sortedBy { it.key }.associate { it.key to it.value }
-
             Column(modifier = Modifier.padding(horizontal = 12.dp)) {
-                if (campsMapByDay.isEmpty()) {
+                if (state.campsMapByDay.isEmpty()) {
                     if (state.isLoading) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 12.dp),
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
                             horizontalArrangement = Arrangement.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
+                        ) { CircularProgressIndicator() }
                     } else {
                         Text(AppStrings.current.timeline.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
                     }
                 } else {
-                    val todayKey = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault()).toString()
-
-                    campsMapByDay.forEach { (date, list) ->
+                    state.campsMapByDay.forEach { (date, list) ->
                         Column(modifier = Modifier.padding(vertical = 6.dp)) {
-                            val now = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
-                            val header = when (date) {
-                                todayKey -> AppStrings.current.timeline.today.lowercase()
-                                now.plus(1, DateTimeUnit.DAY).toString() -> AppStrings.current.timeline.tomorrow.lowercase()
-                                else -> {
-                                    val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
-                                    if (ld == null) date else
-                                        formatFullCalendarDate(ld, AppStrings.currentLanguage.code, ld.year != now.year)
-                                }
-                            }
+                            val header = dateHeader(date, state.todayString, state.tomorrowString)
                             Text(header, style = MaterialTheme.typography.titleMedium)
                             Spacer(modifier = Modifier.height(4.dp))
-
-                            list.sortedBy { it.since }.forEach { item ->
+                            list.forEach { item ->
                                 RenderSingleEventCard(item = item, onEventClick = { id: Long -> onOpenEvent(id) })
                             }
                         }
                     }
                 }
             }
-            val campsEmpty = campsMapByDay.isEmpty()
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 2.dp), horizontalArrangement = Arrangement.Center) {
-                TextButton(onClick = onOpenEvents) { Text(if (campsEmpty) AppStrings.current.overview.browseOthers else AppStrings.current.overview.more) }
+            Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.Center) {
+                TextButton(onClick = onOpenEvents) {
+                    Text(if (state.campsMapByDay.isEmpty()) AppStrings.current.overview.browseOthers else AppStrings.current.overview.more)
+                }
             }
 
-            // Upcoming birthdays (reuse logic from PeopleScreen)
-            val peopleViewModel = viewModel<PeopleViewModel>()
-            val peopleState by peopleViewModel.state.collectAsState()
-            LaunchedEffect(Unit) {
-                peopleViewModel.loadPeople()
-            }
-
-            val allPeople = remember(peopleState.people) { peopleState.people.filterIsInstance<Person>() }
-            val upcomingBirthdays = remember(allPeople) {
-                allPeople
-                    .mapNotNull { p ->
-                        val raw = p.birthDate
-                        val days = daysUntilNextBirthday(raw)
-                        if (days == Int.MAX_VALUE) null else Pair(p, days)
-                    }
-                    .sortedBy { it.second }
-                    .take(3)
-            }
-
+            // Upcoming birthdays
             Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(AppStrings.current.profile.birthdays, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
             Column(modifier = Modifier.padding(horizontal = 12.dp)) {
-                if (upcomingBirthdays.isEmpty()) {
+                if (state.upcomingBirthdays.isEmpty()) {
                     Text(AppStrings.current.timeline.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
                 } else {
-                    upcomingBirthdays.forEach { (person, days) ->
+                    state.upcomingBirthdays.forEach { entry ->
                         Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                                val base = listOf(person.prefixTitle, person.firstName, person.lastName).filterNotNull().filter { it.isNotBlank() }.joinToString(" ")
-                                val name = if (!person.suffixTitle.isNullOrBlank()) "$base, ${person.suffixTitle}" else base.ifBlank { person.id }
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(name, style = MaterialTheme.typography.titleMedium)
-                                    person.birthDate?.let { raw ->
-                                        val formatted = formatDateString(raw)
-                                        Text(formatted ?: raw, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(entry.name, style = MaterialTheme.typography.titleMedium)
+                                    entry.formattedBirthDate?.let {
+                                        Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                 }
-                                if (days == 0) {
+                                if (entry.days == 0) {
                                     Icon(imageVector = Icons.Filled.Cake, contentDescription = "Dnes mají narozeniny", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                                 } else {
-                                    Text("${days}d", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(start = 8.dp))
+                                    Text("${entry.days}d", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(start = 8.dp))
                                 }
                             }
                         }
@@ -385,28 +258,15 @@ fun OverviewScreen(
 
 }
 
-@Composable
-private fun OverviewSection(
-    title: String,
-    items: List<Pair<Long, String>>,
-    onMore: () -> Unit,
-    onItemClick: (Long) -> Unit
-) {
-    Row(modifier = Modifier.padding(horizontal = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Text(title, style = MaterialTheme.typography.titleMedium)
-        TextButton(onClick = onMore) { Text(if (items.isEmpty()) AppStrings.current.overview.browseOthers else AppStrings.current.overview.more) }
-    }
-    Column(modifier = Modifier.padding(horizontal = 12.dp)) {
-        if (items.isEmpty()) {
-            Text(AppStrings.current.timeline.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
-        } else {
-            items.forEach { (id, label) ->
-                Text(
-                    text = label,
-                    modifier = Modifier
-                        .padding(vertical = 6.dp)
-                        .clickable { onItemClick(id) }
-                )
+private fun dateHeader(date: String, todayString: String, tomorrowString: String): String {
+    return when (date) {
+        todayString -> AppStrings.current.timeline.today.lowercase()
+        tomorrowString -> AppStrings.current.timeline.tomorrow.lowercase()
+        else -> {
+            val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
+            if (ld == null) date else {
+                val todayYear = try { LocalDate.parse(todayString).year } catch (_: Exception) { -1 }
+                formatFullCalendarDate(ld, AppStrings.currentLanguage.code, ld.year != todayYear)
             }
         }
     }

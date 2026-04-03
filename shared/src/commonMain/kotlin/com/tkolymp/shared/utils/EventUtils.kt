@@ -2,11 +2,16 @@ package com.tkolymp.shared.utils
 
 import com.tkolymp.shared.event.Event
 import com.tkolymp.shared.language.AppStrings
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.todayIn
+import kotlin.time.Clock
 
 fun translateEventType(type: String?): String? {
     if (type.isNullOrBlank()) return null
@@ -195,4 +200,44 @@ fun participantsForEvent(event: Event?): List<String> {
             } else null
         }
     }
+}
+
+fun daysUntilNextBirthday(raw: String?): Int {
+    if (raw.isNullOrBlank()) return Int.MAX_VALUE
+    val s = raw.trim()
+    val datePrefix = Regex("\\d{4}-\\d{2}-\\d{2}").find(s)?.value
+    val ld = if (datePrefix != null) {
+        try { LocalDate.parse(datePrefix) } catch (_: Exception) { null }
+    } else {
+        parseToLocal(s)?.date
+    } ?: return Int.MAX_VALUE
+
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val month = ld.monthNumber
+    val day = ld.dayOfMonth
+    val candidate = try {
+        LocalDate(today.year, month, day)
+    } catch (_: Exception) {
+        if (month == 2 && day == 29) LocalDate(today.year, 2, 28) else return Int.MAX_VALUE
+    }
+
+    var next = if (candidate < today) candidate.plus(1, DateTimeUnit.YEAR) else candidate
+    if (next.monthNumber == 2 && next.dayOfMonth == 29) {
+        val y = next.year
+        val isLeap = (y % 4 == 0 && (y % 100 != 0 || y % 400 == 0))
+        if (!isLeap) next = LocalDate(y, 2, 28)
+    }
+    return (next.toEpochDays() - today.toEpochDays()).toInt()
+}
+
+fun formatBirthDateString(raw: String?): String? {
+    if (raw.isNullOrBlank()) return null
+    val s = raw.trim()
+    val datePrefix = Regex("\\d{4}-\\d{2}-\\d{2}").find(s)?.value
+    val ld = if (datePrefix != null) {
+        try { LocalDate.parse(datePrefix) } catch (_: Exception) { null }
+    } else {
+        parseToLocal(s)?.date
+    } ?: return null
+    return formatShortDate(ld)
 }
