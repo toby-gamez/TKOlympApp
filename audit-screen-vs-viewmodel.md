@@ -17,8 +17,8 @@
 Co patří do VM nebo shared:
 
 - ~~**`sealed class RegMode`, `data class LessonInput`, `data class RegistrationInput`** — doménové typy definované přímo v screen souboru~~ ✅ Přesunuto do `shared/.../registration/RegistrationInput.kt`
-- **`registeredPersonIds`/`registeredCoupleIds`** computation z JSON — `remember {}` s business logikou v Composable
-- **`selectedRegistrant` initial value** ("preferuj sebe, pokud ještě není přihlášen") — selekční logika
+- ~~**`registeredPersonIds`/`registeredCoupleIds`** computation z JSON — `remember {}` s business logikou v Composable~~ ✅ Přesunuto do `computeRegisteredPersonIds/computeRegisteredCoupleIds` v `shared/.../registration/RegistrationUtils.kt`
+- ~~**`selectedRegistrant` initial value** ("preferuj sebe, pokud ještě není přihlášen") — selekční logika~~ ✅ Přesunuto do `computeInitialRegistrant` v `shared/.../registration/RegistrationUtils.kt`
 - ~~**Display name fetching**: `LaunchedEffect` volající `ServiceLocator.peopleService.fetchPersonDisplayName()` přímo z UI — Register mode~~ ✅ Odstraněno (ViewModel `loadNames` + sync LaunchedEffect postačuje)
 - ~~**Cache invalidation** na `ON_RESUME`: `ServiceLocator.cacheService.invalidatePrefix("person_")` — přímé volání service z obrazovky~~ ✅ Přesunuto do `RegistrationViewModel.invalidateAndRefresh()`
 - ~~**`computeInitCountsFor(regId)`** — pure funkce parsující JSON demands~~ ✅ Přesunuto do `shared/.../registration/RegistrationUtils.kt`

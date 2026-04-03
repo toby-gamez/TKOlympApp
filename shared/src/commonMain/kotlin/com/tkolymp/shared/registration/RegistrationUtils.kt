@@ -33,6 +33,48 @@ fun filterOwnedRegistrations(registrations: JsonArray?, myPersonId: String?, myC
 }
 
 /**
+ * Returns the set of person IDs that already have a registration in [registrations].
+ */
+fun computeRegisteredPersonIds(registrations: JsonArray): Set<String> {
+    val set = mutableSetOf<String>()
+    registrations.forEach { el ->
+        val obj = el as? JsonObject ?: return@forEach
+        val pid = obj["person"]?.let { (it as? JsonObject)?.get("id")?.jsonPrimitive?.contentOrNull }
+        if (!pid.isNullOrBlank()) set.add(pid)
+    }
+    return set
+}
+
+/**
+ * Returns the set of couple IDs that already have a registration in [registrations].
+ */
+fun computeRegisteredCoupleIds(registrations: JsonArray): Set<String> {
+    val set = mutableSetOf<String>()
+    registrations.forEach { el ->
+        val obj = el as? JsonObject ?: return@forEach
+        val cid = obj["couple"]?.let { (it as? JsonObject)?.get("id")?.jsonPrimitive?.contentOrNull }
+        if (!cid.isNullOrBlank()) set.add(cid)
+    }
+    return set
+}
+
+/**
+ * Picks a sensible initial registrant: prefers self ([myPersonId]) if not already registered,
+ * otherwise the first unregistered couple from [myCoupleIds].
+ * Returns a pair of (personId?, coupleId?).
+ */
+fun computeInitialRegistrant(
+    myPersonId: String?,
+    myCoupleIds: List<String>,
+    registeredPersonIds: Set<String>,
+    registeredCoupleIds: Set<String>
+): Pair<String?, String?> {
+    val firstPerson = if (!myPersonId.isNullOrBlank() && !registeredPersonIds.contains(myPersonId)) myPersonId else null
+    val firstUnregCouple = myCoupleIds.firstOrNull { !registeredCoupleIds.contains(it) }
+    return Pair(firstPerson, if (firstPerson == null) firstUnregCouple else null)
+}
+
+/**
  * For a given [regId], look up the lesson demands stored inside that registration and
  * return a list of initial lesson counts aligned with [trainers].
  * Each element in the result corresponds to the trainer at the same index in [trainers].

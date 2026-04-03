@@ -51,6 +51,9 @@ import com.tkolymp.shared.Logger
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.RegistrationViewModel
 import com.tkolymp.shared.registration.computeInitCountsFor
+import com.tkolymp.shared.registration.computeInitialRegistrant
+import com.tkolymp.shared.registration.computeRegisteredCoupleIds
+import com.tkolymp.shared.registration.computeRegisteredPersonIds
 import com.tkolymp.shared.registration.filterOwnedRegistrations
 import com.tkolymp.shared.registration.RegMode
 import com.tkolymp.shared.registration.LessonInput
@@ -166,30 +169,12 @@ fun RegistrationScreen(
                         Text(AppStrings.current.registration.selectRegistrant, style = MaterialTheme.typography.bodyMedium)
                         Spacer(modifier = Modifier.height(6.dp))
                         // compute already-registered person/couple ids so we don't offer them for new registration
-                        val registeredPersonIds = remember(registrations) {
-                            val set = mutableSetOf<String>()
-                            registrations.forEach { rEl ->
-                                val r = rEl as? JsonObject
-                                val pid = r?.get("person").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
-                                if (!pid.isNullOrBlank()) set.add(pid)
-                            }
-                            set
-                        }
-                        val registeredCoupleIds = remember(registrations) {
-                            val set = mutableSetOf<String>()
-                            registrations.forEach { rEl ->
-                                val r = rEl as? JsonObject
-                                val cid = r?.get("couple").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
-                                if (!cid.isNullOrBlank()) set.add(cid)
-                            }
-                            set
-                        }
+                        val registeredPersonIds = remember(registrations) { computeRegisteredPersonIds(registrations) }
+                        val registeredCoupleIds = remember(registrations) { computeRegisteredCoupleIds(registrations) }
 
                         // pick a sensible initial selection: prefer self if not already registered, otherwise first unregistered couple
                         val selectedRegistrant = remember {
-                            val firstPerson = if (!myPersonId.isNullOrBlank() && !registeredPersonIds.contains(myPersonId)) myPersonId else null
-                            val firstUnregCouple = myCoupleIds.firstOrNull { !registeredCoupleIds.contains(it) }
-                            mutableStateOf<Pair<String?, String?>>(Pair(firstPerson, if (firstPerson == null) firstUnregCouple else null))
+                            mutableStateOf(computeInitialRegistrant(myPersonId, myCoupleIds, registeredPersonIds, registeredCoupleIds))
                         }
                         // local observable display name state (start with provided names if any)
                         val personNameState = remember { androidx.compose.runtime.mutableStateOf<String?>(myPersonName) }
