@@ -44,6 +44,42 @@ private val MONTH_NAMES: Map<String, List<String>> = mapOf(
     )
 )
 
+/** Nominative month names for cases where we display "Month Year" (e.g. "září 2025"). */
+private val MONTH_NAMES_NOMINATIVE: Map<String, List<String>> = mapOf(
+    "cs" to listOf(
+        "leden", "únor", "březen", "duben", "květen", "červen",
+        "červenec", "srpen", "září", "říjen", "listopad", "prosinec"
+    ),
+    "de" to listOf(
+        "Januar", "Februar", "März", "April", "Mai", "Juni",
+        "Juli", "August", "September", "Oktober", "November", "Dezember"
+    ),
+    "sk" to listOf(
+        "január", "február", "marec", "apríl", "máj", "jún",
+        "júl", "august", "september", "október", "november", "december"
+    ),
+    "sl" to listOf(
+        "januar", "februar", "marec", "april", "maj", "junij",
+        "julij", "avgust", "september", "oktober", "november", "december"
+    ),
+    "ua" to listOf(
+        "січень", "лютий", "березень", "квітень", "травень", "червень",
+        "липень", "серпень", "вересень", "жовтень", "листопад", "грудень"
+    ),
+    "vi" to listOf(
+        "Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6",
+        "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"
+    ),
+    "en" to listOf(
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ),
+    "brainrot" to listOf(
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    )
+)
+
 private val DAY_NAMES_FULL: Map<String, List<String>> = mapOf(
     "cs" to listOf("pondělí", "úterý", "středa", "čtvrtek", "pátek", "sobota", "neděle"),
     "de" to listOf("Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"),
@@ -58,6 +94,12 @@ private val DAY_NAMES_FULL: Map<String, List<String>> = mapOf(
 /** Returns localized month name (genitive form) for the 1-based month number. */
 fun getLocalizedMonthName(monthNumber: Int, languageCode: String): String {
     val months = MONTH_NAMES[languageCode.lowercase()] ?: MONTH_NAMES["en"]!!
+    return months.getOrElse(monthNumber - 1) { monthNumber.toString() }
+}
+
+/** Returns the nominative/localized month name for displaying "Month Year". */
+fun getLocalizedMonthNameNominative(monthNumber: Int, languageCode: String): String {
+    val months = MONTH_NAMES_NOMINATIVE[languageCode.lowercase()] ?: MONTH_NAMES_NOMINATIVE["en"]!!
     return months.getOrElse(monthNumber - 1) { monthNumber.toString() }
 }
 

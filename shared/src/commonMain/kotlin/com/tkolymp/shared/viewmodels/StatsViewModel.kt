@@ -23,7 +23,31 @@ import kotlinx.datetime.todayIn
 
 // ─── Data models ──────────────────────────────────────────────────────────────
 
-enum class SeasonSelection { CURRENT, LAST }
+/** Represents a single season (Sep 1 -> Aug 31) with a display label. */
+data class SeasonSelection(val start: LocalDate, val end: LocalDate, val label: String) {
+    companion object {
+        private fun forYear(startYear: Int): SeasonSelection {
+            val s = LocalDate(startYear, 9, 1)
+            val e = LocalDate(startYear + 1, 8, 31)
+            val shortNext = ((startYear + 1) % 100).toString().padStart(2, '0')
+            val label = "$startYear/$shortNext"
+            return SeasonSelection(s, e, label)
+        }
+
+        fun current(today: LocalDate = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())): SeasonSelection {
+            val year = if (today.monthNumber >= 9) today.year else today.year - 1
+            return forYear(year)
+        }
+
+        /** Returns recent seasons, newest first (default 4 seasons). */
+        fun recent(count: Int = 4, today: LocalDate = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())): List<SeasonSelection> {
+            val currentYear = if (today.monthNumber >= 9) today.year else today.year - 1
+            return (0 until count).map { offset -> forYear(currentYear - offset) }
+        }
+
+        fun default(): SeasonSelection = current()
+    }
+}
 
 /** Stats for a single calendar week (Mon–Sun). */
 data class WeekStats(
@@ -68,7 +92,7 @@ data class StatsState(
     /** Top-5 trainers by session count. */
     val trainerData: List<TrainerStat> = emptyList(),
     val scoreEntry: ScoreboardEntry? = null,
-    val selectedSeason: SeasonSelection = SeasonSelection.CURRENT,
+    val selectedSeason: SeasonSelection = SeasonSelection.default(),
     override val isLoading: Boolean = false,
     override val error: String? = null
 ) : ViewModelState
@@ -95,7 +119,8 @@ class StatsViewModel(
 
         try {
             val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
-            val (seasonStart, seasonEnd) = seasonBounds(today, season)
+            val seasonStart = season.start
+            val seasonEnd = season.end
 
             val startIso = seasonStart.toString() + "T00:00:00Z"
             val endIso = seasonEnd.toString() + "T23:59:59Z"
@@ -175,22 +200,7 @@ class StatsViewModel(
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    /** Returns (seasonStart, seasonEnd) for CURRENT or LAST season.
-     *  Season runs Sep 1 → Aug 31.  */
-    private fun seasonBounds(today: LocalDate, season: SeasonSelection): Pair<LocalDate, LocalDate> {
-        // current season start: if month >= 9 it's this year, else last year
-        val currentSeasonYear = if (today.monthNumber >= 9) today.year else today.year - 1
-        val currentStart = LocalDate(currentSeasonYear, 9, 1)
-        val currentEnd = LocalDate(currentSeasonYear + 1, 8, 31)
-
-        return when (season) {
-            SeasonSelection.CURRENT -> Pair(currentStart, currentEnd)
-            SeasonSelection.LAST -> Pair(
-                LocalDate(currentSeasonYear - 1, 9, 1),
-                LocalDate(currentSeasonYear, 8, 31)
-            )
-        }
-    }
+    // seasonBounds removed — SeasonSelection contains start/end directly
 
     /** Duration of a training in minutes based on since/until ISO strings. */
     private fun durationMin(since: String?, until: String?): Long {
@@ -337,15 +347,19 @@ class StatsViewModel(
     private fun buildTrainerData(instances: List<EventInstance>): List<TrainerStat> {
         val byTrainer = mutableMapOf<String, Pair<Int, Long>>() // name → (count, minutes)
         instances.forEach { inst ->
-            val trainers = inst.event?.eventTrainersList ?: emptyList()
+            val raw = inst.event?.eventTrainersList ?: emptyList()
             val dur = durationMin(inst.since, inst.until)
+            // Normalize: trim, drop blank, dedupe so a duplicated name in the list
+            // doesn't inflate counts for the same trainer on one instance.
+            val trainers = raw.map { it.trim() }.filter { it.isNotEmpty() }.distinct()
+
             if (trainers.isEmpty()) {
                 val key = "(unknown)"
                 val prev = byTrainer[key] ?: Pair(0, 0L)
                 byTrainer[key] = Pair(prev.first + 1, prev.second + dur)
             } else {
                 trainers.forEach { trainerName ->
-                    val key = trainerName.trim().ifBlank { "(unknown)" }
+                    val key = trainerName.ifBlank { "(unknown)" }
                     val prev = byTrainer[key] ?: Pair(0, 0L)
                     byTrainer[key] = Pair(prev.first + 1, prev.second + dur)
                 }

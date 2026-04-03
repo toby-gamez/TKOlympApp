@@ -466,7 +466,11 @@ fun AppNavHost(
                 )
             }
         ) {
-            StatsScreen(onBack = { navController.navigateUp() }, bottomPadding = bottomPadding)
+            StatsScreen(
+                onBack = { navController.navigateUp() },
+                bottomPadding = bottomPadding,
+                onOpenLeaderboard = { navController.navigate("leaderboard") }
+            )
         }
 
         composable(

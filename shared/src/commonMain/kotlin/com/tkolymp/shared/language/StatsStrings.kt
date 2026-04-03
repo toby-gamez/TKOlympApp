@@ -19,6 +19,7 @@ data class StatsStrings(
     val manualScore: String,
     val currentSeason: String,
     val lastSeason: String,
+    val futureDataExplanation: String,
     val noData: String,
     val monthColumn: String,
     val countColumn: String,
@@ -26,6 +27,7 @@ data class StatsStrings(
     val sessionsUnit: String,
     val hoursUnit: String,
     val otherTrainers: String,
+    val sumLabel: String,
     val weeks: String,
     val noScoreData: String,
 )

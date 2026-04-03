@@ -10,9 +10,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -29,6 +30,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,25 +38,26 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.people.ScoreboardEntry
+import com.tkolymp.shared.utils.getLocalizedMonthNameNominative
 import com.tkolymp.shared.viewmodels.MonthStats
 import com.tkolymp.shared.viewmodels.SeasonSelection
 import com.tkolymp.shared.viewmodels.StatsViewModel
 import com.tkolymp.shared.viewmodels.TrainerStat
 import com.tkolymp.shared.viewmodels.TypeStat
-import com.tkolymp.shared.viewmodels.WeekStats
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.BarChart
 import kotlinx.coroutines.launch
@@ -65,6 +68,7 @@ import kotlin.math.roundToInt
 fun StatsScreen(
     onBack: () -> Unit = {},
     bottomPadding: Dp = 0.dp,
+    onOpenLeaderboard: () -> Unit = {},
     viewModel: StatsViewModel = viewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -72,7 +76,7 @@ fun StatsScreen(
     val strings = AppStrings.current.stats
 
     LaunchedEffect(Unit) {
-        viewModel.loadStats(SeasonSelection.CURRENT)
+        viewModel.loadStats(SeasonSelection.default())
     }
 
     Scaffold(
@@ -109,11 +113,12 @@ fun StatsScreen(
                 // ── Season selector ──────────────────────────────────────────
                 SeasonSelector(
                     selected = state.selectedSeason,
+                    seasons = SeasonSelection.recent(),
+                    currentLabel = strings.currentSeason,
+                    lastLabel = strings.lastSeason,
                     onSelect = { season ->
                         scope.launch { viewModel.loadStats(season) }
-                    },
-                    currentLabel = strings.currentSeason,
-                    lastLabel = strings.lastSeason
+                    }
                 )
 
                 if (state.totalSessions == 0 && !state.isLoading) {
@@ -159,23 +164,6 @@ fun StatsScreen(
                                 selectedBar = if (selectedBar == idx) -1 else idx
                             }
                         )
-                        // Legend for highlighted bar
-                        val currentWeek = state.weeklyData.getOrNull(highlightIndex)
-                        if (currentWeek != null) {
-                            Spacer(Modifier.height(4.dp))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.End
-                            ) {
-                                Text(
-                                    text = "${currentWeek.count} ${strings.sessionsUnit} · " +
-                                        "${(currentWeek.minutes / 60.0).roundTo1dp()} ${strings.hoursUnit}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-
                         // Show tapped-week details (value + hours)
                         if (selectedBar >= 0) {
                             val week = state.weeklyData.getOrNull(selectedBar)
@@ -202,6 +190,13 @@ fun StatsScreen(
                             countCol = strings.countColumn,
                             hoursCol = strings.hoursColumn
                         )
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            text = strings.futureDataExplanation,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 6.dp)
+                        )
                     }
                 }
 
@@ -226,7 +221,7 @@ fun StatsScreen(
 
                 // ── Score card ───────────────────────────────────────────────
                 state.scoreEntry?.let { score ->
-                    ScoreCard(score = score, strings = strings)
+                    ScoreCard(score = score, strings = strings, onOpenLeaderboard = onOpenLeaderboard)
                 }
 
                 Spacer(Modifier.height(24.dp))
@@ -240,24 +235,30 @@ fun StatsScreen(
 @Composable
 private fun SeasonSelector(
     selected: SeasonSelection,
-    onSelect: (SeasonSelection) -> Unit,
+    seasons: List<SeasonSelection>,
     currentLabel: String,
-    lastLabel: String
+    lastLabel: String,
+    onSelect: (SeasonSelection) -> Unit
 ) {
+    val scrollState = rememberScrollState()
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(scrollState)
     ) {
-        FilterChip(
-            selected = selected == SeasonSelection.CURRENT,
-            onClick = { if (selected != SeasonSelection.CURRENT) onSelect(SeasonSelection.CURRENT) },
-            label = { Text(currentLabel) }
-        )
-        FilterChip(
-            selected = selected == SeasonSelection.LAST,
-            onClick = { if (selected != SeasonSelection.LAST) onSelect(SeasonSelection.LAST) },
-            label = { Text(lastLabel) }
-        )
+        seasons.forEachIndexed { idx, season ->
+            val label = when (idx) {
+                0 -> currentLabel
+                1 -> lastLabel
+                else -> season.label
+            }
+            FilterChip(
+                selected = selected == season,
+                onClick = { if (selected != season) onSelect(season) },
+                label = { Text(label) }
+            )
+        }
     }
 }
 
@@ -290,7 +291,7 @@ private fun SummaryRow(
         )
         SummaryCard(
             modifier = Modifier.weight(1f),
-            value = if (streak > 0) "$streak\n${strings.weeksInARow}" else avgFmt.toString(),
+            value = if (streak > 0) "$streak ${strings.weeksInARow}" else avgFmt.toString(),
             label = if (streak > 0) strings.currentStreak else strings.avgPerWeek
         )
     }
@@ -303,25 +304,31 @@ private fun SummaryCard(modifier: Modifier = Modifier, value: String, label: Str
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
     ) {
-        Column(
-            modifier = Modifier.padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 76.dp)
+                .padding(8.dp),
+            contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                )
+            }
         }
     }
 }
@@ -366,7 +373,17 @@ private fun MonthlyTable(
                 .padding(vertical = 3.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(month.monthLabel, modifier = Modifier.weight(2f), style = MaterialTheme.typography.bodySmall)
+            // Try to show localized month name (from `yearMonth` "yyyy-MM").
+            val displayMonth = run {
+                val parts = month.yearMonth.split("-")
+                val year = parts.getOrNull(0)
+                val monthNum = parts.getOrNull(1)?.toIntOrNull()
+                if (monthNum != null && year != null) {
+                    val monthName = getLocalizedMonthNameNominative(monthNum, AppStrings.currentLanguage.code)
+                    "$monthName $year"
+                } else month.monthLabel
+            }
+            Text(displayMonth, modifier = Modifier.weight(2f), style = MaterialTheme.typography.bodySmall)
             Text(
                 month.count.toString(),
                 modifier = Modifier.weight(1f),
@@ -387,7 +404,7 @@ private fun MonthlyTable(
     val totalMinutes = data.sumOf { it.minutes }
     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp)) {
-        Text("Σ", modifier = Modifier.weight(2f), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+        Text(AppStrings.current.stats.sumLabel, modifier = Modifier.weight(2f), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
         Text(totalCount.toString(), modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.End)
         Text((totalMinutes / 60.0).roundTo1dp().toString(), modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, textAlign = TextAlign.End)
     }
@@ -460,7 +477,7 @@ private fun TrainerBreakdownSection(
     )
 
     data.forEachIndexed { idx, item ->
-        val displayName = if (item.name.startsWith("(")) otherLabel else item.name
+        val displayName = if (item.name.startsWith("(")) otherLabel else stripTitles(item.name)
         val barColor = primaryColors.getOrNull(idx) ?: MaterialTheme.colorScheme.primary
 
         Row(
@@ -511,7 +528,8 @@ private fun TrainerBreakdownSection(
 @Composable
 private fun ScoreCard(
     score: ScoreboardEntry,
-    strings: com.tkolymp.shared.language.StatsStrings
+    strings: com.tkolymp.shared.language.StatsStrings,
+    onOpenLeaderboard: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -519,12 +537,17 @@ private fun ScoreCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                strings.myScore,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSecondaryContainer
-            )
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    strings.myScore,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                TextButton(onClick = onOpenLeaderboard) {
+                    Text(AppStrings.current.otherScreen.leaderboard, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                }
+            }
 
             val totalText = score.totalScore?.let {
                 if (it % 1.0 == 0.0) it.toInt().toString() else String.format("%.1f", it)
@@ -571,5 +594,26 @@ private fun ScoreCard(
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+private fun stripTitles(name: String): String {
+    val cleaned = name.trim()
+    if (cleaned.isEmpty() || cleaned.startsWith("(")) return cleaned
+
+    val titleTokens = setOf(
+        "Bc", "Bc.", "Mgr", "Mgr.", "Ing", "Ing.", "PhDr", "PhDr.", "RNDr", "RNDr.",
+        "JUDr", "JUDr.", "PhD", "PhD.", "Dr", "Dr.", "Prof", "Prof.", "doc", "doc.",
+        "MBA", "MVDr", "MVDr.", "MD", "MD."
+    )
+
+    val parts = cleaned.split(Regex("\\s+"))
+    var start = 0
+    var end = parts.size
+
+    while (start < end && titleTokens.contains(parts[start].trimEnd(','))) start++
+    while (end - 1 >= start && titleTokens.contains(parts[end - 1].trimEnd(','))) end--
+
+    val core = parts.subList(start, end).joinToString(" ")
+    return if (core.isBlank()) cleaned else core
+}
 
 private fun Double.roundTo1dp(): Double = (this * 10.0).roundToInt() / 10.0
