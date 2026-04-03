@@ -1,7 +1,6 @@
 package com.tkolymp.tkolympapp.screens
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.shared.utils.formatTimes
-import com.tkolymp.shared.utils.formatTimesWithDate
 import com.tkolymp.shared.utils.formatTimesWithDateAlways
 import com.tkolymp.shared.utils.durationMinutes
 import com.tkolymp.shared.utils.translateEventType
@@ -59,7 +58,6 @@ import com.tkolymp.shared.utils.asJsonObjectOrNull
 import com.tkolymp.shared.utils.asJsonArrayOrNull
 import com.tkolymp.shared.utils.str
 import com.tkolymp.shared.utils.int
-import com.tkolymp.shared.utils.bool
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -101,79 +99,39 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                     Text(AppStrings.current.events.noEventToShow, modifier = Modifier.padding(16.dp))
                 }
                 } else {
-                // compute event-derived values only when `ev` is non-null
-                val type = ev.str("type") ?: ""
-                val trainers = ev["eventTrainersList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
-                val name = when {
-                    !ev.str("name").isNullOrBlank() -> ev.str("name")!!
-                    type.equals("lesson", ignoreCase = true) -> {
-                        trainers.firstOrNull()?.asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() } ?: AppStrings.current.dialogs.noName
-                    }
-                    else -> AppStrings.current.dialogs.noName
-                }
-                val descr = ev.str("description") ?: ""
-                val summary = ev.str("summary") ?: ""
-                val locationName = ev["location"].asJsonObjectOrNull()?.str("name") ?: ev.str("locationText")
-                
-                val isVisible = ev.bool("isVisible") ?: false
-                val isPublic = ev.bool("isPublic") ?: false
-                val isLocked = ev.bool("isLocked") ?: false
-                val enableNotes = ev.bool("enableNotes") ?: false
-                val capacity = ev.int("capacity")
-                val remainingPersonSpots = ev.int("remainingPersonSpots")
-                val remainingLessons = ev.int("remainingLessons")
-
-                val instances = ev["eventInstancesList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
-                val firstInstance = instances.firstOrNull().asJsonObjectOrNull()
-                val lastInstance = instances.lastOrNull().asJsonObjectOrNull()
-                val firstDate = firstInstance?.str("since")
-                val lastDate = lastInstance?.str("until")
-
-                val cohorts = ev["eventTargetCohortsList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
-                val registrations = ev["eventRegistrationsList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
-                val externalRegistrations = ev["eventExternalRegistrationsList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
-
                 Column(modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
                     .padding(12.dp)
                 ) {
-            Text(name, style = MaterialTheme.typography.titleLarge)
+            Text(state.eventName, style = MaterialTheme.typography.titleLarge)
             Spacer(modifier = Modifier.height(8.dp))
 
             // Typ a základní info
         Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(12.dp)) {
-                val displayType = translateEventType(type)
+                val displayType = translateEventType(state.eventType)
                 if (!displayType.isNullOrBlank()) {
                     Text("${AppStrings.current.events.eventType}: $displayType", style = MaterialTheme.typography.bodyMedium)
                     Spacer(modifier = Modifier.height(4.dp))
                 }
-                if (!locationName.isNullOrBlank()) {
-                    Text("${AppStrings.current.events.place}: $locationName", style = MaterialTheme.typography.bodyMedium)
+                if (!state.locationName.isNullOrBlank()) {
+                    Text("${AppStrings.current.events.place}: ${state.locationName}", style = MaterialTheme.typography.bodyMedium)
                     Spacer(modifier = Modifier.height(4.dp))
                 }
-                if (firstDate != null || lastDate != null) {
-                    val dateText = when {
-                        firstDate != null && lastDate != null && firstDate != lastDate -> 
-                            "${AppStrings.current.events.term}: ${formatTimesWithDateAlways(firstDate, null)} - ${formatTimesWithDateAlways(lastDate, null)}"
-                        firstDate != null -> "${AppStrings.current.events.term}: ${formatTimesWithDateAlways(firstDate, lastDate)}"
-                        else -> ""
-                    }
-                    if (dateText.isNotBlank()) {
-                        Text(dateText, style = MaterialTheme.typography.bodyMedium)
-                        Spacer(modifier = Modifier.height(4.dp))
-                    }
+                if (state.eventDateText.isNotBlank()) {
+                    Text(state.eventDateText, style = MaterialTheme.typography.bodyMedium)
+                    Spacer(modifier = Modifier.height(4.dp))
                 }
-                if (instances.isNotEmpty()) {
-                    Text("${AppStrings.current.events.dateCount}: ${instances.size}", style = MaterialTheme.typography.bodySmall)
+                if (state.instances.isNotEmpty()) {
+                    Text("${AppStrings.current.events.dateCount}: ${state.instances.size}", style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
 
         // Seznam termínů
         // Show the instances card only when there is more than one instance
-        if (instances.size > 1) {
+        if (state.instances.size > 1) {
             Spacer(modifier = Modifier.height(8.dp))
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -183,10 +141,10 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                     Text(AppStrings.current.events.eventDates, style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(6.dp))
                     
-                    val instancesToShow = if (showAllInstances.value || instances.size <= 3) {
-                        instances
+                    val instancesToShow = if (showAllInstances.value || state.instances.size <= 3) {
+                        state.instances
                     } else {
-                        instances.take(3)
+                        state.instances.take(3)
                     }
                     
                     instancesToShow.forEachIndexed { index, instanceEl ->
@@ -208,12 +166,12 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                         }
                     }
                     
-                    if (instances.size > 3 && !showAllInstances.value) {
+                    if (state.instances.size > 3 && !showAllInstances.value) {
                         Spacer(modifier = Modifier.height(8.dp))
                         TextButton(onClick = { showAllInstances.value = true }) {
-                            Text("${AppStrings.current.commonActions.showAll.replace("vše", "všech")} ${instances.size} ${AppStrings.current.events.eventDates.lowercase()}")
+                            Text("${AppStrings.current.commonActions.showAll.replace("vše", "všech")} ${state.instances.size} ${AppStrings.current.events.eventDates.lowercase()}")
                         }
-                    } else if (instances.size > 3 && showAllInstances.value) {
+                    } else if (state.instances.size > 3 && showAllInstances.value) {
                         Spacer(modifier = Modifier.height(8.dp))
                         TextButton(onClick = { showAllInstances.value = false }) {
                             Text(AppStrings.current.commonActions.showLess)
@@ -232,31 +190,27 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
             Column(modifier = Modifier.padding(12.dp)) {
                 Text(AppStrings.current.events.aboutEvent, style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(6.dp))
-                Text("${AppStrings.current.events.isVisible}: ${if (isVisible) AppStrings.current.commonActions.yes else AppStrings.current.commonActions.no}", style = MaterialTheme.typography.bodySmall)
-                Text("${AppStrings.current.events.isPublic}: ${if (isPublic) AppStrings.current.commonActions.yes else AppStrings.current.commonActions.no}", style = MaterialTheme.typography.bodySmall)
-                Text("${AppStrings.current.registration.registration}: ${if (isLocked) AppStrings.current.events.registrationClosed else AppStrings.current.events.registrationOpen}", style = MaterialTheme.typography.bodySmall)
-                Text("${AppStrings.current.events.notesAllowed}: ${if (enableNotes) AppStrings.current.commonActions.yes else AppStrings.current.commonActions.no}", style = MaterialTheme.typography.bodySmall)
-                val trainerCount = trainers.size
-                val registerButtonVisible = state.registerButtonVisible
-                val registrationActionsRowVisible = state.registrationActionsRowVisible
-                val editRegistrationButtonVisible = state.editRegistrationButtonVisible
-                val deleteFullWidth = trainerCount == 1
+                Text("${AppStrings.current.events.isVisible}: ${if (state.isVisible) AppStrings.current.commonActions.yes else AppStrings.current.commonActions.no}", style = MaterialTheme.typography.bodySmall)
+                Text("${AppStrings.current.events.isPublic}: ${if (state.isPublic) AppStrings.current.commonActions.yes else AppStrings.current.commonActions.no}", style = MaterialTheme.typography.bodySmall)
+                Text("${AppStrings.current.registration.registration}: ${if (state.isLocked) AppStrings.current.events.registrationClosed else AppStrings.current.events.registrationOpen}", style = MaterialTheme.typography.bodySmall)
+                Text("${AppStrings.current.events.notesAllowed}: ${if (state.enableNotes) AppStrings.current.commonActions.yes else AppStrings.current.commonActions.no}", style = MaterialTheme.typography.bodySmall)
+                val deleteFullWidth = state.trainers.size == 1
 
                 // --- Render buttons stacked under the event info ---
-                if (registerButtonVisible || registrationActionsRowVisible) {
+                if (state.registerButtonVisible || state.registrationActionsRowVisible) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Column(modifier = Modifier.fillMaxWidth()) {
-                        if (registerButtonVisible) {
+                        if (state.registerButtonVisible) {
                             Button(onClick = { onOpenRegistration?.invoke("register", null) }, modifier = Modifier.fillMaxWidth()) {
                                 Text(AppStrings.current.registration.register)
                             }
                             Spacer(modifier = Modifier.height(6.dp))
                         }
 
-                        if (registrationActionsRowVisible) {
+                        if (state.registrationActionsRowVisible) {
                             // If edit actions and the "Zapsat dalšího" action are visible,
                             // render all three on a single row: wide text button + two tonal icon buttons.
-                            if (editRegistrationButtonVisible) {
+                            if (state.editRegistrationButtonVisible) {
                                 Box(modifier = Modifier.fillMaxWidth()) {
                                     Button(
                                         onClick = { onOpenRegistration?.invoke("register", null) },
@@ -276,7 +230,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                                 Spacer(modifier = Modifier.height(6.dp))
                             } else {
                                 // Fallback: show edit as full-width if applicable
-                                if (editRegistrationButtonVisible) {
+                                if (state.editRegistrationButtonVisible) {
                                     Button(onClick = { onOpenRegistration?.invoke("edit", null) }, modifier = Modifier.fillMaxWidth()) {
                                         Text(AppStrings.current.registration.editRegistration)
                                     }
@@ -300,7 +254,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
         
 
         // Popis a shrnutí
-        if (summary.isNotBlank() || descr.isNotBlank()) {
+        if (state.summary.isNotBlank() || state.eventDescription.isNotBlank()) {
             Spacer(modifier = Modifier.height(8.dp))
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -309,18 +263,18 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                 SelectionContainer {
                     Column(modifier = Modifier.padding(12.dp)) {
                         val headerText = when {
-                            summary.isNotBlank() && descr.isNotBlank() -> "Shrnutí a popis"
-                            summary.isNotBlank() -> "Shrnutí"
+                            state.summary.isNotBlank() && state.eventDescription.isNotBlank() -> "Shrnutí a popis"
+                            state.summary.isNotBlank() -> "Shrnutí"
                             else -> "Popis"
                         }
                         Text(headerText, style = MaterialTheme.typography.titleMedium)
                         Spacer(modifier = Modifier.height(6.dp))
-                        if (summary.isNotBlank()) {
-                            Text(formatHtmlContent(summary), style = MaterialTheme.typography.bodyMedium)
-                            if (descr.isNotBlank()) Spacer(modifier = Modifier.height(8.dp))
+                        if (state.summary.isNotBlank()) {
+                            Text(formatHtmlContent(state.summary), style = MaterialTheme.typography.bodyMedium)
+                            if (state.eventDescription.isNotBlank()) Spacer(modifier = Modifier.height(8.dp))
                         }
-                        if (descr.isNotBlank()) {
-                            Text(formatHtmlContent(descr), style = MaterialTheme.typography.bodySmall)
+                        if (state.eventDescription.isNotBlank()) {
+                            Text(formatHtmlContent(state.eventDescription), style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
@@ -328,7 +282,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
         }
 
         // Kapacita
-        if ((capacity != null && capacity > 0) || remainingLessons != null) {
+        if ((state.capacity != null && state.capacity > 0) || state.remainingLessons != null) {
             Spacer(modifier = Modifier.height(8.dp))
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -337,21 +291,21 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(AppStrings.current.events.capacity, style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(6.dp))
-                    val registeredCount = registrations.size + externalRegistrations.size
-                    if (capacity != null && capacity > 0) {
-                        Text("${AppStrings.current.events.registeredCount}: $registeredCount / $capacity ${AppStrings.current.events.capacity}", style = MaterialTheme.typography.bodySmall)
+                    val registeredCount = state.registrations.size + state.externalRegistrations.size
+                    if (state.capacity != null && state.capacity > 0) {
+                        Text("${AppStrings.current.events.registeredCount}: $registeredCount / ${state.capacity} ${AppStrings.current.events.capacity}", style = MaterialTheme.typography.bodySmall)
                     } else if (registeredCount > 0) {
                         Text("${AppStrings.current.events.registeredCount}: $registeredCount ${AppStrings.current.events.capacity}", style = MaterialTheme.typography.bodySmall)
                     }
-                    if (remainingLessons != null) {
-                        Text("${AppStrings.current.misc.remainingLessons}: $remainingLessons", style = MaterialTheme.typography.bodySmall)
+                    if (state.remainingLessons != null) {
+                        Text("${AppStrings.current.misc.remainingLessons}: ${state.remainingLessons}", style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
         }
 
         // Trenéři
-        if (trainers.isNotEmpty()) {
+        if (state.trainers.isNotEmpty()) {
             Spacer(modifier = Modifier.height(8.dp))
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -360,25 +314,13 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(AppStrings.current.profile.trainers, style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(6.dp))
-                    val trainerNames = trainers.mapNotNull { trainerEl ->
-                        val trainer = trainerEl.asJsonObjectOrNull() ?: return@mapNotNull null
-                        val trainerName = trainer.str("name") ?: "(bez jména)"
-                        val lessonsOffered = trainer.int("lessonsOffered")
-                        val lessonsRemaining = trainer.int("lessonsRemaining")
-                        when {
-                            lessonsOffered != null && lessonsRemaining != null -> 
-                                "$trainerName (nabízí: $lessonsOffered, zbývá: $lessonsRemaining)"
-                            lessonsOffered != null -> "$trainerName (nabízí: $lessonsOffered)"
-                            else -> trainerName
-                        }
-                    }.joinToString(", ")
-                    Text(trainerNames.ifBlank { "(žádní)" }, style = MaterialTheme.typography.bodySmall)
+                    Text(state.trainerDisplayNames.ifBlank { "(žádní)" }, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
 
         // Cílové kohorty
-        if (cohorts.isNotEmpty()) {
+        if (state.cohorts.isNotEmpty()) {
             Spacer(modifier = Modifier.height(8.dp))
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -387,13 +329,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(AppStrings.current.events.targetGroups, style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(6.dp))
-                    val cohortNames = cohorts.mapNotNull { cohortEl ->
-                        cohortEl.asJsonObjectOrNull()
-                            ?.get("cohort")
-                            ?.asJsonObjectOrNull()
-                            ?.str("name")
-                    }.joinToString(", ")
-                    Text(cohortNames.ifBlank { "(žádné)" }, style = MaterialTheme.typography.bodySmall)
+                    Text(state.cohortDisplayNames.ifBlank { "(žádné)" }, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -405,7 +341,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
-                val totalCount = registrations.size + externalRegistrations.size
+                val totalCount = state.registrations.size + state.externalRegistrations.size
                 Text("${AppStrings.current.registration.participants} ($totalCount)", style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(6.dp))
                 if (totalCount == 0) {
@@ -414,7 +350,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                     ))
                 } else {
                     // Běžné registrace
-                    registrations.forEach { regEl ->
+                    state.registrations.forEach { regEl ->
                         val reg = regEl.asJsonObjectOrNull() ?: return@forEach
                         val person = reg["person"].asJsonObjectOrNull()
                         val couple = reg["couple"].asJsonObjectOrNull()
@@ -460,7 +396,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                                 val lessonCount = demand.int("lessonCount")
                                 
                                 // Najít jméno trenéra podle trainerId
-                                val trainerName = trainers.firstOrNull { trainerEl ->
+                                val trainerName = state.trainers.firstOrNull { trainerEl ->
                                     val trainer = trainerEl.asJsonObjectOrNull() ?: return@firstOrNull false
                                     trainer.int("id") == trainerId
                                 }?.asJsonObjectOrNull()?.str("name") ?: "Trenér #$trainerId"
@@ -485,7 +421,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                     }
                     
                     // Externí registrace
-                    externalRegistrations.forEach { extRegEl ->
+                    state.externalRegistrations.forEach { extRegEl ->
                         val extReg = extRegEl.asJsonObjectOrNull() ?: return@forEach
                         val firstName = extReg.str("firstName") ?: ""
                         val lastName = extReg.str("lastName") ?: ""

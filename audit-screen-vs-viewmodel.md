@@ -46,13 +46,13 @@ Co patří do VM nebo shared:
 |---|---|
 | Přímé volání `ServiceLocator.*` z UI | `RegistrationScreen` |
 | `LaunchedEffect` s data-fetching logikou v Composable místo VM | Všechny kritické obrazovky |
-| `remember {}` s business logikou místo `StateFlow` ve VM | `EventScreen`, `RegistrationScreen` |
+| `remember {}` s business logikou místo `StateFlow` ve VM | `EventScreen` ✅ Přesunuto (všechna data odvozovaná z JSON jsou nyní ve stavu VM) |
 | Domain typy / `data class` definované v screen souborech | `RegistrationScreen` (`RegMode`, `LessonInput`, `RegistrationInput`), `CalendarViewScreen` (`CoupleInfo`) |
-| Pure transformace dat (JSON parsování, field mapping) inline v Composable | `EventScreen`, `RegistrationScreen` |
+| Pure transformace dat (JSON parsování, field mapping) inline v Composable | `EventScreen` ✅ Přesunuto do `EventViewModel` (`eventName`, `eventType`, `eventDescription`, `summary`, `locationName`, `instances`, `trainers`, `cohorts`, `registrations`, `externalRegistrations`, `trainerDisplayNames`, `cohortDisplayNames`, `eventDateText`) |
 
 ---
 
 ## Doporučené pořadí refactoringu
 
-1. **`EventScreen`** — nejhorší ratio (11.6 : 1), `isPast` používá non-multiplatform API
+1. ~~**`EventScreen`** — nejhorší ratio (11.6 : 1), `isPast` používá non-multiplatform API~~ ✅ Přesunuto: JSON parsing, transformace dat (trainer/cohort jména, datum) do `EventViewModel`
 2. **`RegistrationScreen`** — domain typy mimo shared, opakované service volání 3× v UI

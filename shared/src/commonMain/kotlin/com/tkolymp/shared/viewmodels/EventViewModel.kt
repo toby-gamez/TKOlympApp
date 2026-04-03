@@ -14,13 +14,37 @@ import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlin.time.Duration.Companion.days
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.utils.asJsonObjectOrNull
 import com.tkolymp.shared.utils.asJsonArrayOrNull
 import com.tkolymp.shared.utils.str
+import com.tkolymp.shared.utils.int
 import com.tkolymp.shared.utils.bool
+import com.tkolymp.shared.utils.formatTimesWithDateAlways
 
 data class EventState(
     val eventJson: JsonObject? = null,
+    // Parsed display fields
+    val eventName: String = "",
+    val eventType: String = "",
+    val eventDescription: String = "",
+    val summary: String = "",
+    val locationName: String? = null,
+    val isVisible: Boolean = false,
+    val isPublic: Boolean = false,
+    val isLocked: Boolean = false,
+    val enableNotes: Boolean = false,
+    val capacity: Int? = null,
+    val remainingPersonSpots: Int? = null,
+    val remainingLessons: Int? = null,
+    val instances: JsonArray = JsonArray(emptyList()),
+    val trainers: JsonArray = JsonArray(emptyList()),
+    val cohorts: JsonArray = JsonArray(emptyList()),
+    val registrations: JsonArray = JsonArray(emptyList()),
+    val externalRegistrations: JsonArray = JsonArray(emptyList()),
+    val trainerDisplayNames: String = "",
+    val cohortDisplayNames: String = "",
+    val eventDateText: String = "",
     val myPersonId: String? = null,
     val myCoupleIds: List<String> = emptyList(),
     val isPast: Boolean = false,
@@ -80,8 +104,77 @@ class EventViewModel(
             val registrationActionsRowVisible = !isPast && userRegistered && isRegistrationOpen
             val editRegistrationButtonVisible = !type.equals("lesson", ignoreCase = true) && !type.equals("group", ignoreCase = true)
 
+            val trainers = ev?.get("eventTrainersList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
+            val cohorts = ev?.get("eventTargetCohortsList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
+            val externalRegistrations = ev?.get("eventExternalRegistrationsList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
+
+            val rawName = ev?.str("name")
+            val eventName = when {
+                !rawName.isNullOrBlank() -> rawName
+                type.equals("lesson", ignoreCase = true) ->
+                    trainers.firstOrNull()?.asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() }
+                        ?: AppStrings.current.dialogs.noName
+                else -> if (ev != null) AppStrings.current.dialogs.noName else ""
+            }
+            val eventDescription = ev?.str("description") ?: ""
+            val summary = ev?.str("summary") ?: ""
+            val locationName = ev?.get("location")?.asJsonObjectOrNull()?.str("name") ?: ev?.str("locationText")
+            val isVisible = ev?.bool("isVisible") ?: false
+            val isPublic = ev?.bool("isPublic") ?: false
+            val enableNotes = ev?.bool("enableNotes") ?: false
+            val capacity = ev?.int("capacity")
+            val remainingPersonSpots = ev?.int("remainingPersonSpots")
+            val remainingLessons = ev?.int("remainingLessons")
+
+            val trainerDisplayNames = trainers.mapNotNull { trainerEl ->
+                val trainer = trainerEl.asJsonObjectOrNull() ?: return@mapNotNull null
+                val trainerName = trainer.str("name") ?: AppStrings.current.dialogs.noName
+                val lessonsOffered = trainer.int("lessonsOffered")
+                val lessonsRemaining = trainer.int("lessonsRemaining")
+                when {
+                    lessonsOffered != null && lessonsRemaining != null ->
+                        "$trainerName (nabízí: $lessonsOffered, zbývá: $lessonsRemaining)"
+                    lessonsOffered != null -> "$trainerName (nabízí: $lessonsOffered)"
+                    else -> trainerName
+                }
+            }.joinToString(", ")
+
+            val cohortDisplayNames = cohorts.mapNotNull { cohortEl ->
+                cohortEl.asJsonObjectOrNull()
+                    ?.get("cohort")
+                    ?.asJsonObjectOrNull()
+                    ?.str("name")
+            }.joinToString(", ")
+
+            val eventDateText = when {
+                firstDate != null && lastDate != null && firstDate != lastDate ->
+                    "${AppStrings.current.events.term}: ${formatTimesWithDateAlways(firstDate, null)} - ${formatTimesWithDateAlways(lastDate, null)}"
+                firstDate != null -> "${AppStrings.current.events.term}: ${formatTimesWithDateAlways(firstDate, lastDate)}"
+                else -> ""
+            }
+
             _state.value = _state.value.copy(
                 eventJson = ev,
+                eventName = eventName,
+                eventType = type,
+                eventDescription = eventDescription,
+                summary = summary,
+                locationName = locationName,
+                isVisible = isVisible,
+                isPublic = isPublic,
+                isLocked = isLocked,
+                enableNotes = enableNotes,
+                capacity = capacity,
+                remainingPersonSpots = remainingPersonSpots,
+                remainingLessons = remainingLessons,
+                instances = instances,
+                trainers = trainers,
+                cohorts = cohorts,
+                registrations = registrations,
+                externalRegistrations = externalRegistrations,
+                trainerDisplayNames = trainerDisplayNames,
+                cohortDisplayNames = cohortDisplayNames,
+                eventDateText = eventDateText,
                 myPersonId = myPerson,
                 myCoupleIds = myCouples,
                 isPast = isPast,
