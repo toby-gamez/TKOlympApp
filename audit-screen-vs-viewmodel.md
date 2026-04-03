@@ -21,7 +21,7 @@ Co patří do VM nebo shared:
 - **`selectedRegistrant` initial value** ("preferuj sebe, pokud ještě není přihlášen") — selekční logika
 - ~~**Display name fetching**: `LaunchedEffect` volající `ServiceLocator.peopleService.fetchPersonDisplayName()` přímo z UI — Register mode~~ ✅ Odstraněno (ViewModel `loadNames` + sync LaunchedEffect postačuje)
 - ~~**Cache invalidation** na `ON_RESUME`: `ServiceLocator.cacheService.invalidatePrefix("person_")` — přímé volání service z obrazovky~~ ✅ Přesunuto do `RegistrationViewModel.invalidateAndRefresh()`
-- **`computeInitCountsFor(regId)`** — pure funkce parsující JSON demands
+- ~~**`computeInitCountsFor(regId)`** — pure funkce parsující JSON demands~~ ✅ Přesunuto do `shared/.../registration/RegistrationUtils.kt`
 - ~~**Display name fetching v Edit/Delete mode** — `LaunchedEffect` volající `ServiceLocator.peopleService` přímo z UI (2×)~~ ✅ Přesunuto do `RegistrationViewModel.loadNames()` (`registrationDisplayNames` v state)
 
 ---

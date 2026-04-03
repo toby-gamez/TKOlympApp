@@ -50,6 +50,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.RegistrationViewModel
+import com.tkolymp.shared.registration.computeInitCountsFor
 import com.tkolymp.shared.registration.filterOwnedRegistrations
 import com.tkolymp.shared.registration.RegMode
 import com.tkolymp.shared.registration.LessonInput
@@ -345,16 +346,6 @@ fun RegistrationScreen(
                             filterOwnedRegistrations(registrations, myPersonId, myCoupleIds)
                         }
 
-                        // helper to compute initial counts for a registration id
-                        fun computeInitCountsFor(regId: String): MutableList<Int> {
-                            val reg = ownedRegistrations.firstOrNull { (it as? JsonObject)?.get("id")?.jsonPrimitive?.contentOrNull == regId } as? JsonObject
-                            val demands = reg?.get("eventLessonDemandsByRegistrationIdList").asJsonArrayOrNull()
-                            return trainers.map { t ->
-                                val tId = (t as? JsonObject)?.get("id")?.jsonPrimitive?.intOrNull
-                                val found = demands?.firstOrNull { (it as? JsonObject)?.get("trainerId")?.jsonPrimitive?.intOrNull == tId } as? JsonObject
-                                found?.get("lessonCount")?.jsonPrimitive?.intOrNull ?: 0
-                            }.toMutableList()
-                        }
 
                         val countsByReg = remember {
                             val map = mutableStateMapOf<String, androidx.compose.runtime.snapshots.SnapshotStateList<Int>>()
@@ -363,7 +354,7 @@ fun RegistrationScreen(
                                 val r = rEl as? JsonObject
                                 val rid = r?.get("id")?.jsonPrimitive?.contentOrNull
                                 if (rid != null) {
-                                    val init = computeInitCountsFor(rid)
+                                    val init = computeInitCountsFor(ownedRegistrations, trainers, rid)
                                     val st = mutableStateListOf<Int>()
                                     init.forEach { st.add(it) }
                                     map[rid] = st
@@ -410,7 +401,7 @@ fun RegistrationScreen(
                             // ensure counts exist for this registration (needed even when hidden to send updates)
                             val sid = selectedId
                             val countsState = countsByReg.getOrPut(sid) {
-                                val init = computeInitCountsFor(sid)
+                                val init = computeInitCountsFor(ownedRegistrations, trainers, sid)
                                 val st = mutableStateListOf<Int>()
                                 init.forEach { st.add(it) }
                                 st

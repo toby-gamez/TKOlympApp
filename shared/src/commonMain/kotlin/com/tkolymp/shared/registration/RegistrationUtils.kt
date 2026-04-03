@@ -1,9 +1,11 @@
 package com.tkolymp.shared.registration
 
+import com.tkolymp.shared.utils.asJsonArrayOrNull
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
@@ -27,5 +29,24 @@ fun filterOwnedRegistrations(registrations: JsonArray?, myPersonId: String?, myC
                 return@forEach
             }
         }
+    }
+}
+
+/**
+ * For a given [regId], look up the lesson demands stored inside that registration and
+ * return a list of initial lesson counts aligned with [trainers].
+ * Each element in the result corresponds to the trainer at the same index in [trainers].
+ */
+fun computeInitCountsFor(ownedRegistrations: JsonArray, trainers: JsonArray, regId: String): List<Int> {
+    val reg = ownedRegistrations.firstOrNull {
+        (it as? JsonObject)?.get("id")?.jsonPrimitive?.contentOrNull == regId
+    } as? JsonObject
+    val demands = reg?.get("eventLessonDemandsByRegistrationIdList").asJsonArrayOrNull()
+    return trainers.map { t ->
+        val tId = (t as? JsonObject)?.get("id")?.jsonPrimitive?.intOrNull
+        val found = demands?.firstOrNull {
+            (it as? JsonObject)?.get("trainerId")?.jsonPrimitive?.intOrNull == tId
+        } as? JsonObject
+        found?.get("lessonCount")?.jsonPrimitive?.intOrNull ?: 0
     }
 }
