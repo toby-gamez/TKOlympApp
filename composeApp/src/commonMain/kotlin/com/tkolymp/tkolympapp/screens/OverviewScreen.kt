@@ -9,12 +9,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -34,9 +38,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.shared.people.Person
 import com.tkolymp.shared.utils.formatFullCalendarDate
 import com.tkolymp.shared.utils.formatHtmlContent
 import com.tkolymp.shared.viewmodels.OverviewViewModel
+import com.tkolymp.shared.viewmodels.PeopleViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
@@ -313,6 +319,60 @@ fun OverviewScreen(
                 .fillMaxWidth()
                 .padding(vertical = 2.dp), horizontalArrangement = Arrangement.Center) {
                 TextButton(onClick = onOpenEvents) { Text(if (campsEmpty) AppStrings.current.overview.browseOthers else AppStrings.current.overview.more) }
+            }
+
+            // Upcoming birthdays (reuse logic from PeopleScreen)
+            val peopleViewModel = viewModel<PeopleViewModel>()
+            val peopleState by peopleViewModel.state.collectAsState()
+            LaunchedEffect(Unit) {
+                peopleViewModel.loadPeople()
+            }
+
+            val allPeople = remember(peopleState.people) { peopleState.people.filterIsInstance<Person>() }
+            val upcomingBirthdays = remember(allPeople) {
+                allPeople
+                    .mapNotNull { p ->
+                        val raw = p.birthDate
+                        val days = daysUntilNextBirthday(raw)
+                        if (days == Int.MAX_VALUE) null else Pair(p, days)
+                    }
+                    .sortedBy { it.second }
+                    .take(3)
+            }
+
+            Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(AppStrings.current.profile.birthdays, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            }
+            Column(modifier = Modifier.padding(horizontal = 12.dp)) {
+                if (upcomingBirthdays.isEmpty()) {
+                    Text(AppStrings.current.timeline.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
+                } else {
+                    upcomingBirthdays.forEach { (person, days) ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                val base = listOf(person.prefixTitle, person.firstName, person.lastName).filterNotNull().filter { it.isNotBlank() }.joinToString(" ")
+                                val name = if (!person.suffixTitle.isNullOrBlank()) "$base, ${person.suffixTitle}" else base.ifBlank { person.id }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(name, style = MaterialTheme.typography.titleMedium)
+                                    person.birthDate?.let { raw ->
+                                        val formatted = formatDateString(raw)
+                                        Text(formatted ?: raw, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                }
+                                if (days == 0) {
+                                    Icon(imageVector = Icons.Filled.Cake, contentDescription = "Dnes mají narozeniny", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                                } else {
+                                    Text("${days}d", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(start = 8.dp))
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             if (state.isLoading) {
