@@ -11,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
@@ -80,6 +81,25 @@ data class TypeStat(
 
 data class TrainerStat(val name: String, val count: Int, val minutes: Long)
 
+/** Summary stats for one season used in cross-season comparison. */
+data class SeasonSummary(
+    val season: SeasonSelection,
+    val totalSessions: Int,
+    val totalMinutes: Long,
+    val avgSessionsPerWeek: Double
+)
+
+/** Full breakdown for one season used in the side-by-side detail comparison. */
+data class SeasonDetailStats(
+    val season: SeasonSelection,
+    val totalSessions: Int,
+    val totalMinutes: Long,
+    val avgSessionsPerWeek: Double,
+    val monthlyData: List<MonthStats>,
+    val typeData: List<TypeStat>,
+    val trainerData: List<TrainerStat>
+)
+
 data class StatsState(
     val totalSessions: Int = 0,
     val totalMinutes: Long = 0L,
@@ -93,6 +113,12 @@ data class StatsState(
     val trainerData: List<TrainerStat> = emptyList(),
     val scoreEntry: ScoreboardEntry? = null,
     val selectedSeason: SeasonSelection = SeasonSelection.default(),
+    val comparisonData: List<SeasonSummary> = emptyList(),
+    val isLoadingComparison: Boolean = false,
+    /** Up to 5 comparison slots (A–E). Indexed 0–4. */
+    val compareSeasons: List<SeasonSelection?> = List(5) { null },
+    val compareData: List<SeasonDetailStats?> = List(5) { null },
+    val isLoadingCompare: List<Boolean> = List(5) { false },
     override val isLoading: Boolean = false,
     override val error: String? = null
 ) : ViewModelState
@@ -199,6 +225,96 @@ class StatsViewModel(
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /** Fetches summary stats for the last [count] seasons for cross-season comparison. */
+    suspend fun loadComparison(count: Int = 5) {
+        if (_state.value.isLoadingComparison) return
+        _state.value = _state.value.copy(isLoadingComparison = true)
+        try {
+            val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
+            val seasons = SeasonSelection.recent(count, today)
+            val summaries = seasons.map { season ->
+                val startIso = season.start.toString() + "T00:00:00Z"
+                val endIso = season.end.toString() + "T23:59:59Z"
+                val instances = try {
+                    withContext(Dispatchers.Default) {
+                        eventService.fetchEventsGroupedByDay(
+                            startRangeIso = startIso,
+                            endRangeIso = endIso,
+                            onlyMine = true,
+                            first = 500,
+                            cacheNamespace = "stats_"
+                        ).values.flatten()
+                    }.filter { !it.isCancelled }
+                } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
+
+                val totalSessions = instances.size
+                val totalMinutes = instances.sumOf { durationMin(it.since, it.until) }
+                val capDate = if (today <= season.end) today else season.end
+                val elapsedWeeks = maxOf(1L, (capDate.toEpochDays() - season.start.toEpochDays()) / 7L)
+                val avgPerWeek = totalSessions.toDouble() / elapsedWeeks
+                SeasonSummary(season, totalSessions, totalMinutes, avgPerWeek)
+            }
+            // Auto-assign slots A (0) and B (1) to the two most recent seasons
+            val newSeasons = _state.value.compareSeasons.toMutableList()
+            if (newSeasons[0] == null) newSeasons[0] = summaries.getOrNull(0)?.season
+            if (newSeasons[1] == null) newSeasons[1] = summaries.getOrNull(1)?.season
+            _state.value = _state.value.copy(
+                comparisonData = summaries,
+                isLoadingComparison = false,
+                compareSeasons = newSeasons
+            )
+            // Auto-load detail for pre-filled slots in parallel
+            kotlinx.coroutines.coroutineScope {
+                newSeasons.forEachIndexed { idx, season ->
+                    if (season != null && _state.value.compareData[idx] == null) {
+                        launch { loadSeasonDetail(season, idx) }
+                    }
+                }
+            }
+        } catch (e: CancellationException) { throw e } catch (ex: Exception) {
+            _state.value = _state.value.copy(isLoadingComparison = false)
+        }
+    }
+
+    /** Loads full season detail (monthly/type/trainer breakdown) for slot [slotIndex] (0=A … 4=E). */
+    suspend fun loadSeasonDetail(season: SeasonSelection, slotIndex: Int) {
+        val newSeasons = _state.value.compareSeasons.toMutableList().also { it[slotIndex] = season }
+        val newLoading = _state.value.isLoadingCompare.toMutableList().also { it[slotIndex] = true }
+        _state.value = _state.value.copy(compareSeasons = newSeasons, isLoadingCompare = newLoading)
+        try {
+            val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
+            val startIso = season.start.toString() + "T00:00:00Z"
+            val endIso = season.end.toString() + "T23:59:59Z"
+            val instances = try {
+                withContext(Dispatchers.Default) {
+                    eventService.fetchEventsGroupedByDay(
+                        startRangeIso = startIso,
+                        endRangeIso = endIso,
+                        onlyMine = true,
+                        first = 500,
+                        cacheNamespace = "stats_"
+                    ).values.flatten()
+                }.filter { !it.isCancelled }
+            } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
+
+            val totalSessions = instances.size
+            val totalMinutes = instances.sumOf { durationMin(it.since, it.until) }
+            val capDate = if (today <= season.end) today else season.end
+            val elapsedWeeks = maxOf(1L, (capDate.toEpochDays() - season.start.toEpochDays()) / 7L)
+            val avgPerWeek = totalSessions.toDouble() / elapsedWeeks
+            val monthlyData = buildMonthlyData(instances, season.start, season.end)
+            val typeData = buildTypeData(instances)
+            val trainerData = buildTrainerData(instances)
+            val detail = SeasonDetailStats(season, totalSessions, totalMinutes, avgPerWeek, monthlyData, typeData, trainerData)
+            val newData = _state.value.compareData.toMutableList().also { it[slotIndex] = detail }
+            val doneLoading = _state.value.isLoadingCompare.toMutableList().also { it[slotIndex] = false }
+            _state.value = _state.value.copy(compareData = newData, isLoadingCompare = doneLoading)
+        } catch (e: CancellationException) { throw e } catch (ex: Exception) {
+            val doneLoading = _state.value.isLoadingCompare.toMutableList().also { it[slotIndex] = false }
+            _state.value = _state.value.copy(isLoadingCompare = doneLoading)
+        }
+    }
 
     // seasonBounds removed — SeasonSelection contains start/end directly
 
@@ -388,5 +504,12 @@ class StatsViewModel(
         return try {
             com.tkolymp.shared.utils.translateEventType(type) ?: type
         } catch (_: Exception) { type }
+    }
+
+    /** Clears a comparison slot (0=A … 4=E). */
+    fun clearCompare(slotIndex: Int) {
+        val newSeasons = _state.value.compareSeasons.toMutableList().also { it[slotIndex] = null }
+        val newData = _state.value.compareData.toMutableList().also { it[slotIndex] = null }
+        _state.value = _state.value.copy(compareSeasons = newSeasons, compareData = newData)
     }
 }

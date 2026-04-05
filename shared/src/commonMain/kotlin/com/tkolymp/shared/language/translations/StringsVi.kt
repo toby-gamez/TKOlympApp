@@ -410,5 +410,9 @@ val StringsVi = Strings(
         sumLabel = "Tổng",
         weeks = "tuần",
         noScoreData = "Điểm không khả dụng",
+        seasonComparison = "So sánh mùa giải",
+        seasonColumn = "Mùa giải",
+        seasonALabel = "Mùa giải A",
+        seasonBLabel = "Mùa giải B",
     ),
 )

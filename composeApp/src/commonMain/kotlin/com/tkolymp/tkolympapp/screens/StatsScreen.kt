@@ -54,13 +54,18 @@ import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.people.ScoreboardEntry
 import com.tkolymp.shared.utils.getLocalizedMonthNameNominative
 import com.tkolymp.shared.viewmodels.MonthStats
+import com.tkolymp.shared.viewmodels.SeasonDetailStats
 import com.tkolymp.shared.viewmodels.SeasonSelection
+import com.tkolymp.shared.viewmodels.SeasonSummary
 import com.tkolymp.shared.viewmodels.StatsViewModel
 import com.tkolymp.shared.viewmodels.TrainerStat
 import com.tkolymp.shared.viewmodels.TypeStat
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.BarChart
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.filled.CompareArrows
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.LocalContentColor
 import com.tkolymp.shared.utils.roundTo1dp
 import com.tkolymp.shared.utils.stripTitles
 
@@ -75,28 +80,48 @@ fun StatsScreen(
     val state by viewModel.state.collectAsState()
     val scope = rememberCoroutineScope()
     val strings = AppStrings.current.stats
+    var compareMode by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.loadStats(SeasonSelection.default())
     }
 
+    LaunchedEffect(compareMode) {
+        if (compareMode && state.comparisonData.isEmpty() && !state.isLoadingComparison) {
+            viewModel.loadComparison()
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(strings.statsTitle) },
+                title = { Text(if (compareMode) strings.seasonComparison else strings.statsTitle) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { if (compareMode) compareMode = false else onBack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { compareMode = !compareMode }) {
+                        Icon(
+                            Icons.Default.CompareArrows,
+                            contentDescription = strings.seasonComparison,
+                            tint = if (compareMode) MaterialTheme.colorScheme.primary else LocalContentColor.current
+                        )
                     }
                 }
             )
         }
     ) { padding ->
         SwipeToReload(
-            isRefreshing = state.isLoading,
-            onRefresh = { scope.launch { viewModel.loadStats(state.selectedSeason, forceRefresh = true) } },
+            isRefreshing = if (compareMode) state.isLoadingComparison else state.isLoading,
+            onRefresh = { scope.launch { if (compareMode) viewModel.loadComparison() else viewModel.loadStats(state.selectedSeason, forceRefresh = true) } },
             modifier = Modifier.padding(top = padding.calculateTopPadding(), bottom = bottomPadding)
         ) {
+            if (compareMode) {
+                CompareScreenContent(viewModel = viewModel, strings = strings)
+                return@SwipeToReload
+            }
             if (state.isLoading && state.totalSessions == 0) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
@@ -524,7 +549,373 @@ private fun TrainerBreakdownSection(
     }
 }
 
-// ─── Score card ───────────────────────────────────────────────────────────────
+// ─── Compare mode screen content ─────────────────────────────────────────────
+
+@Composable
+private fun CompareScreenContent(
+    viewModel: StatsViewModel,
+    strings: com.tkolymp.shared.language.StatsStrings,
+    modifier: Modifier = Modifier
+) {
+    val state by viewModel.state.collectAsState()
+    val scope = rememberCoroutineScope()
+    val slotLetters = listOf("A", "B", "C", "D", "E")
+
+    if (state.isLoadingComparison && state.comparisonData.isEmpty()) {
+        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        if (state.comparisonData.isEmpty()) return@Column
+
+        // ── Season picker chips (bare, no card) ───────────────────────────────
+        CompareSeasonPicker(
+            seasons = state.comparisonData.map { it.season },
+            selectedSlots = state.compareSeasons,
+            currentLabel = strings.currentSeason,
+            lastLabel = strings.lastSeason,
+            onToggle = { season ->
+                val slotIdx = state.compareSeasons.indexOf(season)
+                if (slotIdx >= 0) {
+                    viewModel.clearCompare(slotIdx)
+                } else {
+                    val emptySlot = state.compareSeasons.indexOfFirst { it == null }
+                    if (emptySlot >= 0) scope.launch { viewModel.loadSeasonDetail(season, emptySlot) }
+                }
+            }
+        )
+
+        // ── Bar chart overview (sessions per season, labeled A/B/etc if selected) ──
+        StatsCard(title = strings.totalSessions) {
+            val barData = state.comparisonData.map { summary ->
+                val slotIdx = state.compareSeasons.indexOf(summary.season)
+                val label = if (slotIdx >= 0) slotLetters[slotIdx] else summary.season.label
+                Pair(label, summary.totalSessions)
+            }
+            val highlightIdx = state.comparisonData.indexOfFirst { it.season == SeasonSelection.current() }
+            BarChart(
+                data = barData,
+                modifier = Modifier.fillMaxWidth().height(110.dp).padding(top = 8.dp),
+                highlightIndex = highlightIdx,
+                barColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f),
+                highlightColor = MaterialTheme.colorScheme.primary,
+                dimColor = MaterialTheme.colorScheme.primaryContainer,
+                labelEvery = 1,
+                showLabels = true
+            )
+        }
+
+        // ── Side-by-side detail ───────────────────────────────────────────────
+        if (state.isLoadingCompare.any { it }) {
+            Box(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else {
+            // Collect active slots (season set + data loaded), preserving order A→E
+            val activeSlots = state.compareSeasons.indices
+                .filter { state.compareSeasons[it] != null && state.compareData[it] != null }
+            if (activeSlots.size >= 2) {
+                CompareDetailContent(
+                    slots = activeSlots.map { idx -> Pair(slotLetters[idx], state.compareData[idx]!!) },
+                    strings = strings
+                )
+            }
+        }
+
+        Spacer(Modifier.height(24.dp))
+    }
+}
+
+// ─── Up-to-5-slot season picker (A–E) ────────────────────────────────────────
+
+@Composable
+private fun CompareSeasonPicker(
+    seasons: List<SeasonSelection>,
+    selectedSlots: List<SeasonSelection?>,   // size 5, index = slot (A=0…E=4)
+    currentLabel: String,
+    lastLabel: String,
+    onToggle: (SeasonSelection) -> Unit
+) {
+    val slotLetters = listOf("A", "B", "C", "D", "E")
+    // Material3 container/on-container colors for each slot
+    val containerColors = @Composable {
+        listOf(
+            MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer,
+            MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer,
+            MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.onTertiaryContainer,
+            MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer,
+            MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+    val colors = containerColors()
+
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
+    ) {
+        seasons.forEachIndexed { idx, season ->
+            val slotIdx = selectedSlots.indexOf(season)  // -1 if not selected
+            val isSelected = slotIdx >= 0
+            val baseLabel = when (idx) {
+                0 -> currentLabel
+                1 -> lastLabel
+                else -> season.label
+            }
+            val chipLabel = if (isSelected) "${slotLetters[slotIdx]} · $baseLabel" else baseLabel
+            val (container, onContainer) = if (isSelected) colors[slotIdx] else (
+                MaterialTheme.colorScheme.surface to MaterialTheme.colorScheme.onSurface
+            )
+            FilterChip(
+                selected = isSelected,
+                onClick = { onToggle(season) },
+                label = { Text(chipLabel) },
+                colors = if (isSelected) FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = container,
+                    selectedLabelColor = onContainer
+                ) else FilterChipDefaults.filterChipColors()
+            )
+        }
+    }
+}
+
+// ─── Side-by-side detail card ─────────────────────────────────────────────────
+
+/**
+ * [slots] — ordered list of (letter, data) for each active slot, e.g. [("A", …), ("B", …), ("C", …)].
+ * Labels in bars are just the short letter ("A", "B"…) for compactness.
+ */
+@Composable
+private fun CompareDetailContent(
+    slots: List<Pair<String, SeasonDetailStats>>,
+    strings: com.tkolymp.shared.language.StatsStrings
+) {
+    if (slots.isEmpty()) return
+    val isDark = isSystemInDarkTheme()
+
+    // ── Summary stat cards ────────────────────────────────────────────────────
+    StatsCard(title = strings.seasonComparison) {
+        Spacer(Modifier.height(4.dp))
+        // Season header chips
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            slots.forEachIndexed { i, (letter, data) ->
+                Box(
+                    modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp))
+                        .background(slotContainerColor(i)).padding(vertical = 6.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "$letter · ${data.season.label}",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = slotOnContainerColor(i),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        // Summary metrics as multi-bars
+        CompareMultiBars(
+            label = strings.totalSessions,
+            values = slots.map { (_, d) -> d.totalSessions.toDouble() },
+            formatValue = { it.toInt().toString() },
+            letters = slots.map { it.first },
+            isDark = isDark
+        )
+        CompareMultiBars(
+            label = strings.totalHours,
+            values = slots.map { (_, d) -> d.totalMinutes.toDouble() },
+            formatValue = { "${(it / 60.0).roundTo1dp()} ${strings.hoursUnit}" },
+            letters = slots.map { it.first },
+            isDark = isDark
+        )
+        CompareMultiBars(
+            label = strings.avgPerWeek,
+            values = slots.map { (_, d) -> d.avgSessionsPerWeek },
+            formatValue = { "${it.roundTo1dp()} ${strings.sessionsUnit}" },
+            letters = slots.map { it.first },
+            isDark = isDark
+        )
+    }
+
+    // ── Monthly breakdown ─────────────────────────────────────────────────────
+    val hasMonthly = slots.any { (_, d) -> d.monthlyData.isNotEmpty() }
+    if (hasMonthly) {
+        val monthOrder = listOf(9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8)
+        val monthMaps = slots.map { (_, d) -> d.monthlyData.associateBy { it.yearMonth.takeLast(2).toIntOrNull() ?: 0 } }
+        val allMonths = monthMaps.flatMap { it.keys }.toSortedSet(
+            compareBy { monthOrder.indexOf(it).let { i -> if (i < 0) 99 else i } }
+        )
+        val maxCount = allMonths.maxOf { m -> monthMaps.maxOf { map -> map[m]?.count ?: 0 } }.coerceAtLeast(1)
+
+        StatsCard(title = strings.monthlyBreakdown) {
+            allMonths.forEach { monthNum ->
+                val counts = monthMaps.map { it[monthNum]?.count ?: 0 }
+                if (counts.all { it == 0 }) return@forEach
+                val monthName = com.tkolymp.shared.utils.getLocalizedMonthNameNominative(monthNum, AppStrings.currentLanguage.code)
+                Column(modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp)) {
+                    Text(monthName, style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(Modifier.height(2.dp))
+                    CompareMultiBars(
+                        values = counts.map { it.toDouble() },
+                        maxValue = maxCount.toDouble(),
+                        letters = slots.map { it.first },
+                        isDark = isDark
+                    )
+                }
+            }
+        }
+    }
+
+    // ── Type breakdown ────────────────────────────────────────────────────────
+    val allTypes = slots.flatMap { (_, d) -> d.typeData.map { it.type } }.distinct()
+    if (allTypes.isNotEmpty()) {
+        val typeMaps = slots.map { (_, d) -> d.typeData.associateBy { it.type } }
+        val maxType = allTypes.maxOf { t -> typeMaps.maxOf { m -> m[t]?.count ?: 0 } }.coerceAtLeast(1)
+        StatsCard(title = strings.typeBreakdown) {
+            allTypes.sortedByDescending { t -> typeMaps.sumOf { m -> m[t]?.count ?: 0 } }.forEach { type ->
+                val entries = typeMaps.map { it[type] }
+                val displayName = entries.firstNotNullOfOrNull { it }!!.displayName.replaceFirstChar { it.uppercase() }
+                Column(modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp)) {
+                    Text(displayName, style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                    Spacer(Modifier.height(2.dp))
+                    CompareMultiBars(
+                        values = entries.map { (it?.count ?: 0).toDouble() },
+                        maxValue = maxType.toDouble(),
+                        letters = slots.map { it.first },
+                        isDark = isDark
+                    )
+                }
+            }
+        }
+    }
+
+    // ── Trainer breakdown ─────────────────────────────────────────────────────
+    val allTrainers = slots.flatMap { (_, d) -> d.trainerData.map { it.name } }.distinct()
+    if (allTrainers.isNotEmpty()) {
+        val trainerMaps = slots.map { (_, d) -> d.trainerData.associateBy { it.name } }
+        val maxTrainer = allTrainers.maxOf { n -> trainerMaps.maxOf { m -> m[n]?.count ?: 0 } }.coerceAtLeast(1)
+        StatsCard(title = strings.trainerBreakdown) {
+            allTrainers.sortedByDescending { n -> trainerMaps.sumOf { m -> m[n]?.count ?: 0 } }.forEach { name ->
+                val entries = trainerMaps.map { it[name] }
+                val displayName = if (name.startsWith("(")) strings.otherTrainers else stripTitles(name)
+                Column(modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp)) {
+                    Text(displayName, style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                    Spacer(Modifier.height(2.dp))
+                    CompareMultiBars(
+                        values = entries.map { (it?.count ?: 0).toDouble() },
+                        maxValue = maxTrainer.toDouble(),
+                        letters = slots.map { it.first },
+                        isDark = isDark
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ─── Slot color helpers ───────────────────────────────────────────────────────
+
+@Composable
+private fun slotColor(slotIndex: Int): Color = when (slotIndex) {
+    0 -> MaterialTheme.colorScheme.primary
+    1 -> MaterialTheme.colorScheme.secondary
+    2 -> MaterialTheme.colorScheme.tertiary
+    3 -> MaterialTheme.colorScheme.error
+    else -> MaterialTheme.colorScheme.outline
+}
+
+@Composable
+private fun slotContainerColor(slotIndex: Int): Color = when (slotIndex) {
+    0 -> MaterialTheme.colorScheme.primaryContainer
+    1 -> MaterialTheme.colorScheme.secondaryContainer
+    2 -> MaterialTheme.colorScheme.tertiaryContainer
+    3 -> MaterialTheme.colorScheme.errorContainer
+    else -> MaterialTheme.colorScheme.surfaceVariant
+}
+
+@Composable
+private fun slotOnContainerColor(slotIndex: Int): Color = when (slotIndex) {
+    0 -> MaterialTheme.colorScheme.onPrimaryContainer
+    1 -> MaterialTheme.colorScheme.onSecondaryContainer
+    2 -> MaterialTheme.colorScheme.onTertiaryContainer
+    3 -> MaterialTheme.colorScheme.onErrorContainer
+    else -> MaterialTheme.colorScheme.onSurfaceVariant
+}
+
+// ─── N-season horizontal bars ─────────────────────────────────────────────────
+
+/**
+ * Stacked horizontal bars for up to 5 seasons, labeled with short slot letters.
+ * [label] is shown above the bars if non-null. [maxValue] defaults to the max of [values].
+ * [formatValue] formats the count shown at the right; defaults to integer formatting.
+ */
+@Composable
+private fun CompareMultiBars(
+    values: List<Double>,
+    letters: List<String>,
+    isDark: Boolean,
+    label: String? = null,
+    maxValue: Double = values.maxOrNull()?.coerceAtLeast(1.0) ?: 1.0,
+    formatValue: ((Double) -> String)? = null
+) {
+    val alphaBar = if (isDark) 0.7f else 0.85f
+    val maxIdx = values.indices.maxByOrNull { values[it] } ?: -1
+
+    if (label != null) {
+        Text(label, style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 3.dp))
+    }
+    values.indices.forEach { i ->
+        val v = values[i]
+        val fraction = (v / maxValue).toFloat().coerceIn(0f, 1f)
+        val color = slotColor(i)
+        val isWinner = i == maxIdx && values.count { it == v } == 1
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 1.dp)) {
+            Text(
+                text = letters.getOrElse(i) { "$i" },
+                style = MaterialTheme.typography.labelSmall,
+                color = color,
+                modifier = Modifier.width(16.dp)
+            )
+            Spacer(Modifier.width(4.dp))
+            Box(
+                modifier = Modifier.weight(1f).height(13.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                if (v > 0) Box(
+                    modifier = Modifier.fillMaxWidth(fraction).height(13.dp)
+                        .clip(RoundedCornerShape(3.dp))
+                        .background(color.copy(alpha = alphaBar))
+                )
+            }
+            Spacer(Modifier.width(4.dp))
+            Text(
+                text = formatValue?.invoke(v) ?: v.toInt().toString(),
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = if (isWinner) FontWeight.Bold else FontWeight.Normal,
+                color = if (isWinner) color else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.width(24.dp),
+                textAlign = TextAlign.End
+            )
+        }
+    }
+}
 
 @Composable
 private fun ScoreCard(

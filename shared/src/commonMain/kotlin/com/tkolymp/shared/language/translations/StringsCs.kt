@@ -381,5 +381,9 @@ val StringsCs = Strings(
         sumLabel = "suma",
         weeks = "týdnů",
         noScoreData = "Skóre není k dispozici",
+        seasonComparison = "Porovnání sezón",
+        seasonColumn = "Sezóna",
+        seasonALabel = "Sezóna A",
+        seasonBLabel = "Sezóna B",
     ),
 )

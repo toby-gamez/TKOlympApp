@@ -382,5 +382,9 @@ val StringsBrainrot = Strings(
         sumLabel = "Sum",
         weeks = "weeks",
         noScoreData = "Score not available rn",
+        seasonComparison = "Season diff check",
+        seasonColumn = "Season",
+        seasonALabel = "Season A fr",
+        seasonBLabel = "Season B fr",
     ),
 )

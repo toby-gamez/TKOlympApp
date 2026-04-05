@@ -381,5 +381,9 @@ val StringsEn = Strings(
         sumLabel = "Sum",
         weeks = "weeks",
         noScoreData = "Score not available",
+        seasonComparison = "Season Comparison",
+        seasonColumn = "Season",
+        seasonALabel = "Season A",
+        seasonBLabel = "Season B",
     ),
 )

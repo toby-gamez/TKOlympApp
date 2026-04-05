@@ -381,5 +381,9 @@ val StringsUa = Strings(
         sumLabel = "Сума",
         weeks = "тижнів",
         noScoreData = "Рахунок недоступний",
+        seasonComparison = "Порівняння сезонів",
+        seasonColumn = "Сезон",
+        seasonALabel = "Сезон A",
+        seasonBLabel = "Сезон B",
     ),
 )

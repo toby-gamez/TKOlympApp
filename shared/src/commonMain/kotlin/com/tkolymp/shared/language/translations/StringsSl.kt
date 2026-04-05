@@ -381,5 +381,9 @@ val StringsSl = Strings(
         sumLabel = "Vsota",
         weeks = "tednov",
         noScoreData = "Ocene ni na voljo",
+        seasonComparison = "Primerjava sezon",
+        seasonColumn = "Sezona",
+        seasonALabel = "Sezona A",
+        seasonBLabel = "Sezona B",
     ),
 )

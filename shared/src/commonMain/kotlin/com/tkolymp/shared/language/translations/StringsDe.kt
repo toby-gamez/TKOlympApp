@@ -380,6 +380,8 @@ val StringsDe = Strings(
         otherTrainers = "andere",
         sumLabel = "Summe",
         weeks = "Wochen",
-        noScoreData = "Keine Punkte verf\u00fcgbar",
-    ),
+        noScoreData = "Keine Punkte verf\u00fcgbar",        seasonComparison = "Saisonvergleich",
+        seasonColumn = "Saison",
+        seasonALabel = "Saison A",
+        seasonBLabel = "Saison B",    ),
 )

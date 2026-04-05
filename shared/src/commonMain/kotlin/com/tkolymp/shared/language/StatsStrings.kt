@@ -30,4 +30,8 @@ data class StatsStrings(
     val sumLabel: String,
     val weeks: String,
     val noScoreData: String,
+    val seasonComparison: String,
+    val seasonColumn: String,
+    val seasonALabel: String,
+    val seasonBLabel: String,
 )
