@@ -9,6 +9,7 @@ import com.tkolymp.shared.utils.parseToLocal
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -135,6 +136,24 @@ class StatsViewModel(
     private val _state = MutableStateFlow(StatsState())
     val state: StateFlow<StatsState> = _state.asStateFlow()
 
+    // Per-slice flows to allow composables to collect only the pieces they need
+    val totalSessionsFlow = _state.map { it.totalSessions }
+    val totalMinutesFlow = _state.map { it.totalMinutes }
+    val avgPerWeekFlow = _state.map { it.avgSessionsPerWeek }
+    val currentStreakFlow = _state.map { it.currentStreak }
+    val weeklyFlow = _state.map { it.weeklyData }
+    val monthlyFlow = _state.map { it.monthlyData }
+    val typeFlow = _state.map { it.typeData }
+    val trainerFlow = _state.map { it.trainerData }
+    val scoreEntryFlow = _state.map { it.scoreEntry }
+    val selectedSeasonFlow = _state.map { it.selectedSeason }
+    val comparisonDataFlow = _state.map { it.comparisonData }
+    val isLoadingComparisonFlow = _state.map { it.isLoadingComparison }
+    val compareSeasonsFlow = _state.map { it.compareSeasons }
+    val compareDataFlow = _state.map { it.compareData }
+    val isLoadingCompareFlow = _state.map { it.isLoadingCompare }
+    val isLoadingFlow = _state.map { it.isLoading }
+
     /** Load (or re-load) statistics for the given season. */
     suspend fun loadStats(season: SeasonSelection = _state.value.selectedSeason, forceRefresh: Boolean = false) {
         _state.value = _state.value.copy(isLoading = true, error = null, selectedSeason = season)
@@ -174,10 +193,14 @@ class StatsViewModel(
             val totalMinutes = instances.sumOf { inst -> durationMin(inst.since, inst.until) }
 
             // Weeks in season (at most seasonEnd-seasonStart in weeks, but cap shown to 16 most recent)
+            val tWeekly = kotlin.time.TimeSource.Monotonic.markNow()
             val weeklyData = buildWeeklyData(instances, today, seasonStart, seasonEnd)
+            try { Logger.d("StatsViewModel", "buildWeeklyData took=${tWeekly.elapsedNow().inWholeMilliseconds}ms") } catch (_: Exception) {}
 
             // Monthly breakdown
+            val tMonthly = kotlin.time.TimeSource.Monotonic.markNow()
             val monthlyData = buildMonthlyData(instances, seasonStart, seasonEnd)
+            try { Logger.d("StatsViewModel", "buildMonthlyData took=${tMonthly.elapsedNow().inWholeMilliseconds}ms") } catch (_: Exception) {}
 
             // avgPerWeek: total sessions / elapsed full weeks (min 1)
             val elapsedWeeks = maxOf(1, (today.toEpochDays() - seasonStart.toEpochDays()) / 7)
@@ -190,10 +213,14 @@ class StatsViewModel(
             try { Logger.d("StatsViewModel", "weeklyData=${weeklyData.map { it.weekStartIso + ':' + it.count }}") } catch (_: Exception) {}
 
             // Type breakdown
+            val tType = kotlin.time.TimeSource.Monotonic.markNow()
             val typeData = buildTypeData(instances)
+            try { Logger.d("StatsViewModel", "buildTypeData took=${tType.elapsedNow().inWholeMilliseconds}ms") } catch (_: Exception) {}
 
             // Trainer breakdown (top 5)
+            val tTrainer = kotlin.time.TimeSource.Monotonic.markNow()
             val trainerData = buildTrainerData(instances)
+            try { Logger.d("StatsViewModel", "buildTrainerData took=${tTrainer.elapsedNow().inWholeMilliseconds}ms") } catch (_: Exception) {}
 
             // ── Scoreboard ────────────────────────────────────────────────────
             val myPersonId = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }

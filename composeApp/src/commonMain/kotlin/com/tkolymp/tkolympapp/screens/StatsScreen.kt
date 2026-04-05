@@ -1,6 +1,7 @@
 package com.tkolymp.tkolympapp.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,20 +14,22 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CompareArrows
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -53,21 +56,17 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.people.ScoreboardEntry
 import com.tkolymp.shared.utils.getLocalizedMonthNameNominative
+import com.tkolymp.shared.utils.roundTo1dp
+import com.tkolymp.shared.utils.stripTitles
 import com.tkolymp.shared.viewmodels.MonthStats
 import com.tkolymp.shared.viewmodels.SeasonDetailStats
 import com.tkolymp.shared.viewmodels.SeasonSelection
-import com.tkolymp.shared.viewmodels.SeasonSummary
 import com.tkolymp.shared.viewmodels.StatsViewModel
 import com.tkolymp.shared.viewmodels.TrainerStat
 import com.tkolymp.shared.viewmodels.TypeStat
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.BarChart
 import kotlinx.coroutines.launch
-import androidx.compose.material.icons.filled.CompareArrows
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.LocalContentColor
-import com.tkolymp.shared.utils.roundTo1dp
-import com.tkolymp.shared.utils.stripTitles
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,7 +76,22 @@ fun StatsScreen(
     onOpenLeaderboard: () -> Unit = {},
     viewModel: StatsViewModel = viewModel()
 ) {
-    val state by viewModel.state.collectAsState()
+    val totalSessions by viewModel.totalSessionsFlow.collectAsState(initial = 0)
+    val totalMinutes by viewModel.totalMinutesFlow.collectAsState(initial = 0L)
+    val avgPerWeek by viewModel.avgPerWeekFlow.collectAsState(initial = 0.0)
+    val currentStreak by viewModel.currentStreakFlow.collectAsState(initial = 0)
+    val weeklyData by viewModel.weeklyFlow.collectAsState(initial = emptyList())
+    val monthlyData by viewModel.monthlyFlow.collectAsState(initial = emptyList())
+    val typeData by viewModel.typeFlow.collectAsState(initial = emptyList())
+    val trainerData by viewModel.trainerFlow.collectAsState(initial = emptyList())
+    val scoreEntry by viewModel.scoreEntryFlow.collectAsState(initial = null)
+    val selectedSeason by viewModel.selectedSeasonFlow.collectAsState(initial = SeasonSelection.default())
+    val comparisonData by viewModel.comparisonDataFlow.collectAsState(initial = emptyList())
+    val isLoadingComparison by viewModel.isLoadingComparisonFlow.collectAsState(initial = false)
+    val compareSeasons by viewModel.compareSeasonsFlow.collectAsState(initial = List(5) { null })
+    val compareData by viewModel.compareDataFlow.collectAsState(initial = List<SeasonDetailStats?>(5) { null })
+    val isLoadingCompare by viewModel.isLoadingCompareFlow.collectAsState(initial = List(5) { false })
+    val isLoading by viewModel.isLoadingFlow.collectAsState(initial = false)
     val scope = rememberCoroutineScope()
     val strings = AppStrings.current.stats
     var compareMode by remember { mutableStateOf(false) }
@@ -87,7 +101,7 @@ fun StatsScreen(
     }
 
     LaunchedEffect(compareMode) {
-        if (compareMode && state.comparisonData.isEmpty() && !state.isLoadingComparison) {
+        if (compareMode && comparisonData.isEmpty() && !isLoadingComparison) {
             viewModel.loadComparison()
         }
     }
@@ -114,15 +128,15 @@ fun StatsScreen(
         }
     ) { padding ->
         SwipeToReload(
-            isRefreshing = if (compareMode) state.isLoadingComparison else state.isLoading,
-            onRefresh = { scope.launch { if (compareMode) viewModel.loadComparison() else viewModel.loadStats(state.selectedSeason, forceRefresh = true) } },
+            isRefreshing = if (compareMode) isLoadingComparison else isLoading,
+            onRefresh = { scope.launch { if (compareMode) viewModel.loadComparison() else viewModel.loadStats(selectedSeason, forceRefresh = true) } },
             modifier = Modifier.padding(top = padding.calculateTopPadding(), bottom = bottomPadding)
         ) {
             if (compareMode) {
                 CompareScreenContent(viewModel = viewModel, strings = strings)
                 return@SwipeToReload
             }
-            if (state.isLoading && state.totalSessions == 0) {
+            if (isLoading && totalSessions == 0) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
@@ -133,12 +147,12 @@ fun StatsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // ── Season selector ──────────────────────────────────────────
                 SeasonSelector(
-                    selected = state.selectedSeason,
+                    selected = selectedSeason,
                     seasons = SeasonSelection.recent(),
                     currentLabel = strings.currentSeason,
                     lastLabel = strings.lastSeason,
@@ -147,7 +161,7 @@ fun StatsScreen(
                     }
                 )
 
-                if (state.totalSessions == 0 && !state.isLoading) {
+                if (totalSessions == 0 && !isLoading) {
                     Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
                         Text(
                             text = strings.noData,
@@ -162,18 +176,18 @@ fun StatsScreen(
 
                 // ── Summary cards ────────────────────────────────────────────
                 SummaryRow(
-                    totalSessions = state.totalSessions,
-                    totalMinutes = state.totalMinutes,
-                    avgPerWeek = state.avgSessionsPerWeek,
-                    streak = state.currentStreak,
+                    totalSessions = totalSessions,
+                    totalMinutes = totalMinutes,
+                    avgPerWeek = avgPerWeek,
+                    streak = currentStreak,
                     strings = strings
                 )
 
                 // ── Bar chart: weekly activity ───────────────────────────────
-                if (state.weeklyData.isNotEmpty()) {
+                if (weeklyData.isNotEmpty()) {
                     StatsCard(title = strings.weeklyActivity) {
-                        val barData = state.weeklyData.map { Pair(it.weekLabel, it.count) }
-                        val highlightIndex = state.weeklyData.indexOfFirst { it.isCurrent }
+                        val barData = weeklyData.map { Pair(it.weekLabel, it.count) }
+                        val highlightIndex = weeklyData.indexOfFirst { it.isCurrent }
                         var selectedBar by remember { mutableStateOf(-1) }
                         BarChart(
                             data = barData,
@@ -192,7 +206,7 @@ fun StatsScreen(
                         )
                         // Show tapped-week details (value + hours)
                         if (selectedBar >= 0) {
-                            val week = state.weeklyData.getOrNull(selectedBar)
+                            val week = weeklyData.getOrNull(selectedBar)
                             if (week != null) {
                                 Spacer(Modifier.height(6.dp))
                                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
@@ -208,10 +222,10 @@ fun StatsScreen(
                 }
 
                 // ── Monthly breakdown ────────────────────────────────────────
-                if (state.monthlyData.isNotEmpty()) {
+                if (monthlyData.isNotEmpty()) {
                     StatsCard(title = strings.monthlyBreakdown) {
                         MonthlyTable(
-                            data = state.monthlyData,
+                            data = monthlyData,
                             monthCol = strings.monthColumn,
                             countCol = strings.countColumn,
                             hoursCol = strings.hoursColumn
@@ -227,17 +241,17 @@ fun StatsScreen(
                 }
 
                 // ── Type breakdown ───────────────────────────────────────────
-                if (state.typeData.isNotEmpty()) {
+                if (typeData.isNotEmpty()) {
                     StatsCard(title = strings.typeBreakdown) {
-                        TypeBreakdownSection(data = state.typeData)
+                        TypeBreakdownSection(data = typeData)
                     }
                 }
 
                 // ── Trainer breakdown ────────────────────────────────────────
-                if (state.trainerData.isNotEmpty()) {
+                if (trainerData.isNotEmpty()) {
                     StatsCard(title = strings.trainerBreakdown) {
                         TrainerBreakdownSection(
-                            data = state.trainerData,
+                            data = trainerData,
                             sessionsUnit = strings.sessionsUnit,
                             hoursUnit = strings.hoursUnit,
                             otherLabel = strings.otherTrainers
@@ -246,7 +260,7 @@ fun StatsScreen(
                 }
 
                 // ── Score card ───────────────────────────────────────────────
-                state.scoreEntry?.let { score ->
+                scoreEntry?.let { score ->
                     ScoreCard(score = score, strings = strings, onOpenLeaderboard = onOpenLeaderboard)
                 }
 
