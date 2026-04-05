@@ -385,5 +385,12 @@ val StringsCs = Strings(
         seasonColumn = "Sezóna",
         seasonALabel = "Sezóna A",
         seasonBLabel = "Sezóna B",
+        attendanceTabTitle = "Docházka",
+        statsTabTitle = "Statistiky",
+        attendedWeeks = "Navštívené týdny",
+        missedWeeks = "Vynechané týdny",
+        sessionsList = "Seznam lekcí",
+        cancelled = "Zrušeno",
+        noAttendanceData = "Žádné záznamy docházky",
     ),
 )

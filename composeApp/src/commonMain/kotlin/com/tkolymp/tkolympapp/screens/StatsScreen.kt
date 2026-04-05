@@ -32,6 +32,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -55,9 +57,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.people.ScoreboardEntry
+import com.tkolymp.shared.utils.formatTimesWithDateAlways
 import com.tkolymp.shared.utils.getLocalizedMonthNameNominative
 import com.tkolymp.shared.utils.roundTo1dp
 import com.tkolymp.shared.utils.stripTitles
+import com.tkolymp.shared.utils.translateEventType
+import com.tkolymp.shared.viewmodels.AttendanceMonth
 import com.tkolymp.shared.viewmodels.MonthStats
 import com.tkolymp.shared.viewmodels.SeasonDetailStats
 import com.tkolymp.shared.viewmodels.SeasonSelection
@@ -92,9 +97,12 @@ fun StatsScreen(
     val compareData by viewModel.compareDataFlow.collectAsState(initial = List<SeasonDetailStats?>(5) { null })
     val isLoadingCompare by viewModel.isLoadingCompareFlow.collectAsState(initial = List(5) { false })
     val isLoading by viewModel.isLoadingFlow.collectAsState(initial = false)
+    val attendanceMonths by viewModel.attendanceMonthsFlow.collectAsState(initial = emptyList())
+    val cancelledCount by viewModel.cancelledCountFlow.collectAsState(initial = 0)
     val scope = rememberCoroutineScope()
     val strings = AppStrings.current.stats
     var compareMode by remember { mutableStateOf(false) }
+    var selectedTab by remember { mutableStateOf(0) }
 
     LaunchedEffect(Unit) {
         viewModel.loadStats(SeasonSelection.default())
@@ -136,20 +144,49 @@ fun StatsScreen(
                 CompareScreenContent(viewModel = viewModel, strings = strings)
                 return@SwipeToReload
             }
-            if (isLoading && totalSessions == 0) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-                return@SwipeToReload
-            }
 
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                TabRow(selectedTabIndex = selectedTab) {
+                    Tab(
+                        selected = selectedTab == 0,
+                        onClick = { selectedTab = 0 },
+                        text = { Text(strings.statsTabTitle) }
+                    )
+                    Tab(
+                        selected = selectedTab == 1,
+                        onClick = { selectedTab = 1 },
+                        text = { Text(strings.attendanceTabTitle) }
+                    )
+                }
+
+                if (selectedTab == 1) {
+                    AttendanceTabContent(
+                        attendanceMonths = attendanceMonths,
+                        cancelledCount = cancelledCount,
+                        totalSessions = totalSessions,
+                        isLoading = isLoading,
+                        selectedSeason = selectedSeason,
+                        seasons = SeasonSelection.recent(),
+                        strings = strings,
+                        onSeasonSelect = { season -> scope.launch { viewModel.loadStats(season) } }
+                    )
+                    return@Column
+                }
+
+                if (isLoading && totalSessions == 0) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                    return@Column
+                }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
                 // ── Season selector ──────────────────────────────────────────
                 SeasonSelector(
                     selected = selectedSeason,
@@ -265,7 +302,8 @@ fun StatsScreen(
                 }
 
                 Spacer(Modifier.height(24.dp))
-            }
+                } // end inner (scrollable) Column
+            } // end outer Column
         }
     }
 }
@@ -999,4 +1037,167 @@ private fun ScoreCard(
     }
 }
 
+// ─── Attendance tab ────────────────────────────────────────────────────────────
 
+@Composable
+private fun AttendanceTabContent(
+    attendanceMonths: List<AttendanceMonth>,
+    cancelledCount: Int,
+    totalSessions: Int,
+    isLoading: Boolean,
+    selectedSeason: SeasonSelection,
+    seasons: List<SeasonSelection>,
+    strings: com.tkolymp.shared.language.StatsStrings,
+    onSeasonSelect: (SeasonSelection) -> Unit
+) {
+    if (isLoading && totalSessions == 0) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Spacer(Modifier.height(4.dp))
+        // Season selector
+        SeasonSelector(
+            selected = selectedSeason,
+            seasons = seasons,
+            currentLabel = strings.currentSeason,
+            lastLabel = strings.lastSeason,
+            onSelect = onSeasonSelect
+        )
+
+        if (attendanceMonths.isEmpty() && !isLoading) {
+            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+                Text(
+                    text = strings.noAttendanceData,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(24.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+            Spacer(Modifier.height(16.dp))
+            return@Column
+        }
+
+        // Summary card
+        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                AttendanceSummaryItem(
+                    value = totalSessions.toString(),
+                    label = strings.sessionsUnit
+                )
+                AttendanceSummaryItem(
+                    value = cancelledCount.toString(),
+                    label = strings.cancelled
+                )
+            }
+        }
+
+        // Per-month session list
+        Text(
+            text = strings.sessionsList,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(top = 4.dp)
+        )
+
+        attendanceMonths.forEach { month ->
+            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text(
+                        text = "${month.monthLabel} (${month.sessions.size})",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    month.sessions.forEachIndexed { idx, session ->
+                        if (idx > 0) HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
+                        AttendanceSessionRow(session = session, cancelledLabel = strings.cancelled)
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun AttendanceSummaryItem(value: String, label: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun AttendanceSessionRow(
+    session: com.tkolymp.shared.viewmodels.SessionItem,
+    cancelledLabel: String
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            val timeText = formatTimesWithDateAlways(session.since, session.until)
+            Text(
+                text = timeText,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            val name = session.eventName.ifBlank {
+                translateEventType(session.eventType) ?: session.eventType ?: ""
+            }
+            if (name.isNotBlank()) {
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+        if (session.isCancelled) {
+            Spacer(Modifier.width(8.dp))
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.errorContainer)
+                    .padding(horizontal = 6.dp, vertical = 2.dp)
+            ) {
+                Text(
+                    text = cancelledLabel,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onErrorContainer
+                )
+            }
+        } else if (session.durationMinutes > 0) {
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = "${session.durationMinutes} min",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}

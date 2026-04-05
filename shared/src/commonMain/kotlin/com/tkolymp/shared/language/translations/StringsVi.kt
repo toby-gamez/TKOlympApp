@@ -414,5 +414,12 @@ val StringsVi = Strings(
         seasonColumn = "Mùa giải",
         seasonALabel = "Mùa giải A",
         seasonBLabel = "Mùa giải B",
+        attendanceTabTitle = "Điểm danh",
+        statsTabTitle = "Thống kê",
+        attendedWeeks = "Tuần có mặt",
+        missedWeeks = "Tuần vắng",
+        sessionsList = "Danh sách buổi tập",
+        cancelled = "Đã huỷ",
+        noAttendanceData = "Không có dữ liệu điểm danh",
     ),
 )

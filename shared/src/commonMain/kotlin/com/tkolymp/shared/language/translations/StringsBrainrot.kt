@@ -386,5 +386,12 @@ val StringsBrainrot = Strings(
         seasonColumn = "Season",
         seasonALabel = "Season A fr",
         seasonBLabel = "Season B fr",
+        attendanceTabTitle = "Attendance no cap",
+        statsTabTitle = "Stats fr",
+        attendedWeeks = "Weeks I showed up",
+        missedWeeks = "Weeks I skipped lol",
+        sessionsList = "Sessions list",
+        cancelled = "Cancelled rip",
+        noAttendanceData = "No records bestie",
     ),
 )

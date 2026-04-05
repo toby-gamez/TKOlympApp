@@ -34,4 +34,11 @@ data class StatsStrings(
     val seasonColumn: String,
     val seasonALabel: String,
     val seasonBLabel: String,
+    val attendanceTabTitle: String,
+    val statsTabTitle: String,
+    val attendedWeeks: String,
+    val missedWeeks: String,
+    val sessionsList: String,
+    val cancelled: String,
+    val noAttendanceData: String,
 )

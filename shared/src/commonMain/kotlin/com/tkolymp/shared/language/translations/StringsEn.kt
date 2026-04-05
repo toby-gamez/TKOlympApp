@@ -385,5 +385,12 @@ val StringsEn = Strings(
         seasonColumn = "Season",
         seasonALabel = "Season A",
         seasonBLabel = "Season B",
+        attendanceTabTitle = "Attendance",
+        statsTabTitle = "Statistics",
+        attendedWeeks = "Attended weeks",
+        missedWeeks = "Missed weeks",
+        sessionsList = "Session list",
+        cancelled = "Cancelled",
+        noAttendanceData = "No attendance records",
     ),
 )

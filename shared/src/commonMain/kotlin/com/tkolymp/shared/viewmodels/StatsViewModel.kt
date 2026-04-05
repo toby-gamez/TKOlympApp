@@ -5,6 +5,8 @@ import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.event.EventInstance
 import com.tkolymp.shared.people.ScoreboardEntry
+import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.shared.utils.getLocalizedMonthNameNominative
 import com.tkolymp.shared.utils.parseToLocal
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -82,6 +84,24 @@ data class TypeStat(
 
 data class TrainerStat(val name: String, val count: Int, val minutes: Long)
 
+/** A single training session shown in the attendance tab. */
+data class SessionItem(
+    val date: String,
+    val eventName: String,
+    val eventType: String?,
+    val since: String?,
+    val until: String?,
+    val durationMinutes: Long,
+    val isCancelled: Boolean
+)
+
+/** Sessions grouped by calendar month for the attendance list. */
+data class AttendanceMonth(
+    val monthLabel: String,
+    val yearMonth: String,
+    val sessions: List<SessionItem>
+)
+
 /** Summary stats for one season used in cross-season comparison. */
 data class SeasonSummary(
     val season: SeasonSelection,
@@ -120,6 +140,10 @@ data class StatsState(
     val compareSeasons: List<SeasonSelection?> = List(5) { null },
     val compareData: List<SeasonDetailStats?> = List(5) { null },
     val isLoadingCompare: List<Boolean> = List(5) { false },
+    /** Sessions grouped by month for the attendance tab. */
+    val attendanceMonths: List<AttendanceMonth> = emptyList(),
+    /** Number of cancelled sessions in the selected season. */
+    val cancelledCount: Int = 0,
     override val isLoading: Boolean = false,
     override val error: String? = null
 ) : ViewModelState
@@ -153,6 +177,8 @@ class StatsViewModel(
     val compareDataFlow = _state.map { it.compareData }
     val isLoadingCompareFlow = _state.map { it.isLoadingCompare }
     val isLoadingFlow = _state.map { it.isLoading }
+    val attendanceMonthsFlow = _state.map { it.attendanceMonths }
+    val cancelledCountFlow = _state.map { it.cancelledCount }
 
     /** Load (or re-load) statistics for the given season. */
     suspend fun loadStats(season: SeasonSelection = _state.value.selectedSeason, forceRefresh: Boolean = false) {
@@ -222,6 +248,12 @@ class StatsViewModel(
             val trainerData = buildTrainerData(instances)
             try { Logger.d("StatsViewModel", "buildTrainerData took=${tTrainer.elapsedNow().inWholeMilliseconds}ms") } catch (_: Exception) {}
 
+            // Attendance tab data (all instances including cancelled)
+            val langCode = AppStrings.currentLanguage.code
+            val attendanceMonths = buildAttendanceMonths(allInstances, langCode)
+            try { Logger.d("StatsViewModel", "attendance: allInstances=${allInstances.size} months=${attendanceMonths.size}") } catch (_: Exception) {}
+            val cancelledCount = allInstances.count { it.isCancelled }
+
             // ── Scoreboard ────────────────────────────────────────────────────
             val myPersonId = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
             val scoreEntry: ScoreboardEntry? = if (myPersonId != null) {
@@ -243,6 +275,8 @@ class StatsViewModel(
                 trainerData = trainerData,
                 scoreEntry = scoreEntry,
                 selectedSeason = season,
+                attendanceMonths = attendanceMonths,
+                cancelledCount = cancelledCount,
                 isLoading = false,
                 error = null
             )
@@ -538,5 +572,41 @@ class StatsViewModel(
         val newSeasons = _state.value.compareSeasons.toMutableList().also { it[slotIndex] = null }
         val newData = _state.value.compareData.toMutableList().also { it[slotIndex] = null }
         _state.value = _state.value.copy(compareSeasons = newSeasons, compareData = newData)
+    }
+
+    /** Builds chronological session list grouped by month for the attendance tab. */
+    private fun buildAttendanceMonths(
+        instances: List<EventInstance>,
+        languageCode: String
+    ): List<AttendanceMonth> {
+        val byMonth = mutableMapOf<String, MutableList<SessionItem>>()
+        instances.forEach { inst ->
+            val sinceStr = inst.since ?: return@forEach
+            val dateStr = sinceStr.substringBefore('T')
+            val ym = dateStr.take(7)
+            val duration = durationMin(inst.since, inst.until)
+            val session = SessionItem(
+                date = dateStr,
+                eventName = inst.event?.name ?: "",
+                eventType = inst.event?.type,
+                since = inst.since,
+                until = inst.until,
+                durationMinutes = duration,
+                isCancelled = inst.isCancelled
+            )
+            byMonth.getOrPut(ym) { mutableListOf() }.add(session)
+        }
+        return byMonth.entries
+            .sortedByDescending { it.key }
+            .map { (ym, sessions) ->
+                val year = ym.take(4).toIntOrNull() ?: 0
+                val month = ym.drop(5).toIntOrNull() ?: 0
+                val monthName = getLocalizedMonthNameNominative(month, languageCode)
+                AttendanceMonth(
+                    monthLabel = "$monthName $year",
+                    yearMonth = ym,
+                    sessions = sessions.sortedByDescending { it.date }
+                )
+            }
     }
 }
