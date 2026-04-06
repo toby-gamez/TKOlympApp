@@ -20,4 +20,17 @@ actual class CalendarPreferenceStorage actual constructor(platformContext: Any) 
         defaults.setObject(value, "app_theme_mode")
         defaults.synchronize()
     }
+
+    actual suspend fun isEventInCalendar(eventId: Long): Boolean {
+        val stored = defaults.stringForKey("calendar_event_ids") ?: ""
+        return stored.split(",").contains(eventId.toString())
+    }
+
+    actual suspend fun setEventInCalendar(eventId: Long) {
+        val stored = defaults.stringForKey("calendar_event_ids") ?: ""
+        val ids = stored.split(",").filter { it.isNotBlank() }.toMutableSet()
+        ids.add(eventId.toString())
+        defaults.setObject(ids.joinToString(","), "calendar_event_ids")
+        defaults.synchronize()
+    }
 }

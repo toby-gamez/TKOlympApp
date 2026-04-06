@@ -133,6 +133,10 @@ val StringsEn = Strings(
         eventTypeGroup = "group",
         eventTypeReservation = "offer",
         eventTypeHoliday = "holiday",
+        addToCalendar = "Add to calendar",
+        addedToCalendar = "Added to calendar",
+        addToCalendarSuccess = "Event added to calendar",
+        addToCalendarFailed = "Failed to add to calendar",
     ),
     registration = RegistrationStrings(
         registration = "Registration",

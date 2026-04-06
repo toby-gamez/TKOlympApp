@@ -52,13 +52,17 @@ data class EventState(
     val registerButtonVisible: Boolean = false,
     val registrationActionsRowVisible: Boolean = false,
     val editRegistrationButtonVisible: Boolean = false,
+    val isAddedToCalendar: Boolean = false,
+    val calendarResult: Boolean? = null,  // null = no attempt, true = success, false = fail
     override val isLoading: Boolean = false,
     override val error: String? = null
 ) : ViewModelState
 
 class EventViewModel(
     private val eventService: com.tkolymp.shared.event.IEventService = ServiceLocator.eventService,
-    private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService
+    private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService,
+    private val calendarStorage: com.tkolymp.shared.storage.CalendarPreferenceStorage = ServiceLocator.calendarPreferenceStorage,
+    private val systemCalendarService: com.tkolymp.shared.systemcalendar.SystemCalendarService = ServiceLocator.systemCalendarService
 ) : ViewModel() {
     private val _state = MutableStateFlow(EventState())
     val state: StateFlow<EventState> = _state.asStateFlow()
@@ -66,6 +70,8 @@ class EventViewModel(
     suspend fun loadEvent(eventId: Long, forceRefresh: Boolean = false) {
         _state.value = _state.value.copy(isLoading = true, error = null)
         try {
+            // Eagerly check if already added to calendar
+            val alreadyAdded = try { calendarStorage.isEventInCalendar(eventId) } catch (_: Exception) { false }
             val ev = try { withContext(Dispatchers.IO) { eventService.fetchEventById(eventId, forceRefresh) } } catch (e: CancellationException) { throw e } catch (ex: Exception) { Logger.d("EventViewModel", "fetchEventById($eventId) failed: ${ex.message}"); null }
             var myPerson: String? = null
             var myCouples: List<String> = emptyList()
@@ -182,10 +188,60 @@ class EventViewModel(
                 registerButtonVisible = registerButtonVisible,
                 registrationActionsRowVisible = registrationActionsRowVisible,
                 editRegistrationButtonVisible = editRegistrationButtonVisible,
+                isAddedToCalendar = alreadyAdded,
                 isLoading = false
             )
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání události")
         }
+    }
+
+    suspend fun addToCalendar(eventId: Long) {
+        val s = _state.value
+        // Build event data from state
+        val title = s.eventName.ifBlank { "Událost" }
+        val description = s.summary.ifBlank { s.eventDescription }.ifBlank { null }
+        val location = s.locationName
+
+        // Use first instance for time; fall back to 1-hour block starting now
+        val firstInstance = s.instances.firstOrNull()?.asJsonObjectOrNull()
+        val sinceStr = firstInstance?.str("since")
+        val untilStr = firstInstance?.str("until")
+        val startMs = sinceStr?.let {
+            try { kotlinx.datetime.Instant.parse(it).toEpochMilliseconds() } catch (_: Exception) { null }
+        } ?: kotlin.time.Clock.System.now().toEpochMilliseconds()
+        val endMs = untilStr?.let {
+            try { kotlinx.datetime.Instant.parse(it).toEpochMilliseconds() } catch (_: Exception) { null }
+        } ?: (startMs + 3_600_000L)
+
+        // Detect weekly recurrence: instances are weekly if the gap between the
+        // first two instances is between 6.5 and 7.5 days.
+        val weeklyRepeatCount: Int? = run {
+            if (s.instances.size < 2) return@run null
+            val first = s.instances.getOrNull(0)?.asJsonObjectOrNull()?.str("since") ?: return@run null
+            val second = s.instances.getOrNull(1)?.asJsonObjectOrNull()?.str("since") ?: return@run null
+            val t0 = try { kotlinx.datetime.Instant.parse(first).toEpochMilliseconds() } catch (_: Exception) { return@run null }
+            val t1 = try { kotlinx.datetime.Instant.parse(second).toEpochMilliseconds() } catch (_: Exception) { return@run null }
+            val diffDays = (t1 - t0) / 86_400_000.0
+            if (diffDays in 6.5..7.5) s.instances.size else null
+        }
+
+        val success = try {
+            withContext(Dispatchers.IO) {
+                systemCalendarService.addEvent(title, description, location, startMs, endMs, weeklyRepeatCount)
+            }
+        } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
+
+        if (success) {
+            try { calendarStorage.setEventInCalendar(eventId) } catch (_: Exception) {}
+        }
+        _state.value = _state.value.copy(
+            isAddedToCalendar = if (success) true else _state.value.isAddedToCalendar,
+            calendarResult = success
+        )
+    }
+
+    fun clearCalendarResult() {
+        _state.value = _state.value.copy(calendarResult = null)
     }
 }

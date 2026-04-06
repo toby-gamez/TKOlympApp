@@ -134,6 +134,10 @@ val StringsBrainrot = Strings(
         eventTypeGroup = "group vibes fr",
         eventTypeReservation = "offer fr",
         eventTypeHoliday = "holiday fr",
+        addToCalendar = "Add to rizzendar fr",
+        addedToCalendar = "Already on the rizzendar no cap",
+        addToCalendarSuccess = "Slay, added to rizzendar fr",
+        addToCalendarFailed = "L moment, rizzendar said no fr",
     ),
     registration = RegistrationStrings(
         registration = "Registration",

@@ -133,6 +133,10 @@ val StringsUa = Strings(
         eventTypeGroup = "групова",
         eventTypeReservation = "пропозиція",
         eventTypeHoliday = "свято",
+        addToCalendar = "Додати до календаря",
+        addedToCalendar = "Додано до календаря",
+        addToCalendarSuccess = "Подія додана до календаря",
+        addToCalendarFailed = "Не вдалося додати до календаря",
     ),
     registration = RegistrationStrings(
         registration = "Реєстрація",

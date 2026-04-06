@@ -15,6 +15,7 @@ import com.tkolymp.shared.storage.LanguageStorage
 import com.tkolymp.shared.storage.OnboardingStorage
 import com.tkolymp.shared.storage.TokenStorage
 import com.tkolymp.shared.storage.UserStorage
+import com.tkolymp.shared.systemcalendar.SystemCalendarService
 import com.tkolymp.shared.user.UserService
 
 /**
@@ -55,4 +56,5 @@ object ServiceLocator {
     val onboardingStorage: OnboardingStorage get() = container.onboardingStorage
     val languageStorage: LanguageStorage get() = container.languageStorage
     val calendarPreferenceStorage: CalendarPreferenceStorage get() = container.calendarPreferenceStorage
+    val systemCalendarService: SystemCalendarService get() = container.systemCalendarService
 }

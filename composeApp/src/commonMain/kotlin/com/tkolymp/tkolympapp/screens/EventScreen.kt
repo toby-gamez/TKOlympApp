@@ -21,6 +21,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
@@ -33,6 +34,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -65,15 +68,27 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
     val viewModel = viewModel<EventViewModel>()
     val state by viewModel.state.collectAsState()
     val showAllInstances = remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(eventId) {
         viewModel.loadEvent(eventId, forceRefresh = true)
+    }
+
+    // Show snackbar when calendarResult changes
+    LaunchedEffect(state.calendarResult) {
+        val result = state.calendarResult ?: return@LaunchedEffect
+        val msg = if (result) AppStrings.current.events.addToCalendarSuccess
+                  else AppStrings.current.events.addToCalendarFailed
+        snackbarHostState.showSnackbar(msg)
+        viewModel.clearCalendarResult()
     }
 
     val ev = state.eventJson
     // registration navigation handled by App NavHost via `onOpenRegistration`
 
         Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 TopAppBar(
                     title = { Text(AppStrings.current.events.event) },
@@ -87,7 +102,6 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                 )
             }
         ) { padding ->
-        val scope = rememberCoroutineScope()
 
         SwipeToReload(
             isRefreshing = state.isLoading,
@@ -252,6 +266,20 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
         }
 
         
+
+        // Přidat do systémového kalendáře
+        Spacer(modifier = Modifier.height(8.dp))
+        FilledTonalButton(
+            onClick = { scope.launch { viewModel.addToCalendar(eventId) } },
+            enabled = !state.isAddedToCalendar,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(Icons.Default.CalendarMonth, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
+            Text(
+                if (state.isAddedToCalendar) AppStrings.current.events.addedToCalendar
+                else AppStrings.current.events.addToCalendar
+            )
+        }
 
         // Popis a shrnutí
         if (state.summary.isNotBlank() || state.eventDescription.isNotBlank()) {

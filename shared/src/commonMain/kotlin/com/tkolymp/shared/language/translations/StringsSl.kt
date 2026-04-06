@@ -133,6 +133,10 @@ val StringsSl = Strings(
         eventTypeGroup = "skupinska",
         eventTypeReservation = "ponudba",
         eventTypeHoliday = "počitnice",
+        addToCalendar = "Dodaj v koledar",
+        addedToCalendar = "Dodano v koledar",
+        addToCalendarSuccess = "Dogodek dodan v koledar",
+        addToCalendarFailed = "Dodajanje v koledar ni uspelo",
     ),
     registration = RegistrationStrings(
         registration = "Prijava",

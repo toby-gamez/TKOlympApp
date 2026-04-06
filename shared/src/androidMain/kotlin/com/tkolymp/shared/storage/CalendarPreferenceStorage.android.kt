@@ -19,4 +19,16 @@ actual class CalendarPreferenceStorage actual constructor(platformContext: Any) 
     actual suspend fun setThemeMode(value: String) {
         prefs.edit().putString("app_theme_mode", value).apply()
     }
+
+    actual suspend fun isEventInCalendar(eventId: Long): Boolean {
+        val stored = prefs.getString("calendar_event_ids", "") ?: ""
+        return stored.split(",").contains(eventId.toString())
+    }
+
+    actual suspend fun setEventInCalendar(eventId: Long) {
+        val stored = prefs.getString("calendar_event_ids", "") ?: ""
+        val ids = stored.split(",").filter { it.isNotBlank() }.toMutableSet()
+        ids.add(eventId.toString())
+        prefs.edit().putString("calendar_event_ids", ids.joinToString(",")).apply()
+    }
 }

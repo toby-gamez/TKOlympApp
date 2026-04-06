@@ -26,4 +26,8 @@ data class EventStrings(
     val eventTypeGroup: String,
     val eventTypeReservation: String,
     val eventTypeHoliday: String,
+    val addToCalendar: String,
+    val addedToCalendar: String,
+    val addToCalendarSuccess: String,
+    val addToCalendarFailed: String,
 )

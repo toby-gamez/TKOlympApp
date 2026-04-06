@@ -152,6 +152,10 @@ val StringsVi = Strings(
         eventTypeGroup = "nhóm",
         eventTypeReservation = "đề nghị",
         eventTypeHoliday = "nghỉ hè",
+        addToCalendar = "Thêm vào lịch",
+        addedToCalendar = "Đã thêm vào lịch",
+        addToCalendarSuccess = "Sự kiện đã thêm vào lịch",
+        addToCalendarFailed = "Không thể thêm vào lịch",
     ),
     registration = RegistrationStrings(
         registration = "Đăng ký",

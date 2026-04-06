@@ -15,6 +15,7 @@ import com.tkolymp.shared.storage.LanguageStorage
 import com.tkolymp.shared.storage.OnboardingStorage
 import com.tkolymp.shared.storage.TokenStorage
 import com.tkolymp.shared.storage.UserStorage
+import com.tkolymp.shared.systemcalendar.SystemCalendarService
 import com.tkolymp.shared.user.UserService
 
 /**
@@ -39,4 +40,5 @@ class AppContainer(
     val onboardingStorage: OnboardingStorage,
     val languageStorage: LanguageStorage,
     val calendarPreferenceStorage: CalendarPreferenceStorage,
+    val systemCalendarService: SystemCalendarService,
 )
