@@ -12,4 +12,5 @@ data class OtherScreenStrings(
     val notificationSettings: String,
     val privacyPolicy: String,
     val myAccount: String,
+    val appearanceSettings: String,
 )

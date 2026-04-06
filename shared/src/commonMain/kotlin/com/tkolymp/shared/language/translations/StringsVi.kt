@@ -27,6 +27,7 @@ import com.tkolymp.shared.language.PeopleStrings
 import com.tkolymp.shared.language.PrivacyStrings
 import com.tkolymp.shared.language.ProfileStrings
 import com.tkolymp.shared.language.RegistrationStrings
+import com.tkolymp.shared.language.SettingsStrings
 import com.tkolymp.shared.language.StatsStrings
 import com.tkolymp.shared.language.Strings
 import com.tkolymp.shared.language.TimelineStrings
@@ -51,6 +52,7 @@ val StringsVi = Strings(
         notificationSettings = "Cài đặt thông báo",
         privacyPolicy = "Chính sách bảo mật",
         myAccount = "Tài khoản của tôi",
+        appearanceSettings = "Giao diện",
     ),
     filters = FilterStrings(
         filterType = "loại",
@@ -226,7 +228,7 @@ val StringsVi = Strings(
         trainingSpaces = "Sân tập",
     ),
     timeline = TimelineStrings(
-        timeline = "Dòng thời gian",
+        timeline = "Trục thời gian",
         today = "Hôm nay",
         nothingPlanned = "Bạn chưa lên kế hoạch gì cả",
         tomorrow = "Ngày mai",
@@ -300,6 +302,12 @@ val StringsVi = Strings(
         onboardingDesc2 = "Tìm hiểu các tính năng chính",
         onboardingTitle3 = "Bắt đầu",
         onboardingDesc3 = "Hãy bắt đầu ngay bây giờ",
+        onboardingTitle4 = "Chế độ xem lịch",
+        onboardingDesc4 = "Bạn muốn xem lịch tập luyện như thế nào?",
+        calendarViewList = "Danh sách tuần",
+        calendarViewListDesc = "Danh sách gọn\ntheo ngày",
+        calendarViewTimeline = "Trục thời gian",
+        calendarViewTimelineDesc = "Lịch trực quan\nvới trục thời gian",
         start = "Bắt đầu",
     ),
     auth = AuthStrings(
@@ -421,5 +429,17 @@ val StringsVi = Strings(
         sessionsList = "Danh sách buổi tập",
         cancelled = "Đã huỷ",
         noAttendanceData = "Không có dữ liệu điểm danh",
+    ),
+    settings = SettingsStrings(
+        title = "Cài đặt",
+        appearanceSection = "Giao diện",
+        themeLabel = "Chủ đề",
+        themeSystem = "Hệ thống",
+        themeLight = "Sáng",
+        themeDark = "Tối",
+        calendarSection = "Lịch",
+        calendarDefaultView = "Chế độ xem mặc định",
+        calendarViewList = "Danh sách tuần",
+        calendarViewTimeline = "Trục thời gian",
     ),
 )

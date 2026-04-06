@@ -22,6 +22,7 @@ val StringsSl = Strings(
         notificationSettings = "Nastavitve obvestil",
         privacyPolicy = "Politika zasebnosti",
         myAccount = "Moj račun",
+        appearanceSettings = "Videz",
     ),
     filters = FilterStrings(
         filterType = "vrsta",
@@ -208,7 +209,7 @@ val StringsSl = Strings(
         trainingSpaces = "Vadišča",
     ),
     timeline = TimelineStrings(
-        timeline = "Časovnica",
+        timeline = "Os",
         today = "Danes",
         nothingPlanned = "Še niste ničesar načrtovali",
         tomorrow = "Jutri",
@@ -282,6 +283,12 @@ val StringsSl = Strings(
         onboardingDesc2 = "Spoznajte glavne funkcije",
         onboardingTitle3 = "Začnite",
         onboardingDesc3 = "Začnite zdaj",
+        onboardingTitle4 = "Pogled na koledar",
+        onboardingDesc4 = "Kako želiš prikazati urnik treningov?",
+        calendarViewList = "Tedenski pregled",
+        calendarViewListDesc = "Kompaktni seznam\npo dnevih",
+        calendarViewTimeline = "Os",
+        calendarViewTimelineDesc = "Vizualni urnik\ns časovno osjo",
         start = "Začni",
     ),
     dialogs = DialogStrings(
@@ -392,5 +399,17 @@ val StringsSl = Strings(
         sessionsList = "Seznam sej",
         cancelled = "Preklicano",
         noAttendanceData = "Ni zapisov prisotnosti",
+    ),
+    settings = SettingsStrings(
+        title = "Nastavitve",
+        appearanceSection = "Videz",
+        themeLabel = "Tema",
+        themeSystem = "Sistem",
+        themeLight = "Svetla",
+        themeDark = "Temna",
+        calendarSection = "Koledar",
+        calendarDefaultView = "Privzeti pogled",
+        calendarViewList = "Tedenski seznam",
+        calendarViewTimeline = "Os",
     ),
 )

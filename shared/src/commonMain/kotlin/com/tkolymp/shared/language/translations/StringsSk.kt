@@ -22,6 +22,7 @@ val StringsSk = Strings(
         notificationSettings = "Nastavenia notifikácií",
         privacyPolicy = "Zásady ochrany osobných údajov",
         myAccount = "Môj účet",
+        appearanceSettings = "Vzhľad",
     ),
     filters = FilterStrings(
         filterType = "typ",
@@ -208,7 +209,7 @@ val StringsSk = Strings(
         trainingSpaces = "Tréningové priestory",
     ),
     timeline = TimelineStrings(
-        timeline = "Časová os",
+        timeline = "Os",
         today = "Dnes",
         nothingPlanned = "Zatiaľ ste si nič nenaplánovali",
         tomorrow = "Zajtra",
@@ -282,6 +283,12 @@ val StringsSk = Strings(
         onboardingDesc2 = "Zistite hlavné funkcie",
         onboardingTitle3 = "Začnite",
         onboardingDesc3 = "Začnite hneď teraz",
+        onboardingTitle4 = "Pohľad na kalendár",
+        onboardingDesc4 = "Ako chceš zobrazovať tréningový rozvrh?",
+        calendarViewList = "Týždenný prehľad",
+        calendarViewListDesc = "Kompaktný zoznam\npodľa dní",
+        calendarViewTimeline = "Os",
+        calendarViewTimelineDesc = "Vizuálny plán\ns časovou osou",
         start = "Začať",
     ),
     dialogs = DialogStrings(
@@ -392,5 +399,17 @@ val StringsSk = Strings(
         sessionsList = "Zoznam lekcií",
         cancelled = "Zrušené",
         noAttendanceData = "Žiadne záznamy dochádzky",
+    ),
+    settings = SettingsStrings(
+        title = "Nastavenia",
+        appearanceSection = "Vzhľad",
+        themeLabel = "Téma",
+        themeSystem = "Systém",
+        themeLight = "Svetlé",
+        themeDark = "Tmavé",
+        calendarSection = "Kalendár",
+        calendarDefaultView = "Predvolené zobrazenie",
+        calendarViewList = "Týždenný prehľad",
+        calendarViewTimeline = "Os",
     ),
 )

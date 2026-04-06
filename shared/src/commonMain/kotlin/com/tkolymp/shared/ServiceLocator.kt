@@ -10,6 +10,7 @@ import com.tkolymp.shared.notification.INotificationScheduler
 import com.tkolymp.shared.notification.NotificationService
 import com.tkolymp.shared.notification.NotificationStorage
 import com.tkolymp.shared.people.PeopleService
+import com.tkolymp.shared.storage.CalendarPreferenceStorage
 import com.tkolymp.shared.storage.LanguageStorage
 import com.tkolymp.shared.storage.OnboardingStorage
 import com.tkolymp.shared.storage.TokenStorage
@@ -53,4 +54,5 @@ object ServiceLocator {
     val notificationService: NotificationService get() = container.notificationService
     val onboardingStorage: OnboardingStorage get() = container.onboardingStorage
     val languageStorage: LanguageStorage get() = container.languageStorage
+    val calendarPreferenceStorage: CalendarPreferenceStorage get() = container.calendarPreferenceStorage
 }

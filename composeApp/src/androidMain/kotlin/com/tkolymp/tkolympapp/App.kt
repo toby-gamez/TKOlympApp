@@ -8,6 +8,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,6 +43,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.appearance.AppearanceSettings
+import com.tkolymp.shared.appearance.ThemeMode
 import androidx.compose.runtime.collectAsState
 import com.tkolymp.shared.language.AppLanguage
 import com.tkolymp.shared.language.AppStrings
@@ -55,6 +58,7 @@ import com.tkolymp.tkolympapp.screens.EventScreen
 import com.tkolymp.tkolympapp.screens.EventsScreen
 import com.tkolymp.tkolympapp.screens.GroupsScreen
 import com.tkolymp.tkolympapp.screens.LanguageScreen
+import com.tkolymp.tkolympapp.screens.SettingsScreen
 import com.tkolymp.tkolympapp.screens.LeaderboardScreen
 import com.tkolymp.tkolympapp.screens.StatsScreen
 import com.tkolymp.tkolympapp.screens.LoginScreen
@@ -88,11 +92,18 @@ import ui.theme.AppTheme
 @Composable
 @Preview
 fun App() {
-    AppTheme {
+    val themeMode by AppearanceSettings.themeMode.collectAsState()
+    val isDark = when (themeMode) {
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
+        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+    }
+    AppTheme(darkTheme = isDark) {
         val currentLanguage by AppStrings.languageFlow.collectAsState()
 
         var loggedIn by remember { mutableStateOf<Boolean?>(null) }
         var showOnboarding by remember { mutableStateOf<Boolean?>(null) }
+        var preferTimeline by remember { mutableStateOf(false) }
         var weekOffset by remember { mutableIntStateOf(0) }
 
         val ctx = LocalContext.current
@@ -122,6 +133,9 @@ fun App() {
                     // Show onboarding only on first launch (persisted in onboarding storage)
                     val onboardingVm = OnboardingViewModel()
                     val seen = try { onboardingVm.hasSeenOnboarding() } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
+                    preferTimeline = try { onboardingVm.getPreferTimeline() } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
+                    val themeRaw = try { ServiceLocator.calendarPreferenceStorage.getThemeMode() } catch (_: Exception) { "system" }
+                    AppearanceSettings.setThemeMode(when (themeRaw) { "light" -> ThemeMode.LIGHT; "dark" -> ThemeMode.DARK; else -> ThemeMode.SYSTEM })
                     showOnboarding = !seen
                     loggedIn = has
                 } catch (e: CancellationException) { throw e } catch (e: Exception) {
@@ -145,7 +159,7 @@ fun App() {
             containerColor = MaterialTheme.colorScheme.surface,
             bottomBar = {
                 AnimatedVisibility(
-                    visible = showOnboarding != true && loggedIn == true && currentRoute in listOf("overview", "calendar", "board", "events", "other"),
+                    visible = showOnboarding != true && loggedIn == true && currentRoute in listOf("overview", "calendar", "timeline", "board", "events", "other"),
                     enter = slideInVertically(initialOffsetY = { it }, animationSpec = tween(300)),
                     exit = slideOutVertically(targetOffsetY = { it }, animationSpec = tween(300))
                 ) {
@@ -156,6 +170,13 @@ fun App() {
                                 popUpTo(startId) { /* do not save/restore overview state to avoid restoring nested navigation */ }
                                 launchSingleTop = true
                                 restoreState = false
+                            }
+                        } else if (it == "calendar") {
+                            val destination = if (preferTimeline) "timeline" else "calendar"
+                            navController.navigate(destination) {
+                                popUpTo(startId) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
                             }
                         } else {
                             navController.navigate(it) {
@@ -190,6 +211,7 @@ fun App() {
                         navController = navController,
                         weekOffset = weekOffset,
                         onWeekOffsetChange = { weekOffset = it },
+                        preferTimeline = preferTimeline,
                         onLogout = { 
                             loggedIn = false
                             navController.navigate("overview") {
@@ -211,6 +233,7 @@ fun AppNavHost(
     weekOffset: Int,
     onWeekOffsetChange: (Int) -> Unit,
     onLogout: () -> Unit,
+    preferTimeline: Boolean = false,
     bottomPadding: Dp
 ) {
     NavHost(
@@ -235,14 +258,17 @@ fun AppNavHost(
         
         composable(
             route = "calendar",
-            enterTransition = { fadeIn(animationSpec = tween(300)) },
-            exitTransition = { fadeOut(animationSpec = tween(300)) }
+            enterTransition = { if (preferTimeline) slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(400)) else fadeIn(tween(300)) },
+            exitTransition = { if (preferTimeline) slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(400)) else fadeOut(tween(300)) },
+            popEnterTransition = { if (preferTimeline) slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(400)) else fadeIn(tween(300)) },
+            popExitTransition = { if (preferTimeline) slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(400)) else fadeOut(tween(300)) }
         ) {
             CalendarScreen(
                 weekOffset = weekOffset,
                 onWeekOffsetChange = onWeekOffsetChange,
                 onOpenEvent = { id -> navController.navigate("event/$id") },
-                onNavigateTimeline = { navController.navigate("timeline") },
+                onNavigateTimeline = if (preferTimeline) ({ navController.navigateUp() }) else ({ navController.navigate("timeline") }),
+                onBack = if (preferTimeline) ({ navController.navigateUp() }) else null,
                 bottomPadding = bottomPadding
             )
         }
@@ -279,6 +305,7 @@ fun AppNavHost(
                 onPrivacyClick = { navController.navigate("privacy") },
                 onNotificationsClick = { navController.navigate("notifications") },
                 onLanguagesClick = { navController.navigate("languages") },
+                onAppearanceClick = { navController.navigate("settings") },
                 bottomPadding = bottomPadding
             )
         }
@@ -311,6 +338,36 @@ fun AppNavHost(
             }
         ) {
             LanguageScreen(onBack = { navController.navigateUp() })
+        }
+
+        composable(
+            route = "settings",
+            enterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            popEnterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            }
+        ) {
+            SettingsScreen(onBack = { navController.navigateUp() })
         }
 
         composable(
@@ -604,34 +661,15 @@ fun AppNavHost(
         // Vedlejší obrazovky s horizontálními přechody
         composable(
             route = "timeline",
-            enterTransition = {
-                slideIntoContainer(
-                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                    animationSpec = tween(400)
-                )
-            },
-            exitTransition = {
-                slideOutOfContainer(
-                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                    animationSpec = tween(400)
-                )
-            },
-            popEnterTransition = {
-                slideIntoContainer(
-                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                    animationSpec = tween(400)
-                )
-            },
-            popExitTransition = {
-                slideOutOfContainer(
-                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                    animationSpec = tween(400)
-                )
-            }
+            enterTransition = { if (preferTimeline) fadeIn(tween(300)) else slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(400)) },
+            exitTransition = { if (preferTimeline) fadeOut(tween(300)) else slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(400)) },
+            popEnterTransition = { if (preferTimeline) fadeIn(tween(300)) else slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(400)) },
+            popExitTransition = { if (preferTimeline) fadeOut(tween(300)) else slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(400)) }
         ) {
             CalendarViewScreen(
                 onEventClick = { id -> navController.navigate("event/$id") },
-                onBack = { navController.navigateUp() }
+                onBack = if (!preferTimeline) ({ navController.navigateUp() }) else null,
+                onSwitchToBlocks = if (preferTimeline) ({ navController.navigate("calendar") }) else null
             )
         }
         

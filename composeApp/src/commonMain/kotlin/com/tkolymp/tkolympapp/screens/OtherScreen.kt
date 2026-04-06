@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -65,7 +66,7 @@ import com.tkolymp.shared.language.AppStrings
 import kotlin.coroutines.cancellation.CancellationException
 
 private enum class MainItem { PEOPLE, TRAINERS, GROUPS, LEADERBOARD, STATS }
-private enum class SettingsItem { LANGUAGES, ABOUT, NOTIFICATIONS, PRIVACY }
+private enum class SettingsItem { LANGUAGES, ABOUT, NOTIFICATIONS, PRIVACY, APPEARANCE }
 
 // Helper: do not surface internal/cancellation/compose runtime messages to the UI
 private fun shouldShowErrorMessage(msg: String?): Boolean {
@@ -96,7 +97,7 @@ private fun formatDateString(raw: String): String? {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {}, onTrainersClick: () -> Unit = {}, onGroupsClick: () -> Unit = {}, onLeaderboardClick: () -> Unit = {}, onStatsClick: () -> Unit = {}, onAboutClick: () -> Unit = {}, onPrivacyClick: () -> Unit = {}, onNotificationsClick: () -> Unit = {}, onLanguagesClick: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
+fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {}, onTrainersClick: () -> Unit = {}, onGroupsClick: () -> Unit = {}, onLeaderboardClick: () -> Unit = {}, onStatsClick: () -> Unit = {}, onAboutClick: () -> Unit = {}, onPrivacyClick: () -> Unit = {}, onNotificationsClick: () -> Unit = {}, onLanguagesClick: () -> Unit = {}, onAppearanceClick: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
     val viewModel = viewModel<OtherViewModel>()
     val state by viewModel.state.collectAsState()
     var showDebug by remember { mutableStateOf(false) }
@@ -268,14 +269,16 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
             )
 
             val settingsItems = listOf(
+                Pair(SettingsItem.APPEARANCE, Icons.Filled.Palette),
                 Pair(SettingsItem.LANGUAGES, Icons.Filled.Language),
-                Pair(SettingsItem.ABOUT, Icons.Filled.Info),
                 Pair(SettingsItem.NOTIFICATIONS, Icons.Filled.Notifications),
+                Pair(SettingsItem.ABOUT, Icons.Filled.Info),
                 Pair(SettingsItem.PRIVACY, Icons.Filled.Security)
             )
 
             settingsItems.forEach { (item, icon) ->
                 val label = when (item) {
+                    SettingsItem.APPEARANCE -> AppStrings.current.otherScreen.appearanceSettings
                     SettingsItem.LANGUAGES -> AppStrings.current.otherScreen.languages
                     SettingsItem.ABOUT -> AppStrings.current.otherScreen.aboutApp
                     SettingsItem.NOTIFICATIONS -> AppStrings.current.otherScreen.notificationSettings
@@ -287,6 +290,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                         .padding(horizontal = 16.dp, vertical = 4.dp)
                         .clickable {
                             when (item) {
+                                SettingsItem.APPEARANCE -> onAppearanceClick()
                                 SettingsItem.LANGUAGES -> onLanguagesClick()
                                 SettingsItem.ABOUT -> onAboutClick()
                                 SettingsItem.NOTIFICATIONS -> onNotificationsClick()

@@ -10,6 +10,7 @@ import com.tkolymp.shared.notification.INotificationScheduler
 import com.tkolymp.shared.notification.NotificationService
 import com.tkolymp.shared.notification.NotificationStorage
 import com.tkolymp.shared.people.PeopleService
+import com.tkolymp.shared.storage.CalendarPreferenceStorage
 import com.tkolymp.shared.storage.LanguageStorage
 import com.tkolymp.shared.storage.OnboardingStorage
 import com.tkolymp.shared.storage.TokenStorage
@@ -37,4 +38,5 @@ class AppContainer(
     val notificationService: NotificationService,
     val onboardingStorage: OnboardingStorage,
     val languageStorage: LanguageStorage,
+    val calendarPreferenceStorage: CalendarPreferenceStorage,
 )

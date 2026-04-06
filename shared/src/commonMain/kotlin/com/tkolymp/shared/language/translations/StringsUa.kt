@@ -22,6 +22,7 @@ val StringsUa = Strings(
         notificationSettings = "Налаштування сповіщень",
         privacyPolicy = "Політика конфіденційності",
         myAccount = "Мій акаунт",
+        appearanceSettings = "Вигляд",
     ),
     filters = FilterStrings(
         filterType = "тип",
@@ -208,7 +209,7 @@ val StringsUa = Strings(
         trainingSpaces = "Тренувальні зали",
     ),
     timeline = TimelineStrings(
-        timeline = "Стрічка часу",
+        timeline = "Вісь",
         today = "Сьогодні",
         nothingPlanned = "Ви ще нічого не запланували",
         tomorrow = "Завтра",
@@ -282,6 +283,12 @@ val StringsUa = Strings(
         onboardingDesc2 = "Дізнайтеся про основні функції",
         onboardingTitle3 = "Почніть",
         onboardingDesc3 = "Почніть прямо зараз",
+        onboardingTitle4 = "Вигляд календаря",
+        onboardingDesc4 = "Як ти хочеш переглядати розклад тренувань?",
+        calendarViewList = "Тижневий список",
+        calendarViewListDesc = "Компактний список\nза днями",
+        calendarViewTimeline = "Вісь",
+        calendarViewTimelineDesc = "Візуальний план\nз часовою шкалою",
         start = "Почати",
     ),
     dialogs = DialogStrings(
@@ -392,5 +399,17 @@ val StringsUa = Strings(
         sessionsList = "Список занять",
         cancelled = "Скасовано",
         noAttendanceData = "Немає записів відвідуваності",
+    ),
+    settings = SettingsStrings(
+        title = "Налаштування",
+        appearanceSection = "Вигляд",
+        themeLabel = "Тема",
+        themeSystem = "Системна",
+        themeLight = "Світла",
+        themeDark = "Темна",
+        calendarSection = "Календар",
+        calendarDefaultView = "Вигляд за замовчуванням",
+        calendarViewList = "Тижневий список",
+        calendarViewTimeline = "Вісь",
     ),
 )

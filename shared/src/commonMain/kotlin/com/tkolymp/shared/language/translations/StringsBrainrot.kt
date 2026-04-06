@@ -23,6 +23,7 @@ val StringsBrainrot = Strings(
         notificationSettings = "Notification Drip",
         privacyPolicy = "Privacy or Whatever",
         myAccount = "My Slay Account",
+        appearanceSettings = "Aesthetic fr",
     ),
     filters = FilterStrings(
         filterType = "type",
@@ -209,7 +210,7 @@ val StringsBrainrot = Strings(
         trainingSpaces = "Gyms",
     ),
     timeline = TimelineStrings(
-        timeline = "Timeline",
+        timeline = "Axis fr",
         today = "2day",
         nothingPlanned = "U planned nothing bestie",
         tomorrow = "tmrw no cap",
@@ -283,6 +284,12 @@ val StringsBrainrot = Strings(
         onboardingDesc2 = "Track upcoming battles, register for events and rizz up your calendar no cap.",
         onboardingTitle3 = "Club in your pocket fr",
         onboardingDesc3 = "Check leaderboards, the board and member profiles fr. Log in and start the grind rn.",
+        onboardingTitle4 = "Calendar vibes fr",
+        onboardingDesc4 = "How u wanna see the schedule no cap?",
+        calendarViewList = "List mode",
+        calendarViewListDesc = "Compact list\nby day fr",
+        calendarViewTimeline = "Axis fr",
+        calendarViewTimelineDesc = "Big brain visual\nschedule fr",
         start = "Let's go fr",
     ),
     dialogs = DialogStrings(
@@ -393,5 +400,17 @@ val StringsBrainrot = Strings(
         sessionsList = "Sessions list",
         cancelled = "Cancelled rip",
         noAttendanceData = "No records bestie",
+    ),
+    settings = SettingsStrings(
+        title = "Settings no cap",
+        appearanceSection = "Aesthetic fr",
+        themeLabel = "Vibe",
+        themeSystem = "Auto fr",
+        themeLight = "Light mode bestie",
+        themeDark = "Dark mode slay",
+        calendarSection = "Calendar rizz",
+        calendarDefaultView = "Default view no cap",
+        calendarViewList = "List mode",
+        calendarViewTimeline = "Axis fr",
     ),
 )

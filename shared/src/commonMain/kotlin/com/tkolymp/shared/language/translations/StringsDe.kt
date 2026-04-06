@@ -22,6 +22,7 @@ val StringsDe = Strings(
         notificationSettings = "Benachrichtigungseinstellungen",
         privacyPolicy = "Datenschutzrichtlinie",
         myAccount = "Mein Konto",
+        appearanceSettings = "Erscheinungsbild",
     ),
     filters = FilterStrings(
         filterType = "Art",
@@ -208,7 +209,7 @@ val StringsDe = Strings(
         trainingSpaces = "Trainingsstätten",
     ),
     timeline = TimelineStrings(
-        timeline = "Zeitleiste",
+        timeline = "Zeitachse",
         today = "Heute",
         nothingPlanned = "Noch nichts geplant",
         tomorrow = "Morgen",
@@ -282,6 +283,12 @@ val StringsDe = Strings(
         onboardingDesc2 = "Verfolgen Sie bevorstehende Wettkämpfe, melden Sie sich zu Events an und behalten Sie den Überblick über den Klubkalender.",
         onboardingTitle3 = "Klub immer dabei",
         onboardingDesc3 = "Sehen Sie sich Ranglisten, Aushänge und Mitgliederprofile an. Melden Sie sich an und starten Sie jetzt.",
+        onboardingTitle4 = "Kalenderansicht",
+        onboardingDesc4 = "Wie möchtest du deinen Trainingsplan sehen?",
+        calendarViewList = "Wochenübersicht",
+        calendarViewListDesc = "Kompakte Liste\nnach Tagen",
+        calendarViewTimeline = "Zeitachse",
+        calendarViewTimelineDesc = "Visueller Plan\nmit Zeitachse",
         start = "Loslegen",
     ),
     dialogs = DialogStrings(
@@ -391,5 +398,17 @@ val StringsDe = Strings(
         sessionsList = "Einheitenliste",
         cancelled = "Abgesagt",
         noAttendanceData = "Keine Anwesenheitsdaten",
+    ),
+    settings = SettingsStrings(
+        title = "Einstellungen",
+        appearanceSection = "Erscheinungsbild",
+        themeLabel = "Design",
+        themeSystem = "System",
+        themeLight = "Hell",
+        themeDark = "Dunkel",
+        calendarSection = "Kalender",
+        calendarDefaultView = "Standardansicht",
+        calendarViewList = "Wochenübersicht",
+        calendarViewTimeline = "Zeitachse",
     ),
 )

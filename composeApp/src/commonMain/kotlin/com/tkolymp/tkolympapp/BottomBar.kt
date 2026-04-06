@@ -25,7 +25,7 @@ fun AppBottomBar(current: String, onSelect: (String) -> Unit, modifier: Modifier
             label = { Text(AppStrings.current.navigation.overview) }
         )
         NavigationBarItem(
-            selected = current == "calendar",
+            selected = current == "calendar" || current == "timeline",
             onClick = { onSelect("calendar") },
             icon = { Icon(Icons.Default.CalendarToday, contentDescription = null) },
             label = { Text(AppStrings.current.navigation.calendar) }

@@ -11,6 +11,7 @@ import com.tkolymp.shared.notification.NotificationSchedulerAndroid
 import com.tkolymp.shared.notification.NotificationService
 import com.tkolymp.shared.event.EventService
 import com.tkolymp.shared.storage.UserStorage
+import com.tkolymp.shared.storage.CalendarPreferenceStorage
 import com.tkolymp.shared.storage.OnboardingStorage
 import com.tkolymp.shared.user.UserService
 import io.ktor.client.*
@@ -82,6 +83,7 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
         notificationService = notificationSvc,
         onboardingStorage = OnboardingStorage(context),
         languageStorage = com.tkolymp.shared.storage.LanguageStorage(context),
+        calendarPreferenceStorage = CalendarPreferenceStorage(context),
     )
 
     ServiceLocator.init(container)

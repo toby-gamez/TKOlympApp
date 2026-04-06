@@ -1,14 +1,6 @@
 
 
 package com.tkolymp.tkolympapp.screens
-import com.tkolymp.tkolympapp.SwipeToReload
-import com.tkolymp.shared.utils.formatTimes
-import com.tkolymp.shared.utils.formatTimesWithDate
-import com.tkolymp.shared.utils.formatTimesWithDateAlways
-import com.tkolymp.shared.utils.durationMinutes
-import com.tkolymp.shared.utils.translateEventType
-import com.tkolymp.shared.utils.formatFullCalendarDate
-import kotlinx.datetime.LocalDate
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -27,12 +19,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ViewTimeline
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -47,7 +42,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -62,9 +56,17 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.event.EventInstance
 import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.shared.utils.durationMinutes
+import com.tkolymp.shared.utils.formatFullCalendarDate
+import com.tkolymp.shared.utils.formatTimes
+import com.tkolymp.shared.utils.formatTimesWithDate
+import com.tkolymp.shared.utils.translateEventType
+import com.tkolymp.tkolympapp.SwipeToReload
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,12 +75,12 @@ fun CalendarScreen(
     onWeekOffsetChange: (Int) -> Unit = {},
     onOpenEvent: (Long) -> Unit = {},
     onNavigateTimeline: (() -> Unit)? = null,
+    onBack: (() -> Unit)? = null,
     bottomPadding: Dp = 0.dp
 ) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     var localWeekOffset by rememberSaveable { mutableIntStateOf(weekOffset) }
     val tabs = listOf(AppStrings.current.people.mine, AppStrings.current.commonActions.all)
-    // moved data loading into shared CalendarViewModel
     val calendarViewModel = viewModel<com.tkolymp.shared.viewmodels.CalendarViewModel>()
     val calState by calendarViewModel.state.collectAsState()
     val scope = rememberCoroutineScope()
@@ -90,17 +92,32 @@ fun CalendarScreen(
         calendarViewModel.load(localWeekOffset, selectedTab == 0)
     }
 
-    // user id / couple ids are provided by calendar viewmodel state
-
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(AppStrings.current.navigation.calendar) },
-                actions = {
-                    onNavigateTimeline?.let {
+                navigationIcon = {
+                    onBack?.let {
                         IconButton(onClick = it) {
-                            Icon(Icons.Default.ViewTimeline, contentDescription = "Timeline zobrazení")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
                         }
+                    }
+                },
+                actions = {
+                    if (onNavigateTimeline != null && onBack == null) {
+                        FilterChip(
+                            selected = false,
+                            onClick = onNavigateTimeline,
+                            label = { Text(AppStrings.current.onboarding.calendarViewTimeline) },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.ViewTimeline,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(AssistChipDefaults.IconSize)
+                                )
+                            },
+                            modifier = Modifier.padding(end = 4.dp)
+                        )
                     }
                     IconButton(onClick = {
                         localWeekOffset = localWeekOffset - 1
@@ -132,12 +149,10 @@ fun CalendarScreen(
             modifier = Modifier.padding(top = padding.calculateTopPadding(), bottom = bottomPadding)
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize(),
+                modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.Start
             ) {
-                // Calendar controls
                 PrimaryTabRow(selectedTabIndex = selectedTab, modifier = Modifier.fillMaxWidth()) {
                     tabs.forEachIndexed { index, title ->
                         Tab(

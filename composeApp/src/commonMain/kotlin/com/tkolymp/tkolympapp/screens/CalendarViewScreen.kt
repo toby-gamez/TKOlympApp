@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,6 +24,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.ViewWeek
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -86,7 +89,8 @@ import kotlinx.datetime.todayIn
 fun CalendarViewScreen(
     viewModel: CalendarViewViewModel = viewModel(),
     onEventClick: (Long) -> Unit = {},
-    onBack: (() -> Unit)? = null
+    onBack: (() -> Unit)? = null,
+    onSwitchToBlocks: (() -> Unit)? = null
 ) {
     val state by viewModel.state.collectAsState()
     val scope = rememberCoroutineScope()
@@ -99,12 +103,29 @@ fun CalendarViewScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(AppStrings.current.timeline.timeline) },
+                title = { Text(if (onSwitchToBlocks != null) AppStrings.current.navigation.calendar else AppStrings.current.timeline.timeline) },
                 navigationIcon = {
                     onBack?.let {
                         IconButton(onClick = it) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
                         }
+                    }
+                },
+                actions = {
+                    onSwitchToBlocks?.let {
+                        FilterChip(
+                            selected = false,
+                            onClick = it,
+                            label = { Text(AppStrings.current.settings.calendarViewList) },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.ViewWeek,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(AssistChipDefaults.IconSize)
+                                )
+                            },
+                            modifier = Modifier.padding(end = 4.dp)
+                        )
                     }
                 }
             )

@@ -22,6 +22,7 @@ val StringsEn = Strings(
         notificationSettings = "Notification Settings",
         privacyPolicy = "Privacy Policy",
         myAccount = "My Account",
+        appearanceSettings = "Appearance",
     ),
     filters = FilterStrings(
         filterType = "type",
@@ -282,6 +283,12 @@ val StringsEn = Strings(
         onboardingDesc2 = "Learn about key features",
         onboardingTitle3 = "Get Started",
         onboardingDesc3 = "Start now",
+        onboardingTitle4 = "Calendar view",
+        onboardingDesc4 = "How do you want to see your schedule?",
+        calendarViewList = "Weekly list",
+        calendarViewListDesc = "Compact list\nby day",
+        calendarViewTimeline = "Timeline",
+        calendarViewTimelineDesc = "Visual schedule\nwith time axis",
         start = "Start",
     ),
     dialogs = DialogStrings(
@@ -392,5 +399,17 @@ val StringsEn = Strings(
         sessionsList = "Session list",
         cancelled = "Cancelled",
         noAttendanceData = "No attendance records",
+    ),
+    settings = SettingsStrings(
+        title = "Settings",
+        appearanceSection = "Appearance",
+        themeLabel = "Theme",
+        themeSystem = "System",
+        themeLight = "Light",
+        themeDark = "Dark",
+        calendarSection = "Calendar",
+        calendarDefaultView = "Default view",
+        calendarViewList = "Weekly list",
+        calendarViewTimeline = "Timeline",
     ),
 )
