@@ -103,7 +103,7 @@ fun App() {
 
         var loggedIn by remember { mutableStateOf<Boolean?>(null) }
         var showOnboarding by remember { mutableStateOf<Boolean?>(null) }
-        var preferTimeline by remember { mutableStateOf(false) }
+        val preferTimeline by AppearanceSettings.preferTimeline.collectAsState()
         var weekOffset by remember { mutableIntStateOf(0) }
 
         val ctx = LocalContext.current
@@ -133,7 +133,8 @@ fun App() {
                     // Show onboarding only on first launch (persisted in onboarding storage)
                     val onboardingVm = OnboardingViewModel()
                     val seen = try { onboardingVm.hasSeenOnboarding() } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
-                    preferTimeline = try { onboardingVm.getPreferTimeline() } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
+                    val prefTimeline = try { onboardingVm.getPreferTimeline() } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
+                    AppearanceSettings.setPreferTimeline(prefTimeline)
                     val themeRaw = try { ServiceLocator.calendarPreferenceStorage.getThemeMode() } catch (_: Exception) { "system" }
                     AppearanceSettings.setThemeMode(when (themeRaw) { "light" -> ThemeMode.LIGHT; "dark" -> ThemeMode.DARK; else -> ThemeMode.SYSTEM })
                     showOnboarding = !seen

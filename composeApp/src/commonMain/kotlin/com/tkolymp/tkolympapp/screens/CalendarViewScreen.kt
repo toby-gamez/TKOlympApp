@@ -57,6 +57,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
@@ -121,7 +122,7 @@ fun CalendarViewScreen(
                                 Icon(
                                     Icons.Default.ViewWeek,
                                     contentDescription = null,
-                                    modifier = Modifier.size(AssistChipDefaults.IconSize)
+                                    modifier = Modifier.size(AssistChipDefaults.IconSize).rotate(90f)
                                 )
                             },
                             modifier = Modifier.padding(end = 4.dp)

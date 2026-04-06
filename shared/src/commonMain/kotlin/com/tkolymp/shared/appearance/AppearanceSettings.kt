@@ -13,7 +13,14 @@ object AppearanceSettings {
     private val _themeMode = MutableStateFlow(ThemeMode.SYSTEM)
     val themeMode: StateFlow<ThemeMode> = _themeMode
 
+    private val _preferTimeline = MutableStateFlow(false)
+    val preferTimeline: StateFlow<Boolean> = _preferTimeline
+
     fun setThemeMode(mode: ThemeMode) {
         _themeMode.value = mode
+    }
+
+    fun setPreferTimeline(value: Boolean) {
+        _preferTimeline.value = value
     }
 }

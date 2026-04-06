@@ -36,6 +36,7 @@ class SettingsViewModel(
     suspend fun setPreferTimeline(value: Boolean) {
         storage.setPreferTimeline(value)
         _state.update { it.copy(preferTimeline = value) }
+        AppearanceSettings.setPreferTimeline(value)
     }
 
     suspend fun setThemeMode(mode: ThemeMode) {

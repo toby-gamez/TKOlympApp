@@ -42,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -229,7 +230,8 @@ private fun CalendarViewPickerPage(
                 description = listDesc,
                 selected = !preferTimeline,
                 onClick = { onSelect(false) },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                iconModifier = Modifier.rotate(90f)
             )
             CalendarViewOptionCard(
                 icon = Icons.Filled.ViewTimeline,
@@ -251,6 +253,7 @@ private fun CalendarViewOptionCard(
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    iconModifier: Modifier = Modifier,
 ) {
     val borderColor = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent
     val containerColor = if (selected)
@@ -277,7 +280,7 @@ private fun CalendarViewOptionCard(
                 imageVector = icon,
                 contentDescription = null,
                 tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(36.dp)
+                modifier = Modifier.size(36.dp).then(iconModifier)
             )
             Text(
                 text = label,

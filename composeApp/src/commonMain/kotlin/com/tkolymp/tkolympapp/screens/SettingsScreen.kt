@@ -43,6 +43,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -99,7 +100,7 @@ fun SettingsScreen(
                 ) {
                     val modes = listOf(ThemeMode.SYSTEM, ThemeMode.LIGHT, ThemeMode.DARK)
                     val labels = listOf(s.themeSystem, s.themeLight, s.themeDark)
-                    SingleChoiceSegmentedButtonRow {
+                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                         modes.forEachIndexed { index, mode ->
                             SegmentedButton(
                                 selected = state.themeMode == mode,
@@ -124,7 +125,7 @@ fun SettingsScreen(
                     icon = Icons.Filled.CalendarMonth,
                     label = s.calendarDefaultView
                 ) {
-                    SingleChoiceSegmentedButtonRow {
+                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                         SegmentedButton(
                             selected = !state.preferTimeline,
                             onClick = { scope.launch { viewModel.setPreferTimeline(false) } },
@@ -133,7 +134,7 @@ fun SettingsScreen(
                                 Icon(
                                     Icons.Filled.ViewWeek,
                                     contentDescription = null,
-                                    modifier = Modifier.size(SegmentedButtonDefaults.IconSize)
+                                    modifier = Modifier.size(SegmentedButtonDefaults.IconSize).rotate(90f)
                                 )
                             }
                         ) {
@@ -190,31 +191,34 @@ private fun SettingsRow(
     label: String,
     control: @Composable () -> Unit
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp)
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 12.dp)
             )
         }
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 12.dp)
-        )
+        Spacer(modifier = Modifier.height(8.dp))
         control()
     }
 }
