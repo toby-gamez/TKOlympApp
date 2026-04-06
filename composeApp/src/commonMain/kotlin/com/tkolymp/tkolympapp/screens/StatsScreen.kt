@@ -20,6 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CompareArrows
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -103,6 +104,7 @@ fun StatsScreen(
     val strings = AppStrings.current.stats
     var compareMode by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(0) }
+    var showShareDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.loadStats(SeasonSelection.default())
@@ -124,6 +126,14 @@ fun StatsScreen(
                     }
                 },
                 actions = {
+                    if (!compareMode && totalSessions > 0) {
+                        IconButton(onClick = { showShareDialog = true }) {
+                            Icon(
+                                Icons.Default.Share,
+                                contentDescription = "Sdílet statistiky"
+                            )
+                        }
+                    }
                     IconButton(onClick = { compareMode = !compareMode }) {
                         Icon(
                             Icons.Default.CompareArrows,
@@ -135,6 +145,18 @@ fun StatsScreen(
             )
         }
     ) { padding ->
+        if (showShareDialog) {
+            ShareStatsDialog(
+                season = selectedSeason,
+                totalSessions = totalSessions,
+                totalMinutes = totalMinutes,
+                avgPerWeek = avgPerWeek,
+                currentStreak = currentStreak,
+                weeklyData = weeklyData,
+                onDismiss = { showShareDialog = false }
+            )
+        }
+
         SwipeToReload(
             isRefreshing = if (compareMode) isLoadingComparison else isLoading,
             onRefresh = { scope.launch { if (compareMode) viewModel.loadComparison() else viewModel.loadStats(selectedSeason, forceRefresh = true) } },
