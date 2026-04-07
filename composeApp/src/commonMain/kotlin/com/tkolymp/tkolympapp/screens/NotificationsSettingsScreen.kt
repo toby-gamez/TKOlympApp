@@ -235,6 +235,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                             }
                             if (selectedTab == 1) {
                                 var editingReminder by remember { mutableStateOf<EventReminder?>(null) }
+                                var deletingReminder by remember { mutableStateOf<EventReminder?>(null) }
                                 if (vmState.reminders.isEmpty()) {
                                     Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
                                         Text(AppStrings.current.notifications.noReminders, style = MaterialTheme.typography.titleMedium)
@@ -251,13 +252,30 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                                     IconButton(onClick = { editingReminder = reminder }) {
                                                         Icon(Icons.Default.Edit, contentDescription = AppStrings.current.commonActions.edit)
                                                     }
-                                                    IconButton(onClick = { scope.launch { viewModel.deleteReminder(reminder.id) } }) {
+                                                    IconButton(onClick = { deletingReminder = reminder }) {
                                                         Icon(Icons.Default.Delete, contentDescription = AppStrings.current.commonActions.delete)
                                                     }
                                                 }
                                             }
                                         }
                                     }
+                                }
+                                if (deletingReminder != null) {
+                                    val toDelete = deletingReminder!!
+                                    AlertDialog(
+                                        onDismissRequest = { deletingReminder = null },
+                                        title = { Text(AppStrings.current.notifications.deleteRuleConfirmTitle) },
+                                        text = { Text(AppStrings.current.notifications.deleteRuleConfirmText) },
+                                        confirmButton = {
+                                            Button(onClick = {
+                                                scope.launch { viewModel.deleteReminder(toDelete.id) }
+                                                deletingReminder = null
+                                            }) { Text(AppStrings.current.commonActions.delete) }
+                                        },
+                                        dismissButton = {
+                                            TextButton(onClick = { deletingReminder = null }) { Text(AppStrings.current.commonActions.cancel) }
+                                        }
+                                    )
                                 }
                                 if (editingReminder != null) {
                                     val editing = editingReminder!!
