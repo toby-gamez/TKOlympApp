@@ -174,9 +174,20 @@ internal fun ShareStatsDialog(
                         FilterChip(
                             selected = isSelected,
                             onClick = {
+                                val focalSections = setOf(
+                                    ShareSection.OVERVIEW,
+                                    ShareSection.TOTAL_HOURS,
+                                    ShareSection.AVG_PER_WEEK,
+                                    ShareSection.TOTAL_SESSIONS
+                                )
                                 selectedSections = if (isSelected) {
                                     if (selectedSections.size > 1) selectedSections - section
                                     else selectedSections
+                                } else if (section in focalSections) {
+                                    // Nahradit případnou jinou focal sekci touto
+                                    val withoutFocal = selectedSections - focalSections
+                                    if (withoutFocal.size < 3) withoutFocal + section
+                                    else selectedSections // max 3, ale bez focal místa — edge case
                                 } else {
                                     if (selectedSections.size < 3) selectedSections + section
                                     else selectedSections
