@@ -153,6 +153,11 @@ fun StatsScreen(
                 avgPerWeek = avgPerWeek,
                 currentStreak = currentStreak,
                 weeklyData = weeklyData,
+                monthlyData = monthlyData,
+                typeData = typeData,
+                trainerData = trainerData,
+                scoreEntry = scoreEntry,
+                cancelledCount = cancelledCount,
                 onDismiss = { showShareDialog = false }
             )
         }
