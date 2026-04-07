@@ -211,7 +211,7 @@ internal fun ShareStatsDialog(
                         onClick = onDismiss,
                         enabled = !isSharing,
                         modifier = Modifier.weight(1f)
-                    ) { Text("Zrušit") }
+                    ) { Text(AppStrings.current.commonActions.cancel) }
 
                     Button(
                         onClick = {
@@ -236,7 +236,7 @@ internal fun ShareStatsDialog(
                                 strokeWidth = 2.dp
                             )
                         } else {
-                            Text("Sdílet")
+                            Text(strings.shareButton)
                         }
                     }
                 }

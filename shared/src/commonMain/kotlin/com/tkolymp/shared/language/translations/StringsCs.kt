@@ -403,6 +403,7 @@ val StringsCs = Strings(
         sessionsList = "Seznam lekcí",
         cancelled = "Zrušeno",
         noAttendanceData = "Žádné záznamy docházky",
+        shareButton = "Sdílet",
     ),
     settings = SettingsStrings(
         title = "Nastavení",

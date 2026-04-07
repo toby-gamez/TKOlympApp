@@ -1192,8 +1192,12 @@ private fun AttendanceSessionRow(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            val name = session.eventName.ifBlank {
-                translateEventType(session.eventType) ?: session.eventType ?: ""
+            val trainerName = session.trainerName
+            val name = when {
+                session.eventType?.equals("lesson", ignoreCase = true) == true && !trainerName.isNullOrBlank() ->
+                    "${translateEventType(session.eventType)}: ${stripTitles(trainerName)}"
+                session.eventName.isNotBlank() -> session.eventName
+                else -> translateEventType(session.eventType) ?: session.eventType ?: ""
             }
             if (name.isNotBlank()) {
                 Text(

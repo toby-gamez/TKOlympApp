@@ -41,4 +41,5 @@ data class StatsStrings(
     val sessionsList: String,
     val cancelled: String,
     val noAttendanceData: String,
+    val shareButton: String,
 )

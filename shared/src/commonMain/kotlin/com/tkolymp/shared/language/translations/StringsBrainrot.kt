@@ -404,6 +404,7 @@ val StringsBrainrot = Strings(
         sessionsList = "Sessions list",
         cancelled = "Cancelled rip",
         noAttendanceData = "No records bestie",
+        shareButton = "Drop it fr",
     ),
     settings = SettingsStrings(
         title = "Settings no cap",

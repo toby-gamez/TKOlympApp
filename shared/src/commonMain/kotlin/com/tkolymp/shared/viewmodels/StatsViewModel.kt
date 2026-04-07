@@ -92,7 +92,8 @@ data class SessionItem(
     val since: String?,
     val until: String?,
     val durationMinutes: Long,
-    val isCancelled: Boolean
+    val isCancelled: Boolean,
+    val trainerName: String? = null
 )
 
 /** Sessions grouped by calendar month for the attendance list. */
@@ -592,7 +593,8 @@ class StatsViewModel(
                 since = inst.since,
                 until = inst.until,
                 durationMinutes = duration,
-                isCancelled = inst.isCancelled
+                isCancelled = inst.isCancelled,
+                trainerName = inst.event?.eventTrainersList?.firstOrNull { it.isNotBlank() }?.trim()
             )
             byMonth.getOrPut(ym) { mutableListOf() }.add(session)
         }

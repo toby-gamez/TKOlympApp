@@ -402,6 +402,7 @@ val StringsDe = Strings(
         sessionsList = "Einheitenliste",
         cancelled = "Abgesagt",
         noAttendanceData = "Keine Anwesenheitsdaten",
+        shareButton = "Teilen",
     ),
     settings = SettingsStrings(
         title = "Einstellungen",

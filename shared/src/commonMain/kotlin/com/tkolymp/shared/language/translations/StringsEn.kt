@@ -403,6 +403,7 @@ val StringsEn = Strings(
         sessionsList = "Session list",
         cancelled = "Cancelled",
         noAttendanceData = "No attendance records",
+        shareButton = "Share",
     ),
     settings = SettingsStrings(
         title = "Settings",

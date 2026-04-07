@@ -403,6 +403,7 @@ val StringsUa = Strings(
         sessionsList = "Список занять",
         cancelled = "Скасовано",
         noAttendanceData = "Немає записів відвідуваності",
+        shareButton = "Поділитися",
     ),
     settings = SettingsStrings(
         title = "Налаштування",

@@ -403,6 +403,7 @@ val StringsSl = Strings(
         sessionsList = "Seznam sej",
         cancelled = "Preklicano",
         noAttendanceData = "Ni zapisov prisotnosti",
+        shareButton = "Deli",
     ),
     settings = SettingsStrings(
         title = "Nastavitve",

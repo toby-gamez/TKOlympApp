@@ -433,6 +433,7 @@ val StringsVi = Strings(
         sessionsList = "Danh sách buổi tập",
         cancelled = "Đã huỷ",
         noAttendanceData = "Không có dữ liệu điểm danh",
+        shareButton = "Chia sẻ",
     ),
     settings = SettingsStrings(
         title = "Cài đặt",
