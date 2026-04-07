@@ -36,6 +36,11 @@ actual fun rememberShareStatsCallback(): suspend (ImageBitmap) -> Unit {
             } else {
                 captured
             }
+            // Sample center pixel to detect transparent/black capture
+            val cx = src.width / 2
+            val cy = src.height / 2
+            val centerPixel = src.getPixel(cx, cy)
+            Log.d("ShareStats", "center pixel at ($cx,$cy) = #${Integer.toHexString(centerPixel)}")
             canvas.drawBitmap(src, 0f, 0f, null)
 
             val shareDir = File(context.cacheDir, "share")

@@ -1,3 +1,4 @@
+
 package com.tkolymp.tkolympapp.screens
 
 import androidx.compose.foundation.background
@@ -29,14 +30,12 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -46,7 +45,6 @@ import com.tkolymp.shared.viewmodels.WeekStats
 import com.tkolymp.tkolympapp.platform.AppLogo
 import com.tkolymp.tkolympapp.platform.rememberShareStatsCallback
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
 
 // ─── Share preview dialog ─────────────────────────────────────────────────────
 
@@ -75,28 +73,21 @@ internal fun ShareStatsDialog(
                 modifier = Modifier.padding(bottom = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // ── Card captured into graphicsLayer on every draw ─────────────
-                Box(
+                // ── Card rendered into graphicsLayer for capture ───────────────
+                StatsShareCard(
+                    season = season,
+                    totalSessions = totalSessions,
+                    totalMinutes = totalMinutes,
+                    avgPerWeek = avgPerWeek,
+                    currentStreak = currentStreak,
+                    weeklyData = weeklyData,
                     modifier = Modifier.drawWithContent {
-                        graphicsLayer.record(
-                            density = this,
-                            layoutDirection = layoutDirection,
-                            size = IntSize(size.width.roundToInt(), size.height.roundToInt())
-                        ) {
+                        graphicsLayer.record {
                             this@drawWithContent.drawContent()
                         }
                         drawLayer(graphicsLayer)
                     }
-                ) {
-                    StatsShareCard(
-                        season = season,
-                        totalSessions = totalSessions,
-                        totalMinutes = totalMinutes,
-                        avgPerWeek = avgPerWeek,
-                        currentStreak = currentStreak,
-                        weeklyData = weeklyData
-                    )
-                }
+                )
 
                 Spacer(Modifier.height(4.dp))
 
