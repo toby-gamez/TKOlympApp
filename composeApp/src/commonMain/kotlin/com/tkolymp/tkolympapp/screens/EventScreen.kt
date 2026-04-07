@@ -24,6 +24,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.NotificationsOff
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -44,15 +47,18 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.EventViewModel
+import com.tkolymp.tkolympapp.components.QuantityInput
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -70,6 +76,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
     val showAllInstances = remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    var showReminderDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(eventId) {
         viewModel.loadEvent(eventId, forceRefresh = true)
@@ -82,6 +89,15 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                   else AppStrings.current.events.addToCalendarFailed
         snackbarHostState.showSnackbar(msg)
         viewModel.clearCalendarResult()
+    }
+
+    // Show snackbar when reminderResult changes
+    LaunchedEffect(state.reminderResult) {
+        val result = state.reminderResult ?: return@LaunchedEffect
+        val msg = if (result) AppStrings.current.notifications.reminderSet
+                  else AppStrings.current.notifications.reminderRemoveAction
+        snackbarHostState.showSnackbar(msg)
+        viewModel.clearReminderResult()
     }
 
     val ev = state.eventJson
@@ -281,6 +297,33 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
             )
         }
 
+        // Připomínka
+        if (!state.isPast && state.firstInstanceIso != null) {
+            Spacer(modifier = Modifier.height(4.dp))
+            if (state.reminderId != null) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilledTonalButton(
+                        onClick = { showReminderDialog = true },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Default.Notifications, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
+                        Text(AppStrings.current.notifications.remindMeBefore.replace("{0}", state.reminderMinutesBefore?.toString() ?: "30"))
+                    }
+                    FilledTonalButton(onClick = { scope.launch { viewModel.removeReminder(eventId) } }) {
+                        Icon(Icons.Default.NotificationsOff, contentDescription = AppStrings.current.notifications.reminderRemoveAction)
+                    }
+                }
+            } else {
+                FilledTonalButton(
+                    onClick = { showReminderDialog = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Notifications, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
+                    Text(AppStrings.current.notifications.remindMe)
+                }
+            }
+        }
+
         // Popis a shrnutí
         if (state.summary.isNotBlank() || state.eventDescription.isNotBlank()) {
             Spacer(modifier = Modifier.height(8.dp))
@@ -477,4 +520,38 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
-}}}
+}   // closes SwipeToReload
+
+    // Reminder dialog
+    if (showReminderDialog) {
+        val existingMinutes = state.reminderMinutesBefore ?: 30
+        val isHoursInit = existingMinutes >= 60 && existingMinutes % 60 == 0
+        var reminderUnit by remember(showReminderDialog) { mutableStateOf(if (isHoursInit) "h" else "min") }
+        var reminderValue by remember(showReminderDialog) { mutableIntStateOf(if (isHoursInit) existingMinutes / 60 else existingMinutes) }
+        AlertDialog(
+            onDismissRequest = { showReminderDialog = false },
+            title = { Text(AppStrings.current.notifications.reminderDialogTitle) },
+            text = {
+                QuantityInput(
+                    value = reminderValue,
+                    onValueChange = { v, u -> reminderValue = v; reminderUnit = u },
+                    units = listOf("min", "h"),
+                    defaultUnit = reminderUnit,
+                    label = AppStrings.current.notifications.timeAheadLabel,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    val minutes = if (reminderUnit == "h") reminderValue * 60 else reminderValue
+                    scope.launch { viewModel.setReminder(eventId, minutes) }
+                    showReminderDialog = false
+                }) { Text(AppStrings.current.commonActions.save) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showReminderDialog = false }) { Text(AppStrings.current.commonActions.cancel) }
+            }
+        )
+    }
+}  // closes Scaffold { padding ->
+}  // closes EventScreen

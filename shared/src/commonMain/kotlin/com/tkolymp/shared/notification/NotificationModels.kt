@@ -40,3 +40,13 @@ data class ReceivedMessage(
 )
 
 enum class FilterType { ALL, BY_LOCATION, BY_TRAINER, BY_TYPE }
+
+@Serializable
+data class EventReminder(
+    val id: String,
+    val eventId: Long,
+    val eventName: String,
+    val eventStartIso: String,
+    val minutesBefore: Int = 30,
+    val scheduledNotificationId: String? = null
+)

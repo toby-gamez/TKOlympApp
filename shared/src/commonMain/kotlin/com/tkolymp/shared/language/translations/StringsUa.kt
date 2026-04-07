@@ -201,6 +201,13 @@ val StringsUa = Strings(
             timeAgoMinutes = "{0} хв тому",
             timeAgoHours = "{0} год тому",
         fromCoach = "Від тренера",
+        reminderTab = "Нагадування",
+        remindMe = "Нагадай мені",
+        reminderSet = "Нагадування встановлено",
+        reminderRemoveAction = "Скасувати нагадування",
+        noReminders = "Немає нагадувань",
+        remindMeBefore = "Нагадати за {0} хв",
+        reminderDialogTitle = "Встановити нагадування",
     ),
     people = PeopleStrings(
         searchByName = "Пошук за ім'ям або прізвищем",

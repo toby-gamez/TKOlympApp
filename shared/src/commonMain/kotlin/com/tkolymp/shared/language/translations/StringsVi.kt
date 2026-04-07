@@ -220,6 +220,13 @@ val StringsVi = Strings(
         timeAgoMinutes = "{0} phút trước",
         timeAgoHours = "{0} giờ trước",
         fromCoach = "Từ huấn luyện viên",
+        reminderTab = "Nhắc nhở",
+        remindMe = "Nhắc tôi",
+        reminderSet = "Đã đặt nhắc nhở",
+        reminderRemoveAction = "Xóa nhắc nhở",
+        noReminders = "Không có nhắc nhở",
+        remindMeBefore = "Nhắc {0} phút trước",
+        reminderDialogTitle = "Đặt nhắc nhở",
     ),
     people = PeopleStrings(
         searchByName = "Tìm kiếm theo tên hoặc họ",

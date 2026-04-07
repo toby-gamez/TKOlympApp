@@ -201,6 +201,13 @@ val StringsEn = Strings(
             timeAgoMinutes = "{0} min ago",
             timeAgoHours = "{0} h ago",
         fromCoach = "From Trainer",
+        reminderTab = "Reminders",
+        remindMe = "Remind me",
+        reminderSet = "Reminder set",
+        reminderRemoveAction = "Remove reminder",
+        noReminders = "No reminders",
+        remindMeBefore = "Remind {0} min before",
+        reminderDialogTitle = "Set reminder",
     ),
     people = PeopleStrings(
         searchByName = "Search by first or last name",

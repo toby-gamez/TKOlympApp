@@ -201,6 +201,13 @@ val StringsCs = Strings(
             timeAgoMinutes = "před {0} min",
             timeAgoHours = "před {0} h",
         fromCoach = "Od trenéra",
+        reminderTab = "Připomínky",
+        remindMe = "Připomeň mi",
+        reminderSet = "Připomínka nastavena",
+        reminderRemoveAction = "Zrušit připomínku",
+        noReminders = "Žádné připomínky",
+        remindMeBefore = "Připomenout za {0} min",
+        reminderDialogTitle = "Nastavit připomínku",
     ),
     people = PeopleStrings(
         searchByName = "Hledat podle jména nebo příjmení",

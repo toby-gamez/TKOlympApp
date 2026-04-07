@@ -202,6 +202,13 @@ val StringsBrainrot = Strings(
             timeAgoMinutes = "{0} min ago",
             timeAgoHours = "{0} h ago",
         fromCoach = "From Gymbro",
+        reminderTab = "Reminders fr",
+        remindMe = "ping me bestie",
+        reminderSet = "Reminder set no cap",
+        reminderRemoveAction = "yeet reminder",
+        noReminders = "no reminders rn",
+        remindMeBefore = "ping me {0} min b4",
+        reminderDialogTitle = "set reminder fr",
     ),
     people = PeopleStrings(
         searchByName = "Search by name fr",

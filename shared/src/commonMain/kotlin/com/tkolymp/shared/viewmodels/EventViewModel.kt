@@ -54,6 +54,10 @@ data class EventState(
     val editRegistrationButtonVisible: Boolean = false,
     val isAddedToCalendar: Boolean = false,
     val calendarResult: Boolean? = null,  // null = no attempt, true = success, false = fail
+    val firstInstanceIso: String? = null,
+    val reminderMinutesBefore: Int? = null,
+    val reminderId: String? = null,
+    val reminderResult: Boolean? = null,  // null = no attempt, true = set, false = removed
     override val isLoading: Boolean = false,
     override val error: String? = null
 ) : ViewModelState
@@ -62,7 +66,8 @@ class EventViewModel(
     private val eventService: com.tkolymp.shared.event.IEventService = ServiceLocator.eventService,
     private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService,
     private val calendarStorage: com.tkolymp.shared.storage.CalendarPreferenceStorage = ServiceLocator.calendarPreferenceStorage,
-    private val systemCalendarService: com.tkolymp.shared.systemcalendar.SystemCalendarService = ServiceLocator.systemCalendarService
+    private val systemCalendarService: com.tkolymp.shared.systemcalendar.SystemCalendarService = ServiceLocator.systemCalendarService,
+    private val notificationService: com.tkolymp.shared.notification.NotificationService = ServiceLocator.notificationService
 ) : ViewModel() {
     private val _state = MutableStateFlow(EventState())
     val state: StateFlow<EventState> = _state.asStateFlow()
@@ -189,6 +194,9 @@ class EventViewModel(
                 registrationActionsRowVisible = registrationActionsRowVisible,
                 editRegistrationButtonVisible = editRegistrationButtonVisible,
                 isAddedToCalendar = alreadyAdded,
+                firstInstanceIso = firstDate,
+                reminderMinutesBefore = try { notificationService.getReminderForEvent(eventId)?.minutesBefore } catch (_: Exception) { null },
+                reminderId = try { notificationService.getReminderForEvent(eventId)?.id } catch (_: Exception) { null },
                 isLoading = false
             )
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
@@ -243,5 +251,39 @@ class EventViewModel(
 
     fun clearCalendarResult() {
         _state.value = _state.value.copy(calendarResult = null)
+    }
+
+    suspend fun setReminder(eventId: Long, minutesBefore: Int) {
+        val s = _state.value
+        val startIso = s.firstInstanceIso ?: return
+        try {
+            val reminder = com.tkolymp.shared.notification.EventReminder(
+                id = "reminder_evt_$eventId",
+                eventId = eventId,
+                eventName = s.eventName,
+                eventStartIso = startIso,
+                minutesBefore = minutesBefore
+            )
+            val saved = notificationService.addOrUpdateReminder(reminder)
+            _state.value = _state.value.copy(
+                reminderMinutesBefore = saved.minutesBefore,
+                reminderId = saved.id,
+                reminderResult = true
+            )
+        } catch (e: CancellationException) { throw e } catch (_: Exception) {
+            _state.value = _state.value.copy(reminderResult = false)
+        }
+    }
+
+    suspend fun removeReminder(eventId: Long) {
+        val id = _state.value.reminderId ?: "reminder_evt_$eventId"
+        try {
+            notificationService.deleteReminder(id)
+            _state.value = _state.value.copy(reminderMinutesBefore = null, reminderId = null, reminderResult = false)
+        } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+    }
+
+    fun clearReminderResult() {
+        _state.value = _state.value.copy(reminderResult = null)
     }
 }

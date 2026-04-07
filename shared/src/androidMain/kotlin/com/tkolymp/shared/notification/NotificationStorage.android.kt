@@ -135,4 +135,38 @@ actual class NotificationStorage actual constructor(platformContext: Any) {
             }
         } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
     }
+
+    actual suspend fun saveEventReminders(list: List<EventReminder>) {
+        val arr = buildJsonArray {
+            list.forEach { r ->
+                add(buildJsonObject {
+                    put("id", JsonPrimitive(r.id))
+                    put("eventId", JsonPrimitive(r.eventId))
+                    put("eventName", JsonPrimitive(r.eventName))
+                    put("eventStartIso", JsonPrimitive(r.eventStartIso))
+                    put("minutesBefore", JsonPrimitive(r.minutesBefore))
+                    put("scheduledNotificationId", r.scheduledNotificationId?.let { JsonPrimitive(it) } ?: JsonNull)
+                })
+            }
+        }
+        prefs.edit().putString("event_reminders", arr.toString()).apply()
+    }
+
+    actual suspend fun getEventReminders(): List<EventReminder> {
+        val s = prefs.getString("event_reminders", null) ?: return emptyList()
+        return try {
+            json.parseToJsonElement(s).jsonArray.mapNotNull { jo ->
+                try {
+                    val o = jo.jsonObject
+                    val id = o["id"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+                    val eventId = o["eventId"]?.jsonPrimitive?.longOrNull ?: return@mapNotNull null
+                    val eventName = o["eventName"]?.jsonPrimitive?.contentOrNull ?: ""
+                    val startIso = o["eventStartIso"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+                    val minutes = o["minutesBefore"]?.jsonPrimitive?.intOrNull ?: 30
+                    val notifId = o["scheduledNotificationId"]?.let { if (it is JsonNull) null else it.jsonPrimitive.contentOrNull }
+                    EventReminder(id = id, eventId = eventId, eventName = eventName, eventStartIso = startIso, minutesBefore = minutes, scheduledNotificationId = notifId)
+                } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+            }
+        } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
+    }
 }

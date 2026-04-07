@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import com.tkolymp.shared.people.Person
+import com.tkolymp.shared.notification.EventReminder
 import com.tkolymp.shared.notification.FilterType
 import com.tkolymp.shared.notification.NotificationRule
 import com.tkolymp.shared.notification.NotificationSettings
@@ -28,6 +29,7 @@ data class NotificationsSettingsState(
     val availableGroups: List<Pair<String, String>> = emptyList(),
     val myCohortIds: Set<String> = emptySet(),
     val coachMessages: List<ReceivedMessage> = emptyList(),
+    val reminders: List<EventReminder> = emptyList(),
     override val isLoading: Boolean = false,
     override val error: String? = null
 ) : ViewModelState
@@ -161,6 +163,28 @@ class NotificationsSettingsViewModel(
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             Logger.d("NotificationsSettingsVM", "Failed to save settings: ${ex.message}")
         }
+    }
+
+    suspend fun loadReminders() {
+        try {
+            val reminders = notificationService.getReminders()
+            _state.value = _state.value.copy(reminders = reminders)
+        } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+    }
+
+    suspend fun deleteReminder(id: String) {
+        try {
+            notificationService.deleteReminder(id)
+            _state.value = _state.value.copy(reminders = _state.value.reminders.filter { it.id != id })
+        } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+    }
+
+    suspend fun updateReminderMinutes(reminder: EventReminder, minutesBefore: Int) {
+        try {
+            val updated = notificationService.addOrUpdateReminder(reminder.copy(minutesBefore = minutesBefore))
+            val newList = _state.value.reminders.map { if (it.id == reminder.id) updated else it }
+            _state.value = _state.value.copy(reminders = newList)
+        } catch (e: CancellationException) { throw e } catch (_: Exception) {}
     }
 
     suspend fun toggleCategory(category: String) {

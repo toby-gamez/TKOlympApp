@@ -64,6 +64,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.shared.notification.EventReminder
 import com.tkolymp.shared.notification.FilterType
 import com.tkolymp.shared.notification.NotificationRule
 import com.tkolymp.shared.notification.NotificationSettings
@@ -103,9 +104,11 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                 val s1 = async { viewModel.loadSettings() }
                 val s2 = async { viewModel.loadUiData() }
                 val s3 = async { viewModel.loadClubData() }
+                val s4 = async { viewModel.loadReminders() }
                 try { s1.await() } catch (_: Exception) {}
                 try { s2.await() } catch (_: Exception) {}
                 try { s3.await() } catch (_: Exception) {}
+                try { s4.await() } catch (_: Exception) {}
             }
         } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (_: Exception) {}
     }
@@ -142,7 +145,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                 modifier = Modifier.fillMaxSize()
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
-                    val tabs = listOf(AppStrings.current.otherScreen.notificationSettings, AppStrings.current.notifications.fromCoach)
+                    val tabs = listOf(AppStrings.current.otherScreen.notificationSettings, AppStrings.current.notifications.reminderTab, AppStrings.current.notifications.fromCoach)
                     PrimaryTabRow(selectedTabIndex = selectedTab, modifier = Modifier.fillMaxWidth()) {
                         tabs.forEachIndexed { i, t ->
                             Tab(selected = selectedTab == i, onClick = { selectedTab = i }, text = { Text(t) })
@@ -150,6 +153,8 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                     }
                     LaunchedEffect(selectedTab) {
                         if (selectedTab == 1) {
+                            scope.launch { viewModel.loadReminders() }
+                        } else if (selectedTab == 2) {
                             scope.launch { viewModel.loadUiData() }
                         }
                     }
@@ -168,7 +173,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                         }
 
                         Column(modifier = Modifier.fillMaxSize()) {
-                            if (selectedTab == 1) {
+                            if (selectedTab == 2) {
                                 val myGroups = vmState.availableGroups.filter { vmState.myCohortIds.contains(it.first) }
                                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                                     item {
@@ -226,6 +231,62 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                             }
                                         }
                                     }
+                                }
+                            }
+                            if (selectedTab == 1) {
+                                var editingReminder by remember { mutableStateOf<EventReminder?>(null) }
+                                if (vmState.reminders.isEmpty()) {
+                                    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(AppStrings.current.notifications.noReminders, style = MaterialTheme.typography.titleMedium)
+                                    }
+                                } else {
+                                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                                        items(vmState.reminders, key = { it.id }) { reminder ->
+                                            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp)) {
+                                                Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                                    Column(modifier = Modifier.weight(1f)) {
+                                                        Text(reminder.eventName.ifBlank { AppStrings.current.dialogs.noName }, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                                                        Text(AppStrings.current.notifications.remindMeBefore.replace("{0}", reminder.minutesBefore.toString()), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
+                                                    }
+                                                    IconButton(onClick = { editingReminder = reminder }) {
+                                                        Icon(Icons.Default.Edit, contentDescription = AppStrings.current.commonActions.edit)
+                                                    }
+                                                    IconButton(onClick = { scope.launch { viewModel.deleteReminder(reminder.id) } }) {
+                                                        Icon(Icons.Default.Delete, contentDescription = AppStrings.current.commonActions.delete)
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                if (editingReminder != null) {
+                                    val editing = editingReminder!!
+                                    var editUnit by remember(editing) { mutableStateOf(if (editing.minutesBefore >= 60 && editing.minutesBefore % 60 == 0) "h" else "min") }
+                                    var editValue by remember(editing) { mutableStateOf(if (editing.minutesBefore >= 60 && editing.minutesBefore % 60 == 0) editing.minutesBefore / 60 else editing.minutesBefore) }
+                                    AlertDialog(
+                                        onDismissRequest = { editingReminder = null },
+                                        title = { Text(AppStrings.current.notifications.reminderDialogTitle) },
+                                        text = {
+                                            QuantityInput(
+                                                value = editValue,
+                                                onValueChange = { v, u -> editValue = v; editUnit = u },
+                                                units = listOf("min", "h"),
+                                                defaultUnit = editUnit,
+                                                label = AppStrings.current.notifications.timeAheadLabel,
+                                                modifier = Modifier.fillMaxWidth()
+                                            )
+                                        },
+                                        confirmButton = {
+                                            Button(onClick = {
+                                                val minutes = if (editUnit == "h") editValue * 60 else editValue
+                                                scope.launch { viewModel.updateReminderMinutes(editing, minutes) }
+                                                editingReminder = null
+                                            }) { Text(AppStrings.current.commonActions.save) }
+                                        },
+                                        dismissButton = {
+                                            TextButton(onClick = { editingReminder = null }) { Text(AppStrings.current.commonActions.cancel) }
+                                        }
+                                    )
                                 }
                             }
                             if (selectedTab == 0) {

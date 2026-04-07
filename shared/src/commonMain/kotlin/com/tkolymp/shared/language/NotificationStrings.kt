@@ -30,4 +30,11 @@ data class NotificationStrings(
     val timeAgoMinutes: String,
     val timeAgoHours: String,
     val fromCoach: String,
+    val reminderTab: String,
+    val remindMe: String,
+    val reminderSet: String,
+    val reminderRemoveAction: String,
+    val noReminders: String,
+    val remindMeBefore: String,
+    val reminderDialogTitle: String,
 )

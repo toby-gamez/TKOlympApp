@@ -100,4 +100,35 @@ class NotificationService(
 
         storage.saveScheduledNotifications(scheduled)
     }
+
+    suspend fun getReminders(): List<EventReminder> = storage.getEventReminders()
+
+    suspend fun getReminderForEvent(eventId: Long): EventReminder? =
+        storage.getEventReminders().find { it.eventId == eventId }
+
+    suspend fun addOrUpdateReminder(reminder: EventReminder): EventReminder {
+        val existing = storage.getEventReminders().find { it.eventId == reminder.eventId }
+        if (existing?.scheduledNotificationId != null) {
+            try { scheduler.cancelNotification(existing.scheduledNotificationId) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+        }
+        val nid = "reminder_evt_${reminder.eventId}"
+        val title = reminder.eventName.ifBlank { AppStrings.current.events.event }
+        val body = AppStrings.current.notifications.notificationEventStartsIn.replace("{0}", reminder.minutesBefore.toString())
+        val trigger = try {
+            scheduler.scheduleNotificationAt(nid, title, body, reminder.eventStartIso, reminder.minutesBefore)
+        } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+        val saved = reminder.copy(id = nid, scheduledNotificationId = if (trigger != null) nid else null)
+        val others = storage.getEventReminders().filter { it.eventId != reminder.eventId }
+        storage.saveEventReminders(others + saved)
+        return saved
+    }
+
+    suspend fun deleteReminder(reminderId: String) {
+        val all = storage.getEventReminders()
+        val toDelete = all.find { it.id == reminderId }
+        toDelete?.scheduledNotificationId?.let {
+            try { scheduler.cancelNotification(it) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+        }
+        storage.saveEventReminders(all.filter { it.id != reminderId })
+    }
 }

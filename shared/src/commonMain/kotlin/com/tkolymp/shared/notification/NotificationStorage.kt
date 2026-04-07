@@ -7,4 +7,6 @@ expect class NotificationStorage(platformContext: Any) {
     suspend fun getScheduledNotifications(): List<ScheduledNotification>
     suspend fun saveReceivedNotifications(list: List<ReceivedMessage>)
     suspend fun getReceivedNotifications(): List<ReceivedMessage>
+    suspend fun saveEventReminders(list: List<EventReminder>)
+    suspend fun getEventReminders(): List<EventReminder>
 }
