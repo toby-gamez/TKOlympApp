@@ -13,19 +13,25 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.text.font.FontWeight
@@ -58,26 +64,24 @@ internal fun ShareStatsDialog(
     val graphicsLayer = rememberGraphicsLayer()
     val scope = rememberCoroutineScope()
     val shareCallback = rememberShareStatsCallback()
+    var isSharing by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(24.dp),
-            color = MaterialTheme.colorScheme.surface
+            color = MaterialTheme.colorScheme.background
         ) {
             Column(
                 modifier = Modifier.padding(bottom = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // ── Card wrapped with graphics-layer capture ──────────────────
+                // ── Card captured into graphicsLayer on every draw ─────────────
                 Box(
                     modifier = Modifier.drawWithContent {
                         graphicsLayer.record(
                             density = this,
                             layoutDirection = layoutDirection,
-                            size = IntSize(
-                                size.width.roundToInt(),
-                                size.height.roundToInt()
-                            )
+                            size = IntSize(size.width.roundToInt(), size.height.roundToInt())
                         ) {
                             this@drawWithContent.drawContent()
                         }
@@ -105,19 +109,36 @@ internal fun ShareStatsDialog(
                 ) {
                     TextButton(
                         onClick = onDismiss,
+                        enabled = !isSharing,
                         modifier = Modifier.weight(1f)
                     ) { Text("Zrušit") }
 
                     Button(
                         onClick = {
-                            scope.launch {
-                                val bitmap = graphicsLayer.toImageBitmap()
-                                shareCallback(bitmap)
-                                onDismiss()
+                            if (!isSharing) {
+                                isSharing = true
+                                scope.launch {
+                                    val bitmap = graphicsLayer.toImageBitmap()
+                                    shareCallback(bitmap)
+                                    isSharing = false
+                                    onDismiss()
+                                }
                             }
                         },
+                        enabled = !isSharing,
                         modifier = Modifier.weight(2f)
-                    ) { Text("Sdílet") }
+                    ) {
+                        if (isSharing) {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .width(18.dp)
+                                    .height(18.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text("Sdílet")
+                        }
+                    }
                 }
             }
         }
@@ -138,19 +159,15 @@ internal fun StatsShareCard(
 ) {
     val hours = (totalMinutes / 60.0).roundTo1dp()
     val avgFmt = avgPerWeek.roundTo1dp()
-    val primary = MaterialTheme.colorScheme.primary
-    val primaryContainer = MaterialTheme.colorScheme.primaryContainer
-    val onPrimary = MaterialTheme.colorScheme.onPrimary
-    val tertiary = MaterialTheme.colorScheme.tertiary
+    val bg = MaterialTheme.colorScheme.background
+    val onBg = MaterialTheme.colorScheme.onBackground
+    val accent = MaterialTheme.colorScheme.primary
+    val accentContainer = MaterialTheme.colorScheme.primaryContainer
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(primary, primaryContainer)
-                )
-            )
+            .background(bg)
             .padding(24.dp)
     ) {
         Column(
@@ -167,25 +184,22 @@ internal fun StatsShareCard(
                     modifier = Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    AppLogo(size = 20.dp)
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        "TKOlymp",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp,
-                        color = onPrimary,
-                        maxLines = 1
+                    AppLogo(
+                        size = 60.dp,
+                        modifier = Modifier.graphicsLayer({
+                            colorFilter = ColorFilter.tint(onBg)
+                        })
                     )
                 }
                 Spacer(Modifier.width(8.dp))
                 Surface(
                     shape = RoundedCornerShape(20.dp),
-                    color = onPrimary.copy(alpha = 0.15f)
+                    color = accentContainer
                 ) {
                     Text(
                         "Sezóna ${season.label}",
                         fontSize = 11.sp,
-                        color = onPrimary,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
                         maxLines = 1,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                     )
@@ -202,13 +216,13 @@ internal fun StatsShareCard(
                     text = "$currentStreak",
                     fontSize = 64.sp,
                     fontWeight = FontWeight.Black,
-                    color = tertiary,
+                    color = accent,
                     lineHeight = 64.sp
                 )
                 Text(
                     text = "týdnů v řadě",
                     fontSize = 15.sp,
-                    color = onPrimary.copy(alpha = 0.65f)
+                    color = onBg.copy(alpha = 0.65f)
                 )
             } else {
                 Text("🏅", fontSize = 48.sp)
@@ -217,13 +231,13 @@ internal fun StatsShareCard(
                     text = "$totalSessions",
                     fontSize = 64.sp,
                     fontWeight = FontWeight.Black,
-                    color = onPrimary,
+                    color = accent,
                     lineHeight = 64.sp
                 )
                 Text(
                     text = "tréninků",
                     fontSize = 15.sp,
-                    color = onPrimary.copy(alpha = 0.65f)
+                    color = onBg.copy(alpha = 0.65f)
                 )
             }
 
@@ -247,7 +261,7 @@ internal fun StatsShareCard(
                 Text(
                     "Týdenní aktivita",
                     fontSize = 10.sp,
-                    color = onPrimary.copy(alpha = 0.45f),
+                    color = onBg.copy(alpha = 0.45f),
                     modifier = Modifier.align(Alignment.Start)
                 )
                 Spacer(Modifier.height(6.dp))
@@ -260,7 +274,7 @@ internal fun StatsShareCard(
             Text(
                 "tkolymp.cz",
                 fontSize = 10.sp,
-                color = onPrimary.copy(alpha = 0.3f),
+                color = onBg.copy(alpha = 0.3f),
                 textAlign = TextAlign.Center
             )
         }
@@ -271,11 +285,13 @@ internal fun StatsShareCard(
 
 @Composable
 private fun ShareStatPill(modifier: Modifier = Modifier, value: String, label: String) {
-    val onPrimary = MaterialTheme.colorScheme.onPrimary
+    val onBg = MaterialTheme.colorScheme.onBackground
+    val accentContainer = MaterialTheme.colorScheme.primaryContainer
+    val onAccentContainer = MaterialTheme.colorScheme.onPrimaryContainer
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(onPrimary.copy(alpha = 0.1f))
+            .background(accentContainer)
             .padding(vertical = 10.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -284,13 +300,13 @@ private fun ShareStatPill(modifier: Modifier = Modifier, value: String, label: S
                 text = value,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
-                color = onPrimary,
+                color = onAccentContainer,
                 maxLines = 1
             )
             Text(
                 text = label,
                 fontSize = 9.sp,
-                color = onPrimary.copy(alpha = 0.55f),
+                color = onAccentContainer.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center
             )
         }
@@ -303,7 +319,8 @@ private fun ShareStatPill(modifier: Modifier = Modifier, value: String, label: S
 private fun ShareMiniBarChart(weeklyData: List<WeekStats>) {
     val maxCount = weeklyData.maxOfOrNull { it.count }?.coerceAtLeast(1) ?: 1
     val highlightIdx = weeklyData.indexOfFirst { it.isCurrent }
-    val onPrimary = MaterialTheme.colorScheme.onPrimary
+    val accent = MaterialTheme.colorScheme.primary
+    val onBg = MaterialTheme.colorScheme.onBackground
 
     Row(
         modifier = Modifier
@@ -322,9 +339,9 @@ private fun ShareMiniBarChart(weeklyData: List<WeekStats>) {
                     .clip(RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp))
                     .background(
                         when {
-                            isHighlight -> onPrimary
-                            week.count > 0 -> onPrimary.copy(alpha = 0.38f)
-                            else -> onPrimary.copy(alpha = 0.08f)
+                            isHighlight -> accent
+                            week.count > 0 -> onBg.copy(alpha = 0.38f)
+                            else -> onBg.copy(alpha = 0.08f)
                         }
                     )
             )
