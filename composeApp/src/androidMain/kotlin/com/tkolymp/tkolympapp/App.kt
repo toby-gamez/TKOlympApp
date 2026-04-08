@@ -75,6 +75,7 @@ import com.tkolymp.shared.registration.RegMode
 import com.tkolymp.tkolympapp.screens.RegistrationScreen
 import com.tkolymp.tkolympapp.screens.TrainersLocationsScreen
 import androidx.core.content.pm.PackageInfoCompat
+import com.tkolymp.shared.integrity.IntegrityServiceAndroid
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
@@ -103,6 +104,7 @@ fun App() {
 
         var loggedIn by remember { mutableStateOf<Boolean?>(null) }
         var showOnboarding by remember { mutableStateOf<Boolean?>(null) }
+        var integrityFailed by remember { mutableStateOf(false) }
         val preferTimeline by AppearanceSettings.preferTimeline.collectAsState()
         var weekOffset by remember { mutableIntStateOf(0) }
 
@@ -110,6 +112,14 @@ fun App() {
         if (!LocalInspectionMode.current) {
             LaunchedEffect(Unit) {
                 try {
+                    // Skip integrity check in debug builds
+                    if (!BuildConfig.DEBUG) {
+                        val integrityOk = IntegrityServiceAndroid(ctx).isValid()
+                        if (!integrityOk) {
+                            integrityFailed = true
+                            return@LaunchedEffect
+                        }
+                    }
                     com.tkolymp.shared.initNetworking(ctx, BuildConfig.API_BASE_URL, BuildConfig.TENANT_ID)
                     // set platform topic manager to handle FCM topic subscriptions
                     try {
@@ -196,6 +206,7 @@ fun App() {
                     .background(MaterialTheme.colorScheme.surface)
             ) {
                 when {
+                    integrityFailed -> IntegrityErrorScreen()
                     loggedIn == null || showOnboarding == null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
                     }
@@ -225,6 +236,47 @@ fun App() {
             }
         }
         } // end Crossfade(currentLanguage)
+    }
+}
+
+/**
+ * Shown when the APK signing certificate does not match the expected release key.
+ * The user cannot proceed — the only action is to close the app.
+ */
+@Composable
+private fun IntegrityErrorScreen() {
+    val activity = LocalContext.current as? android.app.Activity
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.errorContainer),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(32.dp)
+        ) {
+            Text(
+                text = "Chyba integrity aplikace",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onErrorContainer
+            )
+            Text(
+                text = "Tato kopie aplikace nebyla vydána oficiálním vývojářem. Stáhněte si originální verzi z Google Play.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onErrorContainer,
+                modifier = Modifier.padding(top = 16.dp)
+            )
+            androidx.compose.material3.Button(
+                onClick = { activity?.finish() },
+                modifier = Modifier.padding(top = 24.dp),
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Text("Zavřít aplikaci")
+            }
+        }
     }
 }
 

@@ -11,7 +11,6 @@ import com.tkolymp.shared.utils.parseToLocal
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -160,26 +159,6 @@ class StatsViewModel(
 
     private val _state = MutableStateFlow(StatsState())
     val state: StateFlow<StatsState> = _state.asStateFlow()
-
-    // Per-slice flows to allow composables to collect only the pieces they need
-    val totalSessionsFlow = _state.map { it.totalSessions }
-    val totalMinutesFlow = _state.map { it.totalMinutes }
-    val avgPerWeekFlow = _state.map { it.avgSessionsPerWeek }
-    val currentStreakFlow = _state.map { it.currentStreak }
-    val weeklyFlow = _state.map { it.weeklyData }
-    val monthlyFlow = _state.map { it.monthlyData }
-    val typeFlow = _state.map { it.typeData }
-    val trainerFlow = _state.map { it.trainerData }
-    val scoreEntryFlow = _state.map { it.scoreEntry }
-    val selectedSeasonFlow = _state.map { it.selectedSeason }
-    val comparisonDataFlow = _state.map { it.comparisonData }
-    val isLoadingComparisonFlow = _state.map { it.isLoadingComparison }
-    val compareSeasonsFlow = _state.map { it.compareSeasons }
-    val compareDataFlow = _state.map { it.compareData }
-    val isLoadingCompareFlow = _state.map { it.isLoadingCompare }
-    val isLoadingFlow = _state.map { it.isLoading }
-    val attendanceMonthsFlow = _state.map { it.attendanceMonths }
-    val cancelledCountFlow = _state.map { it.cancelledCount }
 
     /** Load (or re-load) statistics for the given season. */
     suspend fun loadStats(season: SeasonSelection = _state.value.selectedSeason, forceRefresh: Boolean = false) {

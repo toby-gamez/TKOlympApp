@@ -82,24 +82,22 @@ fun StatsScreen(
     onOpenLeaderboard: () -> Unit = {},
     viewModel: StatsViewModel = viewModel()
 ) {
-    val totalSessions by viewModel.totalSessionsFlow.collectAsState(initial = 0)
-    val totalMinutes by viewModel.totalMinutesFlow.collectAsState(initial = 0L)
-    val avgPerWeek by viewModel.avgPerWeekFlow.collectAsState(initial = 0.0)
-    val currentStreak by viewModel.currentStreakFlow.collectAsState(initial = 0)
-    val weeklyData by viewModel.weeklyFlow.collectAsState(initial = emptyList())
-    val monthlyData by viewModel.monthlyFlow.collectAsState(initial = emptyList())
-    val typeData by viewModel.typeFlow.collectAsState(initial = emptyList())
-    val trainerData by viewModel.trainerFlow.collectAsState(initial = emptyList())
-    val scoreEntry by viewModel.scoreEntryFlow.collectAsState(initial = null)
-    val selectedSeason by viewModel.selectedSeasonFlow.collectAsState(initial = SeasonSelection.default())
-    val comparisonData by viewModel.comparisonDataFlow.collectAsState(initial = emptyList())
-    val isLoadingComparison by viewModel.isLoadingComparisonFlow.collectAsState(initial = false)
-    val compareSeasons by viewModel.compareSeasonsFlow.collectAsState(initial = List(5) { null })
-    val compareData by viewModel.compareDataFlow.collectAsState(initial = List<SeasonDetailStats?>(5) { null })
-    val isLoadingCompare by viewModel.isLoadingCompareFlow.collectAsState(initial = List(5) { false })
-    val isLoading by viewModel.isLoadingFlow.collectAsState(initial = false)
-    val attendanceMonths by viewModel.attendanceMonthsFlow.collectAsState(initial = emptyList())
-    val cancelledCount by viewModel.cancelledCountFlow.collectAsState(initial = 0)
+    val state by viewModel.state.collectAsState()
+    val totalSessions = state.totalSessions
+    val totalMinutes = state.totalMinutes
+    val avgPerWeek = state.avgSessionsPerWeek
+    val currentStreak = state.currentStreak
+    val weeklyData = state.weeklyData
+    val monthlyData = state.monthlyData
+    val typeData = state.typeData
+    val trainerData = state.trainerData
+    val scoreEntry = state.scoreEntry
+    val selectedSeason = state.selectedSeason
+    val comparisonData = state.comparisonData
+    val isLoadingComparison = state.isLoadingComparison
+    val isLoading = state.isLoading
+    val attendanceMonths = state.attendanceMonths
+    val cancelledCount = state.cancelledCount
     val scope = rememberCoroutineScope()
     val strings = AppStrings.current.stats
     var compareMode by remember { mutableStateOf(false) }
