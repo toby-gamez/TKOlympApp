@@ -7,5 +7,6 @@ data class AboutStrings(
     val authorsAndContributors: String,
     val leadDeveloperRole: String,
     val translatorRole: String,
+    val bugReporterRole: String,
     val brainrotDisclaimer: String,
 )

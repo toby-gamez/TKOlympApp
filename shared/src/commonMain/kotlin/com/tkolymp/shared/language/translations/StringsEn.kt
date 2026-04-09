@@ -372,7 +372,8 @@ val StringsEn = Strings(
         appLicenseText = "This project may contain third-party libraries; check licenses in dependencies.",
         authorsAndContributors = "Authors and contributors",
         leadDeveloperRole = " - lead developer",
-        translatorRole = " - translator, supporter and helper",
+        translatorRole = " - supporter and helper",
+        bugReporterRole = " - loves finding and reporting bugs",
         brainrotDisclaimer = "Disclaimer: The 'Brainrot' language is a fun variant of the original app, spiced up with some 'brainrot' humor. It's all for fun and shouldn't be taken seriously.",
     ),
     privacy = PrivacyStrings(

@@ -372,7 +372,8 @@ val StringsCs = Strings(
         appLicenseText = "Tento projekt může obsahovat knihovny třetích stran; ověřte licence v závislostech.",
         authorsAndContributors = "Autoři a přispěvatelé",
         leadDeveloperRole = " - hlavní vývojář",
-        translatorRole = " - překladatel, podporovatel a pomocník",
+        translatorRole = " - podporovatel a pomocník",
+        bugReporterRole = " - rád hledá a hlásí chyby",
         brainrotDisclaimer = "Prohlášení: 'Brainrot' jazyk je zábavnou obměnou původní aplikace, obohacenou o trochu 'brainrot' humoru. Je to všechno pro zábavu a nemá být brán vážně.",
     ),
     privacy = PrivacyStrings(

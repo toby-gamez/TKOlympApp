@@ -373,7 +373,8 @@ val StringsBrainrot = Strings(
         appLicenseText = "This project might have third-party libs, check the deps for license rizz.",
         authorsAndContributors = "The mains and contributors fr",
         leadDeveloperRole = " - main dev no cap",
-        translatorRole = " - translator, supporter and helper fr",
+        translatorRole = " - supporter and helper fr",
+        bugReporterRole = " - bug hunter no cap fr",
         brainrotDisclaimer = "Disclaimer: 'Brainrot' lang is a vibe check version of the OG app, lowkey spiced with brainrot humor fr fr. It's all fun no cap, don't take it srsly bestie.",
     ),
     privacy = PrivacyStrings(

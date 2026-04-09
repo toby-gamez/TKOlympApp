@@ -372,7 +372,8 @@ val StringsDe = Strings(
         appLicenseText = "Dieses Projekt kann Bibliotheken von Drittanbietern enthalten; überprüfen Sie die Lizenzen in den Abhängigkeiten.",
         authorsAndContributors = "Autoren und Mitwirkende",
         leadDeveloperRole = " - Hauptentwickler",
-        translatorRole = " - Übersetzer, Unterstützer und Helfer",
+        translatorRole = " - Unterstützer und Helfer",
+        bugReporterRole = " - findet und meldet gerne Fehler",
         brainrotDisclaimer = "Haftungsausschluss: Die 'Brainrot'-Sprache ist eine spaßige Variante der ursprünglichen App mit etwas 'Brainrot'-Humor. Es dient nur zur Unterhaltung und sollte nicht ernst genommen werden.",
     ),
     privacy = PrivacyStrings(

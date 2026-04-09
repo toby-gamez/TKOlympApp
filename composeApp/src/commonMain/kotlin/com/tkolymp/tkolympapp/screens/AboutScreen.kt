@@ -93,6 +93,13 @@ fun AboutScreen(onBack: () -> Unit = {}, appVersionName: String? = null, appVers
                         },
                         modifier = Modifier.padding(top = 4.dp)
                     )
+                    Text(
+                        text = buildAnnotatedString {
+                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) { append("Přemysl Křížan") }
+                            append(AppStrings.current.about.bugReporterRole)
+                        },
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
                 }
             }
 

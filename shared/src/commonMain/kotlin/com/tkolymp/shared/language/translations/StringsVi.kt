@@ -372,7 +372,8 @@ val StringsVi = Strings(
         appLicenseText = "Dự án này có thể chứa thư viện của bên thứ ba; kiểm tra giấy phép trong các phụ thuộc.",
         authorsAndContributors = "Tác giả và cộng tác viên",
         leadDeveloperRole = " - nhà phát triển chính",
-        translatorRole = " - dịch giả, người ủng hộ và người hỗ trợ",
+        translatorRole = " - người ủng hộ và người hỗ trợ",
+        bugReporterRole = " - thích tìm và báo cáo lỗi",
         brainrotDisclaimer = "Tuyên bố: Ngôn ngữ 'Brainrot' là biến thể vui nhộn của ứng dụng gốc, được làm phong phú với chút hài hước 'brainrot'. Tất cả chỉ để vui và không nên hiểu nghĩa nghiêm túc.",
     ),
     privacy = PrivacyStrings(
