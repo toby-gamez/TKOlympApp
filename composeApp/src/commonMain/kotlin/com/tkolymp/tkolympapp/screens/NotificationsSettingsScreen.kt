@@ -119,16 +119,18 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
         topBar = { TopAppBar(title = { Text(AppStrings.current.otherScreen.notificationSettings) }, navigationIcon = {
             IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back) }
         }, actions = {
-            NotificationExportImportButton(
-                onGetExportJson = {
-                    json.encodeToString(NotificationSettings(globalEnabled = vmState.globalEnabled, rules = vmState.rules))
-                },
-                onImportJson = { jsonStr ->
-                    val imported = json.decodeFromString<NotificationSettings>(jsonStr)
-                    scope.launch { viewModel.importSettings(imported) }
-                },
-                onMessage = {}
-            )
+            if (selectedTab == 0) {
+                NotificationExportImportButton(
+                    onGetExportJson = {
+                        json.encodeToString(NotificationSettings(globalEnabled = vmState.globalEnabled, rules = vmState.rules))
+                    },
+                    onImportJson = { jsonStr ->
+                        val imported = json.decodeFromString<NotificationSettings>(jsonStr)
+                        scope.launch { viewModel.importSettings(imported) }
+                    },
+                    onMessage = {}
+                )
+            }
         }) },
         floatingActionButton = {
             if (selectedTab == 0) {
@@ -145,7 +147,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                 modifier = Modifier.fillMaxSize()
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
-                    val tabs = listOf(AppStrings.current.otherScreen.notificationSettings, AppStrings.current.notifications.reminderTab, AppStrings.current.notifications.fromCoach)
+                    val tabs = listOf(AppStrings.current.notifications.notificationsRules, AppStrings.current.notifications.reminderTab, AppStrings.current.notifications.fromCoach)
                     PrimaryTabRow(selectedTabIndex = selectedTab, modifier = Modifier.fillMaxWidth()) {
                         tabs.forEachIndexed { i, t ->
                             Tab(selected = selectedTab == i, onClick = { selectedTab = i }, text = { Text(t) })
@@ -210,7 +212,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                     if (vmState.coachMessages.isEmpty()) {
                                         item {
                                             Column(modifier = Modifier.fillMaxWidth().padding(top = 12.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-                                                Text(AppStrings.current.notifications.fromCoach, style = MaterialTheme.typography.titleMedium)
+                                                Text(AppStrings.current.notifications.noNotificationsFromCoach, style = MaterialTheme.typography.bodyMedium)
                                             }
                                         }
                                     } else {

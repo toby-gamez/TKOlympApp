@@ -20,12 +20,14 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.ViewTimeline
 import androidx.compose.material.icons.filled.ViewWeek
-import com.tkolymp.tkolympapp.platform.AppLogo
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -48,11 +50,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.tkolymp.shared.viewmodels.OnboardingViewModel
 import com.tkolymp.shared.language.AppStrings
-import com.tkolymp.tkolympapp.ui.brandLightPrimary
+import com.tkolymp.shared.viewmodels.OnboardingViewModel
+import com.tkolymp.tkolympapp.platform.AppLogo
 import kotlinx.coroutines.launch
 
 @Composable
@@ -61,7 +64,7 @@ fun OnboardingScreen(
     onFinish: () -> Unit
 ) {
     val strings = AppStrings.current
-    val pageCount = 4 // 3 feature pages + calendar view picker
+    val pageCount = 5 // Calendar, Events, Board, other features, calendar view picker
     val pagerState = rememberPagerState(pageCount = { pageCount })
     val scope = rememberCoroutineScope()
     val isViewPickerPage = pagerState.currentPage == pageCount - 1
@@ -81,9 +84,13 @@ fun OnboardingScreen(
                 .fillMaxWidth()
         ) { pageIndex ->
             when (pageIndex) {
-                0 -> EventsOnboardingPage(title = strings.onboardingTitle1, description = strings.onboardingDesc1)
-                1 -> CalendarOnboardingPage(title = strings.onboardingTitle2, description = strings.onboardingDesc2)
-                2 -> PeopleOnboardingPage(title = strings.onboardingTitle3, description = strings.onboardingDesc3)
+                0 -> CalendarOnboardingPage(title = strings.onboardingTitle2, description = strings.onboardingDesc2)
+                1 -> EventsOnboardingPage(title = strings.onboardingTitle1, description = strings.onboardingDesc1)
+                2 -> BoardOnboardingPage(title = strings.onboardingTitle3, description = strings.onboardingDesc3)
+                3 -> OtherFeaturesOnboardingPage(
+                    title = strings.onboarding.onboardingTitle5,
+                    description = strings.onboarding.onboardingDesc5
+                )
                 else -> CalendarViewPickerPage(
                     title = strings.onboarding.onboardingTitle4,
                     description = strings.onboarding.onboardingDesc4,
@@ -175,18 +182,13 @@ private fun CalendarViewPickerPage(
         verticalArrangement = Arrangement.Center
     ) {
         Box(
-            contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(120.dp)
+                .size(88.dp)
                 .clip(CircleShape)
-                .background(brandLightPrimary())
+                .background(MaterialTheme.colorScheme.primary),
+            contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Filled.CalendarMonth,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.size(60.dp)
-            )
+            AppLogo(size = 100.dp)
         }
 
         Spacer(modifier = Modifier.height(40.dp))
@@ -248,7 +250,7 @@ private fun CalendarViewOptionCard(
 ) {
     val borderColor = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent
     val containerColor = if (selected)
-        MaterialTheme.colorScheme.primaryContainer
+        MaterialTheme.colorScheme.primary
     else
         MaterialTheme.colorScheme.surfaceVariant
 
@@ -270,34 +272,25 @@ private fun CalendarViewOptionCard(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(36.dp).then(iconModifier)
             )
             Text(
                 text = label,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
-                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
             )
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = if (selected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f) else MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 lineHeight = 18.sp
             )
         }
     }
-}
-
-@Composable
-private fun EventsOnboardingPage(title: String, description: String) {
-    OnboardingPageScaffold(
-        title = title,
-        description = description,
-        mockup = { EventsMockupCard(Modifier.fillMaxWidth()) }
-    )
 }
 
 @Composable
@@ -310,11 +303,29 @@ private fun CalendarOnboardingPage(title: String, description: String) {
 }
 
 @Composable
-private fun PeopleOnboardingPage(title: String, description: String) {
+private fun EventsOnboardingPage(title: String, description: String) {
     OnboardingPageScaffold(
         title = title,
         description = description,
-        mockup = { PeopleMockupCard(Modifier.fillMaxWidth()) }
+        mockup = { EventsMockupCard(Modifier.fillMaxWidth()) }
+    )
+}
+
+@Composable
+private fun BoardOnboardingPage(title: String, description: String) {
+    OnboardingPageScaffold(
+        title = title,
+        description = description,
+        mockup = { BoardMockupCard(Modifier.fillMaxWidth()) }
+    )
+}
+
+@Composable
+private fun OtherFeaturesOnboardingPage(title: String, description: String) {
+    OnboardingPageScaffold(
+        title = title,
+        description = description,
+        mockup = { OtherFeaturesIconGrid(Modifier.fillMaxWidth()) }
     )
 }
 
@@ -331,22 +342,15 @@ private fun OnboardingPageScaffold(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Logo pill at top
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        // App logo in primary circle (~2 cm)
+        Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(50))
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .padding(horizontal = 14.dp, vertical = 6.dp)
+                .size(88.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primary),
+            contentAlignment = Alignment.Center
         ) {
-            AppLogo(size = 20.dp)
-            Text(
-                text = "TK Olymp",
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
+            AppLogo(size = 100.dp)
         }
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -377,250 +381,193 @@ private fun OnboardingPageScaffold(
 }
 
 // ──────────────────────────────────────────────────
-// Mockup cards — styled to look like real app UI
+// Mockup cards — match the real app screen design
 // ──────────────────────────────────────────────────
 
 private val MockCardShape = RoundedCornerShape(16.dp)
-private val Gold = Color(0xFFFFD700)
-private val Silver = Color(0xFFC0C0C0)
-private val Bronze = Color(0xFFCD7F32)
-private val TrainingBlue = Color(0xFF2979FF)
-private val TrainingGreen = Color(0xFF43A047)
-private val TrainingOrange = Color(0xFFFB8C00)
-
-@Composable
-private fun EventsMockupCard(modifier: Modifier = Modifier) {
-    val brand = Color(0xFFEE1733)
-    Card(
-        modifier = modifier.shadow(6.dp, MockCardShape),
-        shape = MockCardShape,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-    ) {
-        Column {
-            // Screen header bar
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(brand)
-                    .padding(horizontal = 14.dp, vertical = 10.dp),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.EmojiEvents,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(18.dp)
-                )
-                Text(
-                    text = "  Závody & výsledky",
-                    color = Color.White,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            // Event rows
-            Column(
-                modifier = Modifier.padding(10.dp),
-                verticalArrangement = Arrangement.spacedBy(7.dp)
-            ) {
-                MockEventRow(medalColor = Gold,   rank = "1.", name = "Mistrovství ČR",    detail = "Praha · 12. 4.")
-                MockEventRow(medalColor = Silver, rank = "2.", name = "Pohár TK Olymp",    detail = "Brno · 5. 3.")
-                MockEventRow(medalColor = Bronze, rank = "3.", name = "Krajský přebor",    detail = "Olomouc · 15. 2.")
-            }
-        }
-    }
-}
-
-@Composable
-private fun MockEventRow(medalColor: Color, rank: String, name: String, detail: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(horizontal = 10.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(26.dp)
-                .clip(CircleShape)
-                .background(medalColor),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(rank, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
-        }
-        Column {
-            Text(name, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
-            Text(detail, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-    }
-}
 
 @Composable
 private fun CalendarMockupCard(modifier: Modifier = Modifier) {
-    val brand = Color(0xFFEE1733)
+    val strings = AppStrings.current
     Card(
-        modifier = modifier.shadow(6.dp, MockCardShape),
+        modifier = modifier.shadow(4.dp, MockCardShape),
         shape = MockCardShape,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
-        Column {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(brand)
-                    .padding(horizontal = 14.dp, vertical = 10.dp),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.CalendarMonth,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(18.dp)
-                )
-                Text(
-                    text = "  Tréninkový plán",
-                    color = Color.White,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold
-                )
+        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(strings.timeline.today, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 2.dp, bottom = 2.dp))
+            MockCalendarGroupCard("Kruháč 1", "ZŠ Holečkova", "16:00 - 16:45", dotColor = null)
+            MockCalendarGroupCard("Zlatá skupina LAT", "ZŠ Holečkova", "17:30 - 18:15", dotColor = Color(0xFFFFD700))
+            Spacer(Modifier.height(4.dp))
+            Text("tomorrow", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 2.dp, bottom = 2.dp))
+            MockCalendarLessonCard("Filip Karásek", "BEST Sportcentrum", "15:00 - 15:45", "Novák - Nováková", "45'")
+        }
+    }
+}
+
+@Composable
+private fun MockCalendarGroupCard(name: String, location: String, time: String, dotColor: Color?) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp)) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(name, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface)
+                Text(location, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(time, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Column(
-                modifier = Modifier.padding(10.dp),
-                verticalArrangement = Arrangement.spacedBy(7.dp)
-            ) {
-                MockTrainingRow(accentColor = TrainingBlue,   time = "17:00–18:30", name = "Standard · Sál A")
-                MockTrainingRow(accentColor = TrainingGreen,  time = "18:30–20:00", name = "Latinskoamerická · Sál B")
-                MockTrainingRow(accentColor = TrainingOrange, time = "09:00–10:30", name = "Začátečníci · Sál A")
+            Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text("group", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (dotColor != null) Box(modifier = Modifier.size(12.dp).clip(CircleShape).background(dotColor))
             }
         }
     }
 }
 
 @Composable
-private fun MockTrainingRow(accentColor: Color, time: String, name: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(MaterialTheme.colorScheme.surface),
-        verticalAlignment = Alignment.CenterVertically
+private fun MockCalendarLessonCard(trainer: String, location: String, time: String, names: String, duration: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Box(
-            modifier = Modifier
-                .width(5.dp)
-                .height(44.dp)
-                .background(accentColor, RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp))
-        )
-        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp)) {
-            Text(time, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
-            Text(name, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp)) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Text(trainer, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
+                Text("lesson", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Text(location, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(6.dp))
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(time, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(76.dp))
+                Text(names, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
+                Text(duration, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
     }
 }
 
 @Composable
-private fun PeopleMockupCard(modifier: Modifier = Modifier) {
-    val brand = Color(0xFFEE1733)
+private fun EventsMockupCard(modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier.shadow(4.dp, MockCardShape),
+        shape = MockCardShape,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text("28. March", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 2.dp, bottom = 2.dp))
+            MockEventCard("Soustředění MINI Olympteam - zelená a fialová skupina", "ZŠ Holečkova", "09:00 - 17:00")
+            Spacer(Modifier.height(4.dp))
+            Text("13. March", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 2.dp, bottom = 2.dp))
+            MockEventCard("Desítkové soustředění Prštice 2026", "TJ Sokol Prštice", "13.3.–15.3.2026")
+            Spacer(Modifier.height(4.dp))
+            Text("22. February", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 2.dp, bottom = 2.dp))
+            MockEventCard("Přípravný Camp před MČR LAT - Podbořany", "Filip Karásek", "09:00 - 20:00")
+        }
+    }
+}
+
+@Composable
+private fun MockEventCard(name: String, location: String, time: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp)) {
+            Text(name, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface, maxLines = 2)
+            Spacer(Modifier.height(2.dp))
+            Text(location, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(time, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun BoardMockupCard(modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier.shadow(4.dp, MockCardShape),
+        shape = MockCardShape,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            MockBoardPostCard("Termíny externích trenérů - jaro/léto 2026", "Filip Karásek", "úterý 7. 4. - Martin Odstrčil…")
+            MockBoardPostCard("Seznam soutěží - jaro 2026", "Roman Pecha", "Níže je tabulka zveřejněných naplánovaných soutěží…")
+            MockBoardPostCard("Plán přípravy na MČR 2026", "Miroslav Hýža", "Vážení sportovci, průběžně budou přidávány akce…")
+            MockBoardPostCard("Členská schůze", "Miroslav Hýža", "Vážení členové a rodiče, …")
+        }
+    }
+}
+
+@Composable
+private fun MockBoardPostCard(title: String, author: String, preview: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp)) {
+            Text(title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Spacer(Modifier.height(2.dp))
+            Text(author, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
+            Text(preview, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+@Composable
+private fun OtherFeaturesIconGrid(modifier: Modifier = Modifier) {
+    val strings = AppStrings.current
+    data class Feature(val icon: ImageVector, val label: String)
+    val features = listOf(
+        Feature(Icons.Filled.Groups, strings.otherScreen.people),
+        Feature(Icons.Filled.EmojiEvents, strings.otherScreen.leaderboard),
+        Feature(Icons.Filled.AccountCircle, strings.otherScreen.myAccount),
+        Feature(Icons.Filled.School, strings.otherScreen.trainingGroups),
+        Feature(Icons.Filled.BarChart, strings.stats.statsTitle),
+        Feature(Icons.Filled.Notifications, strings.otherScreen.notificationSettings),
+    )
     Card(
         modifier = modifier.shadow(6.dp, MockCardShape),
         shape = MockCardShape,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
-        Column {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(brand)
-                    .padding(horizontal = 14.dp, vertical = 10.dp),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Groups,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(18.dp)
-                )
-                Text(
-                    text = "  Členové & pořadí",
-                    color = Color.White,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            // Avatar row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 10.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy((-8).dp)
-            ) {
-                val avatarColors = listOf(Color(0xFFEE1733), Color(0xFF1565C0), Color(0xFF2E7D32), Color(0xFFF57F17), Color(0xFF6A1B9A))
-                val initials = listOf("J", "P", "E", "M", "T")
-                avatarColors.zip(initials).forEach { (color, initial) ->
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .background(color)
-                            .border(2.dp, MaterialTheme.colorScheme.surfaceVariant, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(initial, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            features.chunked(3).forEach { row ->
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                    row.forEach { feature ->
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(80.dp)) {
+                            Box(
+                                modifier = Modifier
+                                    .size(52.dp)
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(MaterialTheme.colorScheme.primary),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = feature.icon,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
+                            Spacer(Modifier.height(6.dp))
+                            Text(
+                                feature.label,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                textAlign = TextAlign.Center,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
                 }
-                Spacer(Modifier.width(12.dp))
-                Text(
-                    "+42",
-                    fontSize = 11.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.align(Alignment.CenterVertically)
-                )
-            }
-            // Leaderboard
-            Column(
-                modifier = Modifier.padding(start = 10.dp, end = 10.dp, bottom = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(7.dp)
-            ) {
-                MockLeaderboardRow(rank = 1, name = "Jana K.", score = "94.5")
-                MockLeaderboardRow(rank = 2, name = "Petr N.", score = "91.2")
-                MockLeaderboardRow(rank = 3, name = "Eva M.", score = "88.7")
             }
         }
     }
 }
 
-@Composable
-private fun MockLeaderboardRow(rank: Int, name: String, score: String) {
-    val medalColor = when (rank) {
-        1 -> Gold
-        2 -> Silver
-        else -> Bronze
-    }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(horizontal = 10.dp, vertical = 7.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Box(
-                modifier = Modifier.size(20.dp).clip(CircleShape).background(medalColor),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("$rank", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color.White)
-            }
-            Text(name, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
-        }
-        Text(score, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-    }
-}
 

@@ -37,4 +37,6 @@ data class NotificationStrings(
     val noReminders: String,
     val remindMeBefore: String,
     val reminderDialogTitle: String,
+    val noNotificationsFromCoach: String,
+    val notificationsRules: String,
 )

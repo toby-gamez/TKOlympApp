@@ -119,8 +119,8 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                 Column(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(displayName ?: "Uživatel", style = MaterialTheme.typography.headlineSmall)
                 }
-                // show email under name if available
-                derived.emailText?.let {
+                // show login under name if available
+                profileState.currentUser?.uLogin?.let {
                     Column(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(it, style = MaterialTheme.typography.bodySmall)
                     }

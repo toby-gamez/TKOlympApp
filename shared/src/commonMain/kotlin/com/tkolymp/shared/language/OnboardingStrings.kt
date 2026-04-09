@@ -9,6 +9,8 @@ data class OnboardingStrings(
     val onboardingDesc3: String,
     val onboardingTitle4: String,
     val onboardingDesc4: String,
+    val onboardingTitle5: String,
+    val onboardingDesc5: String,
     val calendarViewList: String,
     val calendarViewListDesc: String,
     val calendarViewTimeline: String,

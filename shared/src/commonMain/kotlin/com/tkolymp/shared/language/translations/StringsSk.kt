@@ -1,6 +1,36 @@
 package com.tkolymp.shared.language.translations
 
-import com.tkolymp.shared.language.*
+import com.tkolymp.shared.language.AboutStrings
+import com.tkolymp.shared.language.AddressStrings
+import com.tkolymp.shared.language.AnnouncementStrings
+import com.tkolymp.shared.language.AuthStrings
+import com.tkolymp.shared.language.BoardTabStrings
+import com.tkolymp.shared.language.CalendarViewStrings
+import com.tkolymp.shared.language.CommonActionStrings
+import com.tkolymp.shared.language.DialogStrings
+import com.tkolymp.shared.language.ErrorMessageStrings
+import com.tkolymp.shared.language.EventCalendarTabStrings
+import com.tkolymp.shared.language.EventStrings
+import com.tkolymp.shared.language.ExtendedProfileFieldStrings
+import com.tkolymp.shared.language.FilterStrings
+import com.tkolymp.shared.language.GenderStrings
+import com.tkolymp.shared.language.ImportExportStrings
+import com.tkolymp.shared.language.LanguageScreenStrings
+import com.tkolymp.shared.language.LeaderboardStrings
+import com.tkolymp.shared.language.MiscStrings
+import com.tkolymp.shared.language.NavigationStrings
+import com.tkolymp.shared.language.NotificationStrings
+import com.tkolymp.shared.language.OnboardingStrings
+import com.tkolymp.shared.language.OtherScreenStrings
+import com.tkolymp.shared.language.OverviewStrings
+import com.tkolymp.shared.language.PeopleStrings
+import com.tkolymp.shared.language.PrivacyStrings
+import com.tkolymp.shared.language.ProfileStrings
+import com.tkolymp.shared.language.RegistrationStrings
+import com.tkolymp.shared.language.SettingsStrings
+import com.tkolymp.shared.language.StatsStrings
+import com.tkolymp.shared.language.Strings
+import com.tkolymp.shared.language.TimelineStrings
 
 val StringsSk = Strings(
     navigation = NavigationStrings(
@@ -208,6 +238,8 @@ val StringsSk = Strings(
         noReminders = "Žiadne pripomienky",
         remindMeBefore = "Pripomenúť za {0} min",
         reminderDialogTitle = "Nastaviť pripomienku",
+        noNotificationsFromCoach = "Nič od trenéra",
+        notificationsRules = "Pravidlá"
     ),
     people = PeopleStrings(
         searchByName = "Hľadať podľa mena alebo priezviska",
@@ -296,6 +328,8 @@ val StringsSk = Strings(
         onboardingDesc3 = "Členovia, tréneri, rebríčky a nástenka – všetko na jednom mieste.",
         onboardingTitle4 = "Pohľad na kalendár",
         onboardingDesc4 = "Ako chceš zobrazovať tréningový rozvrh?",
+        onboardingTitle5 = "A oveľa viac",
+        onboardingDesc5 = "Profil, rebríček, skupiny, tréneri a štatistiky – všetko o tvojom tancovaní.",
         calendarViewList = "Týždenný prehľad",
         calendarViewListDesc = "Kompaktný zoznam\npodľa dní",
         calendarViewTimeline = "Os",

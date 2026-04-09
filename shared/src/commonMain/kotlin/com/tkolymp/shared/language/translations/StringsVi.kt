@@ -227,6 +227,8 @@ val StringsVi = Strings(
         noReminders = "Không có nhắc nhở",
         remindMeBefore = "Nhắc {0} phút trước",
         reminderDialogTitle = "Đặt nhắc nhở",
+        noNotificationsFromCoach = "Không có gì từ huấn luyện viên",
+        notificationsRules = "Quy tắc"
     ),
     people = PeopleStrings(
         searchByName = "Tìm kiếm theo tên hoặc họ",
@@ -315,6 +317,8 @@ val StringsVi = Strings(
         onboardingDesc3 = "Thành viên, huấn luyện viên, bảng xếp hạng và thông báo – tất cả ở một nơi.",
         onboardingTitle4 = "Chế độ xem lịch",
         onboardingDesc4 = "Bạn muốn xem lịch tập luyện như thế nào?",
+        onboardingTitle5 = "Và nhiều hơn nữa",
+        onboardingDesc5 = "Hồ sơ, bảng xếp hạng, nhóm, huấn luyện viên và thống kê – tất cả về bạn.",
         calendarViewList = "Danh sách tuần",
         calendarViewListDesc = "Danh sách gọn\ntheo ngày",
         calendarViewTimeline = "Trục thời gian",

@@ -1,6 +1,36 @@
 package com.tkolymp.shared.language.translations
 
-import com.tkolymp.shared.language.*
+import com.tkolymp.shared.language.AboutStrings
+import com.tkolymp.shared.language.AddressStrings
+import com.tkolymp.shared.language.AnnouncementStrings
+import com.tkolymp.shared.language.AuthStrings
+import com.tkolymp.shared.language.BoardTabStrings
+import com.tkolymp.shared.language.CalendarViewStrings
+import com.tkolymp.shared.language.CommonActionStrings
+import com.tkolymp.shared.language.DialogStrings
+import com.tkolymp.shared.language.ErrorMessageStrings
+import com.tkolymp.shared.language.EventCalendarTabStrings
+import com.tkolymp.shared.language.EventStrings
+import com.tkolymp.shared.language.ExtendedProfileFieldStrings
+import com.tkolymp.shared.language.FilterStrings
+import com.tkolymp.shared.language.GenderStrings
+import com.tkolymp.shared.language.ImportExportStrings
+import com.tkolymp.shared.language.LanguageScreenStrings
+import com.tkolymp.shared.language.LeaderboardStrings
+import com.tkolymp.shared.language.MiscStrings
+import com.tkolymp.shared.language.NavigationStrings
+import com.tkolymp.shared.language.NotificationStrings
+import com.tkolymp.shared.language.OnboardingStrings
+import com.tkolymp.shared.language.OtherScreenStrings
+import com.tkolymp.shared.language.OverviewStrings
+import com.tkolymp.shared.language.PeopleStrings
+import com.tkolymp.shared.language.PrivacyStrings
+import com.tkolymp.shared.language.ProfileStrings
+import com.tkolymp.shared.language.RegistrationStrings
+import com.tkolymp.shared.language.SettingsStrings
+import com.tkolymp.shared.language.StatsStrings
+import com.tkolymp.shared.language.Strings
+import com.tkolymp.shared.language.TimelineStrings
 
 /** Brainrot "language" (en_au) — no cap fr fr 🧠 */
 val StringsBrainrot = Strings(
@@ -209,6 +239,8 @@ val StringsBrainrot = Strings(
         noReminders = "no reminders rn",
         remindMeBefore = "ping me {0} min b4",
         reminderDialogTitle = "set reminder fr",
+        noNotificationsFromCoach = "nothing from gymbro",
+        notificationsRules = "Ruls"
     ),
     people = PeopleStrings(
         searchByName = "Search by name fr",
@@ -297,6 +329,8 @@ val StringsBrainrot = Strings(
         onboardingDesc3 = "Members, coaches, leaderboards and the board – everything in one place no cap.",
         onboardingTitle4 = "Calendar vibes fr",
         onboardingDesc4 = "How u wanna see the schedule no cap?",
+        onboardingTitle5 = "And so much bussin more fr",
+        onboardingDesc5 = "Profile, leaderboard, groups, coaches and stats – all about u no cap.",
         calendarViewList = "List mode",
         calendarViewListDesc = "Compact list\nby day fr",
         calendarViewTimeline = "Axis fr",
