@@ -15,8 +15,7 @@ import java.security.MessageDigest
  * Format: colon-separated uppercase hex pairs, e.g.
  *   "AB:CD:EF:01:23:45:67:89:AB:CD:EF:01:23:45:67:89:AB:CD:EF:01:23:45:67:89:AB:CD:EF:01:23:45:67"
  */
-private const val EXPECTED_CERT_SHA256 =
-    "REPLACE_WITH_YOUR_SHA256_FINGERPRINT"
+private const val EXPECTED_CERT_SHA256 = "99:12:DC:5E:75:5A:3E:88:4A:42:A0:01:64:E8:43:A8:18:D1:F8:DD:1C:B9:1B:AA:49:12:76:B7:5F:8B:5B:C9"
 
 class IntegrityServiceAndroid(private val context: Context) : IIntegrityService {
 
