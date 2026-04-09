@@ -356,12 +356,6 @@ internal fun SingleDayTimelineView(
                     }
                 }
                 
-                // Now line
-                NowLine(
-                    modifier = Modifier.fillMaxWidth(),
-                    minuteHeight = minuteHeight
-                )
-                
                 // Render events
                 events.forEach { layoutData ->
                     TimelineEventCard(
@@ -373,6 +367,12 @@ internal fun SingleDayTimelineView(
                         }
                     )
                 }
+                
+                // Now line (on top of events)
+                NowLine(
+                    modifier = Modifier.fillMaxWidth(),
+                    minuteHeight = minuteHeight
+                )
             }
         }
     }
@@ -480,14 +480,6 @@ internal fun MultiDayTimelineView(
                                 }
                             }
                             
-                            // Now line (only for today)
-                            if (date == kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())) {
-                                NowLine(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    minuteHeight = minuteHeight
-                                )
-                            }
-                            
                             // Events for this day
                             getEventsForDate(date).forEach { layoutData ->
                                 TimelineEventCard(
@@ -498,6 +490,14 @@ internal fun MultiDayTimelineView(
                                         val evId = layoutData.event.event?.id ?: return@TimelineEventCard
                                         onEventClick(evId)
                                     }
+                                )
+                            }
+                            
+                            // Now line on top of events (only for today)
+                            if (date == kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())) {
+                                NowLine(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    minuteHeight = minuteHeight
                                 )
                             }
                         }
