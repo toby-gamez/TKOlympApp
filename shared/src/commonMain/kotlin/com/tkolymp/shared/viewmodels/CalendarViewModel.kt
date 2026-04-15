@@ -80,7 +80,9 @@ class CalendarViewModel(
                 val weekKey = "offline_cal_${bucketName}_$weekStart"
                 val raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(weekKey) } catch (_: Exception) { null }
                 if (raw != null) {
-                    val parsed = parseCalendarJson(raw)
+                    var parsed = parseCalendarJson(raw)
+                    // enrich parsed week summary with full event details saved separately
+                    parsed = try { enrichParsedWithEventDetails(parsed) } catch (_: Exception) { parsed }
 
                     val lessonsByTrainerByDay = parsed.mapValues { (_, list) ->
                         list.filter { isLesson(it) }
@@ -134,7 +136,8 @@ class CalendarViewModel(
                 val weekKey = "offline_cal_${bucketName}_$weekStart"
                 val raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(weekKey) } catch (_: Exception) { null }
                 if (raw != null) {
-                    val parsed = parseCalendarJson(raw)
+                    var parsed = parseCalendarJson(raw)
+                    parsed = try { enrichParsedWithEventDetails(parsed) } catch (_: Exception) { parsed }
                     _state.value = _state.value.copy(isOffline = true)
                     parsed
                 } else throw ex
@@ -188,13 +191,126 @@ class CalendarViewModel(
                     val eventType = obj["eventType"]?.jsonPrimitive?.contentOrNull
                     val locationText = obj["locationText"]?.jsonPrimitive?.contentOrNull
                     val trainers = (obj["trainers"]?.jsonArray)?.mapNotNull { it.jsonPrimitive.contentOrNull } ?: emptyList()
-                    val event = com.tkolymp.shared.event.Event(eventId, eventName, null, eventType, locationText, false, false, false, trainers, emptyList(), emptyList(), null)
+
+                    val targetCohorts = (obj["targetCohorts"]?.jsonArray)?.mapNotNull { it2 ->
+                        val o = it2.jsonObject
+                        val cohortId = o["cohortId"]?.jsonPrimitive?.longOrNull ?: o["cohortId"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                        val cohortObj = o["cohort"]?.jsonObject
+                        val cohort = cohortObj?.let { c ->
+                            val cid = c["id"]?.jsonPrimitive?.longOrNull ?: c["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                            com.tkolymp.shared.event.Cohort(cid, c["name"]?.jsonPrimitive?.contentOrNull, c["colorRgb"]?.jsonPrimitive?.contentOrNull)
+                        }
+                        com.tkolymp.shared.event.TargetCohort(cohortId, cohort)
+                    } ?: emptyList()
+
+                    val registrations = (obj["eventRegistrationsList"]?.jsonArray)?.mapNotNull { regEl ->
+                        val o = regEl.jsonObject
+                        val rid = o["id"]?.jsonPrimitive?.longOrNull ?: o["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+
+                        val personObj = o["person"]?.jsonObject
+                        val person = personObj?.let { p ->
+                            val pid = p["id"]?.jsonPrimitive?.longOrNull ?: p["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                            com.tkolymp.shared.event.Person(pid, p["name"]?.jsonPrimitive?.contentOrNull, p["firstName"]?.jsonPrimitive?.contentOrNull, p["lastName"]?.jsonPrimitive?.contentOrNull)
+                        }
+
+                        val coupleObj = o["couple"]?.jsonObject
+                        val couple = coupleObj?.let { c ->
+                            val cid = c["id"]?.jsonPrimitive?.longOrNull ?: c["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                            val manObj = c["man"]?.jsonObject
+                            val womanObj = c["woman"]?.jsonObject
+                            val man = manObj?.let { m -> com.tkolymp.shared.event.SimpleName(m["firstName"]?.jsonPrimitive?.contentOrNull, m["lastName"]?.jsonPrimitive?.contentOrNull) }
+                            val woman = womanObj?.let { w -> com.tkolymp.shared.event.SimpleName(w["firstName"]?.jsonPrimitive?.contentOrNull, w["lastName"]?.jsonPrimitive?.contentOrNull) }
+                            com.tkolymp.shared.event.Couple(cid, man, woman)
+                        }
+                        com.tkolymp.shared.event.Registration(rid, person, couple)
+                    } ?: emptyList()
+
+                    val locationObj = obj["location"]?.jsonObject
+                    val location = locationObj?.let { l ->
+                        val lid = l["id"]?.jsonPrimitive?.longOrNull ?: l["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                        com.tkolymp.shared.event.Location(lid, l["name"]?.jsonPrimitive?.contentOrNull)
+                    }
+
+                    val event = com.tkolymp.shared.event.Event(eventId, eventName, null, eventType, locationText, false, false, false, trainers, targetCohorts, registrations, location)
                     list += com.tkolymp.shared.event.EventInstance(id, isCancelled, since, until, updatedAt, event)
                 }
                 result[date] = list
             }
             result
         } catch (e: Exception) { emptyMap() }
+    }
+
+    private suspend fun enrichParsedWithEventDetails(parsed: Map<String, List<EventInstance>>): Map<String, List<EventInstance>> {
+        val json = kotlinx.serialization.json.Json
+        val result = mutableMapOf<String, MutableList<EventInstance>>()
+        for ((date, list) in parsed) {
+            val newList = mutableListOf<EventInstance>()
+            for (inst in list) {
+                val ev = inst.event
+                if (ev?.id != null) {
+                    try {
+                        val raw = ServiceLocator.offlineSyncManager.loadEventDetail(ev.id)
+                        if (!raw.isNullOrBlank()) {
+                            val obj = json.parseToJsonElement(raw).jsonObject
+                            // build trainers
+                            val trainers = (obj["eventTrainersList"] as? kotlinx.serialization.json.JsonArray)?.mapNotNull { (it as? kotlinx.serialization.json.JsonObject)?.get("name")?.jsonPrimitive?.contentOrNull }
+                                ?: (obj["eventTrainersList"] as? kotlinx.serialization.json.JsonArray)?.mapNotNull { it.jsonPrimitive.contentOrNull } ?: emptyList()
+
+                            // target cohorts
+                            val targetCohorts = (obj["eventTargetCohortsList"] as? kotlinx.serialization.json.JsonArray)?.mapNotNull { item ->
+                                val o = item as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null
+                                val cohortId = o["cohortId"]?.jsonPrimitive?.longOrNull ?: o["cohortId"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                                val cohortObj = o["cohort"] as? kotlinx.serialization.json.JsonObject
+                                val cohort = cohortObj?.let { c ->
+                                    val cid = c["id"]?.jsonPrimitive?.longOrNull ?: c["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                                    com.tkolymp.shared.event.Cohort(cid, c["name"]?.jsonPrimitive?.contentOrNull, c["colorRgb"]?.jsonPrimitive?.contentOrNull)
+                                }
+                                com.tkolymp.shared.event.TargetCohort(cohortId, cohort)
+                            } ?: emptyList()
+
+                            // registrations (handle a couple of possible shapes)
+                            val regArr = when {
+                                obj["eventRegistrationsList"] is kotlinx.serialization.json.JsonArray -> obj["eventRegistrationsList"] as kotlinx.serialization.json.JsonArray
+                                obj["eventRegistrations"] is kotlinx.serialization.json.JsonObject -> (obj["eventRegistrations"] as kotlinx.serialization.json.JsonObject)["nodes"] as? kotlinx.serialization.json.JsonArray
+                                else -> null
+                            }
+                            val registrations = regArr?.mapNotNull { item ->
+                                val o = item as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null
+                                val rid = o["id"]?.jsonPrimitive?.longOrNull ?: o["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                                val personObj = o["person"] as? kotlinx.serialization.json.JsonObject
+                                val person = personObj?.let { p ->
+                                    val pid = p["id"]?.jsonPrimitive?.longOrNull ?: p["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                                    com.tkolymp.shared.event.Person(pid, p["name"]?.jsonPrimitive?.contentOrNull, p["firstName"]?.jsonPrimitive?.contentOrNull, p["lastName"]?.jsonPrimitive?.contentOrNull)
+                                }
+                                val coupleObj = o["couple"] as? kotlinx.serialization.json.JsonObject
+                                val couple = coupleObj?.let { c ->
+                                    val cid = c["id"]?.jsonPrimitive?.longOrNull ?: c["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                                    val manObj = c["man"] as? kotlinx.serialization.json.JsonObject
+                                    val womanObj = c["woman"] as? kotlinx.serialization.json.JsonObject
+                                    val man = manObj?.let { m -> com.tkolymp.shared.event.SimpleName(m["firstName"]?.jsonPrimitive?.contentOrNull, m["lastName"]?.jsonPrimitive?.contentOrNull) }
+                                    val woman = womanObj?.let { w -> com.tkolymp.shared.event.SimpleName(w["firstName"]?.jsonPrimitive?.contentOrNull, w["lastName"]?.jsonPrimitive?.contentOrNull) }
+                                    com.tkolymp.shared.event.Couple(cid, man, woman)
+                                }
+                                com.tkolymp.shared.event.Registration(rid, person, couple)
+                            } ?: emptyList()
+
+                            val locationObj = obj["location"] as? kotlinx.serialization.json.JsonObject
+                            val location = locationObj?.let { l ->
+                                val lid = l["id"]?.jsonPrimitive?.longOrNull ?: l["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                                com.tkolymp.shared.event.Location(lid, l["name"]?.jsonPrimitive?.contentOrNull)
+                            }
+
+                            val enrichedEvent = com.tkolymp.shared.event.Event(ev.id, obj["name"]?.jsonPrimitive?.contentOrNull ?: ev.name, obj["description"]?.jsonPrimitive?.contentOrNull, obj["type"]?.jsonPrimitive?.contentOrNull ?: ev.type, obj["locationText"]?.jsonPrimitive?.contentOrNull ?: ev.locationText, obj["isRegistrationOpen"]?.jsonPrimitive?.booleanOrNull ?: ev.isRegistrationOpen, obj["isVisible"]?.jsonPrimitive?.booleanOrNull ?: ev.isVisible, obj["isPublic"]?.jsonPrimitive?.booleanOrNull ?: ev.isPublic, trainers ?: ev.eventTrainersList, targetCohorts.ifEmpty { ev.eventTargetCohortsList }, registrations.ifEmpty { ev.eventRegistrationsList }, location ?: ev.location)
+                            newList += com.tkolymp.shared.event.EventInstance(inst.id, inst.isCancelled, inst.since, inst.until, inst.updatedAt, enrichedEvent)
+                            continue
+                        }
+                    } catch (_: Exception) {}
+                }
+                newList += inst
+            }
+            result[date] = newList
+        }
+        return result
     }
 
     private fun isLesson(inst: EventInstance): Boolean =
