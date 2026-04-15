@@ -52,6 +52,12 @@ import com.tkolymp.shared.appearance.ThemeMode
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.SettingsViewModel
 import kotlinx.coroutines.launch
+import com.tkolymp.shared.ServiceLocator
+import androidx.compose.material3.Button
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -156,6 +162,50 @@ fun SettingsScreen(
                         }
                     }
                 }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ── Offline download ────────────────────────────────────
+            SectionHeader(text = "Offline")
+            val downloading = remember { mutableStateOf(false) }
+            val progressStage = remember { mutableStateOf("") }
+            val progressDone = remember { mutableStateOf(0) }
+            val progressTotal = remember { mutableStateOf(0) }
+            SettingsCard {
+                SettingsRow(icon = Icons.Filled.ViewWeek, label = "Download all data") {
+                    Button(onClick = {
+                        scope.launch {
+                            downloading.value = true
+                            progressStage.value = "starting"
+                            progressDone.value = 0
+                            progressTotal.value = 0
+                            try {
+                                ServiceLocator.offlineSyncManager.downloadAll { stage, done, total ->
+                                    progressStage.value = stage
+                                    progressDone.value = done
+                                    progressTotal.value = total
+                                }
+                            } catch (_: Exception) {
+                            }
+                            downloading.value = false
+                        }
+                    }) {
+                        Text("Download all")
+                    }
+                }
+            }
+
+            if (downloading.value) {
+                AlertDialog(onDismissRequest = {}, confirmButton = {}, title = { Text("Downloading") }, text = {
+                    Column {
+                        Text("Stage: ${progressStage.value}")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        if (progressTotal.value > 0) Text("${progressDone.value} / ${progressTotal.value}")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        CircularProgressIndicator()
+                    }
+                })
             }
         }
     }

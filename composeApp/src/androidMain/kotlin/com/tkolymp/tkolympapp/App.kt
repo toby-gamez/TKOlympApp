@@ -88,6 +88,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import ui.theme.AppTheme
+import com.tkolymp.tkolympapp.components.OfflineBanner
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -149,6 +150,14 @@ fun App() {
                     AppearanceSettings.setThemeMode(when (themeRaw) { "light" -> ThemeMode.LIGHT; "dark" -> ThemeMode.DARK; else -> ThemeMode.SYSTEM })
                     showOnboarding = !seen
                     loggedIn = has
+                    // Start a best-effort offline sync in background when network is available
+                    try {
+                        if (com.tkolymp.shared.ServiceLocator.networkMonitor.isConnected()) {
+                            kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
+                                try { com.tkolymp.shared.ServiceLocator.offlineSyncManager.syncAll() } catch (_: Exception) {}
+                            }
+                        }
+                    } catch (_: Exception) {}
                 } catch (e: CancellationException) { throw e } catch (e: Exception) {
                     loggedIn = false
                     // still show onboarding if init fails

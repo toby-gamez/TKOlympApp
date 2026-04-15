@@ -29,6 +29,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.material3.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
@@ -91,11 +93,21 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
-            PrimaryTabRow(selectedTabIndex = state.selectedTab, modifier = Modifier.fillMaxWidth()) {
+            var localSelectedTab by rememberSaveable { mutableIntStateOf(state.selectedTab) }
+
+            // keep local selection in sync if ViewModel updates it externally
+            LaunchedEffect(state.selectedTab) {
+                if (localSelectedTab != state.selectedTab) localSelectedTab = state.selectedTab
+            }
+
+            PrimaryTabRow(selectedTabIndex = localSelectedTab, modifier = Modifier.fillMaxWidth()) {
                 tabs.forEachIndexed { index, title ->
                     Tab(
-                        selected = state.selectedTab == index,
-                        onClick = { viewModel.selectTab(index) },
+                        selected = localSelectedTab == index,
+                        onClick = {
+                            // only update local selection here; actual loading happens in LaunchedEffect below
+                            localSelectedTab = index
+                        },
                         text = { Text(title) }
                     )
 
@@ -126,9 +138,10 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
 
             
 
-            LaunchedEffect(state.selectedTab) {
-                // load announcements whenever selected tab changes
-                viewModel.loadAnnouncements(forceRefresh = true)
+            LaunchedEffect(localSelectedTab) {
+                // update ViewModel selection and load announcements when local tab changes
+                viewModel.selectTab(localSelectedTab)
+                scope.launch { viewModel.loadAnnouncements(forceRefresh = false) }
             }
 
             SwipeToReload(
@@ -137,7 +150,11 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
                 modifier = Modifier.weight(1f).fillMaxWidth()
             ) {
                 Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
-                    val announcements = state.currentAnnouncements.filterIsInstance<com.tkolymp.shared.announcements.Announcement>()
+                    val announcements = if (state.selectedTab == 1) {
+                        state.permanentAnnouncements.filterIsInstance<com.tkolymp.shared.announcements.Announcement>()
+                    } else {
+                        state.currentAnnouncements.filterIsInstance<com.tkolymp.shared.announcements.Announcement>()
+                    }
                     val filtered = announcements.filter { a ->
                         val q = searchQuery.trim()
                         if (q.isBlank()) return@filter true

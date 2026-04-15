@@ -12,7 +12,7 @@ class AnnouncementServiceImpl(private val cache: CacheService = ServiceLocator.c
     """.trimIndent()
 
     override suspend fun getAnnouncements(sticky: Boolean): List<Announcement> {
-        val cacheKey = "announcements_sticky_${'$'}sticky"
+        val cacheKey = "announcements_sticky_$sticky"
         cache.get<List<Announcement>>(cacheKey)?.let { return it }
         val variables = buildJsonObject { put("sticky", JsonPrimitive(sticky)) }
         val resp = ServiceLocator.graphQlClient.post(query, variables)

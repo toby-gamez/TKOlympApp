@@ -5,7 +5,7 @@ import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.IO
+import kotlinx.serialization.json.Json
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,6 +21,7 @@ import com.tkolymp.shared.utils.str
 import com.tkolymp.shared.utils.int
 import com.tkolymp.shared.utils.bool
 import com.tkolymp.shared.utils.formatTimesWithDateAlways
+import kotlinx.serialization.json.jsonObject
 
 data class EventState(
     val eventJson: JsonObject? = null,
@@ -58,6 +59,7 @@ data class EventState(
     val reminderMinutesBefore: Int? = null,
     val reminderId: String? = null,
     val reminderResult: Boolean? = null,  // null = no attempt, true = set, false = removed
+    val isOffline: Boolean = false,
     override val isLoading: Boolean = false,
     override val error: String? = null
 ) : ViewModelState
@@ -77,7 +79,18 @@ class EventViewModel(
         try {
             // Eagerly check if already added to calendar
             val alreadyAdded = try { calendarStorage.isEventInCalendar(eventId) } catch (_: Exception) { false }
-            val ev = try { withContext(Dispatchers.IO) { eventService.fetchEventById(eventId, forceRefresh) } } catch (e: CancellationException) { throw e } catch (ex: Exception) { Logger.d("EventViewModel", "fetchEventById($eventId) failed: ${ex.message}"); null }
+            var ev = try { withContext(Dispatchers.IO) { eventService.fetchEventById(eventId, forceRefresh) } } catch (e: CancellationException) { throw e } catch (ex: Exception) {
+                Logger.d("EventViewModel", "fetchEventById($eventId) failed: ${ex.message}"); null }
+            var isOfflineUsed = false
+            if (ev == null) {
+                try {
+                    val raw = ServiceLocator.offlineSyncManager.loadEventDetail(eventId)
+                    if (raw != null) {
+                        ev = kotlinx.serialization.json.Json.parseToJsonElement(raw).jsonObject
+                        isOfflineUsed = true
+                    }
+                } catch (_: Exception) { }
+            }
             var myPerson: String? = null
             var myCouples: List<String> = emptyList()
             try {
@@ -197,7 +210,8 @@ class EventViewModel(
                 firstInstanceIso = firstDate,
                 reminderMinutesBefore = try { notificationService.getReminderForEvent(eventId)?.minutesBefore } catch (_: Exception) { null },
                 reminderId = try { notificationService.getReminderForEvent(eventId)?.id } catch (_: Exception) { null },
-                isLoading = false
+                isLoading = false,
+                isOffline = isOfflineUsed
             )
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání události")

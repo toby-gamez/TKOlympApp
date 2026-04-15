@@ -15,6 +15,9 @@ import com.tkolymp.shared.storage.CalendarPreferenceStorage
 import com.tkolymp.shared.storage.OnboardingStorage
 import com.tkolymp.shared.systemcalendar.SystemCalendarService
 import com.tkolymp.shared.user.UserService
+import com.tkolymp.shared.storage.OfflineDataStorageAndroid
+import com.tkolymp.shared.network.NetworkMonitorAndroid
+import com.tkolymp.shared.sync.OfflineSyncManager
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -68,6 +71,10 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
     val notificationScheduler = NotificationSchedulerAndroid(context)
     val notificationSvc = NotificationService(notificationStorage, notificationScheduler, eventSvc)
 
+    val offlineDataStorage = OfflineDataStorageAndroid(context)
+    val networkMonitor = NetworkMonitorAndroid(context)
+    val offlineSyncManager = OfflineSyncManager(eventSvc, announcementSvc, peopleSvc, offlineDataStorage, networkMonitor)
+
     val container = AppContainer(
         tokenStorage = storage,
         graphQlClient = gql,
@@ -86,6 +93,9 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
         languageStorage = com.tkolymp.shared.storage.LanguageStorage(context),
         calendarPreferenceStorage = CalendarPreferenceStorage(context),
         systemCalendarService = SystemCalendarService(context),
+        offlineDataStorage = offlineDataStorage,
+        networkMonitor = networkMonitor,
+        offlineSyncManager = offlineSyncManager,
     )
 
     ServiceLocator.init(container)

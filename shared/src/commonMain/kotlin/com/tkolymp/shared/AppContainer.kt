@@ -17,6 +17,9 @@ import com.tkolymp.shared.storage.TokenStorage
 import com.tkolymp.shared.storage.UserStorage
 import com.tkolymp.shared.systemcalendar.SystemCalendarService
 import com.tkolymp.shared.user.UserService
+import com.tkolymp.shared.storage.OfflineDataStorage
+import com.tkolymp.shared.network.NetworkMonitor
+import com.tkolymp.shared.sync.OfflineSyncManager
 
 /**
  * Holds all application-level service instances with explicit constructor injection.
@@ -41,4 +44,7 @@ class AppContainer(
     val languageStorage: LanguageStorage,
     val calendarPreferenceStorage: CalendarPreferenceStorage,
     val systemCalendarService: SystemCalendarService,
+    val offlineDataStorage: OfflineDataStorage,
+    val networkMonitor: NetworkMonitor,
+    val offlineSyncManager: OfflineSyncManager,
 )

@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 
 data class NoticeState(
     val announcement: com.tkolymp.shared.announcements.Announcement? = null,
+    val isOffline: Boolean = false,
     override val isLoading: Boolean = false,
     override val error: String? = null
 ) : ViewModelState
@@ -25,11 +26,21 @@ class NoticeViewModel(
         _state.value = _state.value.copy(isLoading = true, error = null)
         viewModelScope.launch {
             try {
-                val a = try { announcementService.getAnnouncementById(announcementId, forceRefresh) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                var a = try { announcementService.getAnnouncementById(announcementId, forceRefresh) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                var usedOffline = false
+                if (a == null) {
+                    try {
+                        val raw = ServiceLocator.offlineSyncManager.loadAnnouncementDetail(announcementId)
+                        if (raw != null) {
+                            a = kotlinx.serialization.json.Json.decodeFromString(com.tkolymp.shared.announcements.Announcement.serializer(), raw)
+                            usedOffline = true
+                        }
+                    } catch (_: Exception) { }
+                }
                 if (a == null) {
                     _state.value = _state.value.copy(isLoading = false, error = "Oznámení nenalezeno")
                 } else {
-                    _state.value = _state.value.copy(announcement = a, isLoading = false)
+                    _state.value = _state.value.copy(announcement = a, isLoading = false, isOffline = usedOffline)
                 }
             } catch (e: CancellationException) { throw e } catch (ex: Exception) {
                 _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání")

@@ -17,6 +17,9 @@ import com.tkolymp.shared.storage.TokenStorage
 import com.tkolymp.shared.storage.UserStorage
 import com.tkolymp.shared.systemcalendar.SystemCalendarService
 import com.tkolymp.shared.user.UserService
+import com.tkolymp.shared.storage.OfflineDataStorage
+import com.tkolymp.shared.network.NetworkMonitor
+import com.tkolymp.shared.sync.OfflineSyncManager
 
 /**
  * Thin read-only facade over [AppContainer]. All mutable state lives in a single
@@ -57,4 +60,7 @@ object ServiceLocator {
     val languageStorage: LanguageStorage get() = container.languageStorage
     val calendarPreferenceStorage: CalendarPreferenceStorage get() = container.calendarPreferenceStorage
     val systemCalendarService: SystemCalendarService get() = container.systemCalendarService
+    val offlineDataStorage: OfflineDataStorage get() = container.offlineDataStorage
+    val networkMonitor: NetworkMonitor get() = container.networkMonitor
+    val offlineSyncManager: OfflineSyncManager get() = container.offlineSyncManager
 }
