@@ -50,6 +50,10 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import androidx.compose.ui.Alignment as ComposeAlignment
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -73,7 +77,35 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
         try {
             val ppl = withContext(Dispatchers.IO) { com.tkolymp.shared.ServiceLocator.peopleService.fetchPeople() }
             peopleById.value = ppl.associateBy { it.id }
-        } catch (e: CancellationException) { throw e } catch (_: Exception) { /* ignore */ }
+        } catch (e: CancellationException) { throw e } catch (_: Exception) {
+            // Offline fallback: try offline_people saved by OfflineSyncManager
+            try {
+                val raw = withContext(Dispatchers.IO) { com.tkolymp.shared.ServiceLocator.offlineSyncManager.loadPeople() }
+                if (!raw.isNullOrBlank()) {
+                    val arr = kotlinx.serialization.json.Json.parseToJsonElement(raw).jsonArray
+                    val parsed = arr.mapNotNull { el ->
+                        val obj = el.jsonObject
+                        val id = obj["id"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+                        val first = obj["firstName"]?.jsonPrimitive?.contentOrNull
+                        val last = obj["lastName"]?.jsonPrimitive?.contentOrNull
+                        val prefix = obj["prefixTitle"]?.jsonPrimitive?.contentOrNull
+                        val suffix = obj["suffixTitle"]?.jsonPrimitive?.contentOrNull
+                        val birth = obj["birthDate"]?.jsonPrimitive?.contentOrNull
+                        val memberships = (obj["cohortMembershipsList"] as? kotlinx.serialization.json.JsonArray)?.mapNotNull { mEl ->
+                            val mObj = mEl as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null
+                            val cohortObj = mObj["cohort"] as? kotlinx.serialization.json.JsonObject
+                            val cid = cohortObj?.get("id")?.jsonPrimitive?.contentOrNull
+                            val cname = cohortObj?.get("name")?.jsonPrimitive?.contentOrNull
+                            val ccolor = cohortObj?.get("colorRgb")?.jsonPrimitive?.contentOrNull
+                            val cvis = cohortObj?.get("isVisible")?.jsonPrimitive?.contentOrNull?.let { it == "true" }
+                            com.tkolymp.shared.people.CohortMembership(com.tkolymp.shared.people.Cohort(cid, cname, ccolor, cvis))
+                        } ?: emptyList()
+                        com.tkolymp.shared.people.Person(id, first, last, prefix, suffix, birth, memberships)
+                    }
+                    peopleById.value = parsed.associateBy { it.id }
+                }
+            } catch (_: Exception) { /* ignore */ }
+        }
     }
 
     Scaffold(

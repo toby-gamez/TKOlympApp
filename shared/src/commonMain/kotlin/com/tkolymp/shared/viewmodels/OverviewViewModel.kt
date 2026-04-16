@@ -90,12 +90,61 @@ class OverviewViewModel(
                 val grouped = withContext(Dispatchers.Default) {
                     eventService.fetchEventsGroupedByDay(startIso, endIso, onlyMine = true, first = 200, cacheNamespace = "overview_")
                 }
-                grouped.values.flatten()
+                val flattened = grouped.values.flatten()
+
+                // If server returned empty result while we're offline, try offline storage fallback
+                if (flattened.isEmpty()) {
+                    val online = try { ServiceLocator.networkMonitor.isConnected() } catch (_: Exception) { true }
+                    if (!online) {
+                        try {
+                            val startDay = try { kotlinx.datetime.LocalDate.parse(startIso.substringBefore('T')) } catch (_: Exception) { null }
+                            val endDay = try { kotlinx.datetime.LocalDate.parse(endIso.substringBefore('T')) } catch (_: Exception) { null }
+                            val keys = ServiceLocator.offlineDataStorage.allKeys().filter { it.startsWith("offline_cal_MINE_") }
+                                .filter { k ->
+                                    try {
+                                        val suffix = k.removePrefix("offline_cal_MINE_")
+                                        val wk = kotlinx.datetime.LocalDate.parse(suffix)
+                                        if (startDay != null && endDay != null) {
+                                            // include weeks that start within the requested range
+                                            wk <= endDay && wk >= startDay
+                                        } else true
+                                    } catch (_: Exception) { false }
+                                }
+                            val parsed = mutableListOf<EventInstance>()
+                            for (k in keys) {
+                                try {
+                                    val raw = ServiceLocator.offlineDataStorage.load(k) ?: continue
+                                    val map = parseCalendarJson(raw)
+                                    parsed += map.values.flatten()
+                                } catch (_: Exception) {}
+                            }
+                            // Deduplicate by instance id, preferring the most-recent updatedAt/since
+                            val deduped = parsed.groupBy { it.id }.mapNotNull { (_, list) ->
+                                list.maxByOrNull { it.updatedAt ?: it.since ?: "" }
+                            }
+                            if (deduped.isNotEmpty()) {
+                                _state.value = _state.value.copy(isOffline = true)
+                                deduped
+                            } else flattened
+                        } catch (_: Exception) { flattened }
+                    } else flattened
+                } else flattened
             } catch (e: CancellationException) { throw e } catch (e: Exception) {
                 Logger.d("OverviewViewModel", "fetchEvents failed: ${e.message}")
                 // Try offline fallback: collect available offline_cal_MINE_* keys
                 try {
+                    val startDay = try { kotlinx.datetime.LocalDate.parse(startIso.substringBefore('T')) } catch (_: Exception) { null }
+                    val endDay = try { kotlinx.datetime.LocalDate.parse(endIso.substringBefore('T')) } catch (_: Exception) { null }
                     val keys = ServiceLocator.offlineDataStorage.allKeys().filter { it.startsWith("offline_cal_MINE_") }
+                        .filter { k ->
+                            try {
+                                val suffix = k.removePrefix("offline_cal_MINE_")
+                                val wk = kotlinx.datetime.LocalDate.parse(suffix)
+                                if (startDay != null && endDay != null) {
+                                    wk <= endDay && wk >= startDay
+                                } else true
+                            } catch (_: Exception) { false }
+                        }
                     val parsed = mutableListOf<EventInstance>()
                     for (k in keys) {
                         try {
@@ -104,18 +153,135 @@ class OverviewViewModel(
                             parsed += map.values.flatten()
                         } catch (_: Exception) {}
                     }
-                    if (parsed.isNotEmpty()) {
+                    val deduped = parsed.groupBy { it.id }.mapNotNull { (_, list) -> list.maxByOrNull { it.updatedAt ?: it.since ?: "" } }
+                    if (deduped.isNotEmpty()) {
                         _state.value = _state.value.copy(isOffline = true)
-                        parsed
+                        deduped
                     } else emptyList()
                 } catch (_: Exception) { emptyList<EventInstance>() }
             }
+            // If some events came from offline minimal JSON (no registrations), try to fetch full
+            // event details for those event ids (from cache or offline storage) so we can show
+            // participant names like in CalendarScreen.
+            events = events.map { inst ->
+                val ev = inst.event ?: return@map inst
+                if (!ev.eventRegistrationsList.isNullOrEmpty()) return@map inst
+                val evId = ev.id ?: return@map inst
 
+                var regs: List<com.tkolymp.shared.event.Registration> = emptyList()
+                try {
+                    val fullJson = try { eventService.fetchEventById(evId, forceRefresh = false) } catch (_: Exception) { null }
+                    val regArr = when {
+                        fullJson?.get("eventRegistrationsList") is kotlinx.serialization.json.JsonArray -> fullJson?.get("eventRegistrationsList") as kotlinx.serialization.json.JsonArray
+                        fullJson?.get("eventRegistrations") is kotlinx.serialization.json.JsonObject -> (fullJson?.get("eventRegistrations") as kotlinx.serialization.json.JsonObject)["nodes"] as? kotlinx.serialization.json.JsonArray
+                        else -> null
+                    }
+                    if (regArr != null) {
+                        regs = regArr.mapNotNull { item ->
+                            val o = item as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null
+                            val ridPrim = o["id"]?.jsonPrimitive
+                            val rid = ridPrim?.longOrNull ?: ridPrim?.contentOrNull?.toLongOrNull()
+
+                            val personObj = o["person"] as? kotlinx.serialization.json.JsonObject
+                            val person = personObj?.let { p ->
+                                val pidPrim = p["id"]?.jsonPrimitive
+                                val pid = pidPrim?.longOrNull ?: pidPrim?.contentOrNull?.toLongOrNull()
+                                com.tkolymp.shared.event.Person(pid, p["name"]?.jsonPrimitive?.contentOrNull, p["firstName"]?.jsonPrimitive?.contentOrNull, p["lastName"]?.jsonPrimitive?.contentOrNull)
+                            }
+
+                            val coupleObj = o["couple"] as? kotlinx.serialization.json.JsonObject
+                            val couple = coupleObj?.let { c ->
+                                val cidPrim = c["id"]?.jsonPrimitive
+                                val cid = cidPrim?.longOrNull ?: cidPrim?.contentOrNull?.toLongOrNull()
+                                val manObj = c["man"] as? kotlinx.serialization.json.JsonObject
+                                val womanObj = c["woman"] as? kotlinx.serialization.json.JsonObject
+                                val man = manObj?.let { m -> com.tkolymp.shared.event.SimpleName(m["firstName"]?.jsonPrimitive?.contentOrNull, m["lastName"]?.jsonPrimitive?.contentOrNull) }
+                                val woman = womanObj?.let { w -> com.tkolymp.shared.event.SimpleName(w["firstName"]?.jsonPrimitive?.contentOrNull, w["lastName"]?.jsonPrimitive?.contentOrNull) }
+                                com.tkolymp.shared.event.Couple(cid, man, woman)
+                            }
+
+                            com.tkolymp.shared.event.Registration(rid, person, couple)
+                        }
+                    }
+                } catch (_: Exception) {}
+
+                if (regs.isEmpty()) {
+                    try {
+                        val raw = try { ServiceLocator.offlineSyncManager.loadEventDetail(evId) } catch (_: Exception) { null }
+                        if (!raw.isNullOrBlank()) {
+                            val parsed = try { Json.parseToJsonElement(raw).jsonObject } catch (_: Exception) { null }
+                            val regArr2 = when {
+                                parsed?.get("eventRegistrationsList") is kotlinx.serialization.json.JsonArray -> parsed?.get("eventRegistrationsList") as kotlinx.serialization.json.JsonArray
+                                parsed?.get("eventRegistrations") is kotlinx.serialization.json.JsonObject -> (parsed?.get("eventRegistrations") as kotlinx.serialization.json.JsonObject)["nodes"] as? kotlinx.serialization.json.JsonArray
+                                else -> null
+                            }
+                            if (regArr2 != null) {
+                                regs = regArr2.mapNotNull { item ->
+                                    val o = item as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null
+                                    val ridPrim = o["id"]?.jsonPrimitive
+                                    val rid = ridPrim?.longOrNull ?: ridPrim?.contentOrNull?.toLongOrNull()
+
+                                    val personObj = o["person"] as? kotlinx.serialization.json.JsonObject
+                                    val person = personObj?.let { p ->
+                                        val pidPrim = p["id"]?.jsonPrimitive
+                                        val pid = pidPrim?.longOrNull ?: pidPrim?.contentOrNull?.toLongOrNull()
+                                        com.tkolymp.shared.event.Person(pid, p["name"]?.jsonPrimitive?.contentOrNull, p["firstName"]?.jsonPrimitive?.contentOrNull, p["lastName"]?.jsonPrimitive?.contentOrNull)
+                                    }
+
+                                    val coupleObj = o["couple"] as? kotlinx.serialization.json.JsonObject
+                                    val couple = coupleObj?.let { c ->
+                                        val cidPrim = c["id"]?.jsonPrimitive
+                                        val cid = cidPrim?.longOrNull ?: cidPrim?.contentOrNull?.toLongOrNull()
+                                        val manObj = c["man"] as? kotlinx.serialization.json.JsonObject
+                                        val womanObj = c["woman"] as? kotlinx.serialization.json.JsonObject
+                                        val man = manObj?.let { m -> com.tkolymp.shared.event.SimpleName(m["firstName"]?.jsonPrimitive?.contentOrNull, m["lastName"]?.jsonPrimitive?.contentOrNull) }
+                                        val woman = womanObj?.let { w -> com.tkolymp.shared.event.SimpleName(w["firstName"]?.jsonPrimitive?.contentOrNull, w["lastName"]?.jsonPrimitive?.contentOrNull) }
+                                        com.tkolymp.shared.event.Couple(cid, man, woman)
+                                    }
+
+                                    com.tkolymp.shared.event.Registration(rid, person, couple)
+                                }
+                            }
+                        }
+                    } catch (_: Exception) {}
+                }
+
+                if (regs.isEmpty()) inst else inst.copy(event = ev.copy(eventRegistrationsList = regs))
+            }
             val announcements = try {
-                withContext(Dispatchers.Default) { announcementService.getAnnouncements(false) }
-                    .sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }
-                    .take(3)
-            } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("OverviewViewModel", "getAnnouncements failed: ${e.message}"); emptyList<Announcement>() }
+                val fetched = withContext(Dispatchers.Default) { announcementService.getAnnouncements(false) }
+                if (fetched.isNotEmpty()) {
+                    fetched.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }.take(3)
+                } else {
+                    // If server returned empty result while we're offline, try offline storage fallback
+                    val online = try { ServiceLocator.networkMonitor.isConnected() } catch (_: Exception) { true }
+                    if (!online) {
+                        try {
+                            val raw = try { ServiceLocator.offlineSyncManager.loadAnnouncements(false) } catch (_: Exception) { null }
+                            if (!raw.isNullOrBlank()) {
+                                val parsed = try { kotlinx.serialization.json.Json.decodeFromString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), raw) } catch (_: Exception) { null }
+                                if (!parsed.isNullOrEmpty()) {
+                                    _state.value = _state.value.copy(isOffline = true)
+                                    parsed.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }.take(3)
+                                } else emptyList()
+                            } else emptyList()
+                        } catch (_: Exception) { emptyList<Announcement>() }
+                    } else emptyList()
+                }
+            } catch (e: CancellationException) { throw e } catch (e: Exception) {
+                Logger.d("OverviewViewModel", "getAnnouncements failed: ${e.message}")
+                // As a secondary fallback, try loading offline announcements
+                try {
+                    val raw = try { ServiceLocator.offlineSyncManager.loadAnnouncements(false) } catch (_: Exception) { null }
+                    if (!raw.isNullOrBlank()) {
+                        val parsed = try { kotlinx.serialization.json.Json.decodeFromString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), raw) } catch (_: Exception) { null }
+                        if (!parsed.isNullOrEmpty()) {
+                            _state.value = _state.value.copy(isOffline = true)
+                            parsed.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }.take(3)
+                        } else emptyList()
+                    } else emptyList()
+                } catch (_: Exception) { emptyList<Announcement>() }
+            }
 
             val pid = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("OverviewViewModel", "getCachedPersonId failed: ${e.message}"); null }
             val cids = try { userService.getCachedCoupleIds() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("OverviewViewModel", "getCachedCoupleIds failed: ${e.message}"); emptyList<String>() }
@@ -164,31 +330,88 @@ class OverviewViewModel(
                 .groupBy { it.event?.eventTrainersList?.firstOrNull()!!.trim() }
                 .mapValues { (_, insts) -> insts.sortedBy { it.since } }
 
-            // Birthdays via PeopleService
+            // Birthdays via PeopleService with offline fallback
             val upcomingBirthdays = try {
                 val people = withContext(Dispatchers.Default) { peopleService.fetchPeople() }
-                    .filterIsInstance<Person>()
-                people
-                    .mapNotNull { p ->
-                        val days = daysUntilNextBirthday(p.birthDate)
-                        if (days == Int.MAX_VALUE) null else {
-                            val name = buildList {
-                                p.prefixTitle?.takeIf { it.isNotBlank() }?.let { add(it) }
-                                p.firstName?.takeIf { it.isNotBlank() }?.let { add(it) }
-                                p.lastName?.takeIf { it.isNotBlank() }?.let { add(it) }
-                            }.joinToString(" ").let { base ->
-                                if (!p.suffixTitle.isNullOrBlank()) "$base, ${p.suffixTitle}" else base.ifBlank { p.id }
+                if (people.isNotEmpty()) {
+                    people
+                        .mapNotNull { p ->
+                            val days = daysUntilNextBirthday(p.birthDate)
+                            if (days == Int.MAX_VALUE) null else {
+                                val name = buildList {
+                                    p.prefixTitle?.takeIf { it.isNotBlank() }?.let { add(it) }
+                                    p.firstName?.takeIf { it.isNotBlank() }?.let { add(it) }
+                                    p.lastName?.takeIf { it.isNotBlank() }?.let { add(it) }
+                                }.joinToString(" ").let { base ->
+                                    if (!p.suffixTitle.isNullOrBlank()) "$base, ${p.suffixTitle}" else base.ifBlank { p.id }
+                                }
+                                BirthdayEntry(
+                                    personId = p.id,
+                                    name = name,
+                                    formattedBirthDate = formatBirthDateString(p.birthDate),
+                                    days = days
+                                )
                             }
-                            BirthdayEntry(
-                                personId = p.id,
-                                name = name,
-                                formattedBirthDate = formatBirthDateString(p.birthDate),
-                                days = days
-                            )
                         }
-                    }
-                    .sortedBy { it.days }
-                    .take(3)
+                        .sortedBy { it.days }
+                        .take(3)
+                } else {
+                    // try offline fallback when server returned empty
+                    val online = try { ServiceLocator.networkMonitor.isConnected() } catch (_: Exception) { true }
+                    if (!online) {
+                        try {
+                            val raw = try { ServiceLocator.offlineSyncManager.loadPeople() } catch (_: Exception) { null }
+                            if (!raw.isNullOrBlank()) {
+                                val arr = try { Json.parseToJsonElement(raw).jsonArray } catch (_: Exception) { null }
+                                if (arr != null) {
+                                    val parsedPeople = arr.mapNotNull { node ->
+                                        try {
+                                            val obj = node.jsonObject
+                                            val id = obj["id"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+                                            val first = obj["firstName"]?.jsonPrimitive?.contentOrNull
+                                            val last = obj["lastName"]?.jsonPrimitive?.contentOrNull
+                                            val prefix = obj["prefixTitle"]?.jsonPrimitive?.contentOrNull
+                                            val suffix = obj["suffixTitle"]?.jsonPrimitive?.contentOrNull
+                                            val birth = obj["birthDate"]?.jsonPrimitive?.contentOrNull
+                                            val memberships = (obj["cohortMembershipsList"] as? kotlinx.serialization.json.JsonArray)?.mapNotNull { mEl ->
+                                                val mObj = mEl as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null
+                                                val cohortObj = mObj["cohort"] as? kotlinx.serialization.json.JsonObject
+                                                val cId = cohortObj?.get("id")?.jsonPrimitive?.contentOrNull
+                                                val cName = cohortObj?.get("name")?.jsonPrimitive?.contentOrNull
+                                                val cColor = cohortObj?.get("colorRgb")?.jsonPrimitive?.contentOrNull
+                                                val cVis = cohortObj?.get("isVisible")?.jsonPrimitive?.contentOrNull?.let { it == "true" }
+                                                com.tkolymp.shared.people.CohortMembership(com.tkolymp.shared.people.Cohort(cId, cName, cColor, cVis), mObj["since"]?.jsonPrimitive?.contentOrNull, mObj["until"]?.jsonPrimitive?.contentOrNull)
+                                            } ?: emptyList()
+                                            com.tkolymp.shared.people.Person(id, first, last, prefix, suffix, birth, memberships)
+                                        } catch (_: Exception) { null }
+                                    }
+                                    _state.value = _state.value.copy(isOffline = true)
+                                    parsedPeople
+                                        .mapNotNull { p ->
+                                            val days = daysUntilNextBirthday(p.birthDate)
+                                            if (days == Int.MAX_VALUE) null else {
+                                                val name = buildList {
+                                                    p.prefixTitle?.takeIf { it.isNotBlank() }?.let { add(it) }
+                                                    p.firstName?.takeIf { it.isNotBlank() }?.let { add(it) }
+                                                    p.lastName?.takeIf { it.isNotBlank() }?.let { add(it) }
+                                                }.joinToString(" ").let { base ->
+                                                    if (!p.suffixTitle.isNullOrBlank()) "$base, ${p.suffixTitle}" else base.ifBlank { p.id }
+                                                }
+                                                BirthdayEntry(
+                                                    personId = p.id,
+                                                    name = name,
+                                                    formattedBirthDate = formatBirthDateString(p.birthDate),
+                                                    days = days
+                                                )
+                                            }
+                                        }
+                                        .sortedBy { it.days }
+                                        .take(3)
+                                } else emptyList()
+                            } else emptyList()
+                        } catch (_: Exception) { emptyList<BirthdayEntry>() }
+                    } else emptyList()
+                }
             } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("OverviewViewModel", "fetchPeople failed: ${e.message}"); emptyList() }
 
             _state.value = _state.value.copy(

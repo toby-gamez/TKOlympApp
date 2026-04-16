@@ -54,6 +54,12 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -137,9 +143,11 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
             // keep content visible during refresh; SwipeToReload shows the progress indicator
 
             // Ensure we only show CAMP events here (defensive: viewmodel should already filter)
-            val grouped = state.eventsByDay.mapValues { entry ->
+            var grouped = state.eventsByDay.mapValues { entry ->
                 entry.value.filter { it.event?.type?.equals("CAMP", ignoreCase = true) == true }
             }.filterValues { it.isNotEmpty() }
+
+            // Offline fallback handled in EventsViewModel; UI should not scan storage directly.
 
             // If search is active, filter across all dates (not limited to planned/past)
             val filteredGrouped = if (searchQuery.isBlank()) {
@@ -285,4 +293,5 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
             }
         }
     }
-}}
+}
+}

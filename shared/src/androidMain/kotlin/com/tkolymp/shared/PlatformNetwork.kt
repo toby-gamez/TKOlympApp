@@ -73,7 +73,7 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
 
     val offlineDataStorage = OfflineDataStorageAndroid(context)
     val networkMonitor = NetworkMonitorAndroid(context)
-    val offlineSyncManager = OfflineSyncManager(eventSvc, announcementSvc, peopleSvc, offlineDataStorage, networkMonitor)
+    val offlineSyncManager = OfflineSyncManager(eventSvc, announcementSvc, peopleSvc, offlineDataStorage, networkMonitor, userSvc, notificationSvc, clubSvc)
 
     val container = AppContainer(
         tokenStorage = storage,
