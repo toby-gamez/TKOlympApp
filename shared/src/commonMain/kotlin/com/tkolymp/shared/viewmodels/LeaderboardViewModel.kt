@@ -40,105 +40,134 @@ class LeaderboardViewModel(
                         val arr = kotlinx.serialization.json.Json.parseToJsonElement(raw).jsonArray
                         people = arr.mapNotNull { el ->
                             val obj = el.jsonObject
-                            val id =
-                                obj["id"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+                            val id = obj["id"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
                             val first = obj["firstName"]?.jsonPrimitive?.contentOrNull
                             val last = obj["lastName"]?.jsonPrimitive?.contentOrNull
                             val prefix = obj["prefixTitle"]?.jsonPrimitive?.contentOrNull
                             val suffix = obj["suffixTitle"]?.jsonPrimitive?.contentOrNull
                             val birth = obj["birthDate"]?.jsonPrimitive?.contentOrNull
-                            val memberships =
-                                obj["cohortMembershipsList"]?.jsonArray?.mapNotNull { mEl ->
-                                    val mObj = mEl.jsonObject
-                                    val cohortObj = mObj["cohort"]?.jsonObject
-                                    val cId = cohortObj?.get("id")?.jsonPrimitive?.contentOrNull
-                                    val cName = cohortObj?.get("name")?.jsonPrimitive?.contentOrNull
-                                    val cColor =
-                                        cohortObj?.get("colorRgb")?.jsonPrimitive?.contentOrNull
-                                    val cVis =
-                                        cohortObj?.get("isVisible")?.jsonPrimitive?.contentOrNull?.let { it == "true" }
-                                    com.tkolymp.shared.people.CohortMembership(
-                                        com.tkolymp.shared.people.Cohort(
-                                            cId,
-                                            cName,
-                                            cColor,
-                                            cVis
-                                        ),
-                                        mObj["since"]?.jsonPrimitive?.contentOrNull,
-                                        mObj["until"]?.jsonPrimitive?.contentOrNull
-                                    )
-                                } ?: emptyList()
-                            com.tkolymp.shared.people.Person(
-                                id,
-                                first,
-                                last,
-                                prefix,
-                                suffix,
-                                birth,
-                                memberships
-                            )
+                            val memberships = obj["cohortMembershipsList"]?.jsonArray?.mapNotNull { mEl ->
+                                val mObj = mEl.jsonObject
+                                val cohortObj = mObj["cohort"]?.jsonObject
+                                val cId = cohortObj?.get("id")?.jsonPrimitive?.contentOrNull
+                                val cName = cohortObj?.get("name")?.jsonPrimitive?.contentOrNull
+                                val cColor = cohortObj?.get("colorRgb")?.jsonPrimitive?.contentOrNull
+                                val cVis = cohortObj?.get("isVisible")?.jsonPrimitive?.contentOrNull?.let { it == "true" }
+                                com.tkolymp.shared.people.CohortMembership(
+                                    com.tkolymp.shared.people.Cohort(cId, cName, cColor, cVis),
+                                    mObj["since"]?.jsonPrimitive?.contentOrNull,
+                                    mObj["until"]?.jsonPrimitive?.contentOrNull
+                                )
+                            } ?: emptyList()
+                            com.tkolymp.shared.people.Person(id, first, last, prefix, suffix, birth, memberships)
                         }
                     }
-                } catch (e2: Exception) {
+                } catch (_: Exception) {
                     // leave people as empty list
                 }
+            }
 
-                val peopleById = people.associateBy { it.id }
+            // If service returned an empty list (network failure but no exception), try offline fallback as well
+            if (people.isEmpty()) {
+                try {
+                    val raw = ServiceLocator.offlineDataStorage.load("offline_people") ?: ""
+                    if (raw.isNotBlank()) {
+                        val arr = kotlinx.serialization.json.Json.parseToJsonElement(raw).jsonArray
+                        people = arr.mapNotNull { el ->
+                            val obj = el.jsonObject
+                            val id = obj["id"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+                            val first = obj["firstName"]?.jsonPrimitive?.contentOrNull
+                            val last = obj["lastName"]?.jsonPrimitive?.contentOrNull
+                            val prefix = obj["prefixTitle"]?.jsonPrimitive?.contentOrNull
+                            val suffix = obj["suffixTitle"]?.jsonPrimitive?.contentOrNull
+                            val birth = obj["birthDate"]?.jsonPrimitive?.contentOrNull
+                            val memberships = obj["cohortMembershipsList"]?.jsonArray?.mapNotNull { mEl ->
+                                val mObj = mEl.jsonObject
+                                val cohortObj = mObj["cohort"]?.jsonObject
+                                val cId = cohortObj?.get("id")?.jsonPrimitive?.contentOrNull
+                                val cName = cohortObj?.get("name")?.jsonPrimitive?.contentOrNull
+                                val cColor = cohortObj?.get("colorRgb")?.jsonPrimitive?.contentOrNull
+                                val cVis = cohortObj?.get("isVisible")?.jsonPrimitive?.contentOrNull?.let { it == "true" }
+                                com.tkolymp.shared.people.CohortMembership(
+                                    com.tkolymp.shared.people.Cohort(cId, cName, cColor, cVis),
+                                    mObj["since"]?.jsonPrimitive?.contentOrNull,
+                                    mObj["until"]?.jsonPrimitive?.contentOrNull
+                                )
+                            } ?: emptyList()
+                            com.tkolymp.shared.people.Person(id, first, last, prefix, suffix, birth, memberships)
+                        }
+                    }
+                } catch (_: Exception) {
+                    // ignore
+                }
+            }
 
-                // Load scoreboard (with offline fallback)
-                val until = "2100-01-01"
-                val list = try {
-                    peopleService.fetchScoreboard(null, "2025-09-01", until)
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (_e: Exception) {
+            val peopleById = people.associateBy { it.id }
+
+            // Load scoreboard (with offline fallback)
+            val until = "2100-01-01"
+            val list = try {
+                val fetched = peopleService.fetchScoreboard(null, "2025-09-01", until)
+                if (fetched.isEmpty()) {
+                    // try offline fallback when service returned empty list
                     var fallback: List<com.tkolymp.shared.people.ScoreboardEntry> = emptyList()
                     try {
-                        val keys = ServiceLocator.offlineDataStorage.allKeys()
-                            .filter { it.startsWith("offline_scoreboard_") }
+                        val keys = ServiceLocator.offlineDataStorage.allKeys().filter { it.startsWith("offline_scoreboard_") }
                         for (k in keys) {
                             try {
                                 val raw = ServiceLocator.offlineDataStorage.load(k) ?: continue
-                                val arr =
-                                    kotlinx.serialization.json.Json.parseToJsonElement(raw).jsonArray
+                                val arr = kotlinx.serialization.json.Json.parseToJsonElement(raw).jsonArray
                                 val res = arr.mapNotNull { el ->
                                     val obj = el.jsonObject
-                                    val ranking =
-                                        obj["ranking"]?.jsonPrimitive?.contentOrNull?.toIntOrNull()
+                                    val ranking = obj["ranking"]?.jsonPrimitive?.contentOrNull?.toIntOrNull()
                                     val personId = obj["personId"]?.jsonPrimitive?.contentOrNull
                                     val first = obj["personFirstName"]?.jsonPrimitive?.contentOrNull
                                     val last = obj["personLastName"]?.jsonPrimitive?.contentOrNull
-                                    val total =
-                                        obj["totalScore"]?.jsonPrimitive?.contentOrNull?.toDoubleOrNull()
-                                    com.tkolymp.shared.people.ScoreboardEntry(
-                                        ranking,
-                                        personId,
-                                        first,
-                                        last,
-                                        total
-                                    )
+                                    val total = obj["totalScore"]?.jsonPrimitive?.contentOrNull?.toDoubleOrNull()
+                                    com.tkolymp.shared.people.ScoreboardEntry(ranking, personId, first, last, total)
                                 }
-                                if (res.isNotEmpty()) {
-                                    fallback = res; break
-                                }
+                                if (res.isNotEmpty()) { fallback = res; break }
                             } catch (_e: Exception) {
                             }
                         }
                     } catch (_e: Exception) {
                     }
                     fallback
-                }
-
-                _state.value = _state.value.copy(
-                    rankings = list as? List<Any> ?: emptyList(),
-                    peopleById = peopleById,
-                    isLoading = false
-                )
+                } else fetched
             } catch (e: CancellationException) {
                 throw e
+            } catch (_e: Exception) {
+                var fallback: List<com.tkolymp.shared.people.ScoreboardEntry> = emptyList()
+                try {
+                    val keys = ServiceLocator.offlineDataStorage.allKeys().filter { it.startsWith("offline_scoreboard_") }
+                    for (k in keys) {
+                        try {
+                            val raw = ServiceLocator.offlineDataStorage.load(k) ?: continue
+                            val arr = kotlinx.serialization.json.Json.parseToJsonElement(raw).jsonArray
+                            val res = arr.mapNotNull { el ->
+                                val obj = el.jsonObject
+                                val ranking = obj["ranking"]?.jsonPrimitive?.contentOrNull?.toIntOrNull()
+                                val personId = obj["personId"]?.jsonPrimitive?.contentOrNull
+                                val first = obj["personFirstName"]?.jsonPrimitive?.contentOrNull
+                                val last = obj["personLastName"]?.jsonPrimitive?.contentOrNull
+                                val total = obj["totalScore"]?.jsonPrimitive?.contentOrNull?.toDoubleOrNull()
+                                com.tkolymp.shared.people.ScoreboardEntry(ranking, personId, first, last, total)
+                            }
+                            if (res.isNotEmpty()) { fallback = res; break }
+                        } catch (_e: Exception) {
+                        }
+                    }
+                } catch (_e: Exception) {
+                }
+                fallback
             }
-        }
-        catch (ex: Exception) {
+
+            _state.value = _state.value.copy(
+                rankings = list as? List<Any> ?: emptyList(),
+                peopleById = peopleById,
+                isLoading = false
+            )
+        } catch (ex: Exception) {
             _state.value = _state.value.copy(
                 isLoading = false,
                 error = ex.message ?: "Chyba při načítání žebříčku"
