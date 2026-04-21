@@ -52,7 +52,7 @@ val StringsEn = Strings(
         notificationSettings = "Notification Settings",
         privacyPolicy = "Privacy Policy",
         myAccount = "My Account",
-        appearanceSettings = "Appearance",
+        settings = "Settings",
     ),
     filters = FilterStrings(
         filterType = "type",
@@ -458,5 +458,10 @@ val StringsEn = Strings(
         calendarDefaultView = "Default view",
         calendarViewList = "Weekly list",
         calendarViewTimeline = "Timeline",
+        offlineSection = "Offline",
+        offlineDownloadLabel = "Download all data",
+        offlineDownloadButton = "Download all",
+        offlineDownloadingTitle = "Downloading",
+        offlineStageLabel = "Stage:",
     ),
 )

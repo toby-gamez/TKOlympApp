@@ -92,7 +92,6 @@ import ui.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Preview
 fun App() {
     val themeMode by AppearanceSettings.themeMode.collectAsState()
     val isDark = when (themeMode) {
@@ -366,9 +365,7 @@ fun AppNavHost(
                     onStatsClick = { navController.navigate("stats") },
                 onAboutClick = { navController.navigate("about") },
                 onPrivacyClick = { navController.navigate("privacy") },
-                onNotificationsClick = { navController.navigate("notifications") },
-                onLanguagesClick = { navController.navigate("languages") },
-                onAppearanceClick = { navController.navigate("settings") },
+                onSettingsClick = { navController.navigate("settings") },
                 bottomPadding = bottomPadding
             )
         }
@@ -460,7 +457,11 @@ fun AppNavHost(
                 )
             }
         ) {
-            SettingsScreen(onBack = { navController.navigateUp() })
+            SettingsScreen(
+                onBack = { navController.navigateUp() },
+                onOpenLanguages = { navController.navigate("languages") },
+                onOpenNotifications = { navController.navigate("notifications") }
+            )
         }
 
         composable(

@@ -52,7 +52,7 @@ val StringsUa = Strings(
         notificationSettings = "Налаштування сповіщень",
         privacyPolicy = "Політика конфіденційності",
         myAccount = "Мій акаунт",
-        appearanceSettings = "Вигляд",
+        settings = "Налаштування",
     ),
     filters = FilterStrings(
         filterType = "тип",
@@ -458,5 +458,10 @@ val StringsUa = Strings(
         calendarDefaultView = "Вигляд за замовчуванням",
         calendarViewList = "Тижневий список",
         calendarViewTimeline = "Вісь",
+        offlineSection = "Офлайн",
+        offlineDownloadLabel = "Завантажити всі дані",
+        offlineDownloadButton = "Завантажити все",
+        offlineDownloadingTitle = "Завантаження",
+        offlineStageLabel = "Етап:",
     ),
 )

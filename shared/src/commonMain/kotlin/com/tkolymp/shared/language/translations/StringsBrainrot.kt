@@ -53,7 +53,7 @@ val StringsBrainrot = Strings(
         notificationSettings = "Notification Drip",
         privacyPolicy = "Privacy or Whatever",
         myAccount = "My Slay Account",
-        appearanceSettings = "Aesthetic fr",
+        settings = "Settings fr",
     ),
     filters = FilterStrings(
         filterType = "type",
@@ -459,5 +459,10 @@ val StringsBrainrot = Strings(
         calendarDefaultView = "Default view no cap",
         calendarViewList = "List mode",
         calendarViewTimeline = "Axis fr",
+        offlineSection = "Offline vibes",
+        offlineDownloadLabel = "Download all the heckin data",
+        offlineDownloadButton = "Download all",
+        offlineDownloadingTitle = "Downloadingzzz",
+        offlineStageLabel = "Stage:",
     ),
 )

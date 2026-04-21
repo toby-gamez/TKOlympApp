@@ -56,7 +56,8 @@ class EventsViewModel(
             } else {
                 // Try offline fallback when server returns no data
                 val offlineGrouped = try {
-                    val keys = ServiceLocator.offlineDataStorage.allKeys().filter { it.startsWith("offline_cal_") }
+                    // Only read cached calendar data for CAMPS to avoid duplicates across buckets
+                    val keys = ServiceLocator.offlineDataStorage.allKeys().filter { it.startsWith("offline_cal_CAMPS_") }
                     val parsed = mutableListOf<EventInstance>()
                     for (k in keys) {
                         try {
@@ -86,7 +87,9 @@ class EventsViewModel(
                             }
                         } catch (_: Exception) {}
                     }
-                    parsed.groupBy { inst -> inst.since?.substringBefore('T') ?: inst.updatedAt?.substringBefore('T') ?: inst.until?.substringBefore('T') ?: "" }.filterValues { it.isNotEmpty() }
+                    // Deduplicate instances (same event id + since + until) before grouping to avoid repeats
+                    val unique = parsed.distinctBy { Triple(it.event?.id, it.since, it.until) }
+                    unique.groupBy { inst -> inst.since?.substringBefore('T') ?: inst.updatedAt?.substringBefore('T') ?: inst.until?.substringBefore('T') ?: "" }.filterValues { it.isNotEmpty() }
                 } catch (_: Exception) { emptyMap() }
 
                 if (offlineGrouped.isNotEmpty()) {
@@ -98,7 +101,8 @@ class EventsViewModel(
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             // Try offline fallback: scan offline calendar data saved by OfflineSyncManager
             try {
-                val keys = ServiceLocator.offlineDataStorage.allKeys().filter { it.startsWith("offline_cal_") }
+                // Only read cached calendar data for CAMPS to avoid duplicates across buckets
+                val keys = ServiceLocator.offlineDataStorage.allKeys().filter { it.startsWith("offline_cal_CAMPS_") }
                 val parsed = mutableListOf<EventInstance>()
                 for (k in keys) {
                     try {
@@ -124,7 +128,9 @@ class EventsViewModel(
                         }
                     } catch (_: Exception) {}
                 }
-                val grouped = parsed.groupBy { inst -> inst.since?.substringBefore('T') ?: inst.updatedAt?.substringBefore('T') ?: "" }.filterValues { it.isNotEmpty() }
+                // Deduplicate instances (same event id + since + until) before grouping to avoid repeats
+                val uniqueParsed = parsed.distinctBy { Triple(it.event?.id, it.since, it.until) }
+                val grouped = uniqueParsed.groupBy { inst -> inst.since?.substringBefore('T') ?: inst.updatedAt?.substringBefore('T') ?: "" }.filterValues { it.isNotEmpty() }
                 _state.value = _state.value.copy(eventsByDay = grouped, isLoading = false)
             } catch (_: Exception) {
                 _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání akcí")

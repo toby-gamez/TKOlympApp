@@ -52,7 +52,7 @@ val StringsVi = Strings(
         notificationSettings = "Cài đặt thông báo",
         privacyPolicy = "Chính sách bảo mật",
         myAccount = "Tài khoản của tôi",
-        appearanceSettings = "Giao diện",
+        settings = "Cài đặt",
     ),
     filters = FilterStrings(
         filterType = "loại",
@@ -458,5 +458,10 @@ val StringsVi = Strings(
         calendarDefaultView = "Chế độ xem mặc định",
         calendarViewList = "Danh sách tuần",
         calendarViewTimeline = "Trục thời gian",
+        offlineSection = "Ngoại tuyến",
+        offlineDownloadLabel = "Tải tất cả dữ liệu",
+        offlineDownloadButton = "Tải về tất cả",
+        offlineDownloadingTitle = "Đang tải xuống",
+        offlineStageLabel = "Giai đoạn:",
     ),
 )

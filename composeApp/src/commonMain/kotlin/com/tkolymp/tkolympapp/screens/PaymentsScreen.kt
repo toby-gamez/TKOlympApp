@@ -151,9 +151,9 @@ private fun PaymentItemCard(item: com.tkolymp.shared.payments.PaymentDebtorItem)
         Box(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
             Column(modifier = Modifier.align(Alignment.CenterStart)) {
                 Text(text = name.ifEmpty { "Osoba #${item.personId ?: "?"}" }, style = MaterialTheme.typography.titleMedium)
-                Text(text = "Částka: ${amount} ${item.price?.currency ?: "CZK"}")
-                Text(text = "Variabilní symbol: ${item.payment?.variableSymbol ?: "-"}")
-                Text(text = "Splatné: ${fmtDate(item.payment?.dueAt)}")
+                Text(text = "Částka: ${amount} ${item.price?.currency ?: "CZK"}", style = MaterialTheme.typography.bodySmall)
+                Text(text = "Variabilní symbol: ${item.payment?.variableSymbol ?: "-"}", style = MaterialTheme.typography.bodySmall)
+                Text(text = "Splatné: ${fmtDate(item.payment?.dueAt)}", style = MaterialTheme.typography.bodySmall)
             }
 
             if (isPaid) {

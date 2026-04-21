@@ -18,13 +18,16 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.SettingsSystemDaydream
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.ViewTimeline
 import androidx.compose.material.icons.filled.ViewWeek
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,6 +42,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,26 +53,28 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.appearance.ThemeMode
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.SettingsViewModel
 import kotlinx.coroutines.launch
-import com.tkolymp.shared.ServiceLocator
-import androidx.compose.material3.Button
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    onOpenLanguages: () -> Unit = {},
+    onOpenNotifications: () -> Unit = {}
 ) {
     val viewModel = viewModel<SettingsViewModel>()
     val state by viewModel.state.collectAsState()
     val scope = rememberCoroutineScope()
     val s = AppStrings.current.settings
+
+    val downloading = remember { mutableStateOf(false) }
+    val progressStage = remember { mutableStateOf("") }
+    val progressDone = remember { mutableStateOf(0) }
+    val progressTotal = remember { mutableStateOf(0) }
 
     LaunchedEffect(Unit) {
         viewModel.load()
@@ -96,14 +103,11 @@ fun SettingsScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.Top
         ) {
-            // ── Appearance section ──────────────────────────────────
+            // Appearance
             SectionHeader(text = s.appearanceSection)
 
             SettingsCard {
-                SettingsRow(
-                    icon = Icons.Filled.LightMode,
-                    label = s.themeLabel
-                ) {
+                SettingsRow(icon = Icons.Filled.LightMode, label = s.themeLabel) {
                     val modes = listOf(ThemeMode.SYSTEM, ThemeMode.LIGHT, ThemeMode.DARK)
                     val labels = listOf(s.themeSystem, s.themeLight, s.themeDark)
                     SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
@@ -113,9 +117,7 @@ fun SettingsScreen(
                                 onClick = { scope.launch { viewModel.setThemeMode(mode) } },
                                 shape = SegmentedButtonDefaults.itemShape(index = index, count = modes.size),
                                 icon = {}
-                            ) {
-                                Text(labels[index], style = MaterialTheme.typography.labelSmall)
-                            }
+                            ) { Text(labels[index], style = MaterialTheme.typography.labelSmall) }
                         }
                     }
                 }
@@ -123,14 +125,10 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ── Calendar section ────────────────────────────────────
+            // Calendar
             SectionHeader(text = s.calendarSection)
-
             SettingsCard {
-                SettingsRow(
-                    icon = Icons.Filled.CalendarMonth,
-                    label = s.calendarDefaultView
-                ) {
+                SettingsRow(icon = Icons.Filled.CalendarMonth, label = s.calendarDefaultView) {
                     SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                         SegmentedButton(
                             selected = !state.preferTimeline,
@@ -143,9 +141,8 @@ fun SettingsScreen(
                                     modifier = Modifier.size(SegmentedButtonDefaults.IconSize).rotate(90f)
                                 )
                             }
-                        ) {
-                            Text(s.calendarViewList, style = MaterialTheme.typography.labelSmall)
-                        }
+                        ) { Text(s.calendarViewList, style = MaterialTheme.typography.labelSmall) }
+
                         SegmentedButton(
                             selected = state.preferTimeline,
                             onClick = { scope.launch { viewModel.setPreferTimeline(true) } },
@@ -157,24 +154,42 @@ fun SettingsScreen(
                                     modifier = Modifier.size(SegmentedButtonDefaults.IconSize)
                                 )
                             }
-                        ) {
-                            Text(s.calendarViewTimeline, style = MaterialTheme.typography.labelSmall)
-                        }
+                        ) { Text(s.calendarViewTimeline, style = MaterialTheme.typography.labelSmall) }
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ── Offline download ────────────────────────────────────
-            SectionHeader(text = "Offline")
-            val downloading = remember { mutableStateOf(false) }
-            val progressStage = remember { mutableStateOf("") }
-            val progressDone = remember { mutableStateOf(0) }
-            val progressTotal = remember { mutableStateOf(0) }
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Language button — navigates via parent NavController
+            SectionHeader(text = AppStrings.current.otherScreen.languages)
             SettingsCard {
-                SettingsRow(icon = Icons.Filled.ViewWeek, label = "Download all data") {
-                    Button(onClick = {
+                SettingsRow(icon = Icons.Filled.Psychology, label = AppStrings.current.languageScreen.selectLanguage) {
+                    Button(modifier = Modifier.fillMaxWidth(), onClick = onOpenLanguages) {
+                        Text(AppStrings.current.otherScreen.languages)
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Notifications settings — navigates via parent NavController
+            SectionHeader(text = AppStrings.current.otherScreen.notificationSettings)
+            SettingsCard {
+                SettingsRow(icon = Icons.Filled.Notifications, label = AppStrings.current.otherScreen.notificationSettings) {
+                    Button(modifier = Modifier.fillMaxWidth(), onClick = onOpenNotifications) {
+                        Text(AppStrings.current.otherScreen.notificationSettings)
+                    }
+                }
+            }
+
+            // Offline download
+            SectionHeader(text = s.offlineSection)
+            SettingsCard {
+                SettingsRow(icon = Icons.Filled.ViewWeek, label = s.offlineDownloadLabel) {
+                    Button(modifier = Modifier.fillMaxWidth(), onClick = {
                         scope.launch {
                             downloading.value = true
                             progressStage.value = "starting"
@@ -186,20 +201,18 @@ fun SettingsScreen(
                                     progressDone.value = done
                                     progressTotal.value = total
                                 }
-                            } catch (_: Exception) {
-                            }
+                            } catch (_: Exception) {}
                             downloading.value = false
                         }
-                    }) {
-                        Text("Download all")
-                    }
+                    }) { Text(s.offlineDownloadButton) }
                 }
             }
 
+            // Download progress dialog
             if (downloading.value) {
-                AlertDialog(onDismissRequest = {}, confirmButton = {}, title = { Text("Downloading") }, text = {
+                AlertDialog(onDismissRequest = {}, confirmButton = {}, title = { Text(s.offlineDownloadingTitle) }, text = {
                     Column {
-                        Text("Stage: ${progressStage.value}")
+                        Text("${s.offlineStageLabel} ${progressStage.value}")
                         Spacer(modifier = Modifier.height(8.dp))
                         if (progressTotal.value > 0) Text("${progressDone.value} / ${progressTotal.value}")
                         Spacer(modifier = Modifier.height(8.dp))
@@ -229,44 +242,23 @@ private fun SettingsCard(content: @Composable () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-            content()
-        }
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) { content() }
     }
 }
 
 @Composable
-private fun SettingsRow(
-    icon: ImageVector,
-    label: String,
-    control: @Composable () -> Unit
-) {
+private fun SettingsRow(icon: ImageVector, label: String, control: @Composable () -> Unit) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 12.dp)
-            )
+            ) { Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp)) }
+
+            Text(text = label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f).padding(horizontal = 12.dp))
         }
         Spacer(modifier = Modifier.height(8.dp))
         control()

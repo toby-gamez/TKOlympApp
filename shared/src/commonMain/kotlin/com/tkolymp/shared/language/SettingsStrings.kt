@@ -11,4 +11,9 @@ data class SettingsStrings(
     val calendarDefaultView: String,
     val calendarViewList: String,
     val calendarViewTimeline: String,
+    val offlineSection: String,
+    val offlineDownloadLabel: String,
+    val offlineDownloadButton: String,
+    val offlineDownloadingTitle: String,
+    val offlineStageLabel: String,
 )

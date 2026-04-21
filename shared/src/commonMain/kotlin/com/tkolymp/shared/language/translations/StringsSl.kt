@@ -52,7 +52,7 @@ val StringsSl = Strings(
         notificationSettings = "Nastavitve obvestil",
         privacyPolicy = "Politika zasebnosti",
         myAccount = "Moj račun",
-        appearanceSettings = "Videz",
+        settings = "Nastavitve",
     ),
     filters = FilterStrings(
         filterType = "vrsta",
@@ -458,5 +458,10 @@ val StringsSl = Strings(
         calendarDefaultView = "Privzeti pogled",
         calendarViewList = "Tedenski seznam",
         calendarViewTimeline = "Os",
+        offlineSection = "Offline",
+        offlineDownloadLabel = "Prenesi vse podatke",
+        offlineDownloadButton = "Prenesi vse",
+        offlineDownloadingTitle = "Prenašanje",
+        offlineStageLabel = "Korak:",
     ),
 )

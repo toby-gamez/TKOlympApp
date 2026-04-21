@@ -52,7 +52,7 @@ val StringsCs = Strings(
         notificationSettings = "Nastavení notifikací",
         privacyPolicy = "Zásady ochrany osobních údajů",
         myAccount = "Můj účet",
-        appearanceSettings = "Vzhled",
+        settings = "Nastavení",
     ),
     filters = FilterStrings(
         filterType = "typ",
@@ -458,5 +458,10 @@ val StringsCs = Strings(
         calendarDefaultView = "Výchozí pohled",
         calendarViewList = "Týdenní přehled",
         calendarViewTimeline = "Osa",
+        offlineSection = "Offline",
+        offlineDownloadLabel = "Stáhnout všechna data",
+        offlineDownloadButton = "Stáhnout vše",
+        offlineDownloadingTitle = "Stahování",
+        offlineStageLabel = "Krok:",
     ),
 )

@@ -123,7 +123,8 @@ fun RegistrationScreen(
 
         val regViewModel = viewModel<RegistrationViewModel>()
         val regState by regViewModel.state.collectAsState()
-        LaunchedEffect(Unit) {
+        // Reload names whenever the inputs that affect them change so updates appear automatically
+        LaunchedEffect(trainers, registrations, myPersonId, myCoupleIds, myPersonName, myCoupleNames) {
             regViewModel.loadNames(trainers, registrations, myPersonId, myCoupleIds, myPersonName, myCoupleNames)
         }
 
@@ -204,7 +205,10 @@ fun RegistrationScreen(
                                     }
                                     myCoupleIds.forEach { cid ->
                                         if (registeredCoupleIds.contains(cid)) return@forEach
-                                        val coupleLabel = coupleNamesState[cid] ?: "Pár $cid"
+                                        val coupleLabel = coupleNamesState[cid]
+                                            ?: regState.myCoupleNames[cid]
+                                            ?: myCoupleNames[cid]
+                                            ?: "Pár $cid"
                                         Row(modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(vertical = 4.dp)
@@ -353,7 +357,9 @@ fun RegistrationScreen(
                                 val r = rEl as? JsonObject
                                 val rid = r?.get("id")?.jsonPrimitive?.contentOrNull
                                 val labelFromJson = r?.get("person").asJsonObjectOrNull()?.get("name")?.jsonPrimitive?.contentOrNull
-                                    ?: r?.get("couple").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
+                                    ?: r?.get("couple").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull?.let { cid ->
+                                        regState.myCoupleNames[cid] ?: myCoupleNames[cid] ?: cid
+                                    }
                                 val label = regState.registrationDisplayNames[rid ?: ""] ?: labelFromJson ?: "#${rid ?: "?"}"
                                 Row(modifier = Modifier
                                     .fillMaxWidth()

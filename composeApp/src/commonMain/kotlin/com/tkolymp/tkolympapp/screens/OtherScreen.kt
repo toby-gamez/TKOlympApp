@@ -24,12 +24,10 @@ import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -60,7 +58,7 @@ import kotlinx.datetime.LocalDate
 import kotlin.coroutines.cancellation.CancellationException
 
 private enum class MainItem { PEOPLE, TRAINERS, GROUPS, LEADERBOARD, STATS, PAYMENTS }
-private enum class SettingsItem { LANGUAGES, ABOUT, NOTIFICATIONS, PRIVACY, APPEARANCE }
+private enum class SettingsItem { ABOUT, PRIVACY, SETTINGS }
 
 // Helper: do not surface internal/cancellation/compose runtime messages to the UI
 private fun shouldShowErrorMessage(msg: String?): Boolean {
@@ -91,7 +89,7 @@ private fun formatDateString(raw: String): String? {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {}, onTrainersClick: () -> Unit = {}, onGroupsClick: () -> Unit = {}, onLeaderboardClick: () -> Unit = {}, onStatsClick: () -> Unit = {}, onPaymentsClick: () -> Unit = {}, onAboutClick: () -> Unit = {}, onPrivacyClick: () -> Unit = {}, onNotificationsClick: () -> Unit = {}, onLanguagesClick: () -> Unit = {}, onAppearanceClick: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
+fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {}, onTrainersClick: () -> Unit = {}, onGroupsClick: () -> Unit = {}, onLeaderboardClick: () -> Unit = {}, onStatsClick: () -> Unit = {}, onPaymentsClick: () -> Unit = {}, onAboutClick: () -> Unit = {}, onPrivacyClick: () -> Unit = {}, onSettingsClick: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
     val viewModel = viewModel<OtherViewModel>()
     val state by viewModel.state.collectAsState()
     var showDebug by remember { mutableStateOf(false) }
@@ -261,19 +259,15 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
             )
 
             val settingsItems = listOf(
-                Pair(SettingsItem.APPEARANCE, Icons.Filled.Palette),
-                Pair(SettingsItem.LANGUAGES, Icons.Filled.Language),
-                Pair(SettingsItem.NOTIFICATIONS, Icons.Filled.Notifications),
+                Pair(SettingsItem.SETTINGS, Icons.Filled.Settings),
                 Pair(SettingsItem.ABOUT, Icons.Filled.Info),
                 Pair(SettingsItem.PRIVACY, Icons.Filled.Security)
             )
 
             settingsItems.forEach { (item, icon) ->
                 val label = when (item) {
-                    SettingsItem.APPEARANCE -> AppStrings.current.otherScreen.appearanceSettings
-                    SettingsItem.LANGUAGES -> AppStrings.current.otherScreen.languages
+                    SettingsItem.SETTINGS -> AppStrings.current.otherScreen.settings
                     SettingsItem.ABOUT -> AppStrings.current.otherScreen.aboutApp
-                    SettingsItem.NOTIFICATIONS -> AppStrings.current.otherScreen.notificationSettings
                     SettingsItem.PRIVACY -> AppStrings.current.otherScreen.privacyPolicy
                 }
                 Card(
@@ -282,10 +276,9 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                         .padding(horizontal = 16.dp, vertical = 4.dp)
                         .clickable {
                             when (item) {
-                                SettingsItem.APPEARANCE -> onAppearanceClick()
-                                SettingsItem.LANGUAGES -> onLanguagesClick()
+                                SettingsItem.SETTINGS -> onSettingsClick()
+                                // LANGUAGES removed
                                 SettingsItem.ABOUT -> onAboutClick()
-                                SettingsItem.NOTIFICATIONS -> onNotificationsClick()
                                 SettingsItem.PRIVACY -> onPrivacyClick()
                             }
                         },

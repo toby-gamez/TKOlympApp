@@ -52,7 +52,7 @@ val StringsDe = Strings(
         notificationSettings = "Benachrichtigungseinstellungen",
         privacyPolicy = "Datenschutzrichtlinie",
         myAccount = "Mein Konto",
-        appearanceSettings = "Erscheinungsbild",
+        settings = "Einstellungen",
     ),
     filters = FilterStrings(
         filterType = "Art",
@@ -457,5 +457,10 @@ val StringsDe = Strings(
         calendarDefaultView = "Standardansicht",
         calendarViewList = "Wochenübersicht",
         calendarViewTimeline = "Zeitachse",
+        offlineSection = "Offline",
+        offlineDownloadLabel = "Alle Daten herunterladen",
+        offlineDownloadButton = "Alles herunterladen",
+        offlineDownloadingTitle = "Herunterladen",
+        offlineStageLabel = "Phase:",
     ),
 )
