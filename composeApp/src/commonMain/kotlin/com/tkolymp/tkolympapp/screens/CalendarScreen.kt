@@ -38,10 +38,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -56,6 +59,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.event.EventInstance
 import com.tkolymp.shared.language.AppStrings
@@ -84,6 +89,48 @@ fun CalendarScreen(
     val calendarViewModel = viewModel<com.tkolymp.shared.viewmodels.CalendarViewModel>()
     val calState by calendarViewModel.state.collectAsState()
     val scope = rememberCoroutineScope()
+    // Cache last non-empty offline data to avoid brief disappearance on transient empty state
+    val cachedVisibleDates = remember { mutableStateOf<List<String>?>(null) }
+    val cachedLessonsByTrainer = remember { mutableStateOf<Map<String, Map<String, List<EventInstance>>>?>(null) }
+    val cachedOtherEvents = remember { mutableStateOf<Map<String, List<EventInstance>>?>(null) }
+
+    // Update cache whenever we have offline data that's non-empty
+    LaunchedEffect(calState.isOffline, calState.visibleDates, calState.lessonsByTrainerByDay, calState.otherEventsByDay) {
+        if (calState.isOffline) {
+            if (calState.visibleDates.isNotEmpty() && (calState.lessonsByTrainerByDay.isNotEmpty() || calState.otherEventsByDay.isNotEmpty())) {
+                cachedVisibleDates.value = calState.visibleDates
+                cachedLessonsByTrainer.value = calState.lessonsByTrainerByDay
+                cachedOtherEvents.value = calState.otherEventsByDay
+            }
+        } else {
+            // clear cache when online (we want fresh data)
+            cachedVisibleDates.value = null
+            cachedLessonsByTrainer.value = null
+            cachedOtherEvents.value = null
+        }
+    }
+
+    // Ensure we reload when the screen becomes visible again (e.g. returning from detail).
+    // Ignore the first ON_RESUME fired during initial composition to avoid double-load.
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    val resumeSeen = remember { mutableStateOf(false) }
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                if (resumeSeen.value) {
+                    // If we're offline, avoid reloading because an online fetch
+                    // that returns an empty map can overwrite the offline data.
+                    if (!calState.isOffline) {
+                        scope.launch { calendarViewModel.load(localWeekOffset, selectedTab == 0) }
+                    }
+                } else {
+                    resumeSeen.value = true
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     // allow internal control of week offset when parent doesn't provide a handler
     LaunchedEffect(weekOffset) { if (localWeekOffset != weekOffset) localWeekOffset = weekOffset }
@@ -167,9 +214,10 @@ fun CalendarScreen(
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
                 ) {
-                    calState.visibleDates.forEach { date ->
-                        val lessonsByTrainer = calState.lessonsByTrainerByDay[date] ?: emptyMap()
-                        val otherList = calState.otherEventsByDay[date] ?: emptyList()
+                    val visibleDatesToRender = if (calState.visibleDates.isEmpty() && calState.isOffline && cachedVisibleDates.value != null) cachedVisibleDates.value!! else calState.visibleDates
+                    visibleDatesToRender.forEach { date ->
+                        val lessonsByTrainer = if ((calState.lessonsByTrainerByDay[date].orEmpty().isEmpty()) && calState.isOffline && cachedLessonsByTrainer.value != null) cachedLessonsByTrainer.value!!.getOrDefault(date, emptyMap()) else calState.lessonsByTrainerByDay[date] ?: emptyMap()
+                        val otherList = if ((calState.otherEventsByDay[date].orEmpty().isEmpty()) && calState.isOffline && cachedOtherEvents.value != null) cachedOtherEvents.value!!.getOrDefault(date, emptyList()) else calState.otherEventsByDay[date] ?: emptyList()
                         if (lessonsByTrainer.isEmpty() && otherList.isEmpty()) return@forEach
                         Column(modifier = Modifier.padding(8.dp)) {
                             val header = when (date) {

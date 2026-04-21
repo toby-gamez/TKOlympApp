@@ -143,6 +143,53 @@ class CalendarViewModel(
                 } else throw ex
             }
 
+            // If the server returned an empty map (possible when offline but no exception thrown),
+            // try to load the offline week summary saved by OfflineSyncManager.
+            if (map.isEmpty()) {
+                try {
+                    val bucketName = if (onlyMine) "MINE" else "ALL"
+                    val weekKey = "offline_cal_${'$'}{bucketName}_$weekStart"
+                    val raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(weekKey) } catch (_: Exception) { null }
+                    if (raw != null) {
+                        var parsed = parseCalendarJson(raw)
+                        parsed = try { enrichParsedWithEventDetails(parsed) } catch (_: Exception) { parsed }
+
+                        val lessonsByTrainerByDay = parsed.mapValues { (_, list) ->
+                            list.filter { isLesson(it) }
+                                .groupBy { it.event?.eventTrainersList?.firstOrNull()!!.trim() }
+                                .mapValues { (_, instances) -> instances.sortedBy { it.since } }
+                        }
+                        val otherEventsByDay = parsed.mapValues { (_, list) ->
+                            val lessonSet = list.filter { isLesson(it) }.toSet()
+                            (list - lessonSet).sortedBy { it.since }
+                        }
+
+                        lastWeekOffset = weekOffset
+                        lastOnlyMine = onlyMine
+
+                        _state.value = _state.value.copy(
+                            eventsByDay = parsed,
+                            lessonsByTrainerByDay = lessonsByTrainerByDay,
+                            otherEventsByDay = otherEventsByDay,
+                            visibleDates = visibleDates,
+                            todayString = todayString,
+                            tomorrowString = tomorrowString,
+                            myPersonId = pid,
+                            myCoupleIds = cids,
+                            isOffline = true,
+                            isLoading = false
+                        )
+                        return
+                    }
+                } catch (_: Exception) {}
+                // If we reach here and the server map is empty and we have existing data,
+                // avoid overwriting the current non-empty state with an empty result.
+                if (map.isEmpty() && _state.value.eventsByDay.isNotEmpty()) {
+                    _state.value = _state.value.copy(isLoading = false)
+                    return
+                }
+            }
+
             val lessonsByTrainerByDay = map.mapValues { (_, list) ->
                 list.filter { isLesson(it) }
                     .groupBy { it.event?.eventTrainersList?.firstOrNull()!!.trim() }
