@@ -70,7 +70,7 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
 
     LaunchedEffect(Unit) {
         viewModel.loadLeaderboard()
-        // try to load current person id for highlighting
+;        // try to load current person id for highlighting
         try {
             currentPersonId.value = withContext(Dispatchers.IO) { com.tkolymp.shared.ServiceLocator.userService.getCachedPersonId() }
         } catch (e: CancellationException) { throw e } catch (_: Exception) { /* ignore */ }

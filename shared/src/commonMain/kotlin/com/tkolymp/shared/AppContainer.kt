@@ -17,6 +17,7 @@ import com.tkolymp.shared.storage.TokenStorage
 import com.tkolymp.shared.storage.UserStorage
 import com.tkolymp.shared.systemcalendar.SystemCalendarService
 import com.tkolymp.shared.user.UserService
+import com.tkolymp.shared.payments.PaymentService
 import com.tkolymp.shared.storage.OfflineDataStorage
 import com.tkolymp.shared.network.NetworkMonitor
 import com.tkolymp.shared.sync.OfflineSyncManager
@@ -37,6 +38,7 @@ class AppContainer(
     val announcementService: IAnnouncementService,
     val peopleService: PeopleService,
     val clubService: ClubService,
+    val paymentService: PaymentService,
     val notificationStorage: NotificationStorage,
     val notificationScheduler: INotificationScheduler,
     val notificationService: NotificationService,

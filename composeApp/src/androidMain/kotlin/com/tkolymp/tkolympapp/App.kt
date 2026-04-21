@@ -8,8 +8,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,6 +21,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +35,7 @@ import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.core.content.pm.PackageInfoCompat
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -45,10 +47,11 @@ import androidx.navigation.navArgument
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.appearance.AppearanceSettings
 import com.tkolymp.shared.appearance.ThemeMode
-import androidx.compose.runtime.collectAsState
+import com.tkolymp.shared.integrity.IntegrityServiceAndroid
 import com.tkolymp.shared.language.AppLanguage
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.language.getDeviceLanguageCode
+import com.tkolymp.shared.registration.RegMode
 import com.tkolymp.shared.viewmodels.OnboardingViewModel
 import com.tkolymp.tkolympapp.screens.AboutScreen
 import com.tkolymp.tkolympapp.screens.BoardScreen
@@ -58,26 +61,24 @@ import com.tkolymp.tkolympapp.screens.EventScreen
 import com.tkolymp.tkolympapp.screens.EventsScreen
 import com.tkolymp.tkolympapp.screens.GroupsScreen
 import com.tkolymp.tkolympapp.screens.LanguageScreen
-import com.tkolymp.tkolympapp.screens.SettingsScreen
 import com.tkolymp.tkolympapp.screens.LeaderboardScreen
-import com.tkolymp.tkolympapp.screens.StatsScreen
 import com.tkolymp.tkolympapp.screens.LoginScreen
 import com.tkolymp.tkolympapp.screens.NoticeScreen
 import com.tkolymp.tkolympapp.screens.NotificationsSettingsScreen
 import com.tkolymp.tkolympapp.screens.OnboardingScreen
 import com.tkolymp.tkolympapp.screens.OtherScreen
 import com.tkolymp.tkolympapp.screens.OverviewScreen
+import com.tkolymp.tkolympapp.screens.PaymentsScreen
 import com.tkolymp.tkolympapp.screens.PeopleScreen
 import com.tkolymp.tkolympapp.screens.PersonScreen
 import com.tkolymp.tkolympapp.screens.PrivacyPolicyScreen
 import com.tkolymp.tkolympapp.screens.ProfileScreen
-import com.tkolymp.shared.registration.RegMode
 import com.tkolymp.tkolympapp.screens.RegistrationScreen
+import com.tkolymp.tkolympapp.screens.SettingsScreen
+import com.tkolymp.tkolympapp.screens.StatsScreen
 import com.tkolymp.tkolympapp.screens.TrainersLocationsScreen
-import androidx.core.content.pm.PackageInfoCompat
-import com.tkolymp.shared.integrity.IntegrityServiceAndroid
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
@@ -88,7 +89,6 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import ui.theme.AppTheme
-import com.tkolymp.tkolympapp.components.OfflineBanner
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -362,6 +362,7 @@ fun AppNavHost(
                 onTrainersClick = { navController.navigate("trainers") },
                     onGroupsClick = { navController.navigate("groups") },
                     onLeaderboardClick = { navController.navigate("leaderboard") },
+                    onPaymentsClick = { navController.navigate("payments") },
                     onStatsClick = { navController.navigate("stats") },
                 onAboutClick = { navController.navigate("about") },
                 onPrivacyClick = { navController.navigate("privacy") },
@@ -400,6 +401,36 @@ fun AppNavHost(
             }
         ) {
             LanguageScreen(onBack = { navController.navigateUp() })
+        }
+
+        composable(
+            route = "payments",
+            enterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            popEnterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            }
+        ) {
+            PaymentsScreen(onBack = { navController.navigateUp() }, bottomPadding = bottomPadding)
         }
 
         composable(

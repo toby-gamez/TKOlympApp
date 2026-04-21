@@ -1,11 +1,4 @@
 package com.tkolymp.tkolympapp.screens
-import kotlinx.datetime.Clock
-import kotlinx.datetime.DateTimeUnit
-import com.tkolymp.shared.utils.formatShortDate
-import com.tkolymp.shared.utils.parseToLocal
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.plus
 
 // coroutine helpers not needed here; avoid importing isActive directly
 import androidx.compose.foundation.background
@@ -25,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FitnessCenter
@@ -32,13 +26,11 @@ import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -46,26 +38,28 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.tkolymp.shared.viewmodels.OtherViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.shared.utils.formatShortDate
+import com.tkolymp.shared.utils.parseToLocal
+import com.tkolymp.shared.viewmodels.OtherViewModel
+import kotlinx.datetime.LocalDate
 import kotlin.coroutines.cancellation.CancellationException
 
-private enum class MainItem { PEOPLE, TRAINERS, GROUPS, LEADERBOARD, STATS }
+private enum class MainItem { PEOPLE, TRAINERS, GROUPS, LEADERBOARD, STATS, PAYMENTS }
 private enum class SettingsItem { LANGUAGES, ABOUT, NOTIFICATIONS, PRIVACY, APPEARANCE }
 
 // Helper: do not surface internal/cancellation/compose runtime messages to the UI
@@ -97,7 +91,7 @@ private fun formatDateString(raw: String): String? {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {}, onTrainersClick: () -> Unit = {}, onGroupsClick: () -> Unit = {}, onLeaderboardClick: () -> Unit = {}, onStatsClick: () -> Unit = {}, onAboutClick: () -> Unit = {}, onPrivacyClick: () -> Unit = {}, onNotificationsClick: () -> Unit = {}, onLanguagesClick: () -> Unit = {}, onAppearanceClick: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
+fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {}, onTrainersClick: () -> Unit = {}, onGroupsClick: () -> Unit = {}, onLeaderboardClick: () -> Unit = {}, onStatsClick: () -> Unit = {}, onPaymentsClick: () -> Unit = {}, onAboutClick: () -> Unit = {}, onPrivacyClick: () -> Unit = {}, onNotificationsClick: () -> Unit = {}, onLanguagesClick: () -> Unit = {}, onAppearanceClick: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
     val viewModel = viewModel<OtherViewModel>()
     val state by viewModel.state.collectAsState()
     var showDebug by remember { mutableStateOf(false) }
@@ -190,6 +184,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                 Pair(MainItem.TRAINERS, Icons.Filled.FitnessCenter),
                 Pair(MainItem.GROUPS, Icons.Filled.Groups),
                 Pair(MainItem.LEADERBOARD, Icons.Filled.EmojiEvents),
+                Pair(MainItem.PAYMENTS, Icons.Filled.Info),
                 Pair(MainItem.STATS, Icons.Filled.BarChart)
             )
 
@@ -199,6 +194,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                     MainItem.TRAINERS -> AppStrings.current.otherScreen.trainersAndSpaces
                     MainItem.GROUPS -> AppStrings.current.otherScreen.trainingGroups
                     MainItem.LEADERBOARD -> AppStrings.current.otherScreen.leaderboard
+                    MainItem.PAYMENTS -> "Platby"
                     MainItem.STATS -> AppStrings.current.stats.statsTitle
                 }
                 Card(
@@ -211,7 +207,8 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                                 MainItem.TRAINERS -> onTrainersClick()
                                 MainItem.GROUPS -> onGroupsClick()
                                 MainItem.LEADERBOARD -> onLeaderboardClick()
-                                MainItem.STATS -> onStatsClick()
+                                    MainItem.PAYMENTS -> onPaymentsClick()
+                                    MainItem.STATS -> onStatsClick()
                             }
                         },
                     shape = RoundedCornerShape(16.dp),

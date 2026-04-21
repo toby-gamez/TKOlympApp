@@ -52,6 +52,7 @@ object ServiceLocator {
     val announcementService: IAnnouncementService get() = container.announcementService
     val peopleService: PeopleService get() = container.peopleService
     val clubService: ClubService get() = container.clubService
+    val paymentService: com.tkolymp.shared.payments.PaymentService get() = container.paymentService
     val cacheService: CacheService get() = container.cacheService
     val notificationStorage: NotificationStorage get() = container.notificationStorage
     val notificationScheduler: INotificationScheduler get() = container.notificationScheduler
