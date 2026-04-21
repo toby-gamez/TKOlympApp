@@ -45,6 +45,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import com.tkolymp.tkolympapp.SwipeToReload
@@ -78,6 +80,9 @@ import com.tkolymp.shared.calendar.getCoupleInfo
 import com.tkolymp.tkolympapp.util.parseEventColor
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
@@ -95,6 +100,23 @@ fun CalendarViewScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val scope = rememberCoroutineScope()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val resumeSeen = remember { mutableStateOf(false) }
+    val cachedLayout = remember { mutableStateOf<List<EventLayoutData>?>(null) }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                if (resumeSeen.value) {
+                    scope.launch { viewModel.loadEvents() }
+                } else {
+                    resumeSeen.value = true
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
     
     // Load events on first composition
     LaunchedEffect(Unit) {
@@ -184,8 +206,13 @@ fun CalendarViewScreen(
                 // Show timeline based on view mode
                 when (state.viewMode) {
                     ViewMode.DAY -> {
+                        val layoutListToRender = if (state.layoutData.isEmpty() && state.isOffline && cachedLayout.value != null) cachedLayout.value!! else state.layoutData.values.toList()
+
+                        // keep cached copy of last non-empty layout to avoid brief disappearance
+                        LaunchedEffect(state.layoutData) { if (state.layoutData.isNotEmpty()) cachedLayout.value = state.layoutData.values.toList() }
+
                         SingleDayTimelineView(
-                            events = state.layoutData.values.toList(),
+                            events = layoutListToRender,
                             selectedDate = state.selectedDate,
                             onEventClick = onEventClick
                         )

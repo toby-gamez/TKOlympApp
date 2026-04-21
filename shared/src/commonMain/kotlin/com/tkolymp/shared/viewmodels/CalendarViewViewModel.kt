@@ -73,6 +73,7 @@ class CalendarViewViewModel(
      */
     suspend fun loadEvents() {
         _state.value = _state.value.copy(isLoading = true, error = null)
+        var isOfflineUsed = false
         
         // Ensure user info is loaded first
         loadUserInfo()
@@ -109,12 +110,19 @@ class CalendarViewViewModel(
                     if (raw != null) {
                         var parsed = parseCalendarJson(raw)
                         parsed = try { enrichParsedWithEventDetails(parsed) } catch (_: Exception) { parsed }
+                        isOfflineUsed = true
                         // parsed is Map<String, List<EventInstance>>
                         parsed
                     } else throw ex
                 } catch (_: Exception) {
                     throw ex
                 }
+            }
+
+            // If server returned empty map, don't overwrite existing non-empty state with empty
+            if (eventsGrouped.isEmpty() && _state.value.events.isNotEmpty()) {
+                _state.value = _state.value.copy(isLoading = false)
+                return
             }
 
             // Convert to TimelineEvents
@@ -148,7 +156,8 @@ class CalendarViewViewModel(
             _state.value = currentState.copy(
                 events = allTimelineEvents,
                 layoutData = layoutData,
-                isLoading = false
+                isLoading = false,
+                isOffline = isOfflineUsed
             )
 
         } catch (e: Exception) {

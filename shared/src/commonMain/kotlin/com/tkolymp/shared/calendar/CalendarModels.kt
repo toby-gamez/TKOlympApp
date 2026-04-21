@@ -50,6 +50,7 @@ data class CalendarViewState(
     val selectedDate: LocalDate,
     val events: List<TimelineEvent> = emptyList(),
     val layoutData: Map<BigInt, EventLayoutData> = emptyMap(),
+    val isOffline: Boolean = false,
     val isLoading: Boolean = false,
     val error: String? = null,
     val showOnlyMine: Boolean = false
