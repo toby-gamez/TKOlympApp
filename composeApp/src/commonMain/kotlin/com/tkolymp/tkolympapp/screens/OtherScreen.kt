@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Money
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Security
@@ -182,7 +183,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                 Pair(MainItem.TRAINERS, Icons.Filled.FitnessCenter),
                 Pair(MainItem.GROUPS, Icons.Filled.Groups),
                 Pair(MainItem.LEADERBOARD, Icons.Filled.EmojiEvents),
-                Pair(MainItem.PAYMENTS, Icons.Filled.Info),
+                Pair(MainItem.PAYMENTS, Icons.Filled.Money),
                 Pair(MainItem.STATS, Icons.Filled.BarChart)
             )
 
@@ -192,7 +193,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                     MainItem.TRAINERS -> AppStrings.current.otherScreen.trainersAndSpaces
                     MainItem.GROUPS -> AppStrings.current.otherScreen.trainingGroups
                     MainItem.LEADERBOARD -> AppStrings.current.otherScreen.leaderboard
-                    MainItem.PAYMENTS -> "Platby"
+                    MainItem.PAYMENTS -> AppStrings.current.otherScreen.payments
                     MainItem.STATS -> AppStrings.current.stats.statsTitle
                 }
                 Card(

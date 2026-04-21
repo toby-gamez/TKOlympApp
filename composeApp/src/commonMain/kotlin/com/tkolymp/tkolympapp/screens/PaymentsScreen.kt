@@ -50,7 +50,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun PaymentsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
-    val tabs = listOf("Čekající", "Zaplacené")
+    val tabs = listOf(AppStrings.current.misc.paymentsTabPending, AppStrings.current.misc.paymentsTabPaid)
 
     val vm = remember { com.tkolymp.shared.payments.PaymentsViewModel() }
     DisposableEffect(Unit) { onDispose { vm.clear() } }
@@ -62,7 +62,7 @@ fun PaymentsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
 
     Scaffold(
         topBar = { TopAppBar(
-            title = { Text("Platby") },
+            title = { Text(AppStrings.current.otherScreen.payments) },
             navigationIcon = {
                 onBack?.let {
                     IconButton(onClick = it) {
@@ -104,7 +104,7 @@ fun PaymentsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                                             modifier = Modifier.size(48.dp)
                                         )
                                         Spacer(modifier = Modifier.height(8.dp))
-                                        Text("Nic nikomu nedlužíš", style = MaterialTheme.typography.bodyLarge)
+                                        Text(AppStrings.current.misc.paymentsEmptyNoDebts, style = MaterialTheme.typography.bodyLarge)
                                     }
                                 }
                             } else {
@@ -115,7 +115,7 @@ fun PaymentsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                         }
                         else -> {
                             if (paidItems.isEmpty()) {
-                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Žádné zaplacené položky") }
+                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(AppStrings.current.misc.paymentsEmptyNoPaid) }
                             } else {
                                 LazyColumn(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Top) {
                                     items(paidItems) { it -> PaymentItemCard(it) }
@@ -150,10 +150,10 @@ private fun PaymentItemCard(item: com.tkolymp.shared.payments.PaymentDebtorItem)
 
         Box(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
             Column(modifier = Modifier.align(Alignment.CenterStart)) {
-                Text(text = name.ifEmpty { "Osoba #${item.personId ?: "?"}" }, style = MaterialTheme.typography.titleMedium)
-                Text(text = "Částka: ${amount} ${item.price?.currency ?: "CZK"}", style = MaterialTheme.typography.bodySmall)
-                Text(text = "Variabilní symbol: ${item.payment?.variableSymbol ?: "-"}", style = MaterialTheme.typography.bodySmall)
-                Text(text = "Splatné: ${fmtDate(item.payment?.dueAt)}", style = MaterialTheme.typography.bodySmall)
+                Text(text = name.ifEmpty { "${AppStrings.current.misc.personFallback}${item.personId ?: "?"}" }, style = MaterialTheme.typography.titleMedium)
+                Text(text = "${AppStrings.current.misc.amountLabel} ${amount} ${item.price?.currency ?: "CZK"}", style = MaterialTheme.typography.bodySmall)
+                Text(text = "${AppStrings.current.misc.variableSymbolLabel} ${item.payment?.variableSymbol ?: "-"}", style = MaterialTheme.typography.bodySmall)
+                Text(text = "${AppStrings.current.misc.dueLabel} ${fmtDate(item.payment?.dueAt)}", style = MaterialTheme.typography.bodySmall)
             }
 
             if (isPaid) {

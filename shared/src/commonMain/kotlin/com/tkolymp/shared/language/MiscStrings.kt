@@ -10,4 +10,12 @@ data class MiscStrings(
     val author: String,
     val updatedAt: String,
     val rule: String,
+    val paymentsTabPending: String,
+    val paymentsTabPaid: String,
+    val paymentsEmptyNoDebts: String,
+    val paymentsEmptyNoPaid: String,
+    val personFallback: String,
+    val amountLabel: String,
+    val variableSymbolLabel: String,
+    val dueLabel: String,
 )

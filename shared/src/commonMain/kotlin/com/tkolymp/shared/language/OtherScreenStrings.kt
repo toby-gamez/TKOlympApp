@@ -7,6 +7,7 @@ data class OtherScreenStrings(
     val trainersAndSpaces: String,
     val trainingGroups: String,
     val leaderboard: String,
+    val payments: String,
     val languages: String,
     val aboutApp: String,
     val notificationSettings: String,
