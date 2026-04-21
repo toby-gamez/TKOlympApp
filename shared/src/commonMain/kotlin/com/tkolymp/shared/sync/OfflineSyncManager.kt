@@ -32,7 +32,8 @@ class OfflineSyncManager(
     private val networkMonitor: NetworkMonitor,
     private val userService: com.tkolymp.shared.user.UserService,
     private val notificationService: com.tkolymp.shared.notification.NotificationService,
-    private val clubService: com.tkolymp.shared.club.ClubService
+    private val clubService: com.tkolymp.shared.club.ClubService,
+    private val paymentService: com.tkolymp.shared.payments.PaymentService
 ) {
     private val metaLastSyncKey = "offline_meta_last_sync"
     private val json = Json { ignoreUnknownKeys = true }
@@ -45,6 +46,8 @@ class OfflineSyncManager(
         }
 
         try {
+            // Sync payments
+            try { syncPayments() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "syncPayments failed: ${ex.message}") }
             syncCalendarBuckets()
             syncAnnouncements()
             syncPeople()
@@ -55,6 +58,47 @@ class OfflineSyncManager(
         } catch (ex: Exception) {
             Logger.d("OfflineSyncManager", "syncAll: failed: ${ex.message}")
             // swallow; best-effort sync
+        }
+    }
+
+    private suspend fun syncPayments() {
+        try {
+            val list = try { paymentService.fetchPaymentDebtors() } catch (_: Exception) { emptyList() }
+            if (list.isNotEmpty()) {
+                // Build lightweight JSON array
+                val arr = buildJsonArray {
+                    list.forEach { itItem ->
+                        val jo = buildJsonObject {
+                            put("id", JsonPrimitive(itItem.id ?: ""))
+                            put("isUnpaid", JsonPrimitive(itItem.isUnpaid?.toString() ?: ""))
+                            val price = itItem.price
+                            put("price", buildJsonObject { put("amount", JsonPrimitive(price?.amount?.toString() ?: "")); put("currency", JsonPrimitive(price?.currency ?: "")) })
+                            put("paymentId", JsonPrimitive(itItem.paymentId ?: ""))
+                            put("personId", JsonPrimitive(itItem.personId ?: ""))
+                            val p = itItem.payment
+                            put("payment", buildJsonObject { put("id", JsonPrimitive(p?.id ?: "")); put("variableSymbol", JsonPrimitive(p?.variableSymbol ?: "")); put("specificSymbol", JsonPrimitive(p?.specificSymbol ?: "")); put("dueAt", JsonPrimitive(p?.dueAt ?: "")); put("status", JsonPrimitive(p?.status ?: "")) })
+                            val person = itItem.person
+                            put("person", buildJsonObject { put("id", JsonPrimitive(person?.id ?: "")); put("firstName", JsonPrimitive(person?.firstName ?: "")); put("lastName", JsonPrimitive(person?.lastName ?: "")) })
+                        }
+                        add(jo)
+                    }
+                }
+
+                try { offlineDataStorage.save("offline_payments", json.encodeToString(JsonArray.serializer(), arr)) } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save offline_payments failed: ${ex.message}") }
+
+                // Save per-person lists for quick lookup
+                val grouped = list.groupBy { it.personId ?: "" }
+                grouped.forEach { (pid, items) ->
+                    if (pid.isNotBlank()) {
+                        val perArr = buildJsonArray {
+                            items.forEach { itItem -> add(Json.parseToJsonElement(itItem.raw?.toString() ?: JsonObject(emptyMap()).toString())) }
+                        }
+                        try { offlineDataStorage.save("offline_payments_person_$pid", json.encodeToString(JsonArray.serializer(), perArr)) } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save offline_payments_person_${pid} failed: ${ex.message}") }
+                    }
+                }
+            }
+        } catch (ex: Exception) {
+            Logger.d("OfflineSyncManager", "syncPayments exception: ${ex.message}")
         }
     }
 
@@ -262,6 +306,13 @@ class OfflineSyncManager(
 
     suspend fun getLastSyncTime(): String? = offlineDataStorage.load(metaLastSyncKey)
 
+    // Debug / inspection helpers for payments
+    suspend fun loadPayments(): String? = try { offlineDataStorage.load("offline_payments") } catch (_: Exception) { null }
+
+    suspend fun loadPaymentsForPerson(personId: String): String? = try { offlineDataStorage.load("offline_payments_person_$personId") } catch (_: Exception) { null }
+
+    suspend fun listOfflineKeys(): Set<String> = try { offlineDataStorage.allKeys() } catch (_: Exception) { emptySet() }
+
     private suspend fun saveLastSyncTime(iso: String) = offlineDataStorage.save(metaLastSyncKey, iso)
 
     private suspend fun <T> withRetry(attempts: Int = 3, initialDelayMs: Long = 500, block: suspend () -> T): T {
@@ -400,6 +451,12 @@ class OfflineSyncManager(
                 }
             }
         } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll people failed: ${ex.message}") }
+
+            // Payments
+            onProgress("payments", 0, 1)
+            try {
+                try { syncPayments() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll payments failed: ${ex.message}") }
+            } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll payments outer failed: ${ex.message}") }
 
         // Scoreboard (global)
         onProgress("scoreboard", 0, 1)
