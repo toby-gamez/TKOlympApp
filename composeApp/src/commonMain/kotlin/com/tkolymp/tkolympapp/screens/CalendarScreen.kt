@@ -23,6 +23,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ViewTimeline
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
@@ -81,6 +82,7 @@ fun CalendarScreen(
     onOpenEvent: (Long) -> Unit = {},
     onNavigateTimeline: (() -> Unit)? = null,
     onBack: (() -> Unit)? = null,
+    onCreatePersonalEvent: (() -> Unit)? = null,
     bottomPadding: Dp = 0.dp
 ) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
@@ -140,6 +142,13 @@ fun CalendarScreen(
     }
 
     Scaffold(
+        floatingActionButton = {
+            onCreatePersonalEvent?.let {
+                androidx.compose.material3.FloatingActionButton(onClick = it) {
+                    Icon(imageVector = Icons.Filled.FitnessCenter, contentDescription = AppStrings.current.personalEvents.newTraining)
+                }
+            }
+        },
         topBar = {
             TopAppBar(
                 title = { Text(AppStrings.current.navigation.calendar) },

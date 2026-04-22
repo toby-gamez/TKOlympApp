@@ -13,11 +13,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
@@ -125,8 +127,8 @@ class CalendarViewViewModel(
                 return
             }
 
-            // Convert to TimelineEvents
-            val allTimelineEvents = eventsGrouped.values.flatten()
+            // Convert server EventInstances to TimelineEvents
+            val serverTimeline = eventsGrouped.values.flatten()
                 .mapNotNull { instance ->
                     CalendarUtils.eventInstanceToTimelineEvent(
                         instance,
@@ -139,6 +141,31 @@ class CalendarViewViewModel(
                     event.startTime.date >= timeRange.start.date &&
                     event.startTime.date <= timeRange.end.date
                 }
+
+            // Load personal (local) events and convert to TimelineEvent
+            val personalTimeline = try {
+                ServiceLocator.personalEventService.getInRange(startIso, endIso).mapNotNull { ev ->
+                    try {
+                        val s = Instant.parse(ev.startIso).toLocalDateTime(TimeZone.currentSystemDefault())
+                        val e = Instant.parse(ev.endIso).toLocalDateTime(TimeZone.currentSystemDefault())
+                        com.tkolymp.shared.calendar.TimelineEvent(
+                            id = ev.id.hashCode().toLong(),
+                            eventId = null,
+                            title = ev.title,
+                            description = ev.description,
+                            type = "PERSONAL",
+                            startTime = s,
+                            endTime = e,
+                            isCancelled = false,
+                            isMyEvent = true,
+                            colorRgb = ev.colorHex,
+                            event = null
+                        )
+                    } catch (_: Exception) { null }
+                }
+            } catch (_: Exception) { emptyList() }
+
+            val allTimelineEvents = (serverTimeline + personalTimeline).sortedBy { it.startTime }
 
             // Calculate layout for all events
             val layoutData = if (currentState.viewMode == ViewMode.DAY) {

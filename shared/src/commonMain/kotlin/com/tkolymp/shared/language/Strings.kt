@@ -36,6 +36,7 @@ data class Strings(
     val privacy: PrivacyStrings,
     val stats: StatsStrings,
     val settings: SettingsStrings,
+    val personalEvents: PersonalEventStrings = PersonalEventStrings(),
 ) {
     // Backwards-compatible flat accessors for code that still expects
     // `AppStrings.current.someKey` instead of grouped access like

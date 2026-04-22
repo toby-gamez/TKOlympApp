@@ -20,6 +20,7 @@ import com.tkolymp.shared.user.UserService
 import com.tkolymp.shared.storage.OfflineDataStorage
 import com.tkolymp.shared.network.NetworkMonitor
 import com.tkolymp.shared.sync.OfflineSyncManager
+import com.tkolymp.shared.personalevents.PersonalEventService
 
 /**
  * Thin read-only facade over [AppContainer]. All mutable state lives in a single
@@ -62,6 +63,7 @@ object ServiceLocator {
     val calendarPreferenceStorage: CalendarPreferenceStorage get() = container.calendarPreferenceStorage
     val systemCalendarService: SystemCalendarService get() = container.systemCalendarService
     val offlineDataStorage: OfflineDataStorage get() = container.offlineDataStorage
+    val personalEventService: PersonalEventService get() = container.personalEventService
     val networkMonitor: NetworkMonitor get() = container.networkMonitor
     val offlineSyncManager: OfflineSyncManager get() = container.offlineSyncManager
 }

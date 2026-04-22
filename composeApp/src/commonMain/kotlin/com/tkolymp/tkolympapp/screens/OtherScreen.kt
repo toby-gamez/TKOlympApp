@@ -90,7 +90,20 @@ private fun formatDateString(raw: String): String? {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {}, onTrainersClick: () -> Unit = {}, onGroupsClick: () -> Unit = {}, onLeaderboardClick: () -> Unit = {}, onStatsClick: () -> Unit = {}, onPaymentsClick: () -> Unit = {}, onAboutClick: () -> Unit = {}, onPrivacyClick: () -> Unit = {}, onSettingsClick: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
+fun OtherScreen(
+    onProfileClick: () -> Unit = {},
+    onPeopleClick: () -> Unit = {},
+    onTrainersClick: () -> Unit = {},
+    onGroupsClick: () -> Unit = {},
+    onLeaderboardClick: () -> Unit = {},
+    onStatsClick: () -> Unit = {},
+    onPaymentsClick: () -> Unit = {},
+    onAboutClick: () -> Unit = {},
+    onPrivacyClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
+    onPersonalEventsClick: () -> Unit = {},
+    bottomPadding: Dp = 0.dp
+) {
     val viewModel = viewModel<OtherViewModel>()
     val state by viewModel.state.collectAsState()
     var showDebug by remember { mutableStateOf(false) }
@@ -395,6 +408,49 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                }
+            }
+            
+            // Personal trainings entry
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                    .clickable { onPersonalEventsClick() },
+                shape = RoundedCornerShape(16.dp),
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surface)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.FitnessCenter,
+                            contentDescription = AppStrings.current.personalEvents.myTrainings,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(
+                        text = AppStrings.current.personalEvents.myTrainings,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
 
