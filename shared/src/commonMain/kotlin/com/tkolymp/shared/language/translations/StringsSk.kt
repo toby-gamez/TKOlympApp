@@ -414,7 +414,7 @@ val StringsSk = Strings(
         technicalNote = "Technické detaily: implementácia autentifikácie a volania GraphQL nájdete v AuthService a EventServices. Notifikácie spravuje NotificationManagerService.",
     ),
     stats = StatsStrings(
-        statsTitle = "Moje \u0161tatistiky",
+        statsTitle = "Štatistiky",
         totalSessions = "Celkom tréningov",
         totalHours = "Celkom hod\u00edn",
         avgPerWeek = "Priemer/t\u00fd\u017ede\u0148",

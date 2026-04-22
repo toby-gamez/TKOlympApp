@@ -414,7 +414,7 @@ val StringsUa = Strings(
         technicalNote = "Технічні деталі: реалізацію автентифікації та виклики GraphQL можна знайти в AuthService та EventServices. Сповіщеннями керує NotificationManagerService.",
     ),
     stats = StatsStrings(
-        statsTitle = "Моя статистика",
+        statsTitle = "Статистика",
         totalSessions = "Всього тренувань",
         totalHours = "Всього годин",
         avgPerWeek = "Сер./тиж.",

@@ -414,7 +414,7 @@ val StringsVi = Strings(
         technicalNote = "Chi tiết kỹ thuật: triển khai xác thực và các cuộc gọi GraphQL có thể được tìm thấy trong AuthService và EventServices. Thông báo được quản lý bởi NotificationManagerService.",
     ),
     stats = StatsStrings(
-        statsTitle = "Thống kê của tôi",
+        statsTitle = "Thống kê",
         totalSessions = "Tổng buổi tập",
         totalHours = "Tổng giờ tập",
         avgPerWeek = "TB/tuần",

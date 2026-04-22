@@ -414,7 +414,7 @@ val StringsSl = Strings(
         technicalNote = "Tehnične podrobnosti: implementacijo avtentikacije in klice GraphQL najdete v AuthService in EventServices. Obvestila upravlja NotificationManagerService.",
     ),
     stats = StatsStrings(
-        statsTitle = "Moja statistika",
+        statsTitle = "Statistika",
         totalSessions = "Skupaj treningov",
         totalHours = "Skupaj ur",
         avgPerWeek = "Povpre\u010dje/teden",

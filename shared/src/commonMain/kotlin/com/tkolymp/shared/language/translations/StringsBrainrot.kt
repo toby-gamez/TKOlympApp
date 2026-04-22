@@ -415,7 +415,7 @@ val StringsBrainrot = Strings(
         technicalNote = "Technical deets: auth implementation and GraphQL calls can be found in AuthService and EventServices. Notifications are managed by NotificationManagerService fr.",
     ),
     stats = StatsStrings(
-        statsTitle = "My Stats fr fr",
+        statsTitle = "Statistics",
         totalSessions = "Total Grindset",
         totalHours = "Hours Cooked",
         avgPerWeek = "Avg/Week no cap",

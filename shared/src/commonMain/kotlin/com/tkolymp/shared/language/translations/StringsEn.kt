@@ -414,7 +414,7 @@ val StringsEn = Strings(
         technicalNote = "Technical details: authentication implementation and GraphQL calls can be found in AuthService and EventServices. Notifications are managed by NotificationManagerService.",
     ),
     stats = StatsStrings(
-        statsTitle = "My Statistics",
+        statsTitle = "Statistics",
         totalSessions = "Total Sessions",
         totalHours = "Total Hours",
         avgPerWeek = "Avg/Week",

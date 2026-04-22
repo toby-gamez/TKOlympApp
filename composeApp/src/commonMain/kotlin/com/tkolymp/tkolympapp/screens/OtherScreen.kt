@@ -58,7 +58,7 @@ import com.tkolymp.shared.viewmodels.OtherViewModel
 import kotlinx.datetime.LocalDate
 import kotlin.coroutines.cancellation.CancellationException
 
-private enum class MainItem { PEOPLE, TRAINERS, GROUPS, LEADERBOARD, STATS, PAYMENTS }
+private enum class MainItem { PEOPLE, TRAINERS, GROUPS, LEADERBOARD, }
 private enum class SettingsItem { ABOUT, PRIVACY, SETTINGS }
 
 // Helper: do not surface internal/cancellation/compose runtime messages to the UI
@@ -115,7 +115,7 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .padding(top = 12.dp, bottom = 5.dp, start = 16.dp, end = 16.dp)
                     .clickable { onProfileClick() },
                 shape = RoundedCornerShape(20.dp)
             ) {
@@ -168,6 +168,86 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
 
             if (state.error != null) Text(state.error!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(12.dp))
 
+            // Split button: Payments | Stats (moved under profile) - smaller font
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Card(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { onPaymentsClick() },
+                    shape = RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp, topEnd = 8.dp, bottomEnd = 8.dp),
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 10.dp)
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surface)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Money,
+                                contentDescription = AppStrings.current.otherScreen.payments,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = AppStrings.current.otherScreen.payments,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+
+                Card(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { onStatsClick() },
+                    shape = RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp, topEnd = 16.dp, bottomEnd = 16.dp),
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 10.dp)
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surface)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.BarChart,
+                                contentDescription = AppStrings.current.stats.statsTitle,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = AppStrings.current.stats.statsTitle,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.width(16.dp))
 
             // První sekce - Členové a klub
@@ -178,13 +258,12 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                 modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp)
             )
 
+            // Render main items except Payments and Stats normally
             val mainItems = listOf(
                 Pair(MainItem.PEOPLE, Icons.Filled.People),
                 Pair(MainItem.TRAINERS, Icons.Filled.FitnessCenter),
                 Pair(MainItem.GROUPS, Icons.Filled.Groups),
-                Pair(MainItem.LEADERBOARD, Icons.Filled.EmojiEvents),
-                Pair(MainItem.PAYMENTS, Icons.Filled.Money),
-                Pair(MainItem.STATS, Icons.Filled.BarChart)
+                Pair(MainItem.LEADERBOARD, Icons.Filled.EmojiEvents)
             )
 
             mainItems.forEach { (item, icon) ->
@@ -193,8 +272,6 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                     MainItem.TRAINERS -> AppStrings.current.otherScreen.trainersAndSpaces
                     MainItem.GROUPS -> AppStrings.current.otherScreen.trainingGroups
                     MainItem.LEADERBOARD -> AppStrings.current.otherScreen.leaderboard
-                    MainItem.PAYMENTS -> AppStrings.current.otherScreen.payments
-                    MainItem.STATS -> AppStrings.current.stats.statsTitle
                 }
                 Card(
                     modifier = Modifier
@@ -206,12 +283,9 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                                 MainItem.TRAINERS -> onTrainersClick()
                                 MainItem.GROUPS -> onGroupsClick()
                                 MainItem.LEADERBOARD -> onLeaderboardClick()
-                                    MainItem.PAYMENTS -> onPaymentsClick()
-                                    MainItem.STATS -> onStatsClick()
                             }
                         },
                     shape = RoundedCornerShape(16.dp),
-                    
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -248,6 +322,8 @@ fun OtherScreen(onProfileClick: () -> Unit = {}, onPeopleClick: () -> Unit = {},
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.width(16.dp))
 
             Spacer(modifier = Modifier.width(16.dp))
 

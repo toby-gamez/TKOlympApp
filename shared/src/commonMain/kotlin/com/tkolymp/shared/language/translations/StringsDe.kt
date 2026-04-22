@@ -414,7 +414,7 @@ val StringsDe = Strings(
         technicalNote = "Technische Details: Authentifizierungsimplementierung und GraphQL-Aufrufe finden Sie in AuthService und EventServices. Benachrichtigungen werden vom NotificationManagerService verwaltet.",
     ),
     stats = StatsStrings(
-        statsTitle = "Meine Statistiken",
+        statsTitle = "Statistiken",
         totalSessions = "Trainingseinheiten",
         totalHours = "Stunden gesamt",
         avgPerWeek = "\u00d8 pro Woche",
