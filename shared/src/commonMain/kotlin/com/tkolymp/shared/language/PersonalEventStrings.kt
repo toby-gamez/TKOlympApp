@@ -5,6 +5,7 @@ data class PersonalEventStrings(
     val noTrainings: String = "No trainings",
     val newTraining: String = "New training",
     val editTraining: String = "Edit training",
+    val defaultTitle: String = "Solo training",
     val deleteTraining: String = "Delete training",
     val confirmDelete: String = "Are you sure you want to delete this training?",
     val trainingTitle: String = "Title",
@@ -13,5 +14,9 @@ data class PersonalEventStrings(
     val locationOptional: String = "Location (optional)",
     val descriptionOptional: String = "Description (optional)",
     val addReminder: String = "Add reminder",
+    val repeatWeekly: String = "Repeat weekly",
+    val weekday: String = "Weekday",
+    val recurrenceStart: String = "Recurrence start",
+    val recurrenceEnd: String = "Recurrence end",
     val saveTraining: String = "Save"
 )
