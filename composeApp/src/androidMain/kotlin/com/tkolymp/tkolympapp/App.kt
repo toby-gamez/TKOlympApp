@@ -434,7 +434,7 @@ fun AppNavHost(
             popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) }
         ) { backStackEntry ->
             val eventId = backStackEntry.arguments?.getString("eventId")
-            PersonalEventEditScreen(eventId = eventId?.ifEmpty { null }, onSaved = { navController.navigateUp() }, bottomPadding = bottomPadding)
+            PersonalEventEditScreen(eventId = eventId?.ifEmpty { null }, onSaved = { navController.navigateUp() }, onBack = { navController.navigateUp() }, bottomPadding = bottomPadding)
         }
 
         composable(

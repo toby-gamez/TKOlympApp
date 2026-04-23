@@ -2,6 +2,8 @@ package com.tkolymp.shared.viewmodels
 
 import androidx.lifecycle.ViewModel
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.Logger
+import com.tkolymp.shared.cache.CacheService
 import com.tkolymp.shared.calendar.CalendarUtils
 import com.tkolymp.shared.calendar.CalendarViewState
 import com.tkolymp.shared.calendar.CollisionDetectionAlgorithm
@@ -35,7 +37,8 @@ import kotlin.time.Clock
  */
 class CalendarViewViewModel(
     private val eventService: IEventService = ServiceLocator.eventService,
-    private val userService: UserService = ServiceLocator.userService
+    private val userService: UserService = ServiceLocator.userService,
+    private val cache: CacheService = ServiceLocator.cacheService
 ) : ViewModel() {
     private val _state = MutableStateFlow(
         CalendarViewState(
@@ -48,6 +51,9 @@ class CalendarViewViewModel(
     private var myPersonId: String? = null
     private var myCoupleIds: List<String> = emptyList()
     private var userInfoLoaded = false
+    // Track last requested range start and filter to avoid unnecessary cache invalidation
+    private var lastRangeStartIso: String? = null
+    private var lastShowOnlyMine: Boolean? = null
     
     /**
      * Load cached user information (lazy loading)
@@ -91,8 +97,82 @@ class CalendarViewViewModel(
             val startIso = timeRange.start.toInstant(TimeZone.currentSystemDefault()).toString()
             val endIso = timeRange.end.toInstant(TimeZone.currentSystemDefault()).toString()
 
+            // Decide whether filter changed or visible range changed since last load
+            val onlyMineChanged = currentState.showOnlyMine != lastShowOnlyMine
+            val rangeChanged = startIso != lastRangeStartIso
+
+            Logger.d("CalendarViewViewModel", "loadEvents: selectedDate=${currentState.selectedDate} viewMode=${currentState.viewMode} startIso=${startIso} lastRangeStartIso=${lastRangeStartIso} onlyMine=${currentState.showOnlyMine} onlyMineChanged=${onlyMineChanged} rangeChanged=${rangeChanged}")
+
+            // If only the filter changed but the range is the same, try offline-week summary first
+            if (onlyMineChanged && !rangeChanged) {
+                try {
+                    val bucketName = if (currentState.showOnlyMine) "MINE" else "ALL"
+                    val startDate = timeRange.start.date
+                    val weekKey = "offline_cal_${'$'}{bucketName}_${'$'}startDate"
+                    var raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(weekKey) } catch (_: Exception) { null }
+                    if (raw == null) {
+                        // try to find any compatible offline_cal_* key for this bucket (some buckets use different suffixes)
+                        try {
+                            val keys = try { ServiceLocator.offlineSyncManager.listOfflineKeys() } catch (_: Exception) { emptySet() }
+                            val candidates = keys.filter { it.startsWith("offline_cal_${bucketName}_") }
+                            // prefer exact weekStart match
+                            val exact = candidates.firstOrNull { it.endsWith(startDate.toString()) }
+                            val anyKey = exact ?: candidates.firstOrNull()
+                            if (anyKey != null) Logger.d("CalendarViewViewModel", "found offline key for bucket=${bucketName}: ${anyKey}")
+                            if (anyKey != null) raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(anyKey) } catch (_: Exception) { null }
+                        } catch (_: Exception) {}
+                    }
+                    if (raw != null) {
+                        Logger.d("CalendarViewViewModel", "using offline data (key present)")
+                        var parsed = parseCalendarJson(raw)
+                        parsed = try { enrichParsedWithEventDetails(parsed) } catch (_: Exception) { parsed }
+
+                        // Convert parsed offline data to timeline events
+                        val serverTimeline = parsed.values.flatten()
+                            .mapNotNull { instance ->
+                                CalendarUtils.eventInstanceToTimelineEvent(instance, myPersonId, myCoupleIds)
+                            }
+                            .filter { event ->
+                                event.startTime.date >= timeRange.start.date && event.startTime.date <= timeRange.end.date
+                            }
+
+                        val personalTimeline = try { expandPersonalEventsToTimeline(startIso, endIso) } catch (_: Exception) { emptyList() }
+                        val allTimelineEvents = (serverTimeline + personalTimeline).sortedBy { it.startTime }
+
+                        val layoutData = if (currentState.viewMode == ViewMode.DAY) {
+                            CollisionDetectionAlgorithm.calculateLayout(allTimelineEvents)
+                        } else {
+                            allTimelineEvents.groupBy { it.startTime.date }
+                                .flatMap { (_, dayEvents) -> CollisionDetectionAlgorithm.calculateLayout(dayEvents).entries }
+                                .associate { it.key to it.value }
+                        }
+
+                        _state.value = currentState.copy(
+                            events = allTimelineEvents,
+                            layoutData = layoutData,
+                            isLoading = false,
+                            isOffline = true
+                        )
+
+                        lastRangeStartIso = startIso
+                        lastShowOnlyMine = currentState.showOnlyMine
+                        return
+                    }
+                } catch (_: Exception) {}
+            }
+
+            // If the visible range changed (or first load), invalidate related cache entries when online
+            if (rangeChanged) {
+                try {
+                    val online = try { ServiceLocator.networkMonitor.isConnected() } catch (_: Exception) { true }
+                    if (online) {
+                        try { cache.invalidatePrefix("calendar_") } catch (_: Exception) {}
+                    }
+                } catch (_: Exception) {}
+            }
+
             // Try fetching from API; on failure, fall back to offline cached week data
-            val eventsGrouped = try {
+            var eventsGrouped: Map<String, List<com.tkolymp.shared.event.EventInstance>> = try {
                 eventService.fetchEventsGroupedByDay(
                     startRangeIso = startIso,
                     endRangeIso = endIso,
@@ -108,7 +188,16 @@ class CalendarViewViewModel(
                     val bucketName = if (currentState.showOnlyMine) "MINE" else "ALL"
                     val startDate = timeRange.start.date
                     val weekKey = "offline_cal_${'$'}{bucketName}_${'$'}startDate"
-                    val raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(weekKey) } catch (_: Exception) { null }
+                    var raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(weekKey) } catch (_: Exception) { null }
+                    if (raw == null) {
+                        try {
+                            val keys = try { ServiceLocator.offlineSyncManager.listOfflineKeys() } catch (_: Exception) { emptySet() }
+                            val candidates = keys.filter { it.startsWith("offline_cal_${bucketName}_") }
+                            val exact = candidates.firstOrNull { it.endsWith(startDate.toString()) }
+                            val anyKey = exact ?: candidates.firstOrNull()
+                            if (anyKey != null) raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(anyKey) } catch (_: Exception) { null }
+                        } catch (_: Exception) {}
+                    }
                     if (raw != null) {
                         var parsed = parseCalendarJson(raw)
                         parsed = try { enrichParsedWithEventDetails(parsed) } catch (_: Exception) { parsed }
@@ -121,10 +210,32 @@ class CalendarViewViewModel(
                 }
             }
 
-            // If server returned empty map, don't overwrite existing non-empty state with empty
-            if (eventsGrouped.isEmpty() && _state.value.events.isNotEmpty()) {
-                _state.value = _state.value.copy(isLoading = false)
-                return
+            // If server returned empty map, try offline week summary before deciding to keep previous state
+            if (eventsGrouped.isEmpty()) {
+                try {
+                    val bucketName = if (currentState.showOnlyMine) "MINE" else "ALL"
+                    val startDate = timeRange.start.date
+                    val weekKey = "offline_cal_${'$'}{bucketName}_${'$'}startDate"
+                    var raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(weekKey) } catch (_: Exception) { null }
+                    if (raw == null) {
+                        // try to find any compatible offline_cal_* key for this bucket
+                        try {
+                            val keys = try { ServiceLocator.offlineSyncManager.listOfflineKeys() } catch (_: Exception) { emptySet() }
+                            val candidates = keys.filter { it.startsWith("offline_cal_${bucketName}_") }
+                            val exact = candidates.firstOrNull { it.endsWith(startDate.toString()) }
+                            val anyKey = exact ?: candidates.firstOrNull()
+                            if (anyKey != null) raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(anyKey) } catch (_: Exception) { null }
+                        } catch (_: Exception) {}
+                    }
+                    if (raw != null) {
+                        var parsed = parseCalendarJson(raw)
+                        parsed = try { enrichParsedWithEventDetails(parsed) } catch (_: Exception) { parsed }
+                        isOfflineUsed = true
+                        // replace eventsGrouped with parsed offline data
+                        eventsGrouped = parsed
+                    }
+                } catch (_: Exception) {}
+                // continue — if still empty, we'll render empty events (so date change reflects)
             }
 
             // Convert server EventInstances to TimelineEvents
@@ -142,27 +253,9 @@ class CalendarViewViewModel(
                     event.startTime.date <= timeRange.end.date
                 }
 
-            // Load personal (local) events and convert to TimelineEvent
+            // Load personal (local) events and expand recurrences into TimelineEvent
             val personalTimeline = try {
-                ServiceLocator.personalEventService.getInRange(startIso, endIso).mapNotNull { ev ->
-                    try {
-                        val s = Instant.parse(ev.startIso).toLocalDateTime(TimeZone.currentSystemDefault())
-                        val e = Instant.parse(ev.endIso).toLocalDateTime(TimeZone.currentSystemDefault())
-                        com.tkolymp.shared.calendar.TimelineEvent(
-                            id = ev.id.hashCode().toLong(),
-                            eventId = null,
-                            title = ev.title,
-                            description = ev.description,
-                            type = "PERSONAL",
-                            startTime = s,
-                            endTime = e,
-                            isCancelled = false,
-                            isMyEvent = true,
-                            colorRgb = ev.colorHex,
-                            event = null
-                        )
-                    } catch (_: Exception) { null }
-                }
+                expandPersonalEventsToTimeline(startIso, endIso)
             } catch (_: Exception) { emptyList() }
 
             val allTimelineEvents = (serverTimeline + personalTimeline).sortedBy { it.startTime }
@@ -186,6 +279,9 @@ class CalendarViewViewModel(
                 isLoading = false,
                 isOffline = isOfflineUsed
             )
+
+            lastRangeStartIso = startIso
+            lastShowOnlyMine = currentState.showOnlyMine
 
         } catch (e: Exception) {
             _state.value = _state.value.copy(
@@ -332,6 +428,82 @@ class CalendarViewViewModel(
             result[date] = newList
         }
         return result
+    }
+
+    // Expand personal events (including weekly recurrences) into TimelineEvent list
+    private suspend fun expandPersonalEventsToTimeline(startIso: String, endIso: String): List<com.tkolymp.shared.calendar.TimelineEvent> {
+        return try {
+            val result = mutableListOf<com.tkolymp.shared.calendar.TimelineEvent>()
+            val personal = try { ServiceLocator.personalEventService.getAll() } catch (_: Exception) { emptyList() }
+            val tz = TimeZone.currentSystemDefault()
+            val rangeStartDate = try { kotlinx.datetime.Instant.parse(startIso).toLocalDateTime(tz).date } catch (_: Exception) { null }
+            val rangeEndDate = try { kotlinx.datetime.Instant.parse(endIso).toLocalDateTime(tz).date } catch (_: Exception) { null }
+
+            for (ev in personal) {
+                try {
+                    val startInstant = try { kotlinx.datetime.Instant.parse(ev.startIso) } catch (_: Exception) { null }
+                    val endInstant = try { kotlinx.datetime.Instant.parse(ev.endIso) } catch (_: Exception) { null }
+                    val duration = if (startInstant != null && endInstant != null) (endInstant - startInstant) else null
+                    val startLdt = startInstant?.toLocalDateTime(tz)
+
+                    fun addOccurrence(occStartInstant: kotlinx.datetime.Instant) {
+                        val occEndInstant = if (duration != null) occStartInstant + duration else try { kotlinx.datetime.Instant.parse(ev.endIso) } catch (_: Exception) { occStartInstant }
+                        val sldt = occStartInstant.toLocalDateTime(tz)
+                        val eldt = occEndInstant.toLocalDateTime(tz)
+                        val id = (ev.id + sldt.date.toString()).hashCode().toLong()
+                        val te = com.tkolymp.shared.calendar.TimelineEvent(
+                            id = id,
+                            eventId = null,
+                            title = ev.title,
+                            description = ev.description,
+                            type = "PERSONAL",
+                            startTime = sldt,
+                            endTime = eldt,
+                            isCancelled = false,
+                            isMyEvent = true,
+                            colorRgb = ev.colorHex,
+                            event = null
+                        )
+                        result += te
+                    }
+
+                    if (ev.recurrenceDayOfWeek != null && startLdt != null) {
+                        rangeStartDate?.let { rs ->
+                            rangeEndDate?.let { re ->
+                                var current = rs
+                                while (current <= re) {
+                                    val dow = current.dayOfWeek.ordinal + 1
+                                    if (dow == ev.recurrenceDayOfWeek) {
+                                        val occLdt = kotlinx.datetime.LocalDateTime(current.year, current.monthNumber, current.dayOfMonth, startLdt.hour, startLdt.minute, startLdt.second, startLdt.nanosecond)
+                                        val occInstant = occLdt.toInstant(tz)
+                                        val withinStart = try { if (ev.recurrenceStartIso.isNullOrBlank()) true else kotlinx.datetime.Instant.parse(ev.recurrenceStartIso) <= occInstant } catch (_: Exception) { true }
+                                        val withinEnd = try { if (ev.recurrenceEndIso.isNullOrBlank()) true else occInstant <= kotlinx.datetime.Instant.parse(ev.recurrenceEndIso) } catch (_: Exception) { true }
+                                        if (withinStart && withinEnd) addOccurrence(occInstant)
+                                    }
+                                    current = current.plus(1, DateTimeUnit.DAY)
+                                }
+                            }
+                        }
+                    } else {
+                        if (startInstant != null) {
+                            val inRange = try {
+                                val rs = rangeStartDate
+                                val re = rangeEndDate
+                                if (rs != null && re != null) {
+                                    val d = startInstant.toLocalDateTime(tz).date
+                                    d >= rs && d <= re
+                                } else true
+                            } catch (_: Exception) { true }
+                            if (inRange) addOccurrence(startInstant)
+                        }
+                    }
+                } catch (_: Exception) {
+                    // ignore malformed personal event
+                }
+            }
+
+            result.sortedBy { it.startTime }
+        } catch (_: Exception) { emptyList() }
     }
     
     /**
