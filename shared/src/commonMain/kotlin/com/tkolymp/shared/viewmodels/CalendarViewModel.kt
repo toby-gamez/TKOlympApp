@@ -13,7 +13,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
@@ -83,6 +86,8 @@ class CalendarViewModel(
                     var parsed = parseCalendarJson(raw)
                     // enrich parsed week summary with full event details saved separately
                     parsed = try { enrichParsedWithEventDetails(parsed) } catch (_: Exception) { parsed }
+                    // include local/personal events saved by the user
+                    parsed = try { mergePersonalEventsIntoMap(parsed, startIso, endIso) } catch (_: Exception) { parsed }
 
                     val lessonsByTrainerByDay = parsed.mapValues { (_, list) ->
                         list.filter { isLesson(it) }
@@ -138,6 +143,7 @@ class CalendarViewModel(
                 if (raw != null) {
                     var parsed = parseCalendarJson(raw)
                     parsed = try { enrichParsedWithEventDetails(parsed) } catch (_: Exception) { parsed }
+                    parsed = try { mergePersonalEventsIntoMap(parsed, startIso, endIso) } catch (_: Exception) { parsed }
                     _state.value = _state.value.copy(isOffline = true)
                     parsed
                 } else throw ex
@@ -145,7 +151,7 @@ class CalendarViewModel(
 
             // If the server returned an empty map (possible when offline but no exception thrown),
             // try to load the offline week summary saved by OfflineSyncManager.
-            if (map.isEmpty()) {
+                if (map.isEmpty()) {
                 try {
                     val bucketName = if (onlyMine) "MINE" else "ALL"
                     val weekKey = "offline_cal_${'$'}{bucketName}_$weekStart"
@@ -153,6 +159,7 @@ class CalendarViewModel(
                     if (raw != null) {
                         var parsed = parseCalendarJson(raw)
                         parsed = try { enrichParsedWithEventDetails(parsed) } catch (_: Exception) { parsed }
+                        parsed = try { mergePersonalEventsIntoMap(parsed, startIso, endIso) } catch (_: Exception) { parsed }
 
                         val lessonsByTrainerByDay = parsed.mapValues { (_, list) ->
                             list.filter { isLesson(it) }
@@ -190,12 +197,15 @@ class CalendarViewModel(
                 }
             }
 
-            val lessonsByTrainerByDay = map.mapValues { (_, list) ->
+            // merge personal events into server map as well
+            val mergedMap = try { mergePersonalEventsIntoMap(map, startIso, endIso) } catch (_: Exception) { map }
+
+            val lessonsByTrainerByDay = mergedMap.mapValues { (_, list) ->
                 list.filter { isLesson(it) }
                     .groupBy { it.event?.eventTrainersList?.firstOrNull()!!.trim() }
                     .mapValues { (_, instances) -> instances.sortedBy { it.since } }
             }
-            val otherEventsByDay = map.mapValues { (_, list) ->
+            val otherEventsByDay = mergedMap.mapValues { (_, list) ->
                 val lessonSet = list.filter { isLesson(it) }.toSet()
                 (list - lessonSet).sortedBy { it.since }
             }
@@ -204,7 +214,7 @@ class CalendarViewModel(
             lastOnlyMine = onlyMine
 
             _state.value = _state.value.copy(
-                eventsByDay = map,
+                eventsByDay = mergedMap,
                 lessonsByTrainerByDay = lessonsByTrainerByDay,
                 otherEventsByDay = otherEventsByDay,
                 visibleDates = visibleDates,
@@ -217,6 +227,99 @@ class CalendarViewModel(
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání")
         }
+    }
+
+    private suspend fun mergePersonalEventsIntoMap(
+        original: Map<String, List<EventInstance>>,
+        startIso: String,
+        endIso: String
+    ): Map<String, List<EventInstance>> {
+        return try {
+            val result = original.mapValues { (_, v) -> v.toMutableList() }.toMutableMap()
+            val personal = try { ServiceLocator.personalEventService.getAll() } catch (_: Exception) { emptyList() }
+            val tz = TimeZone.currentSystemDefault()
+            val rangeStartDate = try { kotlinx.datetime.Instant.parse(startIso).toLocalDateTime(tz).date } catch (_: Exception) { null }
+            val rangeEndDate = try { kotlinx.datetime.Instant.parse(endIso).toLocalDateTime(tz).date } catch (_: Exception) { null }
+
+            for (ev in personal) {
+                try {
+                    val startInstant = try { kotlinx.datetime.Instant.parse(ev.startIso) } catch (_: Exception) { null }
+                    val endInstant = try { kotlinx.datetime.Instant.parse(ev.endIso) } catch (_: Exception) { null }
+                    val duration = if (startInstant != null && endInstant != null) (endInstant - startInstant) else null
+                    val startLdt = startInstant?.toLocalDateTime(tz)
+
+                    // Helper to add an occurrence for a given local date
+                    fun addOccurrenceFor(date: kotlinx.datetime.LocalDate, occStartInstant: kotlinx.datetime.Instant) {
+                        val occEndInstant = if (duration != null) occStartInstant + duration else try { kotlinx.datetime.Instant.parse(ev.endIso) } catch (_: Exception) { occStartInstant }
+                        val dateKey = date.toString()
+                        val event = com.tkolymp.shared.event.Event(
+                            id = null,
+                            name = ev.title,
+                            description = ev.description,
+                            type = "PERSONAL",
+                            locationText = ev.location,
+                            isRegistrationOpen = false,
+                            isVisible = true,
+                            isPublic = false,
+                            eventTrainersList = emptyList(),
+                            eventTargetCohortsList = emptyList(),
+                            eventRegistrationsList = emptyList(),
+                            location = null
+                        )
+                        // make id per-occurrence to avoid collisions
+                        val occId = (ev.id + date.toString()).hashCode().toLong()
+                        val inst = com.tkolymp.shared.event.EventInstance(occId, false, occStartInstant.toString(), occEndInstant.toString(), null, event)
+                        val list = result.getOrPut(dateKey) { mutableListOf() }
+                        list += inst
+                    }
+
+                    if (ev.recurrenceDayOfWeek != null && startLdt != null) {
+                        // Expand weekly recurrences across the requested range
+                        rangeStartDate?.let { rs ->
+                            rangeEndDate?.let { re ->
+                                startLdt.let { sldt ->
+                                    var current = rs
+                                    while (current <= re) {
+                                        val dow = current.dayOfWeek.isoDayNumber // 1=Mon..7=Sun
+                                        if (dow == ev.recurrenceDayOfWeek) {
+                                            // Check recurrence boundaries if present
+                                            val occLdt = kotlinx.datetime.LocalDateTime(current.year, current.monthNumber, current.dayOfMonth, sldt.hour, sldt.minute, sldt.second, sldt.nanosecond)
+                                            val occInstant = occLdt.toInstant(tz)
+                                            val withinStart = try { if (ev.recurrenceStartIso.isNullOrBlank()) true else kotlinx.datetime.Instant.parse(ev.recurrenceStartIso) <= occInstant } catch (_: Exception) { true }
+                                            val withinEnd = try { if (ev.recurrenceEndIso.isNullOrBlank()) true else occInstant <= kotlinx.datetime.Instant.parse(ev.recurrenceEndIso) } catch (_: Exception) { true }
+                                            if (withinStart && withinEnd) addOccurrenceFor(current, occInstant)
+                                        }
+                                        current = current.plus(1, DateTimeUnit.DAY)
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        // Single occurrence (non-recurring)
+                        if (startInstant != null) {
+                            // Only add if within requested range (safety)
+                            val inRange = try {
+                                val rs = rangeStartDate
+                                val re = rangeEndDate
+                                if (rs != null && re != null) {
+                                    val d = startInstant.toLocalDateTime(tz).date
+                                    d >= rs && d <= re
+                                } else true
+                            } catch (_: Exception) { true }
+                            if (inRange) {
+                                val date = startInstant.toLocalDateTime(tz).date
+                                addOccurrenceFor(date, startInstant)
+                            }
+                        }
+                    }
+                } catch (_: Exception) {
+                    // ignore malformed personal event
+                }
+            }
+
+            // Ensure lists are immutable and sorted by 'since'
+            result.mapValues { (_, v) -> v.sortedBy { it.since } }
+        } catch (_: Exception) { original }
     }
 
     private fun parseCalendarJson(raw: String): Map<String, List<EventInstance>> {

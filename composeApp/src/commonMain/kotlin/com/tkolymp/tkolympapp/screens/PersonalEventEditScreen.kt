@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -59,7 +59,7 @@ private fun formatLocalDate(d: kotlinx.datetime.LocalDate?): String {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
+fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
     val service = ServiceLocator.personalEventService
     val title = remember(eventId) { mutableStateOf(if (eventId.isNullOrBlank()) AppStrings.current.personalEvents.defaultTitle else "") }
     val startIso = remember { mutableStateOf(kotlin.time.Clock.System.now().toString()) }
@@ -88,7 +88,12 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, b
         }
     }
 
-    Scaffold(topBar = { TopAppBar(title = { Text(if (eventId.isNullOrBlank()) AppStrings.current.personalEvents.newTraining else AppStrings.current.personalEvents.editTraining) }) }) { innerPadding ->
+    Scaffold(topBar = {
+        TopAppBar(
+            title = { Text(if (eventId.isNullOrBlank()) AppStrings.current.personalEvents.newTraining else AppStrings.current.personalEvents.editTraining) },
+            navigationIcon = { IconButton(onClick = onBack) { Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null) } }
+        )
+    }) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding).padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             val focusManager = LocalFocusManager.current
             Card(modifier = Modifier.fillMaxWidth()) {
@@ -113,7 +118,7 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, b
                         leadingIcon = { Icon(imageVector = Icons.Default.AccessTime, contentDescription = null) }
                     )
                     if (showStartTimePicker) {
-                        val t = try { Instant.parse(startIso.value).toLocalDateTime(TimeZone.currentSystemDefault()).time } catch (_: Exception) { LocalTime(0,0) }
+                        val t = try { kotlin.time.Instant.parse(startIso.value).toLocalDateTime(TimeZone.currentSystemDefault()).time } catch (_: Exception) { LocalTime(0,0) }
                         val timeState = rememberTimePickerState(initialHour = t.hour, initialMinute = t.minute)
                         androidx.compose.material3.AlertDialog(
                             onDismissRequest = { showStartTimePicker = false },
@@ -218,6 +223,13 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, b
                         val recStartDate = try { if (recurrenceStartIso.value.isBlank()) null else Instant.parse(recurrenceStartIso.value).toLocalDateTime(TimeZone.currentSystemDefault()).date } catch (_: Exception) { null }
                         val recStartMillis = recStartDate?.let { LocalDateTime(it, LocalTime(0,0)).toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds() }
                         val recStartState = rememberDatePickerState(initialSelectedDateMillis = recStartMillis)
+                        LaunchedEffect(recStartState.selectedDateMillis) {
+                            val selMillis = recStartState.selectedDateMillis
+                            if (selMillis != null) {
+                                val sel = Instant.fromEpochMilliseconds(selMillis).toLocalDateTime(TimeZone.currentSystemDefault()).date
+                                recurrenceStartIso.value = LocalDateTime(sel, LocalTime(0,0)).toInstant(TimeZone.currentSystemDefault()).toString()
+                            }
+                        }
                         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                             OutlinedTextField(
                                 value = try {
@@ -225,10 +237,10 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, b
                                 } catch (_: Exception) { "" },
                                 onValueChange = {},
                                 label = { Text(AppStrings.current.personalEvents.recurrenceStart) },
-                                modifier = Modifier.fillMaxWidth(0.85f),
-                                readOnly = true
+                                modifier = Modifier.fillMaxWidth().onFocusChanged { if (it.isFocused) { focusManager.clearFocus(); showRecurrenceStartDatePicker = true } },
+                                readOnly = true,
+                                leadingIcon = { Icon(imageVector = Icons.Default.Event, contentDescription = null) }
                             )
-                            IconButton(onClick = { focusManager.clearFocus(); showRecurrenceStartDatePicker = true }) { Icon(imageVector = Icons.Default.CalendarToday, contentDescription = AppStrings.current.selectDate) }
                         }
                         if (showRecurrenceStartDatePicker) {
                             DatePickerDialog(onDismissRequest = { showRecurrenceStartDatePicker = false }, confirmButton = {
@@ -246,6 +258,13 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, b
                         val recEndDate = try { if (recurrenceEndIso.value.isBlank()) null else Instant.parse(recurrenceEndIso.value).toLocalDateTime(TimeZone.currentSystemDefault()).date } catch (_: Exception) { null }
                         val recEndMillis = recEndDate?.let { LocalDateTime(it, LocalTime(0,0)).toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds() }
                         val recEndState = rememberDatePickerState(initialSelectedDateMillis = recEndMillis)
+                        LaunchedEffect(recEndState.selectedDateMillis) {
+                            val selMillis = recEndState.selectedDateMillis
+                            if (selMillis != null) {
+                                val sel = Instant.fromEpochMilliseconds(selMillis).toLocalDateTime(TimeZone.currentSystemDefault()).date
+                                recurrenceEndIso.value = LocalDateTime(sel, LocalTime(0,0)).toInstant(TimeZone.currentSystemDefault()).toString()
+                            }
+                        }
                         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                             OutlinedTextField(
                                 value = try {
@@ -253,10 +272,10 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, b
                                 } catch (_: Exception) { "" },
                                 onValueChange = {},
                                 label = { Text(AppStrings.current.personalEvents.recurrenceEnd) },
-                                modifier = Modifier.fillMaxWidth(0.85f),
-                                readOnly = true
+                                modifier = Modifier.fillMaxWidth().onFocusChanged { if (it.isFocused) { focusManager.clearFocus(); showRecurrenceEndDatePicker = true } },
+                                readOnly = true,
+                                leadingIcon = { Icon(imageVector = Icons.Default.Event, contentDescription = null) }
                             )
-                            IconButton(onClick = { focusManager.clearFocus(); showRecurrenceEndDatePicker = true }) { Icon(imageVector = Icons.Default.CalendarToday, contentDescription = AppStrings.current.selectDate) }
                         }
                         if (showRecurrenceEndDatePicker) {
                             DatePickerDialog(onDismissRequest = { showRecurrenceEndDatePicker = false }, confirmButton = {
