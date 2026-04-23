@@ -7,18 +7,23 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Event
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
@@ -30,13 +35,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.personalevents.PersonalEvent
+import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
@@ -45,6 +53,10 @@ import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
 import kotlin.time.Duration.Companion.hours
 
+private fun formatLocalDate(d: kotlinx.datetime.LocalDate?): String {
+    return d?.let { "${it.dayOfMonth}. ${it.monthNumber}. ${it.year}" } ?: ""
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
@@ -52,7 +64,7 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, b
     val title = remember(eventId) { mutableStateOf(if (eventId.isNullOrBlank()) AppStrings.current.personalEvents.defaultTitle else "") }
     val startIso = remember { mutableStateOf(kotlin.time.Clock.System.now().toString()) }
     val endIso = remember { mutableStateOf(kotlin.time.Clock.System.now().plus(1.hours).toString()) }
-    val isRecurring = remember { mutableStateOf(false) }
+    val isRecurring = remember { mutableStateOf(true) }
     val weekday = remember { mutableStateOf<Int?>(null) }
     val recurrenceStartIso = remember { mutableStateOf("") }
     val recurrenceEndIso = remember { mutableStateOf("") }
@@ -77,123 +89,188 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, b
     }
 
     Scaffold(topBar = { TopAppBar(title = { Text(if (eventId.isNullOrBlank()) AppStrings.current.personalEvents.newTraining else AppStrings.current.personalEvents.editTraining) }) }) { innerPadding ->
-        Column(modifier = Modifier.padding(innerPadding).padding(12.dp)) {
-            OutlinedTextField(value = title.value, onValueChange = { title.value = it }, label = { Text(AppStrings.current.personalEvents.trainingTitle) }, modifier = Modifier.fillMaxWidth())
-            // Start time (time picker)
+        Column(modifier = Modifier.padding(innerPadding).padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             val focusManager = LocalFocusManager.current
-            Row(modifier = Modifier.padding(top = 8.dp).fillMaxWidth()) {
-                OutlinedTextField(
-                    value = try { Instant.parse(startIso.value).toLocalDateTime(TimeZone.currentSystemDefault()).time.toString() } catch (_: Exception) { "" },
-                    onValueChange = {},
-                    label = { Text(AppStrings.current.personalEvents.startTime) },
-                    modifier = Modifier.fillMaxWidth(0.85f),
-                    readOnly = true
-                )
-                TextButton(onClick = { focusManager.clearFocus(); showStartTimePicker = true }) { Text("...") }
-            }
-            if (showStartTimePicker) {
-                val t = try { Instant.parse(startIso.value).toLocalDateTime(TimeZone.currentSystemDefault()).time } catch (_: Exception) { LocalTime(0,0) }
-                val timeState = rememberTimePickerState(initialHour = t.hour, initialMinute = t.minute)
-                androidx.compose.material3.AlertDialog(
-                    onDismissRequest = { showStartTimePicker = false },
-                    confirmButton = {
-                        Button(onClick = {
-                            val h = timeState.hour; val m = timeState.minute
-                            val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
-                            val iso = LocalDateTime(today, LocalTime(h,m)).toInstant(TimeZone.currentSystemDefault()).toString()
-                            startIso.value = iso
-                            showStartTimePicker = false
-                        }) { Text(AppStrings.current.ok) }
-                    },
-                    text = { TimePicker(state = timeState) }
-                )
-            }
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedTextField(
+                        value = title.value,
+                        onValueChange = { title.value = it },
+                        label = { Text(AppStrings.current.personalEvents.trainingTitle) },
+                        modifier = Modifier.fillMaxWidth(),
+                        leadingIcon = { Icon(imageVector = Icons.Default.Event, contentDescription = null) }
+                    )
 
-            // End time (time picker)
-            Row(modifier = Modifier.padding(top = 8.dp).fillMaxWidth()) {
-                OutlinedTextField(
-                    value = try { Instant.parse(endIso.value).toLocalDateTime(TimeZone.currentSystemDefault()).time.toString() } catch (_: Exception) { "" },
-                    onValueChange = {},
-                    label = { Text(AppStrings.current.personalEvents.endTime) },
-                    modifier = Modifier.fillMaxWidth(0.85f),
-                    readOnly = true
-                )
-                TextButton(onClick = { focusManager.clearFocus(); showEndTimePicker = true }) { Text("...") }
-            }
-            if (showEndTimePicker) {
-                val t2 = try { Instant.parse(endIso.value).toLocalDateTime(TimeZone.currentSystemDefault()).time } catch (_: Exception) { LocalTime(0,0) }
-                val timeState2 = rememberTimePickerState(initialHour = t2.hour, initialMinute = t2.minute)
-                androidx.compose.material3.AlertDialog(
-                    onDismissRequest = { showEndTimePicker = false },
-                    confirmButton = {
-                        Button(onClick = {
-                            val h = timeState2.hour; val m = timeState2.minute
-                            val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
-                            val iso = LocalDateTime(today, LocalTime(h,m)).toInstant(TimeZone.currentSystemDefault()).toString()
-                            endIso.value = iso
-                            showEndTimePicker = false
-                        }) { Text(AppStrings.current.ok) }
-                    },
-                    text = { TimePicker(state = timeState2) }
-                )
-            }
+                    OutlinedTextField(
+                        value = try {
+                            val tm = Instant.parse(startIso.value).toLocalDateTime(TimeZone.currentSystemDefault()).time
+                            "%02d:%02d".format(tm.hour, tm.minute)
+                        } catch (_: Exception) { "" },
+                        onValueChange = {},
+                        label = { Text(AppStrings.current.personalEvents.startTime) },
+                        modifier = Modifier.fillMaxWidth().onFocusChanged { if (it.isFocused) { focusManager.clearFocus(); showStartTimePicker = true } },
+                        readOnly = true,
+                        leadingIcon = { Icon(imageVector = Icons.Default.AccessTime, contentDescription = null) }
+                    )
+                    if (showStartTimePicker) {
+                        val t = try { Instant.parse(startIso.value).toLocalDateTime(TimeZone.currentSystemDefault()).time } catch (_: Exception) { LocalTime(0,0) }
+                        val timeState = rememberTimePickerState(initialHour = t.hour, initialMinute = t.minute)
+                        androidx.compose.material3.AlertDialog(
+                            onDismissRequest = { showStartTimePicker = false },
+                            confirmButton = {
+                                Button(onClick = {
+                                    val h = timeState.hour; val m = timeState.minute
+                                    val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
+                                    val iso = LocalDateTime(today, LocalTime(h,m)).toInstant(TimeZone.currentSystemDefault()).toString()
+                                    startIso.value = iso
+                                    showStartTimePicker = false
+                                }) { Text(AppStrings.current.ok) }
+                            },
+                            text = { TimePicker(state = timeState) }
+                        )
+                    }
 
-            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, modifier = Modifier.padding(top = 12.dp)) {
-                Checkbox(checked = isRecurring.value, onCheckedChange = { isRecurring.value = it })
-                Text(AppStrings.current.personalEvents.repeatWeekly, modifier = Modifier.padding(start = 8.dp))
+                    OutlinedTextField(
+                        value = try {
+                            val tm2 = Instant.parse(endIso.value).toLocalDateTime(TimeZone.currentSystemDefault()).time
+                            "%02d:%02d".format(tm2.hour, tm2.minute)
+                        } catch (_: Exception) { "" },
+                        onValueChange = {},
+                        label = { Text(AppStrings.current.personalEvents.endTime) },
+                        modifier = Modifier.fillMaxWidth().onFocusChanged { if (it.isFocused) { focusManager.clearFocus(); showEndTimePicker = true } },
+                        readOnly = true,
+                        leadingIcon = { Icon(imageVector = Icons.Default.AccessTime, contentDescription = null) }
+                    )
+                    if (showEndTimePicker) {
+                        val t2 = try { Instant.parse(endIso.value).toLocalDateTime(TimeZone.currentSystemDefault()).time } catch (_: Exception) { LocalTime(0,0) }
+                        val timeState2 = rememberTimePickerState(initialHour = t2.hour, initialMinute = t2.minute)
+                        androidx.compose.material3.AlertDialog(
+                            onDismissRequest = { showEndTimePicker = false },
+                            confirmButton = {
+                                Button(onClick = {
+                                    val h = timeState2.hour; val m = timeState2.minute
+                                    val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
+                                    val iso = LocalDateTime(today, LocalTime(h,m)).toInstant(TimeZone.currentSystemDefault()).toString()
+                                    endIso.value = iso
+                                    showEndTimePicker = false
+                                }) { Text(AppStrings.current.ok) }
+                            },
+                            text = { TimePicker(state = timeState2) }
+                        )
+                    }
+
+                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Checkbox(checked = isRecurring.value, onCheckedChange = { isRecurring.value = it })
+                        Text(AppStrings.current.personalEvents.repeatWeekly, modifier = Modifier.padding(start = 8.dp))
+                    }
+                }
             }
 
             if (isRecurring.value) {
-                Text(AppStrings.current.personalEvents.weekday, modifier = Modifier.padding(top = 8.dp))
-                val dayNames = listOf("Po","Út","St","Čt","Pá","So","Ne")
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 4.dp)) {
-                    dayNames.forEachIndexed { idx, d ->
-                        TextButton(onClick = { weekday.value = idx + 1 }) {
-                            Text(text = if (weekday.value == idx + 1) "$d ✓" else d)
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(AppStrings.current.personalEvents.weekday)
+                        // show only Monday..Friday and highlight selection with background
+                        val dayNames = listOf("Po","Út","St","Čt","Pá")
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            dayNames.forEachIndexed { idx, d ->
+                                val sel = idx + 1
+                                FilterChip(
+                                    selected = (weekday.value == sel),
+                                    onClick = {
+                                        weekday.value = sel
+                                        if (recurrenceStartIso.value.isBlank()) {
+                                            val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
+                                            recurrenceStartIso.value = LocalDateTime(today, LocalTime(0,0)).toInstant(TimeZone.currentSystemDefault()).toString()
+                                        }
+                                        if (recurrenceEndIso.value.isBlank()) {
+                                            val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
+                                            var juneYear = today.year
+                                            var juneLast = LocalDate(juneYear, 6, 30)
+                                            if (juneLast < today) juneYear += 1
+                                            juneLast = LocalDate(juneYear, 6, 30)
+                                            val targetDow = when (sel) {
+                                                1 -> DayOfWeek.MONDAY
+                                                2 -> DayOfWeek.TUESDAY
+                                                3 -> DayOfWeek.WEDNESDAY
+                                                4 -> DayOfWeek.THURSDAY
+                                                5 -> DayOfWeek.FRIDAY
+                                                else -> DayOfWeek.MONDAY
+                                            }
+                                            var dEpoch = LocalDateTime(juneLast, LocalTime(0,0)).toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+                                            val dayMillis = 24L * 60L * 60L * 1000L
+                                            var candidate = Instant.fromEpochMilliseconds(dEpoch).toLocalDateTime(TimeZone.currentSystemDefault()).date
+                                            while (candidate.dayOfWeek != targetDow) {
+                                                dEpoch -= dayMillis
+                                                candidate = Instant.fromEpochMilliseconds(dEpoch).toLocalDateTime(TimeZone.currentSystemDefault()).date
+                                            }
+                                            recurrenceEndIso.value = LocalDateTime(candidate, LocalTime(0,0)).toInstant(TimeZone.currentSystemDefault()).toString()
+                                        }
+                                    },
+                                    modifier = Modifier.padding(6.dp),
+                                    label = { Text(d) },
+                                    colors = FilterChipDefaults.filterChipColors()
+                                )
+                            }
+                        }
+                        Divider()
+
+                        val recStartDate = try { if (recurrenceStartIso.value.isBlank()) null else Instant.parse(recurrenceStartIso.value).toLocalDateTime(TimeZone.currentSystemDefault()).date } catch (_: Exception) { null }
+                        val recStartMillis = recStartDate?.let { LocalDateTime(it, LocalTime(0,0)).toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds() }
+                        val recStartState = rememberDatePickerState(initialSelectedDateMillis = recStartMillis)
+                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                            OutlinedTextField(
+                                value = try {
+                                    if (recurrenceStartIso.value.isBlank()) "" else formatLocalDate(Instant.parse(recurrenceStartIso.value).toLocalDateTime(TimeZone.currentSystemDefault()).date)
+                                } catch (_: Exception) { "" },
+                                onValueChange = {},
+                                label = { Text(AppStrings.current.personalEvents.recurrenceStart) },
+                                modifier = Modifier.fillMaxWidth(0.85f),
+                                readOnly = true
+                            )
+                            IconButton(onClick = { focusManager.clearFocus(); showRecurrenceStartDatePicker = true }) { Icon(imageVector = Icons.Default.CalendarToday, contentDescription = AppStrings.current.selectDate) }
+                        }
+                        if (showRecurrenceStartDatePicker) {
+                            DatePickerDialog(onDismissRequest = { showRecurrenceStartDatePicker = false }, confirmButton = {
+                                Button(onClick = {
+                                    val selMillis = recStartState.selectedDateMillis
+                                    if (selMillis != null) {
+                                        val sel = Instant.fromEpochMilliseconds(selMillis).toLocalDateTime(TimeZone.currentSystemDefault()).date
+                                        recurrenceStartIso.value = LocalDateTime(sel, LocalTime(0,0)).toInstant(TimeZone.currentSystemDefault()).toString()
+                                    }
+                                    showRecurrenceStartDatePicker = false
+                                }) { Text(AppStrings.current.ok) }
+                            }) { DatePicker(state = recStartState) }
+                        }
+
+                        val recEndDate = try { if (recurrenceEndIso.value.isBlank()) null else Instant.parse(recurrenceEndIso.value).toLocalDateTime(TimeZone.currentSystemDefault()).date } catch (_: Exception) { null }
+                        val recEndMillis = recEndDate?.let { LocalDateTime(it, LocalTime(0,0)).toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds() }
+                        val recEndState = rememberDatePickerState(initialSelectedDateMillis = recEndMillis)
+                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                            OutlinedTextField(
+                                value = try {
+                                    if (recurrenceEndIso.value.isBlank()) "" else formatLocalDate(Instant.parse(recurrenceEndIso.value).toLocalDateTime(TimeZone.currentSystemDefault()).date)
+                                } catch (_: Exception) { "" },
+                                onValueChange = {},
+                                label = { Text(AppStrings.current.personalEvents.recurrenceEnd) },
+                                modifier = Modifier.fillMaxWidth(0.85f),
+                                readOnly = true
+                            )
+                            IconButton(onClick = { focusManager.clearFocus(); showRecurrenceEndDatePicker = true }) { Icon(imageVector = Icons.Default.CalendarToday, contentDescription = AppStrings.current.selectDate) }
+                        }
+                        if (showRecurrenceEndDatePicker) {
+                            DatePickerDialog(onDismissRequest = { showRecurrenceEndDatePicker = false }, confirmButton = {
+                                Button(onClick = {
+                                    val selMillis = recEndState.selectedDateMillis
+                                    if (selMillis != null) {
+                                        val sel = Instant.fromEpochMilliseconds(selMillis).toLocalDateTime(TimeZone.currentSystemDefault()).date
+                                        recurrenceEndIso.value = LocalDateTime(sel, LocalTime(0,0)).toInstant(TimeZone.currentSystemDefault()).toString()
+                                    }
+                                    showRecurrenceEndDatePicker = false
+                                }) { Text(AppStrings.current.ok) }
+                            }) { DatePicker(state = recEndState) }
                         }
                     }
-                }
-
-                // recurrence start date (date picker)
-                val recStartDate = try { if (recurrenceStartIso.value.isBlank()) null else Instant.parse(recurrenceStartIso.value).toLocalDateTime(TimeZone.currentSystemDefault()).date } catch (_: Exception) { null }
-                val recStartMillis = recStartDate?.let { LocalDateTime(it, LocalTime(0,0)).toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds() }
-                val recStartState = rememberDatePickerState(initialSelectedDateMillis = recStartMillis)
-                Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
-                    OutlinedTextField(value = recStartDate?.toString() ?: "", onValueChange = {}, label = { Text(AppStrings.current.personalEvents.recurrenceStart) }, modifier = Modifier.fillMaxWidth(0.85f), readOnly = true)
-                    IconButton(onClick = { focusManager.clearFocus(); showRecurrenceStartDatePicker = true }) { Icon(imageVector = Icons.Default.CalendarToday, contentDescription = AppStrings.current.selectDate) }
-                }
-                if (showRecurrenceStartDatePicker) {
-                    DatePickerDialog(onDismissRequest = { showRecurrenceStartDatePicker = false }, confirmButton = {
-                        Button(onClick = {
-                            val selMillis = recStartState.selectedDateMillis
-                            if (selMillis != null) {
-                                val sel = Instant.fromEpochMilliseconds(selMillis).toLocalDateTime(TimeZone.currentSystemDefault()).date
-                                recurrenceStartIso.value = sel.toString()
-                            }
-                            showRecurrenceStartDatePicker = false
-                        }) { Text(AppStrings.current.ok) }
-                    }) { DatePicker(state = recStartState) }
-                    }
-
-                // recurrence end date (date picker)
-                val recEndDate = try { if (recurrenceEndIso.value.isBlank()) null else Instant.parse(recurrenceEndIso.value).toLocalDateTime(TimeZone.currentSystemDefault()).date } catch (_: Exception) { null }
-                val recEndMillis = recEndDate?.let { LocalDateTime(it, LocalTime(0,0)).toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds() }
-                val recEndState = rememberDatePickerState(initialSelectedDateMillis = recEndMillis)
-                Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
-                    OutlinedTextField(value = recEndDate?.toString() ?: "", onValueChange = {}, label = { Text(AppStrings.current.personalEvents.recurrenceEnd) }, modifier = Modifier.fillMaxWidth(0.85f), readOnly = true)
-                    IconButton(onClick = { focusManager.clearFocus(); showRecurrenceEndDatePicker = true }) { Icon(imageVector = Icons.Default.CalendarToday, contentDescription = AppStrings.current.selectDate) }
-                }
-                if (showRecurrenceEndDatePicker) {
-                    DatePickerDialog(onDismissRequest = { showRecurrenceEndDatePicker = false }, confirmButton = {
-                        Button(onClick = {
-                            val selMillis = recEndState.selectedDateMillis
-                            if (selMillis != null) {
-                                val sel = Instant.fromEpochMilliseconds(selMillis).toLocalDateTime(TimeZone.currentSystemDefault()).date
-                                recurrenceEndIso.value = sel.toString()
-                            }
-                            showRecurrenceEndDatePicker = false
-                        }) { Text(AppStrings.current.ok) }
-                    }) { DatePicker(state = recEndState) }
                 }
             }
 
@@ -211,7 +288,7 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, b
                 // save
                 kotlinx.coroutines.runBlocking { kotlin.runCatching { service.save(ev) } }
                 onSaved()
-            }, modifier = Modifier.padding(top = 12.dp)) {
+            }, modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
                 Text(AppStrings.current.personalEvents.saveTraining)
             }
         }
