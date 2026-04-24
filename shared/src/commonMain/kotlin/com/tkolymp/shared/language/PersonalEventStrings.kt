@@ -22,5 +22,6 @@ data class PersonalEventStrings(
     val weekday: String = "Weekday",
     val recurrenceStart: String = "Recurrence start",
     val recurrenceEnd: String = "Recurrence end",
-    val saveTraining: String = "Save"
+    val saveTraining: String = "Save",
+    val savedLocallyNote: String = "Solo trainings are stored locally; synchronization with a partner is planned."
 )

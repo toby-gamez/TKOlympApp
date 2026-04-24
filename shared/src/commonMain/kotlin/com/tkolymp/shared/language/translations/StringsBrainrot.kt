@@ -497,6 +497,7 @@ val StringsBrainrot = Strings(
         weekday = "Weekday",
         recurrenceStart = "Repeat starts",
         recurrenceEnd = "Repeat ends",
+        savedLocallyNote = "Solo rizz are stored locally; partner-sync incoming.",
         saveTraining = "Lock In",
     ),
 )

@@ -106,6 +106,15 @@ fun PersonalEventsScreen(
                     }
                 }
             }
+            item {
+                Text(
+                    text = AppStrings.current.personalEvents.savedLocallyNote,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp)
+                )
+            }
         }
 
         if (showConfirm) {

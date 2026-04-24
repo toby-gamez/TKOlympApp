@@ -157,7 +157,7 @@ fun App() {
                     try {
                         if (com.tkolymp.shared.ServiceLocator.networkMonitor.isConnected()) {
                             kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
-                                try { com.tkolymp.shared.ServiceLocator.offlineSyncManager.syncAll() } catch (_: Exception) {}
+                                try { com.tkolymp.shared.ServiceLocator.offlineSyncManager.downloadAll() } catch (_: Exception) {}
                             }
                         }
                     } catch (_: Exception) {}

@@ -496,6 +496,7 @@ val StringsEn = Strings(
         weekday = "Weekday",
         recurrenceStart = "Recurrence start",
         recurrenceEnd = "Recurrence end",
+        savedLocallyNote = "Solo trainings are stored locally; synchronization with a partner is planned.",
         saveTraining = "Save",
     ),
 )

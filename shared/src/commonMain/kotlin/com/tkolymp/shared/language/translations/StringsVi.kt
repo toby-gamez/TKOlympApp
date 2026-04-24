@@ -496,6 +496,7 @@ val StringsVi = Strings(
         weekday = "Ngày trong tuần",
         recurrenceStart = "Bắt đầu lặp",
         recurrenceEnd = "Kết thúc lặp",
+        savedLocallyNote = "Các buổi tập cá nhân được lưu cục bộ; đồng bộ với đối tác đang được lên kế hoạch.",
         saveTraining = "Lưu buổi tập",
     ),
 )

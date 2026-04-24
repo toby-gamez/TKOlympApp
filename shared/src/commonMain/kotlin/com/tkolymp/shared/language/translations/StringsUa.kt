@@ -496,6 +496,7 @@ val StringsUa = Strings(
         weekday = "День тижня",
         recurrenceStart = "Початок повторення",
         recurrenceEnd = "Кінець повторення",
+        savedLocallyNote = "Тренування наодинці зберігаються локально; синхронізація з партнером планується.",
         saveTraining = "Зберегти тренування",
     ),
 )

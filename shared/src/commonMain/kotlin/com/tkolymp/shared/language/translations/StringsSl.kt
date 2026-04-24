@@ -496,6 +496,7 @@ val StringsSl = Strings(
         weekday = "Dan v tednu",
         recurrenceStart = "Začetek ponavljanja",
         recurrenceEnd = "Konec ponavljanja",
+        savedLocallyNote = "Samostojni treningi se shranjujejo lokalno; sinhronizacija s partnerjem je v načrtu.",
         saveTraining = "Shrani trening",
     ),
 )
