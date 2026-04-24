@@ -172,8 +172,8 @@ class OverviewViewModel(
                 try {
                     val fullJson = try { eventService.fetchEventById(evId, forceRefresh = false) } catch (_: Exception) { null }
                     val regArr = when {
-                        fullJson?.get("eventRegistrationsList") is kotlinx.serialization.json.JsonArray -> fullJson?.get("eventRegistrationsList") as kotlinx.serialization.json.JsonArray
-                        fullJson?.get("eventRegistrations") is kotlinx.serialization.json.JsonObject -> (fullJson?.get("eventRegistrations") as kotlinx.serialization.json.JsonObject)["nodes"] as? kotlinx.serialization.json.JsonArray
+                        fullJson?.get("eventRegistrationsList") is kotlinx.serialization.json.JsonArray -> fullJson!!.get("eventRegistrationsList") as kotlinx.serialization.json.JsonArray
+                        fullJson?.get("eventRegistrations") is kotlinx.serialization.json.JsonObject -> (fullJson!!.get("eventRegistrations") as kotlinx.serialization.json.JsonObject)["nodes"] as? kotlinx.serialization.json.JsonArray
                         else -> null
                     }
                     if (regArr != null) {
@@ -211,8 +211,8 @@ class OverviewViewModel(
                         if (!raw.isNullOrBlank()) {
                             val parsed = try { Json.parseToJsonElement(raw).jsonObject } catch (_: Exception) { null }
                             val regArr2 = when {
-                                parsed?.get("eventRegistrationsList") is kotlinx.serialization.json.JsonArray -> parsed?.get("eventRegistrationsList") as kotlinx.serialization.json.JsonArray
-                                parsed?.get("eventRegistrations") is kotlinx.serialization.json.JsonObject -> (parsed?.get("eventRegistrations") as kotlinx.serialization.json.JsonObject)["nodes"] as? kotlinx.serialization.json.JsonArray
+                                parsed?.get("eventRegistrationsList") is kotlinx.serialization.json.JsonArray -> parsed!!.get("eventRegistrationsList") as kotlinx.serialization.json.JsonArray
+                                parsed?.get("eventRegistrations") is kotlinx.serialization.json.JsonObject -> (parsed!!.get("eventRegistrations") as kotlinx.serialization.json.JsonObject)["nodes"] as? kotlinx.serialization.json.JsonArray
                                 else -> null
                             }
                             if (regArr2 != null) {
@@ -435,8 +435,8 @@ class OverviewViewModel(
 
     private fun isLesson(inst: EventInstance): Boolean =
         inst.event?.type?.equals("lesson", ignoreCase = true) == true &&
-            !inst.event?.eventTrainersList.isNullOrEmpty() &&
-            !inst.event?.eventTrainersList?.firstOrNull().isNullOrBlank()
+            !inst.event.eventTrainersList.isNullOrEmpty() &&
+            !inst.event.eventTrainersList.firstOrNull().isNullOrBlank()
 
     private fun parseCalendarJson(raw: String): Map<String, List<EventInstance>> {
         return try {

@@ -31,7 +31,7 @@ class PeopleViewModel(
         _state.value = _state.value.copy(isLoading = true, error = null)
         try {
             // preserve existing people if fetch fails or returns empty while offline
-            val current: List<Person> = (_state.value.people as? List<Person>) ?: emptyList()
+            val current: List<Person> = _state.value.people.filterIsInstance<Person>()
             var fetched: List<Person>? = null
             try { fetched = peopleService.fetchPeople() } catch (e: CancellationException) { throw e } catch (_: Exception) { fetched = null }
 

@@ -92,7 +92,7 @@ class TrainersLocationsViewModel(
                     return
                 }
             }
-            if (d == null || d.raw == null) {
+            if (d == null) {
                 // Try offline fallback: load saved club JSON (same logic as in exception handler)
                 try {
                     val rawBasic = try { ServiceLocator.offlineSyncManager.loadClubBasics() } catch (_: Exception) { null } ?: run {

@@ -2,7 +2,7 @@ package com.tkolymp.shared.utils
 
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.Month
+import kotlinx.datetime.number
 
 /**
  * Locale-aware date formatting for Compose Multiplatform commonMain.
@@ -115,9 +115,9 @@ fun getLocalizedDayName(dayOfWeek: DayOfWeek, languageCode: String): String {
  * Equivalent to DateTimeFormatter.ofPattern("d. MMMM [yyyy]", locale).
  */
 fun formatMonthDay(date: LocalDate, languageCode: String, includeYear: Boolean): String {
-    val month = getLocalizedMonthName(date.monthNumber, languageCode)
-    return if (includeYear) "${date.dayOfMonth}. $month ${date.year}"
-    else "${date.dayOfMonth}. $month"
+    val month = getLocalizedMonthName(date.month.number, languageCode)
+    return if (includeYear) "${date.day}. $month ${date.year}"
+    else "${date.day}. $month"
 }
 
 /**
@@ -126,19 +126,19 @@ fun formatMonthDay(date: LocalDate, languageCode: String, includeYear: Boolean):
  */
 fun formatFullCalendarDate(date: LocalDate, languageCode: String, includeYear: Boolean): String {
     val dayName = getLocalizedDayName(date.dayOfWeek, languageCode)
-    val month = getLocalizedMonthName(date.monthNumber, languageCode)
-    return if (includeYear) "$dayName, ${date.dayOfMonth}. $month ${date.year}"
-    else "$dayName, ${date.dayOfMonth}. $month"
+    val month = getLocalizedMonthName(date.month.number, languageCode)
+    return if (includeYear) "$dayName, ${date.day}. $month ${date.year}"
+    else "$dayName, ${date.day}. $month"
 }
 
 /**
  * Short numeric date "d. M. yyyy" – no locale required.
  */
 fun formatShortDate(date: LocalDate): String =
-    "${date.dayOfMonth}. ${date.monthNumber}. ${date.year}"
+    "${date.day}. ${date.month.number}. ${date.year}"
 
 /**
  * Short numeric date-time "d. M. yyyy HH:mm".
  */
 fun formatShortDateTime(date: LocalDate, hour: Int, minute: Int): String =
-    "${date.dayOfMonth}. ${date.monthNumber}. ${date.year} ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
+    "${date.day}. ${date.month.number}. ${date.year} ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"

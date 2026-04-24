@@ -1,10 +1,11 @@
 package com.tkolymp.shared.user
 
 import com.tkolymp.shared.people.PersonDetails
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Instant
 
 data class CohortDisplay(val name: String, val colorRgb: String?, val since: String?, val until: String?)
 
@@ -28,12 +29,12 @@ fun fmtProfileDate(s: String?): String? {
     if (s.isNullOrBlank()) return null
     try {
         val ld = LocalDate.parse(s)
-        return "${ld.dayOfMonth.toString().padStart(2,'0')}.${ld.monthNumber.toString().padStart(2,'0')}.${ld.year}"
+        return "${ld.day.toString().padStart(2,'0')}.${ld.month.number.toString().padStart(2,'0')}.${ld.year}"
     } catch (_: Exception) {}
     try {
         val inst = Instant.parse(s)
         val ld = inst.toLocalDateTime(TimeZone.UTC).date
-        return "${ld.dayOfMonth.toString().padStart(2,'0')}.${ld.monthNumber.toString().padStart(2,'0')}.${ld.year}"
+        return "${ld.day.toString().padStart(2,'0')}.${ld.month.number.toString().padStart(2,'0')}.${ld.year}"
     } catch (_: Exception) {}
     val m = Regex("""(\d{4})-(\d{2})-(\d{2})""").find(s)
     if (m != null) return "${m.groupValues[3]}.${m.groupValues[2]}.${m.groupValues[1]}"

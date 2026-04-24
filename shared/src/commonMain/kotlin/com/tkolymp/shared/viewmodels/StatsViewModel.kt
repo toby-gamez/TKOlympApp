@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.event.EventInstance
-import com.tkolymp.shared.people.ScoreboardEntry
 import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.shared.people.ScoreboardEntry
 import com.tkolymp.shared.utils.getLocalizedMonthNameNominative
 import com.tkolymp.shared.utils.parseToLocal
 import kotlinx.coroutines.CancellationException
@@ -17,12 +17,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
+import kotlinx.datetime.number
 import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
+import kotlin.time.Instant
 
 // ─── Data models ──────────────────────────────────────────────────────────────
 
@@ -38,13 +39,13 @@ data class SeasonSelection(val start: LocalDate, val end: LocalDate, val label: 
         }
 
         fun current(today: LocalDate = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())): SeasonSelection {
-            val year = if (today.monthNumber >= 9) today.year else today.year - 1
+            val year = if (today.month.number >= 9) today.year else today.year - 1
             return forYear(year)
         }
 
         /** Returns recent seasons, newest first (default 4 seasons). */
         fun recent(count: Int = 4, today: LocalDate = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())): List<SeasonSelection> {
-            val currentYear = if (today.monthNumber >= 9) today.year else today.year - 1
+            val currentYear = if (today.month.number >= 9) today.year else today.year - 1
             return (0 until count).map { offset -> forYear(currentYear - offset) }
         }
 
@@ -370,8 +371,8 @@ class StatsViewModel(
             try {
                 val s = parseToLocal(since) ?: return 0L
                 val u = parseToLocal(until) ?: return 0L
-                val sEpoch = s.date.toEpochDays().toLong() * 86400L + s.hour * 3600L + s.minute * 60L
-                val uEpoch = u.date.toEpochDays().toLong() * 86400L + u.hour * 3600L + u.minute * 60L
+                val sEpoch = s.date.toEpochDays() * 86400L + s.hour * 3600L + s.minute * 60L
+                val uEpoch = u.date.toEpochDays() * 86400L + u.hour * 3600L + u.minute * 60L
                 maxOf(0L, (uEpoch - sEpoch) / 60L)
             } catch (_: Exception) { 0L }
         }
@@ -432,7 +433,7 @@ class StatsViewModel(
             val list = byWeekMonday[monday] ?: emptyList()
             // show week range (Mon–Sun) to make ordering and scope explicit
             val sunday = monday.plus(6, DateTimeUnit.DAY)
-            val label = "${monday.dayOfMonth}.${monday.monthNumber}.–${sunday.dayOfMonth}.${sunday.monthNumber}."
+            val label = "${monday.day}.${monday.month.number}.–${sunday.day}.${sunday.month.number}."
             result.add(
                 WeekStats(
                     weekLabel = label,
@@ -462,12 +463,12 @@ class StatsViewModel(
 
         // Build all months in the season so months with 0 are still present
         val result = mutableListOf<MonthStats>()
-        var cursor = LocalDate(seasonStart.year, seasonStart.monthNumber, 1)
-        val endMonth = LocalDate(seasonEnd.year, seasonEnd.monthNumber, 1)
+        var cursor = LocalDate(seasonStart.year, seasonStart.month.number, 1)
+        val endMonth = LocalDate(seasonEnd.year, seasonEnd.month.number, 1)
         while (cursor <= endMonth) {
-            val ym = "${cursor.year}-${cursor.monthNumber.toString().padStart(2, '0')}"
+            val ym = "${cursor.year}-${cursor.month.number.toString().padStart(2, '0')}"
             val list = byMonth[ym] ?: emptyList()
-            val label = "${cursor.monthNumber.toString().padStart(2, '0')}/${cursor.year}"
+            val label = "${cursor.month.number.toString().padStart(2, '0')}/${cursor.year}"
             result.add(
                 MonthStats(
                     monthLabel = label,

@@ -2,7 +2,7 @@ package com.tkolymp.shared.calendar
 
 import com.tkolymp.shared.event.BigInt
 import com.tkolymp.shared.event.Event
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 

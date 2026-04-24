@@ -58,7 +58,7 @@ class NotificationService(
                         rule.locations.any { locName.contains(it, ignoreCase = true) }
                     }
                     rule.trainers.isNotEmpty() -> {
-                        val trainers = ev.eventTrainersList ?: emptyList()
+                        val trainers = ev.eventTrainersList
                         rule.trainers.any { fv -> trainers.any { it.contains(fv, ignoreCase = true) } }
                     }
                     rule.types.isNotEmpty() -> {
@@ -82,7 +82,7 @@ class NotificationService(
                     val titleToShow: String? = ev.name?.takeIf { it.isNotBlank() } ?: run {
                         val evType = ev.type ?: ""
                         if (evType.equals("LESSON", ignoreCase = true)) {
-                            val trainers = ev.eventTrainersList ?: emptyList()
+                            val trainers = ev.eventTrainersList
                             if (trainers.isNotEmpty()) trainers.joinToString(", ") else AppStrings.current.events.eventTypeLesson.replaceFirstChar { it.titlecase() }
                         } else {
                             // fallback to event type or generic label

@@ -227,7 +227,7 @@ class OfflineSyncManager(
             // Save bodies for top 10 non-sticky
             non.take(10).forEach { ann ->
                 try {
-                    ann.id?.toLongOrNull()?.let { id ->
+                    ann.id.toLongOrNull()?.let { id ->
                         offlineDataStorage.save("offline_ann_body_${id}", json.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), buildJsonObject { put("id", JsonPrimitive(ann.id)); put("title", JsonPrimitive(ann.title ?: "")); put("body", JsonPrimitive(ann.body ?: "")); put("updatedAt", JsonPrimitive(ann.updatedAt ?: "")) }))
                     }
                 } catch (_: Exception) {}
@@ -248,7 +248,7 @@ class OfflineSyncManager(
                     val isTrainer = details?.isTrainer ?: false
 
                     add(buildJsonObject {
-                        put("id", JsonPrimitive(p.id?.toString() ?: ""))
+                        put("id", JsonPrimitive(p.id))
                         put("firstName", JsonPrimitive(p.firstName ?: ""))
                         put("lastName", JsonPrimitive(p.lastName ?: ""))
                         put("prefixTitle", JsonPrimitive(prefix ?: ""))
@@ -417,7 +417,7 @@ class OfflineSyncManager(
                         val isTrainer = details?.isTrainer ?: false
 
                         add(buildJsonObject {
-                            put("id", JsonPrimitive(p.id?.toString() ?: ""))
+                            put("id", JsonPrimitive(p.id))
                             put("firstName", JsonPrimitive(p.firstName ?: ""))
                             put("lastName", JsonPrimitive(p.lastName ?: ""))
                             put("prefixTitle", JsonPrimitive(prefix ?: ""))

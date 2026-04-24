@@ -3,15 +3,16 @@ package com.tkolymp.shared.utils
 import com.tkolymp.shared.event.Event
 import com.tkolymp.shared.language.AppStrings
 import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.number
 import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
 import kotlin.time.Clock
+import kotlin.time.Instant
 
 fun translateEventType(type: String?): String? {
     if (type.isNullOrBlank()) return null
@@ -51,7 +52,7 @@ fun formatTimesWithDate(since: String?, until: String?): String {
 
     fun parseDateTime(s: String?): Pair<String?, String?>? {
         val ldt = parseToLocal(s) ?: return null
-        val date = "${ldt.date.dayOfMonth}.${ldt.date.monthNumber}.${ldt.date.year}"
+        val date = "${ldt.date.day}.${ldt.date.month.number}.${ldt.date.year}"
         val time = "${ldt.hour.toString().padStart(2, '0')}:${ldt.minute.toString().padStart(2, '0')}"
         return Pair(date, time)
     }
@@ -94,7 +95,7 @@ fun formatTimesWithDateAlways(since: String?, until: String?): String {
 
     fun parseDateTime(s: String?): Pair<String?, String?>? {
         val ldt = parseToLocal(s) ?: return null
-        val date = "${ldt.date.dayOfMonth}.${ldt.date.monthNumber}.${ldt.date.year}"
+        val date = "${ldt.date.day}.${ldt.date.month.number}.${ldt.date.year}"
         val time = "${ldt.hour.toString().padStart(2, '0')}:${ldt.minute.toString().padStart(2, '0')}"
         return Pair(date, time)
     }
@@ -214,8 +215,8 @@ fun daysUntilNextBirthday(raw: String?): Int {
     } ?: return Int.MAX_VALUE
 
     val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-    val month = ld.monthNumber
-    val day = ld.dayOfMonth
+    val month = ld.month.number
+    val day = ld.day
     val candidate = try {
         LocalDate(today.year, month, day)
     } catch (_: Exception) {
@@ -223,7 +224,7 @@ fun daysUntilNextBirthday(raw: String?): Int {
     }
 
     var next = if (candidate < today) candidate.plus(1, DateTimeUnit.YEAR) else candidate
-    if (next.monthNumber == 2 && next.dayOfMonth == 29) {
+    if (next.month.number == 2 && next.day == 29) {
         val y = next.year
         val isLeap = (y % 4 == 0 && (y % 100 != 0 || y % 400 == 0))
         if (!isLeap) next = LocalDate(y, 2, 28)

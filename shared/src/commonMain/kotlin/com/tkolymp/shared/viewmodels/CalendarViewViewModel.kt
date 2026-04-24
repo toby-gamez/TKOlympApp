@@ -1,8 +1,8 @@
 package com.tkolymp.shared.viewmodels
 
 import androidx.lifecycle.ViewModel
-import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.Logger
+import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.cache.CacheService
 import com.tkolymp.shared.calendar.CalendarUtils
 import com.tkolymp.shared.calendar.CalendarViewState
@@ -10,16 +10,16 @@ import com.tkolymp.shared.calendar.CollisionDetectionAlgorithm
 import com.tkolymp.shared.calendar.EventLayoutData
 import com.tkolymp.shared.calendar.ViewMode
 import com.tkolymp.shared.event.IEventService
-import com.tkolymp.shared.user.UserService
 import com.tkolymp.shared.personalevents.TrainingType
+import com.tkolymp.shared.user.UserService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
+import kotlinx.datetime.number
 import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
@@ -31,6 +31,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
 import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * ViewModel for CalendarView screen
@@ -418,7 +419,7 @@ class CalendarViewViewModel(
                                 com.tkolymp.shared.event.Location(lid, l["name"]?.jsonPrimitive?.contentOrNull)
                             }
 
-                            val enrichedEvent = com.tkolymp.shared.event.Event(ev.id, obj["name"]?.jsonPrimitive?.contentOrNull ?: ev.name, obj["description"]?.jsonPrimitive?.contentOrNull, obj["type"]?.jsonPrimitive?.contentOrNull ?: ev.type, obj["locationText"]?.jsonPrimitive?.contentOrNull ?: ev.locationText, obj["isRegistrationOpen"]?.jsonPrimitive?.booleanOrNull ?: ev.isRegistrationOpen, obj["isVisible"]?.jsonPrimitive?.booleanOrNull ?: ev.isVisible, obj["isPublic"]?.jsonPrimitive?.booleanOrNull ?: ev.isPublic, trainers ?: ev.eventTrainersList, targetCohorts.ifEmpty { ev.eventTargetCohortsList }, registrations.ifEmpty { ev.eventRegistrationsList }, location ?: ev.location)
+                            val enrichedEvent = com.tkolymp.shared.event.Event(ev.id, obj["name"]?.jsonPrimitive?.contentOrNull ?: ev.name, obj["description"]?.jsonPrimitive?.contentOrNull, obj["type"]?.jsonPrimitive?.contentOrNull ?: ev.type, obj["locationText"]?.jsonPrimitive?.contentOrNull ?: ev.locationText, obj["isRegistrationOpen"]?.jsonPrimitive?.booleanOrNull ?: ev.isRegistrationOpen, obj["isVisible"]?.jsonPrimitive?.booleanOrNull ?: ev.isVisible, obj["isPublic"]?.jsonPrimitive?.booleanOrNull ?: ev.isPublic, trainers, targetCohorts.ifEmpty { ev.eventTargetCohortsList }, registrations.ifEmpty { ev.eventRegistrationsList }, location ?: ev.location)
                             newList += com.tkolymp.shared.event.EventInstance(inst.id, inst.isCancelled, inst.since, inst.until, inst.updatedAt, enrichedEvent)
                             continue
                         }
@@ -437,18 +438,18 @@ class CalendarViewViewModel(
             val result = mutableListOf<com.tkolymp.shared.calendar.TimelineEvent>()
             val personal = try { ServiceLocator.personalEventService.getAll() } catch (_: Exception) { emptyList() }
             val tz = TimeZone.currentSystemDefault()
-            val rangeStartDate = try { kotlinx.datetime.Instant.parse(startIso).toLocalDateTime(tz).date } catch (_: Exception) { null }
-            val rangeEndDate = try { kotlinx.datetime.Instant.parse(endIso).toLocalDateTime(tz).date } catch (_: Exception) { null }
+            val rangeStartDate = try { Instant.parse(startIso).toLocalDateTime(tz).date } catch (_: Exception) { null }
+            val rangeEndDate = try { Instant.parse(endIso).toLocalDateTime(tz).date } catch (_: Exception) { null }
 
             for (ev in personal) {
                 try {
-                    val startInstant = try { kotlinx.datetime.Instant.parse(ev.startIso) } catch (_: Exception) { null }
-                    val endInstant = try { kotlinx.datetime.Instant.parse(ev.endIso) } catch (_: Exception) { null }
+                    val startInstant = try { Instant.parse(ev.startIso) } catch (_: Exception) { null }
+                    val endInstant = try { Instant.parse(ev.endIso) } catch (_: Exception) { null }
                     val duration = if (startInstant != null && endInstant != null) (endInstant - startInstant) else null
                     val startLdt = startInstant?.toLocalDateTime(tz)
 
-                    fun addOccurrence(occStartInstant: kotlinx.datetime.Instant) {
-                        val occEndInstant = if (duration != null) occStartInstant + duration else try { kotlinx.datetime.Instant.parse(ev.endIso) } catch (_: Exception) { occStartInstant }
+                    fun addOccurrence(occStartInstant: Instant) {
+                        val occEndInstant = if (duration != null) occStartInstant + duration else try { Instant.parse(ev.endIso) } catch (_: Exception) { occStartInstant }
                         val sldt = occStartInstant.toLocalDateTime(tz)
                         val eldt = occEndInstant.toLocalDateTime(tz)
                         val id = (ev.id + sldt.date.toString()).hashCode().toLong()
@@ -482,10 +483,10 @@ class CalendarViewViewModel(
                                 while (current <= re) {
                                     val dow = current.dayOfWeek.ordinal + 1
                                     if (dow == ev.recurrenceDayOfWeek) {
-                                        val occLdt = kotlinx.datetime.LocalDateTime(current.year, current.monthNumber, current.dayOfMonth, startLdt.hour, startLdt.minute, startLdt.second, startLdt.nanosecond)
+                                        val occLdt = kotlinx.datetime.LocalDateTime(current.year, current.month.number, current.day, startLdt.hour, startLdt.minute, startLdt.second, startLdt.nanosecond)
                                         val occInstant = occLdt.toInstant(tz)
-                                        val withinStart = try { if (ev.recurrenceStartIso.isNullOrBlank()) true else kotlinx.datetime.Instant.parse(ev.recurrenceStartIso) <= occInstant } catch (_: Exception) { true }
-                                        val withinEnd = try { if (ev.recurrenceEndIso.isNullOrBlank()) true else occInstant <= kotlinx.datetime.Instant.parse(ev.recurrenceEndIso) } catch (_: Exception) { true }
+                                        val withinStart = try { if (ev.recurrenceStartIso.isNullOrBlank()) true else Instant.parse(ev.recurrenceStartIso) <= occInstant } catch (_: Exception) { true }
+                                        val withinEnd = try { if (ev.recurrenceEndIso.isNullOrBlank()) true else occInstant <= Instant.parse(ev.recurrenceEndIso) } catch (_: Exception) { true }
                                         if (withinStart && withinEnd) addOccurrence(occInstant)
                                     }
                                     current = current.plus(1, DateTimeUnit.DAY)
@@ -600,10 +601,10 @@ class CalendarViewViewModel(
                 val endDate = timeRange.end.date
                 
                 if (startDate.month == endDate.month) {
-                    "${startDate.dayOfMonth}–${endDate.dayOfMonth}. ${CalendarUtils.getMonthName(startDate.monthNumber)}"
+                    "${startDate.day}\u2013${endDate.day}. ${CalendarUtils.getMonthName(startDate.month.number)}"
                 } else {
-                    "${startDate.dayOfMonth}. ${CalendarUtils.getMonthName(startDate.monthNumber)} – " +
-                    "${endDate.dayOfMonth}. ${CalendarUtils.getMonthName(endDate.monthNumber)}"
+                    "${startDate.day}. ${CalendarUtils.getMonthName(startDate.month.number)} \u2013 " +
+                    "${endDate.day}. ${CalendarUtils.getMonthName(endDate.month.number)}"
                 }
             }
         }

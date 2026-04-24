@@ -5,6 +5,7 @@ import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.cache.CacheService
 import com.tkolymp.shared.event.EventInstance
+import com.tkolymp.shared.personalevents.TrainingType
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,6 +15,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.number
 import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
@@ -24,8 +26,8 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
-import com.tkolymp.shared.personalevents.TrainingType
 import kotlin.time.Clock
+import kotlin.time.Instant
 
 data class CalendarState(
     val eventsByDay: Map<String, List<EventInstance>> = emptyMap(),
@@ -239,19 +241,19 @@ class CalendarViewModel(
             val result = original.mapValues { (_, v) -> v.toMutableList() }.toMutableMap()
             val personal = try { ServiceLocator.personalEventService.getAll() } catch (_: Exception) { emptyList() }
             val tz = TimeZone.currentSystemDefault()
-            val rangeStartDate = try { kotlinx.datetime.Instant.parse(startIso).toLocalDateTime(tz).date } catch (_: Exception) { null }
-            val rangeEndDate = try { kotlinx.datetime.Instant.parse(endIso).toLocalDateTime(tz).date } catch (_: Exception) { null }
+            val rangeStartDate = try { Instant.parse(startIso).toLocalDateTime(tz).date } catch (_: Exception) { null }
+            val rangeEndDate = try { Instant.parse(endIso).toLocalDateTime(tz).date } catch (_: Exception) { null }
 
             for (ev in personal) {
                 try {
-                    val startInstant = try { kotlinx.datetime.Instant.parse(ev.startIso) } catch (_: Exception) { null }
-                    val endInstant = try { kotlinx.datetime.Instant.parse(ev.endIso) } catch (_: Exception) { null }
+                    val startInstant = try { Instant.parse(ev.startIso) } catch (_: Exception) { null }
+                    val endInstant = try { Instant.parse(ev.endIso) } catch (_: Exception) { null }
                     val duration = if (startInstant != null && endInstant != null) (endInstant - startInstant) else null
                     val startLdt = startInstant?.toLocalDateTime(tz)
 
                     // Helper to add an occurrence for a given local date
-                    fun addOccurrenceFor(date: kotlinx.datetime.LocalDate, occStartInstant: kotlinx.datetime.Instant) {
-                        val occEndInstant = if (duration != null) occStartInstant + duration else try { kotlinx.datetime.Instant.parse(ev.endIso) } catch (_: Exception) { occStartInstant }
+                    fun addOccurrenceFor(date: kotlinx.datetime.LocalDate, occStartInstant: Instant) {
+                        val occEndInstant = if (duration != null) occStartInstant + duration else try { Instant.parse(ev.endIso) } catch (_: Exception) { occStartInstant }
                         val dateKey = date.toString()
                         val trainingLabel = when (ev.type) {
                             TrainingType.GENERAL -> null
@@ -291,10 +293,10 @@ class CalendarViewModel(
                                         val dow = current.dayOfWeek.isoDayNumber // 1=Mon..7=Sun
                                         if (dow == ev.recurrenceDayOfWeek) {
                                             // Check recurrence boundaries if present
-                                            val occLdt = kotlinx.datetime.LocalDateTime(current.year, current.monthNumber, current.dayOfMonth, sldt.hour, sldt.minute, sldt.second, sldt.nanosecond)
+                                            val occLdt = kotlinx.datetime.LocalDateTime(current.year, current.month.number, current.day, sldt.hour, sldt.minute, sldt.second, sldt.nanosecond)
                                             val occInstant = occLdt.toInstant(tz)
-                                            val withinStart = try { if (ev.recurrenceStartIso.isNullOrBlank()) true else kotlinx.datetime.Instant.parse(ev.recurrenceStartIso) <= occInstant } catch (_: Exception) { true }
-                                            val withinEnd = try { if (ev.recurrenceEndIso.isNullOrBlank()) true else occInstant <= kotlinx.datetime.Instant.parse(ev.recurrenceEndIso) } catch (_: Exception) { true }
+                                            val withinStart = try { if (ev.recurrenceStartIso.isNullOrBlank()) true else Instant.parse(ev.recurrenceStartIso) <= occInstant } catch (_: Exception) { true }
+                                            val withinEnd = try { if (ev.recurrenceEndIso.isNullOrBlank()) true else occInstant <= Instant.parse(ev.recurrenceEndIso) } catch (_: Exception) { true }
                                             if (withinStart && withinEnd) addOccurrenceFor(current, occInstant)
                                         }
                                         current = current.plus(1, DateTimeUnit.DAY)
@@ -458,7 +460,7 @@ class CalendarViewModel(
                                 com.tkolymp.shared.event.Location(lid, l["name"]?.jsonPrimitive?.contentOrNull)
                             }
 
-                            val enrichedEvent = com.tkolymp.shared.event.Event(ev.id, obj["name"]?.jsonPrimitive?.contentOrNull ?: ev.name, obj["description"]?.jsonPrimitive?.contentOrNull, obj["type"]?.jsonPrimitive?.contentOrNull ?: ev.type, obj["locationText"]?.jsonPrimitive?.contentOrNull ?: ev.locationText, obj["isRegistrationOpen"]?.jsonPrimitive?.booleanOrNull ?: ev.isRegistrationOpen, obj["isVisible"]?.jsonPrimitive?.booleanOrNull ?: ev.isVisible, obj["isPublic"]?.jsonPrimitive?.booleanOrNull ?: ev.isPublic, trainers ?: ev.eventTrainersList, targetCohorts.ifEmpty { ev.eventTargetCohortsList }, registrations.ifEmpty { ev.eventRegistrationsList }, location ?: ev.location)
+                            val enrichedEvent = com.tkolymp.shared.event.Event(ev.id, obj["name"]?.jsonPrimitive?.contentOrNull ?: ev.name, obj["description"]?.jsonPrimitive?.contentOrNull, obj["type"]?.jsonPrimitive?.contentOrNull ?: ev.type, obj["locationText"]?.jsonPrimitive?.contentOrNull ?: ev.locationText, obj["isRegistrationOpen"]?.jsonPrimitive?.booleanOrNull ?: ev.isRegistrationOpen, obj["isVisible"]?.jsonPrimitive?.booleanOrNull ?: ev.isVisible, obj["isPublic"]?.jsonPrimitive?.booleanOrNull ?: ev.isPublic, trainers, targetCohorts.ifEmpty { ev.eventTargetCohortsList }, registrations.ifEmpty { ev.eventRegistrationsList }, location ?: ev.location)
                             newList += com.tkolymp.shared.event.EventInstance(inst.id, inst.isCancelled, inst.since, inst.until, inst.updatedAt, enrichedEvent)
                             continue
                         }

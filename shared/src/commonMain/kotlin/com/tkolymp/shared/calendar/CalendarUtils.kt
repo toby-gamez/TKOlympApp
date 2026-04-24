@@ -11,6 +11,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
 import kotlinx.datetime.minus
+import kotlinx.datetime.number
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
@@ -33,15 +34,15 @@ object CalendarUtils {
         val endTime = instance.until?.let { parseUtcToLocal(it) } ?: return null
         
         val event = instance.event
-        
-        // Determine title: if event has no name and is a lesson, use trainer name
-        val title = when {
-            !event?.name.isNullOrBlank() -> event?.name!!
-            event?.type?.equals("lesson", ignoreCase = true) == true -> {
-                event.eventTrainersList.firstOrNull()?.takeIf { it.isNotBlank() } ?: AppStrings.current.dialogs.noName
+
+        // Determine title: prefer event name; for lessons fallback to trainer name
+        val title = event?.let { e ->
+            when {
+                !e.name.isNullOrBlank() -> e.name
+                e.type?.equals("lesson", ignoreCase = true) == true -> e.eventTrainersList.firstOrNull()?.takeIf { it.isNotBlank() } ?: AppStrings.current.dialogs.noName
+                else -> AppStrings.current.dialogs.noName
             }
-            else -> AppStrings.current.dialogs.noName
-        }
+        } ?: AppStrings.current.dialogs.noName
         
         // Determine if this is "my" event
         val isMyEvent = isUserParticipant(event, myPersonId, myCoupleIds)
@@ -90,7 +91,7 @@ object CalendarUtils {
         // Check if user is registered
         val isRegistered = event.eventRegistrationsList.any { reg ->
             reg.person?.id?.toString() == myPersonId ||
-            (reg.couple?.id != null && myCoupleIds.contains(reg.couple?.id.toString()))
+            (reg.couple?.id != null && myCoupleIds.contains(reg.couple!!.id.toString()))
         }
         
         // Check if user is trainer
@@ -205,9 +206,9 @@ object CalendarUtils {
             tomorrow -> "zítra"
             else -> {
                 if (includeYear || date.year != today.year) {
-                    "${date.dayOfMonth}. ${getMonthName(date.monthNumber)} ${date.year}"
+                    "${date.day}. ${getMonthName(date.month.number)} ${date.year}"
                 } else {
-                    "${date.dayOfMonth}. ${getMonthName(date.monthNumber)}"
+                    "${date.day}. ${getMonthName(date.month.number)}"
                 }
             }
         }
@@ -246,9 +247,8 @@ object CalendarUtils {
             DayOfWeek.FRIDAY -> "Pá"
             DayOfWeek.SATURDAY -> "So"
             DayOfWeek.SUNDAY -> "Ne"
-            else -> ""
         }
-        
-        return "$dayName ${date.dayOfMonth}.${date.monthNumber}."
+
+        return "$dayName ${date.day}.${date.month.number}."
     }
 }

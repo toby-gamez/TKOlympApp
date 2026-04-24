@@ -6,7 +6,7 @@ import com.tkolymp.shared.notification.INotificationScheduler
 import com.tkolymp.shared.notification.NotificationStorage
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 class PersonalEventService(
     private val offlineDataStorage: OfflineDataStorage,

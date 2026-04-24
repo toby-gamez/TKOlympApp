@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlin.time.Duration.Companion.days
@@ -230,10 +230,10 @@ class EventViewModel(
         val sinceStr = firstInstance?.str("since")
         val untilStr = firstInstance?.str("until")
         val startMs = sinceStr?.let {
-            try { kotlinx.datetime.Instant.parse(it).toEpochMilliseconds() } catch (_: Exception) { null }
+            try { Instant.parse(it).toEpochMilliseconds() } catch (_: Exception) { null }
         } ?: kotlin.time.Clock.System.now().toEpochMilliseconds()
         val endMs = untilStr?.let {
-            try { kotlinx.datetime.Instant.parse(it).toEpochMilliseconds() } catch (_: Exception) { null }
+            try { Instant.parse(it).toEpochMilliseconds() } catch (_: Exception) { null }
         } ?: (startMs + 3_600_000L)
 
         // Detect weekly recurrence: instances are weekly if the gap between the
@@ -242,8 +242,8 @@ class EventViewModel(
             if (s.instances.size < 2) return@run null
             val first = s.instances.getOrNull(0)?.asJsonObjectOrNull()?.str("since") ?: return@run null
             val second = s.instances.getOrNull(1)?.asJsonObjectOrNull()?.str("since") ?: return@run null
-            val t0 = try { kotlinx.datetime.Instant.parse(first).toEpochMilliseconds() } catch (_: Exception) { return@run null }
-            val t1 = try { kotlinx.datetime.Instant.parse(second).toEpochMilliseconds() } catch (_: Exception) { return@run null }
+            val t0 = try { Instant.parse(first).toEpochMilliseconds() } catch (_: Exception) { return@run null }
+            val t1 = try { Instant.parse(second).toEpochMilliseconds() } catch (_: Exception) { return@run null }
             val diffDays = (t1 - t0) / 86_400_000.0
             if (diffDays in 6.5..7.5) s.instances.size else null
         }
