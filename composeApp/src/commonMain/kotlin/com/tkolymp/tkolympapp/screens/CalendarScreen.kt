@@ -23,7 +23,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ViewTimeline
-import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
@@ -142,13 +141,6 @@ fun CalendarScreen(
     }
 
     Scaffold(
-        floatingActionButton = {
-            onCreatePersonalEvent?.let {
-                androidx.compose.material3.FloatingActionButton(onClick = it) {
-                    Icon(imageVector = Icons.Filled.FitnessCenter, contentDescription = AppStrings.current.personalEvents.newTraining)
-                }
-            }
-        },
         topBar = {
             TopAppBar(
                 title = { Text(AppStrings.current.navigation.calendar) },
@@ -412,6 +404,12 @@ internal fun RenderSingleEventCard(item: EventInstance, onEventClick: (Long) -> 
                         style = MaterialTheme.typography.titleMedium.copy(textDecoration = if (cancelled) TextDecoration.LineThrough else TextDecoration.None)
                     )
                     Spacer(modifier = Modifier.height(2.dp))
+                    // Show personal training type / short subtitle if available (first line of description)
+                    val subtitle = item.event?.description?.substringBefore('\n')?.takeIf { it.isNotBlank() }
+                    if (subtitle != null) {
+                        Text(subtitle, style = MaterialTheme.typography.bodySmall)
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
                     if (locationOrTrainer.isNotBlank()) {
                         Text(locationOrTrainer, style = MaterialTheme.typography.bodySmall)
                     }

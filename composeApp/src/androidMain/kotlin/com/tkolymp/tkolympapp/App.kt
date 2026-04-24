@@ -16,8 +16,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -182,13 +180,6 @@ fun App() {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = MaterialTheme.colorScheme.surface,
-            floatingActionButton = {
-                if (showOnboarding != true && loggedIn == true && currentRoute in listOf("calendar", "timeline")) {
-                    FloatingActionButton(onClick = { navController.navigate("personal_event_edit") }) {
-                        Icon(Icons.Filled.FitnessCenter, contentDescription = AppStrings.current.personalEvents.newTraining)
-                    }
-                }
-            },
             bottomBar = {
                 AnimatedVisibility(
                     visible = showOnboarding != true && loggedIn == true && currentRoute in listOf("overview", "calendar", "timeline", "board", "events", "other"),
@@ -343,7 +334,6 @@ fun AppNavHost(
                 onOpenEvent = { id -> navController.navigate("event/$id") },
                 onNavigateTimeline = if (preferTimeline) ({ navController.navigateUp() }) else ({ navController.navigate("timeline") }),
                 onBack = if (preferTimeline) ({ navController.navigateUp() }) else null,
-                onCreatePersonalEvent = { navController.navigate("personal_event_edit") },
                 bottomPadding = bottomPadding
             )
         }
@@ -422,7 +412,12 @@ fun AppNavHost(
             popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
             popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) }
         ) {
-            PersonalEventsScreen(onBack = { navController.navigateUp() }, onEdit = { id -> navController.navigate("personal_event_edit?eventId=$id") }, bottomPadding = bottomPadding)
+            PersonalEventsScreen(
+                onBack = { navController.navigateUp() },
+                onEdit = { id -> navController.navigate("personal_event_edit?eventId=$id") },
+                onCreatePersonalEvent = { navController.navigate("personal_event_edit") },
+                bottomPadding = bottomPadding
+            )
         }
 
         composable(
@@ -801,7 +796,7 @@ fun AppNavHost(
                 onEventClick = { id -> navController.navigate("event/$id") },
                 onBack = if (!preferTimeline) ({ navController.navigateUp() }) else null,
                 onSwitchToBlocks = if (preferTimeline) ({ navController.navigate("calendar") }) else null,
-                onCreatePersonalEvent = { navController.navigate("personal_event_edit") }
+                
             )
         }
         

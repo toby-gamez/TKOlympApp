@@ -11,6 +11,7 @@ import com.tkolymp.shared.calendar.EventLayoutData
 import com.tkolymp.shared.calendar.ViewMode
 import com.tkolymp.shared.event.IEventService
 import com.tkolymp.shared.user.UserService
+import com.tkolymp.shared.personalevents.TrainingType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -451,11 +452,18 @@ class CalendarViewViewModel(
                         val sldt = occStartInstant.toLocalDateTime(tz)
                         val eldt = occEndInstant.toLocalDateTime(tz)
                         val id = (ev.id + sldt.date.toString()).hashCode().toLong()
+                        val trainingLabel = when (ev.type) {
+                            TrainingType.GENERAL -> null
+                            TrainingType.STT -> "STT"
+                            TrainingType.LAT -> "LAT"
+                        }
+                        val desc = listOfNotNull(trainingLabel, ev.description).joinToString("\n")
+
                         val te = com.tkolymp.shared.calendar.TimelineEvent(
                             id = id,
                             eventId = null,
                             title = ev.title,
-                            description = ev.description,
+                            description = if (desc.isBlank()) null else desc,
                             type = "PERSONAL",
                             startTime = sldt,
                             endTime = eldt,

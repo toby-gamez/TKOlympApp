@@ -11,6 +11,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,7 +58,12 @@ private fun formatEventTime(ev: PersonalEvent): String {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PersonalEventsScreen(onBack: () -> Unit = {}, onEdit: (String?) -> Unit = {}, bottomPadding: Dp = 0.dp) {
+fun PersonalEventsScreen(
+    onBack: () -> Unit = {},
+    onEdit: (String?) -> Unit = {},
+    onCreatePersonalEvent: (() -> Unit)? = null,
+    bottomPadding: Dp = 0.dp
+) {
     val vm = viewModel<PersonalEventsViewModel>()
     val scope = rememberCoroutineScope()
     val state by vm.state.collectAsState()
@@ -65,7 +72,15 @@ fun PersonalEventsScreen(onBack: () -> Unit = {}, onEdit: (String?) -> Unit = {}
 
     LaunchedEffect(Unit) { vm.loadAll() }
 
-    Scaffold(topBar = {
+    Scaffold(
+        floatingActionButton = {
+            onCreatePersonalEvent?.let {
+                FloatingActionButton(onClick = it) {
+                    Icon(imageVector = Icons.Filled.FitnessCenter, contentDescription = AppStrings.current.personalEvents.newTraining)
+                }
+            }
+        },
+        topBar = {
         TopAppBar(
             title = { Text(AppStrings.current.personalEvents.myTrainings) },
             navigationIcon = { IconButton(onClick = onBack) { Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null) } }

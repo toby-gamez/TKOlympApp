@@ -56,7 +56,6 @@ import com.tkolymp.shared.utils.formatTimesWithDateAlways
 import com.tkolymp.shared.utils.durationMinutes
 import com.tkolymp.shared.utils.translateEventType
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -97,8 +96,7 @@ fun CalendarViewScreen(
     viewModel: CalendarViewViewModel = viewModel(),
     onEventClick: (Long) -> Unit = {},
     onBack: (() -> Unit)? = null,
-    onSwitchToBlocks: (() -> Unit)? = null,
-    onCreatePersonalEvent: (() -> Unit)? = null
+    onSwitchToBlocks: (() -> Unit)? = null
 ) {
     val state by viewModel.state.collectAsState()
     val scope = rememberCoroutineScope()
@@ -126,13 +124,6 @@ fun CalendarViewScreen(
     }
     
     Scaffold(
-        floatingActionButton = {
-            onCreatePersonalEvent?.let {
-                androidx.compose.material3.FloatingActionButton(onClick = it) {
-                    Icon(imageVector = Icons.Filled.FitnessCenter, contentDescription = AppStrings.current.personalEvents.newTraining)
-                }
-            }
-        },
         topBar = {
             TopAppBar(
                 title = { Text(if (onSwitchToBlocks != null) AppStrings.current.navigation.calendar else AppStrings.current.timeline.timeline) },
@@ -724,6 +715,19 @@ internal fun TimelineEventCard(
                         color = contentColor
                     )
                     
+                    // Show short subtitle (e.g. personal training type) if present as first line of description
+                    val subtitle = event.description?.substringBefore('\n')?.takeIf { it.isNotBlank() }
+                    if (subtitle != null) {
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = subtitle,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = contentColor.copy(alpha = 0.9f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
                     // Secondary info: trainer for lessons, time for others
                     if (layoutData.durationMinutes > 30 && !compact) {
                             if (isLesson && !trainerName.isNullOrBlank()) {

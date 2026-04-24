@@ -24,6 +24,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
+import com.tkolymp.shared.personalevents.TrainingType
 import kotlin.time.Clock
 
 data class CalendarState(
@@ -252,10 +253,17 @@ class CalendarViewModel(
                     fun addOccurrenceFor(date: kotlinx.datetime.LocalDate, occStartInstant: kotlinx.datetime.Instant) {
                         val occEndInstant = if (duration != null) occStartInstant + duration else try { kotlinx.datetime.Instant.parse(ev.endIso) } catch (_: Exception) { occStartInstant }
                         val dateKey = date.toString()
+                        val trainingLabel = when (ev.type) {
+                            TrainingType.GENERAL -> null
+                            TrainingType.STT -> "STT"
+                            TrainingType.LAT -> "LAT"
+                        }
+                        val desc = listOfNotNull(trainingLabel, ev.description).joinToString("\n")
+
                         val event = com.tkolymp.shared.event.Event(
                             id = null,
                             name = ev.title,
-                            description = ev.description,
+                            description = if (desc.isBlank()) null else desc,
                             type = "PERSONAL",
                             locationText = ev.location,
                             isRegistrationOpen = false,

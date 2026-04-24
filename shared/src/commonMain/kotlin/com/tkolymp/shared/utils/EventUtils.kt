@@ -17,6 +17,7 @@ fun translateEventType(type: String?): String? {
     if (type.isNullOrBlank()) return null
     val s = AppStrings.current.events // Accessing the EventStrings group
     return when (type.trim().lowercase()) {
+        "personal" -> AppStrings.current.personalEvents.defaultTitle
         "group" -> s.eventTypeGroup
         "lesson" -> s.eventTypeLesson
         "holiday" -> s.eventTypeHoliday

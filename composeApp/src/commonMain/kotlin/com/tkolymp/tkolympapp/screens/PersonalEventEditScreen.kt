@@ -21,8 +21,12 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBar
@@ -42,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.personalevents.PersonalEvent
+import com.tkolymp.shared.personalevents.TrainingType
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
@@ -64,6 +69,7 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, o
     val title = remember(eventId) { mutableStateOf(if (eventId.isNullOrBlank()) AppStrings.current.personalEvents.defaultTitle else "") }
     val startIso = remember { mutableStateOf(kotlin.time.Clock.System.now().toString()) }
     val endIso = remember { mutableStateOf(kotlin.time.Clock.System.now().plus(1.hours).toString()) }
+    val trainingType = remember { mutableStateOf(TrainingType.GENERAL) }
     val isRecurring = remember { mutableStateOf(true) }
     val weekday = remember { mutableStateOf<Int?>(null) }
     val recurrenceStartIso = remember { mutableStateOf("") }
@@ -78,6 +84,7 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, o
             val ev = service.getAll().find { it.id == eventId }
             if (ev != null) {
                 title.value = ev.title
+                trainingType.value = ev.type
                 startIso.value = ev.startIso
                 endIso.value = ev.endIso
                 weekday.value = ev.recurrenceDayOfWeek
@@ -105,6 +112,24 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, o
                         modifier = Modifier.fillMaxWidth(),
                         leadingIcon = { Icon(imageVector = Icons.Default.Event, contentDescription = null) }
                     )
+
+                    Text(AppStrings.current.personalEvents.trainingTypeLabel, style = MaterialTheme.typography.bodyMedium)
+                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                        val types = listOf(TrainingType.STT, TrainingType.LAT, TrainingType.GENERAL)
+                        val labels = listOf(
+                            AppStrings.current.personalEvents.trainingTypeSTT,
+                            AppStrings.current.personalEvents.trainingTypeLAT,
+                            AppStrings.current.personalEvents.trainingTypeGeneral
+                        )
+                        types.forEachIndexed { index, t ->
+                            SegmentedButton(
+                                selected = (trainingType.value == t),
+                                onClick = { trainingType.value = t },
+                                shape = SegmentedButtonDefaults.itemShape(index = index, count = types.size),
+                                icon = {}
+                            ) { Text(labels[index], style = MaterialTheme.typography.labelSmall) }
+                        }
+                    }
 
                     OutlinedTextField(
                         value = try {
@@ -298,6 +323,7 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, o
                 val ev = PersonalEvent(
                     id = id,
                     title = title.value,
+                    type = trainingType.value,
                     startIso = startIso.value,
                     endIso = endIso.value,
                     recurrenceDayOfWeek = if (isRecurring.value) weekday.value else null,
