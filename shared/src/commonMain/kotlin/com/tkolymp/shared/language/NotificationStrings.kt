@@ -39,4 +39,5 @@ data class NotificationStrings(
     val reminderDialogTitle: String,
     val noNotificationsFromCoach: String,
     val notificationsRules: String,
+    val eventTypePersonalTraining: String,
 )

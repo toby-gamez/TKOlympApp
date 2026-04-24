@@ -1,7 +1,7 @@
 package com.tkolymp.shared.language
 
 data class PersonalEventStrings(
-    val myTrainings: String = "My trainings",
+    val myTrainings: String = "Trainings",
     val noTrainings: String = "No trainings",
     val newTraining: String = "New training",
     val editTraining: String = "Edit training",

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -18,13 +19,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Money
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Security
@@ -181,7 +180,7 @@ fun OtherScreen(
 
             if (state.error != null) Text(state.error!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(12.dp))
 
-            // Split button: Payments | Stats (moved under profile) - smaller font
+            // Trio buttons: Payments | Stats | My trainings (three equal cards)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -196,30 +195,17 @@ fun OtherScreen(
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 10.dp)
+                            .padding(horizontal = 12.dp)
+                            .height(56.dp)
                     ) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surface)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Money,
-                                contentDescription = AppStrings.current.otherScreen.payments,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
                         Text(
                             text = AppStrings.current.otherScreen.payments,
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Medium,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.align(Alignment.CenterVertically)
                         )
                     }
                 }
@@ -228,40 +214,48 @@ fun OtherScreen(
                     modifier = Modifier
                         .weight(1f)
                         .clickable { onStatsClick() },
+                    shape = RoundedCornerShape(8.dp),
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp)
+                            .height(56.dp)
+                    ) {
+                        Text(
+                            text = AppStrings.current.stats.statsTitle,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.align(Alignment.CenterVertically)
+                        )
+                    }
+                }
+
+                Card(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { onPersonalEventsClick() },
                     shape = RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp, topEnd = 16.dp, bottomEnd = 16.dp),
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 10.dp)
+                            .padding(horizontal = 12.dp)
+                            .height(56.dp)
                     ) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surface)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.BarChart,
-                                contentDescription = AppStrings.current.stats.statsTitle,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = AppStrings.current.stats.statsTitle,
-                            style = MaterialTheme.typography.bodySmall,
+                            text = AppStrings.current.personalEvents.myTrainings,
+                            style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Medium,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.align(Alignment.CenterVertically)
                         )
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.width(16.dp))
 
             // První sekce - Členové a klub
             Text(
@@ -411,48 +405,7 @@ fun OtherScreen(
                 }
             }
             
-            // Personal trainings entry
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp)
-                    .clickable { onPersonalEventsClick() },
-                shape = RoundedCornerShape(16.dp),
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
-                ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surface)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.FitnessCenter,
-                            contentDescription = AppStrings.current.personalEvents.myTrainings,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(
-                        text = AppStrings.current.personalEvents.myTrainings,
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Icon(
-                        imageVector = Icons.Default.ChevronRight,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
+            
 
                 if (showDebug) {
                     Text("personId: ${state.personId ?: "(null)"}", style = MaterialTheme.typography.bodySmall)

@@ -241,7 +241,8 @@ val StringsBrainrot = Strings(
         remindMeBefore = "ping me {0} min b4",
         reminderDialogTitle = "set reminder fr",
         noNotificationsFromCoach = "nothing from gymbro",
-        notificationsRules = "Ruls"
+        notificationsRules = "Ruls",
+        eventTypePersonalTraining = "selfie rizz"
     ),
     people = PeopleStrings(
         searchByName = "Search by name fr",
@@ -475,11 +476,11 @@ val StringsBrainrot = Strings(
         offlineStageLabel = "Stage:",
     ),
     personalEvents = com.tkolymp.shared.language.PersonalEventStrings(
-        myTrainings = "My Rizz Trainings",
+        myTrainings = "Rizz Trainings",
         noTrainings = "No training vibes",
         newTraining = "New Rizz Session",
         editTraining = "Tweak Rizz",
-        defaultTitle = "Solo Rizz",
+        defaultTitle = "selfie rizz",
         deleteTraining = "Yeet training",
         confirmDelete = "You sure you wanna yeet this training?",
         trainingTitle = "Name",

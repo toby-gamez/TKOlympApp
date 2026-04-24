@@ -21,7 +21,7 @@ fun translateEventType(type: String?): String? {
         "group" -> s.eventTypeGroup
         "lesson" -> s.eventTypeLesson
         "holiday" -> s.eventTypeHoliday
-        "rezervation" -> s.eventTypeReservation
+        "rezervation", "reservation" -> s.eventTypeReservation
         "camp" -> s.eventTypeCamp
         else -> type
     }

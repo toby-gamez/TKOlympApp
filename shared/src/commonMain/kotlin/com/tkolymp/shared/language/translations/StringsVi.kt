@@ -229,7 +229,8 @@ val StringsVi = Strings(
         remindMeBefore = "Nhắc {0} phút trước",
         reminderDialogTitle = "Đặt nhắc nhở",
         noNotificationsFromCoach = "Không có gì từ huấn luyện viên",
-        notificationsRules = "Quy tắc"
+        notificationsRules = "Quy tắc",
+        eventTypePersonalTraining = "Tự tập"
     ),
     people = PeopleStrings(
         searchByName = "Tìm kiếm theo tên hoặc họ",
@@ -474,7 +475,7 @@ val StringsVi = Strings(
         offlineStageLabel = "Giai đoạn:",
     ),
     personalEvents = com.tkolymp.shared.language.PersonalEventStrings(
-        myTrainings = "Buổi tập của tôi",
+        myTrainings = "Buổi tập",
         noTrainings = "Không có buổi tập",
         newTraining = "Buổi tập mới",
         editTraining = "Chỉnh sửa buổi tập",

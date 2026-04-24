@@ -240,7 +240,8 @@ val StringsDe = Strings(
         remindMeBefore = "Erinnern {0} Min vorher",
         reminderDialogTitle = "Erinnerung einstellen",
         noNotificationsFromCoach = "Nichts vom Trainer",
-        notificationsRules = "Regeln"
+        notificationsRules = "Regeln",
+        eventTypePersonalTraining = "Solo-Training"
     ),
     people = PeopleStrings(
         searchByName = "Nach Vor- oder Nachname suchen",
@@ -473,7 +474,7 @@ val StringsDe = Strings(
         offlineStageLabel = "Phase:",
     ),
     personalEvents = com.tkolymp.shared.language.PersonalEventStrings(
-        myTrainings = "Meine Trainings",
+        myTrainings = "Trainings",
         noTrainings = "Keine Trainings",
         newTraining = "Neues Training",
         editTraining = "Training bearbeiten",

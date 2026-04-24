@@ -83,13 +83,14 @@ import com.tkolymp.tkolympapp.components.QuantityInput
 fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
     val scope = rememberCoroutineScope()
     val json = remember { Json { prettyPrint = true; ignoreUnknownKeys = true } }
-    val availableTypes = listOf("CAMP", "LESSON", "GROUP", "RESERVATION", "HOLIDAY")
+    val availableTypes = listOf("CAMP", "LESSON", "GROUP", "RESERVATION", "HOLIDAY", "PERSONAL_TRAINING")
     val typeLabels = mapOf(
         "LESSON" to AppStrings.current.events.eventTypeLesson,
         "CAMP" to AppStrings.current.events.eventTypeCamp,
         "GROUP" to AppStrings.current.events.eventTypeGroup,
         "RESERVATION" to AppStrings.current.events.eventTypeReservation,
-        "HOLIDAY" to AppStrings.current.events.eventTypeHoliday
+        "HOLIDAY" to AppStrings.current.events.eventTypeHoliday,
+        "PERSONAL_TRAINING" to AppStrings.current.notifications.eventTypePersonalTraining
     )
     val viewModel = viewModel<NotificationsSettingsViewModel>()
     val vmState by viewModel.state.collectAsState()

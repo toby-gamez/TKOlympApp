@@ -39,7 +39,8 @@ class NotificationsSettingsViewModel(
     private val peopleService: com.tkolymp.shared.people.PeopleService = ServiceLocator.peopleService,
     private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService,
     private val clubService: com.tkolymp.shared.club.ClubService = ServiceLocator.clubService,
-    private val notificationStorage: com.tkolymp.shared.notification.NotificationStorage = ServiceLocator.notificationStorage
+    private val notificationStorage: com.tkolymp.shared.notification.NotificationStorage = ServiceLocator.notificationStorage,
+    private val personalEventService: com.tkolymp.shared.personalevents.PersonalEventService = ServiceLocator.personalEventService
 ) : ViewModel() {
     private val _state = MutableStateFlow(NotificationsSettingsState())
     val state: StateFlow<NotificationsSettingsState> = _state.asStateFlow()
@@ -160,6 +161,7 @@ class NotificationsSettingsViewModel(
             )
             notificationService.updateSettings(settings)
             _state.value = _state.value.copy(settings = settings)
+            try { personalEventService.rescheduleAllPersonalEvents() } catch (_: Exception) {}
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             Logger.d("NotificationsSettingsVM", "Failed to save settings: ${ex.message}")
         }
