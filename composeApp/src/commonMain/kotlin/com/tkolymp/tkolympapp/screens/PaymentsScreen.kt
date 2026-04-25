@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -53,6 +54,7 @@ fun PaymentsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
     val tabs = listOf(AppStrings.current.misc.paymentsTabPending, AppStrings.current.misc.paymentsTabPaid)
 
     val vm = remember { com.tkolymp.shared.payments.PaymentsViewModel() }
+    LaunchedEffect(Unit) { vm.load() }
     DisposableEffect(Unit) { onDispose { vm.clear() } }
 
     val isLoading by vm.isLoading.collectAsState()

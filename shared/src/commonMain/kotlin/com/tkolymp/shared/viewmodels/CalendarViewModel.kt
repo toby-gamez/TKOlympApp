@@ -277,8 +277,18 @@ class CalendarViewModel(
                             eventRegistrationsList = emptyList(),
                             location = null
                         )
-                        // make id per-occurrence to avoid collisions
-                        val occId = (ev.id + date.toString()).hashCode().toLong()
+                        // make id per-occurrence to avoid collisions using 64-bit FNV-1a
+                        fun fnv1a64(s: String): Long {
+                            var hash = 0xcbf29ce484222325UL
+                            val prime = 0x100000001b3UL
+                            val bytes = s.encodeToByteArray()
+                            for (b in bytes) {
+                                hash = hash xor (b.toULong() and 0xffUL)
+                                hash *= prime
+                            }
+                            return hash.toLong()
+                        }
+                        val occId = fnv1a64("${ev.id}_${date}")
                         val inst = com.tkolymp.shared.event.EventInstance(occId, false, occStartInstant.toString(), occEndInstant.toString(), null, event)
                         val list = result.getOrPut(dateKey) { mutableListOf() }
                         list += inst

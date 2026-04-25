@@ -86,7 +86,7 @@ class PaymentService(
 
                 PaymentDebtorItem(
                     id = obj["id"]?.jsonPrimitive?.contentOrNull,
-                    isUnpaid = obj["isUnpaid"]?.jsonPrimitive?.contentOrNull?.let { it == "true" },
+                    isUnpaid = obj["isUnpaid"]?.jsonPrimitive?.booleanOrNull,
                     price = price,
                     paymentId = obj["paymentId"]?.jsonPrimitive?.contentOrNull,
                     personId = obj["personId"]?.jsonPrimitive?.contentOrNull,

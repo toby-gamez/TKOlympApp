@@ -1,9 +1,10 @@
 package com.tkolymp.shared.personalevents
 
-import com.tkolymp.shared.storage.OfflineDataStorage
 import com.tkolymp.shared.notification.FilterType
 import com.tkolymp.shared.notification.INotificationScheduler
 import com.tkolymp.shared.notification.NotificationStorage
+import com.tkolymp.shared.storage.OfflineDataStorage
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import kotlin.time.Instant
@@ -13,6 +14,7 @@ class PersonalEventService(
     private val scheduler: INotificationScheduler,
     private val notificationStorage: NotificationStorage? = null
 ) {
+    private val mutex = kotlinx.coroutines.sync.Mutex()
     private val storageKey = "personal_events_v1"
     private val json = Json { encodeDefaults = true; ignoreUnknownKeys = true }
 
@@ -75,7 +77,8 @@ class PersonalEventService(
     }
 
     suspend fun save(event: PersonalEvent) {
-        val list = getAll().toMutableList()
+        mutex.withLock {
+            val list = getAll().toMutableList()
         val existing = list.indexOfFirst { it.id == event.id }
         if (existing >= 0) {
             val prev = list[existing]
@@ -96,16 +99,19 @@ class PersonalEventService(
         }
 
         scheduleRuleNotifications(event)
+        }
     }
 
     suspend fun delete(id: String) {
-        val list = getAll().toMutableList()
-        val idx = list.indexOfFirst { it.id == id }
-        if (idx >= 0) {
-            val ev = list.removeAt(idx)
-            ev.reminderMinutesBefore.forEach { m -> try { scheduler.cancelNotification(notificationIdFor(ev.id, m)) } catch (_: Exception) {} }
-            cancelRuleNotifications(ev.id)
-            try { offlineDataStorage.save(storageKey, json.encodeToString(ListSerializer(PersonalEvent.serializer()), list)) } catch (_: Exception) {}
+        mutex.withLock {
+            val list = getAll().toMutableList()
+            val idx = list.indexOfFirst { it.id == id }
+            if (idx >= 0) {
+                val ev = list.removeAt(idx)
+                ev.reminderMinutesBefore.forEach { m -> try { scheduler.cancelNotification(notificationIdFor(ev.id, m)) } catch (_: Exception) {} }
+                cancelRuleNotifications(ev.id)
+                try { offlineDataStorage.save(storageKey, json.encodeToString(ListSerializer(PersonalEvent.serializer()), list)) } catch (_: Exception) {}
+            }
         }
     }
 }

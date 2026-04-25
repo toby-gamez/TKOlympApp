@@ -16,7 +16,6 @@ import com.google.firebase.messaging.RemoteMessage
 import com.tkolymp.tkolympapp.R
 import com.tkolymp.shared.ServiceLocator
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import com.tkolymp.shared.notification.ReceivedMessage
 import com.tkolymp.shared.language.AppStrings
@@ -32,14 +31,14 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
-        Log.d("FCM", "Message received: ${remoteMessage.data}")
+            Logger.d("FCM", "Message received: ${remoteMessage.data}")
         val title = remoteMessage.notification?.title ?: "TKOlympApp"
         val body = remoteMessage.notification?.body ?: "Máte novou zprávu."
         showNotification(title, body)
         // persist received message locally so it appears in "Od trenéra" tab
         try {
             val storage = ServiceLocator.notificationStorage
-            GlobalScope.launch(Dispatchers.IO) {
+                svcScope.launch {
                 try {
                         val now = Clock.System.now().toEpochMilliseconds()
                         val id = now.toString()

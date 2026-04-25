@@ -19,6 +19,8 @@ data class CacheEntry<T>(
 
 class CacheService {
     private val cache = mutableMapOf<String, CacheEntry<*>>()
+    private val lruOrder = ArrayList<String>()
+    private val MAX_ENTRIES = 200
     private val mutex = Mutex()
 
     suspend fun <T> get(key: String): T? = withContext(Dispatchers.Default) {
@@ -31,10 +33,14 @@ class CacheService {
             }
             if (entry.isValid()) {
                 Logger.d("CacheService", "get: HIT for key=$key")
+                // update LRU ordering
+                lruOrder.remove(key)
+                lruOrder.add(key)
                 entry.data
             } else {
                 Logger.d("CacheService", "get: EXPIRED for key=$key, removing")
                 cache.remove(key)
+                lruOrder.remove(key)
                 null
             }
         }
@@ -44,6 +50,14 @@ class CacheService {
         mutex.withLock {
             Logger.d("CacheService", "put: key=$key ttl=${ttl.inWholeMilliseconds}ms")
             cache[key] = CacheEntry(value, kotlin.time.Clock.System.now(), ttl)
+            // update LRU ordering
+            lruOrder.remove(key)
+            lruOrder.add(key)
+            // evict if necessary
+            while (lruOrder.size > MAX_ENTRIES) {
+                val oldest = lruOrder.removeAt(0)
+                cache.remove(oldest)
+            }
         }
     }
 
@@ -55,6 +69,7 @@ class CacheService {
         mutex.withLock {
             val toRemove = cache.keys.filter { it.startsWith(prefix) }
             toRemove.forEach { cache.remove(it) }
+            lruOrder.removeAll(toRemove.toSet())
             Logger.d("CacheService", "invalidatePrefix: prefix=$prefix removed=${toRemove.size}")
         }
     }

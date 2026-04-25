@@ -21,6 +21,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import com.tkolymp.shared.utils.DateRangeConstants
+import kotlinx.coroutines.async
 
 enum class CalendarBucket { MINE, ALL, CAMPS }
 
@@ -240,8 +241,20 @@ class OfflineSyncManager(
             val people = peopleService.fetchPeople()
             // Save people with additional details (try fetching full person details to get isTrainer/birthDate)
             val peopleJson = buildJsonArray {
+                // Fetch details in concurrent batches to avoid sequential N+1 latency
+                val chunks = people.chunked(20)
+                val detailsMap = mutableMapOf<String, com.tkolymp.shared.people.PersonDetails?>()
+                for (chunk in chunks) {
+                    val deferred = chunk.map { p -> kotlinx.coroutines.GlobalScope.async {
+                        try { withRetry { peopleService.fetchPerson(p.id) } } catch (_: Exception) { null }
+                    } }
+                    val results = deferred.map { d -> try { d.await() } catch (_: Exception) { null } }
+                    // map results back to ids (some may be null)
+                    chunk.forEachIndexed { idx, p -> detailsMap[p.id] = results.getOrNull(idx) }
+                }
+
                 people.forEach { p ->
-                    val details = try { withRetry { peopleService.fetchPerson(p.id) } } catch (_: Exception) { null }
+                    val details = detailsMap[p.id]
                     val birth = details?.birthDate ?: p.birthDate
                     val prefix = details?.prefixTitle ?: p.prefixTitle
                     val suffix = details?.suffixTitle ?: p.suffixTitle
@@ -409,8 +422,19 @@ class OfflineSyncManager(
             val ppl = withRetry { peopleService.fetchPeople() }
             if (ppl.isNotEmpty()) {
                 val peopleJson = buildJsonArray {
+                    // Fetch details in concurrent batches to reduce round-trips
+                    val chunks = ppl.chunked(20)
+                    val detailsMap = mutableMapOf<String, com.tkolymp.shared.people.PersonDetails?>()
+                    for (chunk in chunks) {
+                        val deferred = chunk.map { p -> kotlinx.coroutines.GlobalScope.async {
+                            try { withRetry { peopleService.fetchPerson(p.id) } } catch (_: Exception) { null }
+                        } }
+                        val results = deferred.map { d -> try { d.await() } catch (_: Exception) { null } }
+                        chunk.forEachIndexed { idx, p -> detailsMap[p.id] = results.getOrNull(idx) }
+                    }
+
                     ppl.forEach { p ->
-                        val details = try { withRetry { peopleService.fetchPerson(p.id) } } catch (_: Exception) { null }
+                        val details = detailsMap[p.id]
                         val birth = details?.birthDate ?: p.birthDate
                         val prefix = details?.prefixTitle ?: p.prefixTitle
                         val suffix = details?.suffixTitle ?: p.suffixTitle

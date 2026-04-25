@@ -34,6 +34,7 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,6 +58,7 @@ import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
 import kotlin.time.Duration.Companion.hours
+import kotlinx.coroutines.launch
 
 private fun formatLocalDate(d: kotlinx.datetime.LocalDate?): String {
     return d?.let { "${it.dayOfMonth}. ${it.monthNumber}. ${it.year}" } ?: ""
@@ -78,6 +80,7 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, o
     var showEndTimePicker by remember { mutableStateOf(false) }
     var showRecurrenceStartDatePicker by remember { mutableStateOf(false) }
     var showRecurrenceEndDatePicker by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(eventId) {
         if (!eventId.isNullOrBlank()) {
@@ -330,9 +333,11 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, o
                     recurrenceStartIso = recurrenceStartIso.value.ifBlank { null },
                     recurrenceEndIso = recurrenceEndIso.value.ifBlank { null }
                 )
-                // save
-                kotlinx.coroutines.runBlocking { kotlin.runCatching { service.save(ev) } }
-                onSaved()
+                // save asynchronously to avoid blocking composition
+                coroutineScope.launch {
+                    kotlin.runCatching { service.save(ev) }
+                    onSaved()
+                }
             }, modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
                 Text(AppStrings.current.personalEvents.saveTraining)
             }

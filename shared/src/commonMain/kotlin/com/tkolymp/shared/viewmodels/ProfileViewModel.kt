@@ -15,6 +15,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.serialization.json.jsonObject
 
 data class ProfileState(
     val person: PersonDetails? = null,
@@ -46,11 +47,16 @@ class ProfileViewModel(
                 if (!pid.isNullOrBlank()) {
                     val cachedPerson = try { userService.getCachedPersonDetails() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("ProfileViewModel", "getCachedPersonDetails (pre-check) failed: ${e.message}"); null }
                     val cachedPersonJson = try { userService.getCachedPersonDetailsJson() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("ProfileViewModel", "getCachedPersonDetailsJson failed: ${e.message}"); null }
-                    val needsRefetch = cachedPerson == null || cachedPersonJson.isNullOrBlank() || !(
-                        cachedPersonJson.contains("activeCouplesList") &&
-                            cachedPersonJson.contains("cohortMembershipsList") &&
-                            (cachedPersonJson.contains("email") || cachedPersonJson.contains("uEmail"))
-                        )
+                    val needsRefetch = try {
+                        if (cachedPerson == null || cachedPersonJson.isNullOrBlank()) true
+                        else {
+                            val parsed = try { kotlinx.serialization.json.Json.parseToJsonElement(cachedPersonJson).jsonObject } catch (_: Exception) { null }
+                            val hasActiveCouples = parsed?.get("activeCouplesList") != null
+                            val hasCohorts = parsed?.get("cohortMembershipsList") != null
+                            val hasEmail = parsed?.get("email") != null || parsed?.get("uEmail") != null
+                            !(hasActiveCouples && hasCohorts && hasEmail)
+                        }
+                    } catch (_: Exception) { true }
                     if (needsRefetch) {
                         try { userService.fetchAndStorePersonDetails(pid) } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("ProfileViewModel", "fetchAndStorePersonDetails failed: ${e.message}") }
                     }
@@ -66,7 +72,7 @@ class ProfileViewModel(
         } catch (e: CancellationException) {
             throw e
         } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání profilu")
+            _state.value = _state.value.copy(isLoading = false, error = ex.message ?: com.tkolymp.shared.language.AppStrings.current.errorMessages.errorLoadingProfile)
         }
     }
 

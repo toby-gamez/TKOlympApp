@@ -59,7 +59,7 @@ class LoginViewModel() : ViewModel() {
             _state.value = _state.value.copy(isLoading = false, error = null)
             true
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při přihlášení")
+            _state.value = _state.value.copy(isLoading = false, error = ex.message ?: AppStrings.current.errorMessages.errorLoadingLogin)
             false
         }
     }
