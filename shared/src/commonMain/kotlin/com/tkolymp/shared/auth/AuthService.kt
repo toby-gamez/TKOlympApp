@@ -1,6 +1,7 @@
 package com.tkolymp.shared.auth
 
 import com.tkolymp.shared.Logger
+import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.network.IGraphQlClient
 import com.tkolymp.shared.storage.TokenStorage
 import kotlinx.serialization.json.Json
@@ -102,7 +103,16 @@ class AuthService(private val storage: TokenStorage, private val client: IGraphQ
             // internet connection.
             val refreshed = refreshJwt()
             if (!refreshed) {
-                Logger.d("AuthService", "Token expired but refresh failed — keeping session for offline use")
+                val online = try { ServiceLocator.networkMonitor.isConnected() } catch (_: Exception) { true }
+                if (online) {
+                    // We are online but refresh failed repeatedly -> token likely invalid.
+                    // Clear stored token so caller can force login flow.
+                    try { storage.clear() } catch (_: Exception) {}
+                    Logger.d("AuthService", "Token expired and refresh failed while online — clearing token")
+                    return false
+                } else {
+                    Logger.d("AuthService", "Token expired but refresh failed — keeping session for offline use")
+                }
             }
         }
         return true

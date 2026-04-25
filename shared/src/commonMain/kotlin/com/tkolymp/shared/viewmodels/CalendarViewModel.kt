@@ -28,6 +28,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
 import kotlin.time.Clock
 import kotlin.time.Instant
+import com.tkolymp.shared.event.firstTrainerOrEmpty
 
 data class CalendarState(
     val eventsByDay: Map<String, List<EventInstance>> = emptyMap(),
@@ -94,7 +95,7 @@ class CalendarViewModel(
 
                     val lessonsByTrainerByDay = parsed.mapValues { (_, list) ->
                         list.filter { isLesson(it) }
-                            .groupBy { it.event?.eventTrainersList?.firstOrNull()!!.trim() }
+                            .groupBy { it.event.firstTrainerOrEmpty() }
                             .mapValues { (_, instances) -> instances.sortedBy { it.since } }
                     }
                     val otherEventsByDay = parsed.mapValues { (_, list) ->
@@ -157,7 +158,7 @@ class CalendarViewModel(
                 if (map.isEmpty()) {
                 try {
                     val bucketName = if (onlyMine) "MINE" else "ALL"
-                    val weekKey = "offline_cal_${'$'}{bucketName}_$weekStart"
+                    val weekKey = "offline_cal_${bucketName}_$weekStart"
                     val raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(weekKey) } catch (_: Exception) { null }
                     if (raw != null) {
                         var parsed = parseCalendarJson(raw)
@@ -166,7 +167,7 @@ class CalendarViewModel(
 
                         val lessonsByTrainerByDay = parsed.mapValues { (_, list) ->
                             list.filter { isLesson(it) }
-                                .groupBy { it.event?.eventTrainersList?.firstOrNull()!!.trim() }
+                                .groupBy { it.event.firstTrainerOrEmpty() }
                                 .mapValues { (_, instances) -> instances.sortedBy { it.since } }
                         }
                         val otherEventsByDay = parsed.mapValues { (_, list) ->
@@ -205,7 +206,7 @@ class CalendarViewModel(
 
             val lessonsByTrainerByDay = mergedMap.mapValues { (_, list) ->
                 list.filter { isLesson(it) }
-                    .groupBy { it.event?.eventTrainersList?.firstOrNull()!!.trim() }
+                    .groupBy { it.event.firstTrainerOrEmpty() }
                     .mapValues { (_, instances) -> instances.sortedBy { it.since } }
             }
             val otherEventsByDay = mergedMap.mapValues { (_, list) ->

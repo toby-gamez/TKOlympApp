@@ -324,7 +324,7 @@ class OfflineSyncManager(
             } catch (ex: Exception) {
                 lastEx = ex
                 Logger.d("OfflineSyncManager", "attempt ${i + 1} failed: ${ex.message}")
-                try { kotlinx.coroutines.delay(delayMs) } catch (_: Exception) {}
+                try { kotlinx.coroutines.delay(delayMs) } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (_: Exception) {}
                 delayMs *= 2
             }
         }

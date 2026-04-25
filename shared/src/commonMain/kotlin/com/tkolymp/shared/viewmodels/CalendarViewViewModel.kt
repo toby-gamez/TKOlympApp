@@ -110,7 +110,7 @@ class CalendarViewViewModel(
                 try {
                     val bucketName = if (currentState.showOnlyMine) "MINE" else "ALL"
                     val startDate = timeRange.start.date
-                    val weekKey = "offline_cal_${'$'}{bucketName}_${'$'}startDate"
+                    val weekKey = "offline_cal_${bucketName}_${startDate}"
                     var raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(weekKey) } catch (_: Exception) { null }
                     if (raw == null) {
                         // try to find any compatible offline_cal_* key for this bucket (some buckets use different suffixes)
@@ -189,7 +189,7 @@ class CalendarViewViewModel(
                 try {
                     val bucketName = if (currentState.showOnlyMine) "MINE" else "ALL"
                     val startDate = timeRange.start.date
-                    val weekKey = "offline_cal_${'$'}{bucketName}_${'$'}startDate"
+                    val weekKey = "offline_cal_${bucketName}_${startDate}"
                     var raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(weekKey) } catch (_: Exception) { null }
                     if (raw == null) {
                         try {
@@ -217,7 +217,7 @@ class CalendarViewViewModel(
                 try {
                     val bucketName = if (currentState.showOnlyMine) "MINE" else "ALL"
                     val startDate = timeRange.start.date
-                    val weekKey = "offline_cal_${'$'}{bucketName}_${'$'}startDate"
+                    val weekKey = "offline_cal_${bucketName}_${startDate}"
                     var raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(weekKey) } catch (_: Exception) { null }
                     if (raw == null) {
                         // try to find any compatible offline_cal_* key for this bucket

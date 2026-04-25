@@ -21,8 +21,8 @@ import google.auth.transport.requests
 import google.oauth2.service_account
 
 
-# Default to a path stored in this repo user's environment — override with env var if needed
-DEFAULT_SERVICE_ACCOUNT = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "/home/tobias/Downloads/tkolymp-3aced-c488435878fb.json")
+# Require GOOGLE_APPLICATION_CREDENTIALS to be set in the environment for safety
+DEFAULT_SERVICE_ACCOUNT = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
 # Default project id to use if FCM_PROJECT_ID not set
 DEFAULT_PROJECT = os.environ.get("FCM_PROJECT_ID", "tkolymp-3aced")
 GRAPHQL_URL = os.environ.get("GRAPHQL_URL", "https://api.rozpisovnik.cz/graphql")
@@ -59,7 +59,9 @@ def fetch_cohorts(tenant_id: str = "1"):
     )
     with urllib.request.urlopen(req) as resp:
         data = json.loads(resp.read())
-        return data["data"]["cohortsList"]
+        if "errors" in data:
+            raise RuntimeError(f"GraphQL errors: {data['errors']}")
+        return data.get("data", {}).get("cohortsList", [])
 
 
 def select_topics_interactive(cohorts):

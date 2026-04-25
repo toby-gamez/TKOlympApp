@@ -14,6 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
 import android.util.Log
+import com.tkolymp.shared.Logger
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import com.google.firebase.messaging.FirebaseMessaging
 import com.tkolymp.shared.language.AppLanguage
 import com.tkolymp.shared.language.AppStrings
@@ -31,15 +34,41 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
-        // Apply language synchronously before first composition so every screen
-        // (including OnboardingScreen) already sees the correct language.
-        val savedCode = runBlocking { LanguageStorage(this@MainActivity).getLanguageCode() }
-        val language = if (savedCode != null) {
-            AppLanguage.fromCode(savedCode)
-        } else {
-            AppLanguage.fromCode(getDeviceLanguageCode())
+        // Load language asynchronously before first composition.
+        lifecycleScope.launch {
+            val savedCode = try { LanguageStorage(this@MainActivity).getLanguageCode() } catch (_: Exception) { null }
+            val language = if (savedCode != null) {
+                AppLanguage.fromCode(savedCode)
+            } else {
+                AppLanguage.fromCode(getDeviceLanguageCode())
+            }
+            AppStrings.setLanguage(language)
+
+            setContent {
+                App()
+            }
+
+            // Získání a zalogování FCM tokenu
+            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val token = task.result
+                    Logger.d("FCM", "Current token obtained")
+                    // TODO: Odeslat token na server
+                } else {
+                    Log.w("FCM", "Fetching FCM registration token failed", task.exception)
+                }
+            }
+
+            // Přihlášení k topicu 'all' pro broadcast notifikace
+            FirebaseMessaging.getInstance().subscribeToTopic("all")
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        Logger.d("FCM", "Subscribed to topic 'all'")
+                    } else {
+                        Log.w("FCM", "Topic subscription failed", task.exception)
+                    }
+                }
         }
-        AppStrings.setLanguage(language)
 
         // Create notification channels
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -66,29 +95,7 @@ class MainActivity : ComponentActivity() {
             if (!granted) requestNotificationPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         }
 
-        setContent {
-            App()
-        }
-        // Získání a zalogování FCM tokenu
-        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                val token = task.result
-                Log.d("FCM", "Current token: $token")
-                // TODO: Odeslat token na server
-            } else {
-                Log.w("FCM", "Fetching FCM registration token failed", task.exception)
-            }
-        }
-
-        // Přihlášení k topicu 'all' pro broadcast notifikace
-        FirebaseMessaging.getInstance().subscribeToTopic("all")
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    Log.d("FCM", "Subscribed to topic 'all'")
-                } else {
-                    Log.w("FCM", "Topic subscription failed", task.exception)
-                }
-            }
+        // Note: UI composition and FCM setup are performed in lifecycleScope.launch above.
     }
 }
 

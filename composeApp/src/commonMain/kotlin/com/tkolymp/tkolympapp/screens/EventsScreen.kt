@@ -60,6 +60,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
+import com.tkolymp.shared.event.firstTrainerOrEmpty
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -207,7 +208,7 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                             }
                             val other = list - lessons
 
-                            val lessonsByTrainer = lessons.groupBy { it.event?.eventTrainersList?.firstOrNull()!!.trim() }
+                            val lessonsByTrainer = lessons.groupBy { it.event.firstTrainerOrEmpty() }
 
                             lessonsByTrainer.forEach { (trainer, instances) ->
                                 LessonView(
@@ -262,7 +263,7 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                             }
                             val other = list - lessons
 
-                            val lessonsByTrainer = lessons.groupBy { it.event?.eventTrainersList?.firstOrNull()!!.trim() }
+                            val lessonsByTrainer = lessons.groupBy { it.event.firstTrainerOrEmpty() }
 
                             lessonsByTrainer.forEach { (trainer, instances) ->
                                 LessonView(

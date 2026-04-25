@@ -55,31 +55,11 @@ class PaymentService(
             }
         """.trimIndent()
 
-        val resp = try { client.post(query, null) } catch (e: CancellationException) { throw e } catch (_: Exception) {
-            val fallback = listOf(
-                PaymentDebtorItem(
-                    id = "sample-1",
-                    isUnpaid = true,
-                    price = Money(150.0, "CZK"),
-                    paymentId = "p1",
-                    personId = "person-1",
-                    payment = PaymentSummary(id = "p1", variableSymbol = "2026001", specificSymbol = null, dueAt = "2026-05-01T00:00:00Z", status = null),
-                    person = PersonSummary(id = "person-1", firstName = "Jan", lastName = "Novák"),
-                    raw = JsonNull
-                ),
-                PaymentDebtorItem(
-                    id = "sample-2",
-                    isUnpaid = false,
-                    price = Money(99.9, "CZK"),
-                    paymentId = "p2",
-                    personId = "person-2",
-                    payment = PaymentSummary(id = "p2", variableSymbol = "2026002", specificSymbol = null, dueAt = "2026-04-01T00:00:00Z", status = "PAID"),
-                    person = PersonSummary(id = "person-2", firstName = "Petr", lastName = "Svoboda"),
-                    raw = JsonNull
-                )
-            )
-            try { cache.put(cacheKey, fallback) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
-            return fallback
+        val resp = try { client.post(query, null) } catch (e: CancellationException) { throw e } catch (ex: Exception) {
+            // Do not return hardcoded or fake payment data on network failure.
+            // Let callers handle an empty result or surface the error to the UI.
+            try { cache.put(cacheKey, emptyList<PaymentDebtorItem>()) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+            return emptyList()
         }
         val root = (resp as? JsonObject)?.get("data")?.jsonObject ?: return emptyList()
         val arr = (root["paymentDebtorsList"] as? JsonArray) ?: JsonArray(emptyList())

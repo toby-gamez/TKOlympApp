@@ -41,6 +41,7 @@ object ServiceLocator {
         )
 
     fun init(container: AppContainer) {
+        check(_container == null) { "ServiceLocator already initialized" }
         _container = container
     }
 

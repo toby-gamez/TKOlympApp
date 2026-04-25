@@ -5,6 +5,10 @@ import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
 import android.util.Log
+import com.tkolymp.shared.Logger
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.messaging.FirebaseMessagingService
@@ -19,9 +23,10 @@ import com.tkolymp.shared.language.AppStrings
 import kotlin.time.Clock
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
+    private val svcScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        Log.d("FCM", "New token: $token")
+        Logger.d("FCM", "New token received")
         // TODO: Odeslat token na server
     }
 
@@ -51,18 +56,23 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                             }
                         }
                         if (topic != null) topic = topic.trim()
-                        Log.d("FCM", "Detected topic=$topic from=$from dataKeys=${dataMap.keys}")
+                        Logger.d("FCM", "Detected topic=$topic from=$from dataKeys=${dataMap.keys}")
                         val existing = try { storage.getReceivedNotifications() } catch (_: Exception) { emptyList() }
                         val newList = listOf(ReceivedMessage(id = id, title = title, body = body, sender = "coach", topic = topic, epochMs = now)) + existing
-                        Log.d("FCM", "Saving received message id=$id topic=$topic data=${dataMap}")
+                        Logger.d("FCM", "Saving received message id=$id topic=$topic data=${dataMap.keys}")
                     storage.saveReceivedNotifications(newList)
                 } catch (t: Throwable) {
-                    Log.d("FCM", "Failed saving received message: ${t.message}")
+                    Logger.d("FCM", "Failed saving received message: ${t.message}")
                 }
             }
         } catch (e: Throwable) {
-            Log.d("FCM", "ServiceLocator not ready: ${e.message}")
+            Logger.d("FCM", "ServiceLocator not ready: ${e.message}")
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        svcScope.cancel()
     }
 
     private fun showNotification(title: String, message: String) {

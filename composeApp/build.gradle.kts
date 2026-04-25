@@ -50,7 +50,8 @@ android {
         applicationId = "com.tkolymp.tkolympapp"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 17 // nezapomeň taky nastavit
+        versionCode = 17
+        // nezapomeň taky nastavit
         versionName = "1.4" // nastav i to nahoře
     }
     packaging {

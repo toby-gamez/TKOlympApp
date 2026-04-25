@@ -28,6 +28,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
 import kotlin.time.Clock
 import kotlin.time.Instant
+import com.tkolymp.shared.event.firstTrainerOrEmpty
 
 data class BirthdayEntry(
     val personId: String,
@@ -327,7 +328,7 @@ class OverviewViewModel(
             val lessons = selectedDayList.filter { isLesson(it) }
             val otherEvents = (selectedDayList - lessons.toSet()).sortedBy { it.since }
             val lessonsByTrainer = lessons
-                .groupBy { it.event?.eventTrainersList?.firstOrNull()!!.trim() }
+                .groupBy { it.event.firstTrainerOrEmpty() }
                 .mapValues { (_, insts) -> insts.sortedBy { it.since } }
 
             // Birthdays via PeopleService with offline fallback
