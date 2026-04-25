@@ -22,6 +22,8 @@ import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import com.tkolymp.shared.utils.DateRangeConstants
 import kotlinx.coroutines.async
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 enum class CalendarBucket { MINE, ALL, CAMPS }
 
@@ -45,6 +47,22 @@ class OfflineSyncManager(
             Logger.d("OfflineSyncManager", "syncAll: network not available, skipping")
             return@withContext
         }
+
+        // Debounce rapid successive syncs: skip if last sync was within 5 minutes
+        try {
+            val last = try { getLastSyncTime() } catch (_: Exception) { null }
+            if (!last.isNullOrBlank()) {
+                try {
+                    val parsed = Instant.parse(last)
+                    val now = Clock.System.now()
+                    val elapsedSec = now.epochSeconds - parsed.epochSeconds
+                    if (elapsedSec < 300L) {
+                        Logger.d("OfflineSyncManager", "syncAll: skipped (last sync ${elapsedSec}s ago)")
+                        return@withContext
+                    }
+                } catch (_: Exception) { /* ignore parse errors, continue with sync */ }
+            }
+        } catch (_: Exception) {}
 
         try {
             // Sync payments

@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -13,16 +14,18 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
-import android.util.Log
-import com.tkolymp.shared.Logger
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
 import com.google.firebase.messaging.FirebaseMessaging
+import com.tkolymp.shared.Logger
+import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.language.AppLanguage
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.language.getDeviceLanguageCode
 import com.tkolymp.shared.storage.LanguageStorage
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
 
 @SuppressLint("InvalidFragmentVersionForActivityResult")
 class MainActivity : ComponentActivity() {
@@ -53,7 +56,35 @@ class MainActivity : ComponentActivity() {
                 if (task.isSuccessful) {
                     val token = task.result
                     Logger.d("FCM", "Current token obtained")
-                    // TODO: Odeslat token na server
+                        try {
+                            val prefs = this@MainActivity.getSharedPreferences("tkolymp_fcm", Context.MODE_PRIVATE)
+                            val last = prefs.getString("last_uploaded_fcm_token", null)
+                            if (token != null && token != last) {
+                                lifecycleScope.launch {
+                                    try {
+                                        val mutation = """mutation RegisterFcm(${'$'}input: RegisterFcmInput!) { registerFcm(input: ${'$'}input) { success } }"""
+                                        val variables = buildJsonObject {
+                                            put("input", buildJsonObject {
+                                                put("token", JsonPrimitive(token))
+                                                put("platform", JsonPrimitive("ANDROID"))
+                                            })
+                                        }
+                                        val resp = ServiceLocator.graphQlClient.post(mutation, variables)
+                                        val errors = resp.jsonObject["errors"]
+                                        if (errors != null) {
+                                            Logger.d("FCM", "GraphQL errors registering token: $errors")
+                                        } else {
+                                            prefs.edit().putString("last_uploaded_fcm_token", token).apply()
+                                            Logger.d("FCM", "FCM token uploaded from MainActivity")
+                                        }
+                                    } catch (t: Throwable) {
+                                        Logger.d("FCM", "Failed uploading FCM token: ${t.message}")
+                                    }
+                                }
+                            }
+                        } catch (e: Throwable) {
+                            Logger.d("FCM", "Preparing token upload failed: ${e.message}")
+                        }
                 } else {
                     Log.w("FCM", "Fetching FCM registration token failed", task.exception)
                 }

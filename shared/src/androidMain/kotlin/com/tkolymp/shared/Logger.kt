@@ -9,10 +9,10 @@ actual object Logger {
     }
 
     actual fun w(tag: String, msg: String) {
-        Log.w(tag, msg)
+        if (BuildConfig.DEBUG) Log.w(tag, msg)
     }
 
     actual fun e(tag: String, msg: String, throwable: Throwable?) {
-        Log.e(tag, msg, throwable)
+        if (BuildConfig.DEBUG) Log.e(tag, msg, throwable)
     }
 }

@@ -2,7 +2,6 @@ package com.tkolymp.tkolympapp
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.Context
 import android.os.Build
 import android.util.Log
 import com.tkolymp.shared.Logger
@@ -20,13 +19,50 @@ import kotlinx.coroutines.launch
 import com.tkolymp.shared.notification.ReceivedMessage
 import com.tkolymp.shared.language.AppStrings
 import kotlin.time.Clock
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
+import android.content.Context
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
     private val svcScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         Logger.d("FCM", "New token received")
-        // TODO: Odeslat token na server
+        // Send token to server (best-effort). Avoid duplicate uploads.
+        try {
+            val prefs = getSharedPreferences("tkolymp_fcm", Context.MODE_PRIVATE)
+            val last = prefs.getString("last_uploaded_fcm_token", null)
+            if (token == last) {
+                Logger.d("FCM", "Token unchanged, skipping upload")
+                return
+            }
+            svcScope.launch {
+                try {
+                    val mutation = """mutation RegisterFcm(${'$'}input: RegisterFcmInput!) { registerFcm(input: ${'$'}input) { success } }"""
+                    val variables = buildJsonObject {
+                        put("input", buildJsonObject {
+                            put("token", JsonPrimitive(token))
+                            put("platform", JsonPrimitive("ANDROID"))
+                        })
+                    }
+                    val resp = ServiceLocator.graphQlClient.post(mutation, variables)
+                    val errors = resp.jsonObject["errors"]
+                    if (errors != null) {
+                        Logger.d("FCM", "GraphQL errors registering token: $errors")
+                    } else {
+                        prefs.edit().putString("last_uploaded_fcm_token", token).apply()
+                        Logger.d("FCM", "FCM token uploaded")
+                    }
+                } catch (t: Throwable) {
+                    Logger.d("FCM", "Failed uploading FCM token: ${t.message}")
+                }
+            }
+        } catch (e: Throwable) {
+            Logger.d("FCM", "Failed preparing token upload: ${e.message}")
+        }
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
