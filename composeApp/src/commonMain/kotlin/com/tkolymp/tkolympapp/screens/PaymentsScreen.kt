@@ -49,13 +49,12 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PaymentsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
+fun PaymentsScreen(vm: com.tkolymp.shared.payments.PaymentsViewModel, onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     val tabs = listOf(AppStrings.current.misc.paymentsTabPending, AppStrings.current.misc.paymentsTabPaid)
 
-    val vm = remember { com.tkolymp.shared.payments.PaymentsViewModel() }
-    LaunchedEffect(Unit) { vm.load() }
-    DisposableEffect(Unit) { onDispose { vm.clear() } }
+    // `vm` is provided by the platform (lifecycle-aware wrapper) to avoid
+    // manual construction inside a Composable which is not lifecycle-aware.
 
     val isLoading by vm.isLoading.collectAsState()
     val payments by vm.items.collectAsState(initial = emptyList())

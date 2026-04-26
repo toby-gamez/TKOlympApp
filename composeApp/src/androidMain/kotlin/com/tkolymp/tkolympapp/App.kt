@@ -81,6 +81,7 @@ import com.tkolymp.tkolympapp.screens.RegistrationScreen
 import com.tkolymp.tkolympapp.screens.SettingsScreen
 import com.tkolymp.tkolympapp.screens.StatsScreen
 import com.tkolymp.tkolympapp.screens.TrainersLocationsScreen
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -466,7 +467,8 @@ fun AppNavHost(
                 )
             }
         ) {
-            PaymentsScreen(onBack = { navController.navigateUp() }, bottomPadding = bottomPadding)
+            val androidPaymentsVm: AndroidPaymentsViewModel = viewModel()
+            PaymentsScreen(vm = androidPaymentsVm.paymentsVm, onBack = { navController.navigateUp() }, bottomPadding = bottomPadding)
         }
 
         composable(
