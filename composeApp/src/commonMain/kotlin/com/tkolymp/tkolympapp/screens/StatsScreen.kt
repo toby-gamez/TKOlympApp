@@ -337,6 +337,7 @@ fun StatsScreen(
 
 @Composable
 private fun SeasonSelector(
+    modifier: Modifier = Modifier,
     selected: SeasonSelection,
     seasons: List<SeasonSelection>,
     currentLabel: String,
@@ -346,7 +347,7 @@ private fun SeasonSelector(
     val scrollState = rememberScrollState()
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .horizontalScroll(scrollState)
     ) {
@@ -369,6 +370,7 @@ private fun SeasonSelector(
 
 @Composable
 private fun SummaryRow(
+    modifier: Modifier = Modifier,
     totalSessions: Int,
     totalMinutes: Long,
     avgPerWeek: Double,
@@ -379,7 +381,7 @@ private fun SummaryRow(
     val avgFmt = avgPerWeek.roundTo1dp()
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         SummaryCard(
@@ -439,9 +441,9 @@ private fun SummaryCard(modifier: Modifier = Modifier, value: String, label: Str
 // ─── Section card wrapper ─────────────────────────────────────────────────────
 
 @Composable
-private fun StatsCard(title: String, content: @Composable () -> Unit) {
+private fun StatsCard(modifier: Modifier = Modifier.fillMaxWidth(), title: String, content: @Composable () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier,
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -456,13 +458,14 @@ private fun StatsCard(title: String, content: @Composable () -> Unit) {
 
 @Composable
 private fun MonthlyTable(
+    modifier: Modifier = Modifier,
     data: List<MonthStats>,
     monthCol: String,
     countCol: String,
     hoursCol: String
 ) {
     // Header
-    Row(modifier = Modifier.fillMaxWidth()) {
+    Row(modifier = modifier.fillMaxWidth()) {
         Text(monthCol, modifier = Modifier.weight(2f), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(countCol, modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, textAlign = TextAlign.End, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(hoursCol, modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, textAlign = TextAlign.End, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -516,13 +519,13 @@ private fun MonthlyTable(
 // ─── Type breakdown (horizontal bars) ────────────────────────────────────────
 
 @Composable
-private fun TypeBreakdownSection(data: List<TypeStat>) {
+private fun TypeBreakdownSection(modifier: Modifier = Modifier, data: List<TypeStat>) {
     val maxCount = data.maxOfOrNull { it.count }?.coerceAtLeast(1) ?: 1
     val isDark = isSystemInDarkTheme()
 
     data.forEach { item ->
         Row(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth()
                 .padding(vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -567,6 +570,7 @@ private fun TypeBreakdownSection(data: List<TypeStat>) {
 
 @Composable
 private fun TrainerBreakdownSection(
+    modifier: Modifier = Modifier,
     data: List<TrainerStat>,
     sessionsUnit: String,
     hoursUnit: String,
@@ -584,7 +588,7 @@ private fun TrainerBreakdownSection(
         val barColor = primaryColors.getOrNull(idx) ?: MaterialTheme.colorScheme.primary
 
         Row(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth()
                 .padding(vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -719,6 +723,7 @@ private fun CompareScreenContent(
 
 @Composable
 private fun CompareSeasonPicker(
+    modifier: Modifier = Modifier,
     seasons: List<SeasonSelection>,
     selectedSlots: List<SeasonSelection?>,   // size 5, index = slot (A=0…E=4)
     currentLabel: String,
@@ -740,7 +745,7 @@ private fun CompareSeasonPicker(
 
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
+        modifier = modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
     ) {
         seasons.forEachIndexed { idx, season ->
             val slotIdx = selectedSlots.indexOf(season)  // -1 if not selected
@@ -775,6 +780,7 @@ private fun CompareSeasonPicker(
  */
 @Composable
 private fun CompareDetailContent(
+    modifier: Modifier = Modifier,
     slots: List<Pair<String, SeasonDetailStats>>,
     strings: com.tkolymp.shared.language.StatsStrings
 ) {
@@ -782,10 +788,10 @@ private fun CompareDetailContent(
     val isDark = isSystemInDarkTheme()
 
     // ── Summary stat cards ────────────────────────────────────────────────────
-    StatsCard(title = strings.seasonComparison) {
+    StatsCard(modifier = modifier, title = strings.seasonComparison) {
         Spacer(Modifier.height(4.dp))
         // Season header chips
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             slots.forEachIndexed { i, (letter, data) ->
                 Box(
                     modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp))
@@ -945,6 +951,7 @@ private fun slotOnContainerColor(slotIndex: Int): Color = when (slotIndex) {
  */
 @Composable
 private fun CompareMultiBars(
+    modifier: Modifier = Modifier,
     values: List<Double>,
     letters: List<String>,
     isDark: Boolean,
@@ -958,19 +965,19 @@ private fun CompareMultiBars(
     if (label != null) {
         Text(label, style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(bottom = 3.dp))
+            modifier = modifier.padding(bottom = 3.dp))
     }
     values.indices.forEach { i ->
         val v = values[i]
         val fraction = (v / maxValue).toFloat().coerceIn(0f, 1f)
         val color = slotColor(i)
         val isWinner = i == maxIdx && values.count { it == v } == 1
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 1.dp)) {
-            Text(
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier.padding(vertical = 1.dp)) {
+                Text(
                 text = letters.getOrElse(i) { "$i" },
                 style = MaterialTheme.typography.labelSmall,
                 color = color,
-                modifier = Modifier.width(16.dp)
+                    modifier = Modifier.width(16.dp)
             )
             Spacer(Modifier.width(4.dp))
             Box(
@@ -999,12 +1006,13 @@ private fun CompareMultiBars(
 
 @Composable
 private fun ScoreCard(
+    modifier: Modifier = Modifier,
     score: ScoreboardEntry,
     strings: com.tkolymp.shared.language.StatsStrings,
     onOpenLeaderboard: () -> Unit = {}
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
     ) {
@@ -1069,6 +1077,7 @@ private fun ScoreCard(
 
 @Composable
 private fun AttendanceTabContent(
+    modifier: Modifier = Modifier,
     attendanceMonths: List<AttendanceMonth>,
     cancelledCount: Int,
     totalSessions: Int,
@@ -1086,7 +1095,7 @@ private fun AttendanceTabContent(
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp),
@@ -1165,8 +1174,8 @@ private fun AttendanceTabContent(
 }
 
 @Composable
-private fun AttendanceSummaryItem(value: String, label: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+private fun AttendanceSummaryItem(modifier: Modifier = Modifier, value: String, label: String) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text(
             text = label,
@@ -1179,11 +1188,12 @@ private fun AttendanceSummaryItem(value: String, label: String) {
 
 @Composable
 private fun AttendanceSessionRow(
+    modifier: Modifier = Modifier,
     session: com.tkolymp.shared.viewmodels.SessionItem,
     cancelledLabel: String
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {

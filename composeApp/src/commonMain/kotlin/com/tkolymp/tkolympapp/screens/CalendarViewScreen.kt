@@ -243,9 +243,10 @@ internal fun CalendarTopBar(
     onNextClick: () -> Unit,
     onTodayClick: () -> Unit,
     onViewModeChange: (ViewMode) -> Unit,
-    onToggleOnlyMine: () -> Unit
+    onToggleOnlyMine: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Column {
+    Column(modifier = modifier) {
         // Date navigation row
         Row(
             modifier = Modifier
@@ -324,7 +325,8 @@ internal fun CalendarTopBar(
 internal fun SingleDayTimelineView(
     events: List<EventLayoutData>,
     selectedDate: LocalDate,
-    onEventClick: (Long) -> Unit
+    onEventClick: (Long) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
     val minuteHeight = 1.dp // Height per minute
@@ -335,7 +337,7 @@ internal fun SingleDayTimelineView(
     val now = kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
     val density = LocalDensity.current
 
-    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
     val viewportHeightPx = with(density) { maxHeight.toPx() }
 
     // Auto-scroll: center current time for today, or 7 AM for other days
@@ -413,7 +415,8 @@ internal fun SingleDayTimelineView(
 internal fun MultiDayTimelineView(
     dates: List<LocalDate>,
     getEventsForDate: (LocalDate) -> List<EventLayoutData>,
-    onEventClick: (Long) -> Unit
+    onEventClick: (Long) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val verticalScrollState = rememberScrollState()
     val horizontalScrollState = rememberScrollState()
@@ -427,7 +430,7 @@ internal fun MultiDayTimelineView(
     val now = kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
     val density = LocalDensity.current
 
-    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
     val viewportHeightPx = with(density) { maxHeight.toPx() }
 
     // Auto-scroll: center current time if today is visible, or 7 AM otherwise
@@ -610,7 +613,8 @@ internal fun TimelineEventCard(
     layoutData: EventLayoutData,
     minuteHeight: Dp,
     compact: Boolean = false,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val event = layoutData.event
     val offsetDp = minuteHeight * layoutData.startMinute
@@ -669,7 +673,7 @@ internal fun TimelineEventCard(
     }
     
     BoxWithConstraints(
-        modifier = Modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize()
     ) {
         val totalWidth = maxWidth
         val cardWidth = totalWidth * widthFraction

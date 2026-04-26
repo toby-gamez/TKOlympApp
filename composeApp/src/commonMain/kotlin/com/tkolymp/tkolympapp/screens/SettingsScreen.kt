@@ -107,7 +107,7 @@ fun SettingsScreen(
             SectionHeader(text = s.appearanceSection)
 
             SettingsCard {
-                SettingsRow(icon = Icons.Filled.LightMode, label = s.themeLabel) {
+                SettingsRow(icon = Icons.Filled.LightMode, label = s.themeLabel, control = {
                     val modes = listOf(ThemeMode.SYSTEM, ThemeMode.LIGHT, ThemeMode.DARK)
                     val labels = listOf(s.themeSystem, s.themeLight, s.themeDark)
                     SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
@@ -120,7 +120,7 @@ fun SettingsScreen(
                             ) { Text(labels[index], style = MaterialTheme.typography.labelSmall) }
                         }
                     }
-                }
+                })
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -128,7 +128,7 @@ fun SettingsScreen(
             // Calendar
             SectionHeader(text = s.calendarSection)
             SettingsCard {
-                SettingsRow(icon = Icons.Filled.CalendarMonth, label = s.calendarDefaultView) {
+                SettingsRow(icon = Icons.Filled.CalendarMonth, label = s.calendarDefaultView, control = {
                     SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                         SegmentedButton(
                             selected = !state.preferTimeline,
@@ -156,7 +156,7 @@ fun SettingsScreen(
                             }
                         ) { Text(s.calendarViewTimeline, style = MaterialTheme.typography.labelSmall) }
                     }
-                }
+                })
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -166,11 +166,11 @@ fun SettingsScreen(
             // Language button — navigates via parent NavController
             SectionHeader(text = AppStrings.current.otherScreen.languages)
             SettingsCard {
-                SettingsRow(icon = Icons.Filled.Psychology, label = AppStrings.current.languageScreen.selectLanguage) {
+                SettingsRow(icon = Icons.Filled.Psychology, label = AppStrings.current.languageScreen.selectLanguage, control = {
                     Button(modifier = Modifier.fillMaxWidth(), onClick = onOpenLanguages) {
                         Text(AppStrings.current.otherScreen.languages)
                     }
-                }
+                })
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -178,17 +178,17 @@ fun SettingsScreen(
             // Notifications settings — navigates via parent NavController
             SectionHeader(text = AppStrings.current.otherScreen.notificationSettings)
             SettingsCard {
-                SettingsRow(icon = Icons.Filled.Notifications, label = AppStrings.current.otherScreen.notificationSettings) {
+                SettingsRow(icon = Icons.Filled.Notifications, label = AppStrings.current.otherScreen.notificationSettings, control = {
                     Button(modifier = Modifier.fillMaxWidth(), onClick = onOpenNotifications) {
                         Text(AppStrings.current.otherScreen.notificationSettings)
                     }
-                }
+                })
             }
 
             // Offline download
             SectionHeader(text = s.offlineSection)
             SettingsCard {
-                SettingsRow(icon = Icons.Filled.ViewWeek, label = s.offlineDownloadLabel) {
+                SettingsRow(icon = Icons.Filled.ViewWeek, label = s.offlineDownloadLabel, control = {
                     Button(modifier = Modifier.fillMaxWidth(), onClick = {
                         scope.launch {
                             downloading.value = true
@@ -205,7 +205,7 @@ fun SettingsScreen(
                             downloading.value = false
                         }
                     }) { Text(s.offlineDownloadButton) }
-                }
+                })
             }
 
             // Download progress dialog
@@ -225,20 +225,20 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun SectionHeader(text: String) {
+private fun SectionHeader(text: String, modifier: Modifier = Modifier) {
     Text(
         text = text,
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 6.dp)
+        modifier = modifier.padding(start = 4.dp, top = 8.dp, bottom = 6.dp)
     )
 }
 
 @Composable
-private fun SettingsCard(content: @Composable () -> Unit) {
+private fun SettingsCard(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
@@ -247,8 +247,8 @@ private fun SettingsCard(content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun SettingsRow(icon: ImageVector, label: String, control: @Composable () -> Unit) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+private fun SettingsRow(icon: ImageVector, label: String, control: @Composable () -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier = modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             Box(
                 contentAlignment = Alignment.Center,

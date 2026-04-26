@@ -132,8 +132,8 @@ fun PaymentsScreen(vm: com.tkolymp.shared.payments.PaymentsViewModel, onBack: ()
 }
 
 @Composable
-private fun PaymentItemCard(item: com.tkolymp.shared.payments.PaymentDebtorItem) {
-    Card(modifier = Modifier
+private fun PaymentItemCard(item: com.tkolymp.shared.payments.PaymentDebtorItem, modifier: Modifier = Modifier) {
+    Card(modifier = modifier
         .fillMaxWidth()
         .padding(8.dp), colors = CardDefaults.cardColors()) {
         val name = listOfNotNull(item.person?.firstName, item.person?.lastName).joinToString(" ")

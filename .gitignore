@@ -53,3 +53,4 @@ composeApp/google-services.json
 .agents/skills/*
 REPO_REVIEW.md
 **/build/
+docs/compose-guidelines.md

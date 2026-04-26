@@ -563,14 +563,14 @@ private fun ShareStatPill(modifier: Modifier = Modifier, value: String, label: S
 // ─── Helper: mini weekly bar chart ────────────────────────────────────────────
 
 @Composable
-private fun ShareMiniBarChart(weeklyData: List<WeekStats>) {
+private fun ShareMiniBarChart(weeklyData: List<WeekStats>, modifier: Modifier = Modifier) {
     val maxCount = weeklyData.maxOfOrNull { it.count }?.coerceAtLeast(1) ?: 1
     val highlightIdx = weeklyData.indexOfFirst { it.isCurrent }
     val accent = MaterialTheme.colorScheme.primary
     val onBg = MaterialTheme.colorScheme.onBackground
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(36.dp),
         horizontalArrangement = Arrangement.spacedBy(2.dp),
@@ -599,12 +599,12 @@ private fun ShareMiniBarChart(weeklyData: List<WeekStats>) {
 // ─── Helper: monthly bar chart with roman-numeral month labels ────────────────
 
 @Composable
-private fun ShareMonthlyChart(data: List<MonthStats>) {
+private fun ShareMonthlyChart(data: List<MonthStats>, modifier: Modifier = Modifier) {
     val maxCount = data.maxOfOrNull { it.count }?.coerceAtLeast(1) ?: 1
     val accent = MaterialTheme.colorScheme.primary
     val onBg = MaterialTheme.colorScheme.onBackground
 
-    Column {
+    Column(modifier = modifier) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -653,13 +653,13 @@ private fun ShareMonthlyChart(data: List<MonthStats>) {
 // ─── Helper: horizontal mini bars (type / trainer) ───────────────────────────
 
 @Composable
-private fun ShareHorizontalBars(items: List<Pair<String, Int>>, maxCount: Int) {
+private fun ShareHorizontalBars(items: List<Pair<String, Int>>, maxCount: Int, modifier: Modifier = Modifier) {
     val accent = MaterialTheme.colorScheme.primary
     val onBg = MaterialTheme.colorScheme.onBackground
 
     items.forEach { (name, count) ->
         Row(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth()
                 .padding(vertical = 2.dp),
             verticalAlignment = Alignment.CenterVertically

@@ -406,9 +406,9 @@ private fun CalendarMockupCard(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun MockCalendarGroupCard(name: String, location: String, time: String, dotColor: Color?) {
+private fun MockCalendarGroupCard(name: String, location: String, time: String, dotColor: Color?, modifier: Modifier = Modifier) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
@@ -427,9 +427,9 @@ private fun MockCalendarGroupCard(name: String, location: String, time: String, 
 }
 
 @Composable
-private fun MockCalendarLessonCard(trainer: String, location: String, time: String, names: String, duration: String) {
+private fun MockCalendarLessonCard(trainer: String, location: String, time: String, names: String, duration: String, modifier: Modifier = Modifier) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
@@ -470,9 +470,9 @@ private fun EventsMockupCard(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun MockEventCard(name: String, location: String, time: String) {
+private fun MockEventCard(name: String, location: String, time: String, modifier: Modifier = Modifier) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
@@ -502,9 +502,9 @@ private fun BoardMockupCard(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun MockBoardPostCard(title: String, author: String, preview: String) {
+private fun MockBoardPostCard(title: String, author: String, preview: String, modifier: Modifier = Modifier) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {

@@ -286,9 +286,10 @@ internal fun LessonView(
     isAllTab: Boolean,
     myPersonId: String?,
     myCoupleIds: List<String>,
-    onEventClick: (Long) -> Unit
+    onEventClick: (Long) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Card(modifier = Modifier
+    Card(modifier = modifier
         .fillMaxWidth()
         .padding(vertical = 6.dp)
     ) {
@@ -377,7 +378,7 @@ internal fun LessonView(
 }
 
 @Composable
-internal fun RenderSingleEventCard(item: EventInstance, onEventClick: (Long) -> Unit, showType: Boolean = true) {
+internal fun RenderSingleEventCard(item: EventInstance, onEventClick: (Long) -> Unit, showType: Boolean = true, modifier: Modifier = Modifier) {
     val name = item.event?.name ?: "(no name)"
     val cancelled = item.isCancelled
     val eventObj = item.event
@@ -388,7 +389,7 @@ internal fun RenderSingleEventCard(item: EventInstance, onEventClick: (Long) -> 
     ).firstOrNull().orEmpty()
     val timeText = formatTimesWithDate(item.since, item.until)
 
-    Card(modifier = Modifier
+    Card(modifier = modifier
         .fillMaxWidth()
         .padding(vertical = 4.dp)
         .clickable { val evId = item.event?.id ?: return@clickable; onEventClick(evId) }
