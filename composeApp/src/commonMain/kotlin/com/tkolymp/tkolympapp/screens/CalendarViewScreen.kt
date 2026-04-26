@@ -206,7 +206,7 @@ fun CalendarViewScreen(
                 // Show timeline based on view mode
                 when (state.viewMode) {
                     ViewMode.DAY -> {
-                        val layoutListToRender = if (state.layoutData.isEmpty() && state.isOffline && cachedLayout.value != null) cachedLayout.value!! else state.layoutData.values.toList()
+                        val layoutListToRender = if (state.layoutData.isEmpty() && state.isOffline && cachedLayout.value != null) cachedLayout.value.orEmpty() else state.layoutData.values.toList()
 
                         // keep cached copy of last non-empty layout to avoid brief disappearance
                         LaunchedEffect(state.layoutData) { if (state.layoutData.isNotEmpty()) cachedLayout.value = state.layoutData.values.toList() }

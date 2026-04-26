@@ -160,7 +160,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                 Text(AppStrings.current.profile.aboutMe, style = MaterialTheme.typography.labelLarge)
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 if (!derived.bioText.isNullOrBlank()) {
-                    Text(derived.bioText!!, style = MaterialTheme.typography.bodyMedium)
+                    Text(derived.bioText ?: "", style = MaterialTheme.typography.bodyMedium)
                 } else {
                     Text(AppStrings.current.profile.bioNotAvailable, style = MaterialTheme.typography.bodySmall)
                 }
@@ -190,7 +190,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                         }
                     }
                 } else if (!derived.addrText.isNullOrBlank()) {
-                    Text(derived.addrText!!, style = MaterialTheme.typography.bodyMedium)
+                    Text(derived.addrText ?: "", style = MaterialTheme.typography.bodyMedium)
                 } else {
                     Text(AppStrings.current.address.addressNotAvailable, style = MaterialTheme.typography.bodySmall)
                 }

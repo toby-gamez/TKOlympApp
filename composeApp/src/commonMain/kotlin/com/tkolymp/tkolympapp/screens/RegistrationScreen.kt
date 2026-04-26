@@ -319,7 +319,7 @@ fun RegistrationScreen(
                         }, modifier = Modifier.fillMaxWidth()) { Text(AppStrings.current.registration.confirmRegistrationTitle) }
                         if (!showRegisterError.value.isNullOrBlank()) {
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text(showRegisterError.value!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                            Text(showRegisterError.value ?: "", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
@@ -451,7 +451,7 @@ fun RegistrationScreen(
                                     val regId = selectedId
                                     if (showLessonSelection) countsState.forEachIndexed { i, cnt ->
                                         val trainerId = (trainers[i] as? JsonObject)?.get("id")?.jsonPrimitive?.intOrNull ?: i
-                                        onSetLessonDemand(regId!!, trainerId, cnt)
+                                        regId?.let { id -> onSetLessonDemand(id, trainerId, cnt) }
                                     }
                                     if (enableNotes) onSetNote?.invoke(selectedId, editNoteState.value)
                                     onClose()
@@ -462,7 +462,7 @@ fun RegistrationScreen(
                             }, modifier = Modifier.fillMaxWidth()) { Text("Uložit změny") }
                             if (!showEditError.value.isNullOrBlank()) {
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Text(showEditError.value!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                                Text(showEditError.value ?: "", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }

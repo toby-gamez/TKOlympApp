@@ -92,8 +92,9 @@ fun PaymentsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                         }
                     }
 
-                    val waitingItems = payments.filter { it.isUnpaid == true || (it.isUnpaid == null && (it.payment?.status.isNullOrBlank() || !it.payment!!.status.equals("PAID", ignoreCase = true))) }
-                    val paidItems = payments.filter { it.isUnpaid == false || (!it.payment?.status.isNullOrBlank() && it.payment?.status.equals("PAID", ignoreCase = true)) }
+                    val (waitingItems, paidItems) = payments.partition { item ->
+                        item.isUnpaid == true || (item.isUnpaid == null && (item.payment?.status.isNullOrBlank() || item.payment?.status?.equals("PAID", ignoreCase = true) != true))
+                    }
 
                     when (selectedTab) {
                         0 -> {

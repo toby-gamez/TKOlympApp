@@ -230,6 +230,13 @@ fun App() {
                     )
                     loggedIn == false -> LoginScreen(onSuccess = {
                         loggedIn = true
+                        try {
+                            if (com.tkolymp.shared.ServiceLocator.networkMonitor.isConnected()) {
+                                kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
+                                    try { com.tkolymp.shared.ServiceLocator.offlineSyncManager.downloadAll() } catch (_: Exception) {}
+                                }
+                            }
+                        } catch (_: Exception) {}
                     })
                     else -> AppNavHost(
                         navController = navController,
@@ -879,8 +886,12 @@ fun AppNavHost(
             LaunchedEffect(eventId) {
                 loading = true
                 try {
-                    val svc = ServiceLocator.eventService
-                    evJson = withContext(Dispatchers.IO) { svc.fetchEventById(eventId!!) }
+                    if (eventId == null) {
+                        error = "Missing event id"
+                    } else {
+                        val svc = ServiceLocator.eventService
+                        evJson = withContext(Dispatchers.IO) { svc.fetchEventById(eventId) }
+                    }
                 } catch (ex: Exception) {
                     error = ex.message
                 } finally {
@@ -922,8 +933,9 @@ fun AppNavHost(
                     val regResultMessage = remember { mutableStateOf<String?>(null) }
 
                     Column {
+                        val safeEventId = eventId ?: 0L
                         RegistrationScreen(
-                        eventId = eventId!!,
+                        eventId = safeEventId,
                         mode = mode,
                         trainers = trainers,
                         registrations = registrations,

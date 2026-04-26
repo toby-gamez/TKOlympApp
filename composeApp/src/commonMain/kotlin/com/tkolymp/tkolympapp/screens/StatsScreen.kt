@@ -701,10 +701,13 @@ private fun CompareScreenContent(
             val activeSlots = state.compareSeasons.indices
                 .filter { state.compareSeasons[it] != null && state.compareData[it] != null }
             if (activeSlots.size >= 2) {
-                CompareDetailContent(
-                    slots = activeSlots.map { idx -> Pair(slotLetters[idx], state.compareData[idx]!!) },
-                    strings = strings
-                )
+                val slotPairs = activeSlots.mapNotNull { idx -> state.compareData[idx]?.let { Pair(slotLetters[idx], it) } }
+                if (slotPairs.size >= 2) {
+                    CompareDetailContent(
+                        slots = slotPairs,
+                        strings = strings
+                    )
+                }
             }
         }
 
@@ -863,7 +866,7 @@ private fun CompareDetailContent(
         StatsCard(title = strings.typeBreakdown) {
             allTypes.sortedByDescending { t -> typeMaps.sumOf { m -> m[t]?.count ?: 0 } }.forEach { type ->
                 val entries = typeMaps.map { it[type] }
-                val displayName = entries.firstNotNullOfOrNull { it }!!.displayName.replaceFirstChar { it.uppercase() }
+                val displayName = entries.firstNotNullOfOrNull { it }?.displayName?.replaceFirstChar { it.uppercase() } ?: ""
                 Column(modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp)) {
                     Text(displayName, style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)

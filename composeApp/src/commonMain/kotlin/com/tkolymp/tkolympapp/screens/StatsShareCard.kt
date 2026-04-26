@@ -472,7 +472,7 @@ internal fun StatsShareCard(
                     if (scoreEntry.totalScore != null) {
                         ShareStatPill(
                             modifier = Modifier.weight(1f),
-                            value = scoreEntry.totalScore!!.roundTo1dp().toString(),
+                            value = scoreEntry.totalScore?.roundTo1dp()?.toString() ?: "0",
                             label = "bodů celkem"
                         )
                     }

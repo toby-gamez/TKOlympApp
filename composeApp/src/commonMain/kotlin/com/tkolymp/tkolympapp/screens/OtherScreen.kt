@@ -162,9 +162,9 @@ fun OtherScreen(
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         if (state.personDob != null && !showDebug) {
-                            val formatted = formatDateString(state.personDob!!)
+                            val formatted = state.personDob?.let { formatDateString(it) }
                             Text(
-                                formatted ?: state.personDob!!,
+                                formatted ?: (state.personDob ?: ""),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
                                 modifier = Modifier.padding(top = 2.dp)
@@ -178,7 +178,7 @@ fun OtherScreen(
                 }
             }
 
-            if (state.error != null) Text(state.error!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(12.dp))
+            if (state.error != null) Text(state.error ?: "", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(12.dp))
 
             // Trio buttons: Payments | Stats | My trainings (three equal cards)
             Row(

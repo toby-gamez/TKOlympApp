@@ -52,6 +52,7 @@ import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.language.NationalityHelper
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CancellationException
+import com.tkolymp.shared.Logger
 
 @Composable
 fun ChangePasswordDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
@@ -258,7 +259,7 @@ fun ChangePersonalDataDialog(
                                     modifier = Modifier.fillMaxWidth(0.85f)
                                 )
                                 IconButton(onClick = {
-                                    println("[ProfileDialogs] Date icon clicked")
+                                    Logger.d("ProfileDialogs", "Date icon clicked")
                                     focusManager.clearFocus()
                                     showDatePicker = true
                                 }) {
@@ -353,7 +354,7 @@ fun ChangePersonalDataDialog(
                                     orientationNumber = orientation
                                 )
                             )
-                            try { println("[ProfileScreen] Sending PersonUpdateRequest: $req") } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+                            try { Logger.d("ProfileDialogs", "Sending PersonUpdateRequest: $req") } catch (e: CancellationException) { throw e } catch (ex: Exception) { Logger.w("ProfileDialogs", "log failed: ${ex.message}") }
                             val ok = try { ServiceLocator.userService.updatePerson(pid, req) } catch (e: CancellationException) { throw e } catch (ex: Exception) { false }
                             if (ok) {
                                 onSave(

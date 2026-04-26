@@ -50,3 +50,5 @@ composeApp/build.gradle.kts
 local.properties
 composeApp/google-services.json
 .kotlin/errors/*
+.agents/skills/*
+REPO_REVIEW.md

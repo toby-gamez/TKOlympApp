@@ -215,10 +215,10 @@ fun CalendarScreen(
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
                 ) {
-                    val visibleDatesToRender = if (calState.visibleDates.isEmpty() && calState.isOffline && cachedVisibleDates.value != null) cachedVisibleDates.value!! else calState.visibleDates
+                    val visibleDatesToRender = if (calState.visibleDates.isEmpty() && calState.isOffline && cachedVisibleDates.value != null) cachedVisibleDates.value.orEmpty() else calState.visibleDates
                     visibleDatesToRender.forEach { date ->
-                        val lessonsByTrainer = if ((calState.lessonsByTrainerByDay[date].orEmpty().isEmpty()) && calState.isOffline && cachedLessonsByTrainer.value != null) cachedLessonsByTrainer.value!!.getOrDefault(date, emptyMap()) else calState.lessonsByTrainerByDay[date] ?: emptyMap()
-                        val otherList = if ((calState.otherEventsByDay[date].orEmpty().isEmpty()) && calState.isOffline && cachedOtherEvents.value != null) cachedOtherEvents.value!!.getOrDefault(date, emptyList()) else calState.otherEventsByDay[date] ?: emptyList()
+                        val lessonsByTrainer = if ((calState.lessonsByTrainerByDay[date].orEmpty().isEmpty()) && calState.isOffline && cachedLessonsByTrainer.value != null) cachedLessonsByTrainer.value?.getOrDefault(date, emptyMap()) ?: emptyMap() else calState.lessonsByTrainerByDay[date] ?: emptyMap()
+                        val otherList = if ((calState.otherEventsByDay[date].orEmpty().isEmpty()) && calState.isOffline && cachedOtherEvents.value != null) cachedOtherEvents.value?.getOrDefault(date, emptyList()) ?: emptyList() else calState.otherEventsByDay[date] ?: emptyList()
                         if (lessonsByTrainer.isEmpty() && otherList.isEmpty()) return@forEach
                         Column(modifier = Modifier.padding(8.dp)) {
                             val header = when (date) {

@@ -172,10 +172,12 @@ class OverviewViewModel(
                 var regs: List<com.tkolymp.shared.event.Registration> = emptyList()
                 try {
                     val fullJson = try { eventService.fetchEventById(evId, forceRefresh = false) } catch (_: Exception) { null }
-                    val regArr = when {
-                        fullJson?.get("eventRegistrationsList") is kotlinx.serialization.json.JsonArray -> fullJson!!.get("eventRegistrationsList") as kotlinx.serialization.json.JsonArray
-                        fullJson?.get("eventRegistrations") is kotlinx.serialization.json.JsonObject -> (fullJson!!.get("eventRegistrations") as kotlinx.serialization.json.JsonObject)["nodes"] as? kotlinx.serialization.json.JsonArray
-                        else -> null
+                    val regArr = fullJson?.let { fj ->
+                        when {
+                            fj["eventRegistrationsList"] is kotlinx.serialization.json.JsonArray -> fj["eventRegistrationsList"] as kotlinx.serialization.json.JsonArray
+                            fj["eventRegistrations"] is kotlinx.serialization.json.JsonObject -> (fj["eventRegistrations"] as kotlinx.serialization.json.JsonObject)["nodes"] as? kotlinx.serialization.json.JsonArray
+                            else -> null
+                        }
                     }
                     if (regArr != null) {
                         regs = regArr.mapNotNull { item ->
@@ -211,10 +213,12 @@ class OverviewViewModel(
                         val raw = try { ServiceLocator.offlineSyncManager.loadEventDetail(evId) } catch (_: Exception) { null }
                         if (!raw.isNullOrBlank()) {
                             val parsed = try { Json.parseToJsonElement(raw).jsonObject } catch (_: Exception) { null }
-                            val regArr2 = when {
-                                parsed?.get("eventRegistrationsList") is kotlinx.serialization.json.JsonArray -> parsed!!.get("eventRegistrationsList") as kotlinx.serialization.json.JsonArray
-                                parsed?.get("eventRegistrations") is kotlinx.serialization.json.JsonObject -> (parsed!!.get("eventRegistrations") as kotlinx.serialization.json.JsonObject)["nodes"] as? kotlinx.serialization.json.JsonArray
-                                else -> null
+                            val regArr2 = parsed?.let { pj ->
+                                when {
+                                    pj["eventRegistrationsList"] is kotlinx.serialization.json.JsonArray -> pj["eventRegistrationsList"] as kotlinx.serialization.json.JsonArray
+                                    pj["eventRegistrations"] is kotlinx.serialization.json.JsonObject -> (pj["eventRegistrations"] as kotlinx.serialization.json.JsonObject)["nodes"] as? kotlinx.serialization.json.JsonArray
+                                    else -> null
+                                }
                             }
                             if (regArr2 != null) {
                                 regs = regArr2.mapNotNull { item ->

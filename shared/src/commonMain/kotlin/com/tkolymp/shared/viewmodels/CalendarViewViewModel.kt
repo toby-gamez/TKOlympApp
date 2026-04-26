@@ -371,9 +371,18 @@ class CalendarViewViewModel(
                 val ev = inst.event
                 if (ev?.id != null) {
                     try {
-                        val raw = ServiceLocator.offlineSyncManager.loadEventDetail(ev.id)
+                        var obj: kotlinx.serialization.json.JsonObject? = null
+                        val raw = try { ServiceLocator.offlineSyncManager.loadEventDetail(ev.id) } catch (_: Exception) { null }
                         if (!raw.isNullOrBlank()) {
-                            val obj = json.parseToJsonElement(raw).jsonObject
+                            obj = json.parseToJsonElement(raw).jsonObject
+                        } else {
+                            // offline detail missing — try fetching full event from server as a fallback
+                            try {
+                                val fetched = try { eventService.fetchEventById(ev.id) } catch (_: Exception) { null }
+                                if (fetched != null) obj = fetched
+                            } catch (_: Exception) {}
+                        }
+                        if (obj != null) {
                             val trainers = (obj["eventTrainersList"] as? kotlinx.serialization.json.JsonArray)?.mapNotNull { (it as? kotlinx.serialization.json.JsonObject)?.get("name")?.jsonPrimitive?.contentOrNull }
                                 ?: (obj["eventTrainersList"] as? kotlinx.serialization.json.JsonArray)?.mapNotNull { it.jsonPrimitive.contentOrNull } ?: emptyList()
 

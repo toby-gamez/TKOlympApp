@@ -77,6 +77,8 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import com.tkolymp.tkolympapp.components.QuantityInput
+import com.tkolymp.shared.Logger
+import kotlinx.coroutines.CancellationException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -106,12 +108,12 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                 val s2 = async { viewModel.loadUiData() }
                 val s3 = async { viewModel.loadClubData() }
                 val s4 = async { viewModel.loadReminders() }
-                try { s1.await() } catch (_: Exception) {}
-                try { s2.await() } catch (_: Exception) {}
-                try { s3.await() } catch (_: Exception) {}
-                try { s4.await() } catch (_: Exception) {}
+                try { s1.await() } catch (e: Exception) { if (e is CancellationException) throw e; Logger.w("NotificationsSettings", "loadSettings failed: ${e.message}") }
+                try { s2.await() } catch (e: Exception) { if (e is CancellationException) throw e; Logger.w("NotificationsSettings", "loadUiData failed: ${e.message}") }
+                try { s3.await() } catch (e: Exception) { if (e is CancellationException) throw e; Logger.w("NotificationsSettings", "loadClubData failed: ${e.message}") }
+                try { s4.await() } catch (e: Exception) { if (e is CancellationException) throw e; Logger.w("NotificationsSettings", "loadReminders failed: ${e.message}") }
             }
-        } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (_: Exception) {}
+        } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.w("NotificationsSettings", "initial load failed: ${e.message}") }
     }
 
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
@@ -263,8 +265,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                         }
                                     }
                                 }
-                                if (deletingReminder != null) {
-                                    val toDelete = deletingReminder!!
+                                deletingReminder?.let { toDelete ->
                                     AlertDialog(
                                         onDismissRequest = { deletingReminder = null },
                                         title = { Text(AppStrings.current.notifications.deleteRuleConfirmTitle) },
@@ -280,8 +281,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                         }
                                     )
                                 }
-                                if (editingReminder != null) {
-                                    val editing = editingReminder!!
+                                editingReminder?.let { editing ->
                                     var editUnit by remember(editing) { mutableStateOf(if (editing.minutesBefore >= 60 && editing.minutesBefore % 60 == 0) "h" else "min") }
                                     var editValue by remember(editing) { mutableStateOf(if (editing.minutesBefore >= 60 && editing.minutesBefore % 60 == 0) editing.minutesBefore / 60 else editing.minutesBefore) }
                                     AlertDialog(

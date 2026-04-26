@@ -91,7 +91,7 @@ object CalendarUtils {
         // Check if user is registered
         val isRegistered = event.eventRegistrationsList.any { reg ->
             reg.person?.id?.toString() == myPersonId ||
-            (reg.couple?.id != null && myCoupleIds.contains(reg.couple!!.id.toString()))
+            (reg.couple?.id?.toString()?.let { myCoupleIds.contains(it) } ?: false)
         }
         
         // Check if user is trainer
