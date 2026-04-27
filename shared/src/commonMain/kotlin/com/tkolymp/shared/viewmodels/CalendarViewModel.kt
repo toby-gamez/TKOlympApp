@@ -5,6 +5,7 @@ import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.cache.CacheService
 import com.tkolymp.shared.event.EventInstance
+import com.tkolymp.shared.storage.OfflineDataStorage
 import com.tkolymp.shared.personalevents.TrainingType
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -40,6 +41,7 @@ data class CalendarState(
     val myPersonId: String? = null,
     val myCoupleIds: List<String> = emptyList(),
     val isOffline: Boolean = false,
+    val hasCancelledMineToShow: Boolean = false,
     override val isLoading: Boolean = false,
     override val error: String? = null
 ) : ViewModelState
@@ -47,7 +49,8 @@ data class CalendarState(
 class CalendarViewModel(
     private val eventService: com.tkolymp.shared.event.IEventService = ServiceLocator.eventService,
     private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService,
-    private val cache: CacheService = ServiceLocator.cacheService
+    private val cache: CacheService = ServiceLocator.cacheService,
+    private val offlineDataStorage: OfflineDataStorage = ServiceLocator.offlineDataStorage
 ) : ViewModel() {
     private val _state = MutableStateFlow(CalendarState())
     val state: StateFlow<CalendarState> = _state.asStateFlow()
@@ -217,6 +220,13 @@ class CalendarViewModel(
             lastWeekOffset = weekOffset
             lastOnlyMine = onlyMine
 
+            val hasCancelledMineToShow = if (onlyMine) {
+                val dismissedIds = loadDismissedIds()
+                mergedMap.values.flatten().any { it.isCancelled && it.id.toString() !in dismissedIds }
+            } else {
+                _state.value.hasCancelledMineToShow
+            }
+
             _state.value = _state.value.copy(
                 eventsByDay = mergedMap,
                 lessonsByTrainerByDay = lessonsByTrainerByDay,
@@ -226,6 +236,7 @@ class CalendarViewModel(
                 tomorrowString = tomorrowString,
                 myPersonId = pid,
                 myCoupleIds = cids,
+                hasCancelledMineToShow = hasCancelledMineToShow,
                 isLoading = false
             )
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
@@ -491,5 +502,12 @@ class CalendarViewModel(
 
     fun clearError() {
         _state.value = _state.value.copy(error = null)
+    }
+
+    private suspend fun loadDismissedIds(): Set<String> {
+        return try {
+            val raw = withContext(Dispatchers.Default) { offlineDataStorage.load("dismissed_cancelled_replacements") }
+            raw?.split(",")?.filter { it.isNotBlank() }?.toSet() ?: emptySet()
+        } catch (e: CancellationException) { throw e } catch (_: Exception) { emptySet() }
     }
 }

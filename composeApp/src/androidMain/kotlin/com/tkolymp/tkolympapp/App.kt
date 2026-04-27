@@ -58,6 +58,7 @@ import com.tkolymp.shared.viewmodels.OnboardingViewModel
 import com.tkolymp.tkolympapp.screens.AboutScreen
 import com.tkolymp.tkolympapp.screens.BoardScreen
 import com.tkolymp.tkolympapp.screens.CalendarScreen
+import com.tkolymp.tkolympapp.screens.FreeLessonsScreen
 import com.tkolymp.tkolympapp.screens.CalendarViewScreen
 import com.tkolymp.tkolympapp.screens.EventScreen
 import com.tkolymp.tkolympapp.screens.EventsScreen
@@ -342,7 +343,21 @@ fun AppNavHost(
                 onOpenEvent = { id -> navController.navigate("event/$id") },
                 onNavigateTimeline = if (preferTimeline) ({ navController.navigateUp() }) else ({ navController.navigate("timeline") }),
                 onBack = if (preferTimeline) ({ navController.navigateUp() }) else null,
+                onFindFreeLessons = { navController.navigate("free-lessons") },
                 bottomPadding = bottomPadding
+            )
+        }
+
+        composable(
+            route = "free-lessons",
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+            popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) },
+            popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+        ) {
+            FreeLessonsScreen(
+                onBack = { navController.navigateUp() },
+                onOpenEvent = { id -> navController.navigate("event/$id") }
             )
         }
         

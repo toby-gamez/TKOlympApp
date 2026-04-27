@@ -21,6 +21,7 @@ import com.tkolymp.shared.language.MiscStrings
 import com.tkolymp.shared.language.NavigationStrings
 import com.tkolymp.shared.language.NotificationStrings
 import com.tkolymp.shared.language.OnboardingStrings
+import com.tkolymp.shared.language.FreeLessonsStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
@@ -345,6 +346,34 @@ val StringsCs = Strings(
         calendarViewTimeline = "Osa",
         calendarViewTimelineDesc = "Vizuální plán\ns časovou osou",
         start = "Začít",
+    ),
+    freeLessons = FreeLessonsStrings(
+        title = "Volné lekce",
+        infoTitle = "Jak se hodnotí",
+        scoringHeader = "Základní pravidla:",
+        scoringBase = "Základ: +100 bodů",
+        scoringDay = "Každý den od dneška: −5 bodů (až −70 za 14 dní)",
+        scoringNoTraining = "Pokud nemáš ten den žádný trénink: +30 bodů",
+        scoringSameLocation = "Stejná lokace jako tvůj trénink ten den: +20 bodů",
+        scoringNote = "Poznámka: lekce, které se kryjí s tvým tréninkem, nejsou v ‚Nejlepší nálezy‘.",
+        scoringOk = "Rozumím",
+        bestLabel = "Nejlepší nálezy",
+        otherLabel = "Ostatní",
+        replaceCancelledLabel = "Nahradit za zrušené",
+        noneFound = "Žádné volné lekce v příštích 2 týdnech.",
+        findButton = "Najít volné lekce",
+        dontBother = "Neobtěžuj mě pro tuto lekci",
+        cancelledLabel = "Zrušená lekce",
+        noReplacements = "Žádné náhradní lekce nalezeny.",
+        showReplacements = "Zobrazit náhrady",
+        hideReplacements = "Skrýt náhrady",
+        conflictTip = "Kryje se s {0}",
+        trainingFallback = "tréninkem",
+        differentHallNoTime = "Je to na jiném sále, nemáš dostatečný čas na přesun",
+        differentHallHasTime = "Je to na jiném sále, ale máš čas na přesun",
+        sameHallLongWait = "Mezi {0} a tímto je dlouhé čekání",
+        alsoGoodChoice = "Taky dobrá volba",
+        bestChoiceFallback = "Toto je nejlepší volba",
     ),
     dialogs = DialogStrings(
         passwordMinLength = "Heslo musí mít alespoň 8 znaků.",

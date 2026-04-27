@@ -22,12 +22,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ViewTimeline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -82,6 +86,7 @@ fun CalendarScreen(
     onNavigateTimeline: (() -> Unit)? = null,
     onBack: (() -> Unit)? = null,
     onCreatePersonalEvent: (() -> Unit)? = null,
+    onFindFreeLessons: (() -> Unit)? = null,
     bottomPadding: Dp = 0.dp
 ) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
@@ -185,6 +190,24 @@ fun CalendarScreen(
                     }
                 }
             )
+        },
+        floatingActionButton = {
+            val showFab = (onFindFreeLessons != null) || calState.hasCancelledMineToShow
+            if (showFab) {
+                Box(modifier = Modifier.padding(bottom = bottomPadding)) {
+                    BadgedBox(
+                        badge = {
+                            if (calState.hasCancelledMineToShow) {
+                                Badge(modifier = Modifier.size(20.dp))
+                            }
+                        }
+                    ) {
+                        FloatingActionButton(onClick = { onFindFreeLessons?.invoke() }) {
+                            Icon(Icons.Default.Search, contentDescription = "Najít volné lekce")
+                        }
+                    }
+                }
+            }
         }
     ) { padding ->
         SwipeToReload(

@@ -21,6 +21,7 @@ import com.tkolymp.shared.language.MiscStrings
 import com.tkolymp.shared.language.NavigationStrings
 import com.tkolymp.shared.language.NotificationStrings
 import com.tkolymp.shared.language.OnboardingStrings
+import com.tkolymp.shared.language.FreeLessonsStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
@@ -345,6 +346,34 @@ val StringsEn = Strings(
         calendarViewTimeline = "Timeline",
         calendarViewTimelineDesc = "Visual schedule\nwith time axis",
         start = "Start",
+    ),
+    freeLessons = FreeLessonsStrings(
+        title = "Free lessons",
+        infoTitle = "How scoring works",
+        scoringHeader = "Basic rules:",
+        scoringBase = "Base: +100 points",
+        scoringDay = "Each day from today: −5 points (up to −70 at 14 days)",
+        scoringNoTraining = "If you have no training that day: +30 points",
+        scoringSameLocation = "Same location as your training that day: +20 points",
+        scoringNote = "Note: lessons that conflict with your training are not in 'Best finds'.",
+        scoringOk = "Got it",
+        bestLabel = "Best finds",
+        otherLabel = "Other",
+        replaceCancelledLabel = "Replacements for cancelled",
+        noneFound = "No free lessons in the next 2 weeks.",
+        findButton = "Find free lessons",
+        dontBother = "Don't bother me for this lesson",
+        cancelledLabel = "Cancelled lesson",
+        noReplacements = "No replacement lessons found.",
+        showReplacements = "Show replacements",
+        hideReplacements = "Hide replacements",
+        conflictTip = "Conflicts with {0}",
+        trainingFallback = "training",
+        differentHallNoTime = "It's in a different hall; you don't have enough time to move",
+        differentHallHasTime = "It's in a different hall, but you have time to move",
+        sameHallLongWait = "There's a long wait between {0} and this",
+        alsoGoodChoice = "Also a good choice",
+        bestChoiceFallback = "This is the best choice",
     ),
     dialogs = DialogStrings(
         passwordMinLength = "Password must be at least 8 characters long.",

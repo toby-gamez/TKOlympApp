@@ -21,6 +21,7 @@ import com.tkolymp.shared.language.MiscStrings
 import com.tkolymp.shared.language.NavigationStrings
 import com.tkolymp.shared.language.NotificationStrings
 import com.tkolymp.shared.language.OnboardingStrings
+import com.tkolymp.shared.language.FreeLessonsStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
@@ -345,6 +346,34 @@ val StringsDe = Strings(
         calendarViewTimeline = "Zeitachse",
         calendarViewTimelineDesc = "Visueller Plan\nmit Zeitachse",
         start = "Loslegen",
+    ),
+    freeLessons = FreeLessonsStrings(
+        title = "Freie Lektionen",
+        infoTitle = "Wie die Bewertung funktioniert",
+        scoringHeader = "Grundregeln:",
+        scoringBase = "Grundwert: +100 Punkte",
+        scoringDay = "Jeder Tag ab heute: −5 Punkte (bis zu −70 nach 14 Tagen)",
+        scoringNoTraining = "Wenn du an dem Tag kein Training hast: +30 Punkte",
+        scoringSameLocation = "Gleicher Ort wie dein Training an diesem Tag: +20 Punkte",
+        scoringNote = "Hinweis: Lektionen, die mit deinem Training kollidieren, sind nicht in 'Beste Funde'.",
+        scoringOk = "Verstanden",
+        bestLabel = "Beste Funde",
+        otherLabel = "Andere",
+        replaceCancelledLabel = "Ersatz für Abgesagte",
+        noneFound = "Keine freien Lektionen in den nächsten 2 Wochen.",
+        findButton = "Freie Lektionen finden",
+        dontBother = "Belästige mich nicht wegen dieser Lektion",
+        cancelledLabel = "Abgesagte Lektion",
+        noReplacements = "Keine Ersatzlektionen gefunden.",
+        showReplacements = "Ersatz anzeigen",
+        hideReplacements = "Ersatz verbergen",
+        conflictTip = "Konkuriert mit {0}",
+        trainingFallback = "Training",
+        differentHallNoTime = "Es ist in einer anderen Halle, du hast nicht genug Zeit zum Wechsel",
+        differentHallHasTime = "Es ist in einer anderen Halle, aber du hast Zeit zum Wechsel",
+        sameHallLongWait = "Zwischen {0} und dieser Lektion ist eine lange Wartezeit",
+        alsoGoodChoice = "Auch eine gute Wahl",
+        bestChoiceFallback = "Das ist die beste Wahl",
     ),
     dialogs = DialogStrings(
         passwordMinLength = "Das Passwort muss mindestens 8 Zeichen lang sein.",

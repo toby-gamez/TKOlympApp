@@ -30,6 +30,7 @@ data class Strings(
     val misc: MiscStrings,
     val calendarView: CalendarViewStrings,
     val onboarding: OnboardingStrings,
+    val freeLessons: FreeLessonsStrings = FreeLessonsStrings(),
     val dialogs: DialogStrings,
     val errorMessages: ErrorMessageStrings,
     val about: AboutStrings,

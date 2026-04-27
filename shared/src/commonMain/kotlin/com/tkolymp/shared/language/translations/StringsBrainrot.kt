@@ -21,6 +21,7 @@ import com.tkolymp.shared.language.MiscStrings
 import com.tkolymp.shared.language.NavigationStrings
 import com.tkolymp.shared.language.NotificationStrings
 import com.tkolymp.shared.language.OnboardingStrings
+import com.tkolymp.shared.language.FreeLessonsStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
@@ -346,6 +347,34 @@ val StringsBrainrot = Strings(
         calendarViewTimeline = "Axis fr",
         calendarViewTimelineDesc = "Big brain visual\nschedule fr",
         start = "Let's go fr",
+    ),
+    freeLessons = FreeLessonsStrings(
+        title = "Free Seshes",
+        infoTitle = "How scoring goes",
+        scoringHeader = "Simple rules:",
+        scoringBase = "Base: +100 points",
+        scoringDay = "Each day from today: −5 points (up to −70 at 14 days)",
+        scoringNoTraining = "No training that day: +30 points",
+        scoringSameLocation = "Same spot as your training: +20 points",
+        scoringNote = "Note: conflicting lessons are not in 'Best finds'",
+        scoringOk = "I get the vibe",
+        bestLabel = "Best finds",
+        otherLabel = "Other finds",
+        replaceCancelledLabel = "Replacements for cancelled",
+        noneFound = "No free lessons in the next 2 weeks, sad",
+        findButton = "Find free lessons",
+        dontBother = "Don't bug me for this one",
+        cancelledLabel = "Cancelled lesson",
+        noReplacements = "No replacements found (rip)",
+        showReplacements = "Show replacements",
+        hideReplacements = "Hide replacements",
+        conflictTip = "Conflicts with {0}",
+        trainingFallback = "training",
+        differentHallNoTime = "Different hall, not enough time to move",
+        differentHallHasTime = "Different hall, but you got time",
+        sameHallLongWait = "Long wait between {0} and this",
+        alsoGoodChoice = "Also a solid pick",
+        bestChoiceFallback = "This is the best choice",
     ),
     dialogs = DialogStrings(
         passwordMinLength = "Password needs 8+ characters fr.",

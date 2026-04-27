@@ -21,6 +21,7 @@ import com.tkolymp.shared.language.MiscStrings
 import com.tkolymp.shared.language.NavigationStrings
 import com.tkolymp.shared.language.NotificationStrings
 import com.tkolymp.shared.language.OnboardingStrings
+import com.tkolymp.shared.language.FreeLessonsStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
@@ -345,6 +346,34 @@ val StringsSl = Strings(
         calendarViewTimeline = "Os",
         calendarViewTimelineDesc = "Vizualni urnik\ns časovno osjo",
         start = "Začni",
+    ),
+    freeLessons = FreeLessonsStrings(
+        title = "Proste lekcije",
+        infoTitle = "Kako se ocenjuje",
+        scoringHeader = "Osnovna pravila:",
+        scoringBase = "Osnova: +100 točk",
+        scoringDay = "Vsak dan od danes: −5 točk (do −70 po 14 dneh)",
+        scoringNoTraining = "Če nimaš treninga tisti dan: +30 točk",
+        scoringSameLocation = "Isti kraj kot tvoj trening tisti dan: +20 točk",
+        scoringNote = "Opomba: lekcije, ki se prekrivajo s tvojim treningom, niso v 'Najboljših najdbah'.",
+        scoringOk = "Razumem",
+        bestLabel = "Najboljše najdbe",
+        otherLabel = "Drugo",
+        replaceCancelledLabel = "Nadomestila za odpovedane",
+        noneFound = "V naslednjih 2 tednih ni prostih lekcij.",
+        findButton = "Poišči proste lekcije",
+        dontBother = "Ne moti me zaradi te lekcije",
+        cancelledLabel = "Odpovedana lekcija",
+        noReplacements = "Noben nadomestni termin ni najden.",
+        showReplacements = "Prikaži nadomestila",
+        hideReplacements = "Skrij nadomestila",
+        conflictTip = "Prekriva se s {0}",
+        trainingFallback = "trening",
+        differentHallNoTime = "Je v drugi dvorani, nimaš dovolj časa za prestop",
+        differentHallHasTime = "Je v drugi dvorani, vendar imaš čas za prestop",
+        sameHallLongWait = "Med {0} in to je dolgo čakanje",
+        alsoGoodChoice = "Tudi dobra izbira",
+        bestChoiceFallback = "To je najboljša izbira",
     ),
     dialogs = DialogStrings(
         passwordMinLength = "Geslo mora imeti vsaj 8 znakov.",

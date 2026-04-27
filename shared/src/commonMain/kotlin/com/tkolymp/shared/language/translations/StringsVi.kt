@@ -21,6 +21,7 @@ import com.tkolymp.shared.language.MiscStrings
 import com.tkolymp.shared.language.NavigationStrings
 import com.tkolymp.shared.language.NotificationStrings
 import com.tkolymp.shared.language.OnboardingStrings
+import com.tkolymp.shared.language.FreeLessonsStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
@@ -334,6 +335,34 @@ val StringsVi = Strings(
         calendarViewTimeline = "Trục thời gian",
         calendarViewTimelineDesc = "Lịch trực quan\nvới trục thời gian",
         start = "Bắt đầu",
+    ),
+    freeLessons = FreeLessonsStrings(
+        title = "Lớp trống",
+        infoTitle = "Cách chấm điểm",
+        scoringHeader = "Quy tắc cơ bản:",
+        scoringBase = "Cơ bản: +100 điểm",
+        scoringDay = "Mỗi ngày từ hôm nay: −5 điểm (tối đa −70 sau 14 ngày)",
+        scoringNoTraining = "Nếu bạn không có buổi tập trong ngày đó: +30 điểm",
+        scoringSameLocation = "Cùng địa điểm với buổi tập của bạn trong ngày: +20 điểm",
+        scoringNote = "Lưu ý: các lớp trùng thời gian với buổi tập của bạn sẽ không nằm trong 'Tìm kiếm tốt nhất'.",
+        scoringOk = "Hiểu rồi",
+        bestLabel = "Tìm kiếm tốt nhất",
+        otherLabel = "Khác",
+        replaceCancelledLabel = "Thay thế cho buổi bị hủy",
+        noneFound = "Không có lớp trống trong 2 tuần tới.",
+        findButton = "Tìm lớp trống",
+        dontBother = "Đừng làm phiền tôi về lớp này",
+        cancelledLabel = "Buổi học bị hủy",
+        noReplacements = "Không tìm thấy buổi thay thế.",
+        showReplacements = "Hiện các buổi thay thế",
+        hideReplacements = "Ẩn các buổi thay thế",
+        conflictTip = "Trùng với {0}",
+        trainingFallback = "buổi tập",
+        differentHallNoTime = "Nó ở phòng khác, bạn không có đủ thời gian để di chuyển",
+        differentHallHasTime = "Nó ở phòng khác, nhưng bạn có thời gian để di chuyển",
+        sameHallLongWait = "Có thời gian chờ dài giữa {0} và buổi này",
+        alsoGoodChoice = "Cũng là lựa chọn tốt",
+        bestChoiceFallback = "Đây là lựa chọn tốt nhất",
     ),
     auth = AuthStrings(
         emailOrUsername = "Email hoặc tên đăng nhập",

@@ -13,6 +13,7 @@ import com.tkolymp.shared.language.EventCalendarTabStrings
 import com.tkolymp.shared.language.EventStrings
 import com.tkolymp.shared.language.ExtendedProfileFieldStrings
 import com.tkolymp.shared.language.FilterStrings
+import com.tkolymp.shared.language.FreeLessonsStrings
 import com.tkolymp.shared.language.GenderStrings
 import com.tkolymp.shared.language.ImportExportStrings
 import com.tkolymp.shared.language.LanguageScreenStrings
@@ -40,6 +41,34 @@ val StringsSk = Strings(
         events = "Akcie",
         other = "Ostatné",
     ),
+        freeLessons = FreeLessonsStrings(
+            title = "Voľné lekcie",
+            infoTitle = "Ako sa hodnotí",
+            scoringHeader = "Základné pravidlá:",
+            scoringBase = "Základ: +100 bodov",
+            scoringDay = "Každý deň od dnes: −5 bodov (až −70 za 14 dní)",
+            scoringNoTraining = "Ak ten deň nemáš tréning: +30 bodov",
+            scoringSameLocation = "Rovnaké miesto ako tvoj tréning ten deň: +20 bodov",
+            scoringNote = "Poznámka: lekcie, ktoré sa prekrývajú s tvojím tréningom, nie sú v 'Najlepších nálezoch'.",
+            scoringOk = "Rozumiem",
+            bestLabel = "Najlepšie nálezy",
+            otherLabel = "Ostatné",
+            replaceCancelledLabel = "Nahradiť za zrušené",
+            noneFound = "Žiadne voľné lekcie v nasledujúcich 2 týždňoch.",
+            findButton = "Nájsť voľné lekcie",
+            dontBother = "Neotravuj ma pre túto lekciu",
+            cancelledLabel = "Zrušená lekcia",
+            noReplacements = "Žiadne náhradné lekcie nenájdené.",
+            showReplacements = "Zobraziť náhrady",
+            hideReplacements = "Skryť náhrady",
+            conflictTip = "Kryje sa s {0}",
+            trainingFallback = "tréninkom",
+            differentHallNoTime = "Je to v inom sále, nemáš dosť času na presun",
+            differentHallHasTime = "Je to v inom sále, ale máš čas na presun",
+            sameHallLongWait = "Medzi {0} a touto je dlhé čakanie",
+            alsoGoodChoice = "Tiež dobrá voľba",
+            bestChoiceFallback = "Toto je najlepšia voľba",
+        ),
     otherScreen = OtherScreenStrings(
         membersAndClub = "Členovia a klub",
         appSection = "Aplikácia",

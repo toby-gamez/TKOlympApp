@@ -6,6 +6,7 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.number
 import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
@@ -115,6 +116,40 @@ fun formatTimesWithDateAlways(since: String?, until: String?): String {
         }
         sinceData != null -> "${sinceData.first} ${sinceData.second}"
         untilData != null -> "${untilData.first} ${untilData.second}"
+        else -> ""
+    }
+}
+
+private fun dayOfWeekShort(ldt: LocalDateTime): String = when (ldt.dayOfWeek.isoDayNumber) {
+    1 -> "Po"; 2 -> "Út"; 3 -> "St"; 4 -> "Čt"; 5 -> "Pá"; 6 -> "So"; else -> "Ne"
+}
+
+fun formatTimesWithDayOfWeek(since: String?, until: String?): String {
+    if (since.isNullOrBlank() && until.isNullOrBlank()) return ""
+
+    fun parseDateTime(s: String?): Triple<String, String, String>? { // dayOfWeek, date, time
+        val ldt = parseToLocal(s) ?: return null
+        val dow = dayOfWeekShort(ldt)
+        val date = "${ldt.date.day}.${ldt.date.month.number}."
+        val time = "${ldt.hour.toString().padStart(2, '0')}:${ldt.minute.toString().padStart(2, '0')}"
+        return Triple(dow, date, time)
+    }
+
+    val sinceData = parseDateTime(since)
+    val untilData = parseDateTime(until)
+
+    return when {
+        sinceData != null && untilData != null -> {
+            val (dow, date, sinceTime) = sinceData
+            val (_, untilDate, untilTime) = untilData
+            if (date == untilDate) {
+                "$dow $date $sinceTime - $untilTime"
+            } else {
+                "$dow $date $sinceTime - ${untilData.first} $untilDate $untilTime"
+            }
+        }
+        sinceData != null -> "${sinceData.first} ${sinceData.second} ${sinceData.third}"
+        untilData != null -> "${untilData.first} ${untilData.second} ${untilData.third}"
         else -> ""
     }
 }

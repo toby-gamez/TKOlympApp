@@ -21,6 +21,7 @@ import com.tkolymp.shared.language.MiscStrings
 import com.tkolymp.shared.language.NavigationStrings
 import com.tkolymp.shared.language.NotificationStrings
 import com.tkolymp.shared.language.OnboardingStrings
+import com.tkolymp.shared.language.FreeLessonsStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
@@ -345,6 +346,34 @@ val StringsUa = Strings(
         calendarViewTimeline = "Вісь",
         calendarViewTimelineDesc = "Візуальний план\nз часовою шкалою",
         start = "Почати",
+    ),
+    freeLessons = FreeLessonsStrings(
+        title = "Вільні заняття",
+        infoTitle = "Як оцінюється",
+        scoringHeader = "Основні правила:",
+        scoringBase = "Базово: +100 балів",
+        scoringDay = "Кожен день від сьогодні: −5 балів (до −70 за 14 днів)",
+        scoringNoTraining = "Якщо в тебе немає тренування в цей день: +30 балів",
+        scoringSameLocation = "Та ж локація, що й твоє тренування: +20 балів",
+        scoringNote = "Примітка: заняття, що накладаються на твоє тренування, не в 'Найкращих знахідках'.",
+        scoringOk = "Готово",
+        bestLabel = "Найкращі знахідки",
+        otherLabel = "Інші",
+        replaceCancelledLabel = "Заміни для скасованих",
+        noneFound = "Немає вільних занять протягом наступних 2 тижнів.",
+        findButton = "Знайти вільні заняття",
+        dontBother = "Не турбуй мене щодо цього заняття",
+        cancelledLabel = "Скасоване заняття",
+        noReplacements = "Замін не знайдено.",
+        showReplacements = "Показати заміни",
+        hideReplacements = "Приховати заміни",
+        conflictTip = "Накладається на {0}",
+        trainingFallback = "тренування",
+        differentHallNoTime = "В іншому залі, у тебе недостатньо часу на переміщення",
+        differentHallHasTime = "В іншому залі, але у тебе є час на переміщення",
+        sameHallLongWait = "Між {0} і цим довге очікування",
+        alsoGoodChoice = "Теж хороший вибір",
+        bestChoiceFallback = "Це найкращий вибір",
     ),
     dialogs = DialogStrings(
         passwordMinLength = "Пароль повинен містити принаймні 8 символів.",
