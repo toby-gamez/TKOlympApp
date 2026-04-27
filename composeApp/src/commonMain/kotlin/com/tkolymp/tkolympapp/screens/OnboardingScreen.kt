@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.sp
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.OnboardingViewModel
 import com.tkolymp.tkolympapp.platform.AppLogo
+import com.tkolymp.tkolympapp.ui.brandLightPrimary
 import kotlinx.coroutines.launch
 
 @Composable
@@ -185,7 +186,7 @@ private fun CalendarViewPickerPage(
             modifier = Modifier
                 .size(88.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary),
+                .background(brandLightPrimary()),
             contentAlignment = Alignment.Center
         ) {
             AppLogo(size = 100.dp)
@@ -347,7 +348,7 @@ private fun OnboardingPageScaffold(
             modifier = Modifier
                 .size(88.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary),
+                .background(brandLightPrimary()),
             contentAlignment = Alignment.Center
         ) {
             AppLogo(size = 100.dp)

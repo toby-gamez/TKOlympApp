@@ -20,6 +20,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+// removed TextFieldDefaults import — using Modifier background for inputs
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -27,6 +28,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
@@ -41,6 +46,67 @@ import com.tkolymp.tkolympapp.ui.brandLightPrimary
 import kotlinx.coroutines.launch
 
 @Composable
+fun BackgroundPluses(
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.primary,
+    rows: Int = 8,
+    cols: Int = 5
+) {
+    Canvas(modifier = modifier) {
+        val spacingX = size.width / cols.toFloat()
+        val spacingY = size.height / rows.toFloat()
+        val plusHalf = minOf(spacingX, spacingY) * 0.12f
+        val stroke = plusHalf * 0.45f
+        val drawColor = color.copy(alpha = 0.12f)
+
+        for (i in 0 until cols) {
+            for (j in 0 until rows) {
+                val cx = spacingX * (i + 0.5f)
+                val cy = spacingY * (j + 0.5f)
+                // draw a small gap in the arms so the center isn't darkened by overlap
+                val centerRadius = stroke * 0.55f
+                val gap = centerRadius * 1.1f
+
+                // horizontal arms (left and right) with rounded caps
+                drawLine(
+                    color = drawColor,
+                    start = Offset(cx - plusHalf, cy),
+                    end = Offset(cx - gap, cy),
+                    strokeWidth = stroke,
+                    cap = StrokeCap.Round
+                )
+                drawLine(
+                    color = drawColor,
+                    start = Offset(cx + gap, cy),
+                    end = Offset(cx + plusHalf, cy),
+                    strokeWidth = stroke,
+                    cap = StrokeCap.Round
+                )
+
+                // vertical arms (top and bottom) with rounded caps
+                drawLine(
+                    color = drawColor,
+                    start = Offset(cx, cy - plusHalf),
+                    end = Offset(cx, cy - gap),
+                    strokeWidth = stroke,
+                    cap = StrokeCap.Round
+                )
+                drawLine(
+                    color = drawColor,
+                    start = Offset(cx, cy + gap),
+                    end = Offset(cx, cy + plusHalf),
+                    strokeWidth = stroke,
+                    cap = StrokeCap.Round
+                )
+
+                // final center (same visible color as arms) — drawn once so it doesn't darken
+                drawCircle(color = drawColor, radius = centerRadius, center = Offset(cx, cy))
+            }
+        }
+    }
+}
+
+@Composable
 fun LoginScreen(onSuccess: () -> Unit = {}) {
     val viewModel = viewModel<LoginViewModel>()
     val state by viewModel.state.collectAsState()
@@ -52,6 +118,7 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
             .background(MaterialTheme.colorScheme.surface),
         contentAlignment = Alignment.Center
     ) {
+        BackgroundPluses(modifier = Modifier.fillMaxSize())
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -67,7 +134,7 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
                     .clip(CircleShape)
                     .background(brandLightPrimary())
             ) {
-                AppLogo(size = 80.dp)
+                AppLogo(size = 100.dp)
             }
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -91,7 +158,10 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
                 value = state.username,
                 onValueChange = { viewModel.updateUsername(it) },
                 label = { Text(AppStrings.current.auth.emailOrUsername) },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surface),
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true
             )
@@ -100,7 +170,10 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
                 value = state.password,
                 onValueChange = { viewModel.updatePassword(it) },
                 label = { Text(AppStrings.current.auth.password) },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surface),
                 visualTransformation = PasswordVisualTransformation(),
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true
