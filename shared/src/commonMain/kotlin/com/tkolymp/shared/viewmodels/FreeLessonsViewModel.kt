@@ -7,7 +7,9 @@ import com.tkolymp.shared.cache.CacheService
 import com.tkolymp.shared.event.EventInstance
 import com.tkolymp.shared.event.IEventService
 import com.tkolymp.shared.event.firstTrainerOrEmpty
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.storage.OfflineDataStorage
+import com.tkolymp.shared.sync.CalendarBucket
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -21,8 +23,14 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 import kotlin.time.Clock
-import com.tkolymp.shared.language.AppStrings
 
 private const val TAG = "FreeLessonsViewModel"
 private const val DISMISSED_STORAGE_KEY = "dismissed_cancelled_replacements"
@@ -53,7 +61,7 @@ class FreeLessonsViewModel(
     private val cache: CacheService = ServiceLocator.cacheService,
     private val offlineDataStorage: OfflineDataStorage = ServiceLocator.offlineDataStorage
 ) : ViewModel() {
-
+    private val json = Json { ignoreUnknownKeys = true }
     private val _state = MutableStateFlow(FreeLessonsState())
     val state: StateFlow<FreeLessonsState> = _state.asStateFlow()
 
@@ -69,25 +77,27 @@ class FreeLessonsViewModel(
             val startIso = today.toString() + "T00:00:00Z"
             val endIso = twoWeeksLater.toString() + "T23:59:59Z"
 
-            val (mineMap, allMap) = coroutineScope {
+            val (mineResult, allResult) = coroutineScope {
                 val mineDeferred = async(Dispatchers.Default) {
                     try {
-                        eventService.fetchEventsGroupedByDay(startIso, endIso, true, 200, 0, null, cacheNamespace = "free_lessons_mine_")
+                        fetchGroupedEvents(startIso, endIso, onlyMine = true, first = 500, offset = 0, onlyType = null, cacheNamespace = "free_lessons_mine_")
                     } catch (e: CancellationException) { throw e } catch (e: Exception) {
                         Logger.d(TAG, "fetchMine failed: ${e.message}")
-                        emptyMap()
+                        Pair(emptyMap<String, List<EventInstance>>(), true)
                     }
                 }
                 val allDeferred = async(Dispatchers.Default) {
                     try {
-                        eventService.fetchEventsGroupedByDay(startIso, endIso, false, 200, 0, null, cacheNamespace = "free_lessons_all_")
+                        fetchGroupedEvents(startIso, endIso, onlyMine = false, first = 500, offset = 0, onlyType = null, cacheNamespace = "free_lessons_all_")
                     } catch (e: CancellationException) { throw e } catch (e: Exception) {
                         Logger.d(TAG, "fetchAll failed: ${e.message}")
-                        emptyMap()
+                        Pair(emptyMap<String, List<EventInstance>>(), true)
                     }
                 }
                 Pair(mineDeferred.await(), allDeferred.await())
             }
+            val mineMap = mineResult.first
+            val allMap = allResult.first
 
             // Flatten mine events
             val myAllInstances = mineMap.values.flatten()
@@ -103,9 +113,10 @@ class FreeLessonsViewModel(
                 list.filter { !it.isCancelled }
             }
 
-            // Free slots from all events pool — only lessons, not cancelled, no registrations or open registration
+            // Free slots from all events pool — only lessons, not cancelled, 0 registrations, open registration.
             val freeSlots: List<EventInstance> = allMap.values.flatten()
                 .filter { !it.isCancelled }
+                .filter { isFuture(it.since) }
                 .filter { it.event?.type?.equals("lesson", ignoreCase = true) == true }
                 .filter {
                     it.event?.eventRegistrationsList?.isEmpty() == true &&
@@ -213,7 +224,7 @@ class FreeLessonsViewModel(
             overlaps(mine.since, mine.until, inst.since, inst.until)
         }
         val hasConflict = conflictingEvent != null
-        val conflictName = conflictingEvent?.event?.name
+        val conflictName = conflictingEvent?.event?.name?.takeIf { it.isNotBlank() }
 
         // Same location bonus
         val instLocation = locationOf(inst)
@@ -284,7 +295,7 @@ class FreeLessonsViewModel(
             }
             if (sameHall && gap > 45) {
                 // 2. Same hall, long wait — include previous training name
-                val prevName = nearestMine.event?.name ?: AppStrings.current.freeLessons.trainingFallback
+                val prevName = nearestMine.event?.name?.takeIf { it.isNotBlank() } ?: AppStrings.current.freeLessons.trainingFallback
                 return AppStrings.current.freeLessons.sameHallLongWait.replace("{0}", prevName)
             }
             // Same hall, gap OK → no tip
@@ -352,5 +363,250 @@ class FreeLessonsViewModel(
         try {
             withContext(Dispatchers.Default) { offlineDataStorage.save(DISMISSED_STORAGE_KEY, ids.joinToString(",")) }
         } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+    }
+
+    // Fetch helper — returns (data, isOffline). isOffline=true when falling back to stored data.
+    private suspend fun fetchGroupedEvents(
+        startIso: String,
+        endIso: String,
+        onlyMine: Boolean,
+        first: Int = 500,
+        offset: Int = 0,
+        onlyType: String? = null,
+        cacheNamespace: String? = null
+    ): Pair<Map<String, List<EventInstance>>, Boolean> {
+        return try {
+            val res = eventService.fetchEventsGroupedByDay(startIso, endIso, onlyMine, first, offset, onlyType, cacheNamespace = cacheNamespace)
+            if (res.isNotEmpty()) Pair(res, false)
+            else Pair(loadGroupedFromOffline(startIso, endIso, if (onlyMine) CalendarBucket.MINE else CalendarBucket.ALL), true)
+        } catch (ex: Exception) {
+            Logger.d(TAG, "fetchGroupedEvents failed: ${ex.message}")
+            Pair(loadGroupedFromOffline(startIso, endIso, if (onlyMine) CalendarBucket.MINE else CalendarBucket.ALL), true)
+        }
+    }
+
+    // Reconstruct grouped events map from offline calendar summaries and offline event details
+    private suspend fun loadGroupedFromOffline(startIso: String, endIso: String, bucket: CalendarBucket): Map<String, List<EventInstance>> {
+        val startDate = startIso.substringBefore("T")
+        val endDate = endIso.substringBefore("T")
+        val sd = try { kotlinx.datetime.LocalDate.parse(startDate) } catch (_: Exception) { return emptyMap() }
+        val ed = try { kotlinx.datetime.LocalDate.parse(endDate) } catch (_: Exception) { return emptyMap() }
+
+        val weekStarts = mutableSetOf<String>()
+        var d = sd
+        while (d <= ed) {
+            val ws = weekStartOf(d.toString() + "T00:00:00Z")
+            if (ws != null) weekStarts.add(ws)
+            d = d.plus(1, DateTimeUnit.DAY)
+        }
+        Logger.d(TAG, "loadGroupedFromOffline: computed weekStarts=$weekStarts for range $startDate..$endDate")
+
+        val result = mutableMapOf<String, MutableList<EventInstance>>();
+
+        // Prefer direct week keys, but also scan all stored keys for matches if keys are present under different formats
+        val candidateKeys = mutableSetOf<String>()
+        // direct keys from computed weekStarts
+        weekStarts.forEach { ws -> candidateKeys.add("offline_cal_${bucket.name}_$ws") }
+
+        // add any matching keys from storage (robustness for different week formats)
+        try {
+            val all = offlineDataStorage.allKeys()
+            all.forEach { k ->
+                if (k.startsWith("offline_cal_${bucket.name}_")) candidateKeys.add(k)
+            }
+            if (candidateKeys.isEmpty()) Logger.d(TAG, "loadGroupedFromOffline: no offline_cal keys for ${bucket.name}")
+            else Logger.d(TAG, "loadGroupedFromOffline: candidateKeys=${candidateKeys}")
+        } catch (_: Exception) { }
+
+        for (key in candidateKeys) {
+            val raw = try { offlineDataStorage.load(key) } catch (_: Exception) { null }
+            if (raw.isNullOrBlank()) continue
+            try {
+                // Use Calendar-like parsing to ensure the same shape as CalendarViewModel
+                val parsed = parseCalendarJson(raw)
+                val enriched = enrichParsedWithEventDetails(parsed)
+                enriched.forEach { (date, list) ->
+                    val target = result.getOrPut(date) { mutableListOf() }
+                    val existingIds = target.map { it.id }.toHashSet()
+                    target.addAll(list.filter { it.id !in existingIds })
+                }
+            } catch (e: Exception) { Logger.d(TAG, "loadGroupedFromOffline: parse failed for key=${key}: ${e.message}") }
+        }
+
+        // Filter to only dates within the requested range to avoid leaking past/future events
+        return result.filter { (date, _) -> date >= startDate && date <= endDate }
+    }
+
+    // --- Diagnostics helpers (call from debugger / temporary UI) ---
+    suspend fun debugListOfflineKeys(): Set<String> = try {
+        try { offlineDataStorage.allKeys() } catch (_: Exception) { emptySet() }
+    } catch (_: Exception) { emptySet() }
+
+    suspend fun debugOfflineCalendarSummary(): Map<String, Int> = try {
+        val all = try { offlineDataStorage.allKeys() } catch (_: Exception) { emptySet<String>() }
+        val calKeys = all.filter { it.startsWith("offline_cal_") }
+        val map = mutableMapOf<String, Int>()
+        calKeys.forEach { k ->
+            try {
+                val raw = offlineDataStorage.load(k)
+                if (!raw.isNullOrBlank()) {
+                    val obj = json.parseToJsonElement(raw).jsonObject
+                    var count = 0
+                    obj.forEach { (_, arrEl) ->
+                        count += try { arrEl.jsonArray.size } catch (_: Exception) { 0 }
+                    }
+                    map[k] = count
+                } else map[k] = 0
+            } catch (ex: Exception) {
+                map[k] = -1
+            }
+        }
+        map
+    } catch (_: Exception) { emptyMap() }
+
+    suspend fun debugLoadKey(key: String): String? = try { offlineDataStorage.load(key) } catch (_: Exception) { null }
+
+    private fun parseCalendarJson(raw: String): Map<String, List<EventInstance>> {
+        return try {
+            val parsedJson = kotlinx.serialization.json.Json.parseToJsonElement(raw).jsonObject
+            val result = mutableMapOf<String, MutableList<EventInstance>>()
+            parsedJson.entries.forEach { (date, elem) ->
+                val arr = elem.jsonArray
+                val list = mutableListOf<EventInstance>()
+                arr.forEach { item ->
+                    val obj = item.jsonObject
+                    val id = obj["id"]?.jsonPrimitive?.longOrNull ?: obj["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull() ?: 0L
+                    val isCancelled = obj["isCancelled"]?.jsonPrimitive?.booleanOrNull ?: false
+                    val since = obj["since"]?.jsonPrimitive?.contentOrNull
+                    val until = obj["until"]?.jsonPrimitive?.contentOrNull
+                    val updatedAt = obj["updatedAt"]?.jsonPrimitive?.contentOrNull
+                    val eventId = obj["eventId"]?.jsonPrimitive?.longOrNull
+                    val eventName = obj["eventName"]?.jsonPrimitive?.contentOrNull
+                    val eventType = obj["eventType"]?.jsonPrimitive?.contentOrNull
+                    val locationText = obj["locationText"]?.jsonPrimitive?.contentOrNull
+                    val trainers = (obj["trainers"]?.jsonArray)?.mapNotNull { it.jsonPrimitive.contentOrNull } ?: emptyList()
+
+                    val targetCohorts = (obj["targetCohorts"]?.jsonArray)?.mapNotNull { it2 ->
+                        val o = it2.jsonObject
+                        val cohortId = o["cohortId"]?.jsonPrimitive?.longOrNull ?: o["cohortId"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                        val cohortObj = o["cohort"]?.jsonObject
+                        val cohort = cohortObj?.let { c ->
+                            val cid = c["id"]?.jsonPrimitive?.longOrNull ?: c["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                            com.tkolymp.shared.event.Cohort(cid, c["name"]?.jsonPrimitive?.contentOrNull, c["colorRgb"]?.jsonPrimitive?.contentOrNull)
+                        }
+                        com.tkolymp.shared.event.TargetCohort(cohortId, cohort)
+                    } ?: emptyList()
+
+                    val registrations = (obj["eventRegistrationsList"]?.jsonArray)?.mapNotNull { regEl ->
+                        val o = regEl.jsonObject
+                        val rid = o["id"]?.jsonPrimitive?.longOrNull ?: o["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+
+                        val personObj = o["person"]?.jsonObject
+                        val person = personObj?.let { p ->
+                            val pid = p["id"]?.jsonPrimitive?.longOrNull ?: p["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                            com.tkolymp.shared.event.Person(pid, p["name"]?.jsonPrimitive?.contentOrNull, p["firstName"]?.jsonPrimitive?.contentOrNull, p["lastName"]?.jsonPrimitive?.contentOrNull)
+                        }
+
+                        val coupleObj = o["couple"]?.jsonObject
+                        val couple = coupleObj?.let { c ->
+                            val cid = c["id"]?.jsonPrimitive?.longOrNull ?: c["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                            val manObj = c["man"]?.jsonObject
+                            val womanObj = c["woman"]?.jsonObject
+                            val man = manObj?.let { m -> com.tkolymp.shared.event.SimpleName(m["firstName"]?.jsonPrimitive?.contentOrNull, m["lastName"]?.jsonPrimitive?.contentOrNull) }
+                            val woman = womanObj?.let { w -> com.tkolymp.shared.event.SimpleName(w["firstName"]?.jsonPrimitive?.contentOrNull, w["lastName"]?.jsonPrimitive?.contentOrNull) }
+                            com.tkolymp.shared.event.Couple(cid, man, woman)
+                        }
+                        com.tkolymp.shared.event.Registration(rid, person, couple)
+                    } ?: emptyList()
+
+                    val locationObj = obj["location"]?.jsonObject
+                    val location = locationObj?.let { l ->
+                        val lid = l["id"]?.jsonPrimitive?.longOrNull ?: l["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                        com.tkolymp.shared.event.Location(lid, l["name"]?.jsonPrimitive?.contentOrNull)
+                    }
+
+                    val isRegistrationOpen = obj["isRegistrationOpen"]?.jsonPrimitive?.booleanOrNull ?: false
+                    val event = com.tkolymp.shared.event.Event(eventId, eventName, null, eventType, locationText, isRegistrationOpen, false, false, trainers, targetCohorts, registrations, location)
+                    list += com.tkolymp.shared.event.EventInstance(id, isCancelled, since, until, updatedAt, event)
+                }
+                result[date] = list
+            }
+            result
+        } catch (e: Exception) { emptyMap() }
+    }
+
+    private suspend fun enrichParsedWithEventDetails(parsed: Map<String, List<EventInstance>>): Map<String, List<EventInstance>> {
+        val jsonLib = kotlinx.serialization.json.Json
+        val result = mutableMapOf<String, MutableList<EventInstance>>()
+        for ((date, list) in parsed) {
+            val newList = mutableListOf<EventInstance>()
+            for (inst in list) {
+                val ev = inst.event
+                if (ev?.id != null) {
+                    try {
+                        val raw = ServiceLocator.offlineSyncManager.loadEventDetail(ev.id)
+                        if (!raw.isNullOrBlank()) {
+                            val obj = jsonLib.parseToJsonElement(raw).jsonObject
+                            val trainers = (obj["eventTrainersList"] as? kotlinx.serialization.json.JsonArray)?.mapNotNull { (it as? kotlinx.serialization.json.JsonObject)?.get("name")?.jsonPrimitive?.contentOrNull }
+                                ?: (obj["eventTrainersList"] as? kotlinx.serialization.json.JsonArray)?.mapNotNull { it.jsonPrimitive.contentOrNull } ?: emptyList()
+
+                            val targetCohorts = (obj["eventTargetCohortsList"] as? kotlinx.serialization.json.JsonArray)?.mapNotNull { item ->
+                                val o = item as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null
+                                val cohortId = o["cohortId"]?.jsonPrimitive?.longOrNull ?: o["cohortId"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                                val cohortObj = o["cohort"] as? kotlinx.serialization.json.JsonObject
+                                val cohort = cohortObj?.let { c ->
+                                    val cid = c["id"]?.jsonPrimitive?.longOrNull ?: c["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                                    com.tkolymp.shared.event.Cohort(cid, c["name"]?.jsonPrimitive?.contentOrNull, c["colorRgb"]?.jsonPrimitive?.contentOrNull)
+                                }
+                                com.tkolymp.shared.event.TargetCohort(cohortId, cohort)
+                            } ?: emptyList()
+
+                            val regArr = when {
+                                obj["eventRegistrationsList"] is kotlinx.serialization.json.JsonArray -> obj["eventRegistrationsList"] as kotlinx.serialization.json.JsonArray
+                                obj["eventRegistrations"] is kotlinx.serialization.json.JsonObject -> (obj["eventRegistrations"] as kotlinx.serialization.json.JsonObject)["nodes"] as? kotlinx.serialization.json.JsonArray
+                                else -> null
+                            }
+                            val registrations = regArr?.mapNotNull { item ->
+                                val o = item as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null
+                                val rid = o["id"]?.jsonPrimitive?.longOrNull ?: o["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                                val personObj = o["person"] as? kotlinx.serialization.json.JsonObject
+                                val person = personObj?.let { p ->
+                                    val pid = p["id"]?.jsonPrimitive?.longOrNull ?: p["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                                    com.tkolymp.shared.event.Person(pid, p["name"]?.jsonPrimitive?.contentOrNull, p["firstName"]?.jsonPrimitive?.contentOrNull, p["lastName"]?.jsonPrimitive?.contentOrNull)
+                                }
+                                val coupleObj = o["couple"] as? kotlinx.serialization.json.JsonObject
+                                val couple = coupleObj?.let { c ->
+                                    val cid = c["id"]?.jsonPrimitive?.longOrNull ?: c["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                                    val manObj = c["man"] as? kotlinx.serialization.json.JsonObject
+                                    val womanObj = c["woman"] as? kotlinx.serialization.json.JsonObject
+                                    val man = manObj?.let { m -> com.tkolymp.shared.event.SimpleName(m["firstName"]?.jsonPrimitive?.contentOrNull, m["lastName"]?.jsonPrimitive?.contentOrNull) }
+                                    val woman = womanObj?.let { w -> com.tkolymp.shared.event.SimpleName(w["firstName"]?.jsonPrimitive?.contentOrNull, w["lastName"]?.jsonPrimitive?.contentOrNull) }
+                                    com.tkolymp.shared.event.Couple(cid, man, woman)
+                                }
+                                com.tkolymp.shared.event.Registration(rid, person, couple)
+                            } ?: emptyList()
+
+                            val locationObj = obj["location"] as? kotlinx.serialization.json.JsonObject
+                            val location = locationObj?.let { l ->
+                                val lid = l["id"]?.jsonPrimitive?.longOrNull ?: l["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                                com.tkolymp.shared.event.Location(lid, l["name"]?.jsonPrimitive?.contentOrNull)
+                            }
+
+                            // isLocked is always present in offline_event_* (was always in eventByIdQuery).
+                            // isRegistrationOpen was missing in old snapshots — infer same way as EventViewModel:
+                            // if locked → false, else use stored value, else true (open by default).
+                            val isLocked = obj["isLocked"]?.jsonPrimitive?.booleanOrNull ?: false
+                            val isRegistrationOpen = if (isLocked) false else (obj["isRegistrationOpen"]?.jsonPrimitive?.booleanOrNull ?: true)
+                            val enrichedEvent = com.tkolymp.shared.event.Event(ev.id, obj["name"]?.jsonPrimitive?.contentOrNull ?: ev.name, obj["description"]?.jsonPrimitive?.contentOrNull, obj["type"]?.jsonPrimitive?.contentOrNull ?: ev.type, obj["locationText"]?.jsonPrimitive?.contentOrNull ?: ev.locationText, isRegistrationOpen, obj["isVisible"]?.jsonPrimitive?.booleanOrNull ?: ev.isVisible, obj["isPublic"]?.jsonPrimitive?.booleanOrNull ?: ev.isPublic, trainers, targetCohorts.ifEmpty { ev.eventTargetCohortsList }, registrations.ifEmpty { ev.eventRegistrationsList }, location ?: ev.location)
+                            newList += com.tkolymp.shared.event.EventInstance(inst.id, inst.isCancelled, inst.since, inst.until, inst.updatedAt, enrichedEvent)
+                            continue
+                        }
+                    } catch (_: Exception) {}
+                }
+                newList += inst
+            }
+            result[date] = newList
+        }
+        return result
     }
 }

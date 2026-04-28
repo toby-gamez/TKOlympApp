@@ -199,6 +199,7 @@ class OfflineSyncManager(
                                         put("eventType", JsonPrimitive(ev.type ?: ""))
                                         put("locationText", JsonPrimitive(ev.locationText ?: ""))
                                         put("trainers", buildJsonArray { ev.eventTrainersList.forEach { add(JsonPrimitive(it)) } })
+                                        put("isRegistrationOpen", JsonPrimitive(ev.isRegistrationOpen))
                                     }
                                 })
                             }
@@ -401,6 +402,7 @@ class OfflineSyncManager(
                                             put("eventType", JsonPrimitive(ev.type ?: ""))
                                             put("locationText", JsonPrimitive(ev.locationText ?: ""))
                                             put("trainers", buildJsonArray { ev.eventTrainersList.forEach { add(JsonPrimitive(it)) } })
+                                            put("isRegistrationOpen", JsonPrimitive(ev.isRegistrationOpen))
                                         }
                                     })
                                 }
@@ -604,6 +606,7 @@ class OfflineSyncManager(
                                         put("eventType", JsonPrimitive(ev.type ?: ""))
                                         put("locationText", JsonPrimitive(ev.locationText ?: ""))
                                         put("trainers", buildJsonArray { ev.eventTrainersList.forEach { add(JsonPrimitive(it)) } })
+                                        put("isRegistrationOpen", JsonPrimitive(ev.isRegistrationOpen))
                                     }
                                 })
                             }

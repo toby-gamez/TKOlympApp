@@ -505,7 +505,7 @@ val StringsBrainrot = Strings(
         offlineStageLabel = "Stage:",
     ),
     personalEvents = com.tkolymp.shared.language.PersonalEventStrings(
-        myTrainings = "Rizz Trainings",
+        myTrainings = "Rizz Trains",
         noTrainings = "No training vibes",
         newTraining = "New Rizz Session",
         editTraining = "Tweak Rizz",

@@ -112,6 +112,7 @@ class EventService(
                         __typename
                     }
                     locationText
+                    isRegistrationOpen
                     isLocked
                     isVisible
                     isPublic
