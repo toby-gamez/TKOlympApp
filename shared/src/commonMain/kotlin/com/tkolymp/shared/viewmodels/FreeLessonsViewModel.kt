@@ -113,9 +113,15 @@ class FreeLessonsViewModel(
                 list.filter { !it.isCancelled }
             }
 
+            // Collect all instances from ALL bucket first — including cancelled ones.
+            // Build a set of cancelled IDs: if the same instance appears in multiple cached weeks
+            // with different isCancelled values (stale vs. fresh), the cancelled flag wins.
+            val allInstances = allMap.values.flatten()
+            val cancelledAllIds = allInstances.filter { it.isCancelled }.map { it.id }.toSet()
+
             // Free slots from all events pool — only lessons, not cancelled, 0 registrations, open registration.
-            val freeSlots: List<EventInstance> = allMap.values.flatten()
-                .filter { !it.isCancelled }
+            val freeSlots: List<EventInstance> = allInstances
+                .filter { it.id !in cancelledAllIds }
                 .filter { isFuture(it.since) }
                 .filter { it.event?.type?.equals("lesson", ignoreCase = true) == true }
                 .filter {
@@ -593,12 +599,27 @@ class FreeLessonsViewModel(
                             }
 
                             // isLocked is always present in offline_event_* (was always in eventByIdQuery).
-                            // isRegistrationOpen was missing in old snapshots — infer same way as EventViewModel:
-                            // if locked → false, else use stored value, else true (open by default).
+                            // isRegistrationOpen: if locked → false, else use stored value, else fall back to
+                            // calendar summary value (NOT true — avoids marking cancelled lessons as open).
                             val isLocked = obj["isLocked"]?.jsonPrimitive?.booleanOrNull ?: false
-                            val isRegistrationOpen = if (isLocked) false else (obj["isRegistrationOpen"]?.jsonPrimitive?.booleanOrNull ?: true)
+                            val isRegistrationOpen = if (isLocked) false else (obj["isRegistrationOpen"]?.jsonPrimitive?.booleanOrNull ?: ev.isRegistrationOpen)
+
+                            // Cross-check isCancelled from event detail's eventInstancesList.
+                            // eventByIdQuery always fetches eventInstancesList { id isCancelled }.
+                            // If the event detail was refreshed after a cancellation (e.g. user opened the
+                            // event screen), it will have isCancelled=true even when the calendar summary
+                            // cache still says false. OR the two values so that either source wins.
+                            val isCancelledFromDetail = (obj["eventInstancesList"] as? kotlinx.serialization.json.JsonArray)
+                                ?.any { item ->
+                                    val o = item as? kotlinx.serialization.json.JsonObject ?: return@any false
+                                    val itemId = o["id"]?.jsonPrimitive?.longOrNull
+                                        ?: o["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                                    itemId == inst.id && (o["isCancelled"]?.jsonPrimitive?.booleanOrNull == true)
+                                } ?: false
+                            val isCancelledFinal = inst.isCancelled || isCancelledFromDetail
+
                             val enrichedEvent = com.tkolymp.shared.event.Event(ev.id, obj["name"]?.jsonPrimitive?.contentOrNull ?: ev.name, obj["description"]?.jsonPrimitive?.contentOrNull, obj["type"]?.jsonPrimitive?.contentOrNull ?: ev.type, obj["locationText"]?.jsonPrimitive?.contentOrNull ?: ev.locationText, isRegistrationOpen, obj["isVisible"]?.jsonPrimitive?.booleanOrNull ?: ev.isVisible, obj["isPublic"]?.jsonPrimitive?.booleanOrNull ?: ev.isPublic, trainers, targetCohorts.ifEmpty { ev.eventTargetCohortsList }, registrations.ifEmpty { ev.eventRegistrationsList }, location ?: ev.location)
-                            newList += com.tkolymp.shared.event.EventInstance(inst.id, inst.isCancelled, inst.since, inst.until, inst.updatedAt, enrichedEvent)
+                            newList += com.tkolymp.shared.event.EventInstance(inst.id, isCancelledFinal, inst.since, inst.until, inst.updatedAt, enrichedEvent)
                             continue
                         }
                     } catch (_: Exception) {}
