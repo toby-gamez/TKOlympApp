@@ -29,6 +29,8 @@ private val md_theme_light_onTertiaryContainer = Color(0xFF3A0007)
 
 private val md_theme_light_background = Color(0xFFFAFAFA)
 private val md_theme_light_surface = Color.White
+private val md_theme_light_surfaceVariant = Color(0xFFF0F1F5)
+private val md_theme_light_onSurfaceVariant = Color(0xFF1C1C1C)
 private val md_theme_light_onBackground = Color(0xFF1C1C1C)
 private val md_theme_light_onSurface = Color(0xFF1C1C1C)
 
@@ -54,6 +56,8 @@ val LightColorScheme = lightColorScheme(
     background = md_theme_light_background,
     onBackground = md_theme_light_onBackground,
     surface = md_theme_light_surface,
+    surfaceVariant = md_theme_light_surfaceVariant,
+    onSurfaceVariant = md_theme_light_onSurfaceVariant,
     onSurface = md_theme_light_onSurface,
 
     error = md_theme_light_error,
