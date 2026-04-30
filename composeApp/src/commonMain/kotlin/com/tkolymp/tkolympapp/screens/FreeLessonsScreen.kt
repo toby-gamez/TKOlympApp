@@ -52,6 +52,7 @@ import androidx.compose.material3.TextButton
 import com.tkolymp.shared.viewmodels.FreeLessonResult
 import com.tkolymp.shared.viewmodels.FreeLessonsViewModel
 import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.tkolympapp.components.RenderEventContent
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -292,11 +293,7 @@ private fun FreeLessonCard(
     compact: Boolean = false
 ) {
     val inst = result.instance
-    val eventId = inst.event?.id ?: return
-    val name = displayName(inst.event)
-    val timeText = formatTimesWithDayOfWeek(inst.since, inst.until)
-    val location = inst.event?.locationText?.takeIf { it.isNotBlank() }
-        ?: inst.event?.location?.name?.takeIf { it.isNotBlank() }
+    val eventId = (inst.event?.id as? Number)?.toLong() ?: return
 
     Card(
         modifier = Modifier
@@ -304,40 +301,19 @@ private fun FreeLessonCard(
             .padding(vertical = 4.dp)
             .clickable { onOpenEvent(eventId) }
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(if (compact) 8.dp else 12.dp)
+                .padding(if (compact) 8.dp else 12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(name, style = MaterialTheme.typography.titleSmall)
-                    val tip = result.tip
-                    if (!tip.isNullOrBlank()) {
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            tip,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "★ ${result.score}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(timeText, style = MaterialTheme.typography.bodySmall)
-            if (!location.isNullOrBlank()) {
-                Text(location, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
+            RenderEventContent(item = inst, tip = result.tip, showType = false, showDayOfWeek = true, modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "★ ${result.score}",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }

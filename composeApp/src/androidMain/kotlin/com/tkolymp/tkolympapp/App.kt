@@ -820,6 +820,8 @@ fun AppNavHost(
                 onEventClick = { id -> navController.navigate("event/$id") },
                 onBack = if (!preferTimeline) ({ navController.navigateUp() }) else null,
                 onSwitchToBlocks = if (preferTimeline) ({ navController.navigate("calendar") }) else null,
+                onFindFreeLessons = { navController.navigate("free-lessons") },
+                bottomPadding = bottomPadding,
                 
             )
         }

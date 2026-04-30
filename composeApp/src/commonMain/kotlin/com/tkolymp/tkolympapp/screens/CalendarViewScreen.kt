@@ -35,6 +35,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -96,7 +98,9 @@ fun CalendarViewScreen(
     viewModel: CalendarViewViewModel = viewModel(),
     onEventClick: (Long) -> Unit = {},
     onBack: (() -> Unit)? = null,
-    onSwitchToBlocks: (() -> Unit)? = null
+    onSwitchToBlocks: (() -> Unit)? = null,
+    onFindFreeLessons: (() -> Unit)? = null,
+    bottomPadding: Dp = 0.dp
 ) {
     val state by viewModel.state.collectAsState()
     val scope = rememberCoroutineScope()
@@ -152,6 +156,15 @@ fun CalendarViewScreen(
                     }
                 }
             )
+        },
+        floatingActionButton = {
+            if (onFindFreeLessons != null) {
+                Box(modifier = Modifier.padding(bottom = bottomPadding)) {
+                    FloatingActionButton(onClick = { onFindFreeLessons.invoke() }) {
+                        Icon(Icons.Default.Search, contentDescription = "Najít volné lekce")
+                    }
+                }
+            }
         }
     ) { padding ->
     Column(
