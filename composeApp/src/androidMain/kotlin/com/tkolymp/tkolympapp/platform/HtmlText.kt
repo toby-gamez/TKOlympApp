@@ -26,7 +26,8 @@ actual fun HtmlText(
     textColor: Color,
     linkColor: Color,
     textSizeSp: Float,
-    selectable: Boolean
+    selectable: Boolean,
+    onImageClick: ((String) -> Unit)?
 ) {
     var contentHeightPx by remember { mutableStateOf(0) }
     val density = LocalDensity.current
@@ -67,7 +68,29 @@ actual fun HtmlText(
                                 contentHeightPx = px
                             }
                         }
+                        // inject click handlers for images to call the Android bridge
+                        if (onImageClick != null) {
+                            try {
+                                view.evaluateJavascript(
+                                    "(function(){var imgs=document.getElementsByTagName('img');for(var i=0;i<imgs.length;i++){(function(){var s=imgs[i].src;imgs[i].onclick=function(){window.Android.onImageClick(s);};})();}})()"
+                                ) { /* no-op */ }
+                            } catch (_: Throwable) { }
+                        }
                     }
+                }
+
+                // JS bridge for image clicks
+                if (onImageClick != null) {
+                    addJavascriptInterface(object {
+                        @android.webkit.JavascriptInterface
+                        fun onImageClick(url: String) {
+                            try {
+                                android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                    onImageClick(url)
+                                }
+                            } catch (_: Throwable) { }
+                        }
+                    }, "Android")
                 }
             }
         },
@@ -85,6 +108,11 @@ actual fun HtmlText(
                                 val alpha = "40" // ~25% opacity
                                 "::selection { background: $rgb$alpha; }"
                         } else ""
+                        val injectImageClickScript = if (onImageClick != null) {
+                            // also attach click handlers on load in case some images are added later
+                            "<script>document.addEventListener('DOMContentLoaded', function(){var imgs=document.getElementsByTagName('img');for(var i=0;i<imgs.length;i++){(function(){var s=imgs[i].src;imgs[i].onclick=function(){window.Android.onImageClick(s);};})();}});</script>"
+                        } else ""
+
                         val styledHtml = """
                                 <!DOCTYPE html>
                                 <html>
@@ -105,6 +133,7 @@ actual fun HtmlText(
                                 </style>
                                 </head>
                                 <body>$htmlNoInline</body>
+                                $injectImageClickScript
                                 </html>
                         """.trimIndent()
             wv.loadDataWithBaseURL(null, styledHtml, "text/html", "UTF-8", null)

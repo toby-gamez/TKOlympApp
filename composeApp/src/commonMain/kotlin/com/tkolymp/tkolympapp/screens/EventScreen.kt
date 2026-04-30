@@ -70,6 +70,7 @@ import com.tkolymp.tkolympapp.components.QuantityInput
 import com.tkolymp.tkolympapp.platform.HtmlText
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonArray
+import com.tkolymp.tkolympapp.platform.FullscreenImageViewer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -104,6 +105,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
     }
 
     val ev = state.eventJson
+    val fullScreenImageUrl = remember { mutableStateOf<String?>(null) }
     // registration navigation handled by App NavHost via `onOpenRegistration`
 
         Scaffold(
@@ -370,7 +372,8 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                             textColor = MaterialTheme.colorScheme.onBackground,
                             linkColor = MaterialTheme.colorScheme.primary,
                             textSizeSp = bodySizeSp,
-                            selectable = true
+                            selectable = true,
+                            onImageClick = { url -> fullScreenImageUrl.value = url }
                         )
                         if (state.eventDescription.isNotBlank()) Spacer(modifier = Modifier.height(8.dp))
                     }
@@ -381,7 +384,8 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                             textColor = MaterialTheme.colorScheme.onBackground,
                             linkColor = MaterialTheme.colorScheme.primary,
                             textSizeSp = bodySizeSp,
-                            selectable = true
+                            selectable = true,
+                            onImageClick = { url -> fullScreenImageUrl.value = url }
                         )
                     }
                 }
@@ -560,6 +564,11 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
     }
 }
 }   // closes SwipeToReload
+
+        // Fullscreen image viewer for clicked images
+        fullScreenImageUrl.value?.let { url ->
+            FullscreenImageViewer(imageUrl = url) { fullScreenImageUrl.value = null }
+        }
 
     // Reminder dialog
     if (showReminderDialog) {

@@ -1,17 +1,11 @@
 package com.tkolymp.tkolympapp.screens
-import kotlinx.datetime.Clock
-import kotlinx.datetime.DateTimeUnit
-import com.tkolymp.shared.utils.formatShortDate
-import com.tkolymp.shared.utils.parseToLocal
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.plus
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -19,13 +13,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.filled.Cake
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Female
+import androidx.compose.material.icons.filled.Male
 import androidx.compose.material3.Card
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -36,19 +35,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.tkolymp.shared.people.PersonDetails
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.shared.people.PersonDetails
+import com.tkolymp.shared.utils.formatShortDate
+import com.tkolymp.shared.utils.parseToLocal
 import com.tkolymp.shared.viewmodels.PersonViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.parseColorOrDefault
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,28 +89,74 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                 }
             }
 
-            // Basic Info card
-            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
-                Column(modifier = Modifier.padding(8.dp)) {
-                    Text(AppStrings.current.profile.basicInfo, style = MaterialTheme.typography.labelLarge)
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
-                    p.birthDate?.let { bd ->
-                        val bdText = formatDateStringSmall(bd) ?: bd
-                        Text("${AppStrings.current.profile.birthDate}: $bdText", style = MaterialTheme.typography.bodySmall)
+            // Basic Info - like EventScreen (Row with two Cards, then Card for email)
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp)) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Cake,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        val bdText = p.birthDate?.let { formatDateStringSmall(it) ?: it } ?: "—"
+                        Text(bdText, style = MaterialTheme.typography.bodyMedium)
                     }
-                    p.email?.let { Text("${AppStrings.current.profile.email}: $it", style = MaterialTheme.typography.bodySmall) }
-                    p.cstsId?.let { Text("${AppStrings.current.profile.cstsId}: $it", style = MaterialTheme.typography.bodySmall) }
-                    p.wdsfId?.let { Text("${AppStrings.current.profile.wdsfId}: $it", style = MaterialTheme.typography.bodySmall) }
-                    p.gender?.let {
-                        val genderLabel = when (it) {
+                }
+                Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp)) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val genderIcon = when (p.gender) {
+                            "MAN" -> Icons.Default.Male
+                            "WOMAN" -> Icons.Default.Female
+                            else -> Icons.AutoMirrored.Filled.HelpOutline
+                        }
+                        Icon(
+                            genderIcon,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        val genderLabel = when (p.gender) {
                             "MAN" -> AppStrings.current.gender.genderMale
                             "WOMAN" -> AppStrings.current.gender.genderFemale
                             "UNSPECIFIED" -> AppStrings.current.gender.genderUnspecified
-                            else -> it.lowercase()
+                            null, "" -> "—"
+                            else -> p.gender!!.lowercase()
                         }
-                        Text("${AppStrings.current.profile.gender}: $genderLabel", style = MaterialTheme.typography.bodySmall)
+                        Text(genderLabel, style = MaterialTheme.typography.bodyMedium)
                     }
-                    // trainer badge is shown under the name header; do not duplicate here
+                }
+            }
+
+            if (!p.email.isNullOrBlank()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Email,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(p.email ?: "—", style = MaterialTheme.typography.bodyMedium)
+                    }
                 }
             }
 
@@ -180,10 +227,10 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                         Text(AppStrings.current.profile.activeCouple, style = MaterialTheme.typography.labelLarge)
                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                         p.activeCouplesList.forEach { c ->
-                            Card(modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp)
-                                .clickable { c.id?.let { onOpenCouple(it) } }
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 0.dp) // Remove extra vertical padding
                             ) {
                                 Column(modifier = Modifier.padding(12.dp)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {

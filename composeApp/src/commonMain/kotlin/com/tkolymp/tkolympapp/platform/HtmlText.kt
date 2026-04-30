@@ -16,5 +16,6 @@ expect fun HtmlText(
     textColor: Color = Color.Unspecified,
     linkColor: Color = Color.Unspecified,
     textSizeSp: Float = 14f,
-    selectable: Boolean = false
+    selectable: Boolean = false,
+    onImageClick: ((String) -> Unit)? = null
 )

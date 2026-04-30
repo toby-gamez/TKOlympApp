@@ -1,4 +1,5 @@
 package com.tkolymp.tkolympapp.screens
+import androidx.compose.foundation.clickable
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.shared.utils.formatShortDateTime
 import com.tkolymp.shared.utils.parseToLocal
@@ -49,6 +50,8 @@ import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.viewmodels.NoticeViewModel
 import com.tkolymp.shared.language.AppStrings
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.mutableStateOf
+import com.tkolymp.tkolympapp.platform.FullscreenImageViewer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,6 +65,7 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
 
     // Keep content visible during loading; SwipeToReload handles the refresh indicator.
     val a = state.announcement
+    val fullScreenImageUrl = remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -123,7 +127,7 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
                             ) {
                                 Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(20.dp))
                                 Text(
-                                    if (authorName.isNotBlank()) authorName else "–",
+                                    authorName.ifBlank { "–" },
                                     style = MaterialTheme.typography.bodySmall
                                 )
                             }
@@ -157,13 +161,18 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
                                     textColor = MaterialTheme.colorScheme.onBackground,
                                     linkColor = MaterialTheme.colorScheme.primary,
                                     textSizeSp = bodySizeSp,
-                                    selectable = true
+                                    selectable = true,
+                                    onImageClick = { url -> fullScreenImageUrl.value = url }
                                 )
                             }
                         }
                     }
                 }
             }
+        }
+
+        fullScreenImageUrl.value?.let { url ->
+            FullscreenImageViewer(imageUrl = url) { fullScreenImageUrl.value = null }
         }
 
         state.error?.let { err ->
