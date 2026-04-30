@@ -10,16 +10,21 @@ import kotlinx.datetime.plus
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -97,24 +102,46 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
                     Text(a.title ?: AppStrings.current.dialogs.noName, style = MaterialTheme.typography.titleLarge)
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            val authorName = listOfNotNull(a.author?.uJmeno, a.author?.uPrijmeni).joinToString(" ").trim()
-                            if (authorName.isNotBlank()) {
-                                Text("${AppStrings.current.misc.author}: $authorName", style = MaterialTheme.typography.bodySmall)
-                                Spacer(modifier = Modifier.height(4.dp))
-                            }
-                            fun formatIso(iso: String?): String? {
-                                if (iso.isNullOrBlank()) return null
-                                val ldt = parseToLocal(iso) ?: return iso
-                                return formatShortDateTime(ldt.date, ldt.hour, ldt.minute)
-                            }
+                    fun formatIso(iso: String?): String? {
+                        if (iso.isNullOrBlank()) return null
+                        val ldt = parseToLocal(iso) ?: return iso
+                        return formatShortDateTime(ldt.date, ldt.hour, ldt.minute)
+                    }
+                    val authorName = listOfNotNull(a.author?.uJmeno, a.author?.uPrijmeni).joinToString(" ").trim()
+                    val updatedFormatted = formatIso(a.updatedAt)
+                    val createdFormatted = formatIso(a.createdAt)
 
-                            formatIso(a.createdAt)?.let { f ->
-                                Text("${AppStrings.current.misc.createdAt}: $f", style = MaterialTheme.typography.bodySmall)
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp)) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(20.dp))
+                                Text(
+                                    if (authorName.isNotBlank()) authorName else "–",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
                             }
-                            formatIso(a.updatedAt)?.let { f ->
-                                Text("${AppStrings.current.misc.updatedAt}: $f", style = MaterialTheme.typography.bodySmall)
+                        }
+
+                        Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp)) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                if (updatedFormatted != null) {
+                                    Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(20.dp))
+                                    Text(updatedFormatted, style = MaterialTheme.typography.bodySmall)
+                                } else {
+                                    Icon(Icons.Default.AccessTime, contentDescription = null, modifier = Modifier.size(20.dp))
+                                    Text(createdFormatted ?: "–", style = MaterialTheme.typography.bodySmall)
+                                }
                             }
                         }
                     }

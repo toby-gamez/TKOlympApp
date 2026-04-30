@@ -859,7 +859,8 @@ fun AppNavHost(
                     onBack = { navController.navigateUp() },
                     onOpenRegistration = { mode, _ ->
                         navController.navigate("event/$eid/registration/$mode")
-                    }
+                    },
+                    onOpenPerson = { personId -> navController.navigate("person/$personId") }
                 )
             }
         }

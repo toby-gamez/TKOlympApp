@@ -153,12 +153,11 @@ class EventViewModel(
             val trainerDisplayNames = trainers.mapNotNull { trainerEl ->
                 val trainer = trainerEl.asJsonObjectOrNull() ?: return@mapNotNull null
                 val trainerName = trainer.str("name") ?: AppStrings.current.dialogs.noName
-                val lessonsOffered = trainer.int("lessonsOffered")
-                val lessonsRemaining = trainer.int("lessonsRemaining")
+                val lessonsOffered = trainer.int("lessonsOffered")?.takeIf { it > 0 }
+                val lessonsRemaining = trainer.int("lessonsRemaining")?.takeIf { it > 0 }
                 when {
                     lessonsOffered != null && lessonsRemaining != null ->
                         "$trainerName (nabízí: $lessonsOffered, zbývá: $lessonsRemaining)"
-                    lessonsOffered != null -> "$trainerName (nabízí: $lessonsOffered)"
                     else -> trainerName
                 }
             }.joinToString(", ")
@@ -172,8 +171,8 @@ class EventViewModel(
 
             val eventDateText = when {
                 firstDate != null && lastDate != null && firstDate != lastDate ->
-                    "${AppStrings.current.events.term}: ${formatTimesWithDateAlways(firstDate, null)} - ${formatTimesWithDateAlways(lastDate, null)}"
-                firstDate != null -> "${AppStrings.current.events.term}: ${formatTimesWithDateAlways(firstDate, lastDate)}"
+                    "${formatTimesWithDateAlways(firstDate, null)} - ${formatTimesWithDateAlways(lastDate, null)}"
+                firstDate != null -> formatTimesWithDateAlways(firstDate, lastDate)
                 else -> ""
             }
 

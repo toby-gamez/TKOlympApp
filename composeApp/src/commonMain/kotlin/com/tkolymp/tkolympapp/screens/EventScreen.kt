@@ -1,36 +1,36 @@
 package com.tkolymp.tkolympapp.screens
-import com.tkolymp.tkolympapp.SwipeToReload
-import com.tkolymp.shared.utils.formatTimes
-import com.tkolymp.shared.utils.formatTimesWithDateAlways
-import com.tkolymp.shared.utils.durationMinutes
-import com.tkolymp.shared.utils.translateEventType
-import com.tkolymp.shared.utils.formatHtmlContent
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsOff
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -39,6 +39,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -46,31 +47,33 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.shared.utils.asJsonArrayOrNull
+import com.tkolymp.shared.utils.asJsonObjectOrNull
+import com.tkolymp.shared.utils.formatTimesWithDateAlways
+import com.tkolymp.shared.utils.int
+import com.tkolymp.shared.utils.str
+import com.tkolymp.shared.utils.translateEventType
 import com.tkolymp.shared.viewmodels.EventViewModel
+import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.QuantityInput
+import com.tkolymp.tkolympapp.platform.HtmlText
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import com.tkolymp.shared.utils.asJsonObjectOrNull
-import com.tkolymp.shared.utils.asJsonArrayOrNull
-import com.tkolymp.shared.utils.str
-import com.tkolymp.shared.utils.int
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration: ((String, String?) -> Unit)? = null) {
+fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration: ((String, String?) -> Unit)? = null, onOpenPerson: ((String) -> Unit)? = null) {
     val viewModel = viewModel<EventViewModel>()
     val state by viewModel.state.collectAsState()
     val showAllInstances = remember { mutableStateOf(false) }
@@ -114,6 +117,28 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
                             }
                         }
+                    },
+                    actions = {
+                        if (!state.isPast && state.firstInstanceIso != null) {
+                            if (state.reminderId != null) {
+                                IconButton(onClick = { showReminderDialog = true }) {
+                                    Icon(Icons.Default.Notifications, contentDescription = AppStrings.current.notifications.remindMe)
+                                }
+                                IconButton(onClick = { scope.launch { viewModel.removeReminder(eventId) } }) {
+                                    Icon(Icons.Default.NotificationsOff, contentDescription = AppStrings.current.notifications.reminderRemoveAction)
+                                }
+                            } else {
+                                IconButton(onClick = { showReminderDialog = true }) {
+                                    Icon(Icons.Default.Notifications, contentDescription = AppStrings.current.notifications.remindMe)
+                                }
+                            }
+                        }
+                        IconButton(
+                            onClick = { scope.launch { viewModel.addToCalendar(eventId) } },
+                            enabled = !state.isAddedToCalendar
+                        ) {
+                            Icon(Icons.Default.CalendarMonth, contentDescription = AppStrings.current.events.addToCalendar)
+                        }
                     }
                 )
             }
@@ -135,29 +160,97 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                     .padding(12.dp)
                 ) {
             Text(state.eventName, style = MaterialTheme.typography.titleLarge)
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
+            val statusChips = buildList<String> {
+                if (state.isVisible) add(AppStrings.current.events.isVisible)
+                if (state.isPublic) add(AppStrings.current.events.isPublic)
+                if (state.isLocked) add(AppStrings.current.events.registrationClosed)
+                if (state.enableNotes) add(AppStrings.current.events.notesAllowed)
+            }
+            if (statusChips.isNotEmpty()) {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    statusChips.forEach { label ->
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = MaterialTheme.colorScheme.secondaryContainer
+                        ) {
+                            Text(
+                                label,
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            } else {
+                Spacer(modifier = Modifier.height(8.dp))
+            }
 
             // Typ a základní info
-        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
-            Column(modifier = Modifier.padding(12.dp)) {
-                val displayType = translateEventType(state.eventType)
-                if (!displayType.isNullOrBlank()) {
-                    Text("${AppStrings.current.events.eventType}: $displayType", style = MaterialTheme.typography.bodyMedium)
-                    Spacer(modifier = Modifier.height(4.dp))
+            val displayType = translateEventType(state.eventType)
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp)) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Category,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            if (!displayType.isNullOrBlank()) displayType else "—",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
-                if (!state.locationName.isNullOrBlank()) {
-                    Text("${AppStrings.current.events.place}: ${state.locationName}", style = MaterialTheme.typography.bodyMedium)
-                    Spacer(modifier = Modifier.height(4.dp))
-                }
-                if (state.eventDateText.isNotBlank()) {
-                    Text(state.eventDateText, style = MaterialTheme.typography.bodyMedium)
-                    Spacer(modifier = Modifier.height(4.dp))
-                }
-                if (state.instances.isNotEmpty()) {
-                    Text("${AppStrings.current.events.dateCount}: ${state.instances.size}", style = MaterialTheme.typography.bodySmall)
+                Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp)) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Place,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            if (!state.locationName.isNullOrBlank()) state.locationName!! else "—",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
             }
-        }
+            if (state.eventDateText.isNotBlank()) {
+                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Schedule,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(state.eventDateText, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            }
 
         // Seznam termínů
         // Show the instances card only when there is more than one instance
@@ -211,115 +304,45 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
             }
         }
 
-        // O události (stav a nastavení)
-        Spacer(modifier = Modifier.height(8.dp))
-            Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Column(modifier = Modifier.padding(12.dp)) {
-                Text(AppStrings.current.events.aboutEvent, style = MaterialTheme.typography.titleMedium)
-                Spacer(modifier = Modifier.height(6.dp))
-                Text("${AppStrings.current.events.isVisible}: ${if (state.isVisible) AppStrings.current.commonActions.yes else AppStrings.current.commonActions.no}", style = MaterialTheme.typography.bodySmall)
-                Text("${AppStrings.current.events.isPublic}: ${if (state.isPublic) AppStrings.current.commonActions.yes else AppStrings.current.commonActions.no}", style = MaterialTheme.typography.bodySmall)
-                Text("${AppStrings.current.registration.registration}: ${if (state.isLocked) AppStrings.current.events.registrationClosed else AppStrings.current.events.registrationOpen}", style = MaterialTheme.typography.bodySmall)
-                Text("${AppStrings.current.events.notesAllowed}: ${if (state.enableNotes) AppStrings.current.commonActions.yes else AppStrings.current.commonActions.no}", style = MaterialTheme.typography.bodySmall)
-                val deleteFullWidth = state.trainers.size == 1
+        // Registrační tlačítka
+        if (state.registerButtonVisible || state.registrationActionsRowVisible) {
+            Spacer(modifier = Modifier.height(8.dp))
+            val deleteFullWidth = state.trainers.size == 1
+            Column(modifier = Modifier.fillMaxWidth()) {
+                if (state.registerButtonVisible) {
+                    Button(onClick = { onOpenRegistration?.invoke("register", null) }, modifier = Modifier.fillMaxWidth()) {
+                        Text(AppStrings.current.registration.register)
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+                }
 
-                // --- Render buttons stacked under the event info ---
-                if (state.registerButtonVisible || state.registrationActionsRowVisible) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        if (state.registerButtonVisible) {
-                            Button(onClick = { onOpenRegistration?.invoke("register", null) }, modifier = Modifier.fillMaxWidth()) {
-                                Text(AppStrings.current.registration.register)
+                if (state.registrationActionsRowVisible) {
+                    if (state.editRegistrationButtonVisible) {
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            Button(
+                                onClick = { onOpenRegistration?.invoke("register", null) },
+                                modifier = Modifier.widthIn(max = 300.dp).padding(end = 112.dp)
+                            ) {
+                                Text(AppStrings.current.registration.registerAnother)
                             }
-                            Spacer(modifier = Modifier.height(6.dp))
-                        }
-
-                        if (state.registrationActionsRowVisible) {
-                            // If edit actions and the "Zapsat dalšího" action are visible,
-                            // render all three on a single row: wide text button + two tonal icon buttons.
-                            if (state.editRegistrationButtonVisible) {
-                                Box(modifier = Modifier.fillMaxWidth()) {
-                                    Button(
-                                        onClick = { onOpenRegistration?.invoke("register", null) },
-                                        modifier = Modifier.widthIn(max = 300.dp).padding(end = 112.dp)
-                                    ) {
-                                        Text(AppStrings.current.registration.registerAnother)
-                                    }
-                                    Row(modifier = Modifier.align(Alignment.CenterEnd), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        FilledTonalButton(onClick = { onOpenRegistration?.invoke("edit", null) }) {
-                                            Icon(Icons.Default.Edit, contentDescription = AppStrings.current.registration.editRegistration)
-                                        }
-                                        FilledTonalButton(onClick = { onOpenRegistration?.invoke("delete", null) }) {
-                                            Icon(Icons.Default.Delete, contentDescription = AppStrings.current.registration.deleteRegistration)
-                                        }
-                                    }
+                            Row(modifier = Modifier.align(Alignment.CenterEnd), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                FilledTonalButton(onClick = { onOpenRegistration?.invoke("edit", null) }) {
+                                    Icon(Icons.Default.Edit, contentDescription = AppStrings.current.registration.editRegistration)
                                 }
-                                Spacer(modifier = Modifier.height(6.dp))
-                            } else {
-                                // Fallback: show edit as full-width if applicable
-                                if (state.editRegistrationButtonVisible) {
-                                    Button(onClick = { onOpenRegistration?.invoke("edit", null) }, modifier = Modifier.fillMaxWidth()) {
-                                        Text(AppStrings.current.registration.editRegistration)
-                                    }
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                }
-
-                                // Delete button: if only one trainer, show as full-width (deleteFullWidth)
-                                Button(
-                                    onClick = { onOpenRegistration?.invoke("delete", null) },
-                                    modifier = if (deleteFullWidth) Modifier.fillMaxWidth() else Modifier.fillMaxWidth()
-                                ) {
-                                    Text(AppStrings.current.registration.deleteRegistration)
+                                FilledTonalButton(onClick = { onOpenRegistration?.invoke("delete", null) }) {
+                                    Icon(Icons.Default.Delete, contentDescription = AppStrings.current.registration.deleteRegistration)
                                 }
                             }
                         }
+                        Spacer(modifier = Modifier.height(6.dp))
+                    } else {
+                        Button(
+                            onClick = { onOpenRegistration?.invoke("delete", null) },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(AppStrings.current.registration.deleteRegistration)
+                        }
                     }
-                }
-            }
-        }
-
-        
-
-        // Přidat do systémového kalendáře
-        Spacer(modifier = Modifier.height(8.dp))
-        FilledTonalButton(
-            onClick = { scope.launch { viewModel.addToCalendar(eventId) } },
-            enabled = !state.isAddedToCalendar,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Icon(Icons.Default.CalendarMonth, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
-            Text(
-                if (state.isAddedToCalendar) AppStrings.current.events.addedToCalendar
-                else AppStrings.current.events.addToCalendar
-            )
-        }
-
-        // Připomínka
-        if (!state.isPast && state.firstInstanceIso != null) {
-            Spacer(modifier = Modifier.height(4.dp))
-            if (state.reminderId != null) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilledTonalButton(
-                        onClick = { showReminderDialog = true },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(Icons.Default.Notifications, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
-                        Text(AppStrings.current.notifications.remindMeBefore.replace("{0}", state.reminderMinutesBefore?.toString() ?: "30"))
-                    }
-                    FilledTonalButton(onClick = { scope.launch { viewModel.removeReminder(eventId) } }) {
-                        Icon(Icons.Default.NotificationsOff, contentDescription = AppStrings.current.notifications.reminderRemoveAction)
-                    }
-                }
-            } else {
-                FilledTonalButton(
-                    onClick = { showReminderDialog = true },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.Notifications, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
-                    Text(AppStrings.current.notifications.remindMe)
                 }
             }
         }
@@ -331,46 +354,35 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                SelectionContainer {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        val headerText = when {
-                            state.summary.isNotBlank() && state.eventDescription.isNotBlank() -> "Shrnutí a popis"
-                            state.summary.isNotBlank() -> "Shrnutí"
-                            else -> "Popis"
-                        }
-                        Text(headerText, style = MaterialTheme.typography.titleMedium)
-                        Spacer(modifier = Modifier.height(6.dp))
-                        if (state.summary.isNotBlank()) {
-                            Text(formatHtmlContent(state.summary), style = MaterialTheme.typography.bodyMedium)
-                            if (state.eventDescription.isNotBlank()) Spacer(modifier = Modifier.height(8.dp))
-                        }
-                        if (state.eventDescription.isNotBlank()) {
-                            Text(formatHtmlContent(state.eventDescription), style = MaterialTheme.typography.bodySmall)
-                        }
-                    }
-                }
-            }
-        }
-
-        // Kapacita
-        val capacity = state.capacity
-        if ((capacity != null && capacity > 0) || state.remainingLessons != null) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
-            ) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Text(AppStrings.current.events.capacity, style = MaterialTheme.typography.titleMedium)
-                    Spacer(modifier = Modifier.height(6.dp))
-                    val registeredCount = state.registrations.size + state.externalRegistrations.size
-                    if (capacity != null && capacity > 0) {
-                        Text("${AppStrings.current.events.registeredCount}: $registeredCount / $capacity ${AppStrings.current.events.capacity}", style = MaterialTheme.typography.bodySmall)
-                    } else if (registeredCount > 0) {
-                        Text("${AppStrings.current.events.registeredCount}: $registeredCount ${AppStrings.current.events.capacity}", style = MaterialTheme.typography.bodySmall)
+                    val headerText = when {
+                        state.summary.isNotBlank() && state.eventDescription.isNotBlank() -> "Shrnutí a popis"
+                        state.summary.isNotBlank() -> "Shrnutí"
+                        else -> "Popis"
                     }
-                    if (state.remainingLessons != null) {
-                        Text("${AppStrings.current.misc.remainingLessons}: ${state.remainingLessons}", style = MaterialTheme.typography.bodySmall)
+                    Text(headerText, style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    val bodySizeSp = MaterialTheme.typography.bodyMedium.fontSize.value
+                    if (state.summary.isNotBlank()) {
+                        HtmlText(
+                            html = state.summary,
+                            modifier = Modifier.fillMaxWidth(),
+                            textColor = MaterialTheme.colorScheme.onBackground,
+                            linkColor = MaterialTheme.colorScheme.primary,
+                            textSizeSp = bodySizeSp,
+                            selectable = true
+                        )
+                        if (state.eventDescription.isNotBlank()) Spacer(modifier = Modifier.height(8.dp))
+                    }
+                    if (state.eventDescription.isNotBlank()) {
+                        HtmlText(
+                            html = state.eventDescription,
+                            modifier = Modifier.fillMaxWidth(),
+                            textColor = MaterialTheme.colorScheme.onBackground,
+                            linkColor = MaterialTheme.colorScheme.primary,
+                            textSizeSp = bodySizeSp,
+                            selectable = true
+                        )
                     }
                 }
             }
@@ -386,7 +398,34 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(AppStrings.current.profile.trainers, style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(6.dp))
-                    Text(state.trainerDisplayNames.ifBlank { "(žádní)" }, style = MaterialTheme.typography.bodySmall)
+                    state.trainers.forEach { trainerEl ->
+                        val trainer = trainerEl.asJsonObjectOrNull() ?: return@forEach
+                        val personId = trainer.str("personId") ?: return@forEach
+                        val trainerName = trainer.str("name") ?: return@forEach
+                        val lessonsOffered = trainer.int("lessonsOffered")?.takeIf { it > 0 }
+                        val lessonsRemaining = trainer.int("lessonsRemaining")?.takeIf { it > 0 }
+                        val label = when {
+                            lessonsOffered != null && lessonsRemaining != null ->
+                                "$trainerName (nabízí: $lessonsOffered, zbývá: $lessonsRemaining)"
+                            else -> trainerName
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .then(if (onOpenPerson != null) Modifier.clickable { onOpenPerson(personId) } else Modifier)
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Person,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(label, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
                 }
             }
         }
