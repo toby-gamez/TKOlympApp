@@ -53,7 +53,7 @@ fun formatTimesWithDate(since: String?, until: String?): String {
 
     fun parseDateTime(s: String?): Pair<String?, String?>? {
         val ldt = parseToLocal(s) ?: return null
-        val date = "${ldt.date.day}.${ldt.date.month.number}.${ldt.date.year}"
+        val date = "${ldt.date.day}.${ldt.date.month.number}."
         val time = "${ldt.hour.toString().padStart(2, '0')}:${ldt.minute.toString().padStart(2, '0')}"
         return Pair(date, time)
     }

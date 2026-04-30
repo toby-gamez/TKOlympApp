@@ -57,6 +57,7 @@ import com.tkolymp.shared.utils.formatShortDate
 import com.tkolymp.shared.utils.parseToLocal
 import com.tkolymp.shared.viewmodels.PeopleViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
+import com.tkolymp.tkolympapp.components.parseColorOrDefault
 import com.tkolymp.tkolympapp.util.normalizeForSearch
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit

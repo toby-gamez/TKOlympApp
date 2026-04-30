@@ -47,6 +47,7 @@ import com.tkolymp.shared.people.PersonDetails
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.PersonViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
+import com.tkolymp.tkolympapp.components.parseColorOrDefault
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)

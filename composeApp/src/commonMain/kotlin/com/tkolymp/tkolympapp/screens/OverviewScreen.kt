@@ -41,6 +41,8 @@ import com.tkolymp.shared.utils.formatFullCalendarDate
 import com.tkolymp.shared.utils.formatHtmlContent
 import com.tkolymp.shared.viewmodels.OverviewViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
+import com.tkolymp.tkolympapp.components.LessonView
+import com.tkolymp.tkolympapp.components.RenderSingleEventCard
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 

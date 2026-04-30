@@ -47,6 +47,7 @@ import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.language.NationalityHelper
 import com.tkolymp.shared.user.fmtProfileDate
 import com.tkolymp.shared.viewmodels.ProfileViewModel
+import com.tkolymp.tkolympapp.components.parseColorOrDefault
 import kotlinx.coroutines.launch
 
 private fun formatProfileValue(key: String, value: String): String {

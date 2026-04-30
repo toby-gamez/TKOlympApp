@@ -41,11 +41,14 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.tkolymp.shared.event.firstTrainerOrEmpty
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.utils.formatHtmlContent
 import com.tkolymp.shared.utils.formatMonthDay
 import com.tkolymp.shared.viewmodels.EventsViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
+import com.tkolymp.tkolympapp.components.LessonView
+import com.tkolymp.tkolympapp.components.RenderSingleEventCard
 import com.tkolymp.tkolympapp.util.normalizeForSearch
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
@@ -54,13 +57,6 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
-import kotlinx.serialization.json.booleanOrNull
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.longOrNull
-import com.tkolymp.shared.event.firstTrainerOrEmpty
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
