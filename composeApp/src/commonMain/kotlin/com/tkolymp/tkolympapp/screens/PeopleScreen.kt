@@ -7,10 +7,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -46,6 +49,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -230,9 +234,43 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) 
                         ) {
                             Row(modifier = Modifier
                                 .fillMaxWidth()
+                                .height(IntrinsicSize.Min)
                                 .padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                val cohortColors = p.cohortMembershipsList
+                                                        .mapNotNull { it.cohort }
+                                                        .filter { it.isVisible != false }
+                                                        .mapNotNull { it.colorRgb }
+                                                        .mapNotNull { hex ->
+                                                            try {
+                                                                parseColorOrDefault(hex)
+                                                            } catch (_: Exception) { null }
+                                                        }
+
+                                Column(modifier = Modifier
+                                    .width(6.dp)
+                                    .fillMaxHeight()
+                                    .clip(RoundedCornerShape(6.dp))
+                                ) {
+                                    if (cohortColors.isNotEmpty()) {
+                                        cohortColors.forEach { color ->
+                                            Box(modifier = Modifier
+                                                .fillMaxWidth()
+                                                .weight(1f)
+                                                .background(color)
+                                            )
+                                        }
+                                    } else {
+                                        Box(modifier = Modifier
+                                            .fillMaxSize()
+                                            .background(MaterialTheme.colorScheme.primary)
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.width(12.dp))
+
                                 Column(modifier = Modifier.weight(1f)) {
-                                    val isBirthdayToday = daysUntilNextBirthday(p.birthDate) == 0
+                                            val isBirthdayToday = daysUntilNextBirthday(p.birthDate) == 0
                                     val base = listOf(p.prefixTitle, p.firstName, p.lastName).filterNotNull().filter { it.isNotBlank() }.joinToString(" ")
                                     val name = if (!p.suffixTitle.isNullOrBlank()) "$base, ${p.suffixTitle}" else base
                                     Text(
@@ -257,35 +295,6 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) 
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = if (isBirthdayToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                                             )
-                                        }
-                                    }
-                                }
-
-                                // show cohort color(s) as small circles on the right (similar to CalendarScreen)
-                                val cohortColors = p.cohortMembershipsList
-                                                .mapNotNull { it.cohort }
-                                                .filter { it.isVisible != false }
-                                                .mapNotNull { it.colorRgb }
-                                                .mapNotNull { hex ->
-                                                    try {
-                                                        parseColorOrDefault(hex)
-                                                    } catch (_: Exception) { null }
-                                                }
-
-                                if (cohortColors.isEmpty()) {
-                                    val cohortName = p.cohortMembershipsList
-                                        .mapNotNull { it.cohort }
-                                        .firstOrNull { it.isVisible != false }
-                                        ?.name
-                                    cohortName?.let { Text(it, style = MaterialTheme.typography.labelSmall) }
-                                } else {
-                                    Row {
-                                        cohortColors.forEachIndexed { idx, color ->
-                                            Box(modifier = Modifier
-                                                .size(12.dp)
-                                                .background(color, CircleShape)
-                                            )
-                                            if (idx != cohortColors.lastIndex) Spacer(modifier = Modifier.width(6.dp))
                                         }
                                     }
                                 }

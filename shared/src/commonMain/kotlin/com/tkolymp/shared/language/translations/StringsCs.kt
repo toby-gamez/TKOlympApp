@@ -136,8 +136,8 @@ val StringsCs = Strings(
         street = "Ulice",
         city = "Město",
         zip = "PSČ",
-        district = "Okres / district",
-        region = "Kraj / region",
+        district = "Městská část",
+        region = "Kraj",
     ),
     events = EventStrings(
         event = "Událost",

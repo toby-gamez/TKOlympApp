@@ -4,13 +4,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -88,7 +91,19 @@ fun GroupsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                 ) {
                     Row(modifier = Modifier
                         .fillMaxWidth()
+                        .height(IntrinsicSize.Min)
                         .padding(12.dp), verticalAlignment = Alignment.Top) {
+
+                        val color = try { parseColorOrDefault(cohort.colorRgb) } catch (_: Exception) { MaterialTheme.colorScheme.primary }
+
+                        Box(
+                            modifier = Modifier
+                                .width(6.dp)
+                                .fillMaxHeight()
+                                .background(color, RoundedCornerShape(6.dp))
+                        )
+
+                        Spacer(modifier = Modifier.width(12.dp))
 
                         Column(modifier = Modifier.weight(1f)) {
                             Text(text = cohort.name ?: AppStrings.current.dialogs.noName, style = MaterialTheme.typography.titleMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
@@ -109,12 +124,7 @@ fun GroupsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                             }
                         }
 
-                        val colorBox = parseColorOrDefault(cohort.colorRgb ?: "#CCCCCC")
-
-                        Box(modifier = Modifier
-                            .size(12.dp)
-                            .background(colorBox, CircleShape)
-                        )
+                        // color stripe moved to left for responsive height
                     }
                 }
             }

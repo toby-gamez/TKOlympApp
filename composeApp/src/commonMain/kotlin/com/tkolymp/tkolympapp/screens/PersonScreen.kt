@@ -5,9 +5,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -189,7 +191,16 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                                         Column(modifier = Modifier.padding(6.dp)) {
                                             val since = mem.since
                                             val until = mem.until
-                                            Row(modifier = Modifier.fillMaxWidth()) {
+                                            Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .width(6.dp)
+                                                        .fillMaxHeight()
+                                                        .background(color, RoundedCornerShape(6.dp))
+                                                )
+
+                                                Spacer(modifier = Modifier.width(12.dp))
+
                                                 Column(modifier = Modifier.weight(1f)) {
                                                     Text(
                                                         text = (c.name ?: c.id ?: "-"),
@@ -203,13 +214,6 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                                                         val untilLabel = formatDateStringSmall(until) ?: until
                                                         Text("${AppStrings.current.profile.dateTo}: $untilLabel", style = MaterialTheme.typography.labelSmall)
                                                     }
-                                                }
-                                                Box(modifier = Modifier
-                                                    .width(28.dp)
-                                                    .fillMaxHeight(),
-                                                    contentAlignment = Alignment.Center
-                                                ) {
-                                                    Box(modifier = Modifier.size(12.dp).background(color, shape = CircleShape))
                                                 }
                                             }
                                         }
