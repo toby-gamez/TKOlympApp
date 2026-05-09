@@ -34,7 +34,8 @@ data class BirthdayEntry(
     val personId: String,
     val name: String,
     val formattedBirthDate: String?,
-    val days: Int
+    val days: Int,
+    val cohortColors: List<String> = emptyList()
 )
 
 data class OverviewState(
@@ -350,11 +351,17 @@ class OverviewViewModel(
                                 }.joinToString(" ").let { base ->
                                     if (!p.suffixTitle.isNullOrBlank()) "$base, ${p.suffixTitle}" else base.ifBlank { p.id }
                                 }
+                                val cohortColors = p.cohortMembershipsList
+                                    .mapNotNull { it.cohort }
+                                    .filter { it.isVisible != false }
+                                    .mapNotNull { it.colorRgb }
+                                    .filter { it.isNotBlank() }
                                 BirthdayEntry(
                                     personId = p.id,
                                     name = name,
                                     formattedBirthDate = formatBirthDateString(p.birthDate),
-                                    days = days
+                                    days = days,
+                                    cohortColors = cohortColors
                                 )
                             }
                         }
@@ -402,11 +409,17 @@ class OverviewViewModel(
                                                 }.joinToString(" ").let { base ->
                                                     if (!p.suffixTitle.isNullOrBlank()) "$base, ${p.suffixTitle}" else base.ifBlank { p.id }
                                                 }
+                                                val cohortColors = p.cohortMembershipsList
+                                                    .mapNotNull { it.cohort }
+                                                    .filter { it.isVisible != false }
+                                                    .mapNotNull { it.colorRgb }
+                                                    .filter { it.isNotBlank() }
                                                 BirthdayEntry(
                                                     personId = p.id,
                                                     name = name,
                                                     formattedBirthDate = formatBirthDateString(p.birthDate),
-                                                    days = days
+                                                    days = days,
+                                                    cohortColors = cohortColors
                                                 )
                                             }
                                         }

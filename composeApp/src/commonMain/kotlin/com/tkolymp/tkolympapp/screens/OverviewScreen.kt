@@ -1,18 +1,25 @@
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.draw.clip
+import com.tkolymp.tkolympapp.components.parseColorOrDefault
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material3.Card
@@ -54,7 +61,8 @@ fun OverviewScreen(
     onOpenNotice: (Long) -> Unit = {},
     onOpenCalendar: () -> Unit = {},
     onOpenBoard: () -> Unit = {},
-    onOpenEvents: () -> Unit = {}
+    onOpenEvents: () -> Unit = {},
+    onOpenPerson: (String) -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -228,20 +236,62 @@ fun OverviewScreen(
                     Text(AppStrings.current.timeline.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
                 } else {
                     state.upcomingBirthdays.forEach { entry ->
+                        val isBirthdayToday = entry.days == 0
                         Card(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { onOpenPerson(entry.personId) },
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(entry.name, style = MaterialTheme.typography.titleMedium)
-                                    entry.formattedBirthDate?.let {
-                                        Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(IntrinsicSize.Min)
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                val cohortColors = entry.cohortColors.mapNotNull { hex ->
+                                    try { parseColorOrDefault(hex) } catch (_: Exception) { null }
+                                }
+                                Column(
+                                    modifier = Modifier
+                                        .width(6.dp)
+                                        .fillMaxHeight()
+                                        .clip(RoundedCornerShape(6.dp))
+                                ) {
+                                    if (cohortColors.isNotEmpty()) {
+                                        cohortColors.forEach { color ->
+                                            Box(modifier = Modifier.fillMaxWidth().weight(1f).background(color))
+                                        }
+                                    } else {
+                                        Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primary))
                                     }
                                 }
-                                if (entry.days == 0) {
-                                    Icon(imageVector = Icons.Filled.Cake, contentDescription = "Dnes mají narozeniny", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                                } else {
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        entry.name,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = if (isBirthdayToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                    )
+                                    entry.formattedBirthDate?.let {
+                                        Row(verticalAlignment = Alignment.Bottom) {
+                                            if (isBirthdayToday) {
+                                                Icon(
+                                                    imageVector = Icons.Filled.Cake,
+                                                    contentDescription = "Dnes mají narozeniny",
+                                                    tint = MaterialTheme.colorScheme.primary,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                            }
+                                            Text(
+                                                it,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = if (isBirthdayToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                }
+                                if (!isBirthdayToday) {
                                     Text("${entry.days}d", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(start = 8.dp))
                                 }
                             }

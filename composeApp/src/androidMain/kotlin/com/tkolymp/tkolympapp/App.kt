@@ -331,7 +331,8 @@ fun AppNavHost(
                 onOpenNotice = { id -> navController.navigate("notice/$id") },
                 onOpenCalendar = { navController.navigate("calendar") },
                 onOpenBoard = { navController.navigate("board") },
-                onOpenEvents = { navController.navigate("events") }
+                onOpenEvents = { navController.navigate("events") },
+                onOpenPerson = { id -> navController.navigate("person/$id") }
             )
         }
         
