@@ -1,12 +1,15 @@
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -54,6 +57,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -67,6 +71,7 @@ import com.tkolymp.shared.utils.translateEventType
 import com.tkolymp.shared.viewmodels.EventViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.QuantityInput
+import com.tkolymp.tkolympapp.components.parseColorOrDefault
 import com.tkolymp.tkolympapp.platform.HtmlText
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonArray
@@ -452,7 +457,24 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(AppStrings.current.events.targetGroups, style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(6.dp))
-                    Text(state.cohortDisplayNames.ifBlank { "(žádné)" }, style = MaterialTheme.typography.bodySmall)
+                    state.cohorts.forEach { cohortEl ->
+                        val cohort = cohortEl.asJsonObjectOrNull()?.get("cohort")?.asJsonObjectOrNull() ?: return@forEach
+                        val name = cohort.str("name") ?: return@forEach
+                        val colorRgb = cohort.str("colorRgb")
+                        val color = try { parseColorOrDefault(colorRgb) } catch (_: Exception) { Color.Gray }
+                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
+                            Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(6.dp)) {
+                                Box(
+                                    modifier = Modifier
+                                        .width(6.dp)
+                                        .fillMaxHeight()
+                                        .background(color, RoundedCornerShape(6.dp))
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(name, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -472,96 +494,105 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     ))
                 } else {
-                    // Běžné registrace
-                    state.registrations.forEach { regEl ->
-                        val reg = regEl.asJsonObjectOrNull() ?: return@forEach
-                        val person = reg["person"].asJsonObjectOrNull()
-                        val couple = reg["couple"].asJsonObjectOrNull()
-                        val note = reg.str("note")
+                    // Use 1 column when couples are the majority (their names are wider)
+                    val coupleCount = state.registrations.count { regEl ->
+                        regEl.asJsonObjectOrNull()?.get("couple")?.asJsonObjectOrNull() != null
+                    }
+                    val columns = if (coupleCount * 2 > state.registrations.size) 1 else 2
 
-                        // Získat demands (požadavky na lekce s trenéry)
-                        val lessonDemands = reg["eventLessonDemandsByRegistrationIdList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
+                    val participantList = buildList<Triple<String, Boolean, List<String>>> {
+                        state.registrations.forEach { regEl ->
+                            val reg = regEl.asJsonObjectOrNull() ?: return@forEach
+                            val person = reg["person"].asJsonObjectOrNull()
+                            val couple = reg["couple"].asJsonObjectOrNull()
+                            val note = reg.str("note")
+                            val lessonDemands = reg["eventLessonDemandsByRegistrationIdList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
 
-                        // Build name text and skip entries without any real name
-                        val nameText = when {
-                            couple != null -> {
-                                val woman = couple["woman"].asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() }
-                                val man = couple["man"].asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() }
-                                when {
-                                    woman != null && man != null -> "$woman - $man"
-                                    woman != null -> woman
-                                    man != null -> man
-                                    else -> null
+                            val nameText = when {
+                                couple != null -> {
+                                    val woman = couple["woman"].asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() }
+                                    val man = couple["man"].asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() }
+                                    when {
+                                        woman != null && man != null -> "$woman - $man"
+                                        woman != null -> woman
+                                        man != null -> man
+                                        else -> null
+                                    }
                                 }
-                            }
-                            person != null -> person.str("name")?.takeIf { it.isNotBlank() }
-                            else -> null
-                        }
+                                person != null -> person.str("name")?.takeIf { it.isNotBlank() }
+                                else -> null
+                            } ?: return@forEach
 
-                        if (nameText.isNullOrBlank()) return@forEach // do not show unnamed registrations
+                            val personId = person?.str("id")
+                            val coupleId = couple?.str("id")
+                            val isMe = (personId != null && personId == state.myPersonId) ||
+                                       (coupleId != null && state.myCoupleIds.contains(coupleId))
 
-                        // Determine whether this registration is the current user
-                        val personId = person?.str("id")
-                        val coupleId = couple?.str("id")
-                        val isMe = (personId != null && personId == state.myPersonId) || (coupleId != null && state.myCoupleIds.contains(coupleId))
-
-                        if (isMe) {
-                            Text(nameText, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
-                        } else {
-                            Text(nameText, style = MaterialTheme.typography.bodySmall)
-                        }
-
-                        // Zobrazit trenéry a počet lekcí z demands
-                        if (lessonDemands.isNotEmpty()) {
-                            lessonDemands.forEach { demandEl ->
-                                val demand = demandEl.asJsonObjectOrNull() ?: return@forEach
-                                val trainerId = demand.int("trainerId")
-                                val lessonCount = demand.int("lessonCount")
-                                
-                                // Najít jméno trenéra podle trainerId
-                                val trainerName = state.trainers.firstOrNull { trainerEl ->
-                                    val trainer = trainerEl.asJsonObjectOrNull() ?: return@firstOrNull false
-                                    trainer.int("id") == trainerId
-                                }?.asJsonObjectOrNull()?.str("name") ?: "Trenér #$trainerId"
-                                
-                                val demandText = if (lessonCount != null && lessonCount > 0) {
-                                    "$trainerName: $lessonCount lekcí"
-                                } else {
-                                    trainerName
+                            val subItems = buildList<String> {
+                                lessonDemands.forEach { demandEl ->
+                                    val demand = demandEl.asJsonObjectOrNull() ?: return@forEach
+                                    val trainerId = demand.int("trainerId")
+                                    val lessonCount = demand.int("lessonCount")
+                                    val trainerName = state.trainers.firstOrNull { trainerEl ->
+                                        val trainer = trainerEl.asJsonObjectOrNull() ?: return@firstOrNull false
+                                        trainer.int("id") == trainerId
+                                    }?.asJsonObjectOrNull()?.str("name") ?: "Trenér #$trainerId"
+                                    add(if (lessonCount != null && lessonCount > 0) "$trainerName: $lessonCount lekcí" else trainerName)
                                 }
-                                
-                                Text("   $demandText", style = MaterialTheme.typography.bodySmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                ))
+                                if (!note.isNullOrBlank()) add("Poznámka: $note")
                             }
+
+                            add(Triple(nameText, isMe, subItems))
                         }
-                        
-                        if (!note.isNullOrBlank()) {
-                            Text("   Poznámka: $note", style = MaterialTheme.typography.bodySmall.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            ))
+
+                        state.externalRegistrations.forEach { extRegEl ->
+                            val extReg = extRegEl.asJsonObjectOrNull() ?: return@forEach
+                            val firstName = extReg.str("firstName") ?: ""
+                            val lastName = extReg.str("lastName") ?: ""
+                            val email = extReg.str("email")
+                            val note = extReg.str("note")
+                            val subItems = buildList<String> {
+                                if (!email.isNullOrBlank()) add("Email: $email")
+                                if (!note.isNullOrBlank()) add("Poznámka: $note")
+                            }
+                            add(Triple("$firstName $lastName (externí)", false, subItems))
                         }
                     }
-                    
-                    // Externí registrace
-                    state.externalRegistrations.forEach { extRegEl ->
-                        val extReg = extRegEl.asJsonObjectOrNull() ?: return@forEach
-                        val firstName = extReg.str("firstName") ?: ""
-                        val lastName = extReg.str("lastName") ?: ""
-                        val email = extReg.str("email")
-                        val note = extReg.str("note")
 
-                        Text("$firstName $lastName (externí)", style = MaterialTheme.typography.bodySmall)
-                        if (!email.isNullOrBlank()) {
-                            Text("   Email: $email", style = MaterialTheme.typography.bodySmall.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            ))
-                        }
-                        // Phone number intentionally not shown for external registrations
-                        if (!note.isNullOrBlank()) {
-                            Text("   Poznámka: $note", style = MaterialTheme.typography.bodySmall.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            ))
+                    participantList.chunked(columns).forEach { pair ->
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            pair.forEach { (name, isMe, subItems) ->
+                                Column(modifier = Modifier.weight(1f).padding(vertical = 2.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            Icons.Default.Person,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp),
+                                            tint = if (isMe) MaterialTheme.colorScheme.primary
+                                                   else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            name,
+                                            style = if (isMe)
+                                                MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold)
+                                            else
+                                                MaterialTheme.typography.bodySmall
+                                        )
+                                    }
+                                    subItems.forEach { sub ->
+                                        Text(
+                                            "   $sub",
+                                            style = MaterialTheme.typography.bodySmall.copy(
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                            if (columns > 1) repeat(columns - pair.size) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
                         }
                     }
                 }
