@@ -144,8 +144,12 @@ fun App() {
                         AppStrings.setLanguage(language)
                     } catch (e: CancellationException) { throw e } catch (_: Exception) {}
                     val has = try { com.tkolymp.shared.ServiceLocator.authService.hasToken() } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
-                    // Initialize notification scheduling after networking is ready
-                    try { com.tkolymp.shared.ServiceLocator.notificationService.initializeIfNeeded() } catch (_: Exception) {}
+                    // Initialize notification scheduling after networking is ready.
+                    // Pass stored onboarding role so parents don't get default rules created at startup.
+                    try {
+                        val role = try { com.tkolymp.shared.ServiceLocator.onboardingStorage.getUserRole() } catch (_: Exception) { null }
+                        com.tkolymp.shared.ServiceLocator.notificationService.initializeIfNeeded(role)
+                    } catch (_: Exception) {}
                     // Show onboarding only on first launch (persisted in onboarding storage)
                     val onboardingVm = OnboardingViewModel()
                     val seen = try { onboardingVm.hasSeenOnboarding() } catch (e: CancellationException) { throw e } catch (_: Exception) { false }

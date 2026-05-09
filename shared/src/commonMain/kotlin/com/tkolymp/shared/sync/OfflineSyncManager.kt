@@ -423,8 +423,11 @@ class OfflineSyncManager(
             if (!pid.isNullOrBlank()) {
                 try { withRetry { userService.fetchAndStorePersonDetails(pid) } } catch (_: Exception) {}
             }
-            // Ensure notification defaults exist
-            try { notificationService.initializeIfNeeded() } catch (_: Exception) {}
+            // Ensure notification defaults exist. Pass stored user role so parents don't get default rules.
+            try {
+                val role = try { com.tkolymp.shared.ServiceLocator.onboardingStorage.getUserRole() } catch (_: Exception) { null }
+                notificationService.initializeIfNeeded(role)
+            } catch (_: Exception) {}
         } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll user data failed: ${ex.message}") }
 
         // Announcements

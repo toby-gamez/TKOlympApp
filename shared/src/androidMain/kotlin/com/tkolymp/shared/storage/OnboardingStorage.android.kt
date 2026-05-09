@@ -1,6 +1,7 @@
 package com.tkolymp.shared.storage
 
 import android.content.Context
+import com.tkolymp.shared.models.UserRole
 
 actual class OnboardingStorage actual constructor(platformContext: Any) {
     private val prefs = (platformContext as Context)
@@ -11,5 +12,18 @@ actual class OnboardingStorage actual constructor(platformContext: Any) {
 
     actual suspend fun setOnboardingCompleted() {
         prefs.edit().putBoolean("onboarding_completed", true).apply()
+    }
+
+    actual suspend fun setUserRole(role: UserRole) {
+        prefs.edit().putString("user_role", role.name).apply()
+    }
+
+    actual suspend fun getUserRole(): UserRole? {
+        val name = prefs.getString("user_role", null) ?: return null
+        return try {
+            UserRole.valueOf(name)
+        } catch (_: Exception) {
+            null
+        }
     }
 }

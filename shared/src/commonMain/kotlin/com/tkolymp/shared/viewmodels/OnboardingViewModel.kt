@@ -5,6 +5,7 @@ import com.tkolymp.shared.ServiceLocator
 import kotlinx.coroutines.CancellationException
 import com.tkolymp.shared.storage.CalendarPreferenceStorage
 import com.tkolymp.shared.storage.OnboardingStorage
+import com.tkolymp.shared.models.UserRole
 
 class OnboardingViewModel(
     private val onboardingStorage: OnboardingStorage = ServiceLocator.onboardingStorage,
@@ -17,7 +18,8 @@ class OnboardingViewModel(
         onboardingStorage.setOnboardingCompleted()
         // Seed the default notification rule exactly once on first run
         try {
-            ServiceLocator.notificationService.initializeIfNeeded()
+            val role = onboardingStorage.getUserRole()
+            ServiceLocator.notificationService.initializeIfNeeded(role)
         } catch (e: CancellationException) { throw e } catch (_: Exception) {}
     }
 
@@ -27,4 +29,11 @@ class OnboardingViewModel(
 
     suspend fun getPreferTimeline(): Boolean =
         calendarPreferenceStorage.getPreferTimeline()
+
+    suspend fun setUserRole(role: UserRole) {
+        onboardingStorage.setUserRole(role)
+    }
+
+    suspend fun getUserRole(): UserRole? =
+        onboardingStorage.getUserRole()
 }

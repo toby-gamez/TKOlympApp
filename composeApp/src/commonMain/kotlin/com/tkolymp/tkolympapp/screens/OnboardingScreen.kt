@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.OnboardingViewModel
+import com.tkolymp.shared.models.UserRole
 import com.tkolymp.tkolympapp.platform.AppLogo
 import com.tkolymp.tkolympapp.ui.brandLightPrimary
 import kotlinx.coroutines.launch
@@ -65,11 +66,12 @@ fun OnboardingScreen(
     onFinish: () -> Unit
 ) {
     val strings = AppStrings.current
-    val pageCount = 5 // Calendar, Events, Board, other features, calendar view picker
+    val pageCount = 6 // Role selection, Calendar, Events, Board, other features, calendar view picker
     val pagerState = rememberPagerState(pageCount = { pageCount })
     val scope = rememberCoroutineScope()
     val isViewPickerPage = pagerState.currentPage == pageCount - 1
     var preferTimeline by rememberSaveable { mutableStateOf(false) }
+    var selectedRole by rememberSaveable { mutableStateOf(UserRole.DANCER) }
 
     Column(
         modifier = Modifier
@@ -85,14 +87,20 @@ fun OnboardingScreen(
                 .fillMaxWidth()
         ) { pageIndex ->
             when (pageIndex) {
-                0 -> CalendarOnboardingPage(title = strings.onboardingTitle2, description = strings.onboardingDesc2)
-                1 -> EventsOnboardingPage(title = strings.onboardingTitle1, description = strings.onboardingDesc1)
-                2 -> BoardOnboardingPage(title = strings.onboardingTitle3, description = strings.onboardingDesc3)
-                3 -> OtherFeaturesOnboardingPage(
+                0 -> RoleSelectionPage(
+                    title = "Kdo jste?",
+                    description = "Vyberte si, zda jste tanečník nebo rodič",
+                    selectedRole = selectedRole,
+                    onSelect = { selectedRole = it }
+                )
+                1 -> CalendarOnboardingPage(title = strings.onboardingTitle2, description = strings.onboardingDesc2)
+                2 -> EventsOnboardingPage(title = strings.onboardingTitle1, description = strings.onboardingDesc1)
+                3 -> BoardOnboardingPage(title = strings.onboardingTitle3, description = strings.onboardingDesc3)
+                4 -> OtherFeaturesOnboardingPage(
                     title = strings.onboarding.onboardingTitle5,
                     description = strings.onboarding.onboardingDesc5
                 )
-                else -> CalendarViewPickerPage(
+                5 -> CalendarViewPickerPage(
                     title = strings.onboarding.onboardingTitle4,
                     description = strings.onboarding.onboardingDesc4,
                     listLabel = strings.onboarding.calendarViewList,
@@ -102,6 +110,7 @@ fun OnboardingScreen(
                     preferTimeline = preferTimeline,
                     onSelect = { preferTimeline = it }
                 )
+                else -> {}
             }
         }
 
@@ -137,6 +146,7 @@ fun OnboardingScreen(
                 if (isViewPickerPage) {
                     scope.launch {
                         viewModel.setPreferTimeline(preferTimeline)
+                        viewModel.setUserRole(selectedRole)
                         viewModel.completeOnboarding()
                         onFinish()
                     }
@@ -567,6 +577,91 @@ private fun OtherFeaturesIconGrid(modifier: Modifier = Modifier) {
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun RoleSelectionPage(
+    title: String,
+    description: String,
+    selectedRole: com.tkolymp.shared.models.UserRole,
+    onSelect: (com.tkolymp.shared.models.UserRole) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(88.dp)
+                .clip(CircleShape)
+                .background(brandLightPrimary()),
+            contentAlignment = Alignment.Center
+        ) { AppLogo(size = 100.dp) }
+
+        Spacer(Modifier.height(28.dp))
+
+        Text(title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+        Spacer(Modifier.height(8.dp))
+        Text(description, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+        Spacer(Modifier.height(24.dp))
+
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxWidth()) {
+            RoleOptionCard(
+                icon = Icons.Filled.Groups,
+                label = "Tanečník",
+                description = "Plný přístup",
+                selected = selectedRole == com.tkolymp.shared.models.UserRole.DANCER,
+                onClick = { onSelect(com.tkolymp.shared.models.UserRole.DANCER) },
+                modifier = Modifier.weight(1f)
+            )
+            RoleOptionCard(
+                icon = Icons.Filled.AccountCircle,
+                label = "Rodič",
+                description = "Omezená oznámení",
+                selected = selectedRole == com.tkolymp.shared.models.UserRole.PARENT,
+                onClick = { onSelect(com.tkolymp.shared.models.UserRole.PARENT) },
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun RoleOptionCard(
+    icon: ImageVector,
+    label: String,
+    description: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val borderColor = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent
+    val containerColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+
+    Card(
+        modifier = modifier
+            .clickable(onClick = onClick)
+            .border(2.dp, borderColor, RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = containerColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (selected) 4.dp else 0.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(imageVector = icon, contentDescription = null, tint = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(36.dp))
+            Text(label, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, textAlign = TextAlign.Center)
+            Text(description, style = MaterialTheme.typography.bodySmall, color = if (selected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f) else MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
         }
     }
 }

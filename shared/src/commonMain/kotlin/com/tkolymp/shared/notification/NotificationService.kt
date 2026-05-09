@@ -3,15 +3,34 @@ package com.tkolymp.shared.notification
 import com.tkolymp.shared.event.EventInstance
 import com.tkolymp.shared.language.AppStrings
 import kotlinx.coroutines.CancellationException
+import com.tkolymp.shared.models.UserRole
 
 class NotificationService(
     private val storage: NotificationStorage,
     private val scheduler: INotificationScheduler,
     private val eventService: com.tkolymp.shared.event.IEventService
 ) {
-    suspend fun initializeIfNeeded() {
+    suspend fun initializeIfNeeded(userRole: UserRole? = null) {
         val existing = storage.getSettings()
         if (existing == null) {
+            // If caller didn't provide a role, try to read persisted onboarding role.
+            val roleToCheck = userRole ?: try {
+                com.tkolymp.shared.ServiceLocator.onboardingStorage.getUserRole()
+            } catch (_: Exception) { null }
+
+            // If role is unknown, skip creating defaults now — wait until onboarding completes.
+            if (roleToCheck == null) return
+
+            // Do not create default notification rule for parents.
+            if (roleToCheck == UserRole.PARENT) {
+                val default = NotificationSettings(
+                    globalEnabled = false,
+                    rules = listOf()
+                )
+                storage.saveSettings(default)
+                return
+            }
+
             val defaultRule = NotificationRule(
                 id = "default-rule",
                 name = AppStrings.current.notifications.defaultRuleName,
