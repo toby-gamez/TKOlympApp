@@ -501,6 +501,9 @@ val StringsSl = Strings(
         cancelled = "Preklicano",
         noAttendanceData = "Ni zapisov prisotnosti",
         shareButton = "Deli",
+        attendanceAttended = "Bil sem",
+        attendanceNotExcused = "Neopravičeno",
+        attendanceUnknown = "Neznano",
     ),
     settings = SettingsStrings(
         title = "Nastavitve",

@@ -502,6 +502,9 @@ val StringsBrainrot = Strings(
         cancelled = "Cancelled rip",
         noAttendanceData = "No records bestie",
         shareButton = "Drop it fr",
+        attendanceAttended = "Showed up fr",
+        attendanceNotExcused = "No cap absent",
+        attendanceUnknown = "Idk fam",
     ),
     settings = SettingsStrings(
         title = "Settings no cap",

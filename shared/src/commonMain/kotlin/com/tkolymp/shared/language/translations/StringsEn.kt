@@ -501,6 +501,9 @@ val StringsEn = Strings(
         cancelled = "Cancelled",
         noAttendanceData = "No attendance records",
         shareButton = "Share",
+        attendanceAttended = "Attended",
+        attendanceNotExcused = "Unexcused",
+        attendanceUnknown = "Unknown",
     ),
     settings = SettingsStrings(
         title = "Settings",

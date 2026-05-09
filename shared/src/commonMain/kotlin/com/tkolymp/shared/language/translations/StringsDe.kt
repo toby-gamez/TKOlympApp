@@ -500,6 +500,9 @@ val StringsDe = Strings(
         cancelled = "Abgesagt",
         noAttendanceData = "Keine Anwesenheitsdaten",
         shareButton = "Teilen",
+        attendanceAttended = "Anwesend",
+        attendanceNotExcused = "Unentschuldigt",
+        attendanceUnknown = "Unbekannt",
     ),
     settings = SettingsStrings(
         title = "Einstellungen",

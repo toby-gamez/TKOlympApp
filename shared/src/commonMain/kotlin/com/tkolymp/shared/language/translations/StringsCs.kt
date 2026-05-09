@@ -501,6 +501,9 @@ val StringsCs = Strings(
         cancelled = "Zrušeno",
         noAttendanceData = "Žádné záznamy docházky",
         shareButton = "Sdílet",
+        attendanceAttended = "Byl jsem",
+        attendanceNotExcused = "Neomluveno",
+        attendanceUnknown = "Neznámo",
     ),
     settings = SettingsStrings(
         title = "Nastavení",

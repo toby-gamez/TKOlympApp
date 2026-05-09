@@ -23,6 +23,10 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.number
 import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlin.time.Instant
 
 // ─── Data models ──────────────────────────────────────────────────────────────
@@ -93,7 +97,9 @@ data class SessionItem(
     val until: String?,
     val durationMinutes: Long,
     val isCancelled: Boolean,
-    val trainerName: String? = null
+    val trainerName: String? = null,
+    /** Attendance status from server: ATTENDED, NOT_EXCUSED, UNKNOWN, CANCELLED, or null if not loaded. */
+    val attendanceStatus: String? = null
 )
 
 /** Sessions grouped by calendar month for the attendance list. */
@@ -231,12 +237,16 @@ class StatsViewModel(
 
             // Attendance tab data (all instances including cancelled)
             val langCode = AppStrings.currentLanguage.code
-            val attendanceMonths = buildAttendanceMonths(allInstances, langCode)
-            try { Logger.d("StatsViewModel", "attendance: allInstances=${allInstances.size} months=${attendanceMonths.size}") } catch (_: Exception) {}
+            // ── Fetch attendance statuses ─────────────────────────────────────
+            val myPersonId = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+            val attendanceMap: Map<Long, String> = if (myPersonId != null) {
+                try { fetchAttendanceStatuses(myPersonId) } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyMap() }
+            } else emptyMap()
+            val attendanceMonths = buildAttendanceMonths(allInstances, langCode, attendanceMap)
+            try { Logger.d("StatsViewModel", "attendance: allInstances=${allInstances.size} months=${attendanceMonths.size} attendanceEntries=${attendanceMap.size}") } catch (_: Exception) {}
             val cancelledCount = allInstances.count { it.isCancelled }
 
             // ── Scoreboard ────────────────────────────────────────────────────
-            val myPersonId = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
             val scoreEntry: ScoreboardEntry? = if (myPersonId != null) {
                 try {
                     withContext(Dispatchers.Default) {
@@ -558,7 +568,8 @@ class StatsViewModel(
     /** Builds chronological session list grouped by month for the attendance tab. */
     private fun buildAttendanceMonths(
         instances: List<EventInstance>,
-        languageCode: String
+        languageCode: String,
+        attendanceMap: Map<Long, String> = emptyMap()
     ): List<AttendanceMonth> {
         val byMonth = mutableMapOf<String, MutableList<SessionItem>>()
         instances.forEach { inst ->
@@ -574,7 +585,8 @@ class StatsViewModel(
                 until = inst.until,
                 durationMinutes = duration,
                 isCancelled = inst.isCancelled,
-                trainerName = inst.event?.eventTrainersList?.firstOrNull { it.isNotBlank() }?.trim()
+                trainerName = inst.event?.eventTrainersList?.firstOrNull { it.isNotBlank() }?.trim(),
+                attendanceStatus = attendanceMap[inst.id]
             )
             byMonth.getOrPut(ym) { mutableListOf() }.add(session)
         }
@@ -590,5 +602,40 @@ class StatsViewModel(
                     sessions = sessions.sortedByDescending { it.date }
                 )
             }
+    }
+
+    /**
+     * Fetches attendance statuses for the given person from the GraphQL API.
+     * Returns a map of instanceId (Long) → status string (ATTENDED, NOT_EXCUSED, UNKNOWN, CANCELLED).
+     */
+    private suspend fun fetchAttendanceStatuses(personId: String): Map<Long, String> {
+        val client = ServiceLocator.graphQlClient
+        val idLong = personId.toLongOrNull()
+        val query = if (idLong != null)
+            "query MyQuery(\$id: BigInt!) { person(id: \$id) { eventAttendancesList { status instanceId } } }"
+        else
+            "query MyQuery(\$id: String!) { person(id: \$id) { eventAttendancesList { status instanceId } } }"
+        val variables = kotlinx.serialization.json.buildJsonObject {
+            if (idLong != null) put("id", kotlinx.serialization.json.JsonPrimitive(idLong))
+            else put("id", kotlinx.serialization.json.JsonPrimitive(personId))
+        }
+        val resp = try {
+            withContext(Dispatchers.Default) { client.post(query, variables) }
+        } catch (e: CancellationException) { throw e } catch (_: Exception) { return emptyMap() }
+        val list = try {
+            resp.jsonObject["data"]?.jsonObject?.get("person")?.jsonObject
+                ?.get("eventAttendancesList")?.jsonArray ?: return emptyMap()
+        } catch (_: Exception) { return emptyMap() }
+        val result = mutableMapOf<Long, String>()
+        list.forEach { el ->
+            try {
+                val obj = el.jsonObject
+                val instId = obj["instanceId"]?.jsonPrimitive?.content?.toLongOrNull() ?: return@forEach
+                val status = obj["status"]?.jsonPrimitive?.contentOrNull ?: return@forEach
+                result[instId] = status
+            } catch (_: Exception) {}
+        }
+        Logger.d("StatsViewModel", "fetchAttendanceStatuses: loaded ${result.size} entries for person $personId")
+        return result
     }
 }

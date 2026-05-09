@@ -501,6 +501,9 @@ val StringsVi = Strings(
         cancelled = "Đã huỷ",
         noAttendanceData = "Không có dữ liệu điểm danh",
         shareButton = "Chia sẻ",
+        attendanceAttended = "Có mặt",
+        attendanceNotExcused = "Vắng mặt",
+        attendanceUnknown = "Chưa biết",
     ),
     settings = SettingsStrings(
         title = "Cài đặt",

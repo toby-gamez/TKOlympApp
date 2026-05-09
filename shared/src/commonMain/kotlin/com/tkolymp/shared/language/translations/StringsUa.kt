@@ -501,6 +501,9 @@ val StringsUa = Strings(
         cancelled = "Скасовано",
         noAttendanceData = "Немає записів відвідуваності",
         shareButton = "Поділитися",
+        attendanceAttended = "Був",
+        attendanceNotExcused = "Без пояснень",
+        attendanceUnknown = "Невідомо",
     ),
     settings = SettingsStrings(
         title = "Налаштування",

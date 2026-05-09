@@ -42,4 +42,7 @@ data class StatsStrings(
     val cancelled: String,
     val noAttendanceData: String,
     val shareButton: String,
+    val attendanceAttended: String,
+    val attendanceNotExcused: String,
+    val attendanceUnknown: String,
 )

@@ -19,7 +19,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CompareArrows
+import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -1163,7 +1166,13 @@ private fun AttendanceTabContent(
                     Spacer(Modifier.height(8.dp))
                     month.sessions.forEachIndexed { idx, session ->
                         if (idx > 0) HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
-                        AttendanceSessionRow(session = session, cancelledLabel = strings.cancelled)
+                        AttendanceSessionRow(
+                            session = session,
+                            cancelledLabel = strings.cancelled,
+                            attendedLabel = strings.attendanceAttended,
+                            notExcusedLabel = strings.attendanceNotExcused,
+                            unknownLabel = strings.attendanceUnknown
+                        )
                     }
                 }
             }
@@ -1190,7 +1199,10 @@ private fun AttendanceSummaryItem(modifier: Modifier = Modifier, value: String, 
 private fun AttendanceSessionRow(
     modifier: Modifier = Modifier,
     session: com.tkolymp.shared.viewmodels.SessionItem,
-    cancelledLabel: String
+    cancelledLabel: String,
+    attendedLabel: String = "Attended",
+    notExcusedLabel: String = "Unexcused",
+    unknownLabel: String = "Unknown"
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -1219,8 +1231,8 @@ private fun AttendanceSessionRow(
                 )
             }
         }
+        Spacer(Modifier.width(8.dp))
         if (session.isCancelled) {
-            Spacer(Modifier.width(8.dp))
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
@@ -1233,13 +1245,34 @@ private fun AttendanceSessionRow(
                     color = MaterialTheme.colorScheme.onErrorContainer
                 )
             }
-        } else if (session.durationMinutes > 0) {
-            Spacer(Modifier.width(8.dp))
-            Text(
-                text = "${session.durationMinutes} min",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        } else {
+            when (session.attendanceStatus) {
+                "ATTENDED" -> Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = attendedLabel,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.width(20.dp)
+                )
+                "NOT_EXCUSED" -> Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = notExcusedLabel,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.width(20.dp)
+                )
+                "UNKNOWN" -> Icon(
+                    imageVector = Icons.Default.HelpOutline,
+                    contentDescription = unknownLabel,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.width(20.dp)
+                )
+                else -> if (session.durationMinutes > 0) {
+                    Text(
+                        text = "${session.durationMinutes} min",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         }
     }
 }
