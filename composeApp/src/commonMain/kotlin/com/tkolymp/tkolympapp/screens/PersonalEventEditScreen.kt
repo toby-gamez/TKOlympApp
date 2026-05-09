@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.ArrowBack
@@ -15,7 +17,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -34,10 +35,10 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
@@ -48,17 +49,19 @@ import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.personalevents.PersonalEvent
 import com.tkolymp.shared.personalevents.TrainingType
+import kotlinx.coroutines.launch
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
 import kotlin.time.Duration.Companion.hours
-import kotlinx.coroutines.launch
 
 private fun formatLocalDate(d: kotlinx.datetime.LocalDate?): String {
     return d?.let { "${it.dayOfMonth}. ${it.monthNumber}. ${it.year}" } ?: ""
@@ -91,6 +94,7 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, o
                 startIso.value = ev.startIso
                 endIso.value = ev.endIso
                 weekday.value = ev.recurrenceDayOfWeek
+                    ?: try { Instant.parse(ev.startIso).toLocalDateTime(TimeZone.currentSystemDefault()).date.dayOfWeek.isoDayNumber.takeIf { it in 1..5 } } catch (_: Exception) { null }
                 recurrenceStartIso.value = ev.recurrenceStartIso ?: ""
                 recurrenceEndIso.value = ev.recurrenceEndIso ?: ""
                 isRecurring.value = ev.recurrenceDayOfWeek != null
@@ -104,7 +108,7 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, o
             navigationIcon = { IconButton(onClick = onBack) { Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null) } }
         )
     }) { innerPadding ->
-        Column(modifier = Modifier.padding(innerPadding).padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(modifier = Modifier.padding(innerPadding).padding(horizontal = 12.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             val focusManager = LocalFocusManager.current
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -192,6 +196,51 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, o
                         )
                     }
 
+                    Text(AppStrings.current.personalEvents.weekday)
+                    // show only Monday..Friday and highlight selection with background
+                    val dayNames = listOf("Po","Út","St","Čt","Pá")
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        dayNames.forEachIndexed { idx, d ->
+                            val sel = idx + 1
+                            FilterChip(
+                                selected = (weekday.value == sel),
+                                onClick = {
+                                    weekday.value = sel
+                                    if (recurrenceStartIso.value.isBlank()) {
+                                        val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
+                                        recurrenceStartIso.value = LocalDateTime(today, LocalTime(0,0)).toInstant(TimeZone.currentSystemDefault()).toString()
+                                    }
+                                    if (recurrenceEndIso.value.isBlank()) {
+                                        val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
+                                        var juneYear = today.year
+                                        var juneLast = LocalDate(juneYear, 6, 30)
+                                        if (juneLast < today) juneYear += 1
+                                        juneLast = LocalDate(juneYear, 6, 30)
+                                        val targetDow = when (sel) {
+                                            1 -> DayOfWeek.MONDAY
+                                            2 -> DayOfWeek.TUESDAY
+                                            3 -> DayOfWeek.WEDNESDAY
+                                            4 -> DayOfWeek.THURSDAY
+                                            5 -> DayOfWeek.FRIDAY
+                                            else -> DayOfWeek.MONDAY
+                                        }
+                                        var dEpoch = LocalDateTime(juneLast, LocalTime(0,0)).toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+                                        val dayMillis = 24L * 60L * 60L * 1000L
+                                        var candidate = Instant.fromEpochMilliseconds(dEpoch).toLocalDateTime(TimeZone.currentSystemDefault()).date
+                                        while (candidate.dayOfWeek != targetDow) {
+                                            dEpoch -= dayMillis
+                                            candidate = Instant.fromEpochMilliseconds(dEpoch).toLocalDateTime(TimeZone.currentSystemDefault()).date
+                                        }
+                                        recurrenceEndIso.value = LocalDateTime(candidate, LocalTime(0,0)).toInstant(TimeZone.currentSystemDefault()).toString()
+                                    }
+                                },
+                                modifier = Modifier.padding(6.dp),
+                                label = { Text(d) },
+                                colors = FilterChipDefaults.filterChipColors()
+                            )
+                        }
+                    }
+
                     Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                         Checkbox(checked = isRecurring.value, onCheckedChange = { isRecurring.value = it })
                         Text(AppStrings.current.personalEvents.repeatWeekly, modifier = Modifier.padding(start = 8.dp))
@@ -202,52 +251,6 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, o
             if (isRecurring.value) {
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(AppStrings.current.personalEvents.weekday)
-                        // show only Monday..Friday and highlight selection with background
-                        val dayNames = listOf("Po","Út","St","Čt","Pá")
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            dayNames.forEachIndexed { idx, d ->
-                                val sel = idx + 1
-                                FilterChip(
-                                    selected = (weekday.value == sel),
-                                    onClick = {
-                                        weekday.value = sel
-                                        if (recurrenceStartIso.value.isBlank()) {
-                                            val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
-                                            recurrenceStartIso.value = LocalDateTime(today, LocalTime(0,0)).toInstant(TimeZone.currentSystemDefault()).toString()
-                                        }
-                                        if (recurrenceEndIso.value.isBlank()) {
-                                            val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
-                                            var juneYear = today.year
-                                            var juneLast = LocalDate(juneYear, 6, 30)
-                                            if (juneLast < today) juneYear += 1
-                                            juneLast = LocalDate(juneYear, 6, 30)
-                                            val targetDow = when (sel) {
-                                                1 -> DayOfWeek.MONDAY
-                                                2 -> DayOfWeek.TUESDAY
-                                                3 -> DayOfWeek.WEDNESDAY
-                                                4 -> DayOfWeek.THURSDAY
-                                                5 -> DayOfWeek.FRIDAY
-                                                else -> DayOfWeek.MONDAY
-                                            }
-                                            var dEpoch = LocalDateTime(juneLast, LocalTime(0,0)).toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
-                                            val dayMillis = 24L * 60L * 60L * 1000L
-                                            var candidate = Instant.fromEpochMilliseconds(dEpoch).toLocalDateTime(TimeZone.currentSystemDefault()).date
-                                            while (candidate.dayOfWeek != targetDow) {
-                                                dEpoch -= dayMillis
-                                                candidate = Instant.fromEpochMilliseconds(dEpoch).toLocalDateTime(TimeZone.currentSystemDefault()).date
-                                            }
-                                            recurrenceEndIso.value = LocalDateTime(candidate, LocalTime(0,0)).toInstant(TimeZone.currentSystemDefault()).toString()
-                                        }
-                                    },
-                                    modifier = Modifier.padding(6.dp),
-                                    label = { Text(d) },
-                                    colors = FilterChipDefaults.filterChipColors()
-                                )
-                            }
-                        }
-                        Divider()
-
                         val recStartDate = try { if (recurrenceStartIso.value.isBlank()) null else Instant.parse(recurrenceStartIso.value).toLocalDateTime(TimeZone.currentSystemDefault()).date } catch (_: Exception) { null }
                         val recStartMillis = recStartDate?.let { LocalDateTime(it, LocalTime(0,0)).toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds() }
                         val recStartState = rememberDatePickerState(initialSelectedDateMillis = recStartMillis)
@@ -323,12 +326,32 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, o
 
             Button(onClick = {
                 val id = eventId ?: (kotlin.time.Clock.System.now().toEpochMilliseconds().toString() + "_${(0..Int.MAX_VALUE).random()}")
+                // For non-recurring events with a selected weekday, shift the date to the
+                // nearest occurrence of that weekday in the current week (Mon=1..Fri=5).
+                val tz = TimeZone.currentSystemDefault()
+                val resolvedStart: String
+                val resolvedEnd: String
+                if (!isRecurring.value && weekday.value != null) {
+                    val targetDow = weekday.value!!
+                    val today = kotlin.time.Clock.System.todayIn(tz)
+                    // Pick the nearest occurrence of targetDow that is today or in the future.
+                    val currentDow = today.dayOfWeek.isoDayNumber // 1=Mon..7=Sun
+                    val daysAhead = (targetDow - currentDow + 7) % 7
+                    val targetDate = today.plus(daysAhead, kotlinx.datetime.DateTimeUnit.DAY)
+                    val startTime = try { kotlin.time.Instant.parse(startIso.value).toLocalDateTime(tz).time } catch (_: Exception) { LocalTime(0, 0) }
+                    val endTime = try { kotlin.time.Instant.parse(endIso.value).toLocalDateTime(tz).time } catch (_: Exception) { LocalTime(1, 0) }
+                    resolvedStart = LocalDateTime(targetDate, startTime).toInstant(tz).toString()
+                    resolvedEnd = LocalDateTime(targetDate, endTime).toInstant(tz).toString()
+                } else {
+                    resolvedStart = startIso.value
+                    resolvedEnd = endIso.value
+                }
                 val ev = PersonalEvent(
                     id = id,
                     title = title.value,
                     type = trainingType.value,
-                    startIso = startIso.value,
-                    endIso = endIso.value,
+                    startIso = resolvedStart,
+                    endIso = resolvedEnd,
                     recurrenceDayOfWeek = if (isRecurring.value) weekday.value else null,
                     recurrenceStartIso = recurrenceStartIso.value.ifBlank { null },
                     recurrenceEndIso = recurrenceEndIso.value.ifBlank { null }

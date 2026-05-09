@@ -41,7 +41,7 @@ class PaymentsViewModel {
                 }
 
                 if (list.isNotEmpty()) {
-                    _items.value = list
+                    _items.value = list.sortedByDescending { it.payment?.dueAt }
                 } else {
                     // fallback: try offline cache (per-person then global)
                     val offlineJson = withContext(Dispatchers.IO) {
@@ -54,9 +54,9 @@ class PaymentsViewModel {
                         }
                     }
                     if (!offlineJson.isNullOrBlank()) {
-                        _items.value = parseOfflinePayments(offlineJson, pid)
+                        _items.value = parseOfflinePayments(offlineJson, pid).sortedByDescending { it.payment?.dueAt }
                     } else {
-                        _items.value = list
+                        _items.value = list.sortedByDescending { it.payment?.dueAt }
                     }
                 }
             } catch (e: kotlin.coroutines.cancellation.CancellationException) {

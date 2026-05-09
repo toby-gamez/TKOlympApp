@@ -130,11 +130,10 @@ fun CalendarScreen(
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 if (resumeSeen.value) {
-                    // If we're offline, avoid reloading because an online fetch
-                    // that returns an empty map can overwrite the offline data.
-                    if (!calState.isOffline) {
-                        scope.launch { calendarViewModel.load(localWeekOffset, selectedTab == 0) }
-                    }
+                    // Always reload on resume so newly saved personal events appear.
+                    // CalendarViewModel handles offline fallback and avoids overwriting
+                    // non-empty state with an empty server result.
+                    scope.launch { calendarViewModel.load(localWeekOffset, selectedTab == 0) }
                 } else {
                     resumeSeen.value = true
                 }

@@ -1,22 +1,29 @@
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Tag
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -39,6 +46,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.language.AppStrings
@@ -133,37 +142,93 @@ fun PaymentsScreen(vm: com.tkolymp.shared.payments.PaymentsViewModel, onBack: ()
 
 @Composable
 private fun PaymentItemCard(item: com.tkolymp.shared.payments.PaymentDebtorItem, modifier: Modifier = Modifier) {
-    Card(modifier = modifier
-        .fillMaxWidth()
-        .padding(8.dp), colors = CardDefaults.cardColors()) {
-        val name = listOfNotNull(item.person?.firstName, item.person?.lastName).joinToString(" ")
-        val amount = item.price?.amount?.let { a -> if (a % 1.0 == 0.0) a.toInt().toString() else String.format("%.2f", a) } ?: "-"
+    val isPaid = when {
+        item.isUnpaid != null -> item.isUnpaid == false
+        !item.payment?.status.isNullOrBlank() -> item.payment?.status.equals("PAID", ignoreCase = true)
+        else -> false
+    }
+    val name = listOfNotNull(item.person?.firstName, item.person?.lastName).joinToString(" ")
+    val amount = item.price?.amount?.let { a -> if (a % 1.0 == 0.0) a.toInt().toString() else String.format("%.2f", a) } ?: "-"
 
-        fun fmtDate(raw: String?): String {
-            val ldt = parseToLocal(raw) ?: return raw ?: "-"
-            return formatShortDateTime(ldt.date, ldt.hour, ldt.minute)
-        }
+    fun fmtDate(raw: String?): String {
+        val ldt = parseToLocal(raw) ?: return raw ?: "-"
+        return formatShortDateTime(ldt.date, ldt.hour, ldt.minute)
+    }
 
-        val isPaid = when {
-            item.isUnpaid != null -> item.isUnpaid == false
-            !item.payment?.status.isNullOrBlank() -> item.payment?.status.equals("PAID", ignoreCase = true)
-            else -> false
-        }
+    val stripColor = if (isPaid) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary
 
-        Box(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
-            Column(modifier = Modifier.align(Alignment.CenterStart)) {
-                Text(text = name.ifEmpty { "${AppStrings.current.misc.personFallback}${item.personId ?: "?"}" }, style = MaterialTheme.typography.titleMedium)
-                Text(text = "${AppStrings.current.misc.amountLabel} ${amount} ${item.price?.currency ?: "CZK"}", style = MaterialTheme.typography.bodySmall)
-                Text(text = "${AppStrings.current.misc.variableSymbolLabel} ${item.payment?.variableSymbol ?: "-"}", style = MaterialTheme.typography.bodySmall)
-                Text(text = "${AppStrings.current.misc.dueLabel} ${fmtDate(item.payment?.dueAt)}", style = MaterialTheme.typography.bodySmall)
-            }
-
-            if (isPaid) {
-                Icon(
-                    imageVector = Icons.Filled.Check,
-                    contentDescription = "Paid",
-                    modifier = Modifier.align(Alignment.CenterEnd).padding(start = 10.dp).size(25.dp)
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp)
+            .clip(RoundedCornerShape(12.dp)),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(6.dp)
+                    .height(72.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(stripColor)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = name.ifEmpty { "${AppStrings.current.misc.personFallback}${item.personId ?: "?"}" },
+                    style = MaterialTheme.typography.titleMedium
                 )
+                Spacer(modifier = Modifier.height(6.dp))
+                val boxBg = MaterialTheme.colorScheme.surfaceVariant
+                FlowRow(modifier = Modifier.fillMaxWidth()) {
+                    Box(
+                        modifier = Modifier
+                            .padding(end = 8.dp, bottom = 8.dp)
+                            .background(boxBg, RoundedCornerShape(8.dp))
+                            .padding(horizontal = 8.dp, vertical = 6.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Payments, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("$amount ${item.price?.currency ?: "CZK"}", style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                    val dueText = fmtDate(item.payment?.dueAt)
+                    if (dueText != "-") {
+                        Box(
+                            modifier = Modifier
+                                .padding(end = 8.dp, bottom = 8.dp)
+                                .background(boxBg, RoundedCornerShape(8.dp))
+                                .padding(horizontal = 8.dp, vertical = 6.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Schedule, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("${AppStrings.current.misc.dueLabel} $dueText", style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
+                    val vs = item.payment?.variableSymbol
+                    if (!vs.isNullOrBlank()) {
+                        Box(
+                            modifier = Modifier
+                                .padding(end = 8.dp, bottom = 8.dp)
+                                .background(boxBg, RoundedCornerShape(8.dp))
+                                .padding(horizontal = 8.dp, vertical = 6.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Tag, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(vs, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
+                }
             }
         }
     }
