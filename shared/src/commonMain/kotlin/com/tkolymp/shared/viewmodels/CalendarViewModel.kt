@@ -83,8 +83,11 @@ class CalendarViewModel(
 
         _state.value = _state.value.copy(isLoading = true, error = null, isOffline = false)
 
-        // If only the filter changed (My/All) and we're not forcing refresh, try offline bucket first
-        if (onlyMineChanged && !forceRefresh) {
+        // If only the filter changed (My/All) and we're not forcing refresh, try offline bucket first —
+        // but only when offline. When online the bucket summary omits eventRegistrationsList, which
+        // makes all individual-lesson slots appear as "VOLNO" until the user manually refreshes.
+        val isCurrentlyOnline = try { ServiceLocator.networkMonitor.isConnected() } catch (_: Exception) { true }
+        if (onlyMineChanged && !forceRefresh && !isCurrentlyOnline) {
             try {
                 val bucketName = if (onlyMine) "MINE" else "ALL"
                 val weekKey = "offline_cal_${bucketName}_$weekStart"
@@ -128,8 +131,7 @@ class CalendarViewModel(
 
         if (shouldInvalidate) {
             try {
-                val online = try { ServiceLocator.networkMonitor.isConnected() } catch (_: Exception) { true }
-                if (online) {
+                if (isCurrentlyOnline) {
                     cache.invalidatePrefix("calendar_")
                 } else {
                     Logger.d("CalendarViewModel", "skipping cache invalidation: offline")

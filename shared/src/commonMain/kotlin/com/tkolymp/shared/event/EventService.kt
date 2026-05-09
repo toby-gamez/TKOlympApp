@@ -140,11 +140,6 @@ class EventService(
                             }
                             __typename
                         }
-                        attendanceSummaryList {
-                            count
-                            status
-                            __typename
-                        }
                         eventInstanceTrainersByInstanceIdList {
                             id
                             personId
@@ -521,18 +516,29 @@ class EventService(
     override suspend fun fetchEventById(id: BigInt, forceRefresh: Boolean): JsonObject? {
         val cacheKey = "event_${id}"
         if (!forceRefresh) {
-            cache.get<JsonObject>(cacheKey)?.let { return it }
+            cache.get<JsonObject>(cacheKey)?.let {
+                Logger.d("EventService", "fetchEventById($id): cache HIT")
+                return it
+            }
         }
 
         val variables = buildJsonObject { put("id", JsonPrimitive(id)) }
         val resp = try {
             client.post(eventByIdQuery, variables)
         } catch (ex: Exception) {
+            Logger.d("EventService", "fetchEventById($id): network exception: ${ex.message}")
             return null
         }
 
-        val data = resp.jsonObject["data"]?.jsonObject ?: return null
+        val dataNode = resp.jsonObject["data"]
+        val errorsNode = resp.jsonObject["errors"]
+        Logger.d("EventService", "fetchEventById($id): raw response keys=${resp.jsonObject.keys}, data keys=${dataNode?.jsonObject?.keys}")
+        val data = dataNode?.jsonObject ?: run {
+            Logger.d("EventService", "fetchEventById($id): no 'data' in response, errors=$errorsNode")
+            return null
+        }
         val ev = data["event"]
+        Logger.d("EventService", "fetchEventById($id): event value type=${ev?.let { it::class.simpleName }}, value=$ev")
         val obj = (ev as? JsonObject)
         if (obj != null) {
             try { cache.put(cacheKey, obj, ttl = 5.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) { }

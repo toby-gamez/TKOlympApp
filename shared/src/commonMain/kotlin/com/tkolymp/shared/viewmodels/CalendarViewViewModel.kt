@@ -105,8 +105,12 @@ class CalendarViewViewModel(
 
             Logger.d("CalendarViewViewModel", "loadEvents: selectedDate=${currentState.selectedDate} viewMode=${currentState.viewMode} startIso=${startIso} lastRangeStartIso=${lastRangeStartIso} onlyMine=${currentState.showOnlyMine} onlyMineChanged=${onlyMineChanged} rangeChanged=${rangeChanged}")
 
-            // If only the filter changed but the range is the same, try offline-week summary first
-            if (onlyMineChanged && !rangeChanged) {
+            val isCurrentlyOnline = try { ServiceLocator.networkMonitor.isConnected() } catch (_: Exception) { true }
+
+            // If only the filter changed but the range is the same, try offline-week summary first —
+            // but only when offline. The offline bucket summary omits eventRegistrationsList, so when
+            // online we must fetch from the API to get correct participant data.
+            if (onlyMineChanged && !rangeChanged && !isCurrentlyOnline) {
                 try {
                     val bucketName = if (currentState.showOnlyMine) "MINE" else "ALL"
                     val startDate = timeRange.start.date
@@ -166,8 +170,7 @@ class CalendarViewViewModel(
             // If the visible range changed (or first load), invalidate related cache entries when online
             if (rangeChanged) {
                 try {
-                    val online = try { ServiceLocator.networkMonitor.isConnected() } catch (_: Exception) { true }
-                    if (online) {
+                    if (isCurrentlyOnline) {
                         try { cache.invalidatePrefix("calendar_") } catch (_: Exception) {}
                     }
                 } catch (_: Exception) {}

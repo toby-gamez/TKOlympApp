@@ -79,17 +79,34 @@ class EventViewModel(
         try {
             // Eagerly check if already added to calendar
             val alreadyAdded = try { calendarStorage.isEventInCalendar(eventId) } catch (_: Exception) { false }
-            var ev = try { withContext(Dispatchers.IO) { eventService.fetchEventById(eventId, forceRefresh) } } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-                Logger.d("EventViewModel", "fetchEventById($eventId) failed: ${ex.message}"); null }
+            // When offline, don't bypass the CacheService — use whatever was cached recently.
+            // forceRefresh=true only makes sense when the network is actually available.
+            val isCurrentlyOnline = try { ServiceLocator.networkMonitor.isConnected() } catch (_: Exception) { true }
+            Logger.d("EventViewModel", "loadEvent($eventId): online=$isCurrentlyOnline forceRefresh=$forceRefresh")
+            val effectiveForceRefresh = forceRefresh && isCurrentlyOnline
+            var ev = try { withContext(Dispatchers.IO) { eventService.fetchEventById(eventId, effectiveForceRefresh) } } catch (e: CancellationException) { throw e } catch (ex: Exception) {
+                Logger.d("EventViewModel", "fetchEventById($eventId) exception: ${ex.message}"); null }
+            Logger.d("EventViewModel", "fetchEventById($eventId) result: ${if (ev == null) "null" else "JsonObject(keys=${ev.keys})"} ")
             var isOfflineUsed = false
             if (ev == null) {
                 try {
                     val raw = ServiceLocator.offlineSyncManager.loadEventDetail(eventId)
+                    Logger.d("EventViewModel", "offlineSyncManager.loadEventDetail($eventId): ${if (raw == null) "null" else "found (${raw.length} chars)"}")
                     if (raw != null) {
                         ev = kotlinx.serialization.json.Json.parseToJsonElement(raw).jsonObject
                         isOfflineUsed = true
                     }
-                } catch (_: Exception) { }
+                } catch (ex: Exception) { Logger.d("EventViewModel", "offlineSyncManager.loadEventDetail($eventId) exception: ${ex.message}") }
+            }
+            // After all fallbacks, if ev is still null there's nothing to show — set an error
+            // so the UI can display a retry button instead of a permanent blank state.
+            if (ev == null) {
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    isOffline = !isCurrentlyOnline,
+                    error = AppStrings.current.events.noEventToShow
+                )
+                return
             }
             var myPerson: String? = null
             var myCouples: List<String> = emptyList()

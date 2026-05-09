@@ -152,9 +152,17 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
             modifier = Modifier.padding(padding)
         ) {
             if (ev == null) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(AppStrings.current.events.noEventToShow, modifier = Modifier.padding(16.dp))
+                if (state.error != null) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(state.error!!, modifier = Modifier.padding(16.dp))
+                            TextButton(onClick = { scope.launch { viewModel.loadEvent(eventId, forceRefresh = true) } }) {
+                                Text(AppStrings.current.commonActions.retry)
+                            }
+                        }
+                    }
                 }
+                // else: initial state before loading starts — SwipeToReload shows spinner
                 } else {
                 Column(modifier = Modifier
                     .fillMaxSize()
