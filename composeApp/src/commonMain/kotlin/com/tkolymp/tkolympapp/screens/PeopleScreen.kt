@@ -77,6 +77,7 @@ private enum class SortMode { ALPHABETICAL, BIRTHDAY }
 fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, onBirthdayNotificationsClick: () -> Unit = {}) {
     val viewModel = viewModel<PeopleViewModel>()
     val state by viewModel.state.collectAsState()
+    val trainerPersonIds = state.trainerPersonIds
     var sortMode by remember { mutableStateOf<SortMode>(SortMode.ALPHABETICAL) }
     var showSearch by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
@@ -275,6 +276,7 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
 
                                 Column(modifier = Modifier.weight(1f)) {
                                             val isBirthdayToday = daysUntilNextBirthday(p.birthDate) == 0
+                                            val isTrainer = p.id in trainerPersonIds
                                     val base = listOf(p.prefixTitle, p.firstName, p.lastName).filterNotNull().filter { it.isNotBlank() }.joinToString(" ")
                                     val name = if (!p.suffixTitle.isNullOrBlank()) "$base, ${p.suffixTitle}" else base
                                     Text(
@@ -299,7 +301,22 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = if (isBirthdayToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                                             )
+                                            if (isTrainer) {
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text(
+                                                    AppStrings.current.profile.trainer,
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.primary
+                                                )
+                                            }
                                         }
+                                    }
+                                    if (p.birthDate == null && isTrainer) {
+                                        Text(
+                                            AppStrings.current.profile.trainer,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
                                     }
                                 }
                             }

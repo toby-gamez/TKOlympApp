@@ -17,12 +17,14 @@ data class PeopleState(
     val people: List<Any> = emptyList(),
     val filteredPeople: List<Any> = emptyList(),
     val searchQuery: String = "",
+    val trainerPersonIds: Set<String> = emptySet(),
     override val isLoading: Boolean = false,
     override val error: String? = null
 ) : ViewModelState
 
 class PeopleViewModel(
-    private val peopleService: com.tkolymp.shared.people.PeopleService = ServiceLocator.peopleService
+    private val peopleService: com.tkolymp.shared.people.PeopleService = ServiceLocator.peopleService,
+    private val clubService: com.tkolymp.shared.club.ClubService = ServiceLocator.clubService
 ) : ViewModel() {
     private val _state = MutableStateFlow(PeopleState())
     val state: StateFlow<PeopleState> = _state.asStateFlow()
@@ -32,11 +34,14 @@ class PeopleViewModel(
         try {
             // preserve existing people if fetch fails or returns empty while offline
             val current: List<Person> = _state.value.people.filterIsInstance<Person>()
+            val trainerIds = try {
+                clubService.fetchClubData().trainers.mapNotNull { it.person?.id }.toSet()
+            } catch (e: CancellationException) { throw e } catch (_: Exception) { _state.value.trainerPersonIds }
             var fetched: List<Person>? = null
             try { fetched = peopleService.fetchPeople() } catch (e: CancellationException) { throw e } catch (_: Exception) { fetched = null }
 
             if (fetched != null && fetched.isNotEmpty()) {
-                _state.value = _state.value.copy(people = fetched as? List<Any> ?: emptyList(), filteredPeople = fetched as? List<Any> ?: emptyList(), isLoading = false)
+                _state.value = _state.value.copy(people = fetched as? List<Any> ?: emptyList(), filteredPeople = fetched as? List<Any> ?: emptyList(), trainerPersonIds = trainerIds, isLoading = false)
             } else {
                 // try offline fallback saved by OfflineSyncManager
                 try {
@@ -63,16 +68,16 @@ class PeopleViewModel(
                             } catch (_: Exception) { null }
                         }
                         if (parsed.isNotEmpty()) {
-                            _state.value = _state.value.copy(people = parsed as? List<Any> ?: emptyList(), filteredPeople = parsed as? List<Any> ?: emptyList(), isLoading = false)
+                            _state.value = _state.value.copy(people = parsed as? List<Any> ?: emptyList(), filteredPeople = parsed as? List<Any> ?: emptyList(), trainerPersonIds = trainerIds, isLoading = false)
                         } else {
                             // keep current data if available
-                            _state.value = _state.value.copy(people = current as? List<Any> ?: emptyList(), filteredPeople = current as? List<Any> ?: emptyList(), isLoading = false)
+                            _state.value = _state.value.copy(people = current as? List<Any> ?: emptyList(), filteredPeople = current as? List<Any> ?: emptyList(), trainerPersonIds = trainerIds, isLoading = false)
                         }
                     } else {
-                        _state.value = _state.value.copy(people = current as? List<Any> ?: emptyList(), filteredPeople = current as? List<Any> ?: emptyList(), isLoading = false)
+                        _state.value = _state.value.copy(people = current as? List<Any> ?: emptyList(), filteredPeople = current as? List<Any> ?: emptyList(), trainerPersonIds = trainerIds, isLoading = false)
                     }
                 } catch (_: Exception) {
-                    _state.value = _state.value.copy(people = current as? List<Any> ?: emptyList(), filteredPeople = current as? List<Any> ?: emptyList(), isLoading = false)
+                    _state.value = _state.value.copy(people = current as? List<Any> ?: emptyList(), filteredPeople = current as? List<Any> ?: emptyList(), trainerPersonIds = trainerIds, isLoading = false)
                 }
             }
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
