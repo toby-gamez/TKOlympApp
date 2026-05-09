@@ -26,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -73,7 +74,7 @@ import kotlinx.datetime.todayIn
 private enum class SortMode { ALPHABETICAL, BIRTHDAY }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) {
+fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, onBirthdayNotificationsClick: () -> Unit = {}) {
     val viewModel = viewModel<PeopleViewModel>()
     val state by viewModel.state.collectAsState()
     var sortMode by remember { mutableStateOf<SortMode>(SortMode.ALPHABETICAL) }
@@ -102,6 +103,9 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}) 
                 }
             },
             actions = {
+                IconButton(onClick = onBirthdayNotificationsClick) {
+                    Icon(imageVector = Icons.Filled.Notifications, contentDescription = AppStrings.current.notifications.birthdayNotificationsTitle)
+                }
                 IconButton(onClick = { showSearch = !showSearch }) {
                     Icon(imageVector = Icons.Filled.Search, contentDescription = AppStrings.current.commonActions.search)
                 }

@@ -169,4 +169,44 @@ actual class NotificationStorage actual constructor(platformContext: Any) {
             }
         } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
     }
+
+    actual suspend fun saveBirthdaySettings(settings: BirthdayNotificationSettings) {
+        val obj = buildJsonObject {
+            put("enabled", JsonPrimitive(settings.enabled))
+            put("notifyAll", JsonPrimitive(settings.notifyAll))
+            put("notifyTrainers", JsonPrimitive(settings.notifyTrainers))
+            put("selectedCohortIds", JsonArray(settings.selectedCohortIds.map { JsonPrimitive(it) }))
+            put("selectedPersonIds", JsonArray(settings.selectedPersonIds.map { JsonPrimitive(it) }))
+            put("notificationHour", JsonPrimitive(settings.notificationHour))
+            put("daysBefore", JsonPrimitive(settings.daysBefore))
+        }
+        prefs.edit().putString("birthday_notification_settings", obj.toString()).apply()
+    }
+
+    actual suspend fun getBirthdaySettings(): BirthdayNotificationSettings? {
+        val s = prefs.getString("birthday_notification_settings", null) ?: return null
+        return try {
+            val jo = json.parseToJsonElement(s).jsonObject
+            BirthdayNotificationSettings(
+                enabled = jo["enabled"]?.jsonPrimitive?.booleanOrNull ?: false,
+                notifyAll = jo["notifyAll"]?.jsonPrimitive?.booleanOrNull ?: true,
+                notifyTrainers = jo["notifyTrainers"]?.jsonPrimitive?.booleanOrNull ?: false,
+                selectedCohortIds = jo["selectedCohortIds"]?.jsonArray?.mapNotNull { it.jsonPrimitive.contentOrNull } ?: emptyList(),
+                selectedPersonIds = jo["selectedPersonIds"]?.jsonArray?.mapNotNull { it.jsonPrimitive.contentOrNull } ?: emptyList(),
+                notificationHour = jo["notificationHour"]?.jsonPrimitive?.intOrNull ?: 8,
+                daysBefore = jo["daysBefore"]?.jsonPrimitive?.intOrNull ?: 0
+            )
+        } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+    }
+
+    actual suspend fun saveScheduledBirthdayNotificationIds(ids: List<String>) {
+        prefs.edit().putString("scheduled_birthday_ids", JsonArray(ids.map { JsonPrimitive(it) }).toString()).apply()
+    }
+
+    actual suspend fun getScheduledBirthdayNotificationIds(): List<String> {
+        val s = prefs.getString("scheduled_birthday_ids", null) ?: return emptyList()
+        return try {
+            json.parseToJsonElement(s).jsonArray.mapNotNull { it.jsonPrimitive.contentOrNull }
+        } catch (_: Exception) { emptyList() }
+    }
 }

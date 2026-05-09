@@ -9,4 +9,8 @@ expect class NotificationStorage(platformContext: Any) {
     suspend fun getReceivedNotifications(): List<ReceivedMessage>
     suspend fun saveEventReminders(list: List<EventReminder>)
     suspend fun getEventReminders(): List<EventReminder>
+    suspend fun saveBirthdaySettings(settings: BirthdayNotificationSettings)
+    suspend fun getBirthdaySettings(): BirthdayNotificationSettings?
+    suspend fun saveScheduledBirthdayNotificationIds(ids: List<String>)
+    suspend fun getScheduledBirthdayNotificationIds(): List<String>
 }

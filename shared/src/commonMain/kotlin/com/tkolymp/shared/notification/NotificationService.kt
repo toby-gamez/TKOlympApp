@@ -4,6 +4,13 @@ import com.tkolymp.shared.event.EventInstance
 import com.tkolymp.shared.language.AppStrings
 import kotlinx.coroutines.CancellationException
 import com.tkolymp.shared.models.UserRole
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atTime
+import kotlinx.datetime.minus
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.todayIn
 
 class NotificationService(
     private val storage: NotificationStorage,
@@ -51,6 +58,82 @@ class NotificationService(
     suspend fun updateSettings(s: NotificationSettings) {
         storage.saveSettings(s)
         // caller may want to trigger rescheduleAll()
+    }
+
+    suspend fun getBirthdaySettings(): BirthdayNotificationSettings =
+        storage.getBirthdaySettings() ?: BirthdayNotificationSettings()
+
+    suspend fun saveBirthdaySettings(settings: BirthdayNotificationSettings) {
+        storage.saveBirthdaySettings(settings)
+        scheduleBirthdayNotifications(settings = settings)
+    }
+
+    /**
+     * Schedules (or cancels) birthday alarms based on current settings.
+     * Call after saving settings and on app startup.
+     * Pass [peopleService] to avoid an extra network call if people are already loaded.
+     */
+    suspend fun scheduleBirthdayNotifications(
+        settings: BirthdayNotificationSettings? = null,
+        peopleService: com.tkolymp.shared.people.PeopleService? = null
+    ) {
+        val resolvedSettings = settings ?: getBirthdaySettings()
+
+        // Cancel all existing birthday alarms first
+        val prevIds = storage.getScheduledBirthdayNotificationIds()
+        prevIds.forEach { try { scheduler.cancelNotification(it) } catch (_: Exception) {} }
+
+        if (!resolvedSettings.enabled) {
+            storage.saveScheduledBirthdayNotificationIds(emptyList())
+            return
+        }
+
+        val svc = peopleService ?: com.tkolymp.shared.ServiceLocator.peopleService
+        val allPeople = try { svc.fetchPeople() } catch (_: Exception) { return }
+
+        // Resolve which person IDs to notify
+        val targetIds: Set<String> = if (resolvedSettings.notifyAll) {
+            allPeople.mapNotNull { it.id }.toSet()
+        } else {
+            val fromCohorts = allPeople.filter { person ->
+                person.cohortMembershipsList.any { m ->
+                    m.cohort?.id != null && resolvedSettings.selectedCohortIds.contains(m.cohort.id)
+                }
+            }.mapNotNull { it.id }.toSet()
+            resolvedSettings.selectedPersonIds.toSet() + fromCohorts
+        }
+
+        val tz = TimeZone.currentSystemDefault()
+        val today = kotlin.time.Clock.System.todayIn(tz)
+        val scheduledIds = mutableListOf<String>()
+
+        allPeople.filter { it.id in targetIds }.forEach { person ->
+            val birthStr = person.birthDate?.takeIf { it.length >= 10 } ?: return@forEach
+            val birthDate = try { LocalDate.parse(birthStr.take(10)) } catch (_: Exception) { return@forEach }
+
+            val thisYear = today.year
+            val period = DatePeriod(days = resolvedSettings.daysBefore)
+            val thisYearBirthday = LocalDate(thisYear, birthDate.month, birthDate.dayOfMonth)
+            val thisYearTrigger = thisYearBirthday.minus(period)
+            val triggerDate = if (thisYearTrigger >= today) thisYearTrigger
+            else LocalDate(thisYear + 1, birthDate.month, birthDate.dayOfMonth).minus(period)
+
+            val triggerInstant = triggerDate.atTime(resolvedSettings.notificationHour, 0).toInstant(tz)
+            val nid = "bday_${person.id}"
+            val name = listOfNotNull(person.firstName, person.lastName).joinToString(" ").ifBlank { person.id }
+            try {
+                scheduler.scheduleNotificationAt(
+                    notificationId = nid,
+                    title = AppStrings.current.notifications.birthdayNotificationsTitle,
+                    text = name,
+                    isoDateTime = triggerInstant.toString(),
+                    minutesBefore = 0
+                )
+                scheduledIds += nid
+            } catch (_: Exception) {}
+        }
+
+        storage.saveScheduledBirthdayNotificationIds(scheduledIds)
     }
 
     suspend fun processEvents(instances: List<EventInstance>) {

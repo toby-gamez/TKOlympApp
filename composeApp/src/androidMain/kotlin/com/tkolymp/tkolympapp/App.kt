@@ -56,6 +56,7 @@ import com.tkolymp.shared.language.getDeviceLanguageCode
 import com.tkolymp.shared.registration.RegMode
 import com.tkolymp.shared.viewmodels.OnboardingViewModel
 import com.tkolymp.tkolympapp.screens.AboutScreen
+import com.tkolymp.tkolympapp.screens.BirthdayNotificationsScreen
 import com.tkolymp.tkolympapp.screens.BoardScreen
 import com.tkolymp.tkolympapp.screens.CalendarScreen
 import com.tkolymp.tkolympapp.screens.FreeLessonsScreen
@@ -771,7 +772,41 @@ fun AppNavHost(
                 )
             }
         ) {
-            PeopleScreen(onPersonClick = { id -> navController.navigate("person/$id") }, onBack = { navController.navigateUp() })
+            PeopleScreen(
+                onPersonClick = { id -> navController.navigate("person/$id") },
+                onBack = { navController.navigateUp() },
+                onBirthdayNotificationsClick = { navController.navigate("birthday_notifications") }
+            )
+        }
+
+        composable(
+            route = "birthday_notifications",
+            enterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            popEnterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            }
+        ) {
+            BirthdayNotificationsScreen(onBack = { navController.navigateUp() })
         }
 
         composable(
