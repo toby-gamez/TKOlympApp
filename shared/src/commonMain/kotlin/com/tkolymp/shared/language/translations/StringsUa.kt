@@ -345,6 +345,9 @@ val StringsUa = Strings(
         viewModeThreeDays = "3 дні",
         viewModeWeek = "Тиждень",
         freeLesson = "ВІЛЬНО",
+        calendarOptionsTitle = "Перегляд",
+        weekDayAbbreviations = listOf("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"),
+        resetToToday = "На сьогодні",
     ),
     onboarding = OnboardingStrings(
         onboardingTitle1 = "Змагання & результати",

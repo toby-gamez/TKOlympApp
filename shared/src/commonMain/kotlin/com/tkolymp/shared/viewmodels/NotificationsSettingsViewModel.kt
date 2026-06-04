@@ -194,13 +194,16 @@ class NotificationsSettingsViewModel(
         val new = if (current.contains(category)) current - category else current + category
         try {
             val settings = notificationService.getSettings() ?: NotificationSettings(globalEnabled = true, rules = listOf())
-            val newSettings = settings.copy(rules = listOf(NotificationRule(
+            val existingTypeRule = settings.rules.firstOrNull { it.filterType == FilterType.BY_TYPE }
+            val updatedTypeRule = (existingTypeRule ?: NotificationRule(
                 id = kotlin.random.Random.Default.nextLong().toString(),
                 name = "types", enabled = true,
                 filterType = FilterType.BY_TYPE,
                 locations = listOf(), trainers = listOf(),
-                types = new.toList(), timesBeforeMinutes = listOf(60)
-            )))
+                types = listOf(), timesBeforeMinutes = listOf(60)
+            )).copy(types = new.toList())
+            val newRules = settings.rules.filter { it.filterType != FilterType.BY_TYPE } + updatedTypeRule
+            val newSettings = settings.copy(rules = newRules)
             notificationService.updateSettings(newSettings)
             _state.value = _state.value.copy(enabledCategories = new, settings = newSettings,
                 rules = newSettings.rules, globalEnabled = newSettings.globalEnabled)

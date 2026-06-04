@@ -346,6 +346,9 @@ val StringsBrainrot = Strings(
         viewModeThreeDays = "3 day",
         viewModeWeek = "whole week",
         freeLesson = "OPEN SLOT",
+        calendarOptionsTitle = "vibe",
+        weekDayAbbreviations = listOf("Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"),
+        resetToToday = "back to today fr",
     ),
     onboarding = OnboardingStrings(
         onboardingTitle1 = "Battles & Results fr",

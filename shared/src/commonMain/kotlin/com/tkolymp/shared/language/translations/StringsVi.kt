@@ -334,6 +334,9 @@ val StringsVi = Strings(
         viewModeThreeDays = "3 ngày",
         viewModeWeek = "Tuần",
         freeLesson = "TRỐNG",
+        calendarOptionsTitle = "Xem",
+        weekDayAbbreviations = listOf("T2", "T3", "T4", "T5", "T6", "T7", "CN"),
+        resetToToday = "Về hôm nay",
     ),
     onboarding = OnboardingStrings(
         onboardingTitle1 = "Thi đấu & kết quả",

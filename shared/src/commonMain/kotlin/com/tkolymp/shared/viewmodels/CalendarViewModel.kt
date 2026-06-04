@@ -56,11 +56,12 @@ class CalendarViewModel(
     val state: StateFlow<CalendarState> = _state.asStateFlow()
 
     private var lastWeekOffset: Int? = null
+    private var lastWeekStart: kotlinx.datetime.LocalDate? = null
     private var lastOnlyMine: Boolean? = null
 
-    suspend fun load(weekOffset: Int, onlyMine: Boolean, forceRefresh: Boolean = false) {
+    suspend fun load(weekOffset: Int, onlyMine: Boolean, forceRefresh: Boolean = false, weekStartOverride: kotlinx.datetime.LocalDate? = null) {
         val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-        val weekStart = today.plus(weekOffset * 7, DateTimeUnit.DAY)
+        val weekStart = weekStartOverride ?: today.plus(weekOffset * 7, DateTimeUnit.DAY)
         val endDay = weekStart.plus(6, DateTimeUnit.DAY)
         val startIso = weekStart.toString() + "T00:00:00Z"
         val endIso = endDay.toString() + "T23:59:59Z"
@@ -72,21 +73,33 @@ class CalendarViewModel(
         val todayString = today.toString()
         val tomorrowString = today.plus(1, DateTimeUnit.DAY).toString()
 
+        val isFirstLoad = lastWeekStart == null
+        val weekChanged = weekStart != lastWeekStart
         val onlyMineChanged = onlyMine != lastOnlyMine
-        // only invalidate cache when explicitly forced or when the week changed —
-        // switching the onlyMine filter should not wipe cached data (helps offline)
-        val shouldInvalidate = forceRefresh || (weekOffset != lastWeekOffset)
+        // only invalidate cache when explicitly forced or when the week changed
+        val shouldInvalidate = forceRefresh || weekChanged
+        // Show loading indicator only for initial loads, week changes, and explicit refreshes.
+        // Tab filter switches and resume-triggered reloads run silently (current data stays visible).
+        val showLoadingIndicator = forceRefresh || isFirstLoad || weekChanged
+
+        // Determine online status before touching state so we don't incorrectly clear isOffline.
+        val isCurrentlyOnline = try { ServiceLocator.networkMonitor.isConnected() } catch (_: Exception) { true }
 
         // preload cached user ids (used later in state)
         val pid = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("CalendarViewModel", "getCachedPersonId failed: ${e.message}"); null }
         val cids = try { userService.getCachedCoupleIds() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("CalendarViewModel", "getCachedCoupleIds failed: ${e.message}"); emptyList() }
 
-        _state.value = _state.value.copy(isLoading = true, error = null, isOffline = false)
+        _state.value = _state.value.copy(
+            isLoading = showLoadingIndicator,
+            error = null,
+            // Only reset isOffline when we're about to do a fresh online load; preserve it otherwise
+            // to avoid the screen-level offline cache flickering away and back.
+            isOffline = if (showLoadingIndicator && isCurrentlyOnline) false else _state.value.isOffline
+        )
 
         // If only the filter changed (My/All) and we're not forcing refresh, try offline bucket first —
         // but only when offline. When online the bucket summary omits eventRegistrationsList, which
         // makes all individual-lesson slots appear as "VOLNO" until the user manually refreshes.
-        val isCurrentlyOnline = try { ServiceLocator.networkMonitor.isConnected() } catch (_: Exception) { true }
         if (onlyMineChanged && !forceRefresh && !isCurrentlyOnline) {
             try {
                 val bucketName = if (onlyMine) "MINE" else "ALL"
@@ -109,7 +122,7 @@ class CalendarViewModel(
                         (list - lessonSet).sortedBy { it.since }
                     }
 
-                    lastWeekOffset = weekOffset
+                    lastWeekStart = weekStart
                     lastOnlyMine = onlyMine
 
                     _state.value = _state.value.copy(
@@ -180,7 +193,7 @@ class CalendarViewModel(
                             (list - lessonSet).sortedBy { it.since }
                         }
 
-                        lastWeekOffset = weekOffset
+                        lastWeekStart = weekStart
                         lastOnlyMine = onlyMine
 
                         _state.value = _state.value.copy(
@@ -236,7 +249,7 @@ class CalendarViewModel(
                 (list - lessonSet).sortedBy { it.since }
             }
 
-            lastWeekOffset = weekOffset
+            lastWeekStart = weekStart
             lastOnlyMine = onlyMine
 
             val hasCancelledMineToShow = if (onlyMine) {

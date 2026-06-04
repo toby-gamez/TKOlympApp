@@ -345,6 +345,9 @@ val StringsCs = Strings(
         viewModeThreeDays = "3 dny",
         viewModeWeek = "Týden",
         freeLesson = "VOLNO",
+        calendarOptionsTitle = "Zobrazení",
+        weekDayAbbreviations = listOf("Po", "Út", "St", "Čt", "Pá", "So", "Ne"),
+        resetToToday = "Zpět na dnes",
     ),
     onboarding = OnboardingStrings(
     onboardingTitle1 = "Soutěže & výsledky",

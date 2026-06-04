@@ -140,7 +140,7 @@ internal fun RenderSingleEventCard(item: EventInstance, onEventClick: (Long) -> 
             .padding(vertical = 6.dp)
             .clip(RoundedCornerShape(12.dp))
             .clickable {
-                (item.event?.id as? Number)?.toLong()?.let { onEventClick(it) }
+                item.event?.id?.let { onEventClick(it) }
             }
             .then(Modifier),
         shape = RoundedCornerShape(12.dp)

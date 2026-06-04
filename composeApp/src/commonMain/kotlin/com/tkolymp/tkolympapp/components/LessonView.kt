@@ -98,7 +98,7 @@ internal fun LessonView(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                instances.sortedBy { it.since }.forEach { inst ->
+                instances.forEach { inst ->
                     val time = formatTimes(inst.since, inst.until)
                     val regs = inst.event?.eventRegistrationsList ?: emptyList()
                     val parts: List<Pair<String, Boolean>> = regs.mapNotNull { r ->

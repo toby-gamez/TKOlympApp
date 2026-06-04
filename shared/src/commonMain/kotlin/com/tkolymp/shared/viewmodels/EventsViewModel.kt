@@ -131,7 +131,11 @@ class EventsViewModel(
                 // Deduplicate instances (same event id + since + until) before grouping to avoid repeats
                 val uniqueParsed = parsed.distinctBy { Triple(it.event?.id, it.since, it.until) }
                 val grouped = uniqueParsed.groupBy { inst -> inst.since?.substringBefore('T') ?: inst.updatedAt?.substringBefore('T') ?: "" }.filterValues { it.isNotEmpty() }
-                _state.value = _state.value.copy(eventsByDay = grouped, isLoading = false)
+                if (grouped.isNotEmpty()) {
+                    _state.value = _state.value.copy(eventsByDay = grouped, isLoading = false)
+                } else {
+                    _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání akcí")
+                }
             } catch (_: Exception) {
                 _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání akcí")
             }

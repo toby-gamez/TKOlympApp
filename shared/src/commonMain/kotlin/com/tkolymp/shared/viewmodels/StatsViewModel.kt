@@ -215,8 +215,8 @@ class StatsViewModel(
             val monthlyData = buildMonthlyData(instances, seasonStart, seasonEnd)
             try { Logger.d("StatsViewModel", "buildMonthlyData took=${tMonthly.elapsedNow().inWholeMilliseconds}ms") } catch (_: Exception) {}
 
-            // avgPerWeek: total sessions / elapsed full weeks (min 1)
-            val elapsedWeeks = maxOf(1, (today.toEpochDays() - seasonStart.toEpochDays()) / 7)
+            // avgPerWeek: total sessions / elapsed weeks (min 1), using fractional weeks for accuracy
+            val elapsedWeeks = maxOf(1.0, (today.toEpochDays() - seasonStart.toEpochDays()).toDouble() / 7.0)
             val avgPerWeek = totalSessions.toDouble() / elapsedWeeks
 
             // Streak: consecutive weeks ending at current week with ≥1 training
@@ -303,7 +303,7 @@ class StatsViewModel(
                 val totalSessions = instances.size
                 val totalMinutes = instances.sumOf { durationMin(it.since, it.until) }
                 val capDate = if (today <= season.end) today else season.end
-                val elapsedWeeks = maxOf(1L, (capDate.toEpochDays() - season.start.toEpochDays()) / 7L)
+                val elapsedWeeks = maxOf(1.0, (capDate.toEpochDays() - season.start.toEpochDays()).toDouble() / 7.0)
                 val avgPerWeek = totalSessions.toDouble() / elapsedWeeks
                 SeasonSummary(season, totalSessions, totalMinutes, avgPerWeek)
             }
@@ -353,7 +353,7 @@ class StatsViewModel(
             val totalSessions = instances.size
             val totalMinutes = instances.sumOf { durationMin(it.since, it.until) }
             val capDate = if (today <= season.end) today else season.end
-            val elapsedWeeks = maxOf(1L, (capDate.toEpochDays() - season.start.toEpochDays()) / 7L)
+            val elapsedWeeks = maxOf(1.0, (capDate.toEpochDays() - season.start.toEpochDays()).toDouble() / 7.0)
             val avgPerWeek = totalSessions.toDouble() / elapsedWeeks
             val monthlyData = buildMonthlyData(instances, season.start, season.end)
             val typeData = buildTypeData(instances)

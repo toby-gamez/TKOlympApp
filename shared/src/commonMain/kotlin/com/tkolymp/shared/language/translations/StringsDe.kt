@@ -345,6 +345,9 @@ val StringsDe = Strings(
         viewModeThreeDays = "3 Tage",
         viewModeWeek = "Woche",
         freeLesson = "FREI",
+        calendarOptionsTitle = "Ansicht",
+        weekDayAbbreviations = listOf("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"),
+        resetToToday = "Zurück zu heute",
     ),
     onboarding = OnboardingStrings(
         onboardingTitle1 = "Wettkämpfe & Ergebnisse",

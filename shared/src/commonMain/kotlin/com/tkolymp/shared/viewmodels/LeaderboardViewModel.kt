@@ -6,6 +6,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -107,7 +109,8 @@ class LeaderboardViewModel(
             // Load scoreboard (with offline fallback)
             val until = "2100-01-01"
             val list = try {
-                val fetched = peopleService.fetchScoreboard(null, "2025-09-01", until)
+                val seasonStart = SeasonSelection.current(kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())).start.toString()
+                val fetched = peopleService.fetchScoreboard(null, seasonStart, until)
                 if (fetched.isEmpty()) {
                     // try offline fallback when service returned empty list
                     var fallback: List<com.tkolymp.shared.people.ScoreboardEntry> = emptyList()

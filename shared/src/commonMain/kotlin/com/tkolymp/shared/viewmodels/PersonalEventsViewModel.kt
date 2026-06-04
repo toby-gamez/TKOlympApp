@@ -25,6 +25,7 @@ class PersonalEventsViewModel(
         try {
             val list = service.getAll()
             _state.value = _state.value.copy(events = list, isLoading = false)
+        } catch (e: kotlinx.coroutines.CancellationException) { throw e
         } catch (e: Exception) {
             _state.value = _state.value.copy(isLoading = false, error = e.message ?: "")
         }
@@ -35,8 +36,9 @@ class PersonalEventsViewModel(
         try {
             service.delete(id)
             loadAll()
+        } catch (e: kotlinx.coroutines.CancellationException) { throw e
         } catch (e: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = e.message)
+            _state.value = _state.value.copy(isLoading = false, error = e.message ?: "")
         }
     }
 }

@@ -74,7 +74,6 @@ class OtherViewModel(
                         personDob = p["birthDate"]?.toString()?.replace("\"", "")
                             ?: p["dateOfBirth"]?.toString()?.replace("\"", "")
                             ?: p["dob"]?.toString()?.replace("\"", "")
-                            ?: p["bio"]?.toString()?.replace("\"", "")
                         personPrefix = p["prefixTitle"]?.toString()?.replace("\"", "")
                         personSuffix = p["suffixTitle"]?.toString()?.replace("\"", "")
                             ?: p["postfixTitle"]?.toString()?.replace("\"", "")

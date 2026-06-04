@@ -63,8 +63,9 @@ class PaymentsViewModel {
                 throw e
             } catch (_: Exception) {
                 _items.value = emptyList()
+            } finally {
+                _isLoading.value = false
             }
-            _isLoading.value = false
         }
     }
 
