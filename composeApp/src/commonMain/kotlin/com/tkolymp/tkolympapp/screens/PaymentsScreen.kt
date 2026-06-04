@@ -119,7 +119,7 @@ fun PaymentsScreen(vm: com.tkolymp.shared.payments.PaymentsViewModel, onBack: ()
                                     }
                                 }
                             } else {
-                                LazyColumn(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Top) {
+                                LazyColumn(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalArrangement = Arrangement.Top) {
                                     items(waitingItems) { it -> PaymentItemCard(it) }
                                 }
                             }
@@ -128,7 +128,7 @@ fun PaymentsScreen(vm: com.tkolymp.shared.payments.PaymentsViewModel, onBack: ()
                             if (paidItems.isEmpty()) {
                                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(AppStrings.current.misc.paymentsEmptyNoPaid) }
                             } else {
-                                LazyColumn(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Top) {
+                                LazyColumn(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalArrangement = Arrangement.Top) {
                                     items(paidItems) { it -> PaymentItemCard(it) }
                                 }
                             }

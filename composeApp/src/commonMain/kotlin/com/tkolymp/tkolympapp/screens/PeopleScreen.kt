@@ -135,7 +135,7 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
                     onValueChange = { searchQuery = it },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 6.dp)
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
                         .focusRequester(focusRequester),
                     singleLine = true,
                     leadingIcon = { Icon(imageVector = Icons.Filled.Search, contentDescription = "") },
@@ -153,7 +153,7 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
             // sort controls
             Row(modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                .padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = { sortMode = SortMode.ALPHABETICAL }) {
                     Text(AppStrings.current.people.alphabetically, color = if (sortMode == SortMode.ALPHABETICAL) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
                 }
@@ -180,7 +180,7 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
@@ -228,12 +228,12 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
             if (displayed.isEmpty()) {
                 Text(AppStrings.current.people.noPeopleToShow, modifier = Modifier.padding(16.dp))
             } else {
-                LazyColumn(modifier = Modifier.padding(4.dp)) {
+                LazyColumn {
                     items(displayed) { p ->
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 4.dp, vertical = 4.dp)
+                                .padding(horizontal = 12.dp, vertical = 4.dp)
                                 .clickable { onPersonClick(p.id) },
                             shape = RoundedCornerShape(16.dp)
                         ) {

@@ -96,7 +96,7 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                            .padding(horizontal = 12.dp, vertical = 4.dp)
                             .clickable {
                             val q = loc.name ?: return@clickable
                             val encoded = q.map { c ->
@@ -155,7 +155,7 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                            .padding(horizontal = 12.dp, vertical = 4.dp),
                         shape = RoundedCornerShape(16.dp)
                     ) {
                         Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {

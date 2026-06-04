@@ -75,6 +75,6 @@ class CacheService {
     }
 
     suspend fun clear() = withContext(Dispatchers.Default) {
-        mutex.withLock { cache.clear() }
+        mutex.withLock { cache.clear(); lruOrder.clear() }
     }
 }

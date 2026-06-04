@@ -169,7 +169,7 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
             Column(modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(8.dp)
+                .padding(horizontal = 12.dp)
             ) {
                 if (selectedTab == 0) {
                     // Naplánováno: today..future (ascending)
