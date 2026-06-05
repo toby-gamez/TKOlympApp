@@ -72,6 +72,7 @@ import com.tkolymp.shared.viewmodels.EventSideEffect
 import com.tkolymp.shared.viewmodels.EventViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.QuantityInput
+import com.tkolymp.tkolympapp.util.StaggeredItem
 import com.tkolymp.tkolympapp.components.parseColorOrDefault
 import com.tkolymp.tkolympapp.platform.HtmlText
 import kotlinx.coroutines.launch
@@ -111,6 +112,8 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
 
     val ev = state.eventJson
     val fullScreenImageUrl = remember { mutableStateOf<String?>(null) }
+    var contentVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(ev) { if (ev != null) contentVisible = true }
     // registration navigation handled by App NavHost via `onOpenRegistration`
 
         Scaffold(
@@ -169,6 +172,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                 }
                 // else: initial state before loading starts — SwipeToReload shows spinner
                 } else {
+                StaggeredItem(index = 0, visible = contentVisible, durationMs = 250) {
                 Column(modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
@@ -602,6 +606,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
+} // StaggeredItem
 }   // closes SwipeToReload
 
         // Fullscreen image viewer for clicked images

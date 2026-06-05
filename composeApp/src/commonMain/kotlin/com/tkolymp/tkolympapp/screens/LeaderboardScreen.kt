@@ -36,6 +36,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import com.tkolymp.tkolympapp.util.StaggeredItem
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -145,8 +146,11 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                                 }
                             }
 
+                            var entranceVisible by remember { mutableStateOf(false) }
+                            LaunchedEffect(Unit) { entranceVisible = true }
+
                             LazyColumn(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Top) {
-                                itemsIndexed(displayed) { index, item ->
+                                itemsIndexed(displayed, key = { _, item -> item.personId ?: item.hashCode() }) { index, item ->
                                     val rank = (item.ranking ?: (index + 1))
                                     val isTop = rank in 1..3
                                     val colors = when (rank) {
@@ -156,36 +160,45 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                                         else -> CardDefaults.cardColors()
                                     }
 
-                                    Card(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 12.dp, vertical = 4.dp),
-                                        shape = RoundedCornerShape(16.dp),
-                                        colors = colors
-                                    ) {
-                                        Row(
+                                    val cardContent = @Composable {
+                                        Card(
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .padding(12.dp),
-                                            verticalAlignment = ComposeAlignment.CenterVertically
+                                                .animateItem()
+                                                .padding(horizontal = 12.dp, vertical = 4.dp),
+                                            shape = RoundedCornerShape(16.dp),
+                                            colors = colors
                                         ) {
-                                            Column(modifier = Modifier.weight(1f)) {
-                                                val name = listOfNotNull(item.personFirstName, item.personLastName).joinToString(" ")
-                                                val isCurrent = item.personId != null && item.personId == currentPersonId.value
-                                                Text(
-                                                    text = "${rank}. $name",
-                                                    style = if (isTop) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge,
-                                                    fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
-                                                    color = MaterialTheme.colorScheme.onSurface
-                                                )
-                                            }
-
-                                            Column(modifier = Modifier.wrapContentWidth(align = ComposeAlignment.End), horizontalAlignment = ComposeAlignment.End) {
-                                                val total = item.totalScore
-                                                val totalText = total?.let { if (it % 1.0 == 0.0) it.toInt().toString() else String.format("%.1f", it) } ?: "-"
-                                                Text(text = totalText, style = MaterialTheme.typography.titleMedium)
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(12.dp),
+                                                verticalAlignment = ComposeAlignment.CenterVertically
+                                            ) {
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    val name = listOfNotNull(item.personFirstName, item.personLastName).joinToString(" ")
+                                                    val isCurrent = item.personId != null && item.personId == currentPersonId.value
+                                                    Text(
+                                                        text = "${rank}. $name",
+                                                        style = if (isTop) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge,
+                                                        fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
+                                                        color = MaterialTheme.colorScheme.onSurface
+                                                    )
+                                                }
+                                                Column(modifier = Modifier.wrapContentWidth(align = ComposeAlignment.End), horizontalAlignment = ComposeAlignment.End) {
+                                                    val total = item.totalScore
+                                                    val totalText = total?.let { if (it % 1.0 == 0.0) it.toInt().toString() else String.format("%.1f", it) } ?: "-"
+                                                    Text(text = totalText, style = MaterialTheme.typography.titleMedium)
+                                                }
                                             }
                                         }
+                                    }
+                                    if (isTop) {
+                                        StaggeredItem(index = rank - 1, visible = entranceVisible, baseDelayMs = 80, durationMs = 300) {
+                                            cardContent()
+                                        }
+                                    } else {
+                                        cardContent()
                                     }
                                 }
                             }

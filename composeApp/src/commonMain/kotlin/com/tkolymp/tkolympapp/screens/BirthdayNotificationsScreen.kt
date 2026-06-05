@@ -1,5 +1,11 @@
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -128,217 +134,216 @@ fun BirthdayNotificationsScreen(onBack: () -> Unit = {}) {
                         HorizontalDivider()
                     }
 
-                    if (d.enabled) {
-                        // ── Všichni (shortcut) ───────────────────────────────────
-                        item {
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { viewModel.updateDraft(d.copy(notifyAll = !d.notifyAll)) }
-                                    .padding(vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Checkbox(
-                                    checked = d.notifyAll,
-                                    onCheckedChange = { viewModel.updateDraft(d.copy(notifyAll = it)) }
-                                )
-                                Text(
-                                    AppStrings.current.notifications.birthdayNotifyAllLabel,
-                                    modifier = Modifier.padding(start = 4.dp),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            HorizontalDivider()
-                        }
-                        // ── Granular options (hidden when notifyAll is on) ────
-                        if (!d.notifyAll) {
-                        // ── Skupiny ──────────────────────────────────────────────
-                        if (state.availableGroups.isNotEmpty()) {
-                            item {
+                    // ── Enabled-section (all conditional content in one animated item) ──
+                    item {
+                        AnimatedVisibility(
+                            visible = d.enabled,
+                            enter = fadeIn(tween(220)) + expandVertically(tween(220)),
+                            exit = fadeOut(tween(160)) + shrinkVertically(tween(160))
+                        ) {
+                            Column {
+                                // ── Všichni (shortcut) ───────────────────────────────
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { viewModel.updateDraft(d.copy(notifyAll = !d.notifyAll)) }
+                                        .padding(vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Checkbox(
+                                        checked = d.notifyAll,
+                                        onCheckedChange = { viewModel.updateDraft(d.copy(notifyAll = it)) }
+                                    )
+                                    Text(
+                                        AppStrings.current.notifications.birthdayNotifyAllLabel,
+                                        modifier = Modifier.padding(start = 4.dp),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                HorizontalDivider()
+
+                                // ── Granular options (hidden when notifyAll) ──────────
+                                AnimatedVisibility(
+                                    visible = !d.notifyAll,
+                                    enter = fadeIn(tween(180)) + expandVertically(tween(180)),
+                                    exit = fadeOut(tween(140)) + shrinkVertically(tween(140))
+                                ) {
+                                    Column {
+                                        // ── Skupiny ──────────────────────────────────
+                                        if (state.availableGroups.isNotEmpty()) {
+                                            Spacer(modifier = Modifier.height(16.dp))
+                                            Text(
+                                                AppStrings.current.notifications.birthdaySelectGroups,
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .horizontalScroll(rememberScrollState())
+                                            ) {
+                                                state.availableGroups.forEach { cohort ->
+                                                    val cid = cohort.id ?: return@forEach
+                                                    val selected = d.selectedCohortIds.contains(cid)
+                                                    FilterChip(
+                                                        selected = selected,
+                                                        onClick = {
+                                                            val ids = if (selected)
+                                                                d.selectedCohortIds - cid
+                                                            else
+                                                                d.selectedCohortIds + cid
+                                                            viewModel.updateDraft(d.copy(selectedCohortIds = ids, notifyAll = false))
+                                                        },
+                                                        label = { Text(cohort.name ?: cid) }
+                                                    )
+                                                    Spacer(modifier = Modifier.width(6.dp))
+                                                }
+                                            }
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            HorizontalDivider()
+                                        }
+
+                                        // ── Trenéři ──────────────────────────────────
+                                        if (state.trainerPersonIds.isNotEmpty()) {
+                                            Spacer(modifier = Modifier.height(16.dp))
+                                            val allTrainersSelected = state.trainerPersonIds.isNotEmpty() &&
+                                                state.trainerPersonIds.all { it in d.selectedPersonIds }
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .clickable {
+                                                        val newIds = if (allTrainersSelected)
+                                                            d.selectedPersonIds - state.trainerPersonIds
+                                                        else
+                                                            d.selectedPersonIds + state.trainerPersonIds
+                                                        viewModel.updateDraft(d.copy(selectedPersonIds = newIds, notifyTrainers = false, notifyAll = false))
+                                                    }
+                                                    .padding(vertical = 4.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Checkbox(
+                                                    checked = allTrainersSelected,
+                                                    onCheckedChange = { isChecked ->
+                                                        val newIds = if (isChecked)
+                                                            d.selectedPersonIds + state.trainerPersonIds
+                                                        else
+                                                            d.selectedPersonIds - state.trainerPersonIds
+                                                        viewModel.updateDraft(d.copy(selectedPersonIds = newIds, notifyTrainers = false, notifyAll = false))
+                                                    }
+                                                )
+                                                Text(
+                                                    AppStrings.current.notifications.birthdayFilterTrainers,
+                                                    modifier = Modifier.padding(start = 4.dp),
+                                                    style = MaterialTheme.typography.bodyLarge,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            HorizontalDivider()
+                                        }
+
+                                        // ── Konkrétní sportovci ───────────────────────
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                        Text(
+                                            AppStrings.current.notifications.birthdaySelectPeople,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        var searchQuery by remember { mutableStateOf("") }
+                                        OutlinedTextField(
+                                            value = searchQuery,
+                                            onValueChange = { searchQuery = it },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            singleLine = true,
+                                            placeholder = { Text(AppStrings.current.people.searchByName) }
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        val displayed = remember(state.nonTrainerPeople, searchQuery) {
+                                            if (searchQuery.isBlank()) state.nonTrainerPeople
+                                            else {
+                                                val q = normalizeForSearch(searchQuery.trim())
+                                                state.nonTrainerPeople.filter { p ->
+                                                    listOfNotNull(p.firstName, p.lastName).any {
+                                                        normalizeForSearch(it).contains(q)
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        displayed.forEach { person ->
+                                            val checked = d.selectedPersonIds.contains(person.id)
+                                            BirthdayPersonRow(
+                                                person = person,
+                                                checked = checked,
+                                                onCheckedChange = { isChecked ->
+                                                    val ids = if (isChecked)
+                                                        d.selectedPersonIds + person.id
+                                                    else
+                                                        d.selectedPersonIds - person.id
+                                                    viewModel.updateDraft(d.copy(selectedPersonIds = ids, notifyAll = false))
+                                                }
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        HorizontalDivider()
+                                    }
+                                }
+
+                                // ── WHEN section ─────────────────────────────────────
+                                Spacer(modifier = Modifier.height(16.dp))
+                                HorizontalDivider()
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text(
-                                    AppStrings.current.notifications.birthdaySelectGroups,
+                                    AppStrings.current.notifications.birthdayWhenLabel,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .horizontalScroll(rememberScrollState())
-                                ) {
-                                    state.availableGroups.forEach { cohort ->
-                                        val cid = cohort.id ?: return@forEach
-                                        val selected = d.selectedCohortIds.contains(cid)
-                                        FilterChip(
-                                            selected = selected,
-                                            onClick = {
-                                                val ids = if (selected)
-                                                    d.selectedCohortIds - cid
-                                                else
-                                                    d.selectedCohortIds + cid
-                                                viewModel.updateDraft(d.copy(selectedCohortIds = ids, notifyAll = false))
-                                            },
-                                            label = { Text(cohort.name ?: cid) }
+                                val daysOptions = listOf(
+                                    0 to AppStrings.current.notifications.birthdayDayOfLabel,
+                                    1 to AppStrings.current.notifications.birthdayDayBeforeLabel,
+                                    2 to "2 ${AppStrings.current.notifications.birthdayDaysBeforeLabel}",
+                                    3 to "3 ${AppStrings.current.notifications.birthdayDaysBeforeLabel}",
+                                    7 to "7 ${AppStrings.current.notifications.birthdayDaysBeforeLabel}"
+                                )
+                                daysOptions.forEach { (days, label) ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable { viewModel.updateDraft(d.copy(daysBefore = days)) }
+                                            .padding(vertical = 2.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        RadioButton(
+                                            selected = d.daysBefore == days,
+                                            onClick = { viewModel.updateDraft(d.copy(daysBefore = days)) }
                                         )
-                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(label, modifier = Modifier.padding(start = 4.dp))
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(4.dp))
+
+                                // ── HOUR section ─────────────────────────────────────
+                                Spacer(modifier = Modifier.height(16.dp))
                                 HorizontalDivider()
-                            }
-                        }
-
-                        // ── Trenéři — bulk-select convenience ────────────────────
-                        if (state.trainerPersonIds.isNotEmpty()) {
-                        item {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            val allTrainersSelected = state.trainerPersonIds.isNotEmpty() &&
-                                state.trainerPersonIds.all { it in d.selectedPersonIds }
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        val newIds = if (allTrainersSelected)
-                                            d.selectedPersonIds - state.trainerPersonIds
-                                        else
-                                            d.selectedPersonIds + state.trainerPersonIds
-                                        viewModel.updateDraft(d.copy(selectedPersonIds = newIds, notifyTrainers = false, notifyAll = false))
-                                    }
-                                    .padding(vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Checkbox(
-                                    checked = allTrainersSelected,
-                                    onCheckedChange = { isChecked ->
-                                        val newIds = if (isChecked)
-                                            d.selectedPersonIds + state.trainerPersonIds
-                                        else
-                                            d.selectedPersonIds - state.trainerPersonIds
-                                        viewModel.updateDraft(d.copy(selectedPersonIds = newIds, notifyTrainers = false, notifyAll = false))
-                                    }
-                                )
+                                Spacer(modifier = Modifier.height(16.dp))
                                 Text(
-                                    AppStrings.current.notifications.birthdayFilterTrainers,
-                                    modifier = Modifier.padding(start = 4.dp),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    fontWeight = FontWeight.Medium
+                                    "${AppStrings.current.notifications.birthdayNotificationHourLabel}: ${d.notificationHour}:00",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
                                 )
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            HorizontalDivider()
-                        }
-                        } // end if trainerPersonIds.isNotEmpty()
-
-                        // ── Konkrétní sportovci (bez trenérů) ────────────────────
-                        item {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                AppStrings.current.notifications.birthdaySelectPeople,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            var searchQuery by remember { mutableStateOf("") }
-                            OutlinedTextField(
-                                value = searchQuery,
-                                onValueChange = { searchQuery = it },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
-                                placeholder = { Text(AppStrings.current.people.searchByName) }
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-
-                            // nonTrainerPeople is precomputed in the ViewModel
-                            val displayed = remember(state.nonTrainerPeople, searchQuery) {
-                                if (searchQuery.isBlank()) state.nonTrainerPeople
-                                else {
-                                    val q = normalizeForSearch(searchQuery.trim())
-                                    state.nonTrainerPeople.filter { p ->
-                                        listOfNotNull(p.firstName, p.lastName).any {
-                                            normalizeForSearch(it).contains(q)
-                                        }
-                                    }
-                                }
-                            }
-                            displayed.forEach { person ->
-                                val checked = d.selectedPersonIds.contains(person.id)
-                                BirthdayPersonRow(
-                                    person = person,
-                                    checked = checked,
-                                    onCheckedChange = { isChecked ->
-                                        val ids = if (isChecked)
-                                            d.selectedPersonIds + person.id
-                                        else
-                                            d.selectedPersonIds - person.id
-                                        viewModel.updateDraft(d.copy(selectedPersonIds = ids, notifyAll = false))
-                                    }
+                                Slider(
+                                    value = d.notificationHour.toFloat(),
+                                    onValueChange = { viewModel.updateDraft(d.copy(notificationHour = it.toInt())) },
+                                    valueRange = 6f..22f,
+                                    steps = 15,
+                                    modifier = Modifier.fillMaxWidth()
                                 )
+                                Spacer(modifier = Modifier.height(8.dp))
                             }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            HorizontalDivider()
-                        }
-
-                        } // end if (!d.notifyAll)
-
-                        // ── WHEN section ─────────────────────────────────────────
-                        item {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            HorizontalDivider()
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                AppStrings.current.notifications.birthdayWhenLabel,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            val daysOptions = listOf(
-                                0 to AppStrings.current.notifications.birthdayDayOfLabel,
-                                1 to AppStrings.current.notifications.birthdayDayBeforeLabel,
-                                2 to "2 ${AppStrings.current.notifications.birthdayDaysBeforeLabel}",
-                                3 to "3 ${AppStrings.current.notifications.birthdayDaysBeforeLabel}",
-                                7 to "7 ${AppStrings.current.notifications.birthdayDaysBeforeLabel}"
-                            )
-                            daysOptions.forEach { (days, label) ->
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable { viewModel.updateDraft(d.copy(daysBefore = days)) }
-                                        .padding(vertical = 2.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    RadioButton(
-                                        selected = d.daysBefore == days,
-                                        onClick = { viewModel.updateDraft(d.copy(daysBefore = days)) }
-                                    )
-                                    Text(label, modifier = Modifier.padding(start = 4.dp))
-                                }
-                            }
-                        }
-
-                        // ── HOUR section ─────────────────────────────────────────
-                        item {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            HorizontalDivider()
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                "${AppStrings.current.notifications.birthdayNotificationHourLabel}: ${d.notificationHour}:00",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Slider(
-                                value = d.notificationHour.toFloat(),
-                                onValueChange = { viewModel.updateDraft(d.copy(notificationHour = it.toInt())) },
-                                valueRange = 6f..22f,
-                                steps = 15,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
                 }

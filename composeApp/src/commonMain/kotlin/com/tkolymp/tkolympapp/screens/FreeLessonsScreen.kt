@@ -34,9 +34,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,6 +53,7 @@ import com.tkolymp.shared.viewmodels.FreeLessonResult
 import com.tkolymp.shared.viewmodels.FreeLessonsViewModel
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.tkolympapp.components.RenderEventContent
+import com.tkolymp.tkolympapp.util.StaggeredItem
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,10 +67,12 @@ fun FreeLessonsScreen(
     val scope = rememberCoroutineScope()
     val expandedCancelledIds = remember { mutableStateMapOf<String, Boolean>() }
     var showScoring by remember { mutableStateOf(false) }
+    var cardsVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.load()
     }
+    LaunchedEffect(state.isLoading) { if (!state.isLoading) cardsVisible = true }
 
     Scaffold(
         topBar = {
@@ -131,9 +134,10 @@ fun FreeLessonsScreen(
                             style = MaterialTheme.typography.titleLarge,
                             modifier = Modifier.padding(vertical = 4.dp)
                         )
-                        state.cancelledMineInstances.forEach { cancelled ->
+                        state.cancelledMineInstances.forEachIndexed { i, cancelled ->
                             val idStr = cancelled.id.toString()
                             val expanded = expandedCancelledIds[idStr] ?: true
+                            StaggeredItem(index = i, visible = cardsVisible, baseDelayMs = 60) {
                             CancelledLessonBlock(
                                 cancelled = cancelled,
                                 replacements = state.replacementResults[idStr] ?: emptyList(),
@@ -142,6 +146,7 @@ fun FreeLessonsScreen(
                                 onDismiss = { scope.launch { viewModel.dismissCancelled(idStr) } },
                                 onOpenEvent = onOpenEvent
                             )
+                            }
                         }
                     }
 
@@ -154,8 +159,10 @@ fun FreeLessonsScreen(
                             style = MaterialTheme.typography.titleLarge,
                             modifier = Modifier.padding(vertical = 4.dp)
                         )
-                        state.bestFinds.forEach { result ->
-                            FreeLessonCard(result = result, onOpenEvent = onOpenEvent)
+                        state.bestFinds.forEachIndexed { i, result ->
+                            StaggeredItem(index = i, visible = cardsVisible, baseDelayMs = 50) {
+                                FreeLessonCard(result = result, onOpenEvent = onOpenEvent)
+                            }
                         }
                     }
 
@@ -167,15 +174,19 @@ fun FreeLessonsScreen(
                             style = MaterialTheme.typography.titleLarge,
                             modifier = Modifier.padding(vertical = 4.dp)
                         )
-                        state.otherFinds.forEach { result ->
-                            FreeLessonCard(result = result, onOpenEvent = onOpenEvent)
+                        state.otherFinds.forEachIndexed { i, result ->
+                            StaggeredItem(index = i, visible = cardsVisible, baseDelayMs = 50) {
+                                FreeLessonCard(result = result, onOpenEvent = onOpenEvent)
+                            }
                         }
                     }
 
                     // When cancelled shown, merge other into best section
                     if (state.hasCancelledToShow && state.otherFinds.isNotEmpty()) {
-                        state.otherFinds.forEach { result ->
-                            FreeLessonCard(result = result, onOpenEvent = onOpenEvent)
+                        state.otherFinds.forEachIndexed { i, result ->
+                            StaggeredItem(index = i, visible = cardsVisible, baseDelayMs = 50) {
+                                FreeLessonCard(result = result, onOpenEvent = onOpenEvent)
+                            }
                         }
                     }
 

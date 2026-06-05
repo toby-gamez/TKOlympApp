@@ -51,7 +51,9 @@ import com.tkolymp.shared.viewmodels.NoticeViewModel
 import com.tkolymp.shared.language.AppStrings
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.tkolymp.tkolympapp.platform.FullscreenImageViewer
+import com.tkolymp.tkolympapp.util.StaggeredItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,6 +68,8 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
     // Keep content visible during loading; SwipeToReload handles the refresh indicator.
     val a = state.announcement
     val fullScreenImageUrl = remember { mutableStateOf<String?>(null) }
+    var contentVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(a) { if (a != null) contentVisible = true }
 
     Scaffold(
         topBar = {
@@ -98,6 +102,7 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
                     Text(AppStrings.current.announcements.noAnnouncementToShow, modifier = Modifier.padding(16.dp))
                 }
             } else {
+                StaggeredItem(index = 0, visible = contentVisible, durationMs = 250) {
                 Column(modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
@@ -168,6 +173,7 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
                         }
                     }
                 }
+                } // StaggeredItem
             }
         }
 

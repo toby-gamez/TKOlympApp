@@ -17,8 +17,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -63,6 +69,7 @@ import com.tkolymp.shared.utils.parseToLocal
 import com.tkolymp.shared.viewmodels.PeopleViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.parseColorOrDefault
+import com.tkolymp.tkolympapp.util.StaggeredItem
 import com.tkolymp.tkolympapp.util.normalizeForSearch
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
@@ -91,9 +98,12 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
         }
     }
 
+    var cardsVisible by remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         viewModel.loadPeople()
     }
+    LaunchedEffect(state.people) { if (state.people.isNotEmpty()) cardsVisible = true }
 
     Scaffold(topBar = {
         TopAppBar(
@@ -129,7 +139,11 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
 
                 Column(modifier = Modifier) {
             // search field
-            if (showSearch) {
+            AnimatedVisibility(
+                visible = showSearch,
+                enter = fadeIn(tween(160)) + expandVertically(tween(160)),
+                exit = fadeOut(tween(120)) + shrinkVertically(tween(120))
+            ) {
                 TextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
@@ -229,7 +243,8 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
                 Text(AppStrings.current.people.noPeopleToShow, modifier = Modifier.padding(16.dp))
             } else {
                 LazyColumn {
-                    items(displayed) { p ->
+                    itemsIndexed(displayed, key = { _, p -> p.id }) { index, p ->
+                        StaggeredItem(index = index, visible = cardsVisible, baseDelayMs = 30, modifier = Modifier.animateItem()) {
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -321,6 +336,7 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
                                 }
                             }
                         }
+                        } // StaggeredItem
                     }
                 }
             }

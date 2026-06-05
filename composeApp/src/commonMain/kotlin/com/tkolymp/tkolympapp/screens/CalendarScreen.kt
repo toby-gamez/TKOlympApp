@@ -91,6 +91,8 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
 import com.tkolymp.tkolympapp.components.LessonView
 import com.tkolymp.tkolympapp.components.RenderSingleEventCard
+import com.tkolymp.tkolympapp.util.StaggeredItem
+import com.tkolymp.tkolympapp.util.tabContentTransitionSpec
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -209,13 +211,25 @@ fun CalendarScreen(
                     }
                 }
 
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .verticalScroll(rememberScrollState())
-                ) {
+                val contentKey = Triple(selectedTab, localWeekOffset, customStartDate)
+                androidx.compose.animation.AnimatedContent(
+                    targetState = contentKey,
+                    transitionSpec = { tabContentTransitionSpec() },
+                    label = "calendarContent",
+                    modifier = Modifier.weight(1f)
+                ) { key ->
+                    var datesVisible by remember { mutableStateOf(false) }
+                    LaunchedEffect(key) { datesVisible = false; datesVisible = true }
+
+                    val renderTab = key.first
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                    ) {
                     val visibleDatesToRender = if (calState.visibleDates.isEmpty() && calState.isOffline && cachedVisibleDates.value != null)
                         cachedVisibleDates.value.orEmpty() else calState.visibleDates
+                    var sectionIndex = 0
                     visibleDatesToRender.forEach { date ->
                         val lessonsByTrainer = if ((calState.lessonsByTrainerByDay[date].orEmpty().isEmpty()) && calState.isOffline && cachedLessonsByTrainer.value != null)
                             cachedLessonsByTrainer.value?.getOrDefault(date, emptyMap()) ?: emptyMap()
@@ -224,6 +238,8 @@ fun CalendarScreen(
                             cachedOtherEvents.value?.getOrDefault(date, emptyList()) ?: emptyList()
                         else calState.otherEventsByDay[date] ?: emptyList()
                         if (lessonsByTrainer.isEmpty() && otherList.isEmpty()) return@forEach
+                        val idx = sectionIndex++
+                        StaggeredItem(index = idx, visible = datesVisible, baseDelayMs = 50) {
                         Column(modifier = Modifier.padding(8.dp)) {
                             val header = when (date) {
                                 calState.todayString -> AppStrings.current.timeline.today.lowercase()
@@ -243,7 +259,7 @@ fun CalendarScreen(
                                 LessonView(
                                     trainerName = trainer,
                                     instances = instances,
-                                    isAllTab = (selectedTab == 1),
+                                    isAllTab = (renderTab == 1),
                                     myPersonId = calState.myPersonId,
                                     myCoupleIds = calState.myCoupleIds,
                                     onEventClick = { id: Long -> onOpenEvent(id) }
@@ -254,6 +270,8 @@ fun CalendarScreen(
                                 RenderSingleEventCard(item = item, onEventClick = { id: Long -> onOpenEvent(id) })
                             }
                         }
+                        } // StaggeredItem
+                    }
                     }
                 }
             }

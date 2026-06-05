@@ -1,5 +1,6 @@
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,7 +15,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import com.tkolymp.tkolympapp.util.EmptyStateFade
+import com.tkolymp.tkolympapp.util.tabContentTransitionSpec
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -40,6 +43,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -54,6 +58,7 @@ import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.utils.formatShortDateTime
 import com.tkolymp.shared.utils.parseToLocal
 import com.tkolymp.tkolympapp.SwipeToReload
+import com.tkolymp.tkolympapp.util.StaggeredItem
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -104,32 +109,49 @@ fun PaymentsScreen(vm: com.tkolymp.shared.payments.PaymentsViewModel, onBack: ()
                         item.isUnpaid == true || (item.isUnpaid == null && (item.payment?.status.isNullOrBlank() || item.payment?.status?.equals("PAID", ignoreCase = true) != true))
                     }
 
-                    when (selectedTab) {
-                        0 -> {
-                            if (waitingItems.isEmpty()) {
-                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Icon(
-                                            imageVector = Icons.Filled.EmojiEvents,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(48.dp)
-                                        )
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Text(AppStrings.current.misc.paymentsEmptyNoDebts, style = MaterialTheme.typography.bodyLarge)
+                    AnimatedContent(
+                        targetState = selectedTab,
+                        transitionSpec = { tabContentTransitionSpec() },
+                        label = "paymentsTabContent"
+                    ) { tab ->
+                        var cardsVisible by remember { mutableStateOf(false) }
+                        LaunchedEffect(Unit) { cardsVisible = true }
+                        when (tab) {
+                            0 -> {
+                                EmptyStateFade(visible = waitingItems.isEmpty()) {
+                                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Icon(
+                                                imageVector = Icons.Filled.EmojiEvents,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(48.dp)
+                                            )
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Text(AppStrings.current.misc.paymentsEmptyNoDebts, style = MaterialTheme.typography.bodyLarge)
+                                        }
                                     }
                                 }
-                            } else {
-                                LazyColumn(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalArrangement = Arrangement.Top) {
-                                    items(waitingItems) { it -> PaymentItemCard(it) }
+                                if (waitingItems.isNotEmpty()) {
+                                    LazyColumn(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalArrangement = Arrangement.Top) {
+                                        itemsIndexed(waitingItems, key = { _, item -> item.payment?.id ?: item.personId ?: item.hashCode() }) { index, it ->
+                                            StaggeredItem(index = index, visible = cardsVisible, baseDelayMs = 40, modifier = Modifier.animateItem()) {
+                                                PaymentItemCard(item = it)
+                                            }
+                                        }
+                                    }
                                 }
                             }
-                        }
-                        else -> {
-                            if (paidItems.isEmpty()) {
-                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(AppStrings.current.misc.paymentsEmptyNoPaid) }
-                            } else {
-                                LazyColumn(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalArrangement = Arrangement.Top) {
-                                    items(paidItems) { it -> PaymentItemCard(it) }
+                            else -> {
+                                if (paidItems.isEmpty()) {
+                                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(AppStrings.current.misc.paymentsEmptyNoPaid) }
+                                } else {
+                                    LazyColumn(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalArrangement = Arrangement.Top) {
+                                        itemsIndexed(paidItems, key = { _, item -> item.payment?.id ?: item.personId ?: item.hashCode() }) { index, it ->
+                                            StaggeredItem(index = index, visible = cardsVisible, baseDelayMs = 40, modifier = Modifier.animateItem()) {
+                                                PaymentItemCard(item = it)
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -141,7 +163,7 @@ fun PaymentsScreen(vm: com.tkolymp.shared.payments.PaymentsViewModel, onBack: ()
 }
 
 @Composable
-private fun PaymentItemCard(item: com.tkolymp.shared.payments.PaymentDebtorItem, modifier: Modifier = Modifier) {
+private fun PaymentItemCard(modifier: Modifier = Modifier, item: com.tkolymp.shared.payments.PaymentDebtorItem) {
     val isPaid = when {
         item.isUnpaid != null -> item.isUnpaid == false
         !item.payment?.status.isNullOrBlank() -> item.payment?.status.equals("PAID", ignoreCase = true)

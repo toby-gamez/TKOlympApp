@@ -35,7 +35,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
+import com.tkolymp.tkolympapp.util.StaggeredItem
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -78,6 +82,9 @@ fun OverviewScreen(
             viewModel.loadOverview(forceRefresh = false)
         }
 
+        var cardsVisible by remember { mutableStateOf(false) }
+        LaunchedEffect(state.isLoading) { if (!state.isLoading) cardsVisible = true }
+
         SwipeToReload(
             isRefreshing = state.isLoading,
             onRefresh = { scope.launch { viewModel.loadOverview(forceRefresh = true) } },
@@ -93,7 +100,7 @@ fun OverviewScreen(
 
             val announcements = state.recentAnnouncements
 
-            // Trainings section (grouped by day, styled like Calendar)
+            // Trainings section
             Spacer(modifier = Modifier.height(8.dp))
             Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(AppStrings.current.overview.upcomingTrainings, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -114,18 +121,23 @@ fun OverviewScreen(
                         Text(header, style = MaterialTheme.typography.titleMedium)
                         Spacer(modifier = Modifier.height(4.dp))
 
-                        state.trainingLessonsByTrainer.forEach { (trainer, instances) ->
-                            LessonView(
-                                trainerName = trainer,
-                                instances = instances,
-                                isAllTab = false,
-                                myPersonId = state.myPersonId,
-                                myCoupleIds = state.myCoupleIds,
-                                onEventClick = { id: Long -> onOpenEvent(id) }
-                            )
+                        state.trainingLessonsByTrainer.entries.toList().forEachIndexed { i, (trainer, instances) ->
+                            StaggeredItem(index = i, visible = cardsVisible) {
+                                LessonView(
+                                    trainerName = trainer,
+                                    instances = instances,
+                                    isAllTab = false,
+                                    myPersonId = state.myPersonId,
+                                    myCoupleIds = state.myCoupleIds,
+                                    onEventClick = { id: Long -> onOpenEvent(id) }
+                                )
+                            }
                         }
-                        state.trainingOtherEvents.forEach { item ->
-                            RenderSingleEventCard(item = item, onEventClick = { id: Long -> onOpenEvent(id) })
+                        val trainerCount = state.trainingLessonsByTrainer.size
+                        state.trainingOtherEvents.forEachIndexed { i, item ->
+                            StaggeredItem(index = trainerCount + i, visible = cardsVisible) {
+                                RenderSingleEventCard(item = item, onEventClick = { id: Long -> onOpenEvent(id) })
+                            }
                         }
                     }
                 }
@@ -135,7 +147,6 @@ fun OverviewScreen(
                     Text(if (state.trainingSelectedDate == null) AppStrings.current.overview.browseOthers else AppStrings.current.overview.more)
                 }
             }
-
             Spacer(modifier = Modifier.height(8.dp))
 
             // Board announcements
@@ -153,7 +164,8 @@ fun OverviewScreen(
                         Text(AppStrings.current.timeline.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
                     }
                 } else {
-                    announcements.forEach { a ->
+                    announcements.forEachIndexed { i, a ->
+                        StaggeredItem(index = i, visible = cardsVisible) {
                         Column(modifier = Modifier.padding(4.dp)) {
                             Card(
                                 modifier = Modifier
@@ -183,6 +195,7 @@ fun OverviewScreen(
                                 }
                             }
                         }
+                        } // StaggeredItem announcement
                     }
                 }
             }
@@ -191,7 +204,6 @@ fun OverviewScreen(
                     Text(if (announcements.isEmpty()) AppStrings.current.overview.browseOthers else AppStrings.current.overview.more)
                 }
             }
-
             Spacer(modifier = Modifier.height(8.dp))
 
             // Camps section
@@ -209,13 +221,15 @@ fun OverviewScreen(
                         Text(AppStrings.current.timeline.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
                     }
                 } else {
-                    state.campsMapByDay.forEach { (date, list) ->
-                        Column(modifier = Modifier.padding(vertical = 6.dp)) {
-                            val header = dateHeader(date, state.todayString, state.tomorrowString)
-                            Text(header, style = MaterialTheme.typography.titleMedium)
-                            Spacer(modifier = Modifier.height(4.dp))
-                            list.forEach { item ->
-                                RenderSingleEventCard(item = item, onEventClick = { id: Long -> onOpenEvent(id) })
+                    state.campsMapByDay.entries.toList().forEachIndexed { i, (date, list) ->
+                        StaggeredItem(index = i, visible = cardsVisible) {
+                            Column(modifier = Modifier.padding(vertical = 6.dp)) {
+                                val header = dateHeader(date, state.todayString, state.tomorrowString)
+                                Text(header, style = MaterialTheme.typography.titleMedium)
+                                Spacer(modifier = Modifier.height(4.dp))
+                                list.forEach { item ->
+                                    RenderSingleEventCard(item = item, onEventClick = { id: Long -> onOpenEvent(id) })
+                                }
                             }
                         }
                     }
@@ -226,7 +240,6 @@ fun OverviewScreen(
                     Text(if (state.campsMapByDay.isEmpty()) AppStrings.current.overview.browseOthers else AppStrings.current.overview.more)
                 }
             }
-
             // Upcoming birthdays
             Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(AppStrings.current.profile.birthdays, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -235,7 +248,8 @@ fun OverviewScreen(
                 if (state.upcomingBirthdays.isEmpty()) {
                     Text(AppStrings.current.timeline.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
                 } else {
-                    state.upcomingBirthdays.forEach { entry ->
+                    state.upcomingBirthdays.forEachIndexed { i, entry ->
+                        StaggeredItem(index = i, visible = cardsVisible) {
                         val isBirthdayToday = entry.days == 0
                         Card(
                             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable { onOpenPerson(entry.personId) },
@@ -296,10 +310,10 @@ fun OverviewScreen(
                                 }
                             }
                         }
+                        } // StaggeredItem birthday
                     }
                 }
             }
-
             if (state.isLoading) {
                 Text("Načítám...", modifier = Modifier.padding(12.dp))
             }

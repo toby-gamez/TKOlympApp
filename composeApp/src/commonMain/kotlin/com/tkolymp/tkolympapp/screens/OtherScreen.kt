@@ -52,6 +52,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.utils.formatShortDate
+import com.tkolymp.tkolympapp.util.StaggeredItem
+import com.tkolymp.tkolympapp.util.pressScaleEffect
 import com.tkolymp.shared.utils.parseToLocal
 import com.tkolymp.shared.viewmodels.OtherViewModel
 import kotlinx.datetime.LocalDate
@@ -107,8 +109,11 @@ fun OtherScreen(
     val state by viewModel.state.collectAsState()
     var showDebug by remember { mutableStateOf(false) }
 
+    var itemsVisible by remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         viewModel.load()
+        itemsVisible = true
     }
 
     Scaffold(
@@ -187,72 +192,78 @@ fun OtherScreen(
                     .padding(horizontal = 16.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Card(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { onPaymentsClick() },
-                    shape = RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp, topEnd = 8.dp, bottomEnd = 8.dp),
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center,
+                Box(modifier = Modifier.weight(1f).pressScaleEffect()) {
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 12.dp)
-                            .height(56.dp)
+                            .clickable { onPaymentsClick() },
+                        shape = RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp, topEnd = 8.dp, bottomEnd = 8.dp),
                     ) {
-                        Text(
-                            text = AppStrings.current.otherScreen.payments,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.align(Alignment.CenterVertically)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp)
+                                .height(56.dp)
+                        ) {
+                            Text(
+                                text = AppStrings.current.otherScreen.payments,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.align(Alignment.CenterVertically)
+                            )
+                        }
                     }
                 }
 
-                Card(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { onStatsClick() },
-                    shape = RoundedCornerShape(8.dp),
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center,
+                Box(modifier = Modifier.weight(1f).pressScaleEffect()) {
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 12.dp)
-                            .height(56.dp)
+                            .clickable { onStatsClick() },
+                        shape = RoundedCornerShape(8.dp),
                     ) {
-                        Text(
-                            text = AppStrings.current.stats.statsTitle,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.align(Alignment.CenterVertically)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp)
+                                .height(56.dp)
+                        ) {
+                            Text(
+                                text = AppStrings.current.stats.statsTitle,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.align(Alignment.CenterVertically)
+                            )
+                        }
                     }
                 }
 
-                Card(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { onPersonalEventsClick() },
-                    shape = RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp, topEnd = 16.dp, bottomEnd = 16.dp),
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center,
+                Box(modifier = Modifier.weight(1f).pressScaleEffect()) {
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 12.dp)
-                            .height(56.dp)
+                            .clickable { onPersonalEventsClick() },
+                        shape = RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp, topEnd = 16.dp, bottomEnd = 16.dp),
                     ) {
-                        Text(
-                            text = AppStrings.current.personalEvents.myTrainings,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.align(Alignment.CenterVertically)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp)
+                                .height(56.dp)
+                        ) {
+                            Text(
+                                text = AppStrings.current.personalEvents.myTrainings,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.align(Alignment.CenterVertically)
+                            )
+                        }
                     }
                 }
             }
@@ -273,13 +284,14 @@ fun OtherScreen(
                 Pair(MainItem.LEADERBOARD, Icons.Filled.EmojiEvents)
             )
 
-            mainItems.forEach { (item, icon) ->
+            mainItems.forEachIndexed { i, (item, icon) ->
                 val label = when (item) {
                     MainItem.PEOPLE -> AppStrings.current.otherScreen.people
                     MainItem.TRAINERS -> AppStrings.current.otherScreen.trainersAndSpaces
                     MainItem.GROUPS -> AppStrings.current.otherScreen.trainingGroups
                     MainItem.LEADERBOARD -> AppStrings.current.otherScreen.leaderboard
                 }
+                StaggeredItem(index = i, visible = itemsVisible, baseDelayMs = 35) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -328,6 +340,7 @@ fun OtherScreen(
                         )
                     }
                 }
+                } // StaggeredItem
             }
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -348,12 +361,13 @@ fun OtherScreen(
                 Pair(SettingsItem.PRIVACY, Icons.Filled.Security)
             )
 
-            settingsItems.forEach { (item, icon) ->
+            settingsItems.forEachIndexed { i, (item, icon) ->
                 val label = when (item) {
                     SettingsItem.SETTINGS -> AppStrings.current.otherScreen.settings
                     SettingsItem.ABOUT -> AppStrings.current.otherScreen.aboutApp
                     SettingsItem.PRIVACY -> AppStrings.current.otherScreen.privacyPolicy
                 }
+                StaggeredItem(index = i + 4, visible = itemsVisible, baseDelayMs = 35) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -367,7 +381,7 @@ fun OtherScreen(
                             }
                         },
                     shape = RoundedCornerShape(16.dp),
-                    
+
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -403,6 +417,7 @@ fun OtherScreen(
                         )
                     }
                 }
+                } // StaggeredItem
             }
             
             

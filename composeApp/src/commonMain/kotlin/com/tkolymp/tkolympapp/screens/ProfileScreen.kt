@@ -50,6 +50,7 @@ import com.tkolymp.shared.user.fmtProfileDate
 import com.tkolymp.shared.viewmodels.ProfileViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.parseColorOrDefault
+import com.tkolymp.tkolympapp.util.StaggeredItem
 import kotlinx.coroutines.launch
 
 private fun formatProfileValue(key: String, value: String): String {
@@ -88,6 +89,8 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
     LaunchedEffect(refreshTriggerState.value) { profileViewModel.load() }
 
     val outerScroll = rememberScrollState()
+    var sectionsVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(profileState.isLoading) { if (!profileState.isLoading) sectionsVisible = true }
 
     Scaffold(
         topBar = {
@@ -159,6 +162,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                 val externalList = derived.externalList
                 val otherList = derived.otherList
         // Address card — show all available address subfields
+        StaggeredItem(index = 0, visible = sectionsVisible, baseDelayMs = 50) {
         Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(12.dp)) {
                 Text(AppStrings.current.address.address, style = MaterialTheme.typography.labelLarge)
@@ -187,8 +191,10 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                 }
             }
         }
+        } // StaggeredItem address
 
         // Active couples card (prefer activeCouplesList data)
+        StaggeredItem(index = 1, visible = sectionsVisible, baseDelayMs = 50) {
         Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(12.dp)) {
                 Text(AppStrings.current.profile.activeCouple, style = MaterialTheme.typography.labelLarge)
@@ -204,8 +210,10 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                 }
             }
         }
+        } // StaggeredItem couples
 
         // Groups (cohorts) card - styled like PersonPage
+        StaggeredItem(index = 2, visible = sectionsVisible, baseDelayMs = 50) {
         Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(12.dp)) {
                 Text(AppStrings.current.otherScreen.trainingGroups, style = MaterialTheme.typography.labelLarge)
@@ -246,9 +254,11 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                 }
             }
         }
+        } // StaggeredItem groups
 
         // Category cards (visible, not hidden in details)
         if (personalList.isNotEmpty()) {
+            StaggeredItem(index = 3, visible = sectionsVisible, baseDelayMs = 50) {
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(AppStrings.current.profile.personalData, style = MaterialTheme.typography.labelLarge)
@@ -262,9 +272,11 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                     }
                 }
             }
+            } // StaggeredItem personal
         }
 
         if (contactList.isNotEmpty()) {
+            StaggeredItem(index = 4, visible = sectionsVisible, baseDelayMs = 50) {
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(AppStrings.current.profile.contacts, style = MaterialTheme.typography.labelLarge)
@@ -278,9 +290,11 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                     }
                 }
             }
+            } // StaggeredItem contacts
         }
 
         if (externalList.isNotEmpty()) {
+            StaggeredItem(index = 5, visible = sectionsVisible, baseDelayMs = 50) {
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(AppStrings.current.profile.externalIdSection, style = MaterialTheme.typography.labelLarge)
@@ -294,9 +308,11 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                     }
                 }
             }
+            } // StaggeredItem external
         }
 
         if (otherList.isNotEmpty()) {
+            StaggeredItem(index = 6, visible = sectionsVisible, baseDelayMs = 50) {
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(AppStrings.current.profile.otherDetails, style = MaterialTheme.typography.labelLarge)
@@ -310,6 +326,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                     }
                 }
             }
+            } // StaggeredItem other
         }
 
         // (Removed duplicate detail cards; fields are shown in categorized cards above)

@@ -1,5 +1,12 @@
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -33,6 +40,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import com.tkolymp.tkolympapp.util.StaggeredItem
+import com.tkolymp.tkolympapp.util.tabContentTransitionSpec
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -115,7 +124,11 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                     Tab(selected = selectedTab == index, onClick = { selectedTab = index }, text = { Text(title) })
                 }
             }
-            if (showSearch) {
+            AnimatedVisibility(
+                visible = showSearch,
+                enter = fadeIn(tween(200)) + expandVertically(tween(200)),
+                exit = fadeOut(tween(150)) + shrinkVertically(tween(150))
+            ) {
                 TextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
@@ -166,12 +179,20 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                     .filterValues { it.isNotEmpty() }
             }
 
-            Column(modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 12.dp)
-            ) {
-                if (selectedTab == 0) {
+            AnimatedContent(
+                targetState = selectedTab,
+                transitionSpec = { tabContentTransitionSpec() },
+                label = "eventsTabContent"
+            ) { tab ->
+                var sectionsVisible by remember { mutableStateOf(false) }
+                LaunchedEffect(tab, state.eventsByDay) { sectionsVisible = false; sectionsVisible = true }
+
+                Column(modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 12.dp)
+                ) {
+                if (tab == 0) {
                     // Naplánováno: today..future (ascending)
                     val planned = filteredGrouped.filter { (dateStr, _) ->
                         val d = try { LocalDate.parse(dateStr) } catch (_: Exception) { null }
@@ -183,7 +204,8 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                         Text(AppStrings.current.events.noEventsPlanned, style = MaterialTheme.typography.bodyMedium)
                     }
 
-                    planned.forEach { (date, list) ->
+                    planned.entries.forEachIndexed { i, (date, list) ->
+                        StaggeredItem(index = i, visible = sectionsVisible) {
                         Column(modifier = Modifier.padding(vertical = 6.dp)) {
                             val header = when (date) {
                                 today.toString() -> AppStrings.current.timeline.today.lowercase()
@@ -221,6 +243,7 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                                 RenderSingleEventCard(item = item, onEventClick = onOpenEvent, showType = false)
                             }
                         }
+                        } // StaggeredItem
                     }
 
                 } else {
@@ -238,7 +261,8 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                         Text(AppStrings.current.events.noPastEvents, style = MaterialTheme.typography.bodyMedium)
                     }
 
-                    past.forEach { (date, list) ->
+                    past.forEachIndexed { i, (date, list) ->
+                        StaggeredItem(index = i, visible = sectionsVisible) {
                         Column(modifier = Modifier.padding(vertical = 6.dp)) {
                             val header = when (date) {
                                 today.toString() -> AppStrings.current.timeline.today.lowercase()
@@ -276,9 +300,11 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                                 RenderSingleEventCard(item = item, onEventClick = onOpenEvent, showType = false)
                             }
                         }
+                        } // StaggeredItem
                     }
                 }
             }
+            } // AnimatedContent
 
             state.error?.let { err ->
                 AlertDialog(

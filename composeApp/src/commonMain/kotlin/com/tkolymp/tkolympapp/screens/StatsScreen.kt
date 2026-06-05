@@ -73,8 +73,12 @@ import com.tkolymp.shared.viewmodels.SeasonSelection
 import com.tkolymp.shared.viewmodels.StatsViewModel
 import com.tkolymp.shared.viewmodels.TrainerStat
 import com.tkolymp.shared.viewmodels.TypeStat
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.BarChart
+import com.tkolymp.tkolympapp.util.StaggeredItem
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -106,10 +110,14 @@ fun StatsScreen(
     var compareMode by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(0) }
     var showShareDialog by remember { mutableStateOf(false) }
+    var sectionsVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.loadStats(SeasonSelection.default())
     }
+
+    LaunchedEffect(selectedSeason) { sectionsVisible = false }
+    LaunchedEffect(totalSessions) { if (totalSessions > 0) sectionsVisible = true }
 
     LaunchedEffect(compareMode) {
         if (compareMode && comparisonData.isEmpty() && !isLoadingComparison) {
@@ -240,6 +248,7 @@ fun StatsScreen(
                 }
 
                 // ── Summary cards ────────────────────────────────────────────
+                StaggeredItem(index = 0, visible = sectionsVisible, baseDelayMs = 60) {
                 SummaryRow(
                     totalSessions = totalSessions,
                     totalMinutes = totalMinutes,
@@ -247,9 +256,11 @@ fun StatsScreen(
                     streak = currentStreak,
                     strings = strings
                 )
+                } // StaggeredItem summary
 
                 // ── Bar chart: weekly activity ───────────────────────────────
                 if (weeklyData.isNotEmpty()) {
+                    StaggeredItem(index = 1, visible = sectionsVisible, baseDelayMs = 60) {
                     StatsCard(title = strings.weeklyActivity) {
                         val barData = weeklyData.map { Pair(it.weekLabel, it.count) }
                         val highlightIndex = weeklyData.indexOfFirst { it.isCurrent }
@@ -284,10 +295,12 @@ fun StatsScreen(
                             }
                         }
                     }
+                    } // StaggeredItem weekly
                 }
 
                 // ── Monthly breakdown ────────────────────────────────────────
                 if (monthlyData.isNotEmpty()) {
+                    StaggeredItem(index = 2, visible = sectionsVisible, baseDelayMs = 60) {
                     StatsCard(title = strings.monthlyBreakdown) {
                         MonthlyTable(
                             data = monthlyData,
@@ -303,17 +316,21 @@ fun StatsScreen(
                             modifier = Modifier.padding(top = 6.dp)
                         )
                     }
+                    } // StaggeredItem monthly
                 }
 
                 // ── Type breakdown ───────────────────────────────────────────
                 if (typeData.isNotEmpty()) {
+                    StaggeredItem(index = 3, visible = sectionsVisible, baseDelayMs = 60) {
                     StatsCard(title = strings.typeBreakdown) {
                         TypeBreakdownSection(data = typeData)
                     }
+                    } // StaggeredItem type
                 }
 
                 // ── Trainer breakdown ────────────────────────────────────────
                 if (trainerData.isNotEmpty()) {
+                    StaggeredItem(index = 4, visible = sectionsVisible, baseDelayMs = 60) {
                     StatsCard(title = strings.trainerBreakdown) {
                         TrainerBreakdownSection(
                             data = trainerData,
@@ -322,11 +339,14 @@ fun StatsScreen(
                             otherLabel = strings.otherTrainers
                         )
                     }
+                    } // StaggeredItem trainer
                 }
 
                 // ── Score card ───────────────────────────────────────────────
                 scoreEntry?.let { score ->
+                    StaggeredItem(index = 5, visible = sectionsVisible, baseDelayMs = 60) {
                     ScoreCard(score = score, strings = strings, onOpenLeaderboard = onOpenLeaderboard)
+                    } // StaggeredItem score
                 }
 
                 Spacer(Modifier.height(24.dp))
@@ -525,47 +545,58 @@ private fun MonthlyTable(
 private fun TypeBreakdownSection(modifier: Modifier = Modifier, data: List<TypeStat>) {
     val maxCount = data.maxOfOrNull { it.count }?.coerceAtLeast(1) ?: 1
     val isDark = isSystemInDarkTheme()
+    var triggered by remember(data) { mutableStateOf(false) }
+    LaunchedEffect(data) { triggered = true }
 
     data.forEach { item ->
-        Row(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
+        TypeBarRow(item = item, maxCount = maxCount, isDark = isDark, triggered = triggered, modifier = modifier)
+    }
+}
+
+@Composable
+private fun TypeBarRow(item: TypeStat, maxCount: Int, isDark: Boolean, triggered: Boolean, modifier: Modifier = Modifier) {
+    val fraction = item.count.toFloat() / maxCount.toFloat()
+    val animFraction by animateFloatAsState(
+        targetValue = if (triggered) fraction else 0f,
+        animationSpec = tween(400, easing = FastOutSlowInEasing),
+        label = "typeBarWidth"
+    )
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = item.displayName.replaceFirstChar { it.uppercase() },
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.width(90.dp),
+            maxLines = 1
+        )
+        Spacer(Modifier.width(8.dp))
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(18.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
         ) {
-            Text(
-                text = item.displayName.replaceFirstChar { it.uppercase() },
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.width(90.dp),
-                maxLines = 1
-            )
-            Spacer(Modifier.width(8.dp))
-            // Bar
-            val fraction = item.count.toFloat() / maxCount.toFloat()
             Box(
                 modifier = Modifier
-                    .weight(1f)
+                    .fillMaxWidth(animFraction)
                     .height(18.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(fraction)
-                        .height(18.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = if (isDark) 0.7f else 0.85f))
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            Text(
-                text = item.count.toString(),
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.width(28.dp),
-                textAlign = TextAlign.End
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = if (isDark) 0.7f else 0.85f))
             )
         }
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = item.count.toString(),
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.width(28.dp),
+            textAlign = TextAlign.End
+        )
     }
 }
 
@@ -585,50 +616,81 @@ private fun TrainerBreakdownSection(
         Color(0xFF1976D2), Color(0xFF388E3C), Color(0xFFF57C00),
         Color(0xFF7B1FA2), Color(0xFFD32F2F)
     )
+    var triggered by remember(data) { mutableStateOf(false) }
+    LaunchedEffect(data) { triggered = true }
 
     data.forEachIndexed { idx, item ->
         val displayName = if (item.name.startsWith("(")) otherLabel else stripTitles(item.name)
         val barColor = primaryColors.getOrNull(idx) ?: MaterialTheme.colorScheme.primary
-
-        Row(
+        TrainerBarRow(
+            item = item,
+            maxCount = maxCount,
+            isDark = isDark,
+            barColor = barColor,
+            displayName = displayName,
+            triggered = triggered,
+            sessionsUnit = sessionsUnit,
+            hoursUnit = hoursUnit,
             modifier = modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
+        )
+    }
+}
+
+@Composable
+private fun TrainerBarRow(
+    item: TrainerStat,
+    maxCount: Int,
+    isDark: Boolean,
+    barColor: Color,
+    displayName: String,
+    triggered: Boolean,
+    sessionsUnit: String,
+    hoursUnit: String,
+    modifier: Modifier = Modifier
+) {
+    val fraction = item.count.toFloat() / maxCount.toFloat()
+    val animFraction by animateFloatAsState(
+        targetValue = if (triggered) fraction else 0f,
+        animationSpec = tween(400, easing = FastOutSlowInEasing),
+        label = "trainerBarWidth"
+    )
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = displayName,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.width(90.dp),
+            maxLines = 1
+        )
+        Spacer(Modifier.width(8.dp))
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(18.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
         ) {
-            Text(
-                text = displayName,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.width(90.dp),
-                maxLines = 1
-            )
-            Spacer(Modifier.width(8.dp))
-            val fraction = item.count.toFloat() / maxCount.toFloat()
             Box(
                 modifier = Modifier
-                    .weight(1f)
+                    .fillMaxWidth(animFraction)
                     .height(18.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(fraction)
-                        .height(18.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(barColor.copy(alpha = if (isDark) 0.7f else 0.85f))
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            Column(modifier = Modifier.width(46.dp), horizontalAlignment = Alignment.End) {
-                Text(text = "$sessionsUnit: ${item.count}", style = MaterialTheme.typography.labelSmall, maxLines = 1)
-                Text(
-                    text = "${(item.minutes / 60.0).roundTo1dp()} $hoursUnit",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1
-                )
-            }
+                    .background(barColor.copy(alpha = if (isDark) 0.7f else 0.85f))
+            )
+        }
+        Spacer(Modifier.width(8.dp))
+        Column(modifier = Modifier.width(46.dp), horizontalAlignment = Alignment.End) {
+            Text(text = "$sessionsUnit: ${item.count}", style = MaterialTheme.typography.labelSmall, maxLines = 1)
+            Text(
+                text = "${(item.minutes / 60.0).roundTo1dp()} $hoursUnit",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1
+            )
         }
     }
 }

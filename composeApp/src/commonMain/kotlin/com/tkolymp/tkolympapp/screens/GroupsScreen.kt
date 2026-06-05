@@ -30,7 +30,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
+import com.tkolymp.tkolympapp.util.StaggeredItem
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
@@ -52,6 +56,8 @@ fun GroupsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
 
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
+    var cardsVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(state.cohorts) { if (state.cohorts.isNotEmpty()) cardsVisible = true }
 
     Scaffold(
         topBar = {
@@ -82,7 +88,8 @@ fun GroupsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
 
             state.error?.let { err -> Text(err.message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(16.dp)) }
 
-            state.cohorts.forEach { cohort ->
+            state.cohorts.forEachIndexed { i, cohort ->
+                StaggeredItem(index = i, visible = cardsVisible, baseDelayMs = 50) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -127,6 +134,7 @@ fun GroupsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                         // color stripe moved to left for responsive height
                     }
                 }
+                } // StaggeredItem
             }
         }
     }

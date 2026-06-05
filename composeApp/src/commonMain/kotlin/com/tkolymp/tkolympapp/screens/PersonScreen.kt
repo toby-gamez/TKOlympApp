@@ -37,7 +37,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import com.tkolymp.tkolympapp.util.StaggeredItem
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -59,9 +63,12 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
     val viewModel = viewModel<PersonViewModel>()
     val state by viewModel.state.collectAsState()
 
+    var cardsVisible by remember { mutableStateOf(false) }
+
     LaunchedEffect(personId) {
         viewModel.loadPerson(personId)
     }
+    LaunchedEffect(state.person) { if (state.person != null) cardsVisible = true }
 
     Scaffold(topBar = {
         TopAppBar(title = { Text(AppStrings.current.profile.person) }, navigationIcon = {
@@ -92,6 +99,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
             }
 
             // Basic Info - like EventScreen (Row with two Cards, then Card for email)
+            StaggeredItem(index = 0, visible = cardsVisible, baseDelayMs = 50) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -140,8 +148,10 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                     }
                 }
             }
+            } // StaggeredItem basic info
 
             if (!p.email.isNullOrBlank()) {
+                StaggeredItem(index = 1, visible = cardsVisible, baseDelayMs = 50) {
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                     shape = RoundedCornerShape(16.dp)
@@ -160,11 +170,13 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                         Text(p.email ?: "—", style = MaterialTheme.typography.bodyMedium)
                     }
                 }
+                } // StaggeredItem email
             }
 
             // Tréninkové skupiny (stacked)
             val visibleGroups = p.cohortMembershipsList.filter { it.cohort?.isVisible != false }
             if (visibleGroups.isNotEmpty()) {
+                StaggeredItem(index = 2, visible = cardsVisible, baseDelayMs = 50) {
                 Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                     Column(modifier = Modifier.padding(8.dp)) {
                         Text(AppStrings.current.otherScreen.trainingGroups, style = MaterialTheme.typography.labelLarge)
@@ -211,10 +223,12 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                         }
                     }
                 }
+                } // StaggeredItem groups
             }
 
             // Active couples card
             if (p.activeCouplesList.isNotEmpty()) {
+                StaggeredItem(index = 3, visible = cardsVisible, baseDelayMs = 50) {
                 Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                     Column(modifier = Modifier.padding(12.dp)) {
                         Text(AppStrings.current.profile.activeCouple, style = MaterialTheme.typography.labelLarge)
@@ -239,6 +253,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                         }
                     }
                 }
+                } // StaggeredItem couples
             }
             // (duplicate UI removed)
                 }

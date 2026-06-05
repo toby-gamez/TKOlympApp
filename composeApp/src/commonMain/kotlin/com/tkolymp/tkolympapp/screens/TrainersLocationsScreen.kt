@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Person
@@ -30,9 +30,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
+import com.tkolymp.tkolympapp.util.StaggeredItem
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
@@ -53,6 +56,8 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
     LaunchedEffect(Unit) { vm.load() }
 
     val scope = rememberCoroutineScope()
+    var cardsVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(state.clubData) { if (state.clubData != null) cardsVisible = true }
 
     Scaffold(topBar = {
         TopAppBar(
@@ -81,7 +86,7 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
             } else {
                 LazyColumn(modifier = Modifier) {
             // Locations header
-            item {
+            item(key = "header_locations") {
                 Text(AppStrings.current.people.trainingSpaces, modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
 
@@ -92,7 +97,8 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
             }
 
             if (visibleLocations.isNotEmpty()) {
-                items(visibleLocations) { loc ->
+                itemsIndexed(visibleLocations, key = { _, loc -> "loc_${loc.name ?: loc.hashCode()}" }) { index, loc ->
+                    StaggeredItem(index = index, visible = cardsVisible, baseDelayMs = 50) {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -117,13 +123,14 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                             Text(text = loc.name ?: AppStrings.current.dialogs.noName, style = MaterialTheme.typography.bodyLarge)
                         }
                     }
+                    } // StaggeredItem
                 }
             } else {
-                item { Text(AppStrings.current.people.noTrainingSpaces, modifier = Modifier.padding(16.dp)) }
+                item(key = "no_locations") { Text(AppStrings.current.people.noTrainingSpaces, modifier = Modifier.padding(16.dp)) }
             }
 
             // Trainers header
-            item {
+            item(key = "header_trainers") {
                 Text(AppStrings.current.profile.trainers, modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
 
@@ -151,7 +158,8 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
             }
 
             if (visibleTrainers.isNotEmpty()) {
-                items(visibleTrainers) { t ->
+                itemsIndexed(visibleTrainers, key = { _, t -> "trainer_${t.person?.id ?: t.hashCode()}" }) { index, t ->
+                    StaggeredItem(index = index, visible = cardsVisible, baseDelayMs = 50) {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -181,9 +189,10 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                             }
                         }
                     }
+                    } // StaggeredItem
                 }
             } else {
-                item { Text(AppStrings.current.people.noTrainers, modifier = Modifier.padding(16.dp)) }
+                item(key = "no_trainers") { Text(AppStrings.current.people.noTrainers, modifier = Modifier.padding(16.dp)) }
             }
         }
     }

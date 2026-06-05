@@ -1,5 +1,8 @@
 package com.tkolymp.tkolympapp.components
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,7 +16,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -62,9 +70,22 @@ fun BarChart(
 
     val maxValue = data.maxOfOrNull { it.second } ?: 0
 
+    var animated by remember { mutableStateOf(false) }
+    LaunchedEffect(data) { animated = false; animated = true }
+    val animatedFraction by animateFloatAsState(
+        targetValue = if (animated) 1f else 0f,
+        animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing),
+        label = "barGrowth"
+    )
+    val labelAlpha by animateFloatAsState(
+        targetValue = if (animatedFraction > 0.85f) 1f else 0f,
+        animationSpec = tween(150),
+        label = "labelAlpha"
+    )
+
     Column(modifier = modifier) {
         // Values above bars (for quick readability)
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Row(modifier = Modifier.fillMaxWidth().graphicsLayer { alpha = labelAlpha }, horizontalArrangement = Arrangement.SpaceBetween) {
             data.forEachIndexed { i, (_, value) ->
                 val weight = 1f / max(1, data.size)
                 Text(
@@ -93,7 +114,7 @@ fun BarChart(
                 val barWidth = (totalWidth - barPadding * (n - 1)) / n
 
                 data.forEachIndexed { i, (_, value) ->
-                    val barHeightPx = (value.toFloat() / maxValue.toFloat()) * (totalHeight - 4.dp.toPx())
+                    val barHeightPx = (value.toFloat() / maxValue.toFloat()) * (totalHeight - 4.dp.toPx()) * animatedFraction
                     val x = i * (barWidth + barPadding)
                     val y = totalHeight - barHeightPx
 

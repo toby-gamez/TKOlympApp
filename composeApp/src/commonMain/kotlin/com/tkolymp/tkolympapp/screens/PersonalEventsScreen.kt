@@ -1,5 +1,11 @@
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -69,14 +75,20 @@ fun PersonalEventsScreen(
     val state by vm.state.collectAsState()
     var showConfirm by remember { mutableStateOf(false) }
     var selectedId by remember { mutableStateOf<String?>(null) }
+    var showFab by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) { vm.loadAll() }
+    LaunchedEffect(Unit) { vm.loadAll(); showFab = true }
 
     Scaffold(
         floatingActionButton = {
-            onCreatePersonalEvent?.let {
-                FloatingActionButton(onClick = it) {
-                    Icon(imageVector = Icons.Filled.FitnessCenter, contentDescription = AppStrings.current.personalEvents.newTraining)
+            onCreatePersonalEvent?.let { handler ->
+                AnimatedVisibility(
+                    visible = showFab,
+                    enter = scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)) + fadeIn(tween(200))
+                ) {
+                    FloatingActionButton(onClick = handler) {
+                        Icon(imageVector = Icons.Filled.FitnessCenter, contentDescription = AppStrings.current.personalEvents.newTraining)
+                    }
                 }
             }
         },
@@ -87,9 +99,10 @@ fun PersonalEventsScreen(
         )
     }) { innerPadding ->
         LazyColumn(modifier = Modifier.padding(innerPadding).padding(bottom = bottomPadding)) {
-            items(state.events) { ev: PersonalEvent ->
+            items(state.events, key = { ev -> ev.id }) { ev: PersonalEvent ->
                 Card(modifier = Modifier
                     .fillMaxWidth()
+                    .animateItem()
                     .padding(8.dp)
                     .clickable { onEdit(ev.id) }) {
                     Row(modifier = Modifier.padding(12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {

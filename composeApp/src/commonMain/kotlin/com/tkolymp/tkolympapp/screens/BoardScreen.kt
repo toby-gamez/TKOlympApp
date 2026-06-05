@@ -41,9 +41,18 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.tkolymp.tkolympapp.util.StaggeredItem
+import com.tkolymp.tkolympapp.util.tabContentTransitionSpec
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -115,7 +124,11 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
 
             }
 
-            if (showSearch) {
+            AnimatedVisibility(
+                visible = showSearch,
+                enter = fadeIn(tween(200)) + expandVertically(tween(200)),
+                exit = fadeOut(tween(150)) + shrinkVertically(tween(150))
+            ) {
                 TextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
@@ -149,8 +162,15 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
                 onRefresh = { scope.launch { viewModel.loadAnnouncements(forceRefresh = true) } },
                 modifier = Modifier.weight(1f).fillMaxWidth()
             ) {
-                Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
-                    val announcements = if (state.selectedTab == 1) {
+                AnimatedContent(
+                    targetState = localSelectedTab,
+                    transitionSpec = { tabContentTransitionSpec() },
+                    label = "boardTabContent"
+                ) { tab ->
+                    var listVisible by remember { mutableStateOf(false) }
+                    LaunchedEffect(tab) { listVisible = false; listVisible = true }
+
+                    val announcements = if (tab == 1) {
                         state.permanentAnnouncements
                     } else {
                         state.currentAnnouncements
@@ -164,32 +184,36 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
                         val bodyOk = normalizeForSearch(bodyText).contains(nq)
                         titleOk || bodyOk
                     }
-                    filtered.forEach { a ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 4.dp)
-                                .clickable {
-                                    a.id.toLongOrNull()?.let { nid -> onOpenNotice(nid) }
-                                },
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Column(modifier = Modifier.padding(14.dp)) {
-                                Text(a.title ?: AppStrings.current.dialogs.noName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                                val authorName = listOfNotNull(a.author?.uJmeno, a.author?.uPrijmeni).joinToString(" ").trim()
-                                if (authorName.isNotEmpty()) {
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(authorName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+                        filtered.forEachIndexed { i, a ->
+                            StaggeredItem(index = i, visible = listVisible) {
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                                        .clickable {
+                                            a.id.toLongOrNull()?.let { nid -> onOpenNotice(nid) }
+                                        },
+                                    shape = RoundedCornerShape(16.dp)
+                                ) {
+                                    Column(modifier = Modifier.padding(14.dp)) {
+                                        Text(a.title ?: AppStrings.current.dialogs.noName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                                        val authorName = listOfNotNull(a.author?.uJmeno, a.author?.uPrijmeni).joinToString(" ").trim()
+                                        if (authorName.isNotEmpty()) {
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(authorName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        val plainBody = formatHtmlContent(a.body ?: "")
+                                        Text(
+                                            plainBody,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
                                 }
-                                Spacer(modifier = Modifier.height(6.dp))
-                                val plainBody = formatHtmlContent(a.body ?: "")
-                                Text(
-                                    plainBody,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
                             }
                         }
                     }

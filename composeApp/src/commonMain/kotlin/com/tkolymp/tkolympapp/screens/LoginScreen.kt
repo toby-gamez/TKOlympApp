@@ -1,5 +1,10 @@
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,7 +28,10 @@ import androidx.compose.runtime.Composable
 // removed TextFieldDefaults import — using Modifier background for inputs
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -111,6 +119,8 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
     val viewModel = viewModel<LoginViewModel>()
     val state by viewModel.state.collectAsState()
     val scope = rememberCoroutineScope()
+    var contentVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { contentVisible = true }
 
     Box(
         modifier = Modifier
@@ -127,33 +137,50 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Brand image
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(100.dp)
-                    .clip(CircleShape)
-                    .background(brandLightPrimary())
+            AnimatedVisibility(
+                visible = contentVisible,
+                enter = fadeIn(tween(400)) + scaleIn(tween(400), initialScale = 0.82f)
             ) {
-                AppLogo(size = 100.dp)
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape)
+                        .background(brandLightPrimary())
+                ) {
+                    AppLogo(size = 100.dp)
+                }
             }
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            Text(
-                "TK Olymp",
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                AppStrings.current.auth.loginSubtitle,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
+            AnimatedVisibility(
+                visible = contentVisible,
+                enter = fadeIn(tween(350, delayMillis = 120)) + slideInVertically(tween(350, delayMillis = 120)) { it / 5 }
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        "TK Olymp",
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        AppStrings.current.auth.loginSubtitle,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(4.dp))
 
+            AnimatedVisibility(
+                visible = contentVisible,
+                enter = fadeIn(tween(300, delayMillis = 220))
+            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             OutlinedTextField(
                 value = state.username,
                 onValueChange = { viewModel.updateUsername(it) },
@@ -220,8 +247,13 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
                         textAlign = TextAlign.Center
                     )
                 }
+            } // Column inside AnimatedVisibility
+            } // AnimatedVisibility form
 
-            if (state.error != null) {
+            AnimatedVisibility(
+                visible = state.error != null,
+                enter = fadeIn(tween(200))
+            ) {
                 Text(
                     state.error?.message ?: "",
                     color = MaterialTheme.colorScheme.error,
