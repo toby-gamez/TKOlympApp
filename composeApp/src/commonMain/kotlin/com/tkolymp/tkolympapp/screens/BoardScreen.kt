@@ -151,9 +151,9 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
             ) {
                 Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
                     val announcements = if (state.selectedTab == 1) {
-                        state.permanentAnnouncements.filterIsInstance<com.tkolymp.shared.announcements.Announcement>()
+                        state.permanentAnnouncements
                     } else {
-                        state.currentAnnouncements.filterIsInstance<com.tkolymp.shared.announcements.Announcement>()
+                        state.currentAnnouncements
                     }
                     val filtered = announcements.filter { a ->
                         val q = searchQuery.trim()
@@ -203,7 +203,7 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
                         TextButton(onClick = { viewModel.clearError() }) { Text(AppStrings.current.commonActions.ok) }
                     },
                     title = { Text(AppStrings.current.announcements.errorLoadingAnnouncements) },
-                    text = { Text(state.error ?: "Neznámá chyba") }
+                    text = { Text(state.error?.message ?: "Neznámá chyba") }
                 )
             }
 

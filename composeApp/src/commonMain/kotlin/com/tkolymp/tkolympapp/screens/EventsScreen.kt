@@ -285,7 +285,7 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                     onDismissRequest = { viewModel.clearError() },
                     confirmButton = { TextButton(onClick = { viewModel.clearError() }) { Text(AppStrings.current.commonActions.ok) } },
                     title = { Text(AppStrings.current.events.errorLoadingEvents) },
-                    text = { Text(err) }
+                    text = { Text(err.message) }
                 )
             }
         }

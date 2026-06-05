@@ -107,7 +107,7 @@ fun FreeLessonsScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(state.error ?: "", style = MaterialTheme.typography.bodyMedium)
+                        Text(state.error?.message ?: "", style = MaterialTheme.typography.bodyMedium)
                         Spacer(modifier = Modifier.height(8.dp))
                         Button(onClick = { scope.launch { viewModel.load() } }) {
                             Text(AppStrings.current.commonActions.retry)

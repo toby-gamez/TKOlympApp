@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.json.jsonObject
+import com.tkolymp.shared.json.AppJson
 
 data class ProfileState(
     val person: PersonDetails? = null,
@@ -28,12 +29,12 @@ data class ProfileState(
         personalList = emptyList(), contactList = emptyList(), externalList = emptyList(), otherList = emptyList()
     ),
     override val isLoading: Boolean = false,
-    override val error: String? = null
+    override val error: AppError? = null
 ) : ViewModelState
 
 class ProfileViewModel(
     private val userService: UserService = ServiceLocator.userService,
-    private val tokenStorage: com.tkolymp.shared.storage.TokenStorage = ServiceLocator.tokenStorage
+    private val tokenStorage: com.tkolymp.shared.storage.ITokenStorage = ServiceLocator.tokenStorage
 ) : ViewModel() {
     private val _state = MutableStateFlow(ProfileState())
     val state: StateFlow<ProfileState> = _state.asStateFlow()
@@ -50,7 +51,7 @@ class ProfileViewModel(
                     val needsRefetch = try {
                         if (cachedPerson == null || cachedPersonJson.isNullOrBlank()) true
                         else {
-                            val parsed = try { kotlinx.serialization.json.Json.parseToJsonElement(cachedPersonJson).jsonObject } catch (_: Exception) { null }
+                            val parsed = try { AppJson.parseToJsonElement(cachedPersonJson).jsonObject } catch (_: Exception) { null }
                             val hasActiveCouples = parsed?.get("activeCouplesList") != null
                             val hasCohorts = parsed?.get("cohortMembershipsList") != null
                             val hasEmail = parsed?.get("email") != null || parsed?.get("uEmail") != null
@@ -72,7 +73,7 @@ class ProfileViewModel(
         } catch (e: CancellationException) {
             throw e
         } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = ex.message ?: com.tkolymp.shared.language.AppStrings.current.errorMessages.errorLoadingProfile)
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: com.tkolymp.shared.language.AppStrings.current.errorMessages.errorLoadingProfile))
         }
     }
 

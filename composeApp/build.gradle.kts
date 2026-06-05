@@ -91,7 +91,6 @@ dependencies {
     implementation(libs.firebase.messaging)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
-    // Coil for image loading in Android full-screen viewer
-    implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation(libs.coil.compose)
 }
 

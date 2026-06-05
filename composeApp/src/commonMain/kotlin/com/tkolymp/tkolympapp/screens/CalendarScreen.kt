@@ -266,7 +266,7 @@ fun CalendarScreen(
                     TextButton(onClick = { calendarViewModel.clearError() }) { Text(AppStrings.current.commonActions.ok) }
                 },
                 title = { Text(AppStrings.current.events.errorLoadingEvents) },
-                text = { Text(err) }
+                text = { Text(err.message) }
             )
         }
     }

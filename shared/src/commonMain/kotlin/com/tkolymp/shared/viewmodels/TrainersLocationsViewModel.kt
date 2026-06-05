@@ -13,11 +13,13 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import com.tkolymp.shared.json.AppJson
+import com.tkolymp.shared.sync.OfflineKeys
 
 data class TrainersLocationsState(
     val clubData: ClubData? = null,
     override val isLoading: Boolean = false,
-    override val error: String? = null
+    override val error: AppError? = null
 ) : ViewModelState
 
 class TrainersLocationsViewModel(
@@ -35,11 +37,11 @@ class TrainersLocationsViewModel(
                 // Try offline fallback: load saved club JSON
                 try {
                     val rawBasic = try { ServiceLocator.offlineSyncManager.loadClubBasics() } catch (_: Exception) { null } ?: run {
-                        _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání klubu")
+                        _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání klubu"))
                         return
                     }
                     try { com.tkolymp.shared.Logger.d("TrainersLocationsVM", "offline_club_basic loaded, len=${rawBasic.length}") } catch (_: Exception) {}
-                    val parsed = kotlinx.serialization.json.Json.parseToJsonElement(rawBasic)
+                    val parsed = AppJson.parseToJsonElement(rawBasic)
                     val obj = when (val el = parsed) {
                         is kotlinx.serialization.json.JsonObject -> el
                         else -> parsed.jsonObject
@@ -68,7 +70,7 @@ class TrainersLocationsViewModel(
                     val cohorts = try {
                         val rawC = try { ServiceLocator.offlineSyncManager.loadClubCohorts() } catch (_: Exception) { null }
                         if (!rawC.isNullOrBlank()) {
-                            val parsedC = kotlinx.serialization.json.Json.parseToJsonElement(rawC)
+                            val parsedC = AppJson.parseToJsonElement(rawC)
                             val arr = when (parsedC) {
                                 is kotlinx.serialization.json.JsonArray -> parsedC
                                 is kotlinx.serialization.json.JsonObject -> (parsedC["cohortsList"] as? kotlinx.serialization.json.JsonArray) ?: kotlinx.serialization.json.JsonArray(emptyList())
@@ -88,7 +90,7 @@ class TrainersLocationsViewModel(
                     _state.value = _state.value.copy(clubData = com.tkolymp.shared.club.ClubData(locations, trainers, cohorts, null), isLoading = false)
                     return
                 } catch (_: Exception) {
-                    _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání klubu")
+                    _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání klubu"))
                     return
                 }
             }
@@ -96,11 +98,11 @@ class TrainersLocationsViewModel(
                 // Try offline fallback: load saved club JSON (same logic as in exception handler)
                 try {
                     val rawBasic = try { ServiceLocator.offlineSyncManager.loadClubBasics() } catch (_: Exception) { null } ?: run {
-                        _state.value = _state.value.copy(isLoading = false, error = "Chyba při načítání klubu")
+                        _state.value = _state.value.copy(isLoading = false, error = AppError.generic("Chyba při načítání klubu"))
                         return
                     }
                     try { com.tkolymp.shared.Logger.d("TrainersLocationsVM", "offline_club_basic loaded, len=${rawBasic.length}") } catch (_: Exception) {}
-                    val parsed = kotlinx.serialization.json.Json.parseToJsonElement(rawBasic)
+                    val parsed = AppJson.parseToJsonElement(rawBasic)
                     val obj = when (val el = parsed) {
                         is kotlinx.serialization.json.JsonObject -> el
                         else -> parsed.jsonObject
@@ -129,7 +131,7 @@ class TrainersLocationsViewModel(
                     val cohorts = try {
                         val rawC = try { ServiceLocator.offlineSyncManager.loadClubCohorts() } catch (_: Exception) { null }
                         if (!rawC.isNullOrBlank()) {
-                            val parsedC = kotlinx.serialization.json.Json.parseToJsonElement(rawC)
+                            val parsedC = AppJson.parseToJsonElement(rawC)
                             val arr = when (parsedC) {
                                 is kotlinx.serialization.json.JsonArray -> parsedC
                                 is kotlinx.serialization.json.JsonObject -> (parsedC["cohortsList"] as? kotlinx.serialization.json.JsonArray) ?: kotlinx.serialization.json.JsonArray(emptyList())
@@ -149,14 +151,14 @@ class TrainersLocationsViewModel(
                     _state.value = _state.value.copy(clubData = com.tkolymp.shared.club.ClubData(locations, trainers, cohorts, null), isLoading = false)
                     return
                 } catch (_: Exception) {
-                    _state.value = _state.value.copy(isLoading = false, error = "Chyba při načítání klubu")
+                    _state.value = _state.value.copy(isLoading = false, error = AppError.generic("Chyba při načítání klubu"))
                     return
                 }
             } else {
                 _state.value = _state.value.copy(clubData = d, isLoading = false)
             }
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání")
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání"))
         }
     }
 }

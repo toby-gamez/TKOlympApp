@@ -100,7 +100,7 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                 }
 
                 // compute displayed entries filtered by selected groups (client-side filtering)
-                val entries = state.rankings.filterIsInstance<com.tkolymp.shared.people.ScoreboardEntry>()
+                val entries = state.rankings
                 val displayed = remember(entries, selectedGroups, peopleById.value, groups) {
                     if (selectedGroups.isEmpty() || selectedGroups.size == groups.size) entries
                     else entries.filter { item ->
@@ -115,7 +115,7 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
 
                 when {
                     state.isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-                    state.error != null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(state.error ?: AppStrings.current.commonActions.error) }
+                    state.error != null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(state.error?.message ?: AppStrings.current.commonActions.error) }
                     else -> {
                         Column(modifier = Modifier.fillMaxSize()) {
                             // filter chips (All + per-cohort)

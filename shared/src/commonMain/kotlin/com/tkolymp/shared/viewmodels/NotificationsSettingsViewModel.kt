@@ -31,7 +31,7 @@ data class NotificationsSettingsState(
     val coachMessages: List<ReceivedMessage> = emptyList(),
     val reminders: List<EventReminder> = emptyList(),
     override val isLoading: Boolean = false,
-    override val error: String? = null
+    override val error: AppError? = null
 ) : ViewModelState
 
 class NotificationsSettingsViewModel(
@@ -39,7 +39,7 @@ class NotificationsSettingsViewModel(
     private val peopleService: com.tkolymp.shared.people.PeopleService = ServiceLocator.peopleService,
     private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService,
     private val clubService: com.tkolymp.shared.club.ClubService = ServiceLocator.clubService,
-    private val notificationStorage: com.tkolymp.shared.notification.NotificationStorage = ServiceLocator.notificationStorage,
+    private val notificationStorage: com.tkolymp.shared.notification.INotificationStorage = ServiceLocator.notificationStorage,
     private val personalEventService: com.tkolymp.shared.personalevents.PersonalEventService = ServiceLocator.personalEventService
 ) : ViewModel() {
     private val _state = MutableStateFlow(NotificationsSettingsState())
@@ -58,7 +58,7 @@ class NotificationsSettingsViewModel(
                 isLoading = false
             )
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání nastavení")
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání nastavení"))
         }
     }
 
@@ -117,7 +117,7 @@ class NotificationsSettingsViewModel(
 
             _state.value = _state.value.copy(availableGroups = groups, myCohortIds = myIds, coachMessages = msgs, isLoading = false)
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání dat")
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání dat"))
         }
     }
 
@@ -208,7 +208,7 @@ class NotificationsSettingsViewModel(
             _state.value = _state.value.copy(enabledCategories = new, settings = newSettings,
                 rules = newSettings.rules, globalEnabled = newSettings.globalEnabled)
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(error = ex.message ?: "Chyba při aktualizaci")
+            _state.value = _state.value.copy(error = AppError.generic(ex.message ?: "Chyba při aktualizaci"))
         }
     }
 }

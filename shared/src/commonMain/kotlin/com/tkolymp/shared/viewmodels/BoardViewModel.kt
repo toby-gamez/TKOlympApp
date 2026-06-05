@@ -2,6 +2,7 @@ package com.tkolymp.shared.viewmodels
 
 import androidx.lifecycle.ViewModel
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.announcements.Announcement
 import com.tkolymp.shared.cache.CacheService
 import com.tkolymp.shared.Logger
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,15 +12,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.json.Json
+import com.tkolymp.shared.json.AppJson
 
 data class BoardState(
     val selectedTab: Int = 0,
-    val currentAnnouncements: List<Any> = emptyList(),
-    val permanentAnnouncements: List<Any> = emptyList(),
+    val currentAnnouncements: List<Announcement> = emptyList(),
+    val permanentAnnouncements: List<Announcement> = emptyList(),
     val isOffline: Boolean = false,
     override val isLoading: Boolean = false,
-    override val error: String? = null
+    override val error: AppError? = null
 ) : ViewModelState
 
 class BoardViewModel(
@@ -53,12 +54,12 @@ class BoardViewModel(
                 try {
                     val raw = ServiceLocator.offlineSyncManager.loadAnnouncements(sticky)
                     if (raw != null) {
-                        val parsed = Json.decodeFromString(ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), raw)
+                        val parsed = AppJson.decodeFromString(ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), raw)
                         val parsedSorted = parsed.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }
                         if (sticky) {
-                            _state.value = _state.value.copy(permanentAnnouncements = parsedSorted as? List<Any> ?: emptyList(), isOffline = true, isLoading = false)
+                            _state.value = _state.value.copy(permanentAnnouncements = parsedSorted, isOffline = true, isLoading = false)
                         } else {
-                            _state.value = _state.value.copy(currentAnnouncements = parsedSorted as? List<Any> ?: emptyList(), isOffline = true, isLoading = false)
+                            _state.value = _state.value.copy(currentAnnouncements = parsedSorted, isOffline = true, isLoading = false)
                         }
                         Logger.d("BoardViewModel", "loaded offline announcements for sticky=$sticky count=${parsedSorted.size}")
                         // keep parsed as base; still attempt network refresh below
@@ -74,9 +75,9 @@ class BoardViewModel(
                 list = fetched
                 // update state with fresh online data into the appropriate bucket
                 if (sticky) {
-                    _state.value = _state.value.copy(permanentAnnouncements = fetched as? List<Any> ?: emptyList(), isOffline = false, isLoading = false)
+                    _state.value = _state.value.copy(permanentAnnouncements = fetched, isOffline = false, isLoading = false)
                 } else {
-                    _state.value = _state.value.copy(currentAnnouncements = fetched as? List<Any> ?: emptyList(), isOffline = false, isLoading = false)
+                    _state.value = _state.value.copy(currentAnnouncements = fetched, isOffline = false, isLoading = false)
                 }
                 Logger.d("BoardViewModel", "fetched online announcements for sticky=$sticky count=${fetched.size}")
             } catch (e: CancellationException) { throw e } catch (netEx: Exception) {
@@ -87,29 +88,29 @@ class BoardViewModel(
                     try {
                         val raw = ServiceLocator.offlineSyncManager.loadAnnouncements(sticky)
                         if (raw != null) {
-                            val parsed = Json.decodeFromString(ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), raw)
+                            val parsed = AppJson.decodeFromString(ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), raw)
                             val parsedSorted = parsed.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }
                             if (sticky) {
-                                _state.value = _state.value.copy(permanentAnnouncements = parsedSorted as? List<Any> ?: emptyList(), isOffline = true, isLoading = false)
+                                _state.value = _state.value.copy(permanentAnnouncements = parsedSorted, isOffline = true, isLoading = false)
                             } else {
-                                _state.value = _state.value.copy(currentAnnouncements = parsedSorted as? List<Any> ?: emptyList(), isOffline = true, isLoading = false)
+                                _state.value = _state.value.copy(currentAnnouncements = parsedSorted, isOffline = true, isLoading = false)
                             }
                             Logger.d("BoardViewModel", "fallback offline announcements for sticky=$sticky count=${parsedSorted.size}")
                         } else {
                             // restore previous appropriate list
-                            if (sticky) _state.value = _state.value.copy(permanentAnnouncements = previousPermanent, isLoading = false, error = netEx.message ?: "Chyba při načítání")
-                            else _state.value = _state.value.copy(currentAnnouncements = previousCurrent, isLoading = false, error = netEx.message ?: "Chyba při načítání")
+                            if (sticky) _state.value = _state.value.copy(permanentAnnouncements = previousPermanent, isLoading = false, error = AppError.generic(netEx.message ?: "Chyba při načítání"))
+                            else _state.value = _state.value.copy(currentAnnouncements = previousCurrent, isLoading = false, error = AppError.generic(netEx.message ?: "Chyba při načítání"))
                         }
                     } catch (_: Exception) {
-                        if (sticky) _state.value = _state.value.copy(permanentAnnouncements = previousPermanent, isLoading = false, error = netEx.message ?: "Chyba při načítání")
-                        else _state.value = _state.value.copy(currentAnnouncements = previousCurrent, isLoading = false, error = netEx.message ?: "Chyba při načítání")
+                        if (sticky) _state.value = _state.value.copy(permanentAnnouncements = previousPermanent, isLoading = false, error = AppError.generic(netEx.message ?: "Chyba při načítání"))
+                        else _state.value = _state.value.copy(currentAnnouncements = previousCurrent, isLoading = false, error = AppError.generic(netEx.message ?: "Chyba při načítání"))
                     }
                 }
             }
         Logger.d("BoardViewModel", "loadAnnouncements end: selectedTab=${_state.value.selectedTab} current=${_state.value.currentAnnouncements.size} permanent=${_state.value.permanentAnnouncements.size} isOffline=${_state.value.isOffline}")
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             // restore previous appropriate lists on fatal error
-            _state.value = _state.value.copy(currentAnnouncements = previousCurrent, permanentAnnouncements = previousPermanent, isLoading = false, error = ex.message ?: "Chyba při načítání")
+            _state.value = _state.value.copy(currentAnnouncements = previousCurrent, permanentAnnouncements = previousPermanent, isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání"))
         }
     }
 

@@ -12,11 +12,13 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
+import com.tkolymp.shared.json.AppJson
+import com.tkolymp.shared.sync.OfflineKeys
 
 data class GroupsState(
     val cohorts: List<Cohort> = emptyList(),
     override val isLoading: Boolean = false,
-    override val error: String? = null
+    override val error: AppError? = null
 ) : ViewModelState
 
 class GroupsViewModel(
@@ -33,11 +35,11 @@ class GroupsViewModel(
                 // Try offline fallback (offline_club saved by OfflineSyncManager)
                 try {
                     val raw = try { ServiceLocator.offlineSyncManager.loadClubCohorts() } catch (_: Exception) { null } ?: run {
-                        _state.value = _state.value.copy(isLoading = false, error = "Chyba při načítání dat")
+                        _state.value = _state.value.copy(isLoading = false, error = AppError.generic("Chyba při načítání dat"))
                         return
                     }
                     try { com.tkolymp.shared.Logger.d("GroupsViewModel", "offline_club_cohorts loaded, len=${raw.length}") } catch (_: Exception) {}
-                    val parsed = kotlinx.serialization.json.Json.parseToJsonElement(raw)
+                    val parsed = AppJson.parseToJsonElement(raw)
                     val cohortsArr = when (parsed) {
                         is kotlinx.serialization.json.JsonArray -> parsed
                         is kotlinx.serialization.json.JsonObject -> (parsed["cohortsList"] as? kotlinx.serialization.json.JsonArray) ?: kotlinx.serialization.json.JsonArray(emptyList())
@@ -53,13 +55,13 @@ class GroupsViewModel(
                     }
                     _state.value = _state.value.copy(cohorts = cohorts, isLoading = false)
                 } catch (_: Exception) {
-                    _state.value = _state.value.copy(isLoading = false, error = "Chyba při načítání dat")
+                    _state.value = _state.value.copy(isLoading = false, error = AppError.generic("Chyba při načítání dat"))
                 }
             } else {
                 _state.value = _state.value.copy(cohorts = d.cohorts, isLoading = false)
             }
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání")
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání"))
         }
     }
 }

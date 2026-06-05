@@ -178,7 +178,7 @@ fun OtherScreen(
                 }
             }
 
-            if (state.error != null) Text(state.error ?: "", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(12.dp))
+            if (state.error != null) Text(state.error?.message ?: "", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(12.dp))
 
             // Trio buttons: Payments | Stats | My trainings (three equal cards)
             Row(

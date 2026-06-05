@@ -18,11 +18,16 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
+import com.tkolymp.shared.json.AppJson
+import com.tkolymp.shared.sync.OfflineKeys
+import com.tkolymp.shared.event.EventType
+import com.tkolymp.shared.event.toEventType
+import com.tkolymp.shared.utils.AppConstants
 
 data class EventsState(
     val eventsByDay: Map<String, List<EventInstance>> = emptyMap(),
     override val isLoading: Boolean = false,
-    override val error: String? = null
+    override val error: AppError? = null
 ) : ViewModelState
 
 class EventsViewModel(
@@ -48,7 +53,7 @@ class EventsViewModel(
             // Use a broad fixed range (multiplatform-safe) to fetch upcoming camps
             val startIso = DateRangeConstants.FAR_PAST
             val endIso = DateRangeConstants.FAR_FUTURE
-            val map = try { withContext(Dispatchers.IO) { eventService.fetchEventsGroupedByDay(startIso, endIso, false, 500, 0, "CAMP", cacheNamespace = "camps_") } } catch (e: CancellationException) { throw e } catch (ex: Exception) { emptyMap<String, List<EventInstance>>() }
+            val map = try { withContext(Dispatchers.IO) { eventService.fetchEventsGroupedByDay(startIso, endIso, false, AppConstants.FETCH_LIMIT_PERIOD, 0, "CAMP", cacheNamespace = "camps_") } } catch (e: CancellationException) { throw e } catch (ex: Exception) { emptyMap<String, List<EventInstance>>() }
             val filtered = map.mapValues { entry -> entry.value.filter { it.event?.isVisible != false } }.filterValues { it.isNotEmpty() }
 
             if (filtered.isNotEmpty()) {
@@ -57,18 +62,18 @@ class EventsViewModel(
                 // Try offline fallback when server returns no data
                 val offlineGrouped = try {
                     // Only read cached calendar data for CAMPS to avoid duplicates across buckets
-                    val keys = ServiceLocator.offlineDataStorage.allKeys().filter { it.startsWith("offline_cal_CAMPS_") }
+                    val keys = ServiceLocator.offlineDataStorage.allKeys().filter { it.startsWith(OfflineKeys.CAL_PREFIX + "CAMPS_") }
                     val parsed = mutableListOf<EventInstance>()
                     for (k in keys) {
                         try {
                             val raw = ServiceLocator.offlineDataStorage.load(k) ?: continue
-                            val json = kotlinx.serialization.json.Json.parseToJsonElement(raw).jsonObject
+                            val json = AppJson.parseToJsonElement(raw).jsonObject
                             json.entries.forEach { (_, elem) ->
                                 val arr = elem.jsonArray
                                 arr.forEach { item ->
                                     val obj = item.jsonObject
                                     val eventType = obj["eventType"]?.jsonPrimitive?.contentOrNull
-                                    if (eventType == null || !eventType.contains("CAMP", ignoreCase = true)) return@forEach
+                                    if (eventType == null || eventType.toEventType() != EventType.CAMP) return@forEach
                                     val id = obj["id"]?.jsonPrimitive?.longOrNull ?: obj["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull() ?: 0L
                                     val isCancelled = obj["isCancelled"]?.jsonPrimitive?.booleanOrNull ?: false
                                     val since = obj["since"]?.jsonPrimitive?.contentOrNull
@@ -102,18 +107,18 @@ class EventsViewModel(
             // Try offline fallback: scan offline calendar data saved by OfflineSyncManager
             try {
                 // Only read cached calendar data for CAMPS to avoid duplicates across buckets
-                val keys = ServiceLocator.offlineDataStorage.allKeys().filter { it.startsWith("offline_cal_CAMPS_") }
+                val keys = ServiceLocator.offlineDataStorage.allKeys().filter { it.startsWith(OfflineKeys.CAL_PREFIX + "CAMPS_") }
                 val parsed = mutableListOf<EventInstance>()
                 for (k in keys) {
                     try {
                         val raw = ServiceLocator.offlineDataStorage.load(k) ?: continue
-                        val json = kotlinx.serialization.json.Json.parseToJsonElement(raw).jsonObject
+                        val json = AppJson.parseToJsonElement(raw).jsonObject
                         json.entries.forEach { (_, elem) ->
                             val arr = elem.jsonArray
                             arr.forEach { item ->
                                 val obj = item.jsonObject
                                 val eventType = obj["eventType"]?.jsonPrimitive?.contentOrNull
-                                if (eventType == null || !eventType.contains("CAMP", ignoreCase = true)) return@forEach
+                                if (eventType == null || eventType.toEventType() != EventType.CAMP) return@forEach
                                 // reuse CalendarViewViewModel parser would be nicer; construct minimal EventInstance
                                 val id = obj["id"]?.jsonPrimitive?.longOrNull ?: obj["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull() ?: 0L
                                 val isCancelled = obj["isCancelled"]?.jsonPrimitive?.booleanOrNull ?: false
@@ -134,10 +139,10 @@ class EventsViewModel(
                 if (grouped.isNotEmpty()) {
                     _state.value = _state.value.copy(eventsByDay = grouped, isLoading = false)
                 } else {
-                    _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání akcí")
+                    _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání akcí"))
                 }
             } catch (_: Exception) {
-                _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání akcí")
+                _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání akcí"))
             }
         }
     }

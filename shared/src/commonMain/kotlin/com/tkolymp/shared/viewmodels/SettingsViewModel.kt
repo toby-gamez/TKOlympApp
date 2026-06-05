@@ -15,7 +15,7 @@ data class SettingsState(
 )
 
 class SettingsViewModel(
-    private val storage: com.tkolymp.shared.storage.CalendarPreferenceStorage = ServiceLocator.calendarPreferenceStorage
+    private val storage: com.tkolymp.shared.storage.ICalendarPreferenceStorage = ServiceLocator.calendarPreferenceStorage
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SettingsState())

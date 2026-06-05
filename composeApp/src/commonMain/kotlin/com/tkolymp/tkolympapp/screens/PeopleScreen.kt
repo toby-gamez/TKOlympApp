@@ -125,7 +125,7 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
                     CircularProgressIndicator()
                 }
             } else {
-                val people = state.people.filterIsInstance<Person>()
+                val people = state.people
 
                 Column(modifier = Modifier) {
             // search field

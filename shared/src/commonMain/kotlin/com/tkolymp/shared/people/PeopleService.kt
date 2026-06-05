@@ -6,7 +6,7 @@ import com.tkolymp.shared.cache.CacheService
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import com.tkolymp.shared.network.IGraphQlClient
-import kotlinx.serialization.json.Json
+import com.tkolymp.shared.json.AppJson
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -76,7 +76,7 @@ data class ScoreboardEntry(
 
 class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlClient,
                     private val cache: CacheService = ServiceLocator.cacheService) {
-    private val json = Json { ignoreUnknownKeys = true }
+    
 
     suspend fun fetchPersonName(personId: String): PersonName? {
         val query = """

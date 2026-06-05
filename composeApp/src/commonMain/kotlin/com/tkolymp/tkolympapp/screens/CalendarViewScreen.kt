@@ -206,7 +206,7 @@ fun CalendarViewScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = state.error ?: "",
+                            text = state.error?.message ?: "",
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Spacer(modifier = Modifier.height(16.dp))

@@ -10,12 +10,13 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import com.tkolymp.shared.json.AppJson
 
 data class PersonState(
     val personId: String? = null,
     val person: Any? = null,
     override val isLoading: Boolean = false,
-    override val error: String? = null
+    override val error: AppError? = null
 ) : ViewModelState
 
 class PersonViewModel(
@@ -38,7 +39,7 @@ class PersonViewModel(
             try {
                 val raw = try { ServiceLocator.offlineSyncManager.loadPeople() } catch (_: Exception) { null }
                 if (!raw.isNullOrBlank()) {
-                    val arr = kotlinx.serialization.json.Json.parseToJsonElement(raw).jsonArray
+                    val arr = AppJson.parseToJsonElement(raw).jsonArray
                     val found = arr.mapNotNull { el ->
                         val obj = el.jsonObject
                         val id = obj["id"]?.jsonPrimitive?.contentOrNull
@@ -89,7 +90,7 @@ class PersonViewModel(
             // nothing found
             _state.value = _state.value.copy(person = null, isLoading = false)
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání osoby")
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání osoby"))
         }
     }
 }

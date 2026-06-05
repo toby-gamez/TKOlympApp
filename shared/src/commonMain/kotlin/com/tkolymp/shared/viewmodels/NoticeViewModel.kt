@@ -8,12 +8,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import com.tkolymp.shared.json.AppJson
 
 data class NoticeState(
     val announcement: com.tkolymp.shared.announcements.Announcement? = null,
     val isOffline: Boolean = false,
     override val isLoading: Boolean = false,
-    override val error: String? = null
+    override val error: AppError? = null
 ) : ViewModelState
 
 class NoticeViewModel(
@@ -32,18 +33,18 @@ class NoticeViewModel(
                     try {
                         val raw = ServiceLocator.offlineSyncManager.loadAnnouncementDetail(announcementId)
                         if (raw != null) {
-                            a = kotlinx.serialization.json.Json.decodeFromString(com.tkolymp.shared.announcements.Announcement.serializer(), raw)
+                            a = AppJson.decodeFromString(com.tkolymp.shared.announcements.Announcement.serializer(), raw)
                             usedOffline = true
                         }
                     } catch (_: Exception) { }
                 }
                 if (a == null) {
-                    _state.value = _state.value.copy(isLoading = false, error = "Oznámení nenalezeno")
+                    _state.value = _state.value.copy(isLoading = false, error = AppError.generic("Oznámení nenalezeno"))
                 } else {
                     _state.value = _state.value.copy(announcement = a, isLoading = false, isOffline = usedOffline)
                 }
             } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-                _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání")
+                _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání"))
             }
         }
     }

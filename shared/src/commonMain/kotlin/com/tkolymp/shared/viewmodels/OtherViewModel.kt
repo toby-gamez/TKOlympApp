@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
+import com.tkolymp.shared.json.AppJson
 
 data class OtherState(
     val name: String? = null,
@@ -24,7 +24,7 @@ data class OtherState(
     val personPrefix: String? = null,
     val personSuffix: String? = null,
     override val isLoading: Boolean = false,
-    override val error: String? = null
+    override val error: AppError? = null
 ) : ViewModelState
 
 class OtherViewModel(
@@ -58,7 +58,7 @@ class OtherViewModel(
 
                 try {
                     raw?.let {
-                        val obj = Json.parseToJsonElement(it).jsonObject
+                        val obj = AppJson.parseToJsonElement(it).jsonObject
                         val jmeno = obj["uJmeno"]?.toString()?.replace("\"", "")
                         val prijmeni = obj["uPrijmeni"]?.toString()?.replace("\"", "")
                         name = listOfNotNull(jmeno?.takeIf { it.isNotBlank() }, prijmeni?.takeIf { it.isNotBlank() }).joinToString(" ")
@@ -68,7 +68,7 @@ class OtherViewModel(
 
                 try {
                     personDetails?.let {
-                        val p = Json.parseToJsonElement(it).jsonObject
+                        val p = AppJson.parseToJsonElement(it).jsonObject
                         personFirstName = p["firstName"]?.toString()?.replace("\"", "")
                         personLastName = p["lastName"]?.toString()?.replace("\"", "")
                         personDob = p["birthDate"]?.toString()?.replace("\"", "")
@@ -103,7 +103,7 @@ class OtherViewModel(
                     isLoading = false
                 )
             } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-                _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání")
+                _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání"))
             }
         }
     }

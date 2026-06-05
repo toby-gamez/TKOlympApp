@@ -1,12 +1,12 @@
 package com.tkolymp.shared.personalevents
 
+import com.tkolymp.shared.json.AppJsonWithDefaults
 import com.tkolymp.shared.notification.FilterType
 import com.tkolymp.shared.notification.INotificationScheduler
-import com.tkolymp.shared.notification.NotificationStorage
+import com.tkolymp.shared.notification.INotificationStorage
 import com.tkolymp.shared.storage.OfflineDataStorage
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.json.Json
 import kotlin.time.Instant
 import kotlinx.coroutines.CancellationException
 import com.tkolymp.shared.Logger
@@ -14,11 +14,11 @@ import com.tkolymp.shared.Logger
 class PersonalEventService(
     private val offlineDataStorage: OfflineDataStorage,
     private val scheduler: INotificationScheduler,
-    private val notificationStorage: NotificationStorage? = null
+    private val notificationStorage: INotificationStorage? = null
 ) {
     private val mutex = kotlinx.coroutines.sync.Mutex()
     private val storageKey = "personal_events_v1"
-    private val json = Json { encodeDefaults = true; ignoreUnknownKeys = true }
+    private val json = AppJsonWithDefaults
     private companion object {
         private const val TAG = "PersonalEventService"
     }

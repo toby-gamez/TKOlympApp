@@ -3,8 +3,8 @@ package com.tkolymp.shared.auth
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.network.IGraphQlClient
-import com.tkolymp.shared.storage.TokenStorage
-import kotlinx.serialization.json.Json
+import com.tkolymp.shared.storage.ITokenStorage
+import com.tkolymp.shared.json.AppJson
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
@@ -12,8 +12,8 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
 import kotlinx.serialization.json.put
 
-class AuthService(private val storage: TokenStorage, private val client: IGraphQlClient) : IAuthService {
-    private val json = Json { ignoreUnknownKeys = true }
+class AuthService(private val storage: ITokenStorage, private val client: IGraphQlClient) : IAuthService {
+    
 
     override suspend fun initialize() {
         // Token lives only in secure storage; no in-memory cache needed.
@@ -88,7 +88,7 @@ class AuthService(private val storage: TokenStorage, private val client: IGraphQ
             val parts = token.split(".")
             if (parts.size != 3) return true
             val payload = kotlin.io.encoding.Base64.UrlSafe.decode(parts[1])
-            val jsonObj = json.parseToJsonElement(payload.decodeToString()).jsonObject
+            val jsonObj = AppJson.parseToJsonElement(payload.decodeToString()).jsonObject
             val exp = jsonObj["exp"]?.jsonPrimitive?.long ?: return true
             exp < kotlin.time.Clock.System.now().epochSeconds
         } catch (_: Exception) { true }

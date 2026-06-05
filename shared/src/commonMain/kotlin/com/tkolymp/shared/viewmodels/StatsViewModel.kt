@@ -28,6 +28,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlin.time.Instant
+import com.tkolymp.shared.utils.AppConstants
 
 // ─── Data models ──────────────────────────────────────────────────────────────
 
@@ -152,7 +153,7 @@ data class StatsState(
     /** Number of cancelled sessions in the selected season. */
     val cancelledCount: Int = 0,
     override val isLoading: Boolean = false,
-    override val error: String? = null
+    override val error: AppError? = null
 ) : ViewModelState
 
 // ─── ViewModel ────────────────────────────────────────────────────────────────
@@ -190,7 +191,7 @@ class StatsViewModel(
                         startRangeIso = startIso,
                         endRangeIso = endIso,
                         onlyMine = true,
-                        first = 500,
+                        first = AppConstants.FETCH_LIMIT_PERIOD,
                         cacheNamespace = "stats_"
                     ).values.flatten()
                 }
@@ -272,7 +273,7 @@ class StatsViewModel(
                 error = null
             )
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání statistik")
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání statistik"))
         }
     }
 
@@ -294,7 +295,7 @@ class StatsViewModel(
                             startRangeIso = startIso,
                             endRangeIso = endIso,
                             onlyMine = true,
-                            first = 500,
+                            first = AppConstants.FETCH_LIMIT_PERIOD,
                             cacheNamespace = "stats_"
                         ).values.flatten()
                     }.filter { !it.isCancelled }
@@ -344,7 +345,7 @@ class StatsViewModel(
                         startRangeIso = startIso,
                         endRangeIso = endIso,
                         onlyMine = true,
-                        first = 500,
+                        first = AppConstants.FETCH_LIMIT_PERIOD,
                         cacheNamespace = "stats_"
                     ).values.flatten()
                 }.filter { !it.isCancelled }

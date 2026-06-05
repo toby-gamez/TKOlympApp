@@ -1,0 +1,16 @@
+package com.tkolymp.shared.notification
+
+interface INotificationStorage {
+    suspend fun saveSettings(settings: NotificationSettings)
+    suspend fun getSettings(): NotificationSettings?
+    suspend fun saveScheduledNotifications(list: List<ScheduledNotification>)
+    suspend fun getScheduledNotifications(): List<ScheduledNotification>
+    suspend fun saveReceivedNotifications(list: List<ReceivedMessage>)
+    suspend fun getReceivedNotifications(): List<ReceivedMessage>
+    suspend fun saveEventReminders(list: List<EventReminder>)
+    suspend fun getEventReminders(): List<EventReminder>
+    suspend fun saveBirthdaySettings(settings: BirthdayNotificationSettings)
+    suspend fun getBirthdaySettings(): BirthdayNotificationSettings?
+    suspend fun saveScheduledBirthdayNotificationIds(ids: List<String>)
+    suspend fun getScheduledBirthdayNotificationIds(): List<String>
+}

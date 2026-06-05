@@ -11,12 +11,13 @@ import com.tkolymp.shared.utils.DateRangeConstants
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
-import kotlinx.serialization.json.Json
+import com.tkolymp.shared.json.AppJson
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -25,6 +26,9 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlin.time.Clock
 import kotlin.time.Instant
+import com.tkolymp.shared.sync.OfflineKeys
+import com.tkolymp.shared.utils.AppConstants
+import com.tkolymp.shared.event.EventType
 
 enum class CalendarBucket { MINE, ALL, CAMPS }
 
@@ -39,8 +43,7 @@ class OfflineSyncManager(
     private val clubService: com.tkolymp.shared.club.ClubService,
     private val paymentService: com.tkolymp.shared.payments.PaymentService
 ) {
-    private val metaLastSyncKey = "offline_meta_last_sync"
-    private val json = Json { ignoreUnknownKeys = true }
+    
 
     suspend fun syncAll() = withContext(Dispatchers.IO) {
         Logger.d("OfflineSyncManager", "syncAll: starting")
@@ -57,7 +60,7 @@ class OfflineSyncManager(
                     val parsed = Instant.parse(last)
                     val now = Clock.System.now()
                     val elapsedSec = now.epochSeconds - parsed.epochSeconds
-                    if (elapsedSec < 300L) {
+                    if (elapsedSec < AppConstants.SYNC_DEBOUNCE_SECONDS) {
                         Logger.d("OfflineSyncManager", "syncAll: skipped (last sync ${elapsedSec}s ago)")
                         return@withContext
                     }
@@ -105,16 +108,16 @@ class OfflineSyncManager(
                     }
                 }
 
-                try { offlineDataStorage.save("offline_payments", json.encodeToString(JsonArray.serializer(), arr)) } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save offline_payments failed: ${ex.message}") }
+                try { offlineDataStorage.save(OfflineKeys.PAYMENTS, AppJson.encodeToString(JsonArray.serializer(), arr)) } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save offline_payments failed: ${ex.message}") }
 
                 // Save per-person lists for quick lookup
                 val grouped = list.groupBy { it.personId ?: "" }
                 grouped.forEach { (pid, items) ->
                     if (pid.isNotBlank()) {
                         val perArr = buildJsonArray {
-                            items.forEach { itItem -> add(Json.parseToJsonElement(itItem.raw?.toString() ?: JsonObject(emptyMap()).toString())) }
+                            items.forEach { itItem -> add(AppJson.parseToJsonElement(itItem.raw?.toString() ?: JsonObject(emptyMap()).toString())) }
                         }
-                        try { offlineDataStorage.save("offline_payments_person_$pid", json.encodeToString(JsonArray.serializer(), perArr)) } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save offline_payments_person_${pid} failed: ${ex.message}") }
+                        try { offlineDataStorage.save(OfflineKeys.paymentsForPerson(pid), AppJson.encodeToString(JsonArray.serializer(), perArr)) } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save offline_payments_person_${pid} failed: ${ex.message}") }
                     }
                 }
             }
@@ -135,7 +138,7 @@ class OfflineSyncManager(
                             // Extract cohortsList and save separately
                             val cohortsEl = (dataObj["getCurrentTenant"] as? kotlinx.serialization.json.JsonObject)?.get("cohortsList")
                             if (cohortsEl != null) {
-                                try { offlineDataStorage.save("offline_club_cohorts", cohortsEl.toString()) } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save offline_club_cohorts failed: ${ex.message}") }
+                                try { offlineDataStorage.save(OfflineKeys.CLUB_COHORTS, cohortsEl.toString()) } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save offline_club_cohorts failed: ${ex.message}") }
                             }
                             // Save basic data (locations + trainers)
                             try {
@@ -143,13 +146,13 @@ class OfflineSyncManager(
                                     put("tenantLocationsList", dataObj["tenantLocationsList"] ?: kotlinx.serialization.json.JsonArray(emptyList()))
                                     put("tenantTrainersList", dataObj["tenantTrainersList"] ?: kotlinx.serialization.json.JsonArray(emptyList()))
                                 }
-                                offlineDataStorage.save("offline_club_basic", basics.toString())
+                                offlineDataStorage.save(OfflineKeys.CLUB_BASIC, basics.toString())
                             } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save offline_club_basic failed: ${ex.message}") }
                         }
                         null -> { /* nothing to save */ }
                         else -> {
                             // Fallback: save the whole payload as basic
-                            try { offlineDataStorage.save("offline_club_basic", rawEl.toString()) } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save offline_club_basic failed: ${ex.message}") }
+                            try { offlineDataStorage.save(OfflineKeys.CLUB_BASIC, rawEl.toString()) } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save offline_club_basic failed: ${ex.message}") }
                         }
                     }
                 } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save offline_club failed: ${ex.message}") }
@@ -173,17 +176,17 @@ class OfflineSyncManager(
                 val endIso = "${endDay}" + "T23:59:59Z"
 
                 val onlyMine = bucket == CalendarBucket.MINE
-                val onlyType = if (bucket == CalendarBucket.CAMPS) "CAMP" else null
+                val onlyType = if (bucket == CalendarBucket.CAMPS) EventType.CAMP.rawValue else null
 
                 // Fetch summary events for the range
                 val grouped = try {
-                    eventService.fetchEventsGroupedByDay(startIso, endIso, onlyMine = onlyMine, first = 500, offset = 0, onlyType = onlyType, cacheNamespace = null)
+                    eventService.fetchEventsGroupedByDay(startIso, endIso, onlyMine = onlyMine, first = AppConstants.FETCH_LIMIT_PERIOD, offset = 0, onlyType = onlyType, cacheNamespace = null)
                 } catch (e: Exception) {
                     emptyMap<String, List<EventInstance>>()
                 }
 
                 // Build lightweight JSON summary
-                val weekKey = "offline_cal_${bucket.name}_${weekStart}"
+                val weekKey = OfflineKeys.calendarWeek(bucket, weekStart.toString())
                 val jo = buildJsonObject {
                     grouped.forEach { (date, list) ->
                         put(date, buildJsonArray {
@@ -211,7 +214,7 @@ class OfflineSyncManager(
 
                 try {
                     if (grouped.isNotEmpty()) {
-                        offlineDataStorage.save(weekKey, json.encodeToString(JsonObject.serializer(), jo))
+                        offlineDataStorage.save(weekKey, AppJson.encodeToString(JsonObject.serializer(), jo))
                         Logger.d("OfflineSyncManager", "saved weekKey=${weekKey}")
                     } else {
                         Logger.d("OfflineSyncManager", "skipping save for empty week=${weekKey}")
@@ -224,7 +227,7 @@ class OfflineSyncManager(
                     try {
                         val full = eventService.fetchEventById(evId, forceRefresh = false)
                         if (full != null) {
-                            offlineDataStorage.save("offline_event_${evId}", json.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), full))
+                            offlineDataStorage.save(OfflineKeys.eventDetail(evId), AppJson.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), full))
                             Logger.d("OfflineSyncManager", "saved event detail offline_event_${evId}")
                         }
                     } catch (ex: Exception) {
@@ -241,16 +244,16 @@ class OfflineSyncManager(
             val sticky = announcementService.getAnnouncements(true)
             val non = announcementService.getAnnouncements(false)
             try {
-                offlineDataStorage.save("offline_ann_list_sticky", json.encodeToString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), sticky))
+                offlineDataStorage.save(OfflineKeys.ANN_STICKY, AppJson.encodeToString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), sticky))
             } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save sticky announcements failed: ${ex.message}") }
             try {
-                offlineDataStorage.save("offline_ann_list_nonsticky", json.encodeToString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), non))
+                offlineDataStorage.save(OfflineKeys.ANN_NONSTICKY, AppJson.encodeToString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), non))
             } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save nonsticky announcements failed: ${ex.message}") }
             // Save bodies for top 10 non-sticky
             non.take(10).forEach { ann ->
                 try {
                     ann.id.toLongOrNull()?.let { id ->
-                        offlineDataStorage.save("offline_ann_body_${id}", json.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), buildJsonObject { put("id", JsonPrimitive(ann.id)); put("title", JsonPrimitive(ann.title ?: "")); put("body", JsonPrimitive(ann.body ?: "")); put("updatedAt", JsonPrimitive(ann.updatedAt ?: "")) }))
+                        offlineDataStorage.save("offline_ann_body_${id}", AppJson.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), buildJsonObject { put("id", JsonPrimitive(ann.id)); put("title", JsonPrimitive(ann.title ?: "")); put("body", JsonPrimitive(ann.body ?: "")); put("updatedAt", JsonPrimitive(ann.updatedAt ?: "")) }))
                     }
                 } catch (_: Exception) {}
             }
@@ -266,12 +269,13 @@ class OfflineSyncManager(
                 val chunks = people.chunked(20)
                 val detailsMap = mutableMapOf<String, com.tkolymp.shared.people.PersonDetails?>()
                 for (chunk in chunks) {
-                    val deferred = chunk.map { p -> kotlinx.coroutines.GlobalScope.async {
-                        try { withRetry { peopleService.fetchPerson(p.id) } } catch (_: Exception) { null }
-                    } }
-                    val results = deferred.map { d -> try { d.await() } catch (_: Exception) { null } }
-                    // map results back to ids (some may be null)
-                    chunk.forEachIndexed { idx, p -> detailsMap[p.id] = results.getOrNull(idx) }
+                    coroutineScope {
+                        val deferred = chunk.map { p -> async {
+                            try { withRetry { peopleService.fetchPerson(p.id) } } catch (_: Exception) { null }
+                        } }
+                        val results = deferred.map { d -> try { d.await() } catch (_: Exception) { null } }
+                        chunk.forEachIndexed { idx, p -> detailsMap[p.id] = results.getOrNull(idx) }
+                    }
                 }
 
                 people.forEach { p ->
@@ -308,7 +312,7 @@ class OfflineSyncManager(
                 }
             }
             if (people.isNotEmpty()) {
-                offlineDataStorage.save("offline_people", json.encodeToString(JsonArray.serializer(), peopleJson))
+                offlineDataStorage.save(OfflineKeys.PEOPLE, AppJson.encodeToString(JsonArray.serializer(), peopleJson))
             } else Logger.d("OfflineSyncManager", "skipping save offline_people: empty")
         } catch (_: Exception) {}
     }
@@ -322,7 +326,7 @@ class OfflineSyncManager(
     }
 
     suspend fun loadAnnouncements(sticky: Boolean): String? {
-        val k = if (sticky) "offline_ann_list_sticky" else "offline_ann_list_nonsticky"
+        val k = if (sticky) OfflineKeys.ANN_STICKY else OfflineKeys.ANN_NONSTICKY
         return offlineDataStorage.load(k)
     }
 
@@ -330,26 +334,26 @@ class OfflineSyncManager(
         return offlineDataStorage.load("offline_ann_body_$id")
     }
 
-    suspend fun loadPeople(): String? = offlineDataStorage.load("offline_people")
+    suspend fun loadPeople(): String? = offlineDataStorage.load(OfflineKeys.PEOPLE)
 
     suspend fun loadClub(): String? = try { offlineDataStorage.load("offline_club") } catch (_: Exception) { null }
 
-    suspend fun loadClubCohorts(): String? = try { offlineDataStorage.load("offline_club_cohorts") } catch (_: Exception) { null }
+    suspend fun loadClubCohorts(): String? = try { offlineDataStorage.load(OfflineKeys.CLUB_COHORTS) } catch (_: Exception) { null }
 
-    suspend fun loadClubBasics(): String? = try { offlineDataStorage.load("offline_club_basic") } catch (_: Exception) { null }
+    suspend fun loadClubBasics(): String? = try { offlineDataStorage.load(OfflineKeys.CLUB_BASIC) } catch (_: Exception) { null }
 
-    suspend fun loadAttendance(personId: String): String? = try { offlineDataStorage.load("offline_attendance_$personId") } catch (_: Exception) { null }
+    suspend fun loadAttendance(personId: String): String? = try { offlineDataStorage.load(OfflineKeys.attendance(personId)) } catch (_: Exception) { null }
 
-    suspend fun getLastSyncTime(): String? = offlineDataStorage.load(metaLastSyncKey)
+    suspend fun getLastSyncTime(): String? = offlineDataStorage.load(OfflineKeys.META_LAST_SYNC)
 
     // Debug / inspection helpers for payments
-    suspend fun loadPayments(): String? = try { offlineDataStorage.load("offline_payments") } catch (_: Exception) { null }
+    suspend fun loadPayments(): String? = try { offlineDataStorage.load(OfflineKeys.PAYMENTS) } catch (_: Exception) { null }
 
     suspend fun loadPaymentsForPerson(personId: String): String? = try { offlineDataStorage.load("offline_payments_person_$personId") } catch (_: Exception) { null }
 
     suspend fun listOfflineKeys(): Set<String> = try { offlineDataStorage.allKeys() } catch (_: Exception) { emptySet() }
 
-    private suspend fun saveLastSyncTime(iso: String) = offlineDataStorage.save(metaLastSyncKey, iso)
+    private suspend fun saveLastSyncTime(iso: String) = offlineDataStorage.save(OfflineKeys.META_LAST_SYNC, iso)
 
     private suspend fun <T> withRetry(attempts: Int = 3, initialDelayMs: Long = 500, block: suspend () -> T): T {
         var lastEx: Exception? = null
@@ -386,8 +390,8 @@ class OfflineSyncManager(
                 val startIso = "${weekStart}T00:00:00Z"
                 val endIso = "${endDay}T23:59:59Z"
                 val onlyMine = bucket == CalendarBucket.MINE
-                val onlyType = if (bucket == CalendarBucket.CAMPS) "CAMP" else null
-                val grouped = try { withRetry { eventService.fetchEventsGroupedByDay(startIso, endIso, onlyMine = onlyMine, first = 500, offset = 0, onlyType = onlyType, cacheNamespace = null) } } catch (ex: Exception) { emptyMap<String, List<EventInstance>>() }
+                val onlyType = if (bucket == CalendarBucket.CAMPS) EventType.CAMP.rawValue else null
+                val grouped = try { withRetry { eventService.fetchEventsGroupedByDay(startIso, endIso, onlyMine = onlyMine, first = AppConstants.FETCH_LIMIT_PERIOD, offset = 0, onlyType = onlyType, cacheNamespace = null) } } catch (ex: Exception) { emptyMap<String, List<EventInstance>>() }
                 if (grouped.isNotEmpty()) {
                     val jo = buildJsonObject {
                         grouped.forEach { (date, list) ->
@@ -413,7 +417,7 @@ class OfflineSyncManager(
                             })
                         }
                     }
-                    try { offlineDataStorage.save("offline_cal_${bucket.name}_${weekStart}", json.encodeToString(JsonObject.serializer(), jo)) } catch (_: Exception) {}
+                    try { offlineDataStorage.save(OfflineKeys.calendarWeek(bucket, weekStart.toString()), AppJson.encodeToString(JsonObject.serializer(), jo)) } catch (_: Exception) {}
                     collectedEventIds += grouped.values.flatten().mapNotNull { it.event?.id }
                 }
             }
@@ -439,8 +443,8 @@ class OfflineSyncManager(
         try {
             val sticky = withRetry { announcementService.getAnnouncements(true) }
             val non = withRetry { announcementService.getAnnouncements(false) }
-            if (sticky.isNotEmpty()) offlineDataStorage.save("offline_ann_list_sticky", json.encodeToString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), sticky))
-            if (non.isNotEmpty()) offlineDataStorage.save("offline_ann_list_nonsticky", json.encodeToString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), non))
+            if (sticky.isNotEmpty()) offlineDataStorage.save(OfflineKeys.ANN_STICKY, AppJson.encodeToString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), sticky))
+            if (non.isNotEmpty()) offlineDataStorage.save(OfflineKeys.ANN_NONSTICKY, AppJson.encodeToString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), non))
         } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll announcements failed: ${ex.message}") }
 
         // People
@@ -453,11 +457,13 @@ class OfflineSyncManager(
                     val chunks = ppl.chunked(20)
                     val detailsMap = mutableMapOf<String, com.tkolymp.shared.people.PersonDetails?>()
                     for (chunk in chunks) {
-                        val deferred = chunk.map { p -> kotlinx.coroutines.GlobalScope.async {
-                            try { withRetry { peopleService.fetchPerson(p.id) } } catch (_: Exception) { null }
-                        } }
-                        val results = deferred.map { d -> try { d.await() } catch (_: Exception) { null } }
-                        chunk.forEachIndexed { idx, p -> detailsMap[p.id] = results.getOrNull(idx) }
+                        coroutineScope {
+                            val deferred = chunk.map { p -> async {
+                                try { withRetry { peopleService.fetchPerson(p.id) } } catch (_: Exception) { null }
+                            } }
+                            val results = deferred.map { d -> try { d.await() } catch (_: Exception) { null } }
+                            chunk.forEachIndexed { idx, p -> detailsMap[p.id] = results.getOrNull(idx) }
+                        }
                     }
 
                     ppl.forEach { p ->
@@ -493,9 +499,9 @@ class OfflineSyncManager(
                         })
                     }
                 }
-                val encoded = json.encodeToString(JsonArray.serializer(), peopleJson)
+                val encoded = AppJson.encodeToString(JsonArray.serializer(), peopleJson)
                 try {
-                    offlineDataStorage.save("offline_people", encoded)
+                    offlineDataStorage.save(OfflineKeys.PEOPLE, encoded)
                     Logger.d("OfflineSyncManager", "downloadAll: saved offline_people count=${ppl.size}")
                 } catch (ex: Exception) {
                     Logger.d("OfflineSyncManager", "downloadAll: save offline_people failed: ${ex.message}")
@@ -531,7 +537,7 @@ class OfflineSyncManager(
                         })
                     }
                 }
-                val encodedBoard = json.encodeToString(JsonArray.serializer(), boardJson)
+                val encodedBoard = AppJson.encodeToString(JsonArray.serializer(), boardJson)
                 try {
                     offlineDataStorage.save("offline_scoreboard_${since}_$until", encodedBoard)
                     Logger.d("OfflineSyncManager", "downloadAll: saved offline_scoreboard entries=${board.size}")
@@ -553,20 +559,20 @@ class OfflineSyncManager(
                             val dataObj = rawEl["data"] as? kotlinx.serialization.json.JsonObject ?: rawEl
                             val cohortsEl = (dataObj["getCurrentTenant"] as? kotlinx.serialization.json.JsonObject)?.get("cohortsList")
                             if (cohortsEl != null) {
-                                try { offlineDataStorage.save("offline_club_cohorts", cohortsEl.toString()) } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll: save offline_club_cohorts failed: ${ex.message}") }
+                                try { offlineDataStorage.save(OfflineKeys.CLUB_COHORTS, cohortsEl.toString()) } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll: save offline_club_cohorts failed: ${ex.message}") }
                             }
                             try {
                                 val basics = buildJsonObject {
                                     put("tenantLocationsList", dataObj["tenantLocationsList"] ?: kotlinx.serialization.json.JsonArray(emptyList()))
                                     put("tenantTrainersList", dataObj["tenantTrainersList"] ?: kotlinx.serialization.json.JsonArray(emptyList()))
                                 }
-                                offlineDataStorage.save("offline_club_basic", basics.toString())
+                                offlineDataStorage.save(OfflineKeys.CLUB_BASIC, basics.toString())
                                 Logger.d("OfflineSyncManager", "downloadAll: saved offline_club_basic")
                             } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll: save offline_club_basic failed: ${ex.message}") }
                         }
                         null -> { /* nothing */ }
                         else -> {
-                            try { offlineDataStorage.save("offline_club_basic", rawEl.toString()); Logger.d("OfflineSyncManager", "downloadAll: saved offline_club_basic (fallback)") } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll: save offline_club_basic failed: ${ex.message}") }
+                            try { offlineDataStorage.save(OfflineKeys.CLUB_BASIC, rawEl.toString()); Logger.d("OfflineSyncManager", "downloadAll: saved offline_club_basic (fallback)") } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll: save offline_club_basic failed: ${ex.message}") }
                         }
                     }
                 } catch (_: Exception) {}
@@ -585,9 +591,9 @@ class OfflineSyncManager(
                         DateRangeConstants.FAR_PAST,
                         DateRangeConstants.FAR_FUTURE,
                         onlyMine = false,
-                        first = 1000,
+                        first = AppConstants.FETCH_LIMIT_FULL,
                         offset = 0,
-                        onlyType = "CAMP",
+                        onlyType = EventType.CAMP.rawValue,
                         cacheNamespace = null
                     )
                 }
@@ -622,7 +628,7 @@ class OfflineSyncManager(
                 }
 
                 try {
-                    offlineDataStorage.save("offline_cal_CAMPS_all", json.encodeToString(JsonObject.serializer(), joAll))
+                    offlineDataStorage.save(OfflineKeys.CAL_CAMPS_ALL, AppJson.encodeToString(JsonObject.serializer(), joAll))
                 } catch (ex: Exception) {
                     Logger.d("OfflineSyncManager", "save all camps failed: ${ex.message}")
                 }
@@ -636,7 +642,7 @@ class OfflineSyncManager(
             onProgress("events", ++evDone, totalEv)
             try {
                 val full = withRetry { eventService.fetchEventById(evId, forceRefresh = false) }
-                if (full != null) offlineDataStorage.save("offline_event_${evId}", json.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), full))
+                if (full != null) offlineDataStorage.save(OfflineKeys.eventDetail(evId), AppJson.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), full))
             } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll event ${evId} failed: ${ex.message}") }
         }
 
@@ -667,7 +673,7 @@ class OfflineSyncManager(
                 ?.get("eventAttendancesList") as? JsonArray ?: return
         } catch (_: Exception) { return }
         try {
-            offlineDataStorage.save("offline_attendance_$personId", json.encodeToString(JsonArray.serializer(), arr))
+            offlineDataStorage.save(OfflineKeys.attendance(personId), AppJson.encodeToString(JsonArray.serializer(), arr))
             Logger.d("OfflineSyncManager", "syncAttendance: saved ${arr.size} entries for person $personId")
         } catch (ex: Exception) {
             Logger.d("OfflineSyncManager", "syncAttendance save failed: ${ex.message}")

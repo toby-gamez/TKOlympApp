@@ -14,7 +14,7 @@ class GraphQlClientImpl(
     /** Injected token provider — breaks the circular dependency with AuthService. */
     private val tokenProvider: suspend () -> String?,
 ) : IGraphQlClient {
-    private val json = Json { ignoreUnknownKeys = true }
+    
 
     override suspend fun post(query: String, variables: JsonObject?): JsonElement {
         val body = buildJsonObject {

@@ -23,7 +23,7 @@ data class BirthdayNotificationState(
     /** Person IDs that are club trainers */
     val trainerPersonIds: Set<String> = emptySet(),
     override val isLoading: Boolean = false,
-    override val error: String? = null
+    override val error: AppError? = null
 ) : ViewModelState
 
 class BirthdayNotificationViewModel(
@@ -73,7 +73,7 @@ class BirthdayNotificationViewModel(
             } catch (e: CancellationException) {
                 throw e
             } catch (ex: Exception) {
-                _state.value = _state.value.copy(isLoading = false, error = ex.message)
+                _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message))
             }
         }
     }

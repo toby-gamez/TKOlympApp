@@ -2,6 +2,7 @@ package com.tkolymp.shared.calendar
 
 import com.tkolymp.shared.event.BigInt
 import com.tkolymp.shared.event.Event
+import com.tkolymp.shared.viewmodels.AppError
 import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -52,7 +53,7 @@ data class CalendarViewState(
     val layoutData: Map<BigInt, EventLayoutData> = emptyMap(),
     val isOffline: Boolean = false,
     val isLoading: Boolean = false,
-    val error: String? = null,
+    val error: AppError? = null,
     val showOnlyMine: Boolean = false
 )
 

@@ -1,6 +1,7 @@
 package com.tkolymp.shared.notification
 
 import com.tkolymp.shared.event.EventInstance
+import com.tkolymp.shared.notification.INotificationStorage
 import com.tkolymp.shared.language.AppStrings
 import kotlinx.coroutines.CancellationException
 import com.tkolymp.shared.models.UserRole
@@ -13,7 +14,7 @@ import kotlinx.datetime.toInstant
 import kotlinx.datetime.todayIn
 
 class NotificationService(
-    private val storage: NotificationStorage,
+    private val storage: INotificationStorage,
     private val scheduler: INotificationScheduler,
     private val eventService: com.tkolymp.shared.event.IEventService
 ) {

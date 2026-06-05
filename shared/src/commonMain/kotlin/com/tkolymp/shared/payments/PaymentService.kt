@@ -4,8 +4,9 @@ import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.cache.CacheService
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.*
+import kotlin.math.roundToLong
 
-data class Money(val amount: Double?, val currency: String?)
+data class Money(val amount: Long?, val currency: String?)
 
 data class PaymentSummary(
     val id: String?,
@@ -32,7 +33,7 @@ class PaymentService(
     private val client: com.tkolymp.shared.network.IGraphQlClient = ServiceLocator.graphQlClient,
     private val cache: CacheService = ServiceLocator.cacheService
 ) {
-    private val json = Json { ignoreUnknownKeys = true }
+    
 
     suspend fun fetchPaymentDebtors(): List<PaymentDebtorItem> {
         val cacheKey = "payment_debtors"
@@ -55,12 +56,7 @@ class PaymentService(
             }
         """.trimIndent()
 
-        val resp = try { client.post(query, null) } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            // Do not return hardcoded or fake payment data on network failure.
-            // Let callers handle an empty result or surface the error to the UI.
-            try { cache.put(cacheKey, emptyList<PaymentDebtorItem>()) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
-            return emptyList()
-        }
+        val resp = try { client.post(query, null) } catch (e: CancellationException) { throw e }
         val root = (resp as? JsonObject)?.get("data")?.jsonObject ?: return emptyList()
         val arr = (root["paymentDebtorsList"] as? JsonArray) ?: JsonArray(emptyList())
 
@@ -68,7 +64,10 @@ class PaymentService(
             try {
                 val obj = el as? JsonObject ?: return@mapNotNull null
                 val priceObj = obj["price"] as? JsonObject
-                val price = priceObj?.let { Money(it["amount"]?.jsonPrimitive?.contentOrNull?.toDoubleOrNull(), it["currency"]?.jsonPrimitive?.contentOrNull) }
+                val price = priceObj?.let {
+                    val amountMinor = it["amount"]?.jsonPrimitive?.contentOrNull?.toDoubleOrNull()?.let { d -> (d * 100).roundToLong() }
+                    Money(amountMinor, it["currency"]?.jsonPrimitive?.contentOrNull)
+                }
 
                 val paymentObj = obj["payment"] as? JsonObject
                 val payment = paymentObj?.let {

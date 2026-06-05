@@ -180,7 +180,7 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
                 onDismissRequest = { viewModel.clearError() },
                 confirmButton = { TextButton(onClick = { viewModel.clearError() }) { Text(AppStrings.current.commonActions.ok) } },
                 title = { Text(AppStrings.current.commonActions.error) },
-                text = { Text(err ?: "Neznámá chyba") }
+                text = { Text(err.message) }
             )
         }
     }

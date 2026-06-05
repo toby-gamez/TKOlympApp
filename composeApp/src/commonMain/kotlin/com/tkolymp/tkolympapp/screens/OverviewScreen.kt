@@ -303,7 +303,7 @@ fun OverviewScreen(
             if (state.isLoading) {
                 Text("Načítám...", modifier = Modifier.padding(12.dp))
             }
-            state.error?.let { Text(text = it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(12.dp)) }
+            state.error?.let { Text(text = it.message, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(12.dp)) }
         }
     }
 }

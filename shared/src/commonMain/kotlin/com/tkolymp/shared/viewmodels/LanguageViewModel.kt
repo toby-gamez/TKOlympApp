@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 data class LanguageState(
     val selectedLanguage: AppLanguage = AppLanguage.CS,
     override val isLoading: Boolean = false,
-    override val error: String? = null
+    override val error: AppError? = null
 ) : ViewModelState
 
 class LanguageViewModel(
@@ -46,7 +46,7 @@ class LanguageViewModel(
                 AppStrings.setLanguage(language)
                 _state.value = _state.value.copy(selectedLanguage = language)
             } catch (e: CancellationException) { throw e } catch (e: Exception) {
-                _state.value = _state.value.copy(error = e.message)
+                _state.value = _state.value.copy(error = AppError.generic(e.message))
             }
         }
     }

@@ -4,10 +4,10 @@ import android.content.Context
 import android.content.Intent
 import android.provider.CalendarContract
 
-actual class SystemCalendarService actual constructor(platformContext: Any) {
+actual class SystemCalendarService actual constructor(platformContext: Any) : ISystemCalendarService {
     private val context: Context = (platformContext as Context).applicationContext
 
-    actual suspend fun addEvent(
+    actual override suspend fun addEvent(
         title: String,
         description: String?,
         location: String?,

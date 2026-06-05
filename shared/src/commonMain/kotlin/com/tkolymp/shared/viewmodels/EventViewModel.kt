@@ -5,10 +5,12 @@ import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
-import kotlinx.serialization.json.Json
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.withContext
 import kotlin.time.Instant
 import kotlinx.serialization.json.JsonArray
@@ -20,8 +22,12 @@ import com.tkolymp.shared.utils.asJsonArrayOrNull
 import com.tkolymp.shared.utils.str
 import com.tkolymp.shared.utils.int
 import com.tkolymp.shared.utils.bool
+import com.tkolymp.shared.utils.AppConstants
 import com.tkolymp.shared.utils.formatTimesWithDateAlways
 import kotlinx.serialization.json.jsonObject
+import com.tkolymp.shared.json.AppJson
+import com.tkolymp.shared.event.EventType
+import com.tkolymp.shared.event.toEventType
 
 data class EventState(
     val eventJson: JsonObject? = null,
@@ -54,25 +60,31 @@ data class EventState(
     val registrationActionsRowVisible: Boolean = false,
     val editRegistrationButtonVisible: Boolean = false,
     val isAddedToCalendar: Boolean = false,
-    val calendarResult: Boolean? = null,  // null = no attempt, true = success, false = fail
     val firstInstanceIso: String? = null,
     val reminderMinutesBefore: Int? = null,
     val reminderId: String? = null,
-    val reminderResult: Boolean? = null,  // null = no attempt, true = set, false = removed
     val isOffline: Boolean = false,
     override val isLoading: Boolean = false,
-    override val error: String? = null
+    override val error: AppError? = null
 ) : ViewModelState
+
+sealed class EventSideEffect {
+    data class CalendarResult(val success: Boolean) : EventSideEffect()
+    data class ReminderResult(val set: Boolean) : EventSideEffect()
+}
 
 class EventViewModel(
     private val eventService: com.tkolymp.shared.event.IEventService = ServiceLocator.eventService,
     private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService,
-    private val calendarStorage: com.tkolymp.shared.storage.CalendarPreferenceStorage = ServiceLocator.calendarPreferenceStorage,
-    private val systemCalendarService: com.tkolymp.shared.systemcalendar.SystemCalendarService = ServiceLocator.systemCalendarService,
+    private val calendarStorage: com.tkolymp.shared.storage.ICalendarPreferenceStorage = ServiceLocator.calendarPreferenceStorage,
+    private val systemCalendarService: com.tkolymp.shared.systemcalendar.ISystemCalendarService = ServiceLocator.systemCalendarService,
     private val notificationService: com.tkolymp.shared.notification.NotificationService = ServiceLocator.notificationService
 ) : ViewModel() {
     private val _state = MutableStateFlow(EventState())
     val state: StateFlow<EventState> = _state.asStateFlow()
+
+    private val _sideEffect = Channel<EventSideEffect>(Channel.BUFFERED)
+    val sideEffect: Flow<EventSideEffect> = _sideEffect.receiveAsFlow()
 
     suspend fun loadEvent(eventId: Long, forceRefresh: Boolean = false) {
         _state.value = _state.value.copy(isLoading = true, error = null)
@@ -93,7 +105,7 @@ class EventViewModel(
                     val raw = ServiceLocator.offlineSyncManager.loadEventDetail(eventId)
                     Logger.d("EventViewModel", "offlineSyncManager.loadEventDetail($eventId): ${if (raw == null) "null" else "found (${raw.length} chars)"}")
                     if (raw != null) {
-                        ev = kotlinx.serialization.json.Json.parseToJsonElement(raw).jsonObject
+                        ev = AppJson.parseToJsonElement(raw).jsonObject
                         isOfflineUsed = true
                     }
                 } catch (ex: Exception) { Logger.d("EventViewModel", "offlineSyncManager.loadEventDetail($eventId) exception: ${ex.message}") }
@@ -104,7 +116,7 @@ class EventViewModel(
                 _state.value = _state.value.copy(
                     isLoading = false,
                     isOffline = !isCurrentlyOnline,
-                    error = AppStrings.current.events.noEventToShow
+                    error = AppError.notFound(AppStrings.current.events.noEventToShow)
                 )
                 return
             }
@@ -143,7 +155,7 @@ class EventViewModel(
             val isRegistrationOpen = if (isLocked) false else (ev?.bool("isRegistrationOpen") ?: true)
             val registerButtonVisible = !isPast && !userRegistered && isRegistrationOpen
             val registrationActionsRowVisible = !isPast && userRegistered && isRegistrationOpen
-            val editRegistrationButtonVisible = !type.equals("lesson", ignoreCase = true) && !type.equals("group", ignoreCase = true)
+            val editRegistrationButtonVisible = type.toEventType() != EventType.LESSON && type.toEventType() != EventType.GROUP
 
             val trainers = ev?.get("eventTrainersList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
             val cohorts = ev?.get("eventTargetCohortsList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
@@ -152,7 +164,7 @@ class EventViewModel(
             val rawName = ev?.str("name")
             val eventName = when {
                 !rawName.isNullOrBlank() -> rawName
-                type.equals("lesson", ignoreCase = true) ->
+                type.toEventType() == EventType.LESSON ->
                     trainers.firstOrNull()?.asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() }
                         ?: AppStrings.current.dialogs.noName
                 else -> if (ev != null) AppStrings.current.dialogs.noName else ""
@@ -230,7 +242,7 @@ class EventViewModel(
                 isOffline = isOfflineUsed
             )
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání události")
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání události"))
         }
     }
 
@@ -250,7 +262,7 @@ class EventViewModel(
         } ?: kotlin.time.Clock.System.now().toEpochMilliseconds()
         val endMs = untilStr?.let {
             try { Instant.parse(it).toEpochMilliseconds() } catch (_: Exception) { null }
-        } ?: (startMs + 3_600_000L)
+        } ?: (startMs + AppConstants.DEFAULT_EVENT_DURATION_MS)
 
         // Detect weekly recurrence: instances are weekly if the gap between the
         // first two instances is between 6.5 and 7.5 days.
@@ -261,7 +273,7 @@ class EventViewModel(
             val t0 = try { Instant.parse(first).toEpochMilliseconds() } catch (_: Exception) { return@run null }
             val t1 = try { Instant.parse(second).toEpochMilliseconds() } catch (_: Exception) { return@run null }
             val diffDays = (t1 - t0) / 86_400_000.0
-            if (diffDays in 6.5..7.5) s.instances.size else null
+            if (diffDays in AppConstants.WEEKLY_RECURRENCE_MIN_DAYS..AppConstants.WEEKLY_RECURRENCE_MAX_DAYS) s.instances.size else null
         }
 
         val success = try {
@@ -273,14 +285,8 @@ class EventViewModel(
         if (success) {
             try { calendarStorage.setEventInCalendar(eventId) } catch (_: Exception) {}
         }
-        _state.value = _state.value.copy(
-            isAddedToCalendar = if (success) true else _state.value.isAddedToCalendar,
-            calendarResult = success
-        )
-    }
-
-    fun clearCalendarResult() {
-        _state.value = _state.value.copy(calendarResult = null)
+        _state.value = _state.value.copy(isAddedToCalendar = if (success) true else _state.value.isAddedToCalendar)
+        _sideEffect.trySend(EventSideEffect.CalendarResult(success))
     }
 
     suspend fun setReminder(eventId: Long, minutesBefore: Int) {
@@ -295,13 +301,10 @@ class EventViewModel(
                 minutesBefore = minutesBefore
             )
             val saved = notificationService.addOrUpdateReminder(reminder)
-            _state.value = _state.value.copy(
-                reminderMinutesBefore = saved.minutesBefore,
-                reminderId = saved.id,
-                reminderResult = true
-            )
+            _state.value = _state.value.copy(reminderMinutesBefore = saved.minutesBefore, reminderId = saved.id)
+            _sideEffect.trySend(EventSideEffect.ReminderResult(set = true))
         } catch (e: CancellationException) { throw e } catch (_: Exception) {
-            _state.value = _state.value.copy(reminderResult = false)
+            _sideEffect.trySend(EventSideEffect.ReminderResult(set = false))
         }
     }
 
@@ -309,11 +312,8 @@ class EventViewModel(
         val id = _state.value.reminderId ?: "reminder_evt_$eventId"
         try {
             notificationService.deleteReminder(id)
-            _state.value = _state.value.copy(reminderMinutesBefore = null, reminderId = null, reminderResult = false)
+            _state.value = _state.value.copy(reminderMinutesBefore = null, reminderId = null)
+            _sideEffect.trySend(EventSideEffect.ReminderResult(set = false))
         } catch (e: CancellationException) { throw e } catch (_: Exception) {}
-    }
-
-    fun clearReminderResult() {
-        _state.value = _state.value.copy(reminderResult = null)
     }
 }

@@ -23,7 +23,7 @@ import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.plugins.contentnegotiation.*
 import java.util.concurrent.TimeUnit
-import kotlinx.serialization.json.Json
+import com.tkolymp.shared.json.AppJson
 import io.ktor.serialization.kotlinx.json.*
 import okhttp3.CertificatePinner
 
@@ -49,7 +49,7 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
         }
 
         install(ContentNegotiation) {
-            json(Json { ignoreUnknownKeys = true })
+            json(AppJson)
         }
     }
 

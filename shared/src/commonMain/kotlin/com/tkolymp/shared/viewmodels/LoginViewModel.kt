@@ -16,15 +16,13 @@ data class LoginState(
     val username: String = "",
     val password: String = "",
     override val isLoading: Boolean = false,
-    override val error: String? = null
+    override val error: AppError? = null
 ) : ViewModelState
 
-class LoginViewModel() : ViewModel() {
-    private val authService: IAuthService
-        get() = ServiceLocator.authService
-
-    private val userService: com.tkolymp.shared.user.UserService
-        get() = ServiceLocator.userService
+class LoginViewModel(
+    private val authService: IAuthService = ServiceLocator.authService,
+    private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService
+) : ViewModel() {
     private val _state = MutableStateFlow(LoginState())
     val state: StateFlow<LoginState> = _state.asStateFlow()
     private val loginMutex = Mutex()
@@ -42,13 +40,13 @@ class LoginViewModel() : ViewModel() {
         return try {
             val ok = authService.login(_state.value.username, _state.value.password)
             if (!ok) {
-                _state.value = _state.value.copy(isLoading = false, error = AppStrings.current.errorMessages.errorLogin)
+                _state.value = _state.value.copy(isLoading = false, error = AppError.generic(AppStrings.current.errorMessages.errorLogin))
                 return false
             }
 
             val personId = try { userService.fetchAndStorePersonId() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("LoginViewModel", "fetchAndStorePersonId failed: ${e.message}"); null }
             if (personId == null) {
-                _state.value = _state.value.copy(isLoading = false, error = AppStrings.current.errorMessages.errorLoginPersonId)
+                _state.value = _state.value.copy(isLoading = false, error = AppError.generic(AppStrings.current.errorMessages.errorLoginPersonId))
                 return false
             }
 
@@ -59,7 +57,7 @@ class LoginViewModel() : ViewModel() {
             _state.value = _state.value.copy(isLoading = false, error = null)
             true
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = ex.message ?: AppStrings.current.errorMessages.errorLoadingLogin)
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingLogin))
             false
         }
     }

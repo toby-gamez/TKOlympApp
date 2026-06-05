@@ -93,7 +93,7 @@ class EventService(
     private val client: IGraphQlClient = ServiceLocator.graphQlClient,
     private val cache: CacheService = ServiceLocator.cacheService
 ) : IEventService {
-    private val json = Json { ignoreUnknownKeys = true }
+    
 
     private val eventByIdQuery = """
             query Event(${'$'}id: BigInt!) {

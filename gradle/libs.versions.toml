@@ -20,6 +20,8 @@ kotlinx-datetime = "0.7.1"
 material3 = "1.10.0-alpha05"
 compose-android-bom = "2026.04.01"
 ksafe = "1.8.1"
+kotlinx-coroutines = "1.10.2"
+coil = "2.4.0"
 google-services = "4.4.4"
 firebase-bom = "34.12.0"
 firebase-analytics = "23.2.0"
@@ -56,6 +58,8 @@ kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.
 compose-android-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-android-bom" }
 compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 ksafe = { module = "eu.anifantakis:ksafe", version.ref = "ksafe" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom"}
 firebase-analytics = {module = "com.google.firebase:firebase-analytics", version.ref = "firebase-analytics"}
 androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }

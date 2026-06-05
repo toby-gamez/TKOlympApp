@@ -223,7 +223,7 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
 
             if (state.error != null) {
                 Text(
-                    state.error ?: "",
+                    state.error?.message ?: "",
                     color = MaterialTheme.colorScheme.error,
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.bodyMedium

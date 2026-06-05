@@ -73,7 +73,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
         SwipeToReload(isRefreshing = state.isLoading, onRefresh = { scope.launch { viewModel.loadPerson(personId) } }, modifier = Modifier.padding(padding)) {
             Column(modifier = Modifier.padding(8.dp).verticalScroll(rememberScrollState())) {
 
-            state.error?.let { Text("${AppStrings.current.registration.errorPrefix} $it", color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(8.dp)) }
+            state.error?.let { Text("${AppStrings.current.registration.errorPrefix} ${it.message}", color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(8.dp)) }
 
             val p = state.person as? PersonDetails
             if (p == null) {

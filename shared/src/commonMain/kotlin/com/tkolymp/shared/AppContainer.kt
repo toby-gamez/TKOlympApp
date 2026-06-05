@@ -8,14 +8,14 @@ import com.tkolymp.shared.event.IEventService
 import com.tkolymp.shared.network.IGraphQlClient
 import com.tkolymp.shared.notification.INotificationScheduler
 import com.tkolymp.shared.notification.NotificationService
-import com.tkolymp.shared.notification.NotificationStorage
+import com.tkolymp.shared.notification.INotificationStorage
 import com.tkolymp.shared.people.PeopleService
-import com.tkolymp.shared.storage.CalendarPreferenceStorage
+import com.tkolymp.shared.storage.ICalendarPreferenceStorage
 import com.tkolymp.shared.storage.LanguageStorage
 import com.tkolymp.shared.storage.OnboardingStorage
-import com.tkolymp.shared.storage.TokenStorage
-import com.tkolymp.shared.storage.UserStorage
-import com.tkolymp.shared.systemcalendar.SystemCalendarService
+import com.tkolymp.shared.storage.ITokenStorage
+import com.tkolymp.shared.storage.IUserStorage
+import com.tkolymp.shared.systemcalendar.ISystemCalendarService
 import com.tkolymp.shared.user.UserService
 import com.tkolymp.shared.payments.PaymentService
 import com.tkolymp.shared.storage.OfflineDataStorage
@@ -29,24 +29,24 @@ import com.tkolymp.shared.personalevents.PersonalEventService
  * and registered via [ServiceLocator.init].
  */
 class AppContainer(
-    val tokenStorage: TokenStorage,
+    val tokenStorage: ITokenStorage,
     val graphQlClient: IGraphQlClient,
     val authService: IAuthService,
     val cacheService: CacheService,
     val eventService: IEventService,
-    val userStorage: UserStorage,
+    val userStorage: IUserStorage,
     val userService: UserService,
     val announcementService: IAnnouncementService,
     val peopleService: PeopleService,
     val clubService: ClubService,
     val paymentService: PaymentService,
-    val notificationStorage: NotificationStorage,
+    val notificationStorage: INotificationStorage,
     val notificationScheduler: INotificationScheduler,
     val notificationService: NotificationService,
     val onboardingStorage: OnboardingStorage,
     val languageStorage: LanguageStorage,
-    val calendarPreferenceStorage: CalendarPreferenceStorage,
-    val systemCalendarService: SystemCalendarService,
+    val calendarPreferenceStorage: ICalendarPreferenceStorage,
+    val systemCalendarService: ISystemCalendarService,
     val offlineDataStorage: OfflineDataStorage,
     val personalEventService: PersonalEventService,
     val networkMonitor: NetworkMonitor,

@@ -19,7 +19,6 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
@@ -29,6 +28,12 @@ import kotlinx.serialization.json.longOrNull
 import kotlin.time.Clock
 import kotlin.time.Instant
 import com.tkolymp.shared.event.firstTrainerOrEmpty
+import com.tkolymp.shared.json.AppJson
+import com.tkolymp.shared.sync.OfflineKeys
+import com.tkolymp.shared.utils.AppConstants
+import com.tkolymp.shared.event.EventType
+import com.tkolymp.shared.event.toEventType
+import com.tkolymp.shared.calendar.parseCalendarJson
 
 data class BirthdayEntry(
     val personId: String,
@@ -55,7 +60,7 @@ data class OverviewState(
     val myCoupleIds: List<String> = emptyList(),
     val isOffline: Boolean = false,
     override val isLoading: Boolean = false,
-    override val error: String? = null
+    override val error: AppError? = null
 ) : ViewModelState
 
 class OverviewViewModel(
@@ -90,7 +95,7 @@ class OverviewViewModel(
         try {
             var events = try {
                 val grouped = withContext(Dispatchers.Default) {
-                    eventService.fetchEventsGroupedByDay(startIso, endIso, onlyMine = true, first = 200, cacheNamespace = "overview_")
+                    eventService.fetchEventsGroupedByDay(startIso, endIso, onlyMine = true, first = AppConstants.FETCH_LIMIT_WEEK, cacheNamespace = "overview_")
                 }
                 val flattened = grouped.values.flatten()
 
@@ -101,10 +106,10 @@ class OverviewViewModel(
                         try {
                             val startDay = try { kotlinx.datetime.LocalDate.parse(startIso.substringBefore('T')) } catch (_: Exception) { null }
                             val endDay = try { kotlinx.datetime.LocalDate.parse(endIso.substringBefore('T')) } catch (_: Exception) { null }
-                            val keys = ServiceLocator.offlineDataStorage.allKeys().filter { it.startsWith("offline_cal_MINE_") }
+                            val keys = ServiceLocator.offlineDataStorage.allKeys().filter { it.startsWith(OfflineKeys.CAL_PREFIX + "MINE_") }
                                 .filter { k ->
                                     try {
-                                        val suffix = k.removePrefix("offline_cal_MINE_")
+                                        val suffix = k.removePrefix(OfflineKeys.CAL_PREFIX + "MINE_")
                                         val wk = kotlinx.datetime.LocalDate.parse(suffix)
                                         if (startDay != null && endDay != null) {
                                             // include weeks that start within the requested range
@@ -137,10 +142,10 @@ class OverviewViewModel(
                 try {
                     val startDay = try { kotlinx.datetime.LocalDate.parse(startIso.substringBefore('T')) } catch (_: Exception) { null }
                     val endDay = try { kotlinx.datetime.LocalDate.parse(endIso.substringBefore('T')) } catch (_: Exception) { null }
-                    val keys = ServiceLocator.offlineDataStorage.allKeys().filter { it.startsWith("offline_cal_MINE_") }
+                    val keys = ServiceLocator.offlineDataStorage.allKeys().filter { it.startsWith(OfflineKeys.CAL_PREFIX + "MINE_") }
                         .filter { k ->
                             try {
-                                val suffix = k.removePrefix("offline_cal_MINE_")
+                                val suffix = k.removePrefix(OfflineKeys.CAL_PREFIX + "MINE_")
                                 val wk = kotlinx.datetime.LocalDate.parse(suffix)
                                 if (startDay != null && endDay != null) {
                                     wk <= endDay && wk >= startDay
@@ -213,7 +218,7 @@ class OverviewViewModel(
                     try {
                         val raw = try { ServiceLocator.offlineSyncManager.loadEventDetail(evId) } catch (_: Exception) { null }
                         if (!raw.isNullOrBlank()) {
-                            val parsed = try { Json.parseToJsonElement(raw).jsonObject } catch (_: Exception) { null }
+                            val parsed = try { AppJson.parseToJsonElement(raw).jsonObject } catch (_: Exception) { null }
                             val regArr2 = parsed?.let { pj ->
                                 when {
                                     pj["eventRegistrationsList"] is kotlinx.serialization.json.JsonArray -> pj["eventRegistrationsList"] as kotlinx.serialization.json.JsonArray
@@ -265,7 +270,7 @@ class OverviewViewModel(
                         try {
                             val raw = try { ServiceLocator.offlineSyncManager.loadAnnouncements(false) } catch (_: Exception) { null }
                             if (!raw.isNullOrBlank()) {
-                                val parsed = try { kotlinx.serialization.json.Json.decodeFromString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), raw) } catch (_: Exception) { null }
+                                val parsed = try { AppJson.decodeFromString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), raw) } catch (_: Exception) { null }
                                 if (!parsed.isNullOrEmpty()) {
                                     _state.value = _state.value.copy(isOffline = true)
                                     parsed.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }.take(3)
@@ -280,7 +285,7 @@ class OverviewViewModel(
                 try {
                     val raw = try { ServiceLocator.offlineSyncManager.loadAnnouncements(false) } catch (_: Exception) { null }
                     if (!raw.isNullOrBlank()) {
-                        val parsed = try { kotlinx.serialization.json.Json.decodeFromString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), raw) } catch (_: Exception) { null }
+                        val parsed = try { AppJson.decodeFromString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), raw) } catch (_: Exception) { null }
                         if (!parsed.isNullOrEmpty()) {
                             _state.value = _state.value.copy(isOffline = true)
                             parsed.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }.take(3)
@@ -293,7 +298,7 @@ class OverviewViewModel(
             val cids = try { userService.getCachedCoupleIds() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("OverviewViewModel", "getCachedCoupleIds failed: ${e.message}"); emptyList<String>() }
 
             // Derive camps: events with type containing "CAMP", capped at 2
-            val camps = events.filter { it.event?.type?.contains("CAMP", ignoreCase = true) == true }
+            val camps = events.filter { it.event?.type?.toEventType() == EventType.CAMP == true }
             val campsMapByDay = camps
                 .sortedBy { it.since ?: it.updatedAt ?: "" }
                 .take(2)
@@ -374,7 +379,7 @@ class OverviewViewModel(
                         try {
                             val raw = try { ServiceLocator.offlineSyncManager.loadPeople() } catch (_: Exception) { null }
                             if (!raw.isNullOrBlank()) {
-                                val arr = try { Json.parseToJsonElement(raw).jsonArray } catch (_: Exception) { null }
+                                val arr = try { AppJson.parseToJsonElement(raw).jsonArray } catch (_: Exception) { null }
                                 if (arr != null) {
                                     val parsedPeople = arr.mapNotNull { node ->
                                         try {
@@ -447,40 +452,13 @@ class OverviewViewModel(
                 isLoading = false
             )
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání přehledu")
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání přehledu"))
         }
     }
 
     private fun isLesson(inst: EventInstance): Boolean =
-        inst.event?.type?.equals("lesson", ignoreCase = true) == true &&
+        inst.event?.type?.toEventType() == EventType.LESSON == true &&
             !inst.event.eventTrainersList.isNullOrEmpty() &&
             !inst.event.eventTrainersList.firstOrNull().isNullOrBlank()
 
-    private fun parseCalendarJson(raw: String): Map<String, List<EventInstance>> {
-        return try {
-            val json = Json.parseToJsonElement(raw).jsonObject
-            val result = mutableMapOf<String, MutableList<EventInstance>>()
-            json.entries.forEach { (date, elem) ->
-                val arr = elem.jsonArray
-                val list = mutableListOf<EventInstance>()
-                arr.forEach { item ->
-                    val obj = item.jsonObject
-                    val id = obj["id"]?.jsonPrimitive?.longOrNull ?: obj["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull() ?: 0L
-                    val isCancelled = obj["isCancelled"]?.jsonPrimitive?.booleanOrNull ?: false
-                    val since = obj["since"]?.jsonPrimitive?.contentOrNull
-                    val until = obj["until"]?.jsonPrimitive?.contentOrNull
-                    val updatedAt = obj["updatedAt"]?.jsonPrimitive?.contentOrNull
-                    val eventId = obj["eventId"]?.jsonPrimitive?.longOrNull
-                    val eventName = obj["eventName"]?.jsonPrimitive?.contentOrNull
-                    val eventType = obj["eventType"]?.jsonPrimitive?.contentOrNull
-                    val locationText = obj["locationText"]?.jsonPrimitive?.contentOrNull
-                    val trainers = (obj["trainers"]?.jsonArray)?.mapNotNull { it.jsonPrimitive.contentOrNull } ?: emptyList()
-                    val event = com.tkolymp.shared.event.Event(eventId, eventName, null, eventType, locationText, false, false, false, trainers, emptyList(), emptyList(), null)
-                    list += com.tkolymp.shared.event.EventInstance(id, isCancelled, since, until, updatedAt, event)
-                }
-                result[date] = list
-            }
-            result
-        } catch (e: Exception) { emptyMap() }
-    }
 }

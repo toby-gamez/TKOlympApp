@@ -16,12 +16,12 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
 
-actual class NotificationStorage actual constructor(platformContext: Any) {
+actual class NotificationStorage actual constructor(platformContext: Any) : INotificationStorage {
     private val context = platformContext as Context
     private val prefs = context.getSharedPreferences("notification_prefs", Context.MODE_PRIVATE)
     private val json = Json { ignoreUnknownKeys = true }
 
-    actual suspend fun saveSettings(settings: NotificationSettings) {
+    actual override suspend fun saveSettings(settings: NotificationSettings) {
         val obj = buildJsonObject {
             put("globalEnabled", JsonPrimitive(settings.globalEnabled))
             put("rules", buildJsonArray {
@@ -43,7 +43,7 @@ actual class NotificationStorage actual constructor(platformContext: Any) {
         prefs.edit().putString("notification_settings", s).apply()
     }
 
-    actual suspend fun getSettings(): NotificationSettings? {
+    actual override suspend fun getSettings(): NotificationSettings? {
         val s = prefs.getString("notification_settings", null) ?: return null
         return try {
             val el = json.parseToJsonElement(s)
@@ -66,7 +66,7 @@ actual class NotificationStorage actual constructor(platformContext: Any) {
         } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
     }
 
-    actual suspend fun saveScheduledNotifications(list: List<ScheduledNotification>) {
+    actual override suspend fun saveScheduledNotifications(list: List<ScheduledNotification>) {
         val arr = buildJsonArray {
             list.forEach { sn ->
                 add(buildJsonObject {
@@ -81,7 +81,7 @@ actual class NotificationStorage actual constructor(platformContext: Any) {
         prefs.edit().putString("scheduled_notifications", s).apply()
     }
 
-    actual suspend fun getScheduledNotifications(): List<ScheduledNotification> {
+    actual override suspend fun getScheduledNotifications(): List<ScheduledNotification> {
         val s = prefs.getString("scheduled_notifications", null) ?: return emptyList()
         return try {
             val el = json.parseToJsonElement(s)
@@ -99,7 +99,7 @@ actual class NotificationStorage actual constructor(platformContext: Any) {
         } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
     }
 
-    actual suspend fun saveReceivedNotifications(list: List<ReceivedMessage>) {
+    actual override suspend fun saveReceivedNotifications(list: List<ReceivedMessage>) {
         val arr = buildJsonArray {
             list.forEach { rm ->
                 add(buildJsonObject {
@@ -116,7 +116,7 @@ actual class NotificationStorage actual constructor(platformContext: Any) {
         prefs.edit().putString("received_notifications", s).apply()
     }
 
-    actual suspend fun getReceivedNotifications(): List<ReceivedMessage> {
+    actual override suspend fun getReceivedNotifications(): List<ReceivedMessage> {
         val s = prefs.getString("received_notifications", null) ?: return emptyList()
         return try {
             val el = json.parseToJsonElement(s)
@@ -136,7 +136,7 @@ actual class NotificationStorage actual constructor(platformContext: Any) {
         } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
     }
 
-    actual suspend fun saveEventReminders(list: List<EventReminder>) {
+    actual override suspend fun saveEventReminders(list: List<EventReminder>) {
         val arr = buildJsonArray {
             list.forEach { r ->
                 add(buildJsonObject {
@@ -152,7 +152,7 @@ actual class NotificationStorage actual constructor(platformContext: Any) {
         prefs.edit().putString("event_reminders", arr.toString()).apply()
     }
 
-    actual suspend fun getEventReminders(): List<EventReminder> {
+    actual override suspend fun getEventReminders(): List<EventReminder> {
         val s = prefs.getString("event_reminders", null) ?: return emptyList()
         return try {
             json.parseToJsonElement(s).jsonArray.mapNotNull { jo ->
@@ -170,7 +170,7 @@ actual class NotificationStorage actual constructor(platformContext: Any) {
         } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
     }
 
-    actual suspend fun saveBirthdaySettings(settings: BirthdayNotificationSettings) {
+    actual override suspend fun saveBirthdaySettings(settings: BirthdayNotificationSettings) {
         val obj = buildJsonObject {
             put("enabled", JsonPrimitive(settings.enabled))
             put("notifyAll", JsonPrimitive(settings.notifyAll))
@@ -183,7 +183,7 @@ actual class NotificationStorage actual constructor(platformContext: Any) {
         prefs.edit().putString("birthday_notification_settings", obj.toString()).apply()
     }
 
-    actual suspend fun getBirthdaySettings(): BirthdayNotificationSettings? {
+    actual override suspend fun getBirthdaySettings(): BirthdayNotificationSettings? {
         val s = prefs.getString("birthday_notification_settings", null) ?: return null
         return try {
             val jo = json.parseToJsonElement(s).jsonObject
@@ -199,11 +199,11 @@ actual class NotificationStorage actual constructor(platformContext: Any) {
         } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
     }
 
-    actual suspend fun saveScheduledBirthdayNotificationIds(ids: List<String>) {
+    actual override suspend fun saveScheduledBirthdayNotificationIds(ids: List<String>) {
         prefs.edit().putString("scheduled_birthday_ids", JsonArray(ids.map { JsonPrimitive(it) }).toString()).apply()
     }
 
-    actual suspend fun getScheduledBirthdayNotificationIds(): List<String> {
+    actual override suspend fun getScheduledBirthdayNotificationIds(): List<String> {
         val s = prefs.getString("scheduled_birthday_ids", null) ?: return emptyList()
         return try {
             json.parseToJsonElement(s).jsonArray.mapNotNull { it.jsonPrimitive.contentOrNull }

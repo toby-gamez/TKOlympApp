@@ -30,6 +30,12 @@ import kotlinx.serialization.json.longOrNull
 import kotlin.time.Clock
 import kotlin.time.Instant
 import com.tkolymp.shared.event.firstTrainerOrEmpty
+import com.tkolymp.shared.json.AppJson
+import com.tkolymp.shared.sync.OfflineKeys
+import com.tkolymp.shared.utils.AppConstants
+import com.tkolymp.shared.event.EventType
+import com.tkolymp.shared.event.toEventType
+import com.tkolymp.shared.calendar.parseCalendarJson
 
 data class CalendarState(
     val eventsByDay: Map<String, List<EventInstance>> = emptyMap(),
@@ -43,7 +49,7 @@ data class CalendarState(
     val isOffline: Boolean = false,
     val hasCancelledMineToShow: Boolean = false,
     override val isLoading: Boolean = false,
-    override val error: String? = null
+    override val error: AppError? = null
 ) : ViewModelState
 
 class CalendarViewModel(
@@ -155,7 +161,7 @@ class CalendarViewModel(
         try {
             val map: Map<String, List<EventInstance>> = try {
                 withContext(Dispatchers.Default) {
-                    eventService.fetchEventsGroupedByDay(startIso, endIso, onlyMine, 200, 0, null, cacheNamespace = "calendar_")
+                    eventService.fetchEventsGroupedByDay(startIso, endIso, onlyMine, AppConstants.FETCH_LIMIT_WEEK, 0, null, cacheNamespace = "calendar_")
                 }
             } catch (e: CancellationException) { throw e } catch (ex: Exception) {
                 // offline fallback
@@ -272,7 +278,7 @@ class CalendarViewModel(
                 isLoading = false
             )
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = ex.message ?: "Chyba při načítání")
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání"))
         }
     }
 
@@ -310,7 +316,7 @@ class CalendarViewModel(
                             id = null,
                             name = ev.title,
                             description = if (desc.isBlank()) null else desc,
-                            type = "PERSONAL",
+                            type = EventType.PERSONAL.rawValue,
                             locationText = ev.location,
                             isRegistrationOpen = false,
                             isVisible = true,
@@ -386,73 +392,6 @@ class CalendarViewModel(
         } catch (_: Exception) { original }
     }
 
-    private fun parseCalendarJson(raw: String): Map<String, List<EventInstance>> {
-        return try {
-            val json = kotlinx.serialization.json.Json.parseToJsonElement(raw).jsonObject
-            val result = mutableMapOf<String, MutableList<EventInstance>>()
-            json.entries.forEach { (date, elem) ->
-                val arr = elem.jsonArray
-                val list = mutableListOf<EventInstance>()
-                arr.forEach { item ->
-                    val obj = item.jsonObject
-                    val id = obj["id"]?.jsonPrimitive?.longOrNull ?: obj["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull() ?: 0L
-                    val isCancelled = obj["isCancelled"]?.jsonPrimitive?.booleanOrNull ?: false
-                    val since = obj["since"]?.jsonPrimitive?.contentOrNull
-                    val until = obj["until"]?.jsonPrimitive?.contentOrNull
-                    val updatedAt = obj["updatedAt"]?.jsonPrimitive?.contentOrNull
-                    val eventId = obj["eventId"]?.jsonPrimitive?.longOrNull
-                    val eventName = obj["eventName"]?.jsonPrimitive?.contentOrNull
-                    val eventType = obj["eventType"]?.jsonPrimitive?.contentOrNull
-                    val locationText = obj["locationText"]?.jsonPrimitive?.contentOrNull
-                    val trainers = (obj["trainers"]?.jsonArray)?.mapNotNull { it.jsonPrimitive.contentOrNull } ?: emptyList()
-
-                    val targetCohorts = (obj["targetCohorts"]?.jsonArray)?.mapNotNull { it2 ->
-                        val o = it2.jsonObject
-                        val cohortId = o["cohortId"]?.jsonPrimitive?.longOrNull ?: o["cohortId"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
-                        val cohortObj = o["cohort"]?.jsonObject
-                        val cohort = cohortObj?.let { c ->
-                            val cid = c["id"]?.jsonPrimitive?.longOrNull ?: c["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
-                            com.tkolymp.shared.event.Cohort(cid, c["name"]?.jsonPrimitive?.contentOrNull, c["colorRgb"]?.jsonPrimitive?.contentOrNull)
-                        }
-                        com.tkolymp.shared.event.TargetCohort(cohortId, cohort)
-                    } ?: emptyList()
-
-                    val registrations = (obj["eventRegistrationsList"]?.jsonArray)?.mapNotNull { regEl ->
-                        val o = regEl.jsonObject
-                        val rid = o["id"]?.jsonPrimitive?.longOrNull ?: o["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
-
-                        val personObj = o["person"]?.jsonObject
-                        val person = personObj?.let { p ->
-                            val pid = p["id"]?.jsonPrimitive?.longOrNull ?: p["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
-                            com.tkolymp.shared.event.Person(pid, p["name"]?.jsonPrimitive?.contentOrNull, p["firstName"]?.jsonPrimitive?.contentOrNull, p["lastName"]?.jsonPrimitive?.contentOrNull)
-                        }
-
-                        val coupleObj = o["couple"]?.jsonObject
-                        val couple = coupleObj?.let { c ->
-                            val cid = c["id"]?.jsonPrimitive?.longOrNull ?: c["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
-                            val manObj = c["man"]?.jsonObject
-                            val womanObj = c["woman"]?.jsonObject
-                            val man = manObj?.let { m -> com.tkolymp.shared.event.SimpleName(m["firstName"]?.jsonPrimitive?.contentOrNull, m["lastName"]?.jsonPrimitive?.contentOrNull) }
-                            val woman = womanObj?.let { w -> com.tkolymp.shared.event.SimpleName(w["firstName"]?.jsonPrimitive?.contentOrNull, w["lastName"]?.jsonPrimitive?.contentOrNull) }
-                            com.tkolymp.shared.event.Couple(cid, man, woman)
-                        }
-                        com.tkolymp.shared.event.Registration(rid, person, couple)
-                    } ?: emptyList()
-
-                    val locationObj = obj["location"]?.jsonObject
-                    val location = locationObj?.let { l ->
-                        val lid = l["id"]?.jsonPrimitive?.longOrNull ?: l["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
-                        com.tkolymp.shared.event.Location(lid, l["name"]?.jsonPrimitive?.contentOrNull)
-                    }
-
-                    val event = com.tkolymp.shared.event.Event(eventId, eventName, null, eventType, locationText, false, false, false, trainers, targetCohorts, registrations, location)
-                    list += com.tkolymp.shared.event.EventInstance(id, isCancelled, since, until, updatedAt, event)
-                }
-                result[date] = list
-            }
-            result
-        } catch (e: Exception) { emptyMap() }
-    }
 
     private suspend fun enrichParsedWithEventDetails(parsed: Map<String, List<EventInstance>>): Map<String, List<EventInstance>> {
         val json = kotlinx.serialization.json.Json
@@ -528,7 +467,7 @@ class CalendarViewModel(
     }
 
     private fun isLesson(inst: EventInstance): Boolean =
-        inst.event?.type?.equals("lesson", ignoreCase = true) == true &&
+        inst.event?.type?.toEventType() == EventType.LESSON == true &&
             inst.event.eventTrainersList.isNotEmpty() &&
             !inst.event.eventTrainersList.firstOrNull().isNullOrBlank()
 
@@ -538,7 +477,7 @@ class CalendarViewModel(
 
     private suspend fun loadDismissedIds(): Set<String> {
         return try {
-            val raw = withContext(Dispatchers.Default) { offlineDataStorage.load("dismissed_cancelled_replacements") }
+            val raw = withContext(Dispatchers.Default) { offlineDataStorage.load(OfflineKeys.DISMISSED_CANCELLED) }
             raw?.split(",")?.filter { it.isNotBlank() }?.toSet() ?: emptySet()
         } catch (e: CancellationException) { throw e } catch (_: Exception) { emptySet() }
     }

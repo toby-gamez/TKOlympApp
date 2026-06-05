@@ -6,7 +6,7 @@ import com.tkolymp.shared.cache.CacheService
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import com.tkolymp.shared.network.IGraphQlClient
-import kotlinx.serialization.json.Json
+import com.tkolymp.shared.json.AppJson
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -32,7 +32,7 @@ data class ClubData(val locations: List<Location>, val trainers: List<Trainer>, 
 
 class ClubService(private val client: IGraphQlClient = ServiceLocator.graphQlClient,
                   private val cache: CacheService = ServiceLocator.cacheService) {
-    private val json = Json { ignoreUnknownKeys = true }
+    
 
     suspend fun fetchClubData(): ClubData {
         val cacheKey = "club_data"

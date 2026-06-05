@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 data class PersonalEventsState(
     val events: List<PersonalEvent> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: AppError? = null
 )
 
 class PersonalEventsViewModel(
@@ -27,7 +27,7 @@ class PersonalEventsViewModel(
             _state.value = _state.value.copy(events = list, isLoading = false)
         } catch (e: kotlinx.coroutines.CancellationException) { throw e
         } catch (e: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = e.message ?: "")
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(e.message ?: ""))
         }
     }
 
@@ -38,7 +38,7 @@ class PersonalEventsViewModel(
             loadAll()
         } catch (e: kotlinx.coroutines.CancellationException) { throw e
         } catch (e: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = e.message ?: "")
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(e.message ?: ""))
         }
     }
 }

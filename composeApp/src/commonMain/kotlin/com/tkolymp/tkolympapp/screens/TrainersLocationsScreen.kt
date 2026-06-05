@@ -72,7 +72,7 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
             val club = state.clubData
             if (state.error != null) {
                 Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                    Text(state.error ?: "")
+                    Text(state.error?.message ?: "")
                 }
             } else if (club == null || (club.locations.isEmpty() && club.trainers.isEmpty())) {
                 Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {

@@ -148,7 +148,10 @@ private fun PaymentItemCard(item: com.tkolymp.shared.payments.PaymentDebtorItem,
         else -> false
     }
     val name = listOfNotNull(item.person?.firstName, item.person?.lastName).joinToString(" ")
-    val amount = item.price?.amount?.let { a -> if (a % 1.0 == 0.0) a.toInt().toString() else String.format("%.2f", a) } ?: "-"
+    val amount = item.price?.amount?.let { cents ->
+        if (cents % 100L == 0L) (cents / 100L).toString()
+        else "%.2f".format(cents / 100.0)
+    } ?: "-"
 
     fun fmtDate(raw: String?): String {
         val ldt = parseToLocal(raw) ?: return raw ?: "-"

@@ -8,11 +8,12 @@ import com.tkolymp.shared.people.Cohort
 import com.tkolymp.shared.people.CohortMembership
 import com.tkolymp.shared.people.CoupleMember
 import com.tkolymp.shared.people.PersonDetails
-import com.tkolymp.shared.storage.UserStorage
+import com.tkolymp.shared.storage.IUserStorage
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.*
+import com.tkolymp.shared.json.AppJson
 
 data class CurrentUser(
     val id: String?,
@@ -23,8 +24,8 @@ data class CurrentUser(
 )
 
 class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient = ServiceLocator.graphQlClient,
-                  private val storage: UserStorage = ServiceLocator.userStorage) {
-    private val json = Json { ignoreUnknownKeys = true }
+                  private val storage: IUserStorage = ServiceLocator.userStorage) {
+    
     private val mutex = Mutex()
     private var lastApiError: String? = null
 
@@ -133,7 +134,7 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
     }
 
     private fun parseStoredPersonDetails(jsonStr: String): PersonDetails? = try {
-        val p = Json.parseToJsonElement(jsonStr).jsonObject
+        val p = AppJson.parseToJsonElement(jsonStr).jsonObject
         val id = p["id"]?.jsonPrimitive?.contentOrNull ?: return null
         val couplesArr = (p["activeCouplesList"] as? JsonArray)?.mapNotNull { cEl ->
             val cObj = cEl as? JsonObject ?: return@mapNotNull null
@@ -151,11 +152,11 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
         val address = addrObj?.let { a ->
             AddressDetails(street = a["street"]?.jsonPrimitive?.contentOrNull, city = a["city"]?.jsonPrimitive?.contentOrNull, postalCode = a["postalCode"]?.jsonPrimitive?.contentOrNull, region = a["region"]?.jsonPrimitive?.contentOrNull, district = a["district"]?.jsonPrimitive?.contentOrNull, conscriptionNumber = a["conscriptionNumber"]?.jsonPrimitive?.contentOrNull, orientationNumber = a["orientationNumber"]?.jsonPrimitive?.contentOrNull)
         }
-        PersonDetails(id = id, firstName = p["firstName"]?.jsonPrimitive?.contentOrNull, lastName = p["lastName"]?.jsonPrimitive?.contentOrNull, prefixTitle = p["prefixTitle"]?.jsonPrimitive?.contentOrNull, suffixTitle = p["suffixTitle"]?.jsonPrimitive?.contentOrNull, birthDate = p["birthDate"]?.jsonPrimitive?.contentOrNull, cstsId = p["cstsId"]?.jsonPrimitive?.contentOrNull, email = p["email"]?.jsonPrimitive?.contentOrNull, gender = p["gender"]?.jsonPrimitive?.contentOrNull, isTrainer = p["isTrainer"]?.jsonPrimitive?.contentOrNull?.let { it == "true" }, phone = p["phone"]?.jsonPrimitive?.contentOrNull, wdsfId = p["wdsfId"]?.jsonPrimitive?.contentOrNull, activeCouplesList = couplesArr, cohortMembershipsList = memberships, rawResponse = Json.parseToJsonElement(jsonStr), address = address, nationality = p["nationality"]?.jsonPrimitive?.contentOrNull, nationalIdNumber = p["nationalIdNumber"]?.jsonPrimitive?.contentOrNull)
+        PersonDetails(id = id, firstName = p["firstName"]?.jsonPrimitive?.contentOrNull, lastName = p["lastName"]?.jsonPrimitive?.contentOrNull, prefixTitle = p["prefixTitle"]?.jsonPrimitive?.contentOrNull, suffixTitle = p["suffixTitle"]?.jsonPrimitive?.contentOrNull, birthDate = p["birthDate"]?.jsonPrimitive?.contentOrNull, cstsId = p["cstsId"]?.jsonPrimitive?.contentOrNull, email = p["email"]?.jsonPrimitive?.contentOrNull, gender = p["gender"]?.jsonPrimitive?.contentOrNull, isTrainer = p["isTrainer"]?.jsonPrimitive?.contentOrNull?.let { it == "true" }, phone = p["phone"]?.jsonPrimitive?.contentOrNull, wdsfId = p["wdsfId"]?.jsonPrimitive?.contentOrNull, activeCouplesList = couplesArr, cohortMembershipsList = memberships, rawResponse = AppJson.parseToJsonElement(jsonStr), address = address, nationality = p["nationality"]?.jsonPrimitive?.contentOrNull, nationalIdNumber = p["nationalIdNumber"]?.jsonPrimitive?.contentOrNull)
     } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
 
     private fun parseStoredCurrentUser(jsonStr: String): CurrentUser? = try {
-        val u = Json.parseToJsonElement(jsonStr).jsonObject
+        val u = AppJson.parseToJsonElement(jsonStr).jsonObject
         CurrentUser(id = u["id"]?.jsonPrimitive?.contentOrNull, uEmail = u["uEmail"]?.jsonPrimitive?.contentOrNull, uJmeno = u["uJmeno"]?.jsonPrimitive?.contentOrNull, uLogin = u["uLogin"]?.jsonPrimitive?.contentOrNull, uPrijmeni = u["uPrijmeni"]?.jsonPrimitive?.contentOrNull)
     } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
 

@@ -9,11 +9,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
+import kotlin.math.roundToLong
+import com.tkolymp.shared.json.AppJson
+import com.tkolymp.shared.sync.OfflineKeys
 
 class PaymentsViewModel {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -47,10 +49,10 @@ class PaymentsViewModel {
                     val offlineJson = withContext(Dispatchers.IO) {
                         val storage = com.tkolymp.shared.ServiceLocator.offlineDataStorage
                         if (!pid.isNullOrBlank()) {
-                            try { storage.load("offline_payments_person_$pid") } catch (_: Exception) { null }
-                                ?: try { storage.load("offline_payments") } catch (_: Exception) { null }
+                            try { storage.load(OfflineKeys.paymentsForPerson(pid)) } catch (_: Exception) { null }
+                                ?: try { storage.load(OfflineKeys.PAYMENTS) } catch (_: Exception) { null }
                         } else {
-                            try { storage.load("offline_payments") } catch (_: Exception) { null }
+                            try { storage.load(OfflineKeys.PAYMENTS) } catch (_: Exception) { null }
                         }
                     }
                     if (!offlineJson.isNullOrBlank()) {
@@ -75,7 +77,7 @@ class PaymentsViewModel {
 
     private fun parseOfflinePayments(jsonStr: String, pid: String?): List<PaymentDebtorItem> {
         return try {
-            val el = Json.parseToJsonElement(jsonStr)
+            val el = AppJson.parseToJsonElement(jsonStr)
             val arr = when (el) {
                 is JsonArray -> el
                 is JsonObject -> JsonArray(listOf(el))
@@ -85,7 +87,12 @@ class PaymentsViewModel {
                 try {
                     val obj = itemEl as? JsonObject ?: return@mapNotNull null
                     val priceObj = obj["price"] as? JsonObject
-                    val price = priceObj?.let { Money(it["amount"]?.jsonPrimitive?.contentOrNull?.toDoubleOrNull(), it["currency"]?.jsonPrimitive?.contentOrNull) }
+                    val price = priceObj?.let {
+                        val amountStr = it["amount"]?.jsonPrimitive?.contentOrNull
+                        val amountMinor = amountStr?.toLongOrNull()
+                            ?: amountStr?.toDoubleOrNull()?.let { d -> (d * 100).roundToLong() }
+                        Money(amountMinor, it["currency"]?.jsonPrimitive?.contentOrNull)
+                    }
 
                     val paymentObj = obj["payment"] as? JsonObject
                     val payment = paymentObj?.let {

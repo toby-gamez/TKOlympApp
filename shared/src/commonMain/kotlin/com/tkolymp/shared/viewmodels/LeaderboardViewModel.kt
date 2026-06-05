@@ -2,6 +2,7 @@ package com.tkolymp.shared.viewmodels
 
 import androidx.lifecycle.ViewModel
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.people.ScoreboardEntry
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,12 +13,14 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import com.tkolymp.shared.json.AppJson
+import com.tkolymp.shared.sync.OfflineKeys
 
 data class LeaderboardState(
-    val rankings: List<Any> = emptyList(),
+    val rankings: List<ScoreboardEntry> = emptyList(),
     val peopleById: Map<String, com.tkolymp.shared.people.Person> = emptyMap(),
     override val isLoading: Boolean = false,
-    override val error: String? = null
+    override val error: AppError? = null
 ) : ViewModelState
 
 class LeaderboardViewModel(
@@ -37,9 +40,9 @@ class LeaderboardViewModel(
                 throw e
             } catch (e: Exception) {
                 try {
-                    val raw = ServiceLocator.offlineDataStorage.load("offline_people") ?: ""
+                    val raw = ServiceLocator.offlineDataStorage.load(OfflineKeys.PEOPLE) ?: ""
                     if (raw.isNotBlank()) {
-                        val arr = kotlinx.serialization.json.Json.parseToJsonElement(raw).jsonArray
+                        val arr = AppJson.parseToJsonElement(raw).jsonArray
                         people = arr.mapNotNull { el ->
                             val obj = el.jsonObject
                             val id = obj["id"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
@@ -72,9 +75,9 @@ class LeaderboardViewModel(
             // If service returned an empty list (network failure but no exception), try offline fallback as well
             if (people.isEmpty()) {
                 try {
-                    val raw = ServiceLocator.offlineDataStorage.load("offline_people") ?: ""
+                    val raw = ServiceLocator.offlineDataStorage.load(OfflineKeys.PEOPLE) ?: ""
                     if (raw.isNotBlank()) {
-                        val arr = kotlinx.serialization.json.Json.parseToJsonElement(raw).jsonArray
+                        val arr = AppJson.parseToJsonElement(raw).jsonArray
                         people = arr.mapNotNull { el ->
                             val obj = el.jsonObject
                             val id = obj["id"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
@@ -115,11 +118,11 @@ class LeaderboardViewModel(
                     // try offline fallback when service returned empty list
                     var fallback: List<com.tkolymp.shared.people.ScoreboardEntry> = emptyList()
                     try {
-                        val keys = ServiceLocator.offlineDataStorage.allKeys().filter { it.startsWith("offline_scoreboard_") }
+                        val keys = ServiceLocator.offlineDataStorage.allKeys().filter { it.startsWith(OfflineKeys.SCOREBOARD_PREFIX) }
                         for (k in keys) {
                             try {
                                 val raw = ServiceLocator.offlineDataStorage.load(k) ?: continue
-                                val arr = kotlinx.serialization.json.Json.parseToJsonElement(raw).jsonArray
+                                val arr = AppJson.parseToJsonElement(raw).jsonArray
                                 val res = arr.mapNotNull { el ->
                                     val obj = el.jsonObject
                                     val ranking = obj["ranking"]?.jsonPrimitive?.contentOrNull?.toIntOrNull()
@@ -142,11 +145,11 @@ class LeaderboardViewModel(
             } catch (_e: Exception) {
                 var fallback: List<com.tkolymp.shared.people.ScoreboardEntry> = emptyList()
                 try {
-                    val keys = ServiceLocator.offlineDataStorage.allKeys().filter { it.startsWith("offline_scoreboard_") }
+                    val keys = ServiceLocator.offlineDataStorage.allKeys().filter { it.startsWith(OfflineKeys.SCOREBOARD_PREFIX) }
                     for (k in keys) {
                         try {
                             val raw = ServiceLocator.offlineDataStorage.load(k) ?: continue
-                            val arr = kotlinx.serialization.json.Json.parseToJsonElement(raw).jsonArray
+                            val arr = AppJson.parseToJsonElement(raw).jsonArray
                             val res = arr.mapNotNull { el ->
                                 val obj = el.jsonObject
                                 val ranking = obj["ranking"]?.jsonPrimitive?.contentOrNull?.toIntOrNull()
@@ -166,14 +169,14 @@ class LeaderboardViewModel(
             }
 
             _state.value = _state.value.copy(
-                rankings = list as? List<Any> ?: emptyList(),
+                rankings = list,
                 peopleById = peopleById,
                 isLoading = false
             )
         } catch (ex: Exception) {
             _state.value = _state.value.copy(
                 isLoading = false,
-                error = ex.message ?: "Chyba při načítání žebříčku"
+                error = AppError.generic(ex.message ?: "Chyba při načítání žebříčku")
             )
         }
     }

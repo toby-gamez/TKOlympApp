@@ -8,14 +8,14 @@ import com.tkolymp.shared.event.IEventService
 import com.tkolymp.shared.network.IGraphQlClient
 import com.tkolymp.shared.notification.INotificationScheduler
 import com.tkolymp.shared.notification.NotificationService
-import com.tkolymp.shared.notification.NotificationStorage
+import com.tkolymp.shared.notification.INotificationStorage
 import com.tkolymp.shared.people.PeopleService
-import com.tkolymp.shared.storage.CalendarPreferenceStorage
+import com.tkolymp.shared.storage.ICalendarPreferenceStorage
 import com.tkolymp.shared.storage.LanguageStorage
 import com.tkolymp.shared.storage.OnboardingStorage
-import com.tkolymp.shared.storage.TokenStorage
-import com.tkolymp.shared.storage.UserStorage
-import com.tkolymp.shared.systemcalendar.SystemCalendarService
+import com.tkolymp.shared.storage.ITokenStorage
+import com.tkolymp.shared.storage.IUserStorage
+import com.tkolymp.shared.systemcalendar.ISystemCalendarService
 import com.tkolymp.shared.user.UserService
 import com.tkolymp.shared.storage.OfflineDataStorage
 import com.tkolymp.shared.network.NetworkMonitor
@@ -47,22 +47,22 @@ object ServiceLocator {
 
     val graphQlClient: IGraphQlClient get() = container.graphQlClient
     val authService: IAuthService get() = container.authService
-    val tokenStorage: TokenStorage get() = container.tokenStorage
+    val tokenStorage: ITokenStorage get() = container.tokenStorage
     val eventService: IEventService get() = container.eventService
-    val userStorage: UserStorage get() = container.userStorage
+    val userStorage: IUserStorage get() = container.userStorage
     val userService: UserService get() = container.userService
     val announcementService: IAnnouncementService get() = container.announcementService
     val peopleService: PeopleService get() = container.peopleService
     val clubService: ClubService get() = container.clubService
     val paymentService: com.tkolymp.shared.payments.PaymentService get() = container.paymentService
     val cacheService: CacheService get() = container.cacheService
-    val notificationStorage: NotificationStorage get() = container.notificationStorage
+    val notificationStorage: INotificationStorage get() = container.notificationStorage
     val notificationScheduler: INotificationScheduler get() = container.notificationScheduler
     val notificationService: NotificationService get() = container.notificationService
     val onboardingStorage: OnboardingStorage get() = container.onboardingStorage
     val languageStorage: LanguageStorage get() = container.languageStorage
-    val calendarPreferenceStorage: CalendarPreferenceStorage get() = container.calendarPreferenceStorage
-    val systemCalendarService: SystemCalendarService get() = container.systemCalendarService
+    val calendarPreferenceStorage: ICalendarPreferenceStorage get() = container.calendarPreferenceStorage
+    val systemCalendarService: ISystemCalendarService get() = container.systemCalendarService
     val offlineDataStorage: OfflineDataStorage get() = container.offlineDataStorage
     val personalEventService: PersonalEventService get() = container.personalEventService
     val networkMonitor: NetworkMonitor get() = container.networkMonitor

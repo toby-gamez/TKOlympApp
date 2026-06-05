@@ -68,6 +68,7 @@ import com.tkolymp.shared.utils.formatTimesWithDateAlways
 import com.tkolymp.shared.utils.int
 import com.tkolymp.shared.utils.str
 import com.tkolymp.shared.utils.translateEventType
+import com.tkolymp.shared.viewmodels.EventSideEffect
 import com.tkolymp.shared.viewmodels.EventViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.QuantityInput
@@ -91,22 +92,21 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
         viewModel.loadEvent(eventId, forceRefresh = true)
     }
 
-    // Show snackbar when calendarResult changes
-    LaunchedEffect(state.calendarResult) {
-        val result = state.calendarResult ?: return@LaunchedEffect
-        val msg = if (result) AppStrings.current.events.addToCalendarSuccess
-                  else AppStrings.current.events.addToCalendarFailed
-        snackbarHostState.showSnackbar(msg)
-        viewModel.clearCalendarResult()
-    }
-
-    // Show snackbar when reminderResult changes
-    LaunchedEffect(state.reminderResult) {
-        val result = state.reminderResult ?: return@LaunchedEffect
-        val msg = if (result) AppStrings.current.notifications.reminderSet
-                  else AppStrings.current.notifications.reminderRemoveAction
-        snackbarHostState.showSnackbar(msg)
-        viewModel.clearReminderResult()
+    LaunchedEffect(Unit) {
+        viewModel.sideEffect.collect { effect ->
+            when (effect) {
+                is EventSideEffect.CalendarResult -> {
+                    val msg = if (effect.success) AppStrings.current.events.addToCalendarSuccess
+                              else AppStrings.current.events.addToCalendarFailed
+                    snackbarHostState.showSnackbar(msg)
+                }
+                is EventSideEffect.ReminderResult -> {
+                    val msg = if (effect.set) AppStrings.current.notifications.reminderSet
+                              else AppStrings.current.notifications.reminderRemoveAction
+                    snackbarHostState.showSnackbar(msg)
+                }
+            }
+        }
     }
 
     val ev = state.eventJson
@@ -160,7 +160,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                 if (state.error != null) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(state.error!!, modifier = Modifier.padding(16.dp))
+                            Text(state.error!!.message, modifier = Modifier.padding(16.dp))
                             TextButton(onClick = { scope.launch { viewModel.loadEvent(eventId, forceRefresh = true) } }) {
                                 Text(AppStrings.current.commonActions.retry)
                             }
