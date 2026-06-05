@@ -158,18 +158,6 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                 val contactList = derived.contactList
                 val externalList = derived.externalList
                 val otherList = derived.otherList
-        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
-            Column(modifier = Modifier.padding(12.dp)) {
-                Text(AppStrings.current.profile.aboutMe, style = MaterialTheme.typography.labelLarge)
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                if (!derived.bioText.isNullOrBlank()) {
-                    Text(derived.bioText ?: "", style = MaterialTheme.typography.bodyMedium)
-                } else {
-                    Text(AppStrings.current.profile.bioNotAvailable, style = MaterialTheme.typography.bodySmall)
-                }
-            }
-        }
-
         // Address card — show all available address subfields
         Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(12.dp)) {
@@ -360,7 +348,6 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                     ChangePersonalDataDialog(
                         initialFirst = person?.firstName ?: "",
                         initialLast = person?.lastName ?: "",
-                        initialBio = person?.bio ?: "",
                         initialEmail = (person?.email ?: profileState.currentUser?.uEmail) ?: "",
                         initialPrefix = person?.prefixTitle ?: "",
                         initialSuffix = person?.suffixTitle ?: "",
@@ -380,7 +367,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                         initialBirthDate = person?.birthDate ?: "",
                         initialGender = person?.gender ?: "",
                         onDismiss = { showEditPersonal = false },
-                        onSave = { _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String ->
+                        onSave = { _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String ->
                             // persistence is handled inside the dialog; reload from storage
                             showEditPersonal = false
                             refreshTriggerState.value = refreshTriggerState.value + 1

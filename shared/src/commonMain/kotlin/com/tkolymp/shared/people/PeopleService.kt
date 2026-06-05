@@ -48,7 +48,6 @@ data class PersonDetails(
     val prefixTitle: String? = null,
     val suffixTitle: String? = null,
     val birthDate: String?,
-    val bio: String?,
     val cstsId: String?,
     val email: String?,
     val gender: String?,
@@ -213,7 +212,6 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                         query PersonBasic(${'$'}id: BigInt!) {
                             person(id: ${'$'}id) {
                                 id
-                                bio
                                 birthDate
                                 cstsId
                                 email
@@ -255,7 +253,6 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                         prefixTitle = null,
                         suffixTitle = null,
                         birthDate = null,
-                        bio = null,
                         cstsId = null,
                         email = null,
                         gender = null,
@@ -275,7 +272,6 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                 val prefix = personObj?.get("prefixTitle")?.jsonPrimitive?.contentOrNull
                 val suffix = personObj?.get("suffixTitle")?.jsonPrimitive?.contentOrNull
                 val birth = personObj?.get("birthDate")?.jsonPrimitive?.contentOrNull
-                val bio = personObj?.get("bio")?.jsonPrimitive?.contentOrNull
                 val csts = personObj?.get("cstsId")?.jsonPrimitive?.contentOrNull
                 val email = personObj?.get("email")?.jsonPrimitive?.contentOrNull
                 val gender = personObj?.get("gender")?.jsonPrimitive?.contentOrNull
@@ -305,7 +301,7 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                 CohortMembership(Cohort(cId, cName, cColor, cVis), since, until)
             } ?: emptyList()
 
-            val pd = PersonDetails(id, first, last, prefix, suffix, birth, bio, csts, email, gender, isTrainer, phone, wdsf, couplesArr, memberships, el)
+            val pd = PersonDetails(id, first, last, prefix, suffix, birth, csts, email, gender, isTrainer, phone, wdsf, couplesArr, memberships, el)
             try { cache.put(cacheKey, pd, ttl = 15.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
             return pd
         }

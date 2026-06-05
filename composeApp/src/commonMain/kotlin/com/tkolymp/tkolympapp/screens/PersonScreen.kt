@@ -162,17 +162,6 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                 }
             }
 
-            // Bio card (if present and non-empty)
-            p.bio?.takeIf { it.isNotBlank() }?.let { bio ->
-                Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
-                    Column(modifier = Modifier.padding(8.dp)) {
-                        Text(AppStrings.current.profile.aboutMe, style = MaterialTheme.typography.labelLarge)
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
-                        Text(bio, style = MaterialTheme.typography.bodyMedium)
-                    }
-                }
-            }
-
             // Tréninkové skupiny (stacked)
             val visibleGroups = p.cohortMembershipsList.filter { it.cohort?.isVisible != false }
             if (visibleGroups.isNotEmpty()) {

@@ -115,7 +115,6 @@ fun ChangePasswordDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
 fun ChangePersonalDataDialog(
     initialFirst: String,
     initialLast: String,
-    initialBio: String,
     initialEmail: String,
     initialPrefix: String,
     initialSuffix: String,
@@ -135,11 +134,10 @@ fun ChangePersonalDataDialog(
     initialBirthDate: String,
     initialGender: String,
     onDismiss: () -> Unit,
-    onSave: (first: String, last: String, bio: String, email: String, prefix: String, suffix: String, csts: String, wdsf: String, nid: String, nationality: String, street: String, city: String, postal: String, region: String, district: String, conscription: String, orientation: String, phone: String, mobile: String, birthDate: String, gender: String) -> Unit
+    onSave: (first: String, last: String, email: String, prefix: String, suffix: String, csts: String, wdsf: String, nid: String, nationality: String, street: String, city: String, postal: String, region: String, district: String, conscription: String, orientation: String, phone: String, mobile: String, birthDate: String, gender: String) -> Unit
 ) {
     var first by remember(initialFirst) { mutableStateOf(initialFirst) }
     var last by remember(initialLast) { mutableStateOf(initialLast) }
-    var bio by remember(initialBio) { mutableStateOf(initialBio) }
     var email by remember(initialEmail) { mutableStateOf(initialEmail) }
     var prefix by remember(initialPrefix) { mutableStateOf(initialPrefix) }
     var suffix by remember(initialSuffix) { mutableStateOf(initialSuffix) }
@@ -206,7 +204,6 @@ fun ChangePersonalDataDialog(
                 TextField(value = last, onValueChange = { last = it }, label = { Text(strings.lastName) }, singleLine = true)
                 TextField(value = prefix, onValueChange = { prefix = it }, label = { Text(strings.prefixTitle) }, singleLine = true)
                 TextField(value = suffix, onValueChange = { suffix = it }, label = { Text(strings.suffixTitle) }, singleLine = true)
-                TextField(value = bio, onValueChange = { bio = it }, label = { Text(strings.aboutMe) })
                 TextField(value = email, onValueChange = { email = it }, label = { Text(strings.email) }, singleLine = true)
                 TextField(value = csts, onValueChange = { csts = it }, label = { Text(strings.cstsId) }, singleLine = true)
                 TextField(value = wdsf, onValueChange = { wdsf = it }, label = { Text(strings.wdsfId) }, singleLine = true)
@@ -330,7 +327,6 @@ fun ChangePersonalDataDialog(
                         } else {
                             val genderIso = labelToIso(gender)
                             val req = com.tkolymp.shared.user.PersonUpdateRequest(
-                                bio = bio,
                                 cstsId = csts,
                                 email = email,
                                 firstName = first,
@@ -358,7 +354,7 @@ fun ChangePersonalDataDialog(
                             val ok = try { ServiceLocator.userService.updatePerson(pid, req) } catch (e: CancellationException) { throw e } catch (ex: Exception) { false }
                             if (ok) {
                                 onSave(
-                                    first.trim(), last.trim(), bio.trim(), email.trim(), prefix.trim(), suffix.trim(), csts.trim(), wdsf.trim(), nid.trim(), nationalityId.trim(),
+                                    first.trim(), last.trim(), email.trim(), prefix.trim(), suffix.trim(), csts.trim(), wdsf.trim(), nid.trim(), nationalityId.trim(),
                                     street.trim(), city.trim(), postal.trim(), region.trim(), district.trim(), conscription.trim(), orientation.trim(),
                                     phone.trim(), mobile.trim(), birth.trim(), gender.trim()
                                 )

@@ -93,7 +93,7 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
     suspend fun fetchAndStorePersonDetails(personId: String): JsonObject? {
         // Try sending id as numeric BigInt when possible (server expects BigInt)
         val idLong = personId.toLongOrNull()
-        val baseSelection = "person(id: \$id) { id bio birthDate lastName firstName email phone prefixTitle suffixTitle wdsfId cstsId gender isTrainer nationality nationalIdNumber address { city conscriptionNumber district orientationNumber postalCode region street } activeCouplesList { id man { firstName lastName } woman { firstName lastName } } cohortMembershipsList { cohort { id colorRgb name isVisible } since until } }"
+        val baseSelection = "person(id: \$id) { id birthDate lastName firstName email phone prefixTitle suffixTitle wdsfId cstsId gender isTrainer nationality nationalIdNumber address { city conscriptionNumber district orientationNumber postalCode region street } activeCouplesList { id man { firstName lastName } woman { firstName lastName } } cohortMembershipsList { cohort { id colorRgb name isVisible } since until } }"
 
         var query: String
         var variables: JsonObject
@@ -151,7 +151,7 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
         val address = addrObj?.let { a ->
             AddressDetails(street = a["street"]?.jsonPrimitive?.contentOrNull, city = a["city"]?.jsonPrimitive?.contentOrNull, postalCode = a["postalCode"]?.jsonPrimitive?.contentOrNull, region = a["region"]?.jsonPrimitive?.contentOrNull, district = a["district"]?.jsonPrimitive?.contentOrNull, conscriptionNumber = a["conscriptionNumber"]?.jsonPrimitive?.contentOrNull, orientationNumber = a["orientationNumber"]?.jsonPrimitive?.contentOrNull)
         }
-        PersonDetails(id = id, firstName = p["firstName"]?.jsonPrimitive?.contentOrNull, lastName = p["lastName"]?.jsonPrimitive?.contentOrNull, prefixTitle = p["prefixTitle"]?.jsonPrimitive?.contentOrNull, suffixTitle = p["suffixTitle"]?.jsonPrimitive?.contentOrNull, birthDate = p["birthDate"]?.jsonPrimitive?.contentOrNull, bio = p["bio"]?.jsonPrimitive?.contentOrNull, cstsId = p["cstsId"]?.jsonPrimitive?.contentOrNull, email = p["email"]?.jsonPrimitive?.contentOrNull, gender = p["gender"]?.jsonPrimitive?.contentOrNull, isTrainer = p["isTrainer"]?.jsonPrimitive?.contentOrNull?.let { it == "true" }, phone = p["phone"]?.jsonPrimitive?.contentOrNull, wdsfId = p["wdsfId"]?.jsonPrimitive?.contentOrNull, activeCouplesList = couplesArr, cohortMembershipsList = memberships, rawResponse = Json.parseToJsonElement(jsonStr), address = address, nationality = p["nationality"]?.jsonPrimitive?.contentOrNull, nationalIdNumber = p["nationalIdNumber"]?.jsonPrimitive?.contentOrNull)
+        PersonDetails(id = id, firstName = p["firstName"]?.jsonPrimitive?.contentOrNull, lastName = p["lastName"]?.jsonPrimitive?.contentOrNull, prefixTitle = p["prefixTitle"]?.jsonPrimitive?.contentOrNull, suffixTitle = p["suffixTitle"]?.jsonPrimitive?.contentOrNull, birthDate = p["birthDate"]?.jsonPrimitive?.contentOrNull, cstsId = p["cstsId"]?.jsonPrimitive?.contentOrNull, email = p["email"]?.jsonPrimitive?.contentOrNull, gender = p["gender"]?.jsonPrimitive?.contentOrNull, isTrainer = p["isTrainer"]?.jsonPrimitive?.contentOrNull?.let { it == "true" }, phone = p["phone"]?.jsonPrimitive?.contentOrNull, wdsfId = p["wdsfId"]?.jsonPrimitive?.contentOrNull, activeCouplesList = couplesArr, cohortMembershipsList = memberships, rawResponse = Json.parseToJsonElement(jsonStr), address = address, nationality = p["nationality"]?.jsonPrimitive?.contentOrNull, nationalIdNumber = p["nationalIdNumber"]?.jsonPrimitive?.contentOrNull)
     } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
 
     private fun parseStoredCurrentUser(jsonStr: String): CurrentUser? = try {
@@ -189,7 +189,6 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
                 else put(name, JsonPrimitive(value))
             }
 
-            addStringField("bio", request.bio)
             addStringField("cstsId", request.cstsId)
             addStringField("email", request.email)
             addStringField("firstName", request.firstName)
@@ -257,7 +256,6 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
 }
 
 data class PersonUpdateRequest(
-    val bio: String? = null,
     val cstsId: String? = null,
     val email: String? = null,
     val firstName: String? = null,

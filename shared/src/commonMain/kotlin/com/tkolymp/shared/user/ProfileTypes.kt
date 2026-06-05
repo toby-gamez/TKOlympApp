@@ -11,7 +11,6 @@ data class CohortDisplay(val name: String, val colorRgb: String?, val since: Str
 
 data class ProfileDerivedState(
     val titleText: String?,
-    val bioText: String?,
     val addrText: String?,
     val emailText: String?,
     val activeCoupleNames: List<String>,
@@ -78,7 +77,6 @@ fun deriveProfileState(person: PersonDetails?, currentUser: CurrentUser?, couple
 
     val titleText = listOfNotNull(person?.prefixTitle, person?.firstName, person?.lastName)
         .joinToString(" ").takeIf { it.isNotBlank() }
-    val bioText = person?.bio?.takeIf { it.isNotBlank() }
     val emailText = person?.email?.takeIf { it.isNotBlank() } ?: currentUser?.uEmail?.takeIf { it.isNotBlank() }
 
     val addressFields = person?.address?.let { a ->
@@ -101,7 +99,7 @@ fun deriveProfileState(person: PersonDetails?, currentUser: CurrentUser?, couple
     val currentUserFields = buildCurrentUserFieldList(currentUser)
 
     // Merge fields, excluding keys shown elsewhere
-    val excluded = setOf("prefixTitle", "firstName", "lastName", "bio", "address",
+    val excluded = setOf("prefixTitle", "firstName", "lastName", "address",
         "activeCouplesList", "cohortMembershipsList")
     val mergedFields = linkedMapOf<String, String>()
     personFields.forEach { (k: String, v: String) -> if (k !in excluded && v.isNotBlank()) mergedFields[k] = v }
@@ -125,7 +123,6 @@ fun deriveProfileState(person: PersonDetails?, currentUser: CurrentUser?, couple
 
     return ProfileDerivedState(
         titleText = titleText,
-        bioText = bioText,
         addrText = addrText,
         emailText = emailText,
         activeCoupleNames = activeCoupleNames,

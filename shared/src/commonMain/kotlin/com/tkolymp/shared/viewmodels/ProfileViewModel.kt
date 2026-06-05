@@ -22,7 +22,7 @@ data class ProfileState(
     val currentUser: CurrentUser? = null,
     val coupleIds: List<String> = emptyList(),
     val derived: ProfileDerivedState = ProfileDerivedState(
-        titleText = null, bioText = null, addrText = null, emailText = null,
+        titleText = null, addrText = null, emailText = null,
         activeCoupleNames = emptyList(), cohortItems = emptyList(),
         personFields = emptyList(), currentUserFields = emptyList(), addressFields = emptyList(),
         personalList = emptyList(), contactList = emptyList(), externalList = emptyList(), otherList = emptyList()

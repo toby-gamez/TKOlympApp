@@ -67,7 +67,6 @@ class PersonViewModel(
                             prefixTitle = prefix,
                             suffixTitle = suffix,
                             birthDate = birth,
-                            bio = null,
                             cstsId = null,
                             email = null,
                             gender = null,
