@@ -109,7 +109,7 @@ class CalendarViewModel(
         if (onlyMineChanged && !forceRefresh && !isCurrentlyOnline) {
             try {
                 val bucketName = if (onlyMine) "MINE" else "ALL"
-                val weekKey = "offline_cal_${bucketName}_$weekStart"
+                val weekKey = OfflineKeys.CAL_PREFIX + "${bucketName}_$weekStart"
                 val raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(weekKey) } catch (_: Exception) { null }
                 if (raw != null) {
                     var parsed = parseCalendarJson(raw)
@@ -166,7 +166,7 @@ class CalendarViewModel(
             } catch (e: CancellationException) { throw e } catch (ex: Exception) {
                 // offline fallback
                 val bucketName = if (onlyMine) "MINE" else "ALL"
-                val weekKey = "offline_cal_${bucketName}_$weekStart"
+                val weekKey = OfflineKeys.CAL_PREFIX + "${bucketName}_$weekStart"
                 val raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(weekKey) } catch (_: Exception) { null }
                 if (raw != null) {
                     var parsed = parseCalendarJson(raw)
@@ -182,7 +182,7 @@ class CalendarViewModel(
                 if (map.isEmpty()) {
                 try {
                     val bucketName = if (onlyMine) "MINE" else "ALL"
-                    val weekKey = "offline_cal_${bucketName}_$weekStart"
+                    val weekKey = OfflineKeys.CAL_PREFIX + "${bucketName}_$weekStart"
                     val raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(weekKey) } catch (_: Exception) { null }
                     if (raw != null) {
                         var parsed = parseCalendarJson(raw)

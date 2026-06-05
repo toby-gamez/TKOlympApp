@@ -36,6 +36,7 @@ import com.tkolymp.shared.json.AppJson
 import com.tkolymp.shared.event.EventType
 import com.tkolymp.shared.utils.AppConstants
 import com.tkolymp.shared.calendar.parseCalendarJson
+import com.tkolymp.shared.sync.OfflineKeys
 
 /**
  * ViewModel for CalendarView screen
@@ -118,13 +119,13 @@ class CalendarViewViewModel(
                 try {
                     val bucketName = if (currentState.showOnlyMine) "MINE" else "ALL"
                     val startDate = timeRange.start.date
-                    val weekKey = "offline_cal_${bucketName}_${startDate}"
+                    val weekKey = OfflineKeys.CAL_PREFIX + "${bucketName}_${startDate}"
                     var raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(weekKey) } catch (_: Exception) { null }
                     if (raw == null) {
                         // try to find any compatible offline_cal_* key for this bucket (some buckets use different suffixes)
                         try {
                             val keys = try { ServiceLocator.offlineSyncManager.listOfflineKeys() } catch (_: Exception) { emptySet() }
-                            val candidates = keys.filter { it.startsWith("offline_cal_${bucketName}_") }
+                            val candidates = keys.filter { it.startsWith(OfflineKeys.CAL_PREFIX + "${bucketName}_") }
                             // prefer exact weekStart match
                             val exact = candidates.firstOrNull { it.endsWith(startDate.toString()) }
                             val anyKey = exact ?: candidates.firstOrNull()
@@ -196,12 +197,12 @@ class CalendarViewViewModel(
                 try {
                     val bucketName = if (currentState.showOnlyMine) "MINE" else "ALL"
                     val startDate = timeRange.start.date
-                    val weekKey = "offline_cal_${bucketName}_${startDate}"
+                    val weekKey = OfflineKeys.CAL_PREFIX + "${bucketName}_${startDate}"
                     var raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(weekKey) } catch (_: Exception) { null }
                     if (raw == null) {
                         try {
                             val keys = try { ServiceLocator.offlineSyncManager.listOfflineKeys() } catch (_: Exception) { emptySet() }
-                            val candidates = keys.filter { it.startsWith("offline_cal_${bucketName}_") }
+                            val candidates = keys.filter { it.startsWith(OfflineKeys.CAL_PREFIX + "${bucketName}_") }
                             val exact = candidates.firstOrNull { it.endsWith(startDate.toString()) }
                             val anyKey = exact ?: candidates.firstOrNull()
                             if (anyKey != null) raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(anyKey) } catch (_: Exception) { null }
@@ -224,13 +225,13 @@ class CalendarViewViewModel(
                 try {
                     val bucketName = if (currentState.showOnlyMine) "MINE" else "ALL"
                     val startDate = timeRange.start.date
-                    val weekKey = "offline_cal_${bucketName}_${startDate}"
+                    val weekKey = OfflineKeys.CAL_PREFIX + "${bucketName}_${startDate}"
                     var raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(weekKey) } catch (_: Exception) { null }
                     if (raw == null) {
                         // try to find any compatible offline_cal_* key for this bucket
                         try {
                             val keys = try { ServiceLocator.offlineSyncManager.listOfflineKeys() } catch (_: Exception) { emptySet() }
-                            val candidates = keys.filter { it.startsWith("offline_cal_${bucketName}_") }
+                            val candidates = keys.filter { it.startsWith(OfflineKeys.CAL_PREFIX + "${bucketName}_") }
                             val exact = candidates.firstOrNull { it.endsWith(startDate.toString()) }
                             val anyKey = exact ?: candidates.firstOrNull()
                             if (anyKey != null) raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(anyKey) } catch (_: Exception) { null }

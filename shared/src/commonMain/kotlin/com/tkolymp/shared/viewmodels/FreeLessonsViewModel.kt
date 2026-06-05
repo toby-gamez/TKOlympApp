@@ -23,7 +23,6 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
-import kotlinx.serialization.json.Json
 import com.tkolymp.shared.json.AppJson
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
@@ -418,13 +417,13 @@ class FreeLessonsViewModel(
         // Prefer direct week keys, but also scan all stored keys for matches if keys are present under different formats
         val candidateKeys = mutableSetOf<String>()
         // direct keys from computed weekStarts
-        weekStarts.forEach { ws -> candidateKeys.add("offline_cal_${bucket.name}_$ws") }
+        weekStarts.forEach { ws -> candidateKeys.add(OfflineKeys.CAL_PREFIX + "${bucket.name}_$ws") }
 
         // add any matching keys from storage (robustness for different week formats)
         try {
             val all = offlineDataStorage.allKeys()
             all.forEach { k ->
-                if (k.startsWith("offline_cal_${bucket.name}_")) candidateKeys.add(k)
+                if (k.startsWith(OfflineKeys.CAL_PREFIX + "${bucket.name}_")) candidateKeys.add(k)
             }
             if (candidateKeys.isEmpty()) Logger.d(TAG, "loadGroupedFromOffline: no offline_cal keys for ${bucket.name}")
             else Logger.d(TAG, "loadGroupedFromOffline: candidateKeys=${candidateKeys}")
@@ -456,7 +455,7 @@ class FreeLessonsViewModel(
 
     suspend fun debugOfflineCalendarSummary(): Map<String, Int> = try {
         val all = try { offlineDataStorage.allKeys() } catch (_: Exception) { emptySet<String>() }
-        val calKeys = all.filter { it.startsWith("offline_cal_") }
+        val calKeys = all.filter { it.startsWith(OfflineKeys.CAL_PREFIX) }
         val map = mutableMapOf<String, Int>()
         calKeys.forEach { k ->
             try {

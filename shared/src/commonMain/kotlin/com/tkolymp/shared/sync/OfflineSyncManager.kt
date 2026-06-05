@@ -253,7 +253,7 @@ class OfflineSyncManager(
             non.take(10).forEach { ann ->
                 try {
                     ann.id.toLongOrNull()?.let { id ->
-                        offlineDataStorage.save("offline_ann_body_${id}", AppJson.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), buildJsonObject { put("id", JsonPrimitive(ann.id)); put("title", JsonPrimitive(ann.title ?: "")); put("body", JsonPrimitive(ann.body ?: "")); put("updatedAt", JsonPrimitive(ann.updatedAt ?: "")) }))
+                        offlineDataStorage.save(OfflineKeys.announcementBody(id), AppJson.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), buildJsonObject { put("id", JsonPrimitive(ann.id)); put("title", JsonPrimitive(ann.title ?: "")); put("body", JsonPrimitive(ann.body ?: "")); put("updatedAt", JsonPrimitive(ann.updatedAt ?: "")) }))
                     }
                 } catch (_: Exception) {}
             }
@@ -322,7 +322,7 @@ class OfflineSyncManager(
     }
 
     suspend fun loadEventDetail(id: Long): String? {
-        return offlineDataStorage.load("offline_event_$id")
+        return offlineDataStorage.load(OfflineKeys.eventDetail(id))
     }
 
     suspend fun loadAnnouncements(sticky: Boolean): String? {
@@ -331,12 +331,12 @@ class OfflineSyncManager(
     }
 
     suspend fun loadAnnouncementDetail(id: Long): String? {
-        return offlineDataStorage.load("offline_ann_body_$id")
+        return offlineDataStorage.load(OfflineKeys.announcementBody(id))
     }
 
     suspend fun loadPeople(): String? = offlineDataStorage.load(OfflineKeys.PEOPLE)
 
-    suspend fun loadClub(): String? = try { offlineDataStorage.load("offline_club") } catch (_: Exception) { null }
+    suspend fun loadClub(): String? = try { offlineDataStorage.load(OfflineKeys.CLUB) } catch (_: Exception) { null }
 
     suspend fun loadClubCohorts(): String? = try { offlineDataStorage.load(OfflineKeys.CLUB_COHORTS) } catch (_: Exception) { null }
 
@@ -349,7 +349,7 @@ class OfflineSyncManager(
     // Debug / inspection helpers for payments
     suspend fun loadPayments(): String? = try { offlineDataStorage.load(OfflineKeys.PAYMENTS) } catch (_: Exception) { null }
 
-    suspend fun loadPaymentsForPerson(personId: String): String? = try { offlineDataStorage.load("offline_payments_person_$personId") } catch (_: Exception) { null }
+    suspend fun loadPaymentsForPerson(personId: String): String? = try { offlineDataStorage.load(OfflineKeys.paymentsForPerson(personId)) } catch (_: Exception) { null }
 
     suspend fun listOfflineKeys(): Set<String> = try { offlineDataStorage.allKeys() } catch (_: Exception) { emptySet() }
 
@@ -539,7 +539,7 @@ class OfflineSyncManager(
                 }
                 val encodedBoard = AppJson.encodeToString(JsonArray.serializer(), boardJson)
                 try {
-                    offlineDataStorage.save("offline_scoreboard_${since}_$until", encodedBoard)
+                    offlineDataStorage.save(OfflineKeys.scoreboard(since, until), encodedBoard)
                     Logger.d("OfflineSyncManager", "downloadAll: saved offline_scoreboard entries=${board.size}")
                 } catch (ex: Exception) {
                     Logger.d("OfflineSyncManager", "downloadAll: save offline_scoreboard failed: ${ex.message}")
