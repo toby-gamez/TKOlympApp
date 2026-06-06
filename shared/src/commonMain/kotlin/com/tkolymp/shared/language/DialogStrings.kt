@@ -11,4 +11,6 @@ data class DialogStrings(
     val selectDate: String,
     val selected: String,
     val noName: String,
+    val barcodeInfoTitle: String,
+    val barcodeInfoText: String,
 )

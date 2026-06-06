@@ -114,11 +114,15 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
         }
 
         val data = resp.jsonObject["data"]?.jsonObject?.get("person")?.jsonObject
-        if (data != null) storage.savePersonDetailsJson(data.toString())
+        if (data != null) {
+            storage.savePersonDetailsJson(data.toString())
+            data["cstsId"]?.jsonPrimitive?.contentOrNull?.let { storage.saveCstsId(it) }
+        }
         return data
     }
 
     suspend fun getCachedPersonId(): String? = storage.getPersonId()
+    suspend fun getCachedCstsId(): String? = storage.getCstsId()
     suspend fun getCachedCoupleIds(): List<String> = storage.getCoupleIds()
     suspend fun getCachedCurrentUserJson(): String? = storage.getCurrentUserJson()
     suspend fun getCachedPersonDetailsJson(): String? = storage.getPersonDetailsJson()

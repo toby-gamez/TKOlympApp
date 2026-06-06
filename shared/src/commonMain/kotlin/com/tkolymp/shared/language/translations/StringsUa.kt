@@ -405,6 +405,8 @@ val StringsUa = Strings(
         selectDate = "Оберіть дату",
         selected = "Вибрано",
         noName = "(без назви)",
+        barcodeInfoTitle = "Перевірка на змаганні",
+        barcodeInfoText = "Цей код ідентичний тому, що ви отримуєте через офіційний сайт. Використовується для підтвердження особи при реєстрації на змаганнях ČSTS.",
     ),
     errorMessages = ErrorMessageStrings(
         errorLogin = "Неправильне ім'я користувача або пароль",

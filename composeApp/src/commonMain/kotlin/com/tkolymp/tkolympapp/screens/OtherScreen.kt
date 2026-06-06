@@ -27,7 +27,9 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -103,6 +105,7 @@ fun OtherScreen(
     onPrivacyClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
     onPersonalEventsClick: () -> Unit = {},
+    onBarcodeClick: () -> Unit = {},
     bottomPadding: Dp = 0.dp
 ) {
     val viewModel = viewModel<OtherViewModel>()
@@ -173,6 +176,16 @@ fun OtherScreen(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
                                 modifier = Modifier.padding(top = 2.dp)
+                            )
+                        }
+                    }
+
+                    if (state.cstsId != null) {
+                        IconButton(onClick = onBarcodeClick) {
+                            Icon(
+                                imageVector = Icons.Filled.QrCode2,
+                                contentDescription = "Barcode",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }

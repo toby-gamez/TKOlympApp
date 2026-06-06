@@ -405,6 +405,8 @@ val StringsDe = Strings(
         selectDate = "Datum auswählen",
         selected = "Ausgewählt",
         noName = "(unbenannt)",
+        barcodeInfoTitle = "Nachweis bei der Veranstaltung",
+        barcodeInfoText = "Dieser Code ist identisch mit dem, den Sie über die offiziellen Seiten erhalten. Er dient als Nachweis bei der Anmeldung zu ČSTS-Wettkämpfen.",
     ),
     errorMessages = ErrorMessageStrings(
         errorLogin = "Benutzername oder Passwort falsch",

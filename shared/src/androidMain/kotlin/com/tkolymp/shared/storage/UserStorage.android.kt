@@ -19,6 +19,15 @@ actual class UserStorage actual constructor(platformContext: Any) : IUserStorage
         return value.takeIf { it.isNotEmpty() }
     }
 
+    actual override suspend fun saveCstsId(cstsId: String) {
+        ksafe.put("csts_id", cstsId)
+    }
+
+    actual override suspend fun getCstsId(): String? {
+        val value = ksafe.get("csts_id", "")
+        return value.takeIf { it.isNotEmpty() }
+    }
+
     actual override suspend fun saveCoupleIds(coupleIds: List<String>) {
         ksafe.put("couple_ids", Json.encodeToString(ListSerializer(String.serializer()), coupleIds))
     }
@@ -53,6 +62,7 @@ actual class UserStorage actual constructor(platformContext: Any) : IUserStorage
 
     actual override suspend fun clear() {
         ksafe.delete("person_id")
+        ksafe.delete("csts_id")
         ksafe.delete("couple_ids")
         ksafe.delete("current_user_json")
         ksafe.delete("person_details_json")

@@ -56,6 +56,7 @@ import com.tkolymp.shared.language.getDeviceLanguageCode
 import com.tkolymp.shared.registration.RegMode
 import com.tkolymp.shared.viewmodels.OnboardingViewModel
 import com.tkolymp.tkolympapp.screens.AboutScreen
+import com.tkolymp.tkolympapp.screens.BarcodeScreen
 import com.tkolymp.tkolympapp.screens.BirthdayNotificationsScreen
 import com.tkolymp.tkolympapp.screens.BoardScreen
 import com.tkolymp.tkolympapp.screens.CalendarScreen
@@ -400,8 +401,19 @@ fun AppNavHost(
                 onPrivacyClick = { navController.navigate("privacy") },
                 onSettingsClick = { navController.navigate("settings") },
                 onPersonalEventsClick = { navController.navigate("personal_events") },
+                onBarcodeClick = { navController.navigate("barcode") },
                 bottomPadding = bottomPadding
             )
+        }
+
+        composable(
+            route = "barcode",
+            enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
+            exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
+            popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) },
+            popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) }
+        ) {
+            BarcodeScreen(onBack = { navController.navigateUp() })
         }
 
         composable(

@@ -405,6 +405,8 @@ val StringsEn = Strings(
         selectDate = "Select date",
         selected = "Selected",
         noName = "(no name)",
+        barcodeInfoTitle = "Verification at Competition",
+        barcodeInfoText = "This code is identical to the one you receive through the official website. It is used for identification at the ČSTS competition registration.",
     ),
     errorMessages = ErrorMessageStrings(
         errorLogin = "Incorrect username or password",

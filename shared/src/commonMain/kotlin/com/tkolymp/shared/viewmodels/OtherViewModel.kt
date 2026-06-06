@@ -15,6 +15,7 @@ data class OtherState(
     val name: String? = null,
     val subtitle: String? = null,
     val personId: String? = null,
+    val cstsId: String? = null,
     val coupleIds: List<String> = emptyList(),
     val rawJson: String? = null,
     val personDetailsRaw: String? = null,
@@ -39,6 +40,7 @@ class OtherViewModel(
             try {
                 val raw = try { userService.getCachedCurrentUserJson() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                 val pid = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                val cstsId = try { userService.getCachedCstsId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                 val cids = try { userService.getCachedCoupleIds() } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList<String>() }
                 var personDetails = try { userService.getCachedPersonDetailsJson() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
 
@@ -92,6 +94,7 @@ class OtherViewModel(
                     name = name,
                     subtitle = subtitle,
                     personId = pid,
+                    cstsId = cstsId,
                     coupleIds = cids,
                     rawJson = raw,
                     personDetailsRaw = personDetails,

@@ -406,6 +406,8 @@ val StringsBrainrot = Strings(
         selectDate = "Pick a date fr",
         selected = "Selected fr",
         noName = "(nameless fr)",
+        barcodeInfoTitle = "Proof at the slay event bestie",
+        barcodeInfoText = "This code is literally the same as the one from the official sigma pages fr fr. Use it to prove ur not mid at the ČSTS competition check-in no cap.",
     ),
     errorMessages = ErrorMessageStrings(
         errorLogin = "wrong username or password no cap",

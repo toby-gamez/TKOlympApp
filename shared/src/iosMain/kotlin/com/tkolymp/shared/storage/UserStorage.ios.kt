@@ -36,6 +36,12 @@ actual class UserStorage actual constructor(platformContext: Any) {
 
     actual suspend fun getPersonId(): String? = keychainGet("person_id")
 
+    actual suspend fun saveCstsId(cstsId: String) {
+        keychainSave("csts_id", cstsId)
+    }
+
+    actual suspend fun getCstsId(): String? = keychainGet("csts_id")
+
     actual suspend fun saveCoupleIds(coupleIds: List<String>) {
         keychainSave("couple_ids", coupleIds.joinToString(","))
     }
@@ -58,7 +64,7 @@ actual class UserStorage actual constructor(platformContext: Any) {
     actual suspend fun getPersonDetailsJson(): String? = keychainGet("person_details_json")
 
     actual suspend fun clear() {
-        listOf("person_id", "couple_ids", "current_user_json", "person_details_json")
+        listOf("person_id", "csts_id", "couple_ids", "current_user_json", "person_details_json")
             .forEach { keychainDelete(it) }
     }
 

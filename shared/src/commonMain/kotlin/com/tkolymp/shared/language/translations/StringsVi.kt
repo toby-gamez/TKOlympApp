@@ -405,6 +405,8 @@ val StringsVi = Strings(
         selectDate = "Chọn ngày",
         selected = "Đã chọn",
         noName = "(không có tên)",
+        barcodeInfoTitle = "Xác minh tại giải đấu",
+        barcodeInfoText = "Mã này giống với mã bạn nhận được qua trang web chính thức. Dùng để xác nhận danh tính khi đăng ký tại giải đấu ČSTS.",
     ),
     errorMessages = ErrorMessageStrings(
         errorLogin = "Tên đăng nhập hoặc mật khẩu không đúng",

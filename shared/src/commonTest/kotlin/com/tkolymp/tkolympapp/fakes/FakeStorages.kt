@@ -19,12 +19,15 @@ class FakeTokenStorage(private var token: String? = null) : ITokenStorage {
 
 class FakeUserStorage : IUserStorage {
     private var personId: String? = null
+    private var cstsId: String? = null
     private var coupleIds: List<String> = emptyList()
     private var currentUserJson: String? = null
     private var personDetailsJson: String? = null
 
     override suspend fun savePersonId(personId: String) { this.personId = personId }
     override suspend fun getPersonId(): String? = personId
+    override suspend fun saveCstsId(cstsId: String) { this.cstsId = cstsId }
+    override suspend fun getCstsId(): String? = cstsId
     override suspend fun saveCoupleIds(coupleIds: List<String>) { this.coupleIds = coupleIds }
     override suspend fun getCoupleIds(): List<String> = coupleIds
     override suspend fun saveCurrentUserJson(json: String) { this.currentUserJson = json }
@@ -32,7 +35,7 @@ class FakeUserStorage : IUserStorage {
     override suspend fun savePersonDetailsJson(json: String) { this.personDetailsJson = json }
     override suspend fun getPersonDetailsJson(): String? = personDetailsJson
     override suspend fun clear() {
-        personId = null; coupleIds = emptyList()
+        personId = null; cstsId = null; coupleIds = emptyList()
         currentUserJson = null; personDetailsJson = null
     }
 }

@@ -405,6 +405,8 @@ val StringsCs = Strings(
         selectDate = "Vybrat datum",
         selected = "Vybráno",
         noName = "(bez názvu)",
+        barcodeInfoTitle = "Ověření na soutěži",
+        barcodeInfoText = "Tento kód je identický s tím, který dostanete přes oficiální stránky. Slouží k prokazování se u prezence soutěže ČSTS.",
     ),
     errorMessages = ErrorMessageStrings(
         errorLogin = "Špatné jméno nebo heslo",
