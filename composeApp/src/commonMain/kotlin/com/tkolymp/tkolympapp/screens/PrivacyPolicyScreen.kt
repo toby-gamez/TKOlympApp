@@ -12,7 +12,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
@@ -23,6 +31,13 @@ import com.tkolymp.shared.language.AppStrings
 @Composable
 fun PrivacyPolicyScreen(onBack: () -> Unit = {}) {
     val scrollState = rememberScrollState()
+    var contentVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { contentVisible = true }
+    val contentAlpha by animateFloatAsState(
+        targetValue = if (contentVisible) 1f else 0f,
+        animationSpec = tween(300),
+        label = "privacyFade"
+    )
     Scaffold(
         topBar = {
             TopAppBar(
@@ -41,6 +56,7 @@ fun PrivacyPolicyScreen(onBack: () -> Unit = {}) {
                 .padding(padding)
                 .verticalScroll(scrollState)
                 .padding(16.dp)
+                .graphicsLayer { alpha = contentAlpha }
         ) {
             Text(AppStrings.current.privacy.effectiveDate, style = MaterialTheme.typography.bodySmall)
             Text(AppStrings.current.privacy.summaryTitle, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))

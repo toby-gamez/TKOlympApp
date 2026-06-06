@@ -185,7 +185,8 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                 label = "eventsTabContent"
             ) { tab ->
                 var sectionsVisible by remember { mutableStateOf(false) }
-                LaunchedEffect(tab, state.eventsByDay) { sectionsVisible = false; sectionsVisible = true }
+                LaunchedEffect(tab) { sectionsVisible = false }
+                LaunchedEffect(tab, state.eventsByDay.isNotEmpty()) { if (state.eventsByDay.isNotEmpty()) sectionsVisible = true }
 
                 Column(modifier = Modifier
                     .fillMaxSize()

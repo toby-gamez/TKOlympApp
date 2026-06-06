@@ -168,13 +168,13 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
                     label = "boardTabContent"
                 ) { tab ->
                     var listVisible by remember { mutableStateOf(false) }
-                    LaunchedEffect(tab) { listVisible = false; listVisible = true }
-
+                    LaunchedEffect(tab) { listVisible = false }
                     val announcements = if (tab == 1) {
                         state.permanentAnnouncements
                     } else {
                         state.currentAnnouncements
                     }
+                    LaunchedEffect(tab, announcements.isNotEmpty()) { if (announcements.isNotEmpty()) listVisible = true }
                     val filtered = announcements.filter { a ->
                         val q = searchQuery.trim()
                         if (q.isBlank()) return@filter true

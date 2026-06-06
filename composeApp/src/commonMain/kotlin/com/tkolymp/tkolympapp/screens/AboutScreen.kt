@@ -20,6 +20,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import com.tkolymp.tkolympapp.util.StaggeredItem
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.SpanStyle
@@ -48,6 +54,9 @@ fun AboutScreen(onBack: () -> Unit = {}, appVersionName: String? = null, appVers
             )
         }
     ) { padding ->
+        var contentVisible by remember { mutableStateOf(false) }
+        LaunchedEffect(Unit) { contentVisible = true }
+
         val scrollState = rememberScrollState()
         Column(
             modifier = Modifier
@@ -59,6 +68,7 @@ fun AboutScreen(onBack: () -> Unit = {}, appVersionName: String? = null, appVers
             Text("TK Olymp", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 8.dp, bottom = 4.dp))
             Text("${AppStrings.current.misc.appVersion} ${appVersionName ?: "?"} (Build ${appVersionCode ?: "?"})", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 12.dp))
 
+            StaggeredItem(index = 0, visible = contentVisible, baseDelayMs = 60) {
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(text = AppStrings.current.about.appDescriptionTitle, style = MaterialTheme.typography.labelLarge)
@@ -66,7 +76,9 @@ fun AboutScreen(onBack: () -> Unit = {}, appVersionName: String? = null, appVers
                     Text(text = AppStrings.current.about.appDescriptionText, modifier = Modifier.padding(top = 6.dp))
                 }
             }
+            }
 
+            StaggeredItem(index = 1, visible = contentVisible, baseDelayMs = 60) {
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
                 Text(AppStrings.current.misc.licenseInfo, style = MaterialTheme.typography.labelLarge)
@@ -74,7 +86,9 @@ fun AboutScreen(onBack: () -> Unit = {}, appVersionName: String? = null, appVers
                     Text(text = AppStrings.current.about.appLicenseText, modifier = Modifier.padding(top = 6.dp))
                 }
             }
+            }
 
+            StaggeredItem(index = 2, visible = contentVisible, baseDelayMs = 60) {
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(text = AppStrings.current.about.authorsAndContributors, style = MaterialTheme.typography.labelLarge)
@@ -102,7 +116,9 @@ fun AboutScreen(onBack: () -> Unit = {}, appVersionName: String? = null, appVers
                     )
                 }
             }
+            }
 
+            StaggeredItem(index = 3, visible = contentVisible, baseDelayMs = 60) {
             Text(
                 text = AppStrings.current.about.brainrotDisclaimer,
                 fontStyle = FontStyle.Italic,
@@ -116,6 +132,7 @@ fun AboutScreen(onBack: () -> Unit = {}, appVersionName: String? = null, appVers
                 style = MaterialTheme.typography.bodySmall,
                 textAlign = TextAlign.Center
             )
+            }
         }
     }
 }

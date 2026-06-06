@@ -147,7 +147,7 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                             }
 
                             var entranceVisible by remember { mutableStateOf(false) }
-                            LaunchedEffect(Unit) { entranceVisible = true }
+                            LaunchedEffect(state.rankings.isNotEmpty()) { if (state.rankings.isNotEmpty()) entranceVisible = true }
 
                             LazyColumn(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Top) {
                                 itemsIndexed(displayed, key = { _, item -> item.personId ?: item.hashCode() }) { index, item ->
@@ -159,12 +159,10 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                                         3 -> CardDefaults.cardColors(containerColor = Color(0xFFCD7F32).copy(alpha = 0.12f))
                                         else -> CardDefaults.cardColors()
                                     }
-
-                                    val cardContent = @Composable {
+                                    StaggeredItem(index = index, visible = entranceVisible, baseDelayMs = 40, durationMs = 250, modifier = Modifier.animateItem()) {
                                         Card(
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .animateItem()
                                                 .padding(horizontal = 12.dp, vertical = 4.dp),
                                             shape = RoundedCornerShape(16.dp),
                                             colors = colors
@@ -192,13 +190,6 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                                                 }
                                             }
                                         }
-                                    }
-                                    if (isTop) {
-                                        StaggeredItem(index = rank - 1, visible = entranceVisible, baseDelayMs = 80, durationMs = 300) {
-                                            cardContent()
-                                        }
-                                    } else {
-                                        cardContent()
                                     }
                                 }
                             }

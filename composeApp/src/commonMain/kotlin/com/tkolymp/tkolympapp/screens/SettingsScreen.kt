@@ -45,6 +45,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -57,6 +58,7 @@ import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.appearance.ThemeMode
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.SettingsViewModel
+import com.tkolymp.tkolympapp.util.StaggeredItem
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,8 +78,11 @@ fun SettingsScreen(
     val progressDone = remember { mutableStateOf(0) }
     val progressTotal = remember { mutableStateOf(0) }
 
+    var itemsVisible by remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         viewModel.load()
+        itemsVisible = true
     }
 
     Scaffold(
@@ -104,8 +109,9 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.Top
         ) {
             // Appearance
+            StaggeredItem(index = 0, visible = itemsVisible, baseDelayMs = 60) {
+            Column {
             SectionHeader(text = s.appearanceSection)
-
             SettingsCard {
                 SettingsRow(icon = Icons.Filled.LightMode, label = s.themeLabel, control = {
                     val modes = listOf(ThemeMode.SYSTEM, ThemeMode.LIGHT, ThemeMode.DARK)
@@ -122,10 +128,14 @@ fun SettingsScreen(
                     }
                 })
             }
+            }
+            } // StaggeredItem appearance
 
             Spacer(modifier = Modifier.height(16.dp))
 
             // Calendar
+            StaggeredItem(index = 1, visible = itemsVisible, baseDelayMs = 60) {
+            Column {
             SectionHeader(text = s.calendarSection)
             SettingsCard {
                 SettingsRow(icon = Icons.Filled.CalendarMonth, label = s.calendarDefaultView, control = {
@@ -159,11 +169,16 @@ fun SettingsScreen(
                 })
             }
 
+            }
+            } // StaggeredItem calendar
+
             Spacer(modifier = Modifier.height(16.dp))
 
             Spacer(modifier = Modifier.height(12.dp))
 
             // Language button — navigates via parent NavController
+            StaggeredItem(index = 2, visible = itemsVisible, baseDelayMs = 60) {
+            Column {
             SectionHeader(text = AppStrings.current.otherScreen.languages)
             SettingsCard {
                 SettingsRow(icon = Icons.Filled.Psychology, label = AppStrings.current.languageScreen.selectLanguage, control = {
@@ -172,10 +187,14 @@ fun SettingsScreen(
                     }
                 })
             }
+            }
+            } // StaggeredItem language
 
             Spacer(modifier = Modifier.height(12.dp))
 
             // Notifications settings — navigates via parent NavController
+            StaggeredItem(index = 3, visible = itemsVisible, baseDelayMs = 60) {
+            Column {
             SectionHeader(text = AppStrings.current.otherScreen.notificationSettings)
             SettingsCard {
                 SettingsRow(icon = Icons.Filled.Notifications, label = AppStrings.current.otherScreen.notificationSettings, control = {
@@ -184,8 +203,12 @@ fun SettingsScreen(
                     }
                 })
             }
+            }
+            } // StaggeredItem notifications
 
             // Offline download
+            StaggeredItem(index = 4, visible = itemsVisible, baseDelayMs = 60) {
+            Column {
             SectionHeader(text = s.offlineSection)
             SettingsCard {
                 SettingsRow(icon = Icons.Filled.ViewWeek, label = s.offlineDownloadLabel, control = {
@@ -207,6 +230,8 @@ fun SettingsScreen(
                     }) { Text(s.offlineDownloadButton) }
                 })
             }
+            }
+            } // StaggeredItem offline
 
             // Download progress dialog
             if (downloading.value) {

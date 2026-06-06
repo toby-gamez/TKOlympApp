@@ -90,7 +90,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
 
     val outerScroll = rememberScrollState()
     var sectionsVisible by remember { mutableStateOf(false) }
-    LaunchedEffect(profileState.isLoading) { if (!profileState.isLoading) sectionsVisible = true }
+    LaunchedEffect(Unit) { sectionsVisible = true }
 
     Scaffold(
         topBar = {

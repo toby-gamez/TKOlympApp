@@ -66,6 +66,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -112,6 +113,7 @@ fun CalendarScreen(
     val calendarViewModel = viewModel<com.tkolymp.shared.viewmodels.CalendarViewModel>()
     val calState by calendarViewModel.state.collectAsState()
     val scope = rememberCoroutineScope()
+    val keyboardController = LocalSoftwareKeyboardController.current
     val today = remember { kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault()) }
     // null → floating today-based view; non-null → a specific Monday chosen from the picker
     var customStartDate by remember { mutableStateOf<LocalDate?>(null) }
@@ -219,7 +221,8 @@ fun CalendarScreen(
                     modifier = Modifier.weight(1f)
                 ) { key ->
                     var datesVisible by remember { mutableStateOf(false) }
-                    LaunchedEffect(key) { datesVisible = false; datesVisible = true }
+                    LaunchedEffect(key) { datesVisible = false }
+                    LaunchedEffect(calState.visibleDates) { if (calState.visibleDates.isNotEmpty()) datesVisible = true }
 
                     val renderTab = key.first
                     Column(
@@ -292,8 +295,9 @@ fun CalendarScreen(
     if (showBottomSheet) {
         val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         ModalBottomSheet(
-            onDismissRequest = { showBottomSheet = false },
-            sheetState = sheetState
+            onDismissRequest = { keyboardController?.hide(); showBottomSheet = false },
+            sheetState = sheetState,
+            contentWindowInsets = { androidx.compose.foundation.layout.WindowInsets(0) },
         ) {
             CalendarBottomSheetContent(
                 today = today,
