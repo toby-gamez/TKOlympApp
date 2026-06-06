@@ -1,9 +1,19 @@
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -24,33 +34,39 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.ViewWeek
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ViewTimeline
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.IntOffset
+import com.tkolymp.tkolympapp.LocalBottomBarPadding
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.shared.utils.formatTimes
 import com.tkolymp.shared.utils.formatTimesWithDate
@@ -126,7 +142,12 @@ fun CalendarViewScreen(
     LaunchedEffect(Unit) {
         viewModel.loadEvents()
     }
-    
+
+    val showBottomSheet = remember { mutableStateOf(false) }
+    val sheetDragOffset = remember { Animatable(0f) }
+    LaunchedEffect(showBottomSheet.value) { if (showBottomSheet.value) sheetDragOffset.snapTo(0f) }
+
+    Box(modifier = Modifier.fillMaxSize()) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -139,32 +160,11 @@ fun CalendarViewScreen(
                     }
                 },
                 actions = {
-                    onSwitchToBlocks?.let {
-                        FilterChip(
-                            selected = false,
-                            onClick = it,
-                            label = { Text(AppStrings.current.settings.calendarViewList) },
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Default.ViewWeek,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(AssistChipDefaults.IconSize).rotate(90f)
-                                )
-                            },
-                            modifier = Modifier.padding(end = 4.dp)
-                        )
+                    IconButton(onClick = { showBottomSheet.value = true }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "Options")
                     }
                 }
             )
-        },
-        floatingActionButton = {
-            if (onFindFreeLessons != null) {
-                Box(modifier = Modifier.padding(bottom = bottomPadding)) {
-                    FloatingActionButton(onClick = { onFindFreeLessons.invoke() }) {
-                        Icon(Icons.Default.Search, contentDescription = "Najít volné lekce")
-                    }
-                }
-            }
         }
     ) { padding ->
     Column(
@@ -173,21 +173,17 @@ fun CalendarViewScreen(
             .padding(padding)
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Top bar with navigation and view mode selector
         CalendarTopBar(
             dateLabel = viewModel.getDateLabel(),
-            viewMode = state.viewMode,
             showOnlyMine = state.showOnlyMine,
             onPreviousClick = { scope.launch { viewModel.navigatePrevious() } },
             onNextClick = { scope.launch { viewModel.navigateNext() } },
             onTodayClick = { scope.launch { viewModel.navigateToday() } },
-            onViewModeChange = { mode -> scope.launch { viewModel.setViewMode(mode) } },
             onToggleOnlyMine = { scope.launch { viewModel.toggleShowOnlyMine() } }
         )
-        
+
         HorizontalDivider()
 
-        // Timeline view wrapped in swipe-to-refresh — keep UI visible during refresh
         SwipeToReload(
             isRefreshing = state.isLoading,
             onRefresh = { scope.launch { viewModel.loadEvents() } },
@@ -216,14 +212,10 @@ fun CalendarViewScreen(
                     }
                 }
             } else {
-                // Show timeline based on view mode
                 when (state.viewMode) {
                     ViewMode.DAY -> {
                         val layoutListToRender = if (state.layoutData.isEmpty() && state.isOffline && cachedLayout.value != null) cachedLayout.value.orEmpty() else state.layoutData.values.toList()
-
-                        // keep cached copy of last non-empty layout to avoid brief disappearance
                         LaunchedEffect(state.layoutData) { if (state.layoutData.isNotEmpty()) cachedLayout.value = state.layoutData.values.toList() }
-
                         SingleDayTimelineView(
                             events = layoutListToRender,
                             selectedDate = state.selectedDate,
@@ -242,6 +234,86 @@ fun CalendarViewScreen(
         }
     }
     }
+
+    // Scrim
+    AnimatedVisibility(
+        visible = showBottomSheet.value,
+        enter = fadeIn(tween(200)),
+        exit = fadeOut(tween(200))
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.32f))
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) { showBottomSheet.value = false }
+        )
+    }
+
+    // Inline bottom sheet — same window as Scaffold, no keyboard flash
+    AnimatedVisibility(
+        visible = showBottomSheet.value,
+        enter = slideInVertically(tween(300)) { it } + fadeIn(tween(200)),
+        exit = slideOutVertically(tween(300)) { it } + fadeOut(tween(200)),
+        modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth()
+    ) {
+        Surface(
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            modifier = Modifier
+                .fillMaxWidth()
+                .offset { IntOffset(0, sheetDragOffset.value.toInt().coerceAtLeast(0)) }
+                .pointerInput(Unit) {
+                    val dismissThreshold = 100.dp.toPx()
+                    detectVerticalDragGestures(
+                        onDragEnd = {
+                            if (sheetDragOffset.value > dismissThreshold) {
+                                showBottomSheet.value = false
+                            } else {
+                                scope.launch { sheetDragOffset.animateTo(0f, spring()) }
+                            }
+                        },
+                        onDragCancel = { scope.launch { sheetDragOffset.animateTo(0f, spring()) } },
+                        onVerticalDrag = { change, dragAmount ->
+                            change.consume()
+                            scope.launch { sheetDragOffset.snapTo(sheetDragOffset.value + dragAmount) }
+                        }
+                    )
+                }
+        ) {
+            Column {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) { showBottomSheet.value = false }
+                        .padding(top = 22.dp, bottom = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(32.dp)
+                            .height(4.dp)
+                            .background(
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                                RoundedCornerShape(50)
+                            )
+                    )
+                }
+                TimelineBottomSheetContent(
+                    viewMode = state.viewMode,
+                    onViewModeChange = { mode -> scope.launch { viewModel.setViewMode(mode) } },
+                    onSwitchToBlocks = onSwitchToBlocks?.let { sw -> { showBottomSheet.value = false; sw() } },
+                    onFindFreeLessons = onFindFreeLessons?.let { finder -> { showBottomSheet.value = false; finder() } }
+                )
+            }
+        }
+    }
+    } // Box
 }
 
 /**
@@ -250,82 +322,125 @@ fun CalendarViewScreen(
 @Composable
 internal fun CalendarTopBar(
     dateLabel: String,
-    viewMode: ViewMode,
     showOnlyMine: Boolean,
     onPreviousClick: () -> Unit,
     onNextClick: () -> Unit,
     onTodayClick: () -> Unit,
-    onViewModeChange: (ViewMode) -> Unit,
     onToggleOnlyMine: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier) {
-        // Date navigation row
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onPreviousClick) {
-                Icon(Icons.Default.ChevronLeft, AppStrings.current.calendarView.previous)
-            }
-            
-            Text(
-                text = dateLabel,
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.weight(1f),
-                textAlign = TextAlign.Center
-            )
-            
-            IconButton(onClick = onNextClick) {
-                Icon(Icons.Default.ChevronRight, AppStrings.current.calendarView.next)
-            }
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 4.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(onClick = onPreviousClick) {
+            Icon(Icons.Default.ChevronLeft, AppStrings.current.calendarView.previous)
         }
-        
-        // View mode and filter row
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // View mode selector
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                ViewMode.entries.forEach { mode ->
+        Text(
+            text = dateLabel,
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.weight(1f),
+            textAlign = TextAlign.Center
+        )
+        IconButton(onClick = onNextClick) {
+            Icon(Icons.Default.ChevronRight, AppStrings.current.calendarView.next)
+        }
+        TextButton(onClick = onTodayClick) {
+            Text(AppStrings.current.timeline.today)
+        }
+        FilterChip(
+            selected = showOnlyMine,
+            onClick = onToggleOnlyMine,
+            label = { Text(AppStrings.current.people.mine) }
+        )
+    }
+}
+
+@Composable
+private fun TimelineBottomSheetContent(
+    viewMode: ViewMode,
+    onViewModeChange: (ViewMode) -> Unit,
+    onSwitchToBlocks: (() -> Unit)?,
+    onFindFreeLessons: (() -> Unit)?
+) {
+    var showContent by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { showContent = true }
+    val enterAnim = fadeIn(tween(260)) + slideInVertically(tween(260)) { it / 4 }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(bottom = LocalBottomBarPadding.current + 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // View switcher: timeline (selected) vs list
+        AnimatedVisibility(visible = showContent && onSwitchToBlocks != null, enter = enterAnim) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = AppStrings.current.calendarView.calendarOptionsTitle,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(
-                        selected = viewMode == mode,
-                        onClick = { onViewModeChange(mode) },
-                        label = {
-                            Text(
-                                when (mode) {
-                                    ViewMode.DAY -> AppStrings.current.calendarView.viewModeDay
-                                    ViewMode.THREE_DAY -> AppStrings.current.calendarView.viewModeThreeDays
-                                    ViewMode.WEEK -> AppStrings.current.calendarView.viewModeWeek
-                                }
+                        selected = true,
+                        onClick = {},
+                        label = { Text(AppStrings.current.onboarding.calendarViewTimeline) },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.ViewTimeline,
+                                contentDescription = null,
+                                modifier = Modifier.size(AssistChipDefaults.IconSize)
                             )
                         }
                     )
+                    FilterChip(
+                        selected = false,
+                        onClick = { onSwitchToBlocks!!() },
+                        label = { Text(AppStrings.current.settings.calendarViewList) }
+                    )
                 }
+                HorizontalDivider()
             }
+        }
 
-            // Right-side: my events filter + Today button
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextButton(onClick = onTodayClick) {
-                    Text(AppStrings.current.timeline.today)
+        // View mode: 1 day, 3 days, week
+        AnimatedVisibility(visible = showContent, enter = enterAnim) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ViewMode.entries.forEach { mode ->
+                        FilterChip(
+                            selected = viewMode == mode,
+                            onClick = { onViewModeChange(mode) },
+                            label = {
+                                Text(
+                                    when (mode) {
+                                        ViewMode.DAY -> AppStrings.current.calendarView.viewModeDay
+                                        ViewMode.THREE_DAY -> AppStrings.current.calendarView.viewModeThreeDays
+                                        ViewMode.WEEK -> AppStrings.current.calendarView.viewModeWeek
+                                    }
+                                )
+                            }
+                        )
+                    }
                 }
+        }
 
-                FilterChip(
-                    selected = showOnlyMine,
-                    onClick = onToggleOnlyMine,
-                    label = { Text(AppStrings.current.people.mine) }
-                )
+        // Find free lessons
+        AnimatedVisibility(visible = showContent && onFindFreeLessons != null, enter = enterAnim) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                HorizontalDivider()
+                FilledTonalButton(
+                    onClick = { onFindFreeLessons!!() },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.size(8.dp))
+                    Text(AppStrings.current.freeLessons.findButton, style = MaterialTheme.typography.labelLarge)
+                }
             }
         }
     }

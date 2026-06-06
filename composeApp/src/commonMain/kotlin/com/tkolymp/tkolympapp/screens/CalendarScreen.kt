@@ -3,11 +3,14 @@ package com.tkolymp.tkolympapp.screens
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
@@ -23,6 +26,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -44,14 +51,13 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -66,8 +72,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -81,6 +88,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.event.EventInstance
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.utils.formatFullCalendarDate
+import com.tkolymp.tkolympapp.LocalBottomBarPadding
 import com.tkolymp.tkolympapp.SwipeToReload
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DatePeriod
@@ -113,11 +121,12 @@ fun CalendarScreen(
     val calendarViewModel = viewModel<com.tkolymp.shared.viewmodels.CalendarViewModel>()
     val calState by calendarViewModel.state.collectAsState()
     val scope = rememberCoroutineScope()
-    val keyboardController = LocalSoftwareKeyboardController.current
     val today = remember { kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault()) }
     // null → floating today-based view; non-null → a specific Monday chosen from the picker
     var customStartDate by remember { mutableStateOf<LocalDate?>(null) }
     var showBottomSheet by remember { mutableStateOf(false) }
+    val sheetDragOffset = remember { Animatable(0f) }
+    LaunchedEffect(showBottomSheet) { if (showBottomSheet) sheetDragOffset.snapTo(0f) }
 
     // Cache last non-empty offline data to avoid brief disappearance on transient empty state
     val cachedVisibleDates = remember { mutableStateOf<List<String>?>(null) }
@@ -160,6 +169,7 @@ fun CalendarScreen(
         calendarViewModel.load(localWeekOffset, selectedTab == 0, weekStartOverride = customStartDate)
     }
 
+    Box(modifier = Modifier.fillMaxSize()) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -292,33 +302,96 @@ fun CalendarScreen(
         }
     }
 
-    if (showBottomSheet) {
-        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-        ModalBottomSheet(
-            onDismissRequest = { keyboardController?.hide(); showBottomSheet = false },
-            sheetState = sheetState,
-            contentWindowInsets = { androidx.compose.foundation.layout.WindowInsets(0) },
-        ) {
-            CalendarBottomSheetContent(
-                today = today,
-                currentWeekStart = customStartDate ?: today.plus(localWeekOffset * 7, DateTimeUnit.DAY),
-                onNavigateTimeline = onNavigateTimeline?.let { nav ->
-                    { showBottomSheet = false; nav() }
-                },
-                onFindFreeLessons = onFindFreeLessons?.let { finder ->
-                    { showBottomSheet = false; finder() }
-                },
-                onWeekSelected = { monday ->
-                    customStartDate = monday
-                },
-                onReset = {
-                    customStartDate = null
-                    localWeekOffset = 0
-                    onWeekOffsetChange(0)
+    // Scrim — same window as Scaffold, no Dialog, no keyboard flash
+    AnimatedVisibility(
+        visible = showBottomSheet,
+        enter = fadeIn(tween(200)),
+        exit = fadeOut(tween(200))
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.32f))
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) { showBottomSheet = false }
+        )
+    }
+
+    AnimatedVisibility(
+        visible = showBottomSheet,
+        enter = slideInVertically(tween(300)) { it } + fadeIn(tween(200)),
+        exit = slideOutVertically(tween(300)) { it } + fadeOut(tween(200)),
+        modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth()
+    ) {
+        Surface(
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            modifier = Modifier
+                .fillMaxWidth()
+                .offset { IntOffset(0, sheetDragOffset.value.toInt().coerceAtLeast(0)) }
+                .pointerInput(Unit) {
+                    val dismissThreshold = 100.dp.toPx()
+                    detectVerticalDragGestures(
+                        onDragEnd = {
+                            if (sheetDragOffset.value > dismissThreshold) {
+                                showBottomSheet = false
+                            } else {
+                                scope.launch { sheetDragOffset.animateTo(0f, spring()) }
+                            }
+                        },
+                        onDragCancel = { scope.launch { sheetDragOffset.animateTo(0f, spring()) } },
+                        onVerticalDrag = { change, dragAmount ->
+                            change.consume()
+                            scope.launch { sheetDragOffset.snapTo(sheetDragOffset.value + dragAmount) }
+                        }
+                    )
                 }
-            )
+        ) {
+            Column {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) { showBottomSheet = false }
+                        .padding(top = 22.dp, bottom = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(32.dp)
+                            .height(4.dp)
+                            .background(
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                                RoundedCornerShape(50)
+                            )
+                    )
+                }
+                CalendarBottomSheetContent(
+                    today = today,
+                    currentWeekStart = customStartDate ?: today.plus(localWeekOffset * 7, DateTimeUnit.DAY),
+                    onNavigateTimeline = onNavigateTimeline?.let { nav ->
+                        { showBottomSheet = false; nav() }
+                    },
+                    onFindFreeLessons = onFindFreeLessons?.let { finder ->
+                        { showBottomSheet = false; finder() }
+                    },
+                    onWeekSelected = { monday ->
+                        customStartDate = monday
+                    },
+                    onReset = {
+                        customStartDate = null
+                        localWeekOffset = 0
+                        onWeekOffsetChange(0)
+                    }
+                )
+            }
         }
     }
+    } // Box
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -345,7 +418,7 @@ private fun CalendarBottomSheetContent(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .padding(bottom = 32.dp),
+            .padding(bottom = LocalBottomBarPadding.current + 8.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // ── View switcher ──────────────────────────────────────────────────────
