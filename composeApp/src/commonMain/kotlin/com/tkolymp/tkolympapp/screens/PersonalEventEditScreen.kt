@@ -57,6 +57,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.number
 import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
@@ -64,7 +65,7 @@ import kotlinx.datetime.todayIn
 import kotlin.time.Duration.Companion.hours
 
 private fun formatLocalDate(d: kotlinx.datetime.LocalDate?): String {
-    return d?.let { "${it.day}. ${it.month.value}. ${it.year}" } ?: ""
+    return d?.let { "${it.day}. ${it.month.number}. ${it.year}" } ?: ""
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

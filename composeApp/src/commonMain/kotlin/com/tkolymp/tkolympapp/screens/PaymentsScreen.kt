@@ -79,10 +79,8 @@ fun PaymentsScreen(vm: com.tkolymp.shared.payments.PaymentsViewModel, onBack: ()
         topBar = { TopAppBar(
             title = { Text(AppStrings.current.otherScreen.payments) },
             navigationIcon = {
-                onBack?.let {
-                    IconButton(onClick = it) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
-                    }
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
                 }
             }
         ) },

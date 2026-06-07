@@ -5,7 +5,7 @@ import com.tkolymp.shared.event.EventInstance
 import com.tkolymp.shared.language.AppStrings
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone

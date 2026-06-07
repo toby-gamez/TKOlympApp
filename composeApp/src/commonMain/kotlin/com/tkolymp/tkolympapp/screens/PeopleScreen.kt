@@ -75,6 +75,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.number
 import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
 
@@ -369,7 +370,7 @@ internal fun daysUntilNextBirthday(raw: String?): Int {
     } ?: return Int.MAX_VALUE
 
     val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
-    val month = ld.month.value
+    val month = ld.month.number
     val day = ld.day
     val candidate = try {
         LocalDate(today.year, month, day)
@@ -378,7 +379,7 @@ internal fun daysUntilNextBirthday(raw: String?): Int {
     }
 
     var next = if (candidate < today) candidate.plus(1, DateTimeUnit.YEAR) else candidate
-    if (next.month.value == 2 && next.day == 29) {
+    if (next.month.number == 2 && next.day == 29) {
         val y = next.year
         val isLeap = (y % 4 == 0 && (y % 100 != 0 || y % 400 == 0))
         if (!isLeap) next = LocalDate(y, 2, 28)

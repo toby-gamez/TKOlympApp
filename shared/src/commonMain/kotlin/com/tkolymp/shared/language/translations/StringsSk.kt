@@ -298,6 +298,9 @@ val StringsSk = Strings(
         noTrainers = "Žiadni tréneri",
         noTrainingSpaces = "Žiadne tréningové priestory",
         trainingSpaces = "Tréningové priestory",
+        tabOverview = "Prehľad",
+        tabSchedule = "Rozvrh",
+        heatmapNoData = "Dáta nie sú k dispozícii",
     ),
     timeline = TimelineStrings(
         timeline = "Os",

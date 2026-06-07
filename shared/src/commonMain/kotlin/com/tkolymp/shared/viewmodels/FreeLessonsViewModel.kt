@@ -131,7 +131,7 @@ class FreeLessonsViewModel(
                 .filter { it.event?.type?.toEventType() == EventType.LESSON == true }
                 .filter {
                     it.event?.eventRegistrationsList?.isEmpty() == true &&
-                    it.event?.isRegistrationOpen == true
+                    it.event.isRegistrationOpen == true
                 }
 
             // Score each free slot
@@ -339,7 +339,7 @@ class FreeLessonsViewModel(
 
     private fun parseEpoch(iso: String): Long {
         return try {
-            kotlinx.datetime.Instant.parse(iso).toEpochMilliseconds()
+            kotlin.time.Instant.parse(iso).toEpochMilliseconds()
         } catch (_: Exception) { 0L }
     }
 

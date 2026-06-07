@@ -270,6 +270,9 @@ val StringsSl = Strings(
         noTrainers = "Ni trenerjev",
         noTrainingSpaces = "Ni vadišč",
         trainingSpaces = "Vadišča",
+        tabOverview = "Pregled",
+        tabSchedule = "Urnik",
+        heatmapNoData = "Ni podatkov",
     ),
     timeline = TimelineStrings(
         timeline = "Os",

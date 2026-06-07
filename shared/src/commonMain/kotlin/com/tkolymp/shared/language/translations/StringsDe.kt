@@ -270,6 +270,9 @@ val StringsDe = Strings(
         noTrainers = "Keine Trainer",
         noTrainingSpaces = "Keine Trainingsstätten",
         trainingSpaces = "Trainingsstätten",
+        tabOverview = "Übersicht",
+        tabSchedule = "Stundenplan",
+        heatmapNoData = "Keine Daten vorhanden",
     ),
     timeline = TimelineStrings(
         timeline = "Zeitachse",

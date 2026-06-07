@@ -270,6 +270,9 @@ val StringsUa = Strings(
         noTrainers = "Немає тренерів",
         noTrainingSpaces = "Немає тренувальних залів",
         trainingSpaces = "Тренувальні зали",
+        tabOverview = "Огляд",
+        tabSchedule = "Розклад",
+        heatmapNoData = "Даних ще немає",
     ),
     timeline = TimelineStrings(
         timeline = "Вісь",

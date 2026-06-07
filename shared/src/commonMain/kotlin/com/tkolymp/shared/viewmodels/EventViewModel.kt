@@ -120,6 +120,7 @@ class EventViewModel(
                 )
                 return
             }
+            val eventObj = ev
             var myPerson: String? = null
             var myCouples: List<String> = emptyList()
             try {
@@ -130,7 +131,7 @@ class EventViewModel(
             } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("EventViewModel", "failed to read user cache: ${e.message}") }
 
             // Derive business-logic fields from loaded JSON
-            val instances = ev?.get("eventInstancesList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
+            val instances = eventObj.get("eventInstancesList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
             val firstDate = instances.firstOrNull()?.asJsonObjectOrNull()?.str("since")
             val lastDate = instances.lastOrNull()?.asJsonObjectOrNull()?.str("until")
             val isPast = try {
@@ -142,7 +143,7 @@ class EventViewModel(
                 }
             } catch (_: Exception) { false }
 
-            val registrations = ev?.get("eventRegistrationsList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
+            val registrations = eventObj.get("eventRegistrationsList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
             val userRegistered = registrations.any { regEl ->
                 val reg = regEl.asJsonObjectOrNull() ?: return@any false
                 val personId = reg["person"].asJsonObjectOrNull()?.str("id")
@@ -150,34 +151,34 @@ class EventViewModel(
                 (personId != null && personId == myPerson) || (coupleId != null && coupleId in myCouples)
             }
 
-            val type = ev?.str("type") ?: ""
-            val isLocked = ev?.bool("isLocked") ?: false
-            val isRegistrationOpen = if (isLocked) false else (ev?.bool("isRegistrationOpen") ?: true)
+            val type = eventObj.str("type") ?: ""
+            val isLocked = eventObj.bool("isLocked") ?: false
+            val isRegistrationOpen = if (isLocked) false else (eventObj.bool("isRegistrationOpen") ?: true)
             val registerButtonVisible = !isPast && !userRegistered && isRegistrationOpen
             val registrationActionsRowVisible = !isPast && userRegistered && isRegistrationOpen
             val editRegistrationButtonVisible = type.toEventType() != EventType.LESSON && type.toEventType() != EventType.GROUP
 
-            val trainers = ev?.get("eventTrainersList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
-            val cohorts = ev?.get("eventTargetCohortsList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
-            val externalRegistrations = ev?.get("eventExternalRegistrationsList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
+            val trainers = eventObj.get("eventTrainersList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
+            val cohorts = eventObj.get("eventTargetCohortsList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
+            val externalRegistrations = eventObj.get("eventExternalRegistrationsList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
 
-            val rawName = ev?.str("name")
+            val rawName = eventObj.str("name")
             val eventName = when {
                 !rawName.isNullOrBlank() -> rawName
                 type.toEventType() == EventType.LESSON ->
                     trainers.firstOrNull()?.asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() }
                         ?: AppStrings.current.dialogs.noName
-                else -> if (ev != null) AppStrings.current.dialogs.noName else ""
+                else -> AppStrings.current.dialogs.noName
             }
-            val eventDescription = ev?.str("description") ?: ""
-            val summary = ev?.str("summary") ?: ""
-            val locationName = ev?.get("location")?.asJsonObjectOrNull()?.str("name") ?: ev?.str("locationText")
-            val isVisible = ev?.bool("isVisible") ?: false
-            val isPublic = ev?.bool("isPublic") ?: false
-            val enableNotes = ev?.bool("enableNotes") ?: false
-            val capacity = ev?.int("capacity")
-            val remainingPersonSpots = ev?.int("remainingPersonSpots")
-            val remainingLessons = ev?.int("remainingLessons")
+            val eventDescription = eventObj.str("description") ?: ""
+            val summary = eventObj.str("summary") ?: ""
+            val locationName = eventObj.get("location")?.asJsonObjectOrNull()?.str("name") ?: eventObj.str("locationText")
+            val isVisible = eventObj.bool("isVisible") ?: false
+            val isPublic = eventObj.bool("isPublic") ?: false
+            val enableNotes = eventObj.bool("enableNotes") ?: false
+            val capacity = eventObj.int("capacity")
+            val remainingPersonSpots = eventObj.int("remainingPersonSpots")
+            val remainingLessons = eventObj.int("remainingLessons")
 
             val trainerDisplayNames = trainers.mapNotNull { trainerEl ->
                 val trainer = trainerEl.asJsonObjectOrNull() ?: return@mapNotNull null

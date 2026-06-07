@@ -117,10 +117,10 @@ fun BarcodeScreen(onBack: () -> Unit = {}) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("ČSTS ID") },
+                title = { Text(AppStrings.current.profile.cstsId) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zpět")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
                     }
                 },
                 actions = {
@@ -139,17 +139,17 @@ fun BarcodeScreen(onBack: () -> Unit = {}) {
         ) {
             if (cstsId == null) {
                 Text(
-                    text = "ČSTS ID není k dispozici",
+                    text = AppStrings.current.profile.cstsNotAvailable,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(32.dp)
                 )
             } else {
-                val encoded = encodeEan8(cstsId!!)
+                val encoded = encodeEan8(cstsId)
                 if (encoded == null) {
                     Text(
-                        text = "ČSTS ID má nesprávný formát\n(${cstsId})",
+                        text = "${AppStrings.current.profile.cstsInvalidFormat}\n(${cstsId})",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.error,
                         textAlign = TextAlign.Center,

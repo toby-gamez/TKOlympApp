@@ -332,7 +332,7 @@ fun CalendarScreen(
                             }
 
                             filteredOther.forEach { item ->
-                                key(item.id ?: item.since) {
+                                key(item.id) {
                                     RenderSingleEventCard(item = item, onEventClick = { id: Long -> onOpenEvent(id) })
                                 }
                             }

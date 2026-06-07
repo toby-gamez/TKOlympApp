@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Divider
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
@@ -91,11 +91,9 @@ fun QuantityInput(
                 textStyle = MaterialTheme.typography.bodyLarge,
                 placeholder = { Text("0") }
             )
-            Divider(
+            VerticalDivider(
                 color = MaterialTheme.colorScheme.outlineVariant,
-                modifier = Modifier
-                    .width(1.dp)
-                    .fillMaxHeight()
+                modifier = Modifier.fillMaxHeight()
             )
             Box(
                 modifier = Modifier

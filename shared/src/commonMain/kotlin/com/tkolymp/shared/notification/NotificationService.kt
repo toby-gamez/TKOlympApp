@@ -114,10 +114,10 @@ class NotificationService(
 
             val thisYear = today.year
             val period = DatePeriod(days = resolvedSettings.daysBefore)
-            val thisYearBirthday = LocalDate(thisYear, birthDate.month, birthDate.dayOfMonth)
+            val thisYearBirthday = LocalDate(thisYear, birthDate.month, birthDate.day)
             val thisYearTrigger = thisYearBirthday.minus(period)
             val triggerDate = if (thisYearTrigger >= today) thisYearTrigger
-            else LocalDate(thisYear + 1, birthDate.month, birthDate.dayOfMonth).minus(period)
+            else LocalDate(thisYear + 1, birthDate.month, birthDate.day).minus(period)
 
             val triggerInstant = triggerDate.atTime(resolvedSettings.notificationHour, 0).toInstant(tz)
             val nid = "bday_${person.id}"

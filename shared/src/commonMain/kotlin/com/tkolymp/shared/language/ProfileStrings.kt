@@ -35,4 +35,6 @@ data class ProfileStrings(
     val dateTo: String,
     val birthdays: String,
     val couple: String,
+    val cstsNotAvailable: String = "ČSTS ID not available",
+    val cstsInvalidFormat: String = "ČSTS ID has invalid format",
 )

@@ -130,6 +130,8 @@ val StringsCs = Strings(
         dateTo = "Do",
         birthdays = "Narozeniny",
         couple = "pár",
+        cstsNotAvailable = "ČSTS ID není k dispozici",
+        cstsInvalidFormat = "ČSTS ID má nesprávný formát",
     ),
     address = AddressStrings(
         address = "Adresa",
@@ -272,6 +274,9 @@ val StringsCs = Strings(
         noTrainers = "Žádní trenéři",
         noTrainingSpaces = "Žádné tréninkové prostory",
         trainingSpaces = "Tréninkové prostory",
+        tabOverview = "Přehled",
+        tabSchedule = "Rozvrh",
+        heatmapNoData = "Data nejsou k dispozici",
     ),
     timeline = TimelineStrings(
         timeline = "Osa",

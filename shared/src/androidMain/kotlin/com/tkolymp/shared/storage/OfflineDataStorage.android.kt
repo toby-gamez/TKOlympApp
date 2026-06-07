@@ -156,7 +156,7 @@ class OfflineDataStorageAndroid(private val context: Context) : OfflineDataStora
         return withContext(Dispatchers.IO) {
             try {
                 val idx = readIndex()
-                idx.values.toSet()
+                idx.keys.toSet()
             } catch (e: Exception) {
                 Log.w(TAG, "allKeys failed", e)
                 emptySet()

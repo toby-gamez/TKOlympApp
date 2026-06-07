@@ -1,15 +1,4 @@
 package com.tkolymp.tkolympapp.screens
-import com.tkolymp.shared.utils.parseToLocal
-import kotlinx.datetime.Clock
-import kotlinx.datetime.DateTimeUnit
-import kotlin.time.Instant
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.LocalTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.plus
-import kotlinx.datetime.toLocalDateTime
-import kotlinx.datetime.toInstant
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -47,12 +36,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
+import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.language.NationalityHelper
-import kotlinx.coroutines.launch
+import com.tkolymp.shared.utils.parseToLocal
 import kotlinx.coroutines.CancellationException
-import com.tkolymp.shared.Logger
+import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.number
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Instant
 
 @Composable
 fun ChangePasswordDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
@@ -167,7 +165,7 @@ fun ChangePersonalDataDialog(
     var birthIso by remember(initialBirthDate) { mutableStateOf(initialLocal?.toString() ?: initialBirthDate) }
     fun formatDisplayDate(iso: String?): String {
         val ld = parseToLocalDate(iso) ?: return iso ?: ""
-        return try { "${ld.day.toString().padStart(2,'0')}.${ld.month.value.toString().padStart(2,'0')}.${ld.year}" } catch (_: Exception) { ld.toString() }
+        return try { "${ld.day.toString().padStart(2,'0')}.${ld.month.number.toString().padStart(2,'0')}.${ld.year}" } catch (_: Exception) { ld.toString() }
     }
     var birthDisplay by remember(birthIso) { mutableStateOf(formatDisplayDate(birthIso)) }
 

@@ -12,7 +12,7 @@ A grid (columns = weekdays, rows = trainers) showing which trainers teach on whi
 
 ## Stats & Personal
 
-### 4. Training streak tracker
+### 4. Training streak tracker ✅
 `StatsViewModel` already has weekly attendance data. Count consecutive weeks with ≥1 session, display a streak counter + milestone badge on `StatsScreen`.
 
 ### 5. Weekly training goal + progress bar

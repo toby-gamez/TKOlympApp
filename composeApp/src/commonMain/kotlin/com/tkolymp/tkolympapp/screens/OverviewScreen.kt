@@ -125,11 +125,9 @@ fun OverviewScreen(
                         WeekPersona.CAMP -> ps.camp
                         WeekPersona.ALL_ROUNDER -> ps.allRounder
                     }
-                    val dayLabels = remember { listOf(ps.mon, ps.tue, ps.wed, ps.thu, ps.fri, ps.sat, ps.sun) }
                     WeekPersonaBadge(
                         vibes = weekVibes,
                         personaLabel = personaLabel,
-                        dayLabels = dayLabels,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
                     )
                 }
@@ -150,7 +148,7 @@ fun OverviewScreen(
                         horizontalArrangement = Arrangement.Center
                     ) { CircularProgressIndicator() }
                 } else {
-                    val date = state.trainingSelectedDate!!
+                    val date = state.trainingSelectedDate ?: return@Column
                     Column(modifier = Modifier.padding(vertical = 6.dp)) {
                         val header = dateHeader(date, state.todayString, state.tomorrowString)
                         Text(header, style = MaterialTheme.typography.titleMedium)
@@ -350,7 +348,7 @@ fun OverviewScreen(
                 }
             }
             if (state.isLoading) {
-                Text("Načítám...", modifier = Modifier.padding(12.dp))
+                Text(AppStrings.current.commonActions.loading, modifier = Modifier.padding(12.dp))
             }
             state.error?.let { Text(text = it.message, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(12.dp)) }
         }

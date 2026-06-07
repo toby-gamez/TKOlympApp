@@ -6,14 +6,14 @@ import com.tkolymp.shared.event.toEventType
 
 
 data class DailyDensity(
-    val dayLabel: String,
     val count: Int
 )
 
 data class WeekVibesData(
     val persona: WeekPersona,
     val dailyDensity: List<DailyDensity>,
-    val maxDensity: Int
+    val maxDensity: Int,
+    val dayOfWeekOrdinals: List<Int>
 )
 
 enum class WeekPersona(
@@ -37,16 +37,11 @@ fun computeWeekVibes(
     val dailyDensity = visibleDates.map { date ->
         val dayCount = (lessonsByTrainerByDay[date]?.values?.sumOf { it.size } ?: 0) +
             (otherEventsByDay[date]?.size ?: 0)
-        val dayOfWeek = try {
-            val ld = kotlinx.datetime.LocalDate.parse(date)
-            ld.dayOfWeek.ordinal + 1
-        } catch (_: Exception) { 0 }
-        val label = when (dayOfWeek) {
-            1 -> "Mon"; 2 -> "Tue"; 3 -> "Wed"; 4 -> "Thu"
-            5 -> "Fri"; 6 -> "Sat"; 7 -> "Sun"
-            else -> "?"
-        }
-        DailyDensity(label, dayCount)
+        DailyDensity(dayCount)
+    }
+
+    val dayOfWeekOrdinals = visibleDates.map { date ->
+        try { kotlinx.datetime.LocalDate.parse(date).dayOfWeek.ordinal } catch (_: Exception) { 0 }
     }
 
     val maxDensity = dailyDensity.maxOfOrNull { it.count } ?: 0
@@ -88,9 +83,11 @@ fun computeWeekVibes(
         else -> WeekPersona.ALL_ROUNDER
     }
 
+    val sorted = dailyDensity.zip(dayOfWeekOrdinals).sortedBy { it.second }
     return WeekVibesData(
         persona = persona,
-        dailyDensity = dailyDensity,
-        maxDensity = maxDensity
+        dailyDensity = sorted.map { it.first },
+        maxDensity = maxDensity,
+        dayOfWeekOrdinals = sorted.map { it.second }
     )
 }

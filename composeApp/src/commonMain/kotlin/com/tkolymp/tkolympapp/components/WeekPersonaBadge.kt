@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
 import com.tkolymp.shared.calendar.WeekVibesData
+import com.tkolymp.shared.language.AppStrings
 import kotlin.math.max
 
 @Composable
@@ -44,7 +45,6 @@ fun WeekPersonaBadge(
     vibes: WeekVibesData,
     modifier: Modifier = Modifier,
     personaLabel: String,
-    dayLabels: List<String>
 ) {
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(vibes) { visible = true }
@@ -99,7 +99,12 @@ fun WeekPersonaBadge(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        dayLabels.take(7).forEach { label ->
+                        val dayLabels = remember(vibes) {
+                            val ps = AppStrings.current.weekPersona
+                            val all = listOf(ps.mon, ps.tue, ps.wed, ps.thu, ps.fri, ps.sat, ps.sun)
+                            vibes.dayOfWeekOrdinals.map { all.getOrElse(it) { "?" } }
+                        }
+                        dayLabels.forEach { label ->
                             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.TopCenter) {
                                 Text(
                                     text = label,
