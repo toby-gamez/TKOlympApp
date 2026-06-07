@@ -97,7 +97,7 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
             }
 
             if (visibleLocations.isNotEmpty()) {
-                itemsIndexed(visibleLocations, key = { _, loc -> "loc_${loc.name ?: loc.hashCode()}" }) { index, loc ->
+                itemsIndexed(visibleLocations, key = { index, loc -> "loc_${index}_${loc.name ?: loc.hashCode()}" }) { index, loc ->
                     StaggeredItem(index = index, visible = cardsVisible, baseDelayMs = 50) {
                     Card(
                         modifier = Modifier
@@ -158,7 +158,7 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
             }
 
             if (visibleTrainers.isNotEmpty()) {
-                itemsIndexed(visibleTrainers, key = { _, t -> "trainer_${t.person?.id ?: t.hashCode()}" }) { index, t ->
+                itemsIndexed(visibleTrainers, key = { index, t -> "trainer_${index}_${t.person?.id ?: t.hashCode()}" }) { index, t ->
                     StaggeredItem(index = index, visible = cardsVisible, baseDelayMs = 50) {
                     Card(
                         modifier = Modifier
