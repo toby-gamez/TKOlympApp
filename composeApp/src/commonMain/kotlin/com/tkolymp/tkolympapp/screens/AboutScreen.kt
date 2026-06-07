@@ -119,6 +119,7 @@ fun AboutScreen(onBack: () -> Unit = {}, appVersionName: String? = null, appVers
             }
 
             StaggeredItem(index = 3, visible = contentVisible, baseDelayMs = 60) {
+            Column {
             Text(
                 text = AppStrings.current.about.brainrotDisclaimer,
                 fontStyle = FontStyle.Italic,
@@ -132,6 +133,7 @@ fun AboutScreen(onBack: () -> Unit = {}, appVersionName: String? = null, appVers
                 style = MaterialTheme.typography.bodySmall,
                 textAlign = TextAlign.Center
             )
+            }
             }
         }
     }

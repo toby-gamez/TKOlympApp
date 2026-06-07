@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ViewAgenda
 import androidx.compose.material.icons.filled.ViewTimeline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChipDefaults
@@ -433,7 +434,14 @@ private fun CalendarBottomSheetContent(
                     FilterChip(
                         selected = true,
                         onClick = {},
-                        label = { Text(AppStrings.current.settings.calendarViewList) }
+                        label = { Text(AppStrings.current.settings.calendarViewList) },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.ViewAgenda,
+                                contentDescription = null,
+                                modifier = Modifier.size(AssistChipDefaults.IconSize)
+                            )
+                        }
                     )
                     FilterChip(
                         selected = false,

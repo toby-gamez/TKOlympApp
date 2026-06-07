@@ -36,7 +36,11 @@ import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Today
+import androidx.compose.material.icons.filled.ViewAgenda
+import androidx.compose.material.icons.filled.ViewDay
 import androidx.compose.material.icons.filled.ViewTimeline
+import androidx.compose.material.icons.filled.ViewWeek
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -46,6 +50,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -160,6 +165,11 @@ fun CalendarViewScreen(
                     }
                 },
                 actions = {
+                    FilterChip(
+                        selected = state.showOnlyMine,
+                        onClick = { scope.launch { viewModel.toggleShowOnlyMine() } },
+                        label = { Text(AppStrings.current.people.mine) }
+                    )
                     IconButton(onClick = { showBottomSheet.value = true }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "Options")
                     }
@@ -175,11 +185,8 @@ fun CalendarViewScreen(
     ) {
         CalendarTopBar(
             dateLabel = viewModel.getDateLabel(),
-            showOnlyMine = state.showOnlyMine,
             onPreviousClick = { scope.launch { viewModel.navigatePrevious() } },
-            onNextClick = { scope.launch { viewModel.navigateNext() } },
-            onTodayClick = { scope.launch { viewModel.navigateToday() } },
-            onToggleOnlyMine = { scope.launch { viewModel.toggleShowOnlyMine() } }
+            onNextClick = { scope.launch { viewModel.navigateNext() } }
         )
 
         HorizontalDivider()
@@ -308,7 +315,8 @@ fun CalendarViewScreen(
                     viewMode = state.viewMode,
                     onViewModeChange = { mode -> scope.launch { viewModel.setViewMode(mode) } },
                     onSwitchToBlocks = onSwitchToBlocks?.let { sw -> { showBottomSheet.value = false; sw() } },
-                    onFindFreeLessons = onFindFreeLessons?.let { finder -> { showBottomSheet.value = false; finder() } }
+                    onFindFreeLessons = onFindFreeLessons?.let { finder -> { showBottomSheet.value = false; finder() } },
+                    onNavigateToday = { showBottomSheet.value = false; scope.launch { viewModel.navigateToday() } }
                 )
             }
         }
@@ -322,11 +330,8 @@ fun CalendarViewScreen(
 @Composable
 internal fun CalendarTopBar(
     dateLabel: String,
-    showOnlyMine: Boolean,
     onPreviousClick: () -> Unit,
     onNextClick: () -> Unit,
-    onTodayClick: () -> Unit,
-    onToggleOnlyMine: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -347,14 +352,6 @@ internal fun CalendarTopBar(
         IconButton(onClick = onNextClick) {
             Icon(Icons.Default.ChevronRight, AppStrings.current.calendarView.next)
         }
-        TextButton(onClick = onTodayClick) {
-            Text(AppStrings.current.timeline.today)
-        }
-        FilterChip(
-            selected = showOnlyMine,
-            onClick = onToggleOnlyMine,
-            label = { Text(AppStrings.current.people.mine) }
-        )
     }
 }
 
@@ -363,7 +360,8 @@ private fun TimelineBottomSheetContent(
     viewMode: ViewMode,
     onViewModeChange: (ViewMode) -> Unit,
     onSwitchToBlocks: (() -> Unit)?,
-    onFindFreeLessons: (() -> Unit)?
+    onFindFreeLessons: (() -> Unit)?,
+    onNavigateToday: () -> Unit
 ) {
     var showContent by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { showContent = true }
@@ -400,7 +398,14 @@ private fun TimelineBottomSheetContent(
                     FilterChip(
                         selected = false,
                         onClick = { onSwitchToBlocks!!() },
-                        label = { Text(AppStrings.current.settings.calendarViewList) }
+                        label = { Text(AppStrings.current.settings.calendarViewList) },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.ViewAgenda,
+                                contentDescription = null,
+                                modifier = Modifier.size(AssistChipDefaults.IconSize)
+                            )
+                        }
                     )
                 }
                 HorizontalDivider()
@@ -414,6 +419,17 @@ private fun TimelineBottomSheetContent(
                         FilterChip(
                             selected = viewMode == mode,
                             onClick = { onViewModeChange(mode) },
+                            leadingIcon = {
+                                Icon(
+                                    when (mode) {
+                                        ViewMode.DAY -> Icons.Default.ViewDay
+                                        ViewMode.THREE_DAY -> Icons.Default.ViewAgenda
+                                        ViewMode.WEEK -> Icons.Default.ViewWeek
+                                    },
+                                    contentDescription = null,
+                                    modifier = Modifier.size(AssistChipDefaults.IconSize)
+                                )
+                            },
                             label = {
                                 Text(
                                     when (mode) {
@@ -426,6 +442,22 @@ private fun TimelineBottomSheetContent(
                         )
                     }
                 }
+        }
+
+        // Reset to today
+        AnimatedVisibility(visible = showContent, enter = enterAnim) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                HorizontalDivider()
+                FilledTonalButton(
+                    onClick = onNavigateToday,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(Icons.Default.Today, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.size(8.dp))
+                    Text(AppStrings.current.calendarView.resetToToday, style = MaterialTheme.typography.labelLarge)
+                }
+            }
         }
 
         // Find free lessons
@@ -662,10 +694,8 @@ internal fun MultiDayTimelineView(
                     }
                     
                     // Divider between days
-                    HorizontalDivider(
-                        modifier = Modifier
-                            .width(1.dp)
-                            .height(totalHeight + dayHeaderHeight),
+                    VerticalDivider(
+                        modifier = Modifier.height(totalHeight + dayHeaderHeight),
                         color = MaterialTheme.colorScheme.outline
                     )
                 }
