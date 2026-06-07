@@ -38,6 +38,7 @@ import com.tkolymp.shared.utils.AppConstants
 import com.tkolymp.shared.event.EventType
 import com.tkolymp.shared.event.toEventType
 import com.tkolymp.shared.calendar.parseCalendarJson
+import com.tkolymp.shared.payments.PaymentService
 
 data class BirthdayEntry(
     val personId: String,
@@ -66,6 +67,7 @@ data class OverviewState(
     val weeklyGoal: Int = 0,
     val currentWeekCount: Int = 0,
     val currentWeekMinutes: Long = 0L,
+    val paymentDaysUntilDue: Int? = null,
     override val isLoading: Boolean = false,
     override val error: AppError? = null
 ) : ViewModelState
@@ -76,7 +78,8 @@ class OverviewViewModel(
     private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService,
     private val peopleService: com.tkolymp.shared.people.PeopleService = ServiceLocator.peopleService,
     private val cache: CacheService = ServiceLocator.cacheService,
-    private val calendarPreferenceStorage: com.tkolymp.shared.storage.ICalendarPreferenceStorage = ServiceLocator.calendarPreferenceStorage
+    private val calendarPreferenceStorage: com.tkolymp.shared.storage.ICalendarPreferenceStorage = ServiceLocator.calendarPreferenceStorage,
+    private val paymentService: PaymentService = ServiceLocator.paymentService
 ) : ViewModel() {
     private val _state = MutableStateFlow(OverviewState())
     val state: StateFlow<OverviewState> = _state.asStateFlow()
@@ -417,6 +420,20 @@ class OverviewViewModel(
             val currentWeekCount = thisWeekEvents.size
             val currentWeekMinutes = thisWeekEvents.sumOf { inst -> overviewDurationMin(inst.since, inst.until) }
 
+            val paymentDaysUntilDue: Int? = try {
+                val debtors = withContext(Dispatchers.IO) { paymentService.fetchDebtorsForPerson(pid) }
+                val soonestDueAt = debtors
+                    .filter { it.isUnpaid == true }
+                    .mapNotNull { it.payment?.dueAt?.takeIf { s -> s.isNotBlank() } }
+                    .minOrNull()
+                if (soonestDueAt != null) {
+                    val dueDate = try {
+                        kotlinx.datetime.LocalDate.parse(soonestDueAt.substringBefore('T'))
+                    } catch (_: Exception) { null }
+                    dueDate?.let { (it.toEpochDays() - today.toEpochDays()).toInt() }
+                } else null
+            } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+
             _state.value = _state.value.copy(
                 upcomingEvents = events,
                 recentAnnouncements = announcements,
@@ -432,6 +449,7 @@ class OverviewViewModel(
                 weeklyGoal = weeklyGoal,
                 currentWeekCount = currentWeekCount,
                 currentWeekMinutes = currentWeekMinutes,
+                paymentDaysUntilDue = paymentDaysUntilDue,
                 isLoading = false
             )
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {

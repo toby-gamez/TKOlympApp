@@ -370,6 +370,8 @@ val StringsSk = Strings(
         amountLabel = "Čiastka:",
         variableSymbolLabel = "Variabilný symbol:",
         dueLabel = "Splatné:",
+        paymentDueIn = "Platba splatná za %d dní",
+        paymentOverdue = "Platba po splatnosti",
     ),
     calendarView = CalendarViewStrings(
         next = "Ďalej",

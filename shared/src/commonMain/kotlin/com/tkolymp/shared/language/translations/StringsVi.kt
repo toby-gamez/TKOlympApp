@@ -331,6 +331,8 @@ val StringsVi = Strings(
         amountLabel = "Amount:",
         variableSymbolLabel = "Variable symbol:",
         dueLabel = "Due:",
+        paymentDueIn = "Thanh toán sau %d ngày",
+        paymentOverdue = "Thanh toán quá hạn",
     ),
     calendarView = CalendarViewStrings(
         next = "Tiếp theo",

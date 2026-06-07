@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import com.tkolymp.tkolympapp.components.parseColorOrDefault
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cake
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -204,6 +205,16 @@ fun OverviewScreen(
                     Text(if (state.trainingSelectedDate == null) AppStrings.current.overview.browseOthers else AppStrings.current.overview.more)
                 }
             }
+
+            state.paymentDaysUntilDue?.let { days ->
+                PaymentDueBanner(
+                    daysUntilDue = days,
+                    dueInTemplate = AppStrings.current.misc.paymentDueIn,
+                    overdueLabel = AppStrings.current.misc.paymentOverdue,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                )
+            }
+
             Spacer(modifier = Modifier.height(8.dp))
 
             // Board announcements
@@ -444,6 +455,46 @@ private fun WeeklyGoalIndicator(
                 color = progressColor,
                 trackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.15f)
             )
+        }
+    }
+}
+
+@Composable
+private fun PaymentDueBanner(
+    daysUntilDue: Int,
+    dueInTemplate: String,
+    overdueLabel: String,
+    modifier: Modifier = Modifier
+) {
+    val isOverdue = daysUntilDue < 0
+    val containerColor = if (isOverdue)
+        MaterialTheme.colorScheme.errorContainer
+    else
+        MaterialTheme.colorScheme.tertiaryContainer
+    val contentColor = if (isOverdue)
+        MaterialTheme.colorScheme.onErrorContainer
+    else
+        MaterialTheme.colorScheme.onTertiaryContainer
+    val label = if (isOverdue) overdueLabel
+    else dueInTemplate.replace("%d", daysUntilDue.toString())
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = containerColor)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Warning,
+                contentDescription = null,
+                tint = contentColor,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(label, style = MaterialTheme.typography.bodySmall, color = contentColor)
         }
     }
 }

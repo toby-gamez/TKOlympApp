@@ -342,6 +342,8 @@ val StringsDe = Strings(
         amountLabel = "Betrag:",
         variableSymbolLabel = "Variabler Verwendungszweck:",
         dueLabel = "Fällig:",
+        paymentDueIn = "Zahlung fällig in %d Tagen",
+        paymentOverdue = "Zahlung überfällig",
     ),
     calendarView = CalendarViewStrings(
         next = "Weiter",

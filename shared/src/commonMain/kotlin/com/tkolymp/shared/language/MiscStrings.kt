@@ -18,4 +18,6 @@ data class MiscStrings(
     val amountLabel: String,
     val variableSymbolLabel: String,
     val dueLabel: String,
+    val paymentDueIn: String,
+    val paymentOverdue: String,
 )

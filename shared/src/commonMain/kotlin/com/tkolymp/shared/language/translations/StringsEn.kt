@@ -342,6 +342,8 @@ val StringsEn = Strings(
         amountLabel = "Amount:",
         variableSymbolLabel = "Variable symbol:",
         dueLabel = "Due:",
+        paymentDueIn = "Payment due in %d days",
+        paymentOverdue = "Overdue payment",
     ),
     calendarView = CalendarViewStrings(
         next = "Next",

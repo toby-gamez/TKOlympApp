@@ -342,6 +342,8 @@ val StringsUa = Strings(
         amountLabel = "Amount:",
         variableSymbolLabel = "Variable symbol:",
         dueLabel = "Due:",
+        paymentDueIn = "Платіж через %d днів",
+        paymentOverdue = "Платіж прострочений",
     ),
     calendarView = CalendarViewStrings(
         next = "Вперед",

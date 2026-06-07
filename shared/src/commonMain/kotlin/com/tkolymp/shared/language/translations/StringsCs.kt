@@ -349,6 +349,8 @@ val StringsCs = Strings(
         amountLabel = "Částka:",
         variableSymbolLabel = "Variabilní symbol:",
         dueLabel = "Splatné:",
+        paymentDueIn = "Platba splatná za %d dní",
+        paymentOverdue = "Platba po splatnosti",
     ),
     calendarView = CalendarViewStrings(
         next = "Další",
