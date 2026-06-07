@@ -31,11 +31,27 @@ data class OtherState(
 class OtherViewModel(
     private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService
 ) : ViewModel() {
-    private val _state = MutableStateFlow(OtherState())
+    private val _state = MutableStateFlow(lastKnownState ?: OtherState())
     val state: StateFlow<OtherState> = _state.asStateFlow()
+    private var loadStarted = false
 
-    fun load() {
-        _state.value = _state.value.copy(isLoading = true, error = null)
+    companion object {
+        // Survives ViewModel recreation within the same process — eliminates the blank-name flash
+        private var lastKnownState: OtherState? = null
+    }
+
+    init {
+        fetchFromStorage()
+    }
+
+    // Called from the screen — no-op if already started; use force = true to refresh
+    fun load(force: Boolean = false) {
+        if (loadStarted && !force) return
+        fetchFromStorage()
+    }
+
+    private fun fetchFromStorage() {
+        loadStarted = true
         viewModelScope.launch {
             try {
                 val raw = try { userService.getCachedCurrentUserJson() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
@@ -44,12 +60,13 @@ class OtherViewModel(
                 val cids = try { userService.getCachedCoupleIds() } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList<String>() }
                 var personDetails = try { userService.getCachedPersonDetailsJson() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
 
+                // Only show spinner + hit the network when person details aren't cached yet
                 if (personDetails.isNullOrBlank() && !pid.isNullOrBlank()) {
+                    _state.value = _state.value.copy(isLoading = true, error = null)
                     try { userService.fetchAndStorePersonDetails(pid) } catch (e: CancellationException) { throw e } catch (_: Exception) { }
                     personDetails = try { userService.getCachedPersonDetailsJson() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                 }
 
-                // parse simple fields
                 var name: String? = null
                 var subtitle: String? = null
                 var personFirstName: String? = null
@@ -85,12 +102,12 @@ class OtherViewModel(
                                 .filter { !it.isNullOrBlank() }
                                 .map { it!! }
                             val base = parts.joinToString(" ")
-                            name = if (!personSuffix.isNullOrBlank()) "$base, ${personSuffix}" else base
+                            name = if (!personSuffix.isNullOrBlank()) "$base, $personSuffix" else base
                         }
                     }
                 } catch (e: CancellationException) { throw e } catch (_: Exception) { }
 
-                _state.value = _state.value.copy(
+                val updated = _state.value.copy(
                     name = name,
                     subtitle = subtitle,
                     personId = pid,
@@ -105,6 +122,8 @@ class OtherViewModel(
                     personSuffix = personSuffix,
                     isLoading = false
                 )
+                lastKnownState = updated
+                _state.value = updated
             } catch (e: CancellationException) { throw e } catch (ex: Exception) {
                 _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání"))
             }
