@@ -185,8 +185,7 @@ fun App() {
         val navController = rememberNavController()
         val currentBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = currentBackStackEntry?.destination?.route
-        val boardViewModel = viewModel<com.tkolymp.shared.viewmodels.BoardViewModel>()
-        val boardState by boardViewModel.state.collectAsState()
+        val boardHasUnread by com.tkolymp.shared.announcements.AnnouncementBadge.hasUnread.collectAsState()
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -197,7 +196,7 @@ fun App() {
                     enter = slideInVertically(initialOffsetY = { it }, animationSpec = tween(300)),
                     exit = slideOutVertically(targetOffsetY = { it }, animationSpec = tween(300))
                 ) {
-                    AppBottomBar(current = currentRoute ?: "overview", boardHasUnread = boardState.hasUnread, onSelect = { 
+                    AppBottomBar(current = currentRoute ?: "overview", boardHasUnread = boardHasUnread, onSelect = { 
                         val startId = navController.graph.findStartDestination().id
                         if (it == "overview") {
                             navController.navigate(it) {

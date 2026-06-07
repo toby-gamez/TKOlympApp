@@ -4,9 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.announcements.Announcement
-import com.tkolymp.shared.cache.CacheService
+import com.tkolymp.shared.announcements.AnnouncementBadge
 import com.tkolymp.shared.Logger
-import com.tkolymp.shared.storage.AnnouncementBadgeStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.StateFlow
@@ -29,11 +28,11 @@ data class BoardState(
     override val error: AppError? = null
 ) : ViewModelState
 
-class BoardViewModel(
-    private val announcementService: com.tkolymp.shared.announcements.IAnnouncementService = ServiceLocator.announcementService,
-    private val cache: CacheService = ServiceLocator.cacheService,
-    private val badgeStorage: AnnouncementBadgeStorage = ServiceLocator.announcementBadgeStorage
-) : ViewModel() {
+class BoardViewModel : ViewModel() {
+    private val announcementService by lazy { ServiceLocator.announcementService }
+    private val cache by lazy { ServiceLocator.cacheService }
+    private val badgeStorage by lazy { ServiceLocator.announcementBadgeStorage }
+
     private val _state = MutableStateFlow(BoardState())
     val state: StateFlow<BoardState> = _state.asStateFlow()
 
@@ -49,8 +48,10 @@ class BoardViewModel(
                 if (raw != null) {
                     val parsed = AppJson.decodeFromString(ListSerializer(Announcement.serializer()), raw)
                     val latestTs = parsed.mapNotNull { it.updatedAt ?: it.createdAt }.maxOrNull()
-                    if (latestTs != null && (lastSeen == null || latestTs > lastSeen)) {
+                    val unread = latestTs != null && (lastSeen == null || latestTs > lastSeen)
+                    if (unread) {
                         _state.value = _state.value.copy(hasUnread = true)
+                        AnnouncementBadge.set(true)
                     }
                 }
             } catch (e: CancellationException) { throw e } catch (_: Exception) {}
@@ -63,6 +64,7 @@ class BoardViewModel(
                 val now = Clock.System.now().toString()
                 badgeStorage.setLastSeenTimestamp(now)
                 _state.value = _state.value.copy(hasUnread = false)
+                AnnouncementBadge.set(false)
             } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         }
     }
@@ -84,14 +86,14 @@ class BoardViewModel(
 
         try {
             val sticky = _state.value.selectedTab == 1
-            var list: List<com.tkolymp.shared.announcements.Announcement>? = null
+            var list: List<Announcement>? = null
 
             // If not forcing refresh, try offline cached announcements first and show them immediately
             if (!forceRefresh) {
                 try {
                     val raw = ServiceLocator.offlineSyncManager.loadAnnouncements(sticky)
                     if (raw != null) {
-                        val parsed = AppJson.decodeFromString(ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), raw)
+                        val parsed = AppJson.decodeFromString(ListSerializer(Announcement.serializer()), raw)
                         val parsedSorted = parsed.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }
                         if (sticky) {
                             _state.value = _state.value.copy(permanentAnnouncements = parsedSorted, isOffline = true, isLoading = false)
@@ -100,20 +102,18 @@ class BoardViewModel(
                             val latestTs = parsedSorted.mapNotNull { it.updatedAt ?: it.createdAt }.maxOrNull()
                             val unread = latestTs != null && (lastSeen == null || latestTs > lastSeen)
                             _state.value = _state.value.copy(currentAnnouncements = parsedSorted, isOffline = true, isLoading = false, hasUnread = unread)
+                            AnnouncementBadge.set(unread)
                         }
                         Logger.d("BoardViewModel", "loaded offline announcements for sticky=$sticky count=${parsedSorted.size}")
-                        // keep parsed as base; still attempt network refresh below
                         list = parsedSorted
                     }
                 } catch (e: CancellationException) { throw e } catch (_: Exception) {}
             }
 
             try {
-                // Attempt network fetch (will overwrite cached view on success)
                 val fetched = withContext(Dispatchers.Default) { announcementService.getAnnouncements(sticky) }
                     .sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }
                 list = fetched
-                // update state with fresh online data into the appropriate bucket
                 if (sticky) {
                     _state.value = _state.value.copy(permanentAnnouncements = fetched, isOffline = false, isLoading = false)
                 } else {
@@ -121,17 +121,17 @@ class BoardViewModel(
                     val latestTs = fetched.mapNotNull { it.updatedAt ?: it.createdAt }.maxOrNull()
                     val unread = latestTs != null && (lastSeen == null || latestTs > lastSeen)
                     _state.value = _state.value.copy(currentAnnouncements = fetched, isOffline = false, isLoading = false, hasUnread = unread)
+                    AnnouncementBadge.set(unread)
                 }
                 Logger.d("BoardViewModel", "fetched online announcements for sticky=$sticky count=${fetched.size}")
             } catch (e: CancellationException) { throw e } catch (netEx: Exception) {
-                // If network failed and we have already shown cached data, keep it; otherwise fallback to offline manager
                 if (list != null && list.isNotEmpty()) {
                     _state.value = _state.value.copy(isOffline = true, isLoading = false)
                 } else {
                     try {
                         val raw = ServiceLocator.offlineSyncManager.loadAnnouncements(sticky)
                         if (raw != null) {
-                            val parsed = AppJson.decodeFromString(ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), raw)
+                            val parsed = AppJson.decodeFromString(ListSerializer(Announcement.serializer()), raw)
                             val parsedSorted = parsed.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }
                             if (sticky) {
                                 _state.value = _state.value.copy(permanentAnnouncements = parsedSorted, isOffline = true, isLoading = false)
@@ -140,10 +140,10 @@ class BoardViewModel(
                                 val latestTs = parsedSorted.mapNotNull { it.updatedAt ?: it.createdAt }.maxOrNull()
                                 val unread = latestTs != null && (lastSeen == null || latestTs > lastSeen)
                                 _state.value = _state.value.copy(currentAnnouncements = parsedSorted, isOffline = true, isLoading = false, hasUnread = unread)
+                                AnnouncementBadge.set(unread)
                             }
                             Logger.d("BoardViewModel", "fallback offline announcements for sticky=$sticky count=${parsedSorted.size}")
                         } else {
-                            // restore previous appropriate list
                             if (sticky) _state.value = _state.value.copy(permanentAnnouncements = previousPermanent, isLoading = false, error = AppError.generic(netEx.message ?: AppStrings.current.errorMessages.errorLoading))
                             else _state.value = _state.value.copy(currentAnnouncements = previousCurrent, isLoading = false, error = AppError.generic(netEx.message ?: AppStrings.current.errorMessages.errorLoading))
                         }
@@ -155,7 +155,6 @@ class BoardViewModel(
             }
         Logger.d("BoardViewModel", "loadAnnouncements end: selectedTab=${_state.value.selectedTab} current=${_state.value.currentAnnouncements.size} permanent=${_state.value.permanentAnnouncements.size} isOffline=${_state.value.isOffline}")
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            // restore previous appropriate lists on fatal error
             _state.value = _state.value.copy(currentAnnouncements = previousCurrent, permanentAnnouncements = previousPermanent, isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoading))
         }
     }
