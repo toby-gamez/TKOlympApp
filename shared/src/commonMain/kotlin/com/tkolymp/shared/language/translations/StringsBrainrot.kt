@@ -22,6 +22,7 @@ import com.tkolymp.shared.language.NavigationStrings
 import com.tkolymp.shared.language.NotificationStrings
 import com.tkolymp.shared.language.OnboardingStrings
 import com.tkolymp.shared.language.FreeLessonsStrings
+import com.tkolymp.shared.language.WeekPersonaStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
@@ -510,6 +511,8 @@ val StringsBrainrot = Strings(
         attendanceAttended = "Showed up fr",
         attendanceNotExcused = "No cap absent",
         attendanceUnknown = "Idk fam",
+        weekStreak = "W RIZZ streak",
+        bestStreak = "GOAT",
     ),
     settings = SettingsStrings(
         title = "Settings no cap",
@@ -552,5 +555,21 @@ val StringsBrainrot = Strings(
         recurrenceEnd = "Repeat endie",
         savedLocallyNote = "Solo rizzies are stored locally; partner-syncie incoming.",
         saveTraining = "Lock In",
+    ),
+    weekPersona = WeekPersonaStrings(
+        hustle = "Grindset Sigma Week",
+        easy = "Chill Rizz Week",
+        sprint = "Speedrun Any% Week",
+        mix = "Crossover Episode Week",
+        social = "Main Character Week",
+        camp = "Glow Up Camp Week",
+        allRounder = "Perfectly Balanced (No nerfs pls)",
+        mon = "Mog",
+        tue = "Tues",
+        wed = "Weds",
+        thu = "Thr",
+        fri = "Fri",
+        sat = "Sats",
+        sun = "Sun (skibidi)",
     ),
 )

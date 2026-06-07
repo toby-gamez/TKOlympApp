@@ -134,6 +134,7 @@ data class StatsState(
     val totalMinutes: Long = 0L,
     val avgSessionsPerWeek: Double = 0.0,
     val currentStreak: Int = 0,
+    val longestStreak: Int = 0,
     /** Last 16 weeks, oldest first, newest last. */
     val weeklyData: List<WeekStats> = emptyList(),
     val monthlyData: List<MonthStats> = emptyList(),
@@ -222,6 +223,7 @@ class StatsViewModel(
 
             // Streak: consecutive weeks ending at current week with ≥1 training
             val currentStreak = computeStreak(weeklyData)
+            val longestStreak = computeLongestStreak(weeklyData)
 
             // Debug: log weekly buckets for easier inspection during testing
             try { Logger.d("StatsViewModel", "weeklyData=${weeklyData.map { it.weekStartIso + ':' + it.count }}") } catch (_: Exception) {}
@@ -261,6 +263,7 @@ class StatsViewModel(
                 totalMinutes = totalMinutes,
                 avgSessionsPerWeek = avgPerWeek,
                 currentStreak = currentStreak,
+                longestStreak = longestStreak,
                 weeklyData = weeklyData,
                 monthlyData = monthlyData,
                 typeData = typeData,
@@ -273,7 +276,7 @@ class StatsViewModel(
                 error = null
             )
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání statistik"))
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingStats))
         }
     }
 
@@ -551,6 +554,21 @@ class StatsViewModel(
             if (week.count > 0) streak++ else break
         }
         return streak
+    }
+
+    /** Longest consecutive run of weeks with count > 0 anywhere in the data. */
+    private fun computeLongestStreak(weeklyData: List<WeekStats>): Int {
+        var maxStreak = 0
+        var current = 0
+        for (week in weeklyData) {
+            if (week.count > 0) {
+                current++
+                if (current > maxStreak) maxStreak = current
+            } else {
+                current = 0
+            }
+        }
+        return maxStreak
     }
 
     private fun translateType(type: String): String {

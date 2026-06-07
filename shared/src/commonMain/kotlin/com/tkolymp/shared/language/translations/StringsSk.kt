@@ -14,6 +14,7 @@ import com.tkolymp.shared.language.EventStrings
 import com.tkolymp.shared.language.ExtendedProfileFieldStrings
 import com.tkolymp.shared.language.FilterStrings
 import com.tkolymp.shared.language.FreeLessonsStrings
+import com.tkolymp.shared.language.WeekPersonaStrings
 import com.tkolymp.shared.language.GenderStrings
 import com.tkolymp.shared.language.ImportExportStrings
 import com.tkolymp.shared.language.LanguageScreenStrings
@@ -509,6 +510,8 @@ val StringsSk = Strings(
         attendanceAttended = "Bol som",
         attendanceNotExcused = "Neospravedlnené",
         attendanceUnknown = "Neznáme",
+        weekStreak = "týždenná séria",
+        bestStreak = "Najlepšia",
     ),
     settings = SettingsStrings(
         title = "Nastavenia",
@@ -551,5 +554,21 @@ val StringsSk = Strings(
         recurrenceEnd = "Koniec opakovania",
         savedLocallyNote = "Samotréningy sa ukladajú lokálne, synchronizácia s partnerom je v pláne.",
         saveTraining = "Uložiť tréning",
+    ),
+    weekPersona = WeekPersonaStrings(
+        hustle = "Hustle Week",
+        easy = "Easy Week",
+        sprint = "Sprint Week",
+        mix = "Mix Week",
+        social = "Social Week",
+        camp = "Camp Week",
+        allRounder = "All-Rounder",
+        mon = "Mon",
+        tue = "Tue",
+        wed = "Wed",
+        thu = "Thu",
+        fri = "Fri",
+        sat = "Sat",
+        sun = "Sun",
     ),
 )

@@ -22,6 +22,7 @@ import com.tkolymp.shared.language.NavigationStrings
 import com.tkolymp.shared.language.NotificationStrings
 import com.tkolymp.shared.language.OnboardingStrings
 import com.tkolymp.shared.language.FreeLessonsStrings
+import com.tkolymp.shared.language.WeekPersonaStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
@@ -508,6 +509,8 @@ val StringsDe = Strings(
         attendanceAttended = "Anwesend",
         attendanceNotExcused = "Unentschuldigt",
         attendanceUnknown = "Unbekannt",
+        weekStreak = "Wochens Serie",
+        bestStreak = "Beste",
     ),
     settings = SettingsStrings(
         title = "Einstellungen",
@@ -550,5 +553,21 @@ val StringsDe = Strings(
         recurrenceEnd = "Ende der Wiederholung",
         savedLocallyNote = "Einzeltrainings werden lokal gespeichert; eine Synchronisation mit dem Partner ist geplant.",
         saveTraining = "Training speichern",
+    ),
+    weekPersona = WeekPersonaStrings(
+        hustle = "Hustle Week",
+        easy = "Easy Week",
+        sprint = "Sprint Week",
+        mix = "Mix Week",
+        social = "Social Week",
+        camp = "Camp Week",
+        allRounder = "All-Rounder",
+        mon = "Mon",
+        tue = "Tue",
+        wed = "Wed",
+        thu = "Thu",
+        fri = "Fri",
+        sat = "Sat",
+        sun = "Sun",
     ),
 )

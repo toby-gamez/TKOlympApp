@@ -22,6 +22,7 @@ import com.tkolymp.shared.language.NavigationStrings
 import com.tkolymp.shared.language.NotificationStrings
 import com.tkolymp.shared.language.OnboardingStrings
 import com.tkolymp.shared.language.FreeLessonsStrings
+import com.tkolymp.shared.language.WeekPersonaStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
@@ -509,6 +510,8 @@ val StringsVi = Strings(
         attendanceAttended = "Có mặt",
         attendanceNotExcused = "Vắng mặt",
         attendanceUnknown = "Chưa biết",
+        weekStreak = "chuỗi tuần",
+        bestStreak = "Tốt nhất",
     ),
     settings = SettingsStrings(
         title = "Cài đặt",
@@ -551,5 +554,21 @@ val StringsVi = Strings(
         recurrenceEnd = "Kết thúc lặp",
         savedLocallyNote = "Các buổi tập cá nhân được lưu cục bộ; đồng bộ với đối tác đang được lên kế hoạch.",
         saveTraining = "Lưu buổi tập",
+    ),
+    weekPersona = WeekPersonaStrings(
+        hustle = "Hustle Week",
+        easy = "Easy Week",
+        sprint = "Sprint Week",
+        mix = "Mix Week",
+        social = "Social Week",
+        camp = "Camp Week",
+        allRounder = "All-Rounder",
+        mon = "Mon",
+        tue = "Tue",
+        wed = "Wed",
+        thu = "Thu",
+        fri = "Fri",
+        sat = "Sat",
+        sun = "Sun",
     ),
 )

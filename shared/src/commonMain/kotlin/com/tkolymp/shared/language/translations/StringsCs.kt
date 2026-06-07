@@ -22,6 +22,7 @@ import com.tkolymp.shared.language.NavigationStrings
 import com.tkolymp.shared.language.NotificationStrings
 import com.tkolymp.shared.language.OnboardingStrings
 import com.tkolymp.shared.language.FreeLessonsStrings
+import com.tkolymp.shared.language.WeekPersonaStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
@@ -368,6 +369,12 @@ val StringsCs = Strings(
         calendarViewTimeline = "Osa",
         calendarViewTimelineDesc = "Vizuální plán\ns časovou osou",
         start = "Začít",
+        roleSelectionTitle = "Kdo jste?",
+        roleSelectionDescription = "Vyberte si, zda jste tanečník nebo rodič",
+        roleDancer = "Tanečník",
+        roleDancerDesc = "Plný přístup",
+        roleParent = "Rodič",
+        roleParentDesc = "Omezená oznámení",
     ),
     freeLessons = FreeLessonsStrings(
         title = "Volné lekce",
@@ -517,6 +524,17 @@ val StringsCs = Strings(
         attendanceAttended = "Byl jsem",
         attendanceNotExcused = "Neomluveno",
         attendanceUnknown = "Neznámo",
+        rankingLabel = "pořadí",
+        totalPointsLabel = "bodů celkem",
+        trainingsPerWeekLabel = "tréninků za týden",
+        attendanceLabel = "Docházka",
+        attendedLabel = "absolvováno",
+        excusedLabel = "omluveno",
+        scoreSectionLabel = "Skóre",
+        weeksInARowLabel = "týdnů v řadě",
+        seasonPrefix = "Sezóna",
+        weekStreak = "týdenní série",
+        bestStreak = "Nejlepší",
     ),
     settings = SettingsStrings(
         title = "Nastavení",
@@ -559,5 +577,21 @@ val StringsCs = Strings(
         recurrenceEnd = "Konec opakování",
            savedLocallyNote = "Samotréninky jsou ukládány lokálně, synchronizace s partnerem je v plánu.",
            saveTraining = "Uložit trénink",
+    ),
+    weekPersona = WeekPersonaStrings(
+        hustle = "Týden dřiny",
+        easy = "Klidný týden",
+        sprint = "Týden sprintu",
+        mix = "Mix týden",
+        social = "Společenský týden",
+        camp = "Táborový týden",
+        allRounder = "Všestranný",
+        mon = "Po",
+        tue = "Út",
+        wed = "St",
+        thu = "Čt",
+        fri = "Pá",
+        sat = "So",
+        sun = "Ne",
     ),
 )

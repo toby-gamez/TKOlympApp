@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -31,6 +32,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
@@ -94,6 +96,7 @@ fun StatsScreen(
     val totalMinutes = state.totalMinutes
     val avgPerWeek = state.avgSessionsPerWeek
     val currentStreak = state.currentStreak
+    val longestStreak = state.longestStreak
     val weeklyData = state.weeklyData
     val monthlyData = state.monthlyData
     val typeData = state.typeData
@@ -253,14 +256,24 @@ fun StatsScreen(
                     totalSessions = totalSessions,
                     totalMinutes = totalMinutes,
                     avgPerWeek = avgPerWeek,
-                    streak = currentStreak,
                     strings = strings
                 )
                 } // StaggeredItem summary
 
+                // ── Streak section ───────────────────────────────────────────
+                if (currentStreak > 0) {
+                    StaggeredItem(index = 1, visible = sectionsVisible, baseDelayMs = 60) {
+                    StreakSection(
+                        streak = currentStreak,
+                        longestStreak = longestStreak,
+                        strings = strings
+                    )
+                    } // StaggeredItem streak
+                }
+
                 // ── Bar chart: weekly activity ───────────────────────────────
                 if (weeklyData.isNotEmpty()) {
-                    StaggeredItem(index = 1, visible = sectionsVisible, baseDelayMs = 60) {
+                    StaggeredItem(index = 2, visible = sectionsVisible, baseDelayMs = 60) {
                     StatsCard(title = strings.weeklyActivity) {
                         val barData = weeklyData.map { Pair(it.weekLabel, it.count) }
                         val highlightIndex = weeklyData.indexOfFirst { it.isCurrent }
@@ -300,7 +313,7 @@ fun StatsScreen(
 
                 // ── Monthly breakdown ────────────────────────────────────────
                 if (monthlyData.isNotEmpty()) {
-                    StaggeredItem(index = 2, visible = sectionsVisible, baseDelayMs = 60) {
+                    StaggeredItem(index = 3, visible = sectionsVisible, baseDelayMs = 60) {
                     StatsCard(title = strings.monthlyBreakdown) {
                         MonthlyTable(
                             data = monthlyData,
@@ -321,7 +334,7 @@ fun StatsScreen(
 
                 // ── Type breakdown ───────────────────────────────────────────
                 if (typeData.isNotEmpty()) {
-                    StaggeredItem(index = 3, visible = sectionsVisible, baseDelayMs = 60) {
+                    StaggeredItem(index = 4, visible = sectionsVisible, baseDelayMs = 60) {
                     StatsCard(title = strings.typeBreakdown) {
                         TypeBreakdownSection(data = typeData)
                     }
@@ -330,7 +343,7 @@ fun StatsScreen(
 
                 // ── Trainer breakdown ────────────────────────────────────────
                 if (trainerData.isNotEmpty()) {
-                    StaggeredItem(index = 4, visible = sectionsVisible, baseDelayMs = 60) {
+                    StaggeredItem(index = 5, visible = sectionsVisible, baseDelayMs = 60) {
                     StatsCard(title = strings.trainerBreakdown) {
                         TrainerBreakdownSection(
                             data = trainerData,
@@ -344,7 +357,7 @@ fun StatsScreen(
 
                 // ── Score card ───────────────────────────────────────────────
                 scoreEntry?.let { score ->
-                    StaggeredItem(index = 5, visible = sectionsVisible, baseDelayMs = 60) {
+                    StaggeredItem(index = 6, visible = sectionsVisible, baseDelayMs = 60) {
                     ScoreCard(score = score, strings = strings, onOpenLeaderboard = onOpenLeaderboard)
                     } // StaggeredItem score
                 }
@@ -397,7 +410,6 @@ private fun SummaryRow(
     totalSessions: Int,
     totalMinutes: Long,
     avgPerWeek: Double,
-    streak: Int,
     strings: com.tkolymp.shared.language.StatsStrings
 ) {
     val totalHoursFmt = (totalMinutes / 60.0).roundTo1dp()
@@ -419,9 +431,160 @@ private fun SummaryRow(
         )
         SummaryCard(
             modifier = Modifier.weight(1f),
-            value = if (streak > 0) "$streak ${strings.weeksInARow}" else avgFmt.toString(),
-            label = if (streak > 0) strings.currentStreak else strings.avgPerWeek
+            value = avgFmt.toString(),
+            label = strings.avgPerWeek
         )
+    }
+}
+
+// ─── Streak section (with milestone badges) ──────────────────────────────────
+
+private data class StreakMilestone(
+    val minStreak: Int,
+    val emoji: String,
+    val label: String,
+    val badgeColor: Color,
+    val glowColor: Color
+)
+
+private val streakMilestones = listOf(
+    StreakMilestone(0, "🔥", "", Color.Unspecified, Color.Unspecified),
+    StreakMilestone(5, "🔥", "On Fire!", Color(0xFFFF6D00), Color(0xFFFF9800)),
+    StreakMilestone(10, "⚡", "Unstoppable!", Color(0xFFAB47BC), Color(0xFFCE93D8)),
+    StreakMilestone(15, "💎", "Legendary!", Color(0xFF42A5F5), Color(0xFF90CAF9)),
+    StreakMilestone(20, "🏆", "Champion!", Color(0xFFFFCA28), Color(0xFFFFE082)),
+    StreakMilestone(25, "👑", "Titan!", Color(0xFF7C4DFF), Color(0xFFB388FF)),
+)
+
+private fun getMilestone(streak: Int): StreakMilestone =
+    streakMilestones.lastOrNull { it.minStreak <= streak } ?: streakMilestones.first()
+
+private fun nextMilestoneTarget(streak: Int): Int {
+    val next = streakMilestones.firstOrNull { it.minStreak > streak }
+    return next?.minStreak ?: streakMilestones.last().minStreak
+}
+
+private fun milestoneProgress(streak: Int): Float {
+    if (streak <= 0) return 0f
+    val current = getMilestone(streak)
+    val nextTarget = nextMilestoneTarget(streak)
+    if (nextTarget <= current.minStreak) return 1f
+    return ((streak - current.minStreak).toFloat() / (nextTarget - current.minStreak).toFloat()).coerceIn(0f, 1f)
+}
+
+@Composable
+private fun StreakSection(
+    modifier: Modifier = Modifier,
+    streak: Int,
+    longestStreak: Int,
+    strings: com.tkolymp.shared.language.StatsStrings
+) {
+    val milestone = remember(streak) { getMilestone(streak) }
+    val nextTarget = remember(streak) { nextMilestoneTarget(streak) }
+    val progress = remember(streak) { milestoneProgress(streak) }
+
+    val cardColor = if (streak >= 5) milestone.badgeColor.copy(alpha = 0.15f) else MaterialTheme.colorScheme.primaryContainer
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = cardColor)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Large emoji
+            Text(
+                text = milestone.emoji,
+                style = MaterialTheme.typography.displayMedium,
+                textAlign = TextAlign.Center
+            )
+
+            // Streak count
+            Text(
+                text = streak.toString(),
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                textAlign = TextAlign.Center
+            )
+
+            // Label
+            Text(
+                text = strings.weekStreak,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+                textAlign = TextAlign.Center
+            )
+
+            // Milestone badge (only for 5+ weeks)
+            if (streak >= 5) {
+                Spacer(Modifier.height(10.dp))
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(milestone.badgeColor)
+                        .padding(horizontal = 14.dp, vertical = 5.dp)
+                ) {
+                    Text(
+                        text = "${milestone.emoji} ${milestone.label}",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            }
+
+            // Progress to next milestone
+            if (streak > 0 && nextTarget > getMilestone(streak).minStreak) {
+                Spacer(Modifier.height(14.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "+${nextTarget - streak}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.5f)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp))
+                            .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.15f))
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(progress)
+                                .fillMaxHeight()
+                                .clip(RoundedCornerShape(3.dp))
+                                .background(milestone.glowColor.takeIf { it != Color.Unspecified } ?: MaterialTheme.colorScheme.primary)
+                        )
+                    }
+                    Text(
+                        text = nextTarget.toString(),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
+
+            // Best streak comparison
+            if (longestStreak > streak) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = "${strings.bestStreak}: $longestStreak ${strings.weeksInARow}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.45f)
+                )
+            }
+        }
     }
 }
 
