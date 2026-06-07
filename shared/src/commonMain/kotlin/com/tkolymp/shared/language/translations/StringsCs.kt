@@ -544,6 +544,11 @@ val StringsCs = Strings(
         seasonPrefix = "Sezóna",
         weekStreak = "týdenní série",
         bestStreak = "Nejlepší",
+        weeklyGoalTitle = "Týdenní cíl",
+        setWeeklyGoal = "Nastavit týdenní cíl",
+        sessionsPerWeek = "tréninků/týden",
+        goalReached = "Cíl splněn!",
+        thisWeek = "Tento týden",
     ),
     settings = SettingsStrings(
         title = "Nastavení",

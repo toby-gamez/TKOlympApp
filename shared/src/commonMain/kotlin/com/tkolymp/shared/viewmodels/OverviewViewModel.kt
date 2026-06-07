@@ -16,7 +16,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
 import kotlinx.serialization.json.booleanOrNull
@@ -61,6 +63,9 @@ data class OverviewState(
     val myPersonId: String? = null,
     val myCoupleIds: List<String> = emptyList(),
     val isOffline: Boolean = false,
+    val weeklyGoal: Int = 0,
+    val currentWeekCount: Int = 0,
+    val currentWeekMinutes: Long = 0L,
     override val isLoading: Boolean = false,
     override val error: AppError? = null
 ) : ViewModelState
@@ -70,14 +75,25 @@ class OverviewViewModel(
     private val announcementService: com.tkolymp.shared.announcements.IAnnouncementService = ServiceLocator.announcementService,
     private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService,
     private val peopleService: com.tkolymp.shared.people.PeopleService = ServiceLocator.peopleService,
-    private val cache: CacheService = ServiceLocator.cacheService
+    private val cache: CacheService = ServiceLocator.cacheService,
+    private val calendarPreferenceStorage: com.tkolymp.shared.storage.ICalendarPreferenceStorage = ServiceLocator.calendarPreferenceStorage
 ) : ViewModel() {
     private val _state = MutableStateFlow(OverviewState())
     val state: StateFlow<OverviewState> = _state.asStateFlow()
 
     suspend fun loadOverview(forceRefresh: Boolean = false) {
         val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-        val startIso = today.toString() + "T00:00:00Z"
+        val isoDay = when (today.dayOfWeek) {
+            kotlinx.datetime.DayOfWeek.MONDAY -> 1
+            kotlinx.datetime.DayOfWeek.TUESDAY -> 2
+            kotlinx.datetime.DayOfWeek.WEDNESDAY -> 3
+            kotlinx.datetime.DayOfWeek.THURSDAY -> 4
+            kotlinx.datetime.DayOfWeek.FRIDAY -> 5
+            kotlinx.datetime.DayOfWeek.SATURDAY -> 6
+            kotlinx.datetime.DayOfWeek.SUNDAY -> 7
+        }
+        val weekMonday = today.minus(isoDay - 1, DateTimeUnit.DAY)
+        val startIso = weekMonday.toString() + "T00:00:00Z"
         val endIso = today.plus(365, DateTimeUnit.DAY).toString() + "T23:59:59Z"
         val todayString = today.toString()
         val tomorrowString = today.plus(1, DateTimeUnit.DAY).toString()
@@ -391,6 +407,16 @@ class OverviewViewModel(
                 }
             } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("OverviewViewModel", "fetchPeople failed: ${e.message}"); emptyList() }
 
+            val weeklyGoal = try { calendarPreferenceStorage.getWeeklyGoal() } catch (_: Exception) { 0 }
+            val mondayStr = weekMonday.toString()
+            val sundayStr = weekMonday.plus(6, DateTimeUnit.DAY).toString()
+            val thisWeekEvents = events.filter { inst ->
+                val ds = (inst.since ?: inst.until ?: "").substringBefore('T')
+                ds in mondayStr..sundayStr && !inst.isCancelled
+            }
+            val currentWeekCount = thisWeekEvents.size
+            val currentWeekMinutes = thisWeekEvents.sumOf { inst -> overviewDurationMin(inst.since, inst.until) }
+
             _state.value = _state.value.copy(
                 upcomingEvents = events,
                 recentAnnouncements = announcements,
@@ -403,6 +429,9 @@ class OverviewViewModel(
                 upcomingBirthdays = upcomingBirthdays,
                 myPersonId = pid,
                 myCoupleIds = cids,
+                weeklyGoal = weeklyGoal,
+                currentWeekCount = currentWeekCount,
+                currentWeekMinutes = currentWeekMinutes,
                 isLoading = false
             )
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
@@ -414,5 +443,14 @@ class OverviewViewModel(
         inst.event?.type?.toEventType() == EventType.LESSON == true &&
             !inst.event.eventTrainersList.isNullOrEmpty() &&
             !inst.event.eventTrainersList.firstOrNull().isNullOrBlank()
+
+    private fun overviewDurationMin(since: String?, until: String?): Long {
+        if (since.isNullOrBlank() || until.isNullOrBlank()) return 0L
+        return try {
+            val s = kotlin.time.Instant.parse(since).epochSeconds
+            val u = kotlin.time.Instant.parse(until).epochSeconds
+            maxOf(0L, (u - s) / 60L)
+        } catch (_: Exception) { 0L }
+    }
 
 }

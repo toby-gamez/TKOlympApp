@@ -1,6 +1,7 @@
 package com.tkolymp.shared.viewmodels
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.event.EventInstance
@@ -13,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
@@ -135,6 +137,8 @@ data class StatsState(
     val avgSessionsPerWeek: Double = 0.0,
     val currentStreak: Int = 0,
     val longestStreak: Int = 0,
+    val weeklyGoal: Int = 0,
+    val currentWeekCount: Int = 0,
     /** Last 16 weeks, oldest first, newest last. */
     val weeklyData: List<WeekStats> = emptyList(),
     val monthlyData: List<MonthStats> = emptyList(),
@@ -163,7 +167,8 @@ class StatsViewModel(
     private val eventService: com.tkolymp.shared.event.IEventService = ServiceLocator.eventService,
     private val peopleService: com.tkolymp.shared.people.PeopleService = ServiceLocator.peopleService,
     private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService,
-    private val cacheService: com.tkolymp.shared.cache.CacheService = ServiceLocator.cacheService
+    private val cacheService: com.tkolymp.shared.cache.CacheService = ServiceLocator.cacheService,
+    private val calendarPreferenceStorage: com.tkolymp.shared.storage.ICalendarPreferenceStorage = ServiceLocator.calendarPreferenceStorage
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(StatsState())
@@ -224,6 +229,8 @@ class StatsViewModel(
             // Streak: consecutive weeks ending at current week with ≥1 training
             val currentStreak = computeStreak(weeklyData)
             val longestStreak = computeLongestStreak(weeklyData)
+            val weeklyGoal = calendarPreferenceStorage.getWeeklyGoal()
+            val currentWeekCount = weeklyData.find { it.isCurrent }?.count ?: 0
 
             // Debug: log weekly buckets for easier inspection during testing
             try { Logger.d("StatsViewModel", "weeklyData=${weeklyData.map { it.weekStartIso + ':' + it.count }}") } catch (_: Exception) {}
@@ -264,6 +271,8 @@ class StatsViewModel(
                 avgSessionsPerWeek = avgPerWeek,
                 currentStreak = currentStreak,
                 longestStreak = longestStreak,
+                weeklyGoal = weeklyGoal,
+                currentWeekCount = currentWeekCount,
                 weeklyData = weeklyData,
                 monthlyData = monthlyData,
                 typeData = typeData,
@@ -575,6 +584,13 @@ class StatsViewModel(
         return try {
             com.tkolymp.shared.utils.translateEventType(type) ?: type
         } catch (_: Exception) { type }
+    }
+
+    fun setWeeklyGoal(goal: Int) {
+        viewModelScope.launch {
+            calendarPreferenceStorage.setWeeklyGoal(goal)
+            _state.update { it.copy(weeklyGoal = goal) }
+        }
     }
 
     /** Clears a comparison slot (0=A … 4=E). */

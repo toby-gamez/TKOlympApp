@@ -516,6 +516,11 @@ val StringsVi = Strings(
         attendanceUnknown = "Chưa biết",
         weekStreak = "chuỗi tuần",
         bestStreak = "Tốt nhất",
+        weeklyGoalTitle = "Mục tiêu tuần",
+        setWeeklyGoal = "Đặt mục tiêu tuần",
+        sessionsPerWeek = "buổi/tuần",
+        goalReached = "Đạt mục tiêu!",
+        thisWeek = "Tuần này",
     ),
     settings = SettingsStrings(
         title = "Cài đặt",

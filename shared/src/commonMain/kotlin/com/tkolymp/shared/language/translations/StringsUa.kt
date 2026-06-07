@@ -516,6 +516,11 @@ val StringsUa = Strings(
         attendanceUnknown = "Невідомо",
         weekStreak = "тижнева серія",
         bestStreak = "Найкраща",
+        weeklyGoalTitle = "Тижнева мета",
+        setWeeklyGoal = "Встановити тижневу мету",
+        sessionsPerWeek = "тренувань/тиждень",
+        goalReached = "Мета досягнута!",
+        thisWeek = "Цей тиждень",
     ),
     settings = SettingsStrings(
         title = "Налаштування",

@@ -515,6 +515,11 @@ val StringsDe = Strings(
         attendanceUnknown = "Unbekannt",
         weekStreak = "Wochens Serie",
         bestStreak = "Beste",
+        weeklyGoalTitle = "Wochenziel",
+        setWeeklyGoal = "Wochenziel setzen",
+        sessionsPerWeek = "Einheiten/Woche",
+        goalReached = "Ziel erreicht!",
+        thisWeek = "Diese Woche",
     ),
     settings = SettingsStrings(
         title = "Einstellungen",

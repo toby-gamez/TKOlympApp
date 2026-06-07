@@ -56,4 +56,9 @@ data class StatsStrings(
     val seasonPrefix: String = "Season",
     val weekStreak: String = "week streak",
     val bestStreak: String = "Best",
+    val weeklyGoalTitle: String = "Weekly goal",
+    val setWeeklyGoal: String = "Set a weekly goal",
+    val sessionsPerWeek: String = "sessions/week",
+    val goalReached: String = "Goal reached!",
+    val thisWeek: String = "This week",
 )

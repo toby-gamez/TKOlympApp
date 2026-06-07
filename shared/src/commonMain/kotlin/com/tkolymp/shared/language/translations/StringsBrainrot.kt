@@ -517,6 +517,11 @@ val StringsBrainrot = Strings(
         attendanceUnknown = "Idk fam",
         weekStreak = "W RIZZ streak",
         bestStreak = "GOAT",
+        weeklyGoalTitle = "Weekly grind goal",
+        setWeeklyGoal = "Set ur weekly grind",
+        sessionsPerWeek = "sessions/week no cap",
+        goalReached = "COOKED IT FR FR!",
+        thisWeek = "This week bestie",
     ),
     settings = SettingsStrings(
         title = "Settings no cap",

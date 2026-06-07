@@ -24,7 +24,10 @@ import androidx.compose.material.icons.automirrored.filled.CompareArrows
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -271,9 +274,19 @@ fun StatsScreen(
                     } // StaggeredItem streak
                 }
 
+                // ── Weekly goal ──────────────────────────────────────────────
+                StaggeredItem(index = 2, visible = sectionsVisible, baseDelayMs = 60) {
+                WeeklyGoalSection(
+                    weeklyGoal = state.weeklyGoal,
+                    currentWeekCount = state.currentWeekCount,
+                    strings = strings,
+                    onSetGoal = { goal -> viewModel.setWeeklyGoal(goal) }
+                )
+                } // StaggeredItem weekly goal
+
                 // ── Bar chart: weekly activity ───────────────────────────────
                 if (weeklyData.isNotEmpty()) {
-                    StaggeredItem(index = 2, visible = sectionsVisible, baseDelayMs = 60) {
+                    StaggeredItem(index = 3, visible = sectionsVisible, baseDelayMs = 60) {
                     StatsCard(title = strings.weeklyActivity) {
                         val barData = weeklyData.map { Pair(it.weekLabel, it.count) }
                         val highlightIndex = weeklyData.indexOfFirst { it.isCurrent }
@@ -313,7 +326,7 @@ fun StatsScreen(
 
                 // ── Monthly breakdown ────────────────────────────────────────
                 if (monthlyData.isNotEmpty()) {
-                    StaggeredItem(index = 3, visible = sectionsVisible, baseDelayMs = 60) {
+                    StaggeredItem(index = 4, visible = sectionsVisible, baseDelayMs = 60) {
                     StatsCard(title = strings.monthlyBreakdown) {
                         MonthlyTable(
                             data = monthlyData,
@@ -334,7 +347,7 @@ fun StatsScreen(
 
                 // ── Type breakdown ───────────────────────────────────────────
                 if (typeData.isNotEmpty()) {
-                    StaggeredItem(index = 4, visible = sectionsVisible, baseDelayMs = 60) {
+                    StaggeredItem(index = 5, visible = sectionsVisible, baseDelayMs = 60) {
                     StatsCard(title = strings.typeBreakdown) {
                         TypeBreakdownSection(data = typeData)
                     }
@@ -343,7 +356,7 @@ fun StatsScreen(
 
                 // ── Trainer breakdown ────────────────────────────────────────
                 if (trainerData.isNotEmpty()) {
-                    StaggeredItem(index = 5, visible = sectionsVisible, baseDelayMs = 60) {
+                    StaggeredItem(index = 6, visible = sectionsVisible, baseDelayMs = 60) {
                     StatsCard(title = strings.trainerBreakdown) {
                         TrainerBreakdownSection(
                             data = trainerData,
@@ -357,7 +370,7 @@ fun StatsScreen(
 
                 // ── Score card ───────────────────────────────────────────────
                 scoreEntry?.let { score ->
-                    StaggeredItem(index = 6, visible = sectionsVisible, baseDelayMs = 60) {
+                    StaggeredItem(index = 7, visible = sectionsVisible, baseDelayMs = 60) {
                     ScoreCard(score = score, strings = strings, onOpenLeaderboard = onOpenLeaderboard)
                     } // StaggeredItem score
                 }
@@ -434,6 +447,130 @@ private fun SummaryRow(
             value = avgFmt.toString(),
             label = strings.avgPerWeek
         )
+    }
+}
+
+// ─── Weekly goal section ──────────────────────────────────────────────────────
+
+@Composable
+private fun WeeklyGoalSection(
+    modifier: Modifier = Modifier,
+    weeklyGoal: Int,
+    currentWeekCount: Int,
+    strings: com.tkolymp.shared.language.StatsStrings,
+    onSetGoal: (Int) -> Unit
+) {
+    var showDialog by remember { mutableStateOf(false) }
+    var pendingGoal by remember(weeklyGoal) { mutableStateOf(if (weeklyGoal > 0) weeklyGoal else 3) }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text(strings.weeklyGoalTitle) },
+            text = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(strings.sessionsPerWeek, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(Modifier.height(12.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        OutlinedButton(
+                            onClick = { if (pendingGoal > 1) pendingGoal-- },
+                            enabled = pendingGoal > 1
+                        ) { Text("−") }
+                        Text(
+                            text = pendingGoal.toString(),
+                            style = MaterialTheme.typography.displaySmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        OutlinedButton(
+                            onClick = { if (pendingGoal < 14) pendingGoal++ },
+                            enabled = pendingGoal < 14
+                        ) { Text("+") }
+                    }
+                    if (weeklyGoal > 0) {
+                        Spacer(Modifier.height(8.dp))
+                        TextButton(onClick = { onSetGoal(0); showDialog = false }) {
+                            Text("✕ ${strings.weeklyGoalTitle}", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { onSetGoal(pendingGoal); showDialog = false }) {
+                    Text(AppStrings.current.commonActions.confirm)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text(AppStrings.current.commonActions.cancel)
+                }
+            }
+        )
+    }
+
+    if (weeklyGoal <= 0) {
+        OutlinedButton(
+            onClick = { showDialog = true },
+            modifier = modifier.fillMaxWidth()
+        ) {
+            Text(strings.setWeeklyGoal)
+        }
+        return
+    }
+
+    val progress = (currentWeekCount.toFloat() / weeklyGoal.toFloat()).coerceIn(0f, 1f)
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress,
+        animationSpec = tween(600, easing = FastOutSlowInEasing),
+        label = "goalProgress"
+    )
+    val goalMet = currentWeekCount >= weeklyGoal
+    val progressColor = if (goalMet) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (goalMet) Color(0xFF4CAF50).copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(strings.weeklyGoalTitle, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        text = "$currentWeekCount / $weeklyGoal ${strings.sessionsPerWeek}",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    if (goalMet) {
+                        Text(strings.goalReached, style = MaterialTheme.typography.labelSmall, color = Color(0xFF4CAF50), fontWeight = FontWeight.Bold)
+                    }
+                }
+                IconButton(onClick = { showDialog = true }) {
+                    Icon(Icons.Default.Edit, contentDescription = strings.weeklyGoalTitle, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            Spacer(Modifier.height(10.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.15f))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(animatedProgress)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(progressColor)
+                )
+            }
+        }
     }
 }
 

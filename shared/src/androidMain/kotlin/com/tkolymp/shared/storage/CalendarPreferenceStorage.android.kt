@@ -31,4 +31,11 @@ actual class CalendarPreferenceStorage actual constructor(platformContext: Any) 
         ids.add(eventId.toString())
         prefs.edit().putString("calendar_event_ids", ids.joinToString(",")).apply()
     }
+
+    actual override suspend fun getWeeklyGoal(): Int =
+        prefs.getInt("weekly_goal", 0)
+
+    actual override suspend fun setWeeklyGoal(value: Int) {
+        prefs.edit().putInt("weekly_goal", value).apply()
+    }
 }

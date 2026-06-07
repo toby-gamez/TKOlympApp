@@ -516,6 +516,11 @@ val StringsSl = Strings(
         attendanceUnknown = "Neznano",
         weekStreak = "tedenska serija",
         bestStreak = "Najboljša",
+        weeklyGoalTitle = "Tedenski cilj",
+        setWeeklyGoal = "Nastavi tedenski cilj",
+        sessionsPerWeek = "treningov/teden",
+        goalReached = "Cilj dosežen!",
+        thisWeek = "Ta teden",
     ),
     settings = SettingsStrings(
         title = "Nastavitve",

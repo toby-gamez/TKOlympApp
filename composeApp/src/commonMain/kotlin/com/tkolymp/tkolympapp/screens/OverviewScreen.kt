@@ -23,8 +23,10 @@ import com.tkolymp.tkolympapp.components.parseColorOrDefault
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -131,6 +133,28 @@ fun OverviewScreen(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
                     )
                 }
+            }
+
+            if (!state.isLoading) {
+                MiniStatsRow(
+                    sessionCount = state.currentWeekCount,
+                    minutes = state.currentWeekMinutes,
+                    thisWeekLabel = AppStrings.current.stats.thisWeek,
+                    sessionsUnit = AppStrings.current.stats.sessionsUnit,
+                    hoursUnit = AppStrings.current.stats.hoursUnit,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp)
+                )
+            }
+
+            if (state.weeklyGoal > 0) {
+                WeeklyGoalIndicator(
+                    goal = state.weeklyGoal,
+                    count = state.currentWeekCount,
+                    thisWeekLabel = AppStrings.current.stats.thisWeek,
+                    sessionsPerWeek = AppStrings.current.stats.sessionsPerWeek,
+                    goalReached = AppStrings.current.stats.goalReached,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                )
             }
 
             // Trainings section
@@ -355,6 +379,73 @@ fun OverviewScreen(
     }
 }
 
+}
+
+@Composable
+private fun MiniStatsRow(
+    sessionCount: Int,
+    minutes: Long,
+    thisWeekLabel: String,
+    sessionsUnit: String,
+    hoursUnit: String,
+    modifier: Modifier = Modifier
+) {
+    val hours = minutes / 60
+    val label = buildString {
+        append("$thisWeekLabel: $sessionCount $sessionsUnit")
+        if (hours > 0) append(" · $hours $hoursUnit")
+    }
+    Text(
+        text = label,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun WeeklyGoalIndicator(
+    modifier: Modifier = Modifier,
+    goal: Int,
+    count: Int,
+    thisWeekLabel: String,
+    sessionsPerWeek: String,
+    goalReached: String
+) {
+    val progress = (count.toFloat() / goal.toFloat()).coerceIn(0f, 1f)
+    val goalMet = count >= goal
+    val green = androidx.compose.ui.graphics.Color(0xFF4CAF50)
+    val progressColor = if (goalMet) green else MaterialTheme.colorScheme.primary
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "$thisWeekLabel · $count / $goal $sessionsPerWeek",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (goalMet) {
+                    Text(goalReached, style = MaterialTheme.typography.labelSmall, color = green, fontWeight = FontWeight.Bold)
+                }
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
+                color = progressColor,
+                trackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.15f)
+            )
+        }
+    }
 }
 
 private fun computeOverviewWeekVibes(
