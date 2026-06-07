@@ -213,7 +213,7 @@ fun CalendarScreen(
                             }
                         ) {
                             IconButton(onClick = { showBottomSheet = true }) {
-                                Icon(Icons.Default.MoreVert, contentDescription = "Options")
+                                Icon(Icons.Default.MoreVert, contentDescription = AppStrings.current.commonActions.options)
                             }
                         }
                     }

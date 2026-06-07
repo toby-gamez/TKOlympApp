@@ -171,7 +171,7 @@ fun CalendarViewScreen(
                         label = { Text(AppStrings.current.people.mine) }
                     )
                     IconButton(onClick = { showBottomSheet.value = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "Options")
+                        Icon(Icons.Default.MoreVert, contentDescription = AppStrings.current.commonActions.options)
                     }
                 }
             )

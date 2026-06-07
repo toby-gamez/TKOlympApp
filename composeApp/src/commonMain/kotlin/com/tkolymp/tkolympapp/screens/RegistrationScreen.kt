@@ -267,7 +267,7 @@ fun RegistrationScreen(
                                             val newVal = (old - 1).coerceAtLeast(0)
                                             if (idx < counts.size) counts[idx] = newVal else counts.add(newVal)
                                             Logger.d("RegScreen", "Register mode: trainer=$idx old=$old new=$newVal")
-                                        }) { Icon(Icons.Default.Remove, contentDescription = "Snížit") }
+                                        }) { Icon(Icons.Default.Remove, contentDescription = AppStrings.current.commonActions.decrease) }
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text("${counts[idx]}", modifier = Modifier.padding(8.dp))
                                         IconButton(onClick = {
@@ -277,7 +277,7 @@ fun RegistrationScreen(
                                             val newVal = (old + 1).coerceAtMost(maxForTrainer)
                                             if (idx < counts.size) counts[idx] = newVal else counts.add(newVal)
                                             Logger.d("RegScreen", "Register mode: trainer=$idx old=$old max=$maxForTrainer new=$newVal")
-                                        }) { Icon(Icons.Default.Add, contentDescription = "Přidat") }
+                                        }) { Icon(Icons.Default.Add, contentDescription = AppStrings.current.commonActions.increase) }
                                     }
                                 }
                             }
@@ -416,7 +416,7 @@ fun RegistrationScreen(
                                                 val old = countsState.getOrNull(idx) ?: 0
                                                 val newVal = (old - 1).coerceAtLeast(0)
                                                 if (idx < countsState.size) countsState[idx] = newVal else countsState.add(newVal)
-                                            }) { Icon(Icons.Default.Remove, contentDescription = "Snížit") }
+                                            }) { Icon(Icons.Default.Remove, contentDescription = AppStrings.current.commonActions.decrease) }
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text("${countsState.getOrNull(idx) ?: 0}", modifier = Modifier.padding(8.dp))
                                             IconButton(onClick = {
@@ -426,7 +426,7 @@ fun RegistrationScreen(
                                                 val newVal = (old + 1).coerceAtMost(maxForTrainer)
                                                 if (idx < countsState.size) countsState[idx] = newVal else countsState.add(newVal)
                                                 Logger.d("RegScreen", "Edit mode: reg=$selectedId trainer=$idx old=$old max=$maxForTrainer new=$newVal")
-                                            }) { Icon(Icons.Default.Add, contentDescription = "Přidat") }
+                                            }) { Icon(Icons.Default.Add, contentDescription = AppStrings.current.commonActions.increase) }
                                         }
                                     }
                                 }

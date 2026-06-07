@@ -271,8 +271,9 @@ val StringsUa = Strings(
         noTrainingSpaces = "Немає тренувальних залів",
         trainingSpaces = "Тренувальні зали",
         tabOverview = "Огляд",
-        tabSchedule = "Розклад",
-        heatmapNoData = "Даних ще немає",
+        tabWorkload = "Завантаженість",
+        heatmapNoData = "Немає тренерів",
+        heatmapPeriod = "Останні 4 тижні",
     ),
     timeline = TimelineStrings(
         timeline = "Вісь",

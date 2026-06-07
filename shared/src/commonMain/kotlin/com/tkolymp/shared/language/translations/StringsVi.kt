@@ -260,8 +260,9 @@ val StringsVi = Strings(
         noTrainingSpaces = "Không có sân tập nào",
         trainingSpaces = "Sân tập",
         tabOverview = "Tổng quan",
-        tabSchedule = "Lịch",
-        heatmapNoData = "Chưa có dữ liệu",
+        tabWorkload = "Khối lượng",
+        heatmapNoData = "Không có HLV",
+        heatmapPeriod = "4 tuần gần đây",
     ),
     timeline = TimelineStrings(
         timeline = "Trục thời gian",

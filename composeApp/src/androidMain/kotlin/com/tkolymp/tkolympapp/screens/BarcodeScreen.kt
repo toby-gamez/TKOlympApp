@@ -137,7 +137,8 @@ fun BarcodeScreen(onBack: () -> Unit = {}) {
                 .padding(innerPadding),
             contentAlignment = Alignment.Center
         ) {
-            if (cstsId == null) {
+            val id = cstsId
+            if (id == null) {
                 Text(
                     text = AppStrings.current.profile.cstsNotAvailable,
                     style = MaterialTheme.typography.bodyLarge,
@@ -146,10 +147,10 @@ fun BarcodeScreen(onBack: () -> Unit = {}) {
                     modifier = Modifier.padding(32.dp)
                 )
             } else {
-                val encoded = encodeEan8(cstsId)
+                val encoded = encodeEan8(id)
                 if (encoded == null) {
                     Text(
-                        text = "${AppStrings.current.profile.cstsInvalidFormat}\n(${cstsId})",
+                        text = "${AppStrings.current.profile.cstsInvalidFormat}\n(${id})",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.error,
                         textAlign = TextAlign.Center,

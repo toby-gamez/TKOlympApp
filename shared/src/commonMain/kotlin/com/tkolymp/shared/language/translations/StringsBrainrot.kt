@@ -272,8 +272,9 @@ val StringsBrainrot = Strings(
         noTrainingSpaces = "No gyms fr",
         trainingSpaces = "Gyms",
         tabOverview = "Lowkey overview",
-        tabSchedule = "Schedule fr",
-        heatmapNoData = "No data rn",
+        tabWorkload = "Grind check",
+        heatmapNoData = "No gymbros rn",
+        heatmapPeriod = "Last 4 weeks fr",
     ),
     timeline = TimelineStrings(
         timeline = "Axis fr",

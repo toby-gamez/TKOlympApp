@@ -16,7 +16,13 @@ import kotlinx.serialization.json.jsonPrimitive
 import com.tkolymp.shared.json.AppJson
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.calendar.parseCalendarJson
+import com.tkolymp.shared.sync.CalendarBucket
 import com.tkolymp.shared.sync.OfflineKeys
+import kotlin.time.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
+import kotlinx.datetime.todayIn
 
 data class TrainersLocationsState(
     val clubData: ClubData? = null,
@@ -34,17 +40,18 @@ class TrainersLocationsViewModel(
     private suspend fun computeTrainerLessonCounts(): Map<String, IntArray> =
         withContext(Dispatchers.Default) {
             val counts = mutableMapOf<String, IntArray>()
-            val keys = try { ServiceLocator.offlineDataStorage.allKeys() } catch (_: Exception) { emptySet() }
-            keys.filter { it.startsWith(OfflineKeys.CAL_PREFIX + "ALL_") }.forEach { key ->
+            val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+            for (weekOffset in -1..2) {
+                val weekStart = today.plus(weekOffset * 7, DateTimeUnit.DAY)
+                val key = OfflineKeys.calendarWeek(CalendarBucket.ALL, weekStart.toString())
                 val raw = try { ServiceLocator.offlineDataStorage.load(key) } catch (_: Exception) { null }
-                if (raw.isNullOrBlank()) return@forEach
+                if (raw.isNullOrBlank()) continue
                 parseCalendarJson(raw).forEach { (dateStr, instances) ->
                     val dayIdx = try {
                         kotlinx.datetime.LocalDate.parse(dateStr).dayOfWeek.ordinal
                     } catch (_: Exception) { return@forEach }
                     instances.forEach inst@{ inst ->
-                        if (inst.event?.type != "lesson") return@inst
-                        inst.event.eventTrainersList.forEach { name ->
+                        inst.event?.eventTrainersList?.forEach { name ->
                             if (name.isBlank()) return@forEach
                             counts.getOrPut(name.trim()) { IntArray(7) }[dayIdx]++
                         }

@@ -271,8 +271,9 @@ val StringsDe = Strings(
         noTrainingSpaces = "Keine Trainingsstätten",
         trainingSpaces = "Trainingsstätten",
         tabOverview = "Übersicht",
-        tabSchedule = "Stundenplan",
-        heatmapNoData = "Keine Daten vorhanden",
+        tabWorkload = "Auslastung",
+        heatmapNoData = "Keine Trainer",
+        heatmapPeriod = "Letzte 4 Wochen",
     ),
     timeline = TimelineStrings(
         timeline = "Zeitachse",

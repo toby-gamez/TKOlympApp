@@ -21,4 +21,7 @@ data class CommonActionStrings(
     val all: String,
     val yes: String,
     val no: String,
+    val decrease: String = "Decrease",
+    val increase: String = "Increase",
+    val options: String = "Options",
 )

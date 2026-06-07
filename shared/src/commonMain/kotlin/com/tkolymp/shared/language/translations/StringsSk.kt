@@ -299,8 +299,9 @@ val StringsSk = Strings(
         noTrainingSpaces = "Žiadne tréningové priestory",
         trainingSpaces = "Tréningové priestory",
         tabOverview = "Prehľad",
-        tabSchedule = "Rozvrh",
-        heatmapNoData = "Dáta nie sú k dispozícii",
+        tabWorkload = "Vyťaženosť",
+        heatmapNoData = "Žiadni tréneri",
+        heatmapPeriod = "Posledné 4 týždne",
     ),
     timeline = TimelineStrings(
         timeline = "Os",

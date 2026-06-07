@@ -31,7 +31,7 @@ actual fun FullscreenImageViewer(imageUrl: String, onDismiss: () -> Unit) {
             var offsetX by remember { mutableStateOf(0f) }
             var offsetY by remember { mutableStateOf(0f) }
 
-            val transformableState = rememberTransformableState { zoomChange, panChange, _rotation ->
+            val transformableState = rememberTransformableState { _centroid, zoomChange, panChange, _rotation ->
                 scale = (scale * zoomChange).coerceIn(0.5f, 5f)
                 offsetX += panChange.x
                 offsetY += panChange.y

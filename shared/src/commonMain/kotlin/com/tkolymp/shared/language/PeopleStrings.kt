@@ -10,6 +10,7 @@ data class PeopleStrings(
     val noTrainingSpaces: String,
     val trainingSpaces: String,
     val tabOverview: String,
-    val tabSchedule: String,
+    val tabWorkload: String,
     val heatmapNoData: String,
+    val heatmapPeriod: String,
 )

@@ -83,6 +83,9 @@ val StringsCs = Strings(
         all = "Vše",
         yes = "Ano",
         no = "Ne",
+        decrease = "Snížit",
+        increase = "Přidat",
+        options = "Možnosti",
     ),
     auth = AuthStrings(
         emailOrUsername = "Email nebo uživatelské jméno",
@@ -275,8 +278,9 @@ val StringsCs = Strings(
         noTrainingSpaces = "Žádné tréninkové prostory",
         trainingSpaces = "Tréninkové prostory",
         tabOverview = "Přehled",
-        tabSchedule = "Rozvrh",
-        heatmapNoData = "Data nejsou k dispozici",
+        tabWorkload = "Vytíženost",
+        heatmapNoData = "Žádní trenéři",
+        heatmapPeriod = "Poslední 4 týdny",
     ),
     timeline = TimelineStrings(
         timeline = "Osa",

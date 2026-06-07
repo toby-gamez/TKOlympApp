@@ -109,7 +109,7 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                     Tab(
                         selected = selectedTab == 1,
                         onClick = { selectedTab = 1 },
-                        text = { Text(AppStrings.current.people.tabSchedule) }
+                        text = { Text(AppStrings.current.people.tabWorkload) }
                     )
                 }
 
@@ -239,14 +239,14 @@ private fun TrainerHeatmapTab(
     trainers: List<Trainer>,
     counts: Map<String, IntArray>
 ) {
-    val dayLabels = listOf("Mo", "Tu", "We", "Th", "Fr", "Sa", "Su")
+    val dayLabels = AppStrings.current.calendarView.weekDayAbbreviations
     val maxCount = remember(counts) {
         counts.values.flatMap { it.toList() }.maxOrNull()?.coerceAtLeast(1) ?: 1
     }
     val primary = MaterialTheme.colorScheme.primary
     val surface = MaterialTheme.colorScheme.surfaceVariant
 
-    if (counts.isEmpty()) {
+    if (trainers.isEmpty()) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
                 AppStrings.current.people.heatmapNoData,
@@ -257,6 +257,12 @@ private fun TrainerHeatmapTab(
     }
 
     Column(Modifier.fillMaxSize()) {
+        Text(
+            AppStrings.current.people.heatmapPeriod,
+            modifier = Modifier.padding(start = 8.dp, top = 8.dp, bottom = 2.dp),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
         Row(
             Modifier
                 .fillMaxWidth()
@@ -274,7 +280,7 @@ private fun TrainerHeatmapTab(
             }
         }
         LazyColumn(Modifier.fillMaxSize()) {
-            itemsIndexed(trainers, key = { _, t -> t.person?.id ?: t.hashCode() }) { _, trainer ->
+            itemsIndexed(trainers, key = { index, t -> "h_${index}_${t.person?.id}" }) { _, trainer ->
                 val fullName = listOfNotNull(
                     trainer.person?.firstName?.trim(),
                     trainer.person?.lastName?.trim()
