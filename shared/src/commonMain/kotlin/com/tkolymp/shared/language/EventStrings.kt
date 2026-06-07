@@ -30,4 +30,6 @@ data class EventStrings(
     val addedToCalendar: String,
     val addToCalendarSuccess: String,
     val addToCalendarFailed: String,
+    val trainerOffersLabel: String = "offers",
+    val trainerRemainingLabel: String = "remaining",
 )

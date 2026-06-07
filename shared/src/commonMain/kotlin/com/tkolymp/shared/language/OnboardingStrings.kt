@@ -16,4 +16,10 @@ data class OnboardingStrings(
     val calendarViewTimeline: String,
     val calendarViewTimelineDesc: String,
     val start: String,
+    val roleSelectionTitle: String = "Who are you?",
+    val roleSelectionDescription: String = "Select whether you are a dancer or a parent",
+    val roleDancer: String = "Dancer",
+    val roleDancerDesc: String = "Full access",
+    val roleParent: String = "Parent",
+    val roleParentDesc: String = "Limited notifications",
 )

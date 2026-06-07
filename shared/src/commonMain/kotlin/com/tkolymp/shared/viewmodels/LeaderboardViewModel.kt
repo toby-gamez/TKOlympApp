@@ -14,6 +14,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import com.tkolymp.shared.json.AppJson
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.sync.OfflineKeys
 
 data class LeaderboardState(
@@ -176,7 +177,7 @@ class LeaderboardViewModel(
         } catch (ex: Exception) {
             _state.value = _state.value.copy(
                 isLoading = false,
-                error = AppError.generic(ex.message ?: "Chyba při načítání žebříčku")
+                error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingLeaderboard)
             )
         }
     }

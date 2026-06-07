@@ -1,5 +1,7 @@
 package com.tkolymp.tkolympapp.fakes
 
+import com.tkolymp.shared.announcements.Announcement
+import com.tkolymp.shared.announcements.IAnnouncementService
 import com.tkolymp.shared.auth.IAuthService
 import com.tkolymp.shared.event.EventInstance
 import com.tkolymp.shared.event.IEventService
@@ -26,12 +28,17 @@ class FakeGraphQlClient(private val response: JsonElement = JsonObject(emptyMap(
 
 class FakeEventService(
     private val eventById: JsonObject? = null,
-    private val throwOnFetch: Boolean = false
+    private val throwOnFetch: Boolean = false,
+    private val groupedByDay: Map<String, List<EventInstance>> = emptyMap(),
+    private val throwOnGroupedFetch: Boolean = false
 ) : IEventService {
     override suspend fun fetchEventsGroupedByDay(
         startRangeIso: String, endRangeIso: String, onlyMine: Boolean,
         first: Int, offset: Int, onlyType: String?, cacheNamespace: String?
-    ): Map<String, List<EventInstance>> = emptyMap()
+    ): Map<String, List<EventInstance>> {
+        if (throwOnGroupedFetch) throw RuntimeException("Network error")
+        return groupedByDay
+    }
 
     override suspend fun fetchEventById(id: Long, forceRefresh: Boolean): JsonObject? {
         if (throwOnFetch) throw RuntimeException("Network error")
@@ -41,6 +48,17 @@ class FakeEventService(
     override suspend fun setLessonDemand(registrationId: String, trainerId: Int, lessonCount: Int) = false
     override suspend fun deleteEventRegistration(registrationId: String): JsonElement? = null
     override suspend fun setRegistrationNote(registrationId: String, note: String) = false
+}
+
+class FakeAnnouncementService(
+    private val announcements: List<Announcement> = emptyList(),
+    private val throwOnFetch: Boolean = false
+) : IAnnouncementService {
+    override suspend fun getAnnouncements(sticky: Boolean): List<Announcement> {
+        if (throwOnFetch) throw RuntimeException("Network error")
+        return announcements
+    }
+    override suspend fun getAnnouncementById(id: Long, forceRefresh: Boolean): Announcement? = null
 }
 
 class FakeNotificationScheduler : INotificationScheduler {

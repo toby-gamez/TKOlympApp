@@ -177,7 +177,8 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                                         p?.firstName?.takeIf { it.isNotBlank() },
                                         p?.lastName?.takeIf { it.isNotBlank() }
                                     ).joinToString(" ")
-                                    val displayName = if (!p?.suffixTitle.isNullOrBlank()) "$name, ${p?.suffixTitle}" else name
+                                    val suffix = p?.suffixTitle?.takeIf { it.isNotBlank() }
+                                    val displayName = if (suffix != null) "$name, $suffix" else name
                                     Text(text = if (displayName.isBlank()) (p?.id ?: "(trenér)") else displayName, style = MaterialTheme.typography.bodyLarge)
                                 }
                             }

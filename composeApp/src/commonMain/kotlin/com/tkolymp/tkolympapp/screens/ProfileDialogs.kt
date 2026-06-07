@@ -2,7 +2,7 @@ package com.tkolymp.tkolympapp.screens
 import com.tkolymp.shared.utils.parseToLocal
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
@@ -167,7 +167,7 @@ fun ChangePersonalDataDialog(
     var birthIso by remember(initialBirthDate) { mutableStateOf(initialLocal?.toString() ?: initialBirthDate) }
     fun formatDisplayDate(iso: String?): String {
         val ld = parseToLocalDate(iso) ?: return iso ?: ""
-        return try { "${ld.dayOfMonth.toString().padStart(2,'0')}.${ld.monthNumber.toString().padStart(2,'0')}.${ld.year}" } catch (_: Exception) { ld.toString() }
+        return try { "${ld.day.toString().padStart(2,'0')}.${ld.month.value.toString().padStart(2,'0')}.${ld.year}" } catch (_: Exception) { ld.toString() }
     }
     var birthDisplay by remember(birthIso) { mutableStateOf(formatDisplayDate(birthIso)) }
 

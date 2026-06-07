@@ -13,6 +13,7 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 import com.tkolymp.shared.json.AppJson
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.sync.OfflineKeys
 
 data class GroupsState(
@@ -35,7 +36,7 @@ class GroupsViewModel(
                 // Try offline fallback (offline_club saved by OfflineSyncManager)
                 try {
                     val raw = try { ServiceLocator.offlineSyncManager.loadClubCohorts() } catch (_: Exception) { null } ?: run {
-                        _state.value = _state.value.copy(isLoading = false, error = AppError.generic("Chyba při načítání dat"))
+                        _state.value = _state.value.copy(isLoading = false, error = AppError.generic(AppStrings.current.errorMessages.errorLoadingData))
                         return
                     }
                     try { com.tkolymp.shared.Logger.d("GroupsViewModel", "offline_club_cohorts loaded, len=${raw.length}") } catch (_: Exception) {}
@@ -55,13 +56,13 @@ class GroupsViewModel(
                     }
                     _state.value = _state.value.copy(cohorts = cohorts, isLoading = false)
                 } catch (_: Exception) {
-                    _state.value = _state.value.copy(isLoading = false, error = AppError.generic("Chyba při načítání dat"))
+                    _state.value = _state.value.copy(isLoading = false, error = AppError.generic(AppStrings.current.errorMessages.errorLoadingData))
                 }
             } else {
                 _state.value = _state.value.copy(cohorts = d.cohorts, isLoading = false)
             }
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání"))
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoading))
         }
     }
 }

@@ -15,6 +15,7 @@ import com.tkolymp.shared.notification.FilterType
 import com.tkolymp.shared.notification.NotificationRule
 import com.tkolymp.shared.notification.NotificationSettings
 import com.tkolymp.shared.notification.ReceivedMessage
+import com.tkolymp.shared.language.AppStrings
 
 data class NotificationsSettingsState(
     val enabledCategories: Set<String> = emptySet(),
@@ -58,7 +59,7 @@ class NotificationsSettingsViewModel(
                 isLoading = false
             )
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání nastavení"))
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingSettings))
         }
     }
 
@@ -117,7 +118,7 @@ class NotificationsSettingsViewModel(
 
             _state.value = _state.value.copy(availableGroups = groups, myCohortIds = myIds, coachMessages = msgs, isLoading = false)
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání dat"))
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingData))
         }
     }
 
@@ -208,7 +209,7 @@ class NotificationsSettingsViewModel(
             _state.value = _state.value.copy(enabledCategories = new, settings = newSettings,
                 rules = newSettings.rules, globalEnabled = newSettings.globalEnabled)
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(error = AppError.generic(ex.message ?: "Chyba při aktualizaci"))
+            _state.value = _state.value.copy(error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorUpdating))
         }
     }
 }

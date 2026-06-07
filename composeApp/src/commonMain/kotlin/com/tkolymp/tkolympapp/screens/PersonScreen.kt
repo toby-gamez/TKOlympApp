@@ -142,7 +142,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                             "WOMAN" -> AppStrings.current.gender.genderFemale
                             "UNSPECIFIED" -> AppStrings.current.gender.genderUnspecified
                             null, "" -> "—"
-                            else -> p.gender!!.lowercase()
+                            else -> (p.gender ?: "").lowercase()
                         }
                         Text(genderLabel, style = MaterialTheme.typography.bodyMedium)
                     }

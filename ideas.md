@@ -4,7 +4,7 @@ All items below require no API changes — UI/client-side only.
 
 ## Calendar & Training
 
-### 1. Calendar filters (trainer / location / cohort)
+### 1. Calendar filters (trainer / location / cohort) ✅
 Add a filter pill bar on `CalendarScreen` / `CalendarViewScreen`. The data is already loaded — filter client-side by trainer ID, location ID, or cohort. High value for users with multiple trainers.
 
 ### 3. Trainer availability heatmap

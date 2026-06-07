@@ -12,6 +12,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import com.tkolymp.shared.people.Person
 import com.tkolymp.shared.json.AppJson
+import com.tkolymp.shared.language.AppStrings
 
 data class PeopleState(
     val people: List<Person> = emptyList(),
@@ -81,7 +82,7 @@ class PeopleViewModel(
                 }
             }
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání lidí"))
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingPeople))
         }
     }
 

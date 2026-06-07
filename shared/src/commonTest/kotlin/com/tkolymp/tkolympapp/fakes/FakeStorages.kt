@@ -10,6 +10,7 @@ import com.tkolymp.shared.notification.ScheduledNotification
 import com.tkolymp.shared.storage.ICalendarPreferenceStorage
 import com.tkolymp.shared.storage.ITokenStorage
 import com.tkolymp.shared.storage.IUserStorage
+import com.tkolymp.shared.storage.OfflineDataStorage
 
 class FakeTokenStorage(private var token: String? = null) : ITokenStorage {
     override suspend fun saveToken(token: String) { this.token = token }
@@ -68,4 +69,12 @@ class FakeNotificationStorage : INotificationStorage {
     override suspend fun getBirthdaySettings(): BirthdayNotificationSettings? = null
     override suspend fun saveScheduledBirthdayNotificationIds(ids: List<String>) {}
     override suspend fun getScheduledBirthdayNotificationIds(): List<String> = emptyList()
+}
+
+class FakeOfflineDataStorage : OfflineDataStorage {
+    private val store = mutableMapOf<String, String>()
+    override suspend fun save(key: String, json: String) { store[key] = json }
+    override suspend fun load(key: String): String? = store[key]
+    override suspend fun deleteByPrefix(prefix: String) { store.keys.removeAll { it.startsWith(prefix) } }
+    override suspend fun allKeys(): Set<String> = store.keys.toSet()
 }

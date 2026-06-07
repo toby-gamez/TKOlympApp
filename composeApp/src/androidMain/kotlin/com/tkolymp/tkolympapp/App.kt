@@ -503,8 +503,8 @@ fun AppNavHost(
                 )
             }
         ) {
-            val androidPaymentsVm: AndroidPaymentsViewModel = viewModel()
-            PaymentsScreen(vm = androidPaymentsVm.paymentsVm, onBack = { navController.navigateUp() }, bottomPadding = bottomPadding)
+            val paymentsVm: com.tkolymp.shared.payments.PaymentsViewModel = viewModel()
+            PaymentsScreen(vm = paymentsVm, onBack = { navController.navigateUp() }, bottomPadding = bottomPadding)
         }
 
         composable(

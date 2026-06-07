@@ -33,11 +33,11 @@ kotlin {
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.datetime)
-            implementation(libs.ksafe)
             implementation(libs.androidx.lifecycle.viewmodel)
         }
         val androidMain by getting {
             dependencies {
+                implementation(libs.ksafe)
                 implementation(libs.ktor.okhttp)
                 // Removed biometric support; keep core dependencies as needed
                 implementation(libs.androidx.core.ktx)

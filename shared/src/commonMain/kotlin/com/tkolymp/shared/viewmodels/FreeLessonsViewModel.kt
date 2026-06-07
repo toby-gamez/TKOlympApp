@@ -194,7 +194,7 @@ class FreeLessonsViewModel(
             throw e
         } catch (e: Exception) {
             Logger.d(TAG, "load failed: ${e.message}")
-            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(e.message ?: "Chyba při načítání"))
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(e.message ?: AppStrings.current.errorMessages.errorLoading))
         }
     }
 

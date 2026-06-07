@@ -14,6 +14,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import com.tkolymp.shared.json.AppJson
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.sync.OfflineKeys
 
 data class TrainersLocationsState(
@@ -37,7 +38,7 @@ class TrainersLocationsViewModel(
                 // Try offline fallback: load saved club JSON
                 try {
                     val rawBasic = try { ServiceLocator.offlineSyncManager.loadClubBasics() } catch (_: Exception) { null } ?: run {
-                        _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání klubu"))
+                        _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingClub))
                         return
                     }
                     try { com.tkolymp.shared.Logger.d("TrainersLocationsVM", "offline_club_basic loaded, len=${rawBasic.length}") } catch (_: Exception) {}
@@ -90,7 +91,7 @@ class TrainersLocationsViewModel(
                     _state.value = _state.value.copy(clubData = com.tkolymp.shared.club.ClubData(locations, trainers, cohorts, null), isLoading = false)
                     return
                 } catch (_: Exception) {
-                    _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání klubu"))
+                    _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingClub))
                     return
                 }
             }
@@ -98,7 +99,7 @@ class TrainersLocationsViewModel(
                 // Try offline fallback: load saved club JSON (same logic as in exception handler)
                 try {
                     val rawBasic = try { ServiceLocator.offlineSyncManager.loadClubBasics() } catch (_: Exception) { null } ?: run {
-                        _state.value = _state.value.copy(isLoading = false, error = AppError.generic("Chyba při načítání klubu"))
+                        _state.value = _state.value.copy(isLoading = false, error = AppError.generic(AppStrings.current.errorMessages.errorLoadingClub))
                         return
                     }
                     try { com.tkolymp.shared.Logger.d("TrainersLocationsVM", "offline_club_basic loaded, len=${rawBasic.length}") } catch (_: Exception) {}
@@ -151,14 +152,14 @@ class TrainersLocationsViewModel(
                     _state.value = _state.value.copy(clubData = com.tkolymp.shared.club.ClubData(locations, trainers, cohorts, null), isLoading = false)
                     return
                 } catch (_: Exception) {
-                    _state.value = _state.value.copy(isLoading = false, error = AppError.generic("Chyba při načítání klubu"))
+                    _state.value = _state.value.copy(isLoading = false, error = AppError.generic(AppStrings.current.errorMessages.errorLoadingClub))
                     return
                 }
             } else {
                 _state.value = _state.value.copy(clubData = d, isLoading = false)
             }
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání"))
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoading))
         }
     }
 }

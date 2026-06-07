@@ -13,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import com.tkolymp.shared.json.AppJson
+import com.tkolymp.shared.language.AppStrings
 
 data class BoardState(
     val selectedTab: Int = 0,
@@ -98,19 +99,19 @@ class BoardViewModel(
                             Logger.d("BoardViewModel", "fallback offline announcements for sticky=$sticky count=${parsedSorted.size}")
                         } else {
                             // restore previous appropriate list
-                            if (sticky) _state.value = _state.value.copy(permanentAnnouncements = previousPermanent, isLoading = false, error = AppError.generic(netEx.message ?: "Chyba při načítání"))
-                            else _state.value = _state.value.copy(currentAnnouncements = previousCurrent, isLoading = false, error = AppError.generic(netEx.message ?: "Chyba při načítání"))
+                            if (sticky) _state.value = _state.value.copy(permanentAnnouncements = previousPermanent, isLoading = false, error = AppError.generic(netEx.message ?: AppStrings.current.errorMessages.errorLoading))
+                            else _state.value = _state.value.copy(currentAnnouncements = previousCurrent, isLoading = false, error = AppError.generic(netEx.message ?: AppStrings.current.errorMessages.errorLoading))
                         }
                     } catch (_: Exception) {
-                        if (sticky) _state.value = _state.value.copy(permanentAnnouncements = previousPermanent, isLoading = false, error = AppError.generic(netEx.message ?: "Chyba při načítání"))
-                        else _state.value = _state.value.copy(currentAnnouncements = previousCurrent, isLoading = false, error = AppError.generic(netEx.message ?: "Chyba při načítání"))
+                        if (sticky) _state.value = _state.value.copy(permanentAnnouncements = previousPermanent, isLoading = false, error = AppError.generic(netEx.message ?: AppStrings.current.errorMessages.errorLoading))
+                        else _state.value = _state.value.copy(currentAnnouncements = previousCurrent, isLoading = false, error = AppError.generic(netEx.message ?: AppStrings.current.errorMessages.errorLoading))
                     }
                 }
             }
         Logger.d("BoardViewModel", "loadAnnouncements end: selectedTab=${_state.value.selectedTab} current=${_state.value.currentAnnouncements.size} permanent=${_state.value.permanentAnnouncements.size} isOffline=${_state.value.isOffline}")
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             // restore previous appropriate lists on fatal error
-            _state.value = _state.value.copy(currentAnnouncements = previousCurrent, permanentAnnouncements = previousPermanent, isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání"))
+            _state.value = _state.value.copy(currentAnnouncements = previousCurrent, permanentAnnouncements = previousPermanent, isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoading))
         }
     }
 

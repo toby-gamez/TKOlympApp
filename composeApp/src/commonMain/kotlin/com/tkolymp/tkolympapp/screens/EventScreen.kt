@@ -163,7 +163,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                 if (state.error != null) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(state.error!!.message, modifier = Modifier.padding(16.dp))
+                            Text(state.error?.message ?: "", modifier = Modifier.padding(16.dp))
                             TextButton(onClick = { scope.launch { viewModel.loadEvent(eventId, forceRefresh = true) } }) {
                                 Text(AppStrings.current.commonActions.retry)
                             }
@@ -247,7 +247,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            if (!state.locationName.isNullOrBlank()) state.locationName!! else "—",
+                            state.locationName?.takeIf { it.isNotBlank() } ?: "—",
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }

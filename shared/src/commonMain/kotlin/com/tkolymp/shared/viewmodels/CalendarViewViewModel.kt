@@ -33,6 +33,7 @@ import kotlinx.serialization.json.longOrNull
 import kotlin.time.Clock
 import kotlin.time.Instant
 import com.tkolymp.shared.json.AppJson
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.event.EventType
 import com.tkolymp.shared.utils.AppConstants
 import com.tkolymp.shared.calendar.parseCalendarJson
@@ -296,7 +297,7 @@ class CalendarViewViewModel(
         } catch (e: Exception) {
             _state.value = _state.value.copy(
                 isLoading = false,
-                error = AppError.generic(e.message ?: "Neznámá chyba při načítání událostí")
+                error = AppError.generic(e.message ?: AppStrings.current.errorMessages.errorLoadingEvent)
             )
         }
     }

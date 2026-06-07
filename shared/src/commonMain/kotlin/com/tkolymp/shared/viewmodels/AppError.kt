@@ -1,5 +1,7 @@
 package com.tkolymp.shared.viewmodels
 
+import com.tkolymp.shared.language.AppStrings
+
 sealed class AppError {
     abstract val message: String
 
@@ -8,8 +10,8 @@ sealed class AppError {
     data class NotFound(override val message: String) : AppError()
 
     companion object {
-        fun generic(message: String?): AppError = Generic(message ?: "Neznámá chyba")
-        fun network(message: String?): AppError = Network(message ?: "Chyba sítě")
-        fun notFound(message: String?): AppError = NotFound(message ?: "Nenalezeno")
+        fun generic(message: String?): AppError = Generic(message ?: AppStrings.current.errorMessages.unknownError)
+        fun network(message: String?): AppError = Network(message ?: AppStrings.current.errorMessages.networkError)
+        fun notFound(message: String?): AppError = NotFound(message ?: AppStrings.current.errorMessages.notFoundError)
     }
 }

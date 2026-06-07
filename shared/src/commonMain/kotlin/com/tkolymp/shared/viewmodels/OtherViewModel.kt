@@ -8,8 +8,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import com.tkolymp.shared.json.AppJson
+import com.tkolymp.shared.language.AppStrings
 
 data class OtherState(
     val name: String? = null,
@@ -38,6 +41,8 @@ class OtherViewModel(
     companion object {
         // Survives ViewModel recreation within the same process — eliminates the blank-name flash
         private var lastKnownState: OtherState? = null
+
+        fun clearCache() { lastKnownState = null }
     }
 
     init {
@@ -78,29 +83,29 @@ class OtherViewModel(
                 try {
                     raw?.let {
                         val obj = AppJson.parseToJsonElement(it).jsonObject
-                        val jmeno = obj["uJmeno"]?.toString()?.replace("\"", "")
-                        val prijmeni = obj["uPrijmeni"]?.toString()?.replace("\"", "")
+                        val jmeno = obj["uJmeno"]?.jsonPrimitive?.contentOrNull
+                        val prijmeni = obj["uPrijmeni"]?.jsonPrimitive?.contentOrNull
                         name = listOfNotNull(jmeno?.takeIf { it.isNotBlank() }, prijmeni?.takeIf { it.isNotBlank() }).joinToString(" ")
-                        subtitle = obj["uLogin"]?.toString()?.replace("\"", "")
+                        subtitle = obj["uLogin"]?.jsonPrimitive?.contentOrNull
                     }
                 } catch (e: CancellationException) { throw e } catch (_: Exception) { }
 
                 try {
                     personDetails?.let {
                         val p = AppJson.parseToJsonElement(it).jsonObject
-                        personFirstName = p["firstName"]?.toString()?.replace("\"", "")
-                        personLastName = p["lastName"]?.toString()?.replace("\"", "")
-                        personDob = p["birthDate"]?.toString()?.replace("\"", "")
-                            ?: p["dateOfBirth"]?.toString()?.replace("\"", "")
-                            ?: p["dob"]?.toString()?.replace("\"", "")
-                        personPrefix = p["prefixTitle"]?.toString()?.replace("\"", "")
-                        personSuffix = p["suffixTitle"]?.toString()?.replace("\"", "")
-                            ?: p["postfixTitle"]?.toString()?.replace("\"", "")
-                            ?: p["suffix"]?.toString()?.replace("\"", "")
+                        personFirstName = p["firstName"]?.jsonPrimitive?.contentOrNull
+                        personLastName = p["lastName"]?.jsonPrimitive?.contentOrNull
+                        personDob = p["birthDate"]?.jsonPrimitive?.contentOrNull
+                            ?: p["dateOfBirth"]?.jsonPrimitive?.contentOrNull
+                            ?: p["dob"]?.jsonPrimitive?.contentOrNull
+                        personPrefix = p["prefixTitle"]?.jsonPrimitive?.contentOrNull
+                        personSuffix = p["suffixTitle"]?.jsonPrimitive?.contentOrNull
+                            ?: p["postfixTitle"]?.jsonPrimitive?.contentOrNull
+                            ?: p["suffix"]?.jsonPrimitive?.contentOrNull
                         if (!personFirstName.isNullOrBlank() || !personLastName.isNullOrBlank()) {
                             val parts = listOf(personPrefix, personFirstName, personLastName)
-                                .filter { !it.isNullOrBlank() }
-                                .map { it!! }
+                                .filterNotNull()
+                                .filter { it.isNotBlank() }
                             val base = parts.joinToString(" ")
                             name = if (!personSuffix.isNullOrBlank()) "$base, $personSuffix" else base
                         }
@@ -125,7 +130,7 @@ class OtherViewModel(
                 lastKnownState = updated
                 _state.value = updated
             } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-                _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání"))
+                _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoading))
             }
         }
     }

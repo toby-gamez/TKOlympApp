@@ -10,7 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -51,7 +51,7 @@ import com.tkolymp.shared.personalevents.PersonalEvent
 import com.tkolymp.shared.personalevents.TrainingType
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DayOfWeek
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
@@ -64,7 +64,7 @@ import kotlinx.datetime.todayIn
 import kotlin.time.Duration.Companion.hours
 
 private fun formatLocalDate(d: kotlinx.datetime.LocalDate?): String {
-    return d?.let { "${it.dayOfMonth}. ${it.monthNumber}. ${it.year}" } ?: ""
+    return d?.let { "${it.day}. ${it.month.value}. ${it.year}" } ?: ""
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -105,7 +105,7 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, o
     Scaffold(topBar = {
         TopAppBar(
             title = { Text(if (eventId.isNullOrBlank()) AppStrings.current.personalEvents.newTraining else AppStrings.current.personalEvents.editTraining) },
-            navigationIcon = { IconButton(onClick = onBack) { Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null) } }
+            navigationIcon = { IconButton(onClick = onBack) { Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) } }
         )
     }) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding).padding(horizontal = 12.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -331,8 +331,9 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, o
                 val tz = TimeZone.currentSystemDefault()
                 val resolvedStart: String
                 val resolvedEnd: String
-                if (!isRecurring.value && weekday.value != null) {
-                    val targetDow = weekday.value!!
+                val resolvedWeekday = weekday.value
+                if (!isRecurring.value && resolvedWeekday != null) {
+                    val targetDow = resolvedWeekday
                     val today = kotlin.time.Clock.System.todayIn(tz)
                     // Pick the nearest occurrence of targetDow that is today or in the future.
                     val currentDow = today.dayOfWeek.isoDayNumber // 1=Mon..7=Sun

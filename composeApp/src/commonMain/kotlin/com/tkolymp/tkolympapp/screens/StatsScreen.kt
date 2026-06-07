@@ -20,10 +20,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.CompareArrows
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.CompareArrows
-import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -39,7 +39,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -148,7 +148,7 @@ fun StatsScreen(
                     }
                     IconButton(onClick = { compareMode = !compareMode }) {
                         Icon(
-                            Icons.Default.CompareArrows,
+                            Icons.AutoMirrored.Filled.CompareArrows,
                             contentDescription = strings.seasonComparison,
                             tint = if (compareMode) MaterialTheme.colorScheme.primary else LocalContentColor.current
                         )
@@ -185,7 +185,7 @@ fun StatsScreen(
             }
 
             Column(modifier = Modifier.fillMaxSize()) {
-                TabRow(selectedTabIndex = selectedTab) {
+                PrimaryTabRow(selectedTabIndex = selectedTab) {
                     Tab(
                         selected = selectedTab == 0,
                         onClick = { selectedTab = 0 },
@@ -1485,7 +1485,7 @@ private fun AttendanceSessionRow(
                     modifier = Modifier.width(20.dp)
                 )
                 "UNKNOWN" -> Icon(
-                    imageVector = Icons.Default.HelpOutline,
+                    imageVector = Icons.AutoMirrored.Filled.HelpOutline,
                     contentDescription = unknownLabel,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.width(20.dp)

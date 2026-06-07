@@ -28,6 +28,8 @@ import kotlinx.serialization.json.longOrNull
 import kotlin.time.Clock
 import kotlin.time.Instant
 import com.tkolymp.shared.event.firstTrainerOrEmpty
+import com.tkolymp.shared.event.parseRegistrationsFromJson
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.json.AppJson
 import com.tkolymp.shared.sync.OfflineKeys
 import com.tkolymp.shared.utils.AppConstants
@@ -186,31 +188,7 @@ class OverviewViewModel(
                         }
                     }
                     if (regArr != null) {
-                        regs = regArr.mapNotNull { item ->
-                            val o = item as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null
-                            val ridPrim = o["id"]?.jsonPrimitive
-                            val rid = ridPrim?.longOrNull ?: ridPrim?.contentOrNull?.toLongOrNull()
-
-                            val personObj = o["person"] as? kotlinx.serialization.json.JsonObject
-                            val person = personObj?.let { p ->
-                                val pidPrim = p["id"]?.jsonPrimitive
-                                val pid = pidPrim?.longOrNull ?: pidPrim?.contentOrNull?.toLongOrNull()
-                                com.tkolymp.shared.event.Person(pid, p["name"]?.jsonPrimitive?.contentOrNull, p["firstName"]?.jsonPrimitive?.contentOrNull, p["lastName"]?.jsonPrimitive?.contentOrNull)
-                            }
-
-                            val coupleObj = o["couple"] as? kotlinx.serialization.json.JsonObject
-                            val couple = coupleObj?.let { c ->
-                                val cidPrim = c["id"]?.jsonPrimitive
-                                val cid = cidPrim?.longOrNull ?: cidPrim?.contentOrNull?.toLongOrNull()
-                                val manObj = c["man"] as? kotlinx.serialization.json.JsonObject
-                                val womanObj = c["woman"] as? kotlinx.serialization.json.JsonObject
-                                val man = manObj?.let { m -> com.tkolymp.shared.event.SimpleName(m["firstName"]?.jsonPrimitive?.contentOrNull, m["lastName"]?.jsonPrimitive?.contentOrNull) }
-                                val woman = womanObj?.let { w -> com.tkolymp.shared.event.SimpleName(w["firstName"]?.jsonPrimitive?.contentOrNull, w["lastName"]?.jsonPrimitive?.contentOrNull) }
-                                com.tkolymp.shared.event.Couple(cid, man, woman)
-                            }
-
-                            com.tkolymp.shared.event.Registration(rid, person, couple)
-                        }
+                        regs = parseRegistrationsFromJson(regArr)
                     }
                 } catch (_: Exception) {}
 
@@ -227,31 +205,7 @@ class OverviewViewModel(
                                 }
                             }
                             if (regArr2 != null) {
-                                regs = regArr2.mapNotNull { item ->
-                                    val o = item as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null
-                                    val ridPrim = o["id"]?.jsonPrimitive
-                                    val rid = ridPrim?.longOrNull ?: ridPrim?.contentOrNull?.toLongOrNull()
-
-                                    val personObj = o["person"] as? kotlinx.serialization.json.JsonObject
-                                    val person = personObj?.let { p ->
-                                        val pidPrim = p["id"]?.jsonPrimitive
-                                        val pid = pidPrim?.longOrNull ?: pidPrim?.contentOrNull?.toLongOrNull()
-                                        com.tkolymp.shared.event.Person(pid, p["name"]?.jsonPrimitive?.contentOrNull, p["firstName"]?.jsonPrimitive?.contentOrNull, p["lastName"]?.jsonPrimitive?.contentOrNull)
-                                    }
-
-                                    val coupleObj = o["couple"] as? kotlinx.serialization.json.JsonObject
-                                    val couple = coupleObj?.let { c ->
-                                        val cidPrim = c["id"]?.jsonPrimitive
-                                        val cid = cidPrim?.longOrNull ?: cidPrim?.contentOrNull?.toLongOrNull()
-                                        val manObj = c["man"] as? kotlinx.serialization.json.JsonObject
-                                        val womanObj = c["woman"] as? kotlinx.serialization.json.JsonObject
-                                        val man = manObj?.let { m -> com.tkolymp.shared.event.SimpleName(m["firstName"]?.jsonPrimitive?.contentOrNull, m["lastName"]?.jsonPrimitive?.contentOrNull) }
-                                        val woman = womanObj?.let { w -> com.tkolymp.shared.event.SimpleName(w["firstName"]?.jsonPrimitive?.contentOrNull, w["lastName"]?.jsonPrimitive?.contentOrNull) }
-                                        com.tkolymp.shared.event.Couple(cid, man, woman)
-                                    }
-
-                                    com.tkolymp.shared.event.Registration(rid, person, couple)
-                                }
+                                regs = parseRegistrationsFromJson(regArr2)
                             }
                         }
                     } catch (_: Exception) {}
@@ -452,7 +406,7 @@ class OverviewViewModel(
                 isLoading = false
             )
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání přehledu"))
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingOverview))
         }
     }
 

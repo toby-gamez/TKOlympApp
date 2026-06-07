@@ -186,7 +186,7 @@ class EventViewModel(
                 val lessonsRemaining = trainer.int("lessonsRemaining")?.takeIf { it > 0 }
                 when {
                     lessonsOffered != null && lessonsRemaining != null ->
-                        "$trainerName (nabízí: $lessonsOffered, zbývá: $lessonsRemaining)"
+                        "$trainerName (${AppStrings.current.events.trainerOffersLabel}: $lessonsOffered, ${AppStrings.current.events.trainerRemainingLabel}: $lessonsRemaining)"
                     else -> trainerName
                 }
             }.joinToString(", ")
@@ -242,14 +242,14 @@ class EventViewModel(
                 isOffline = isOfflineUsed
             )
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání události"))
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingEvent))
         }
     }
 
     suspend fun addToCalendar(eventId: Long) {
         val s = _state.value
         // Build event data from state
-        val title = s.eventName.ifBlank { "Událost" }
+        val title = s.eventName.ifBlank { AppStrings.current.events.event }
         val description = s.summary.ifBlank { s.eventDescription }.ifBlank { null }
         val location = s.locationName
 

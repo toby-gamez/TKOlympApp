@@ -55,7 +55,17 @@ import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.LessonView
 import com.tkolymp.tkolympapp.components.RenderSingleEventCard
 import kotlinx.coroutines.launch
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.plus
+import com.tkolymp.shared.calendar.WeekPersona
+import com.tkolymp.shared.calendar.WeekVibesData
+import com.tkolymp.shared.calendar.computeWeekVibes
+import com.tkolymp.shared.event.EventInstance
+import com.tkolymp.shared.event.EventType
+import com.tkolymp.shared.event.firstTrainerOrEmpty
+import com.tkolymp.shared.event.toEventType
+import com.tkolymp.tkolympapp.components.WeekPersonaBadge
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -99,6 +109,31 @@ fun OverviewScreen(
             ) {
 
             val announcements = state.recentAnnouncements
+
+            if (state.upcomingEvents.isNotEmpty()) {
+                val weekVibes = remember(state.upcomingEvents, state.todayString) {
+                    computeOverviewWeekVibes(state.upcomingEvents, state.todayString)
+                }
+                if (weekVibes != null) {
+                    val ps = AppStrings.current.weekPersona
+                    val personaLabel = when (weekVibes.persona) {
+                        WeekPersona.HUSTLE -> ps.hustle
+                        WeekPersona.EASY -> ps.easy
+                        WeekPersona.SPRINT -> ps.sprint
+                        WeekPersona.MIX -> ps.mix
+                        WeekPersona.SOCIAL -> ps.social
+                        WeekPersona.CAMP -> ps.camp
+                        WeekPersona.ALL_ROUNDER -> ps.allRounder
+                    }
+                    val dayLabels = remember { listOf(ps.mon, ps.tue, ps.wed, ps.thu, ps.fri, ps.sat, ps.sun) }
+                    WeekPersonaBadge(
+                        vibes = weekVibes,
+                        personaLabel = personaLabel,
+                        dayLabels = dayLabels,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                    )
+                }
+            }
 
             // Trainings section
             Spacer(modifier = Modifier.height(8.dp))
@@ -322,6 +357,34 @@ fun OverviewScreen(
     }
 }
 
+}
+
+private fun computeOverviewWeekVibes(
+    events: List<EventInstance>,
+    todayString: String
+): WeekVibesData? {
+    val today = try { LocalDate.parse(todayString) } catch (_: Exception) { return null }
+    val visibleDates = (0..6).map { today.plus(it, DateTimeUnit.DAY).toString() }
+    val weekEvents = events.filter { inst ->
+        val ds = (inst.since ?: inst.until ?: "").substringBefore('T')
+        ds in visibleDates
+    }
+    val grouped = weekEvents.groupBy { (it.since ?: it.until ?: "").substringBefore('T') }
+    val lessons = mutableMapOf<String, Map<String, List<EventInstance>>>()
+    val other = mutableMapOf<String, List<EventInstance>>()
+    for ((date, list) in grouped) {
+        val less = list.filter { isLessonRaw(it) }
+        lessons[date] = less.groupBy { it.event.firstTrainerOrEmpty() }
+        other[date] = (list - less.toSet()).sortedBy { it.since }
+    }
+    return computeWeekVibes(lessons, other, visibleDates)
+}
+
+private fun isLessonRaw(inst: EventInstance): Boolean {
+    val ev = inst.event ?: return false
+    return ev.type?.toEventType() == EventType.LESSON == true &&
+        ev.eventTrainersList.isNotEmpty() &&
+        !ev.eventTrainersList.firstOrNull().isNullOrBlank()
 }
 
 private fun dateHeader(date: String, todayString: String, tomorrowString: String): String {

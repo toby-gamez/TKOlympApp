@@ -430,31 +430,8 @@ class EventService(
                     TargetCohort(cohortId, cohort)
                 } ?: emptyList()
 
-                val registrations = (e["eventRegistrationsList"] as? JsonArray)?.mapNotNull { item ->
-                    val o = item as? JsonObject ?: return@mapNotNull null
-                    val ridPrim = o["id"]?.jsonPrimitive
-                    val rid = ridPrim?.longOrNull ?: ridPrim?.contentOrNull?.toLongOrNull()
-
-                    val personObj = o["person"] as? JsonObject
-                    val person = personObj?.let { p ->
-                        val pidPrim = p["id"]?.jsonPrimitive
-                        val pid = pidPrim?.longOrNull ?: pidPrim?.contentOrNull?.toLongOrNull()
-                        Person(pid, p["name"]?.jsonPrimitive?.contentOrNull, p["firstName"]?.jsonPrimitive?.contentOrNull, p["lastName"]?.jsonPrimitive?.contentOrNull)
-                    }
-
-                    val coupleObj = o["couple"] as? JsonObject
-                    val couple = coupleObj?.let { c ->
-                        val cidPrim = c["id"]?.jsonPrimitive
-                        val cid = cidPrim?.longOrNull ?: cidPrim?.contentOrNull?.toLongOrNull()
-                        val manObj = c["man"] as? JsonObject
-                        val womanObj = c["woman"] as? JsonObject
-                        val man = manObj?.let { m -> SimpleName(m["firstName"]?.jsonPrimitive?.contentOrNull, m["lastName"]?.jsonPrimitive?.contentOrNull) }
-                        val woman = womanObj?.let { w -> SimpleName(w["firstName"]?.jsonPrimitive?.contentOrNull, w["lastName"]?.jsonPrimitive?.contentOrNull) }
-                        Couple(cid, man, woman)
-                    }
-
-                    Registration(rid, person, couple)
-                } ?: emptyList()
+                val registrations = (e["eventRegistrationsList"] as? JsonArray)
+                    ?.let { parseRegistrationsFromJson(it) } ?: emptyList()
 
                 val locationObj = e["location"] as? JsonObject
                 val location = locationObj?.let { l ->
@@ -561,8 +538,8 @@ class EventService(
             return null
         }
 
-        // Do not automatically clear caches on mutations; caches are per-consumer and
-        // should expire by TTL or be invalidated explicitly by callers when needed.
+        try { cache.invalidatePrefix("calendar_") } catch (_: Exception) {}
+        try { cache.invalidatePrefix("overview_") } catch (_: Exception) {}
         return resp
     }
 
@@ -619,7 +596,8 @@ class EventService(
             return null
         }
 
-        // No global cache clear performed.
+        try { cache.invalidatePrefix("calendar_") } catch (_: Exception) {}
+        try { cache.invalidatePrefix("overview_") } catch (_: Exception) {}
         return resp
     }
 }

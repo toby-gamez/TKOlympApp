@@ -30,6 +30,8 @@ import kotlinx.serialization.json.longOrNull
 import kotlin.time.Clock
 import kotlin.time.Instant
 import com.tkolymp.shared.event.firstTrainerOrEmpty
+import com.tkolymp.shared.event.parseRegistrationsFromJson
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.json.AppJson
 import com.tkolymp.shared.sync.OfflineKeys
 import com.tkolymp.shared.utils.AppConstants
@@ -278,7 +280,7 @@ class CalendarViewModel(
                 isLoading = false
             )
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání"))
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoading))
         }
     }
 
@@ -427,25 +429,7 @@ class CalendarViewModel(
                                 obj["eventRegistrations"] is kotlinx.serialization.json.JsonObject -> (obj["eventRegistrations"] as kotlinx.serialization.json.JsonObject)["nodes"] as? kotlinx.serialization.json.JsonArray
                                 else -> null
                             }
-                            val registrations = regArr?.mapNotNull { item ->
-                                val o = item as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null
-                                val rid = o["id"]?.jsonPrimitive?.longOrNull ?: o["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
-                                val personObj = o["person"] as? kotlinx.serialization.json.JsonObject
-                                val person = personObj?.let { p ->
-                                    val pid = p["id"]?.jsonPrimitive?.longOrNull ?: p["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
-                                    com.tkolymp.shared.event.Person(pid, p["name"]?.jsonPrimitive?.contentOrNull, p["firstName"]?.jsonPrimitive?.contentOrNull, p["lastName"]?.jsonPrimitive?.contentOrNull)
-                                }
-                                val coupleObj = o["couple"] as? kotlinx.serialization.json.JsonObject
-                                val couple = coupleObj?.let { c ->
-                                    val cid = c["id"]?.jsonPrimitive?.longOrNull ?: c["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
-                                    val manObj = c["man"] as? kotlinx.serialization.json.JsonObject
-                                    val womanObj = c["woman"] as? kotlinx.serialization.json.JsonObject
-                                    val man = manObj?.let { m -> com.tkolymp.shared.event.SimpleName(m["firstName"]?.jsonPrimitive?.contentOrNull, m["lastName"]?.jsonPrimitive?.contentOrNull) }
-                                    val woman = womanObj?.let { w -> com.tkolymp.shared.event.SimpleName(w["firstName"]?.jsonPrimitive?.contentOrNull, w["lastName"]?.jsonPrimitive?.contentOrNull) }
-                                    com.tkolymp.shared.event.Couple(cid, man, woman)
-                                }
-                                com.tkolymp.shared.event.Registration(rid, person, couple)
-                            } ?: emptyList()
+                            val registrations = regArr?.let { parseRegistrationsFromJson(it) } ?: emptyList()
 
                             val locationObj = obj["location"] as? kotlinx.serialization.json.JsonObject
                             val location = locationObj?.let { l ->

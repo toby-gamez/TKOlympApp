@@ -371,7 +371,7 @@ fun RegistrationScreen(
                                 ) {
                                     RadioButton(selected = selectedRegId.value == rid, onClick = { selectedRegId.value = rid })
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text(label ?: "registrace")
+                                    Text(label)
                                 }
                             }
                         }
@@ -451,15 +451,15 @@ fun RegistrationScreen(
                                     val regId = selectedId
                                     if (showLessonSelection) countsState.forEachIndexed { i, cnt ->
                                         val trainerId = (trainers[i] as? JsonObject)?.get("id")?.jsonPrimitive?.intOrNull ?: i
-                                        regId?.let { id -> onSetLessonDemand(id, trainerId, cnt) }
+                                        onSetLessonDemand(regId, trainerId, cnt)
                                     }
                                     if (enableNotes) onSetNote?.invoke(selectedId, editNoteState.value)
                                     onClose()
                                 } catch (e: CancellationException) { throw e } catch (t: Exception) {
                                     Logger.d("RegScreen", "SetLessonDemand failed: ${t.message}")
-                                    showEditError.value = t.message ?: "Chyba při ukládání změn"
+                                    showEditError.value = t.message ?: AppStrings.current.errorMessages.errorUpdating
                                 }
-                            }, modifier = Modifier.fillMaxWidth()) { Text("Uložit změny") }
+                            }, modifier = Modifier.fillMaxWidth()) { Text(AppStrings.current.commonActions.saveChanges) }
                             if (!showEditError.value.isNullOrBlank()) {
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(showEditError.value ?: "", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
@@ -494,7 +494,7 @@ fun RegistrationScreen(
                                 ) {
                                     RadioButton(selected = selectedReg.value == rid, onClick = { selectedReg.value = rid })
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text(label ?: "registrace")
+                                    Text(label)
                                 }
                             }
                         }
@@ -545,7 +545,7 @@ fun RegistrationScreen(
                         }
                         if (!showDeleteError.value.isNullOrBlank()) {
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text(showDeleteError.value!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                            Text(showDeleteError.value.orEmpty(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }

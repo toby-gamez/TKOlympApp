@@ -397,7 +397,7 @@ private fun TimelineBottomSheetContent(
                     )
                     FilterChip(
                         selected = false,
-                        onClick = { onSwitchToBlocks!!() },
+                        onClick = { onSwitchToBlocks?.invoke() },
                         label = { Text(AppStrings.current.settings.calendarViewList) },
                         leadingIcon = {
                             Icon(
@@ -465,7 +465,7 @@ private fun TimelineBottomSheetContent(
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 HorizontalDivider()
                 FilledTonalButton(
-                    onClick = { onFindFreeLessons!!() },
+                    onClick = { onFindFreeLessons?.invoke() },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
                 ) {

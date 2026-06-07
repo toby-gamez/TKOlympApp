@@ -1,10 +1,9 @@
 package com.tkolymp.shared.payments
 
-import kotlinx.coroutines.CoroutineScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -17,8 +16,7 @@ import kotlin.math.roundToLong
 import com.tkolymp.shared.json.AppJson
 import com.tkolymp.shared.sync.OfflineKeys
 
-class PaymentsViewModel {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+class PaymentsViewModel : ViewModel() {
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading
@@ -31,7 +29,7 @@ class PaymentsViewModel {
     }
 
     fun load() {
-        scope.launch {
+        viewModelScope.launch {
             _isLoading.value = true
             try {
                 val pid = withContext(Dispatchers.IO) { com.tkolymp.shared.ServiceLocator.userService.getCachedPersonId() }
@@ -69,10 +67,6 @@ class PaymentsViewModel {
                 _isLoading.value = false
             }
         }
-    }
-
-    fun clear() {
-        scope.cancel()
     }
 
     private fun parseOfflinePayments(jsonStr: String, pid: String?): List<PaymentDebtorItem> {

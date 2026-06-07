@@ -51,8 +51,9 @@ android {
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 18
-        // nezapomeň taky nastavit
-        versionName = "1.6" // nastav i to nahoře
+        versionName = "1.6"
+        buildConfigField("String", "API_BASE_URL", "\"${localProps["api.base.url"] ?: ""}\"")
+        buildConfigField("String", "TENANT_ID", "\"${localProps["tenant.id"] ?: ""}\"")
     }
     packaging {
         resources {
@@ -61,10 +62,6 @@ android {
     }
     buildFeatures {
         buildConfig = true
-    }
-    defaultConfig {
-        buildConfigField("String", "API_BASE_URL", "\"${localProps["api.base.url"] ?: ""}\"")
-        buildConfigField("String", "TENANT_ID", "\"${localProps["tenant.id"] ?: ""}\"") 
     }
     buildTypes {
         getByName("release") {

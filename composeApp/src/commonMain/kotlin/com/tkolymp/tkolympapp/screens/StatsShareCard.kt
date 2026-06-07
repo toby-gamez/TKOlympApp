@@ -159,10 +159,10 @@ internal fun ShareStatsDialog(
                 ) {
                     availableSections.forEach { section ->
                         val label = when (section) {
-                            ShareSection.OVERVIEW -> "Řada"
-                            ShareSection.TOTAL_HOURS -> "Celkem hodin"
-                            ShareSection.AVG_PER_WEEK -> "Trén./týden"
-                            ShareSection.TOTAL_SESSIONS -> "Počet tréninků"
+                            ShareSection.OVERVIEW -> strings.currentStreak
+                            ShareSection.TOTAL_HOURS -> strings.totalHours
+                            ShareSection.AVG_PER_WEEK -> strings.avgPerWeek
+                            ShareSection.TOTAL_SESSIONS -> strings.totalSessions
                             ShareSection.WEEKLY_ACTIVITY -> strings.weeklyActivity
                             ShareSection.MONTHLY_ACTIVITY -> strings.monthlyBreakdown
                             ShareSection.TYPE_BREAKDOWN -> strings.typeBreakdown
@@ -263,6 +263,7 @@ internal fun StatsShareCard(
     selectedSections: Set<ShareSection> = setOf(ShareSection.OVERVIEW, ShareSection.WEEKLY_ACTIVITY),
     modifier: Modifier = Modifier
 ) {
+    val strings = AppStrings.current.stats
     val hours = (totalMinutes / 60.0).roundTo1dp()
     val avgFmt = avgPerWeek.roundTo1dp()
     val bg = MaterialTheme.colorScheme.background
@@ -303,7 +304,7 @@ internal fun StatsShareCard(
                     color = accentContainer
                 ) {
                     Text(
-                        "Sezóna ${season.label}",
+                        "${strings.seasonPrefix} ${season.label}",
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         maxLines = 1,
@@ -325,7 +326,7 @@ internal fun StatsShareCard(
                     lineHeight = 64.sp
                 )
                 Text(
-                    text = "týdnů v řadě",
+                    text = strings.weeksInARowLabel,
                     fontSize = 15.sp,
                     color = onBg.copy(alpha = 0.65f)
                 )
@@ -344,7 +345,7 @@ internal fun StatsShareCard(
                     lineHeight = 64.sp
                 )
                 Text(
-                    text = "celkem hodin",
+                    text = strings.totalHours,
                     fontSize = 15.sp,
                     color = onBg.copy(alpha = 0.65f)
                 )
@@ -363,7 +364,7 @@ internal fun StatsShareCard(
                     lineHeight = 64.sp
                 )
                 Text(
-                    text = "tréninků za týden",
+                    text = strings.trainingsPerWeekLabel,
                     fontSize = 15.sp,
                     color = onBg.copy(alpha = 0.65f)
                 )
@@ -382,7 +383,7 @@ internal fun StatsShareCard(
                     lineHeight = 64.sp
                 )
                 Text(
-                    text = "tréninků",
+                    text = strings.sessionsUnit,
                     fontSize = 15.sp,
                     color = onBg.copy(alpha = 0.65f)
                 )
@@ -392,7 +393,7 @@ internal fun StatsShareCard(
             if (ShareSection.WEEKLY_ACTIVITY in selectedSections && weeklyData.isNotEmpty()) {
                 Spacer(Modifier.height(20.dp))
                 Text(
-                    "Týdenní aktivita",
+                    strings.weeklyActivity,
                     fontSize = 10.sp,
                     color = onBg.copy(alpha = 0.45f),
                     modifier = Modifier.align(Alignment.Start)
@@ -405,7 +406,7 @@ internal fun StatsShareCard(
             if (ShareSection.MONTHLY_ACTIVITY in selectedSections && monthlyData.isNotEmpty()) {
                 Spacer(Modifier.height(20.dp))
                 Text(
-                    "Měsíční aktivita",
+                    strings.monthlyBreakdown,
                     fontSize = 10.sp,
                     color = onBg.copy(alpha = 0.45f),
                     modifier = Modifier.align(Alignment.Start)
@@ -418,7 +419,7 @@ internal fun StatsShareCard(
             if (ShareSection.TYPE_BREAKDOWN in selectedSections && typeData.isNotEmpty()) {
                 Spacer(Modifier.height(20.dp))
                 Text(
-                    "Podle typu",
+                    strings.typeBreakdown,
                     fontSize = 10.sp,
                     color = onBg.copy(alpha = 0.45f),
                     modifier = Modifier.align(Alignment.Start)
@@ -434,7 +435,7 @@ internal fun StatsShareCard(
             if (ShareSection.TRAINER_BREAKDOWN in selectedSections && trainerData.isNotEmpty()) {
                 Spacer(Modifier.height(20.dp))
                 Text(
-                    "Podle trenérů",
+                    strings.trainerBreakdown,
                     fontSize = 10.sp,
                     color = onBg.copy(alpha = 0.45f),
                     modifier = Modifier.align(Alignment.Start)
@@ -442,7 +443,7 @@ internal fun StatsShareCard(
                 Spacer(Modifier.height(4.dp))
                 ShareHorizontalBars(
                     items = trainerData.take(5).map {
-                        (if (it.name.startsWith("(")) "ostatní" else stripTitles(it.name)) to it.count
+                        (if (it.name.startsWith("(")) strings.otherTrainers else stripTitles(it.name)) to it.count
                     },
                     maxCount = trainerData.take(5).maxOfOrNull { it.count }?.coerceAtLeast(1) ?: 1
                 )
@@ -452,7 +453,7 @@ internal fun StatsShareCard(
             if (ShareSection.SCORE in selectedSections && scoreEntry != null) {
                 Spacer(Modifier.height(20.dp))
                 Text(
-                    "Skóre",
+                    strings.scoreSectionLabel,
                     fontSize = 10.sp,
                     color = onBg.copy(alpha = 0.45f),
                     modifier = Modifier.align(Alignment.Start)
@@ -466,14 +467,14 @@ internal fun StatsShareCard(
                         ShareStatPill(
                             modifier = Modifier.weight(1f),
                             value = "#${scoreEntry.ranking}",
-                            label = "pořadí"
+                            label = strings.rankingLabel
                         )
                     }
                     if (scoreEntry.totalScore != null) {
                         ShareStatPill(
                             modifier = Modifier.weight(1f),
                             value = scoreEntry.totalScore?.roundTo1dp()?.toString() ?: "0",
-                            label = "bodů celkem"
+                            label = strings.totalPointsLabel
                         )
                     }
                 }
@@ -485,7 +486,7 @@ internal fun StatsShareCard(
                 val pct = if (total > 0) totalSessions * 100 / total else 100
                 Spacer(Modifier.height(20.dp))
                 Text(
-                    "Docházka",
+                    strings.attendanceLabel,
                     fontSize = 10.sp,
                     color = onBg.copy(alpha = 0.45f),
                     modifier = Modifier.align(Alignment.Start)
@@ -498,18 +499,18 @@ internal fun StatsShareCard(
                     ShareStatPill(
                         modifier = Modifier.weight(1f),
                         value = "$pct %",
-                        label = "absolvováno"
+                        label = strings.attendedLabel
                     )
                     ShareStatPill(
                         modifier = Modifier.weight(1f),
                         value = totalSessions.toString(),
-                        label = "tréninků"
+                        label = strings.sessionsUnit
                     )
                     if (cancelledCount > 0) {
                         ShareStatPill(
                             modifier = Modifier.weight(1f),
                             value = cancelledCount.toString(),
-                            label = "omluveno"
+                            label = strings.excusedLabel
                         )
                     }
                 }

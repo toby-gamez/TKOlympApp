@@ -81,5 +81,6 @@ class ProfileViewModel(
         try { tokenStorage.clear() } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         try { userService.clear() } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         try { ServiceLocator.cacheService.clear() } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+        OtherViewModel.clearCache()
     }
 }

@@ -88,8 +88,8 @@ fun OnboardingScreen(
         ) { pageIndex ->
             when (pageIndex) {
                 0 -> RoleSelectionPage(
-                    title = "Kdo jste?",
-                    description = "Vyberte si, zda jste tanečník nebo rodič",
+                    title = strings.onboarding.roleSelectionTitle,
+                    description = strings.onboarding.roleSelectionDescription,
                     selectedRole = selectedRole,
                     onSelect = { selectedRole = it }
                 )
@@ -410,7 +410,7 @@ private fun CalendarMockupCard(modifier: Modifier = Modifier) {
             MockCalendarGroupCard("Kruháč 1", "ZŠ Holečkova", "16:00 - 16:45", dotColor = null)
             MockCalendarGroupCard("Zlatá skupina LAT", "ZŠ Holečkova", "17:30 - 18:15", dotColor = Color(0xFFFFD700))
             Spacer(Modifier.height(4.dp))
-            Text("tomorrow", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 2.dp, bottom = 2.dp))
+            Text(strings.timeline.tomorrow, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 2.dp, bottom = 2.dp))
             MockCalendarLessonCard("Filip Karásek", "BEST Sportcentrum", "15:00 - 15:45", "Novák - Nováková", "45'")
         }
     }
@@ -430,7 +430,7 @@ private fun MockCalendarGroupCard(name: String, location: String, time: String, 
                 Text(time, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("group", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(AppStrings.current.events.eventTypeGroup, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (dotColor != null) Box(modifier = Modifier.size(12.dp).clip(CircleShape).background(dotColor))
             }
         }
@@ -447,7 +447,7 @@ private fun MockCalendarLessonCard(trainer: String, location: String, time: Stri
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp)) {
             Row(modifier = Modifier.fillMaxWidth()) {
                 Text(trainer, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
-                Text("lesson", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(AppStrings.current.events.eventTypeLesson, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Text(location, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(6.dp))
@@ -614,16 +614,16 @@ private fun RoleSelectionPage(
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxWidth()) {
             RoleOptionCard(
                 icon = Icons.Filled.Groups,
-                label = "Tanečník",
-                description = "Plný přístup",
+                label = AppStrings.current.onboarding.roleDancer,
+                description = AppStrings.current.onboarding.roleDancerDesc,
                 selected = selectedRole == com.tkolymp.shared.models.UserRole.DANCER,
                 onClick = { onSelect(com.tkolymp.shared.models.UserRole.DANCER) },
                 modifier = Modifier.weight(1f)
             )
             RoleOptionCard(
                 icon = Icons.Filled.AccountCircle,
-                label = "Rodič",
-                description = "Omezená oznámení",
+                label = AppStrings.current.onboarding.roleParent,
+                description = AppStrings.current.onboarding.roleParentDesc,
                 selected = selectedRole == com.tkolymp.shared.models.UserRole.PARENT,
                 onClick = { onSelect(com.tkolymp.shared.models.UserRole.PARENT) },
                 modifier = Modifier.weight(1f)

@@ -11,6 +11,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import com.tkolymp.shared.json.AppJson
+import com.tkolymp.shared.language.AppStrings
 
 data class PersonState(
     val personId: String? = null,
@@ -90,7 +91,7 @@ class PersonViewModel(
             // nothing found
             _state.value = _state.value.copy(person = null, isLoading = false)
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání osoby"))
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingPerson))
         }
     }
 }

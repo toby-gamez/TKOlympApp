@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.tkolymp.shared.json.AppJson
+import com.tkolymp.shared.language.AppStrings
 
 data class NoticeState(
     val announcement: com.tkolymp.shared.announcements.Announcement? = null,
@@ -44,7 +45,7 @@ class NoticeViewModel(
                     _state.value = _state.value.copy(announcement = a, isLoading = false, isOffline = usedOffline)
                 }
             } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-                _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: "Chyba při načítání"))
+                _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoading))
             }
         }
     }

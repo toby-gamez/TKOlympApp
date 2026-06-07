@@ -66,6 +66,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -318,18 +319,22 @@ fun CalendarScreen(
                             Spacer(modifier = Modifier.height(4.dp))
 
                             filteredLessons.forEach { (trainer, instances) ->
-                                LessonView(
-                                    trainerName = trainer,
-                                    instances = instances,
-                                    isAllTab = (selectedTab == 1),
-                                    myPersonId = calState.myPersonId,
-                                    myCoupleIds = calState.myCoupleIds,
-                                    onEventClick = { id: Long -> onOpenEvent(id) }
-                                )
+                                key(trainer) {
+                                    LessonView(
+                                        trainerName = trainer,
+                                        instances = instances,
+                                        isAllTab = (selectedTab == 1),
+                                        myPersonId = calState.myPersonId,
+                                        myCoupleIds = calState.myCoupleIds,
+                                        onEventClick = { id: Long -> onOpenEvent(id) }
+                                    )
+                                }
                             }
 
                             filteredOther.forEach { item ->
-                                RenderSingleEventCard(item = item, onEventClick = { id: Long -> onOpenEvent(id) })
+                                key(item.id ?: item.since) {
+                                    RenderSingleEventCard(item = item, onEventClick = { id: Long -> onOpenEvent(id) })
+                                }
                             }
                         }
                         } // StaggeredItem
@@ -574,7 +579,7 @@ private fun CalendarBottomSheetContent(
                     )
                     FilterChip(
                         selected = false,
-                        onClick = { onNavigateTimeline!!() },
+                        onClick = { onNavigateTimeline?.invoke() },
                         label = { Text(AppStrings.current.onboarding.calendarViewTimeline) },
                         leadingIcon = {
                             Icon(
@@ -620,7 +625,7 @@ private fun CalendarBottomSheetContent(
         AnimatedVisibility(visible = showContent && onFindFreeLessons != null, enter = enterAnim) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 androidx.compose.material3.FilledTonalButton(
-                    onClick = { onFindFreeLessons!!() },
+                    onClick = { onFindFreeLessons?.invoke() },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
                 ) {

@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material3.FloatingActionButton
@@ -46,7 +46,7 @@ import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.personalevents.PersonalEvent
 import com.tkolymp.shared.viewmodels.PersonalEventsViewModel
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
@@ -95,7 +95,7 @@ fun PersonalEventsScreen(
         topBar = {
         TopAppBar(
             title = { Text(AppStrings.current.personalEvents.myTrainings) },
-            navigationIcon = { IconButton(onClick = onBack) { Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null) } }
+            navigationIcon = { IconButton(onClick = onBack) { Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) } }
         )
     }) { innerPadding ->
         LazyColumn(modifier = Modifier.padding(innerPadding).padding(bottom = bottomPadding)) {
@@ -114,7 +114,7 @@ fun PersonalEventsScreen(
                             selectedId = ev.id
                             showConfirm = true
                         }) {
-                            Icon(imageVector = Icons.Filled.Delete, contentDescription = "Smazat")
+                            Icon(imageVector = Icons.Filled.Delete, contentDescription = AppStrings.current.commonActions.delete)
                         }
                     }
                 }
@@ -139,11 +139,11 @@ fun PersonalEventsScreen(
                         showConfirm = false
                         selectedId = null
                         if (id != null) scope.launch { vm.delete(id) }
-                    }) { Text("Smazat") }
+                    }) { Text(AppStrings.current.commonActions.delete) }
                 },
-                dismissButton = { TextButton(onClick = { showConfirm = false; selectedId = null }) { Text("Zrušit") } },
-                title = { Text("Potvrdit") },
-                text = { Text("Opravdu chcete smazat tuto událost?") }
+                dismissButton = { TextButton(onClick = { showConfirm = false; selectedId = null }) { Text(AppStrings.current.commonActions.cancel) } },
+                title = { Text(AppStrings.current.commonActions.confirm) },
+                text = { Text(AppStrings.current.personalEvents.confirmDelete) }
             )
         }
         }

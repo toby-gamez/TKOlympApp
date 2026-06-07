@@ -369,8 +369,8 @@ internal fun daysUntilNextBirthday(raw: String?): Int {
     } ?: return Int.MAX_VALUE
 
     val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
-    val month = ld.monthNumber
-    val day = ld.dayOfMonth
+    val month = ld.month.value
+    val day = ld.day
     val candidate = try {
         LocalDate(today.year, month, day)
     } catch (_: Exception) {
@@ -378,7 +378,7 @@ internal fun daysUntilNextBirthday(raw: String?): Int {
     }
 
     var next = if (candidate < today) candidate.plus(1, DateTimeUnit.YEAR) else candidate
-    if (next.monthNumber == 2 && next.dayOfMonth == 29) {
+    if (next.month.value == 2 && next.day == 29) {
         val y = next.year
         val isLeap = (y % 4 == 0 && (y % 100 != 0 || y % 400 == 0))
         if (!isLeap) next = LocalDate(y, 2, 28)
