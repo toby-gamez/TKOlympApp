@@ -23,15 +23,15 @@ Add a compact row — "This week: X sessions · Y hours" — pulled from `StatsV
 
 ## People
 
-### 7. "Trainers" quick filter on PeopleScreen
+### 7. "Trainers" quick filter on PeopleScreen ✅
 A chip that filters the people list to trainers only. `PersonDetails.isTrainer` already exists.
 
-### 8. Person → filter calendar by trainer
+### 8. Person → filter calendar by trainer ✅
 From `PersonScreen`, if the person is a trainer, add a "See schedule" button that opens the calendar pre-filtered to that trainer's lessons. Pure navigation + filter state.
 
 ## UI / UX Polish
 
-### 11. Leaderboard: pin your own position
+### 11. Leaderboard: pin your own position ✅
 Always show the current user's row pinned at the bottom of `LeaderboardScreen` even when scrolled past it. Cross-reference `ScoreboardEntry` with `UserStorage`.
 
 ### 12. Payments due-date countdown on OverviewScreen

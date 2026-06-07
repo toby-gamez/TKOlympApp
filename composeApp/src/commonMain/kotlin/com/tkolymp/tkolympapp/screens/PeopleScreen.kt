@@ -179,6 +179,7 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
             }
 
             // groups (cohorts) filter with multi-selection (default: show all)
+            var showTrainersOnly by remember { mutableStateOf(false) }
             var selectedGroups by remember { mutableStateOf<Set<String>>(emptySet()) }
             val groups = remember(people) {
                 people.flatMap { p -> p.cohortMembershipsList.mapNotNull { it.cohort } }
@@ -201,9 +202,15 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
                 Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
                     // 'Vše' clears selection (empty = show all)
                     FilterChip(
-                        selected = selectedGroups.isEmpty() || selectedGroups.size == groups.size,
-                        onClick = { selectedGroups = emptySet() },
+                        selected = selectedGroups.isEmpty() && !showTrainersOnly,
+                        onClick = { selectedGroups = emptySet(); showTrainersOnly = false },
                         label = { Text(AppStrings.current.commonActions.all) }
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    FilterChip(
+                        selected = showTrainersOnly,
+                        onClick = { showTrainersOnly = !showTrainersOnly },
+                        label = { Text(AppStrings.current.profile.trainers) }
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     groups.forEach { (id, name) ->
@@ -220,8 +227,9 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
 
             }
 
-            val displayed = remember(people, sortMode, selectedGroups, groups, searchQuery) {
-                val filtered = if (selectedGroups.isEmpty() || selectedGroups.size == groups.size) people else people.filter { p ->
+            val displayed = remember(people, sortMode, selectedGroups, groups, searchQuery, showTrainersOnly, trainerPersonIds) {
+                val trainerFiltered = if (showTrainersOnly) people.filter { p -> p.id in trainerPersonIds } else people
+                val filtered = if (selectedGroups.isEmpty() || selectedGroups.size == groups.size) trainerFiltered else trainerFiltered.filter { p ->
                     p.cohortMembershipsList
                         .mapNotNull { it.cohort }
                         .filter { it.isVisible != false }
