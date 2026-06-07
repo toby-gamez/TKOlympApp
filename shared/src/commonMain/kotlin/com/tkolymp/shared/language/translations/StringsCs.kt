@@ -169,6 +169,8 @@ val StringsCs = Strings(
         addedToCalendar = "Přidáno do kalendáře",
         addToCalendarSuccess = "Akce přidána do kalendáře",
         addToCalendarFailed = "Nepodařilo se přidat do kalendáře",
+        trainerOffersLabel = "nabízí",
+        trainerRemainingLabel = "zbývá",
     ),
     registration = RegistrationStrings(
         registration = "Registrace",
@@ -348,6 +350,7 @@ val StringsCs = Strings(
         calendarOptionsTitle = "Zobrazení",
         weekDayAbbreviations = listOf("Po", "Út", "St", "Čt", "Pá", "So", "Ne"),
         resetToToday = "Zpět na dnes",
+        clearFilters = "Zrušit filtry",
     ),
     onboarding = OnboardingStrings(
     onboardingTitle1 = "Soutěže & výsledky",
@@ -425,6 +428,11 @@ val StringsCs = Strings(
         errorLoadingProfile = "Chyba při načítání profilu",
         errorLoadingNames = "Chyba při načítání jmen",
         errorLoadingClub = "Chyba při načítání klubu",
+        unknownError = "Neznámá chyba",
+        networkError = "Chyba sítě",
+        notFoundError = "Nenalezeno",
+        errorLoadingStats = "Chyba při načítání statistik",
+        errorLoadingEvents = "Chyba při načítání akcí",
     ),
     about = AboutStrings(
         appDescriptionTitle = "Popis aplikace",

@@ -30,6 +30,7 @@ import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,6 +40,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ViewAgenda
 import androidx.compose.material.icons.filled.ViewTimeline
@@ -129,6 +131,24 @@ fun CalendarScreen(
     val sheetDragOffset = remember { Animatable(0f) }
     LaunchedEffect(showBottomSheet) { if (showBottomSheet) sheetDragOffset.snapTo(0f) }
 
+    var selectedTrainers by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var selectedLocations by remember { mutableStateOf<Set<String>>(emptySet()) }
+
+    val availableTrainers = remember(calState.lessonsByTrainerByDay) {
+        calState.lessonsByTrainerByDay.values.flatMap { it.keys }.toSortedSet()
+    }
+    val availableLocations = remember(calState.eventsByDay) {
+        calState.eventsByDay.values.flatten().mapNotNull { inst ->
+            inst.event?.locationText?.takeIf { it.isNotBlank() }
+                ?: inst.event?.location?.name?.takeIf { it.isNotBlank() }
+        }.toSortedSet()
+    }
+
+    LaunchedEffect(localWeekOffset, customStartDate) {
+        selectedTrainers = emptySet()
+        selectedLocations = emptySet()
+    }
+
     // Cache last non-empty offline data to avoid brief disappearance on transient empty state
     val cachedVisibleDates = remember { mutableStateOf<List<String>?>(null) }
     val cachedLessonsByTrainer = remember { mutableStateOf<Map<String, Map<String, List<EventInstance>>>?>(null) }
@@ -186,7 +206,7 @@ fun CalendarScreen(
                     Box(modifier = Modifier.padding(end = 4.dp)) {
                         BadgedBox(
                             badge = {
-                                if (calState.hasCancelledMineToShow) {
+                                if (calState.hasCancelledMineToShow || selectedTrainers.isNotEmpty() || selectedLocations.isNotEmpty()) {
                                     Badge(modifier = Modifier.size(8.dp))
                                 }
                             }
@@ -224,7 +244,47 @@ fun CalendarScreen(
                     }
                 }
 
-                val contentKey = Triple(selectedTab, localWeekOffset, customStartDate)
+                // Compute filtered+offline-merged data once; only recomputes when filter
+                // inputs actually change — not on every unrelated recomposition.
+                val filteredEventsByDay = remember(
+                    calState.visibleDates,
+                    calState.lessonsByTrainerByDay,
+                    calState.otherEventsByDay,
+                    calState.isOffline,
+                    cachedVisibleDates.value,
+                    cachedLessonsByTrainer.value,
+                    cachedOtherEvents.value,
+                    selectedTrainers,
+                    selectedLocations
+                ) {
+                    val visibleDates = if (calState.visibleDates.isEmpty() && calState.isOffline && cachedVisibleDates.value != null)
+                        cachedVisibleDates.value.orEmpty() else calState.visibleDates
+                    visibleDates.mapNotNull { date ->
+                        val lessonsByTrainer = if ((calState.lessonsByTrainerByDay[date].orEmpty().isEmpty()) && calState.isOffline && cachedLessonsByTrainer.value != null)
+                            cachedLessonsByTrainer.value?.getOrDefault(date, emptyMap()) ?: emptyMap()
+                        else calState.lessonsByTrainerByDay[date] ?: emptyMap()
+                        val otherList = if ((calState.otherEventsByDay[date].orEmpty().isEmpty()) && calState.isOffline && cachedOtherEvents.value != null)
+                            cachedOtherEvents.value?.getOrDefault(date, emptyList()) ?: emptyList()
+                        else calState.otherEventsByDay[date] ?: emptyList()
+                        val fl = lessonsByTrainer
+                            .let { if (selectedTrainers.isEmpty()) it else it.filterKeys { k -> k in selectedTrainers } }
+                            .let { m -> if (selectedLocations.isEmpty()) m else m.filter { (_, instances) ->
+                                instances.mapNotNull { i -> i.event?.locationText?.takeIf { it.isNotBlank() } ?: i.event?.location?.name?.takeIf { it.isNotBlank() } }.firstOrNull()
+                                    ?.let { it in selectedLocations } == true
+                            }}
+                        val fo = otherList
+                            .let { list -> if (selectedTrainers.isEmpty()) list else list.filter { inst -> inst.event?.eventTrainersList?.any { it in selectedTrainers } == true } }
+                            .let { list -> if (selectedLocations.isEmpty()) list else list.filter { inst ->
+                                val loc = inst.event?.locationText?.takeIf { it.isNotBlank() } ?: inst.event?.location?.name?.takeIf { it.isNotBlank() }
+                                loc != null && loc in selectedLocations
+                            }}
+                        if (fl.isEmpty() && fo.isEmpty()) null else Triple(date, fl, fo)
+                    }
+                }
+
+                // Tab changes are NOT in the content key — they recompose in place so the
+                // stagger animation does not replay every time Mine/All is toggled.
+                val contentKey = Pair(localWeekOffset, customStartDate)
                 androidx.compose.animation.AnimatedContent(
                     targetState = contentKey,
                     transitionSpec = { tabContentTransitionSpec() },
@@ -235,24 +295,12 @@ fun CalendarScreen(
                     LaunchedEffect(key) { datesVisible = false }
                     LaunchedEffect(calState.visibleDates) { if (calState.visibleDates.isNotEmpty()) datesVisible = true }
 
-                    val renderTab = key.first
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
                             .verticalScroll(rememberScrollState())
                     ) {
-                    val visibleDatesToRender = if (calState.visibleDates.isEmpty() && calState.isOffline && cachedVisibleDates.value != null)
-                        cachedVisibleDates.value.orEmpty() else calState.visibleDates
-                    var sectionIndex = 0
-                    visibleDatesToRender.forEach { date ->
-                        val lessonsByTrainer = if ((calState.lessonsByTrainerByDay[date].orEmpty().isEmpty()) && calState.isOffline && cachedLessonsByTrainer.value != null)
-                            cachedLessonsByTrainer.value?.getOrDefault(date, emptyMap()) ?: emptyMap()
-                        else calState.lessonsByTrainerByDay[date] ?: emptyMap()
-                        val otherList = if ((calState.otherEventsByDay[date].orEmpty().isEmpty()) && calState.isOffline && cachedOtherEvents.value != null)
-                            cachedOtherEvents.value?.getOrDefault(date, emptyList()) ?: emptyList()
-                        else calState.otherEventsByDay[date] ?: emptyList()
-                        if (lessonsByTrainer.isEmpty() && otherList.isEmpty()) return@forEach
-                        val idx = sectionIndex++
+                    filteredEventsByDay.forEachIndexed { idx, (date, filteredLessons, filteredOther) ->
                         StaggeredItem(index = idx, visible = datesVisible, baseDelayMs = 50) {
                         Column(modifier = Modifier.padding(8.dp)) {
                             val header = when (date) {
@@ -269,18 +317,18 @@ fun CalendarScreen(
                             Text(header, style = MaterialTheme.typography.titleMedium)
                             Spacer(modifier = Modifier.height(4.dp))
 
-                            lessonsByTrainer.forEach { (trainer, instances) ->
+                            filteredLessons.forEach { (trainer, instances) ->
                                 LessonView(
                                     trainerName = trainer,
                                     instances = instances,
-                                    isAllTab = (renderTab == 1),
+                                    isAllTab = (selectedTab == 1),
                                     myPersonId = calState.myPersonId,
                                     myCoupleIds = calState.myCoupleIds,
                                     onEventClick = { id: Long -> onOpenEvent(id) }
                                 )
                             }
 
-                            otherList.forEach { item ->
+                            filteredOther.forEach { item ->
                                 RenderSingleEventCard(item = item, onEventClick = { id: Long -> onOpenEvent(id) })
                             }
                         }
@@ -387,6 +435,20 @@ fun CalendarScreen(
                         customStartDate = null
                         localWeekOffset = 0
                         onWeekOffsetChange(0)
+                    },
+                    availableTrainers = availableTrainers,
+                    availableLocations = availableLocations,
+                    selectedTrainers = selectedTrainers,
+                    selectedLocations = selectedLocations,
+                    onTrainerToggle = { trainer ->
+                        selectedTrainers = if (trainer in selectedTrainers) selectedTrainers - trainer else selectedTrainers + trainer
+                    },
+                    onLocationToggle = { location ->
+                        selectedLocations = if (location in selectedLocations) selectedLocations - location else selectedLocations + location
+                    },
+                    onResetFilters = {
+                        selectedTrainers = emptySet()
+                        selectedLocations = emptySet()
                     }
                 )
             }
@@ -395,15 +457,82 @@ fun CalendarScreen(
     } // Box
 }
 
+@Composable
+private fun CalendarFilterBar(
+    availableTrainers: Set<String>,
+    availableLocations: Set<String>,
+    selectedTrainers: Set<String>,
+    selectedLocations: Set<String>,
+    onTrainerToggle: (String) -> Unit,
+    onLocationToggle: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val showTrainers = availableTrainers.size >= 2
+    val showLocations = availableLocations.size >= 2
+    if (!showTrainers && !showLocations) return
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (showTrainers) {
+            availableTrainers.forEach { trainer ->
+                FilterChip(
+                    selected = trainer in selectedTrainers,
+                    onClick = { onTrainerToggle(trainer) },
+                    label = { Text(trainer, maxLines = 1) }
+                )
+            }
+        }
+
+        if (showTrainers && showLocations) {
+            Box(
+                modifier = Modifier
+                    .height(24.dp)
+                    .width(1.dp)
+                    .background(MaterialTheme.colorScheme.outlineVariant)
+            )
+        }
+
+        if (showLocations) {
+            availableLocations.forEach { location ->
+                FilterChip(
+                    selected = location in selectedLocations,
+                    onClick = { onLocationToggle(location) },
+                    label = { Text(location, maxLines = 1) },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Place,
+                            contentDescription = null,
+                            modifier = Modifier.size(AssistChipDefaults.IconSize)
+                        )
+                    }
+                )
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CalendarBottomSheetContent(
     today: LocalDate,
-    currentWeekStart: LocalDate,         // actual start of the currently shown period
+    currentWeekStart: LocalDate,
     onNavigateTimeline: (() -> Unit)?,
     onFindFreeLessons: (() -> Unit)?,
-    onWeekSelected: (LocalDate) -> Unit, // receives Monday of the tapped week
-    onReset: () -> Unit
+    onWeekSelected: (LocalDate) -> Unit,
+    onReset: () -> Unit,
+    availableTrainers: Set<String> = emptySet(),
+    availableLocations: Set<String> = emptySet(),
+    selectedTrainers: Set<String> = emptySet(),
+    selectedLocations: Set<String> = emptySet(),
+    onTrainerToggle: (String) -> Unit = {},
+    onLocationToggle: (String) -> Unit = {},
+    onResetFilters: (() -> Unit)? = null
 ) {
     var displayMonth by remember(currentWeekStart) {
         mutableStateOf(LocalDate(currentWeekStart.year, currentWeekStart.month, 1))
@@ -455,6 +584,33 @@ private fun CalendarBottomSheetContent(
                             )
                         }
                     )
+                }
+                HorizontalDivider()
+            }
+        }
+
+        // ── Filters ────────────────────────────────────────────────────────────
+        AnimatedVisibility(
+            visible = showContent && (availableTrainers.size >= 2 || availableLocations.size >= 2),
+            enter = enterAnim
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                CalendarFilterBar(
+                    availableTrainers = availableTrainers,
+                    availableLocations = availableLocations,
+                    selectedTrainers = selectedTrainers,
+                    selectedLocations = selectedLocations,
+                    onTrainerToggle = onTrainerToggle,
+                    onLocationToggle = onLocationToggle
+                )
+                val filtersActive = selectedTrainers.isNotEmpty() || selectedLocations.isNotEmpty()
+                AnimatedVisibility(visible = filtersActive, enter = fadeIn(tween(160)), exit = fadeOut(tween(120))) {
+                    TextButton(
+                        onClick = { onResetFilters?.invoke() },
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Text(AppStrings.current.calendarView.clearFilters)
+                    }
                 }
                 HorizontalDivider()
             }

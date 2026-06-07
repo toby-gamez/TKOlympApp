@@ -10,4 +10,5 @@ data class CalendarViewStrings(
     val calendarOptionsTitle: String = "View",
     val weekDayAbbreviations: List<String> = listOf("Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"),
     val resetToToday: String = "Reset to today",
+    val clearFilters: String = "Clear filters",
 )
