@@ -12,6 +12,7 @@ import com.tkolymp.shared.notification.NotificationService
 import com.tkolymp.shared.event.EventService
 import com.tkolymp.shared.storage.UserStorage
 import com.tkolymp.shared.storage.CalendarPreferenceStorage
+import com.tkolymp.shared.storage.AnnouncementBadgeStorage
 import com.tkolymp.shared.storage.OnboardingStorage
 import com.tkolymp.shared.systemcalendar.SystemCalendarService
 import com.tkolymp.shared.user.UserService
@@ -101,6 +102,7 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
         personalEventService = personalEventService,
         networkMonitor = networkMonitor,
         offlineSyncManager = offlineSyncManager,
+        announcementBadgeStorage = AnnouncementBadgeStorage(context),
     )
 
     ServiceLocator.init(container)

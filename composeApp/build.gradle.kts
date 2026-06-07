@@ -51,7 +51,7 @@ android {
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 18
-        versionName = "1.6"
+        versionName = "1.7"
         buildConfigField("String", "API_BASE_URL", "\"${localProps["api.base.url"] ?: ""}\"")
         buildConfigField("String", "TENANT_ID", "\"${localProps["tenant.id"] ?: ""}\"")
     }

@@ -17,6 +17,7 @@ import com.tkolymp.shared.storage.ITokenStorage
 import com.tkolymp.shared.storage.IUserStorage
 import com.tkolymp.shared.systemcalendar.ISystemCalendarService
 import com.tkolymp.shared.user.UserService
+import com.tkolymp.shared.storage.AnnouncementBadgeStorage
 import com.tkolymp.shared.storage.OfflineDataStorage
 import com.tkolymp.shared.network.NetworkMonitor
 import com.tkolymp.shared.sync.OfflineSyncManager
@@ -67,4 +68,5 @@ object ServiceLocator {
     val personalEventService: PersonalEventService get() = container.personalEventService
     val networkMonitor: NetworkMonitor get() = container.networkMonitor
     val offlineSyncManager: OfflineSyncManager get() = container.offlineSyncManager
+    val announcementBadgeStorage: AnnouncementBadgeStorage get() = container.announcementBadgeStorage
 }

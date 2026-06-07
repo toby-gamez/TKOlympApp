@@ -6,6 +6,8 @@ import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -16,7 +18,12 @@ import androidx.compose.ui.Modifier
 import com.tkolymp.shared.language.AppStrings
 
 @Composable
-fun AppBottomBar(current: String, onSelect: (String) -> Unit, modifier: Modifier = Modifier) {
+fun AppBottomBar(
+    current: String,
+    onSelect: (String) -> Unit,
+    boardHasUnread: Boolean = false,
+    modifier: Modifier = Modifier
+) {
     NavigationBar(modifier = modifier) {
         NavigationBarItem(
             selected = current == "overview",
@@ -33,7 +40,11 @@ fun AppBottomBar(current: String, onSelect: (String) -> Unit, modifier: Modifier
         NavigationBarItem(
             selected = current == "board",
             onClick = { onSelect("board") },
-            icon = { Icon(Icons.Default.Dashboard, contentDescription = null) },
+            icon = {
+                BadgedBox(badge = { if (boardHasUnread) Badge() }) {
+                    Icon(Icons.Default.Dashboard, contentDescription = null)
+                }
+            },
             label = { Text(AppStrings.current.navigation.board) }
         )
         NavigationBarItem(

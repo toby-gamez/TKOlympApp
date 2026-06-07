@@ -76,6 +76,10 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
 
+    LaunchedEffect(Unit) {
+        viewModel.markAsSeen()
+    }
+
     LaunchedEffect(showSearch) {
         if (showSearch) {
             focusRequester.requestFocus()
