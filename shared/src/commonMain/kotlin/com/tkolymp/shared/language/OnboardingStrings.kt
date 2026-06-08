@@ -1,6 +1,7 @@
 package com.tkolymp.shared.language
 
 data class OnboardingStrings(
+    val welcomeSubtitle: String = "Training schedule, competition sign-ups, bulletin board and everything about your dancing – all in one place.",
     val onboardingTitle1: String,
     val onboardingDesc1: String,
     val onboardingTitle2: String,
@@ -19,7 +20,7 @@ data class OnboardingStrings(
     val roleSelectionTitle: String = "Who are you?",
     val roleSelectionDescription: String = "Select whether you are a dancer or a parent",
     val roleDancer: String = "Dancer",
-    val roleDancerDesc: String = "Full access",
+    val roleDancerDesc: String = "Customized for dancer",
     val roleParent: String = "Parent",
-    val roleParentDesc: String = "Limited notifications",
+    val roleParentDesc: String = "Customized for dancer's parent",
 )

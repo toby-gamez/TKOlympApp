@@ -357,6 +357,7 @@ val StringsEn = Strings(
         resetToToday = "Reset to today",
     ),
     onboarding = OnboardingStrings(
+        welcomeSubtitle = "Training schedule, competition sign-ups, bulletin board and everything about your dancing – all in one place.",
         onboardingTitle1 = "Competitions & Results",
         onboardingDesc1 = "Track results, points and event registrations throughout the whole season.",
         onboardingTitle2 = "Training Schedule",

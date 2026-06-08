@@ -72,6 +72,7 @@ import com.tkolymp.tkolympapp.screens.LoginScreen
 import com.tkolymp.tkolympapp.screens.NoticeScreen
 import com.tkolymp.tkolympapp.screens.NotificationsSettingsScreen
 import com.tkolymp.tkolympapp.screens.OnboardingScreen
+import com.tkolymp.tkolympapp.screens.RoleSelectionScreen
 import com.tkolymp.tkolympapp.screens.OtherScreen
 import com.tkolymp.tkolympapp.screens.OverviewScreen
 import com.tkolymp.tkolympapp.screens.PaymentsScreen
@@ -113,6 +114,7 @@ fun App() {
 
         var loggedIn by remember { mutableStateOf<Boolean?>(null) }
         var showOnboarding by remember { mutableStateOf<Boolean?>(null) }
+        var showRoleSelection by remember { mutableStateOf(false) }
         var integrityFailed by remember { mutableStateOf(false) }
         val preferTimeline by AppearanceSettings.preferTimeline.collectAsState()
         var weekOffset by remember { mutableIntStateOf(0) }
@@ -182,6 +184,7 @@ fun App() {
         }
 
         Crossfade(targetState = currentLanguage, animationSpec = tween(600), label = "languageTransition") { _ ->
+        val scope = rememberCoroutineScope()
         val navController = rememberNavController()
         val currentBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = currentBackStackEntry?.destination?.route
@@ -192,7 +195,7 @@ fun App() {
             containerColor = MaterialTheme.colorScheme.surface,
             bottomBar = {
                 AnimatedVisibility(
-                    visible = showOnboarding != true && loggedIn == true && currentRoute in listOf("overview", "calendar", "timeline", "board", "events", "other"),
+                    visible = showOnboarding != true && showRoleSelection != true && loggedIn == true && currentRoute in listOf("overview", "calendar", "timeline", "board", "events", "other"),
                     enter = slideInVertically(initialOffsetY = { it }, animationSpec = tween(300)),
                     exit = slideOutVertically(targetOffsetY = { it }, animationSpec = tween(300))
                 ) {
@@ -241,6 +244,7 @@ fun App() {
                     )
                     loggedIn == false -> LoginScreen(onSuccess = {
                         loggedIn = true
+                        showRoleSelection = true
                         try {
                             if (com.tkolymp.shared.ServiceLocator.networkMonitor.isConnected()) {
                                 kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
@@ -248,6 +252,9 @@ fun App() {
                                 }
                             }
                         } catch (_: Exception) {}
+                    })
+                    showRoleSelection -> RoleSelectionScreen(onFinish = {
+                        showRoleSelection = false
                     })
                     else -> AppNavHost(
                         navController = navController,

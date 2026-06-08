@@ -357,6 +357,7 @@ val StringsUa = Strings(
         resetToToday = "На сьогодні",
     ),
     onboarding = OnboardingStrings(
+        welcomeSubtitle = "Розклад тренувань, реєстрація на змагання, дошка оголошень та все про ваш танець – зручно в одному місці.",
         onboardingTitle1 = "Змагання & результати",
         onboardingDesc1 = "Відстежуй результати, бали та реєстрації на змагання протягом усього сезону.",
         onboardingTitle2 = "Розклад тренувань",

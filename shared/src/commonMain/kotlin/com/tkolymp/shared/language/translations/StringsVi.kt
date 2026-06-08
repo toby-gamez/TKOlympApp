@@ -346,6 +346,7 @@ val StringsVi = Strings(
         resetToToday = "Về hôm nay",
     ),
     onboarding = OnboardingStrings(
+        welcomeSubtitle = "Lịch tập luyện, đăng ký thi đấu, bảng thông báo và tất cả về hành trình khiêu vũ của bạn – mọi thứ trong một nơi.",
         onboardingTitle1 = "Thi đấu & kết quả",
         onboardingDesc1 = "Theo dõi kết quả, điểm số và đăng ký thi đấu trong suốt mùa giải.",
         onboardingTitle2 = "Lịch tập luyện",

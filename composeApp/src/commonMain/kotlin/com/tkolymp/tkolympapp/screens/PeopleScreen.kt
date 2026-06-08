@@ -298,8 +298,9 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
 
                                 Spacer(modifier = Modifier.width(12.dp))
 
+                                val daysLeft = daysUntilNextBirthday(p.birthDate)
                                 Column(modifier = Modifier.weight(1f)) {
-                                            val isBirthdayToday = daysUntilNextBirthday(p.birthDate) == 0
+                                            val isBirthdayToday = daysLeft == 0
                                             val isTrainer = p.id in trainerPersonIds
                                     val base = listOf(p.prefixTitle, p.firstName, p.lastName).filterNotNull().filter { it.isNotBlank() }.joinToString(" ")
                                     val name = if (!p.suffixTitle.isNullOrBlank()) "$base, ${p.suffixTitle}" else base
@@ -309,7 +310,7 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
                                         color = if (isBirthdayToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                                     )
                                     p.birthDate?.let { raw ->
-                                        val formatted = formatDateString(raw)
+                                        val yearStr = raw.trim().take(4).takeIf { it.all { c -> c.isDigit() } }
                                         Row(verticalAlignment = Alignment.Bottom) {
                                             if (isBirthdayToday) {
                                                 Icon(
@@ -321,7 +322,7 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
                                                 Spacer(modifier = Modifier.width(8.dp))
                                             }
                                             Text(
-                                                formatted ?: raw,
+                                                yearStr ?: raw,
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = if (isBirthdayToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                                             )
@@ -342,6 +343,9 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
                                             color = MaterialTheme.colorScheme.primary
                                         )
                                     }
+                                }
+                                if (sortMode == SortMode.BIRTHDAY && daysLeft != Int.MAX_VALUE && daysLeft > 0) {
+                                    Text("${daysLeft}d", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(start = 8.dp))
                                 }
                             }
                         }

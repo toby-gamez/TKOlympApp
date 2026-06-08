@@ -358,6 +358,7 @@ val StringsBrainrot = Strings(
         resetToToday = "back to today fr",
     ),
     onboarding = OnboardingStrings(
+        welcomeSubtitle = "Training sched, comp sign-ups, the board and all ur dance vibes – everything in one place fr no cap.",
         onboardingTitle1 = "Battles & Results fr",
         onboardingDesc1 = "Track ur competition results, points and sign-ups fr – no cap, whole season covered.",
         onboardingTitle2 = "Training Schedule fr",

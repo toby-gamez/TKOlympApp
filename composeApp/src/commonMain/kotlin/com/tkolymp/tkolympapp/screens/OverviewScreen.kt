@@ -113,7 +113,7 @@ fun OverviewScreen(
 
             val announcements = state.recentAnnouncements
 
-            if (state.upcomingEvents.isNotEmpty()) {
+            if (state.isDancer && state.upcomingEvents.isNotEmpty()) {
                 val weekVibes = remember(state.upcomingEvents, state.todayString) {
                     computeOverviewWeekVibes(state.upcomingEvents, state.todayString)
                 }
@@ -136,7 +136,7 @@ fun OverviewScreen(
                 }
             }
 
-            if (!state.isLoading) {
+            if (state.isDancer && !state.isLoading) {
                 MiniStatsRow(
                     sessionCount = state.currentWeekCount,
                     minutes = state.currentWeekMinutes,
@@ -147,7 +147,7 @@ fun OverviewScreen(
                 )
             }
 
-            if (state.weeklyGoal > 0) {
+            if (state.isDancer && state.weeklyGoal > 0) {
                 WeeklyGoalIndicator(
                     goal = state.weeklyGoal,
                     count = state.currentWeekCount,

@@ -1,6 +1,10 @@
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.remember
+import androidx.compose.ui.draw.scale
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,13 +25,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.School
-import androidx.compose.material.icons.filled.ViewTimeline
-import androidx.compose.material.icons.filled.ViewWeek
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -44,7 +50,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -66,12 +71,11 @@ fun OnboardingScreen(
     onFinish: () -> Unit
 ) {
     val strings = AppStrings.current
-    val pageCount = 6 // Role selection, Calendar, Events, Board, other features, calendar view picker
+    val pageCount = 5
     val pagerState = rememberPagerState(pageCount = { pageCount })
     val scope = rememberCoroutineScope()
-    val isViewPickerPage = pagerState.currentPage == pageCount - 1
-    var preferTimeline by rememberSaveable { mutableStateOf(false) }
-    var selectedRole by rememberSaveable { mutableStateOf(UserRole.DANCER) }
+    val isWelcomePage = pagerState.currentPage == 0
+    val isLastPage = pagerState.currentPage == pageCount - 1
 
     Column(
         modifier = Modifier
@@ -87,11 +91,8 @@ fun OnboardingScreen(
                 .fillMaxWidth()
         ) { pageIndex ->
             when (pageIndex) {
-                0 -> RoleSelectionPage(
-                    title = strings.onboarding.roleSelectionTitle,
-                    description = strings.onboarding.roleSelectionDescription,
-                    selectedRole = selectedRole,
-                    onSelect = { selectedRole = it }
+                0 -> WelcomeOnboardingPage(
+                    onNext = { scope.launch { pagerState.animateScrollToPage(1) } }
                 )
                 1 -> CalendarOnboardingPage(title = strings.onboardingTitle2, description = strings.onboardingDesc2)
                 2 -> EventsOnboardingPage(title = strings.onboardingTitle1, description = strings.onboardingDesc1)
@@ -100,208 +101,139 @@ fun OnboardingScreen(
                     title = strings.onboarding.onboardingTitle5,
                     description = strings.onboarding.onboardingDesc5
                 )
-                5 -> CalendarViewPickerPage(
-                    title = strings.onboarding.onboardingTitle4,
-                    description = strings.onboarding.onboardingDesc4,
-                    listLabel = strings.onboarding.calendarViewList,
-                    listDesc = strings.onboarding.calendarViewListDesc,
-                    timelineLabel = strings.onboarding.calendarViewTimeline,
-                    timelineDesc = strings.onboarding.calendarViewTimelineDesc,
-                    preferTimeline = preferTimeline,
-                    onSelect = { preferTimeline = it }
-                )
                 else -> {}
             }
         }
 
-        // Dot indicators
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(vertical = 24.dp)
-        ) {
-            (0 until pageCount).forEach { index ->
-                val width by animateDpAsState(
-                    targetValue = if (pagerState.currentPage == index) 24.dp else 8.dp,
-                    label = "dot_width"
+        if (!isWelcomePage) {
+            // Dot indicators
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(vertical = 24.dp)
+            ) {
+                (1 until pageCount).forEach { index ->
+                    val width by animateDpAsState(
+                        targetValue = if (pagerState.currentPage == index) 24.dp else 8.dp,
+                        label = "dot_width"
+                    )
+                    Box(
+                        modifier = Modifier
+                            .height(8.dp)
+                            .width(width)
+                            .clip(RoundedCornerShape(50))
+                            .background(
+                                if (pagerState.currentPage == index)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                            )
+                    )
+                }
+            }
+
+            // CTA button
+            Button(
+                onClick = {
+                    if (isLastPage) {
+                        scope.launch {
+                            viewModel.completeOnboarding()
+                            onFinish()
+                        }
+                    } else {
+                        scope.launch {
+                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                        }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp)
+                    .height(52.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
                 )
-                Box(
-                    modifier = Modifier
-                        .height(8.dp)
-                        .width(width)
-                        .clip(RoundedCornerShape(50))
-                        .background(
-                            if (pagerState.currentPage == index)
-                                MaterialTheme.colorScheme.primary
-                            else
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-                        )
+            ) {
+                Text(
+                    text = if (isLastPage) strings.start else strings.next,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
-        }
-
-        // CTA button
-        Button(
-            onClick = {
-                if (isViewPickerPage) {
-                    scope.launch {
-                        viewModel.setPreferTimeline(preferTimeline)
-                        viewModel.setUserRole(selectedRole)
-                        viewModel.completeOnboarding()
-                        onFinish()
-                    }
-                } else {
-                    scope.launch {
-                        pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                    }
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 32.dp)
-                .height(52.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary
-            )
-        ) {
-            Text(
-                text = if (isViewPickerPage) strings.start else strings.next,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold
-            )
         }
     }
 }
 
 @Composable
-private fun CalendarViewPickerPage(
-    title: String,
-    description: String,
-    listLabel: String,
-    listDesc: String,
-    timelineLabel: String,
-    timelineDesc: String,
-    preferTimeline: Boolean,
-    onSelect: (Boolean) -> Unit,
-) {
+private fun WelcomeOnboardingPage(onNext: () -> Unit) {
+    val logoScale = remember { Animatable(1f) }
+    val scope = rememberCoroutineScope()
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        BackgroundPluses(modifier = Modifier.fillMaxSize())
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
     ) {
+        Spacer(modifier = Modifier.weight(1f))
+
         Box(
             modifier = Modifier
-                .size(88.dp)
+                .size(160.dp)
+                .scale(logoScale.value)
                 .clip(CircleShape)
                 .background(brandLightPrimary()),
             contentAlignment = Alignment.Center
         ) {
-            AppLogo(size = 100.dp)
+            AppLogo(size = 180.dp)
         }
 
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(28.dp))
 
         Text(
-            text = title,
-            style = MaterialTheme.typography.headlineMedium,
+            text = "TK Olymp",
+            style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurface
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = description,
+            text = AppStrings.current.onboarding.welcomeSubtitle,
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            lineHeight = 24.sp
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.weight(1f))
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            CalendarViewOptionCard(
-                icon = Icons.Filled.ViewWeek,
-                label = listLabel,
-                description = listDesc,
-                selected = !preferTimeline,
-                onClick = { onSelect(false) },
-                modifier = Modifier.weight(1f),
-                iconModifier = Modifier.rotate(90f)
-            )
-            CalendarViewOptionCard(
-                icon = Icons.Filled.ViewTimeline,
-                label = timelineLabel,
-                description = timelineDesc,
-                selected = preferTimeline,
-                onClick = { onSelect(true) },
-                modifier = Modifier.weight(1f)
-            )
-        }
-    }
-}
-
-@Composable
-private fun CalendarViewOptionCard(
-    icon: ImageVector,
-    label: String,
-    description: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    iconModifier: Modifier = Modifier,
-) {
-    val borderColor = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent
-    val containerColor = if (selected)
-        MaterialTheme.colorScheme.primary
-    else
-        MaterialTheme.colorScheme.surfaceVariant
-
-    Card(
-        modifier = modifier
-            .clickable(onClick = onClick)
-            .border(2.dp, borderColor, RoundedCornerShape(16.dp)),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = containerColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (selected) 4.dp else 0.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+        Button(
+            onClick = {
+                scope.launch {
+                    logoScale.animateTo(0.45f, animationSpec = tween(320))
+                    onNext()
+                    logoScale.snapTo(1f)
+                }
+            },
+            modifier = Modifier.fillMaxWidth().height(88.dp),
+            shape = RoundedCornerShape(50),
+            contentPadding = PaddingValues(0.dp)
         ) {
             Icon(
-                imageVector = icon,
+                imageVector = Icons.Filled.ArrowForward,
                 contentDescription = null,
-                tint = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(36.dp).then(iconModifier)
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = if (selected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f) else MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                lineHeight = 18.sp
+                modifier = Modifier.size(36.dp)
             )
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
     }
+    } // Box
 }
 
 @Composable
@@ -407,8 +339,8 @@ private fun CalendarMockupCard(modifier: Modifier = Modifier) {
     ) {
         Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(strings.timeline.today, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 2.dp, bottom = 2.dp))
-            MockCalendarGroupCard("Kruháč 1", "ZŠ Holečkova", "16:00 - 16:45", dotColor = null)
-            MockCalendarGroupCard("Zlatá skupina LAT", "ZŠ Holečkova", "17:30 - 18:15", dotColor = Color(0xFFFFD700))
+            MockCalendarGroupCard("Kruháč 1", "ZŠ Holečkova", "16:00 - 16:45", accentColor = null)
+            MockCalendarGroupCard("Zlatá skupina LAT", "ZŠ Holečkova", "17:30 - 18:15", accentColor = Color(0xFFFFD700))
             Spacer(Modifier.height(4.dp))
             Text(strings.timeline.tomorrow, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 2.dp, bottom = 2.dp))
             MockCalendarLessonCard("Filip Karásek", "BEST Sportcentrum", "15:00 - 15:45", "Novák - Nováková", "45'")
@@ -417,21 +349,53 @@ private fun CalendarMockupCard(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun MockCalendarGroupCard(name: String, location: String, time: String, dotColor: Color?, modifier: Modifier = Modifier) {
+private fun MockChip(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
+    Box(
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
+            .padding(horizontal = 6.dp, vertical = 3.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(12.dp))
+            Spacer(Modifier.width(3.dp))
+            Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun MockCalendarGroupCard(name: String, location: String, time: String, accentColor: Color?, modifier: Modifier = Modifier) {
+    val color = accentColor ?: MaterialTheme.colorScheme.primary
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp)) {
+        Row(modifier = Modifier.fillMaxWidth().padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .width(5.dp)
+                    .height(52.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(color)
+            )
+            Spacer(Modifier.width(10.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(name, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface)
-                Text(location, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(time, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(AppStrings.current.events.eventTypeGroup, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (dotColor != null) Box(modifier = Modifier.size(12.dp).clip(CircleShape).background(dotColor))
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(name, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
+                    Box(
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(6.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(AppStrings.current.events.eventTypeGroup, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                    }
+                }
+                Spacer(Modifier.height(4.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    MockChip(Icons.Filled.Place, location)
+                    MockChip(Icons.Filled.Schedule, time)
+                }
             }
         }
     }
@@ -444,17 +408,32 @@ private fun MockCalendarLessonCard(trainer: String, location: String, time: Stri
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp)) {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Text(trainer, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
-                Text(AppStrings.current.events.eventTypeLesson, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Text(location, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.height(6.dp))
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(time, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(76.dp))
-                Text(names, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
-                Text(duration, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(modifier = Modifier.fillMaxWidth().padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .width(5.dp)
+                    .height(52.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(MaterialTheme.colorScheme.tertiary)
+            )
+            Spacer(Modifier.width(10.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(trainer, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
+                    Box(
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(6.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(AppStrings.current.events.eventTypeLesson, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                    }
+                }
+                Text(names, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.height(4.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    MockChip(Icons.Filled.Place, location)
+                    MockChip(Icons.Filled.Schedule, "$time · $duration")
+                }
             }
         }
     }
@@ -666,4 +645,46 @@ private fun RoleOptionCard(
     }
 }
 
+@Composable
+fun RoleSelectionScreen(
+    viewModel: OnboardingViewModel = OnboardingViewModel(),
+    onFinish: () -> Unit
+) {
+    val strings = AppStrings.current
+    var selectedRole by rememberSaveable { mutableStateOf(UserRole.DANCER) }
+    val scope = rememberCoroutineScope()
 
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(bottom = 40.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(modifier = Modifier.weight(1f)) {
+            RoleSelectionPage(
+                title = strings.onboarding.roleSelectionTitle,
+                description = strings.onboarding.roleSelectionDescription,
+                selectedRole = selectedRole,
+                onSelect = { selectedRole = it }
+            )
+        }
+
+        Button(
+            onClick = {
+                scope.launch {
+                    viewModel.setUserRole(selectedRole)
+                    onFinish()
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp)
+                .height(52.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+        ) {
+            Text(strings.start, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+        }
+    }
+}

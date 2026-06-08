@@ -385,6 +385,7 @@ val StringsSk = Strings(
         resetToToday = "Späť na dnes",
     ),
     onboarding = OnboardingStrings(
+        welcomeSubtitle = "Tréningový rozvrh, prihlasovanie na súťaže, nástenka a všetko o vašom tancovaní – prehľadne na jednom mieste.",
         onboardingTitle1 = "Súťaže & výsledky",
         onboardingDesc1 = "Sledujte výsledky, body a prihlášky na súťaže počas celej sezóny.",
         onboardingTitle2 = "Tréningový plán",

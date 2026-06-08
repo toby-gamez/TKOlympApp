@@ -16,9 +16,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -29,8 +27,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.material3.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
@@ -41,7 +37,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -52,7 +47,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.tkolymp.tkolympapp.util.StaggeredItem
-import com.tkolymp.tkolympapp.util.tabContentTransitionSpec
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -68,7 +62,6 @@ import kotlinx.coroutines.launch
 fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
     val viewModel = viewModel<BoardViewModel>()
     val state by viewModel.state.collectAsState()
-    val tabs = listOf(AppStrings.current.boardTabs.news, AppStrings.current.boardTabs.permanentBoard)
     val scope = rememberCoroutineScope()
 
     var showSearch by remember { mutableStateOf(false) }
@@ -78,6 +71,7 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
 
     LaunchedEffect(Unit) {
         viewModel.markAsSeen()
+        scope.launch { viewModel.loadAnnouncements(forceRefresh = false) }
     }
 
     LaunchedEffect(showSearch) {
@@ -106,28 +100,6 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
-            var localSelectedTab by rememberSaveable { mutableIntStateOf(state.selectedTab) }
-
-            // keep local selection in sync if ViewModel updates it externally
-            LaunchedEffect(state.selectedTab) {
-                if (localSelectedTab != state.selectedTab) localSelectedTab = state.selectedTab
-            }
-
-            PrimaryTabRow(selectedTabIndex = localSelectedTab, modifier = Modifier.fillMaxWidth()) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = localSelectedTab == index,
-                        onClick = {
-                            // only update local selection here; actual loading happens in LaunchedEffect below
-                            localSelectedTab = index
-                        },
-                        text = { Text(title) }
-                    )
-
-                }
-
-            }
-
             AnimatedVisibility(
                 visible = showSearch,
                 enter = fadeIn(tween(200)) + expandVertically(tween(200)),
@@ -153,70 +125,51 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
                 )
             }
 
-            
-
-            LaunchedEffect(localSelectedTab) {
-                // update ViewModel selection and load announcements when local tab changes
-                viewModel.selectTab(localSelectedTab)
-                scope.launch { viewModel.loadAnnouncements(forceRefresh = false) }
-            }
-
             SwipeToReload(
                 isRefreshing = state.isLoading,
                 onRefresh = { scope.launch { viewModel.loadAnnouncements(forceRefresh = true) } },
                 modifier = Modifier.weight(1f).fillMaxWidth()
             ) {
-                AnimatedContent(
-                    targetState = localSelectedTab,
-                    transitionSpec = { tabContentTransitionSpec() },
-                    label = "boardTabContent"
-                ) { tab ->
-                    var listVisible by remember { mutableStateOf(false) }
-                    LaunchedEffect(tab) { listVisible = false }
-                    val announcements = if (tab == 1) {
-                        state.permanentAnnouncements
-                    } else {
-                        state.currentAnnouncements
-                    }
-                    LaunchedEffect(tab, announcements.isNotEmpty()) { if (announcements.isNotEmpty()) listVisible = true }
-                    val filtered = announcements.filter { a ->
-                        val q = searchQuery.trim()
-                        if (q.isBlank()) return@filter true
-                        val nq = normalizeForSearch(q)
-                        val titleOk = a.title?.let { normalizeForSearch(it).contains(nq) } == true
-                        val bodyText = formatHtmlContent(a.body ?: "")
-                        val bodyOk = normalizeForSearch(bodyText).contains(nq)
-                        titleOk || bodyOk
-                    }
-                    Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
-                        filtered.forEachIndexed { i, a ->
-                            StaggeredItem(index = i, visible = listVisible) {
-                                Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 12.dp, vertical = 4.dp)
-                                        .clickable {
-                                            a.id.toLongOrNull()?.let { nid -> onOpenNotice(nid) }
-                                        },
-                                    shape = RoundedCornerShape(16.dp)
-                                ) {
-                                    Column(modifier = Modifier.padding(14.dp)) {
-                                        Text(a.title ?: AppStrings.current.dialogs.noName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                                        val authorName = listOfNotNull(a.author?.uJmeno, a.author?.uPrijmeni).joinToString(" ").trim()
-                                        if (authorName.isNotEmpty()) {
-                                            Spacer(modifier = Modifier.height(2.dp))
-                                            Text(authorName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        }
-                                        Spacer(modifier = Modifier.height(6.dp))
-                                        val plainBody = formatHtmlContent(a.body ?: "")
-                                        Text(
-                                            plainBody,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            maxLines = 2,
-                                            overflow = TextOverflow.Ellipsis,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
+                var listVisible by remember { mutableStateOf(false) }
+                val announcements = state.currentAnnouncements
+                LaunchedEffect(announcements.isNotEmpty()) { if (announcements.isNotEmpty()) listVisible = true }
+                val filtered = announcements.filter { a ->
+                    val q = searchQuery.trim()
+                    if (q.isBlank()) return@filter true
+                    val nq = normalizeForSearch(q)
+                    val titleOk = a.title?.let { normalizeForSearch(it).contains(nq) } == true
+                    val bodyText = formatHtmlContent(a.body ?: "")
+                    val bodyOk = normalizeForSearch(bodyText).contains(nq)
+                    titleOk || bodyOk
+                }
+                Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+                    filtered.forEachIndexed { i, a ->
+                        StaggeredItem(index = i, visible = listVisible) {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 4.dp)
+                                    .clickable {
+                                        a.id.toLongOrNull()?.let { nid -> onOpenNotice(nid) }
+                                    },
+                                shape = RoundedCornerShape(16.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(14.dp)) {
+                                    Text(a.title ?: AppStrings.current.dialogs.noName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                                    val authorName = listOfNotNull(a.author?.uJmeno, a.author?.uPrijmeni).joinToString(" ").trim()
+                                    if (authorName.isNotEmpty()) {
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(authorName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    val plainBody = formatHtmlContent(a.body ?: "")
+                                    Text(
+                                        plainBody,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 }
                             }
                         }
@@ -234,10 +187,6 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
                     text = { Text(state.error?.message ?: "Neznámá chyba") }
                 )
             }
-
-            
         }
     }
 }
-
-// `PrimaryTabRow` is provided in other screens (e.g. CalendarScreen). Use that implementation to avoid duplicates.

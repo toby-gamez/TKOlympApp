@@ -357,6 +357,7 @@ val StringsSl = Strings(
         resetToToday = "Nazaj na danes",
     ),
     onboarding = OnboardingStrings(
+        welcomeSubtitle = "Urnik treningov, prijave na tekmovanja, oglasna deska in vse o vašem plesu – pregledno na enem mestu.",
         onboardingTitle1 = "Tekmovanja & rezultati",
         onboardingDesc1 = "Sledite rezultatom, točkam in prijavnicam na tekmovanja skozi celo sezono.",
         onboardingTitle2 = "Urnik treningov",

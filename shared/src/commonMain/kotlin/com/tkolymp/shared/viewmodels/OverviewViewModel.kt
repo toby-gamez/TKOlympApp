@@ -39,6 +39,7 @@ import com.tkolymp.shared.event.EventType
 import com.tkolymp.shared.event.toEventType
 import com.tkolymp.shared.calendar.parseCalendarJson
 import com.tkolymp.shared.payments.PaymentService
+import com.tkolymp.shared.models.UserRole
 
 data class BirthdayEntry(
     val personId: String,
@@ -68,6 +69,7 @@ data class OverviewState(
     val currentWeekCount: Int = 0,
     val currentWeekMinutes: Long = 0L,
     val paymentDaysUntilDue: Int? = null,
+    val isDancer: Boolean = true,
     override val isLoading: Boolean = false,
     override val error: AppError? = null
 ) : ViewModelState
@@ -79,7 +81,8 @@ class OverviewViewModel(
     private val peopleService: com.tkolymp.shared.people.PeopleService = ServiceLocator.peopleService,
     private val cache: CacheService = ServiceLocator.cacheService,
     private val calendarPreferenceStorage: com.tkolymp.shared.storage.ICalendarPreferenceStorage = ServiceLocator.calendarPreferenceStorage,
-    private val paymentService: PaymentService = ServiceLocator.paymentService
+    private val paymentService: PaymentService = ServiceLocator.paymentService,
+    private val onboardingStorage: com.tkolymp.shared.storage.OnboardingStorage = ServiceLocator.onboardingStorage
 ) : ViewModel() {
     private val _state = MutableStateFlow(OverviewState())
     val state: StateFlow<OverviewState> = _state.asStateFlow()
@@ -410,6 +413,8 @@ class OverviewViewModel(
                 }
             } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("OverviewViewModel", "fetchPeople failed: ${e.message}"); emptyList() }
 
+            val isDancer = try { onboardingStorage.getUserRole() != UserRole.PARENT } catch (_: Exception) { true }
+
             val weeklyGoal = try { calendarPreferenceStorage.getWeeklyGoal() } catch (_: Exception) { 0 }
             val mondayStr = weekMonday.toString()
             val sundayStr = weekMonday.plus(6, DateTimeUnit.DAY).toString()
@@ -450,6 +455,7 @@ class OverviewViewModel(
                 currentWeekCount = currentWeekCount,
                 currentWeekMinutes = currentWeekMinutes,
                 paymentDaysUntilDue = paymentDaysUntilDue,
+                isDancer = isDancer,
                 isLoading = false
             )
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
