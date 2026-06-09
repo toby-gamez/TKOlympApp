@@ -14,6 +14,7 @@ import com.tkolymp.shared.language.EventStrings
 import com.tkolymp.shared.language.ExtendedProfileFieldStrings
 import com.tkolymp.shared.language.FilterStrings
 import com.tkolymp.shared.language.FreeLessonsStrings
+import com.tkolymp.shared.language.TutorialStrings
 import com.tkolymp.shared.language.WeekPersonaStrings
 import com.tkolymp.shared.language.GenderStrings
 import com.tkolymp.shared.language.ImportExportStrings
@@ -583,5 +584,40 @@ val StringsSk = Strings(
         fri = "Fri",
         sat = "Sat",
         sun = "Sun",
+    ),
+    tutorial = TutorialStrings(
+        tutorialRowLabel = "Sprievodca aplikáciou",
+        tutorialRowSubtitle = "Komentovaná prehliadka aplikácie",
+        overviewUpcomingTitle = "Nadchádzajúce tréningy",
+        overviewUpcomingDesc = "Tvoja najbližšia lekcia, zoradená podľa trénera. Klepni na kartu lekcie pre zobrazenie miesta, času a ďalších účastníkov.",
+        overviewBoardTitle = "Výňatok z nástenky",
+        overviewBoardDesc = "Náhľad dvoch najnovších klubových oznámení. Klepni na príspevok pre celý text alebo prejdi na záložku Nástenka.",
+        overviewCampsTitle = "Nadchádzajúce sústredenia",
+        overviewCampsDesc = "Blížiace sa sústredenia a klubové akcie. Klepni na položku pre podrobnosti alebo správu prihlášky.",
+        overviewBirthdaysTitle = "Narodeniny",
+        overviewBirthdaysDesc = "Blížiace sa narodeniny členov klubu — aby si nikdy nezabudol/a pogratulovat.",
+        overviewStatsTitle = "Týždenné štatistiky & persona",
+        overviewStatsDesc = "Tanečníci vidia počet lekcií a minúty tréningu za týždeň, pokrok v týždennom cieli a zábavnú personu podľa rozvrhu.",
+        calendarMineTitle = "Záložka Moje",
+        calendarMineDesc = "Zobrazí len lekcie z tvojich vlastných tréningových skupín — najrýchlejší prehľad nadchádzajúceho týždňa.",
+        calendarAllTitle = "Záložka Všetky",
+        calendarAllDesc = "Zobrazí všetky lekcie vo všetkých skupinách. Hodí sa pre nájdenie lekcií, ktoré by si mohol/a navštíviť, alebo pre prehľad celého rozvrhu klubu.",
+        calendarFilterTitle = "Filter & navigácia týždňov",
+        calendarFilterDesc = "Klepni na ⋮ pre filtrovanie lekcií podľa trénera alebo miesta. Šípkami v lište prepínaš týždne dopredu alebo dozadu.",
+        boardListTitle = "Oznámenia",
+        boardListDesc = "Posuvný zoznam všetkých klubových príspevkov od koordinátorov a trénerov. Klepni na oznámenie pre celý text.",
+        boardSearchTitle = "Hľadanie & odznak",
+        boardSearchDesc = "Klepni na ikonu lupy pre hľadanie príspevkov podľa kľúčového slova. Odznak na záložke Nástenka svieti pri neprečítaných príspevkoch.",
+        eventsPlannedTitle = "Naplánované akcie",
+        eventsPlannedDesc = "Nadchádzajúce sústredenia a klubové akcie, zoradené podľa dátumu. Klepni na akciu pre zobrazenie podrobností a prihlásenie.",
+        eventsPastTitle = "Prebehnuté akcie",
+        eventsPastDesc = "Akcie, ktoré už prebehli. Stále si môžeš zobraziť podrobnosti alebo spravovať existujúcu prihlášku.",
+        otherTitle = "To je všetko!",
+        otherDesc = "Si pripravený/á. Záložku Ostatné preskúmaj sám/sama — nájdeš tam profil, členov klubu, skupiny, štatistiky, platby a nastavenia.",
+        next = "Ďalej",
+        previous = "Späť",
+        skip = "Preskočiť",
+        done = "Hotovo",
+        stepOf = "z",
     ),
 )

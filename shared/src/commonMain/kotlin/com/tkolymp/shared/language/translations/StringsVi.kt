@@ -22,6 +22,7 @@ import com.tkolymp.shared.language.NavigationStrings
 import com.tkolymp.shared.language.NotificationStrings
 import com.tkolymp.shared.language.OnboardingStrings
 import com.tkolymp.shared.language.FreeLessonsStrings
+import com.tkolymp.shared.language.TutorialStrings
 import com.tkolymp.shared.language.WeekPersonaStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
@@ -583,5 +584,40 @@ val StringsVi = Strings(
         fri = "Fri",
         sat = "Sat",
         sun = "Sun",
+    ),
+    tutorial = TutorialStrings(
+        tutorialRowLabel = "Hướng dẫn ứng dụng",
+        tutorialRowSubtitle = "Tham quan ứng dụng có hướng dẫn",
+        overviewUpcomingTitle = "Buổi tập sắp tới",
+        overviewUpcomingDesc = "Buổi tập tiếp theo của bạn, được nhóm theo huấn luyện viên. Nhấn vào thẻ để xem địa điểm, thời gian và người tham gia.",
+        overviewBoardTitle = "Xem trước bảng tin",
+        overviewBoardDesc = "Xem trước hai thông báo mới nhất của câu lạc bộ. Nhấn vào bài đăng để đọc toàn bộ hoặc chuyển sang tab Bảng tin.",
+        overviewCampsTitle = "Trại sắp tới",
+        overviewCampsDesc = "Các trại và sự kiện câu lạc bộ sắp tới. Nhấn vào mục để xem chi tiết hoặc quản lý đăng ký.",
+        overviewBirthdaysTitle = "Sinh nhật",
+        overviewBirthdaysDesc = "Sinh nhật sắp tới của các thành viên câu lạc bộ — để bạn không bỏ lỡ cơ hội chúc mừng.",
+        overviewStatsTitle = "Thống kê tuần & nhân vật",
+        overviewStatsDesc = "Vũ công xem số buổi tập và số phút tập trong tuần, tiến độ mục tiêu tuần và thẻ nhân vật tuần thú vị dựa trên lịch tập.",
+        calendarMineTitle = "Tab Của tôi",
+        calendarMineDesc = "Chỉ hiển thị các buổi từ nhóm tập của bạn — cách nhanh nhất để xem lịch tuần tới.",
+        calendarAllTitle = "Tab Tất cả",
+        calendarAllDesc = "Hiển thị mọi buổi tập của tất cả các nhóm. Hữu ích để tìm các buổi tập bạn có thể tham gia hoặc xem toàn bộ lịch câu lạc bộ.",
+        calendarFilterTitle = "Bộ lọc & điều hướng tuần",
+        calendarFilterDesc = "Nhấn ⋮ để lọc buổi tập theo huấn luyện viên hoặc địa điểm. Dùng mũi tên trên thanh để chuyển tuần trước hoặc sau.",
+        boardListTitle = "Thông báo",
+        boardListDesc = "Danh sách có thể cuộn của tất cả bài đăng câu lạc bộ. Nhấn vào thông báo để đọc toàn bộ nội dung.",
+        boardSearchTitle = "Tìm kiếm & huy hiệu chưa đọc",
+        boardSearchDesc = "Nhấn biểu tượng tìm kiếm để tìm bài đăng theo từ khóa. Huy hiệu trên tab Bảng tin sáng lên khi có bài đăng chưa đọc.",
+        eventsPlannedTitle = "Sự kiện đã lên kế hoạch",
+        eventsPlannedDesc = "Các trại và sự kiện câu lạc bộ sắp tới, sắp xếp theo ngày. Nhấn vào sự kiện để xem chi tiết và đăng ký.",
+        eventsPastTitle = "Sự kiện đã qua",
+        eventsPastDesc = "Các sự kiện đã diễn ra. Bạn vẫn có thể xem chi tiết hoặc quản lý đăng ký hiện có.",
+        otherTitle = "Xong rồi!",
+        otherDesc = "Bạn đã sẵn sàng. Khám phá tab Khác theo tốc độ của bạn — nơi có hồ sơ, thành viên câu lạc bộ, nhóm, thống kê, thanh toán và cài đặt.",
+        next = "Tiếp",
+        previous = "Quay lại",
+        skip = "Bỏ qua",
+        done = "Xong",
+        stepOf = "/",
     ),
 )

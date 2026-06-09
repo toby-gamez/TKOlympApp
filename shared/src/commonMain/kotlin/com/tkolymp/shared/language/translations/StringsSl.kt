@@ -22,6 +22,7 @@ import com.tkolymp.shared.language.NavigationStrings
 import com.tkolymp.shared.language.NotificationStrings
 import com.tkolymp.shared.language.OnboardingStrings
 import com.tkolymp.shared.language.FreeLessonsStrings
+import com.tkolymp.shared.language.TutorialStrings
 import com.tkolymp.shared.language.WeekPersonaStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
@@ -583,5 +584,40 @@ val StringsSl = Strings(
         fri = "Fri",
         sat = "Sat",
         sun = "Sun",
+    ),
+    tutorial = TutorialStrings(
+        tutorialRowLabel = "Vadnik za aplikacijo",
+        tutorialRowSubtitle = "Komentiran ogled aplikacije",
+        overviewUpcomingTitle = "Prihajajoči treningi",
+        overviewUpcomingDesc = "Tvoja naslednja vadba, razvrščena po trenerju. Dotakni se kartice, da vidiš kraj, čas in udeležence.",
+        overviewBoardTitle = "Ogled oglasne deske",
+        overviewBoardDesc = "Predogled dveh najnovejših obvestil kluba. Dotakni se objave za celotno besedilo ali pojdi na zavihek Oglasna deska.",
+        overviewCampsTitle = "Prihajajoči tabori",
+        overviewCampsDesc = "Bližajoči se tabori in klubske prireditve. Dotakni se za podrobnosti ali upravljanje prijave.",
+        overviewBirthdaysTitle = "Rojstni dnevi",
+        overviewBirthdaysDesc = "Bližajoči se rojstni dnevi članov kluba – da ne zamudite priložnosti za čestitke.",
+        overviewStatsTitle = "Tedenske statistike & persona",
+        overviewStatsDesc = "Plesalci vidijo število vadb in minut treninga za teden, napredek k tedenskemu cilju in zabavno tedensko kartico persone.",
+        calendarMineTitle = "Zavihek Moje",
+        calendarMineDesc = "Prikaže samo vadbe iz tvojih lastnih skupin – najhitrejši pregled prihajajočega tedna.",
+        calendarAllTitle = "Zavihek Vse",
+        calendarAllDesc = "Prikaže vse vadbe vseh skupin. Koristno za iskanje vadb ali za pregled celotnega urnika kluba.",
+        calendarFilterTitle = "Filter & navigacija po tednih",
+        calendarFilterDesc = "Dotakni se ⋮ za filtriranje po trenerju ali kraju. Z puščicami v orodni vrstici preskakuješ tedne.",
+        boardListTitle = "Obvestila",
+        boardListDesc = "Drsni seznam vseh klubskih objav. Dotakni se obvestila za celotno besedilo.",
+        boardSearchTitle = "Iskanje & značka neprebrano",
+        boardSearchDesc = "Dotakni se ikone za iskanje, da poiščeš objave po ključni besedi. Značka na zavihku Oglasna deska sveti pri neprebranih obvestilih.",
+        eventsPlannedTitle = "Načrtovani dogodki",
+        eventsPlannedDesc = "Prihajajoči tabori in klubski dogodki, razvrščeni po datumu. Dotakni se za podrobnosti in prijavo.",
+        eventsPastTitle = "Pretekli dogodki",
+        eventsPastDesc = "Dogodki, ki so se že zgodili. Še vedno si lahko ogledaš podrobnosti ali upravljaš obstoječo prijavo.",
+        otherTitle = "To je to!",
+        otherDesc = "Si pripravljen/a. Zavihek Ostalo raziskuj v svojem tempu – tam najdeš profil, člane kluba, skupine, statistike, plačila in nastavitve.",
+        next = "Naprej",
+        previous = "Nazaj",
+        skip = "Preskoči",
+        done = "Končano",
+        stepOf = "od",
     ),
 )

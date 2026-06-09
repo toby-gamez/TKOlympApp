@@ -22,6 +22,7 @@ import com.tkolymp.shared.language.NavigationStrings
 import com.tkolymp.shared.language.NotificationStrings
 import com.tkolymp.shared.language.OnboardingStrings
 import com.tkolymp.shared.language.FreeLessonsStrings
+import com.tkolymp.shared.language.TutorialStrings
 import com.tkolymp.shared.language.WeekPersonaStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
@@ -582,5 +583,40 @@ val StringsDe = Strings(
         fri = "Fri",
         sat = "Sat",
         sun = "Sun",
+    ),
+    tutorial = TutorialStrings(
+        tutorialRowLabel = "App-Tutorial",
+        tutorialRowSubtitle = "Geführte Tour durch die App",
+        overviewUpcomingTitle = "Anstehende Trainings",
+        overviewUpcomingDesc = "Deine nächste Trainingseinheit, nach Trainer sortiert. Tippe auf eine Karte, um Ort, Zeit und Teilnehmer zu sehen.",
+        overviewBoardTitle = "Pinnwand-Vorschau",
+        overviewBoardDesc = "Vorschau der zwei neuesten Vereinsmitteilungen. Tippe auf einen Beitrag für den vollständigen Text oder wechsle zum Pinnwand-Tab.",
+        overviewCampsTitle = "Bevorstehende Freizeiten",
+        overviewCampsDesc = "Bevorstehende Freizeiten und Vereinsveranstaltungen. Tippe auf einen Eintrag für Details oder zur Anmeldungsverwaltung.",
+        overviewBirthdaysTitle = "Geburtstage",
+        overviewBirthdaysDesc = "Bevorstehende Geburtstage von Vereinsmitgliedern – damit du keinen verpasst.",
+        overviewStatsTitle = "Wochenstats & Persona",
+        overviewStatsDesc = "Tänzer sehen ihre Einheitenanzahl und Trainingsminuten der Woche, den Fortschritt zum Wochenziel und eine wöchentliche Persona-Karte.",
+        calendarMineTitle = "Tab Meine",
+        calendarMineDesc = "Zeigt nur Einheiten aus deinen eigenen Trainingsgruppen – dein schnellster Überblick über die Woche.",
+        calendarAllTitle = "Tab Alle",
+        calendarAllDesc = "Zeigt jede Einheit aller Gruppen. Nützlich zum Finden von Einheiten oder für einen vollständigen Vereinsüberblick.",
+        calendarFilterTitle = "Filter & Wochennavigation",
+        calendarFilterDesc = "Tippe auf ⋮ zum Filtern nach Trainer oder Ort. Mit den Pfeilen in der Leiste springst du wochenweise vor oder zurück.",
+        boardListTitle = "Mitteilungen",
+        boardListDesc = "Eine scrollbare Liste aller Vereinsbeiträge von Koordinatoren und Trainern. Tippe auf eine Mitteilung, um den vollständigen Text zu lesen.",
+        boardSearchTitle = "Suche & Ungelesen-Badge",
+        boardSearchDesc = "Tippe auf das Suchsymbol, um Beiträge nach Stichwort zu finden. Das Badge am Pinnwand-Tab leuchtet bei ungelesenen Beiträgen.",
+        eventsPlannedTitle = "Geplante Veranstaltungen",
+        eventsPlannedDesc = "Bevorstehende Freizeiten und Vereinsveranstaltungen, nach Datum sortiert. Tippe auf eine Veranstaltung für Details und Anmeldung.",
+        eventsPastTitle = "Vergangene Veranstaltungen",
+        eventsPastDesc = "Bereits stattgefundene Veranstaltungen. Du kannst weiterhin Details einsehen oder eine bestehende Anmeldung verwalten.",
+        otherTitle = "Das war's!",
+        otherDesc = "Du bist startklar. Erkunde den Sonstige-Tab in deinem eigenen Tempo – dort findest du Profil, Mitglieder, Gruppen, Statistiken, Zahlungen und Einstellungen.",
+        next = "Weiter",
+        previous = "Zurück",
+        skip = "Überspringen",
+        done = "Fertig",
+        stepOf = "von",
     ),
 )

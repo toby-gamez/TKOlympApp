@@ -22,6 +22,7 @@ import com.tkolymp.shared.language.NavigationStrings
 import com.tkolymp.shared.language.NotificationStrings
 import com.tkolymp.shared.language.OnboardingStrings
 import com.tkolymp.shared.language.FreeLessonsStrings
+import com.tkolymp.shared.language.TutorialStrings
 import com.tkolymp.shared.language.WeekPersonaStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
@@ -583,5 +584,40 @@ val StringsUa = Strings(
         fri = "Fri",
         sat = "Sat",
         sun = "Sun",
+    ),
+    tutorial = TutorialStrings(
+        tutorialRowLabel = "Гід по додатку",
+        tutorialRowSubtitle = "Екскурсія по додатку",
+        overviewUpcomingTitle = "Майбутні тренування",
+        overviewUpcomingDesc = "Ваше наступне тренування, згруповане за тренером. Натисніть на картку, щоб побачити місце, час та учасників.",
+        overviewBoardTitle = "Анонс дошки",
+        overviewBoardDesc = "Попередній перегляд двох останніх повідомлень клубу. Натисніть на допис для повного тексту або перейдіть на вкладку Дошка.",
+        overviewCampsTitle = "Майбутні збори",
+        overviewCampsDesc = "Найближчі збори та клубні заходи. Натисніть на елемент для деталей або управління реєстрацією.",
+        overviewBirthdaysTitle = "Дні народження",
+        overviewBirthdaysDesc = "Найближчі дні народження членів клубу — щоб не пропустити нагоду привітати.",
+        overviewStatsTitle = "Тижнева статистика та персонаж",
+        overviewStatsDesc = "Танцюристи бачать кількість занять та хвилини тренувань за тиждень, прогрес до тижневої мети та веселу персональну картку.",
+        calendarMineTitle = "Вкладка Мої",
+        calendarMineDesc = "Показує лише заняття з ваших власних тренувальних груп — найшвидший перегляд тижня.",
+        calendarAllTitle = "Вкладка Всі",
+        calendarAllDesc = "Показує всі заняття всіх груп. Зручно для пошуку занять або перегляду повного розкладу клубу.",
+        calendarFilterTitle = "Фільтр та навігація по тижнях",
+        calendarFilterDesc = "Натисніть ⋮ для фільтрування занять за тренером або місцем. Стрілками в рядку можна переходити між тижнями.",
+        boardListTitle = "Оголошення",
+        boardListDesc = "Список усіх клубних дописів від координаторів та тренерів. Натисніть на оголошення для повного тексту.",
+        boardSearchTitle = "Пошук та значок непрочитаного",
+        boardSearchDesc = "Натисніть на значок пошуку для пошуку дописів за ключовим словом. Значок на вкладці Дошка світиться при непрочитаних дописах.",
+        eventsPlannedTitle = "Заплановані заходи",
+        eventsPlannedDesc = "Майбутні збори та клубні заходи, відсортовані за датою. Натисніть на захід для деталей та реєстрації.",
+        eventsPastTitle = "Минулі заходи",
+        eventsPastDesc = "Заходи, які вже відбулися. Ви можете переглянути деталі або управляти існуючою реєстрацією.",
+        otherTitle = "Це все!",
+        otherDesc = "Ви готові. Досліджуйте вкладку Інше у власному темпі — там є профіль, члени клубу, групи, статистика, платежі та налаштування.",
+        next = "Далі",
+        previous = "Назад",
+        skip = "Пропустити",
+        done = "Готово",
+        stepOf = "з",
     ),
 )

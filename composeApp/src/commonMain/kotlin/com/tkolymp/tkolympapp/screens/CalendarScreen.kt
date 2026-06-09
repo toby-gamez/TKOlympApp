@@ -78,11 +78,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import com.tkolymp.tkolympapp.TutorialHighlight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -122,6 +125,16 @@ fun CalendarScreen(
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     var localWeekOffset by rememberSaveable { mutableIntStateOf(weekOffset) }
     val tabs = listOf(AppStrings.current.people.mine, AppStrings.current.commonActions.all)
+
+    val tutorialActive by com.tkolymp.shared.tutorial.TutorialManager.isActive.collectAsState()
+    val tutorialStep by com.tkolymp.shared.tutorial.TutorialManager.currentStep.collectAsState()
+    LaunchedEffect(tutorialStep, tutorialActive) {
+        if (tutorialActive) when (tutorialStep) {
+            5 -> selectedTab = 0   // calendarMine
+            6 -> selectedTab = 1   // calendarAll
+            7 -> selectedTab = 0   // calendarFilter — reset to Mine
+        }
+    }
     val calendarViewModel = viewModel<com.tkolymp.shared.viewmodels.CalendarViewModel>()
     val calState by calendarViewModel.state.collectAsState()
     val scope = rememberCoroutineScope()
@@ -235,7 +248,16 @@ fun CalendarScreen(
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.Start
             ) {
-                PrimaryTabRow(selectedTabIndex = selectedTab, modifier = Modifier.fillMaxWidth()) {
+                PrimaryTabRow(
+                    selectedTabIndex = selectedTab,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onGloballyPositioned { coords ->
+                            if (tutorialActive && tutorialStep in 5..6) {
+                                TutorialHighlight.rect = coords.boundsInRoot()
+                            }
+                        }
+                ) {
                     tabs.forEachIndexed { index, title ->
                         Tab(
                             selected = selectedTab == index,

@@ -184,11 +184,30 @@ fun App() {
         }
 
         Crossfade(targetState = currentLanguage, animationSpec = tween(600), label = "languageTransition") { _ ->
+        androidx.compose.runtime.DisposableEffect(Unit) {
+            onDispose { com.tkolymp.shared.tutorial.TutorialManager.skip() }
+        }
         val scope = rememberCoroutineScope()
         val navController = rememberNavController()
         val currentBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = currentBackStackEntry?.destination?.route
         val boardHasUnread by com.tkolymp.shared.announcements.AnnouncementBadge.hasUnread.collectAsState()
+        val tutorialActive by com.tkolymp.shared.tutorial.TutorialManager.isActive.collectAsState()
+        val tutorialStep by com.tkolymp.shared.tutorial.TutorialManager.currentStep.collectAsState()
+
+        androidx.compose.runtime.LaunchedEffect(tutorialStep, tutorialActive) {
+            if (tutorialActive) {
+                val route = com.tkolymp.shared.tutorial.TutorialManager.steps[tutorialStep].route
+                val currentRoute = navController.currentBackStackEntry?.destination?.route
+                if (route != currentRoute) {
+                    navController.navigate(route) {
+                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            }
+        }
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -255,19 +274,30 @@ fun App() {
                     })
                     showRoleSelection -> RoleSelectionScreen(onFinish = {
                         showRoleSelection = false
+                        com.tkolymp.shared.tutorial.TutorialManager.start()
                     })
                     else -> AppNavHost(
                         navController = navController,
                         weekOffset = weekOffset,
                         onWeekOffsetChange = { weekOffset = it },
                         preferTimeline = preferTimeline,
-                        onLogout = { 
+                        onLogout = {
                             loggedIn = false
                             navController.navigate("overview") {
                                 popUpTo(0) { inclusive = true }
                             }
                         },
                         bottomPadding = padding.calculateBottomPadding()
+                    )
+                }
+
+                if (loggedIn == true && showOnboarding == false && !showRoleSelection) {
+                    com.tkolymp.tkolympapp.components.TutorialOverlay(
+                        isActive = tutorialActive,
+                        step = tutorialStep,
+                        onNext = { com.tkolymp.shared.tutorial.TutorialManager.next() },
+                        onPrevious = { com.tkolymp.shared.tutorial.TutorialManager.previous() },
+                        onSkip = { com.tkolymp.shared.tutorial.TutorialManager.skip() }
                     )
                 }
             }

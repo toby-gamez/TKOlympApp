@@ -44,6 +44,9 @@ import com.tkolymp.tkolympapp.util.StaggeredItem
 import com.tkolymp.tkolympapp.util.tabContentTransitionSpec
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import com.tkolymp.tkolympapp.TutorialHighlight
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -72,6 +75,15 @@ import kotlinx.datetime.todayIn
 fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
     var selectedTab by rememberSaveable { mutableStateOf(0) }
     val tabs = listOf(AppStrings.current.eventCalendarTabs.planned, AppStrings.current.eventCalendarTabs.past)
+
+    val tutorialActive by com.tkolymp.shared.tutorial.TutorialManager.isActive.collectAsState()
+    val tutorialStep by com.tkolymp.shared.tutorial.TutorialManager.currentStep.collectAsState()
+    LaunchedEffect(tutorialStep, tutorialActive) {
+        if (tutorialActive) when (tutorialStep) {
+            10 -> selectedTab = 0  // eventsPlanned
+            11 -> selectedTab = 1  // eventsPast
+        }
+    }
 
     val viewModel = viewModel<EventsViewModel>()
     val state by viewModel.state.collectAsState()
@@ -119,7 +131,14 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.Start
             ) {
-            PrimaryTabRow(selectedTabIndex = selectedTab) {
+            PrimaryTabRow(
+                selectedTabIndex = selectedTab,
+                modifier = Modifier.onGloballyPositioned { coords ->
+                    if (tutorialActive && tutorialStep in 10..11) {
+                        TutorialHighlight.rect = coords.boundsInRoot()
+                    }
+                }
+            ) {
                 tabs.forEachIndexed { index, title ->
                     Tab(selected = selectedTab == index, onClick = { selectedTab = index }, text = { Text(title) })
                 }

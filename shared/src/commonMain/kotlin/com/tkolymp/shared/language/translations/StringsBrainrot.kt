@@ -22,6 +22,7 @@ import com.tkolymp.shared.language.NavigationStrings
 import com.tkolymp.shared.language.NotificationStrings
 import com.tkolymp.shared.language.OnboardingStrings
 import com.tkolymp.shared.language.FreeLessonsStrings
+import com.tkolymp.shared.language.TutorialStrings
 import com.tkolymp.shared.language.WeekPersonaStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
@@ -584,5 +585,40 @@ val StringsBrainrot = Strings(
         fri = "Fri",
         sat = "Sats",
         sun = "Sun (skibidi)",
+    ),
+    tutorial = TutorialStrings(
+        tutorialRowLabel = "App Tutorial (no cap)",
+        tutorialRowSubtitle = "Sigma walkthrough of the app fr fr",
+        overviewUpcomingTitle = "Next Session Finna Hit",
+        overviewUpcomingDesc = "Your next training session, no cap. Tap the card to check who's bussin up with you, the location, and what time to show up fr fr.",
+        overviewBoardTitle = "Board Snippet (lowkey important)",
+        overviewBoardDesc = "Sneak peek at the 2 latest club posts. Tap a post to read the whole lore or rizz your way over to the Board tab.",
+        overviewCampsTitle = "Upcoming Slay Camps",
+        overviewCampsDesc = "Camps and club events that are about to go crazy. Tap any item to peep details or flex your registration.",
+        overviewBirthdaysTitle = "Birthday SZN",
+        overviewBirthdaysDesc = "Who's having a glow-up moment soon? Don't be an NPC — go send some Ws and show up.",
+        overviewStatsTitle = "Weekly Stats & Vibe Check",
+        overviewStatsDesc = "Dancers get weekly session count, training minutes, goal drip, and a persona card that goes absolutely hard based on their schedule.",
+        calendarMineTitle = "Mine Tab (your era)",
+        calendarMineDesc = "Only YOUR groups showing up. No cap, this is your main character calendar view — no NPC sessions cluttering it.",
+        calendarAllTitle = "All Tab (sigma mode unlocked)",
+        calendarAllDesc = "Every session from every group. Full club schedule dropped, zero gatekeeping fr fr.",
+        calendarFilterTitle = "Filter & Week Nav (big brain move)",
+        calendarFilterDesc = "Hit the ⋮ button to filter by trainer or location — actual galaxy brain feature. The arrows let you time-travel week by week.",
+        boardListTitle = "Announcements (read or be NPC)",
+        boardListDesc = "Every club post, no filter, straight lore. Tap any announcement to get the full text dumped on you.",
+        boardSearchTitle = "Search & Badge (rizz IQ check)",
+        boardSearchDesc = "Tap the search icon to hunt posts by keyword — that's a W move. The Board tab badge goes off when there's unread content. Don't be last to know.",
+        eventsPlannedTitle = "Planned Events (incoming W's)",
+        eventsPlannedDesc = "Camps and club events dropping soon, sorted by date. Tap to sign up and secure your bag before it's cooked.",
+        eventsPastTitle = "Past Events (throwback era)",
+        eventsPastDesc = "Events that already ate and left. You can still peep the lore or manage a registration that's still active.",
+        otherTitle = "You ate that! 🗣️",
+        otherDesc = "Tutorial complete, no skips needed — you're a real one. Hit the Other tab on your own terms: profile, groups, stats, payments and settings await your sigma grindset.",
+        next = "Next W",
+        previous = "Backtrack",
+        skip = "Skip (NPC move)",
+        done = "Ate fr",
+        stepOf = "of",
     ),
 )

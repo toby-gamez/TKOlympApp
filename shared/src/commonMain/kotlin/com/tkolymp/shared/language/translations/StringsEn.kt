@@ -22,6 +22,7 @@ import com.tkolymp.shared.language.NavigationStrings
 import com.tkolymp.shared.language.NotificationStrings
 import com.tkolymp.shared.language.OnboardingStrings
 import com.tkolymp.shared.language.FreeLessonsStrings
+import com.tkolymp.shared.language.TutorialStrings
 import com.tkolymp.shared.language.WeekPersonaStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
@@ -583,5 +584,40 @@ val StringsEn = Strings(
         fri = "Fri",
         sat = "Sat",
         sun = "Sun",
+    ),
+    tutorial = TutorialStrings(
+        tutorialRowLabel = "App Tutorial",
+        tutorialRowSubtitle = "A guided tour of the app",
+        overviewUpcomingTitle = "Upcoming Trainings",
+        overviewUpcomingDesc = "Your next training session, listed by trainer. Tap a session card to see the location, time and who else is attending.",
+        overviewBoardTitle = "Board Snippet",
+        overviewBoardDesc = "A preview of the two most recent club announcements. Tap a post for the full text, or head to the Board tab to see all posts.",
+        overviewCampsTitle = "Upcoming Camps",
+        overviewCampsDesc = "Camps and club events coming up soon. Tap any item to see details or manage your registration.",
+        overviewBirthdaysTitle = "Birthdays",
+        overviewBirthdaysDesc = "Upcoming birthdays of club members — so you never miss a chance to celebrate.",
+        overviewStatsTitle = "Weekly Stats & Persona",
+        overviewStatsDesc = "Dancers see their session count and training minutes for the week, progress toward a weekly goal, and a fun weekly persona card based on their schedule.",
+        calendarMineTitle = "Mine Tab",
+        calendarMineDesc = "Shows only sessions from your own training groups — your quickest view of the week ahead.",
+        calendarAllTitle = "All Tab",
+        calendarAllDesc = "Shows every session across all groups. Useful for finding sessions you could join or seeing the full club schedule.",
+        calendarFilterTitle = "Filter & Week Navigation",
+        calendarFilterDesc = "Tap ⋮ to filter sessions by trainer or location. Use the arrows in the app bar to jump forward or back by week.",
+        boardListTitle = "Announcements",
+        boardListDesc = "A scrollable list of every club post from coordinators and trainers. Tap any announcement to read the full text.",
+        boardSearchTitle = "Search & Unread Badge",
+        boardSearchDesc = "Tap the search icon to find posts by keyword. The Board tab icon shows a badge when there are unread posts.",
+        eventsPlannedTitle = "Planned Events",
+        eventsPlannedDesc = "Upcoming camps and club events, sorted by date. Tap any event to see details and sign up.",
+        eventsPastTitle = "Past Events",
+        eventsPastDesc = "Events that have already taken place. You can still view details or manage an existing registration.",
+        otherTitle = "That's it!",
+        otherDesc = "You're all set. Explore the Other tab at your own pace — it has your profile, club members, groups, stats, payments and settings.",
+        next = "Next",
+        previous = "Back",
+        skip = "Skip",
+        done = "Done",
+        stepOf = "of",
     ),
 )

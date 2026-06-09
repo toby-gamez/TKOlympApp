@@ -1,5 +1,6 @@
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +16,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -45,16 +48,20 @@ import androidx.compose.runtime.rememberCoroutineScope
 import com.tkolymp.tkolympapp.util.StaggeredItem
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.shared.tutorial.TutorialManager
 import com.tkolymp.shared.utils.formatFullCalendarDate
 import com.tkolymp.shared.utils.formatHtmlContent
 import com.tkolymp.shared.viewmodels.OverviewViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
+import com.tkolymp.tkolympapp.TutorialHighlight
 import com.tkolymp.tkolympapp.components.LessonView
 import com.tkolymp.tkolympapp.components.RenderSingleEventCard
 import kotlinx.coroutines.launch
@@ -70,7 +77,7 @@ import com.tkolymp.shared.event.firstTrainerOrEmpty
 import com.tkolymp.shared.event.toEventType
 import com.tkolymp.tkolympapp.components.WeekPersonaBadge
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun OverviewScreen(
     bottomPadding: Dp = 0.dp,
@@ -98,6 +105,25 @@ fun OverviewScreen(
         var cardsVisible by remember { mutableStateOf(false) }
         LaunchedEffect(state.isLoading) { if (!state.isLoading) cardsVisible = true }
 
+        val tutorialActive by TutorialManager.isActive.collectAsState()
+        val tutorialStep by TutorialManager.currentStep.collectAsState()
+
+        val bvrStats = remember { BringIntoViewRequester() }
+        val bvrUpcoming = remember { BringIntoViewRequester() }
+        val bvrBoard = remember { BringIntoViewRequester() }
+        val bvrCamps = remember { BringIntoViewRequester() }
+        val bvrBirthdays = remember { BringIntoViewRequester() }
+
+        LaunchedEffect(tutorialStep, tutorialActive) {
+            if (tutorialActive) when (tutorialStep) {
+                0 -> bvrUpcoming.bringIntoView()
+                1 -> bvrBoard.bringIntoView()
+                2 -> bvrCamps.bringIntoView()
+                3 -> bvrBirthdays.bringIntoView()
+                4 -> bvrStats.bringIntoView()
+            }
+        }
+
         SwipeToReload(
             isRefreshing = state.isLoading,
             onRefresh = { scope.launch { viewModel.loadOverview(forceRefresh = true) } },
@@ -112,6 +138,9 @@ fun OverviewScreen(
             ) {
 
             val announcements = state.recentAnnouncements
+
+            // Stats scroll anchor (step 4) — always present so BVR can bring it into view
+            Spacer(modifier = Modifier.height(0.dp).bringIntoViewRequester(bvrStats))
 
             if (state.isDancer && state.upcomingEvents.isNotEmpty()) {
                 val weekVibes = remember(state.upcomingEvents, state.todayString) {
@@ -131,7 +160,13 @@ fun OverviewScreen(
                     WeekPersonaBadge(
                         vibes = weekVibes,
                         personaLabel = personaLabel,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp, vertical = 6.dp)
+                            .onGloballyPositioned { coords ->
+                                if (tutorialActive && tutorialStep == 4) {
+                                    TutorialHighlight.rect = coords.boundsInRoot()
+                                }
+                            }
                     )
                 }
             }
@@ -160,7 +195,17 @@ fun OverviewScreen(
 
             // Trainings section
             Spacer(modifier = Modifier.height(8.dp))
-            Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                    .bringIntoViewRequester(bvrUpcoming)
+                    .onGloballyPositioned { coords ->
+                        if (tutorialActive && tutorialStep == 0) {
+                            TutorialHighlight.rect = coords.boundsInRoot()
+                        }
+                    },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(AppStrings.current.overview.upcomingTrainings, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
 
@@ -218,7 +263,17 @@ fun OverviewScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             // Board announcements
-            Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                    .bringIntoViewRequester(bvrBoard)
+                    .onGloballyPositioned { coords ->
+                        if (tutorialActive && tutorialStep == 1) {
+                            TutorialHighlight.rect = coords.boundsInRoot()
+                        }
+                    },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(AppStrings.current.overview.fromTheBoard, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
             Column(modifier = Modifier.padding(horizontal = 12.dp)) {
@@ -275,7 +330,17 @@ fun OverviewScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             // Camps section
-            Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                    .bringIntoViewRequester(bvrCamps)
+                    .onGloballyPositioned { coords ->
+                        if (tutorialActive && tutorialStep == 2) {
+                            TutorialHighlight.rect = coords.boundsInRoot()
+                        }
+                    },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(AppStrings.current.overview.upcomingCamps, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
             Column(modifier = Modifier.padding(horizontal = 12.dp)) {
@@ -309,7 +374,17 @@ fun OverviewScreen(
                 }
             }
             // Upcoming birthdays
-            Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 6.dp)
+                    .bringIntoViewRequester(bvrBirthdays)
+                    .onGloballyPositioned { coords ->
+                        if (tutorialActive && tutorialStep == 3) {
+                            TutorialHighlight.rect = coords.boundsInRoot()
+                        }
+                    },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(AppStrings.current.profile.birthdays, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
             Column(modifier = Modifier.padding(horizontal = 12.dp)) {
