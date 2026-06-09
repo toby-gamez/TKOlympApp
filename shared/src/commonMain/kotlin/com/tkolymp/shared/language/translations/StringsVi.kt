@@ -185,6 +185,7 @@ val StringsVi = Strings(
         deleteRegistrationConfirmTitle = "Xóa đăng ký",
         deleteRegistrationConfirmText = "Bạn có thực sự muốn xóa đăng ký đã chọn không?",
         noRegistrationOwned = "Không tìm thấy đăng ký của bạn",
+        registrationSuccess = "Đăng ký thành công",
     ),
     announcements = AnnouncementStrings(
         announcements = "Thông báo",

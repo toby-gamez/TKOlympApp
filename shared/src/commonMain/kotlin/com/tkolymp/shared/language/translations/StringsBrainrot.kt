@@ -197,6 +197,7 @@ val StringsBrainrot = Strings(
         deleteRegistrationConfirmTitle = "yeet registration?",
         deleteRegistrationConfirmText = "u actually wanna yeet this registration fr?",
         noRegistrationOwned = "no registration found bestie",
+        registrationSuccess = "registered no cap fr fr",
     ),
     announcements = AnnouncementStrings(
         announcements = "Announcements",

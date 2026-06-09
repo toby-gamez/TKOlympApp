@@ -1029,43 +1029,24 @@ fun AppNavHost(
                         eventType = (ev["type"] as? kotlinx.serialization.json.JsonPrimitive)?.contentOrNull,
                         onClose = { navController.navigateUp() },
                         onRegister = { regs ->
-                            coroutineScope.launch {
-                                try {
-                                    val regsJson = regs.map { r ->
-                                        buildJsonObject {
-                                            // include eventId so server knows which event these registrations belong to
-                                            put("eventId", JsonPrimitive(eventId))
-                                            if (r.personId != null) put("personId", JsonPrimitive(r.personId))
-                                            if (r.coupleId != null) put("coupleId", JsonPrimitive(r.coupleId))
-                                            put("lessons", JsonArray(r.lessons.map { l -> buildJsonObject { put("trainerId", JsonPrimitive(l.trainerId)); put("lessonCount", JsonPrimitive(l.lessonCount)) } }))
-                                            if (r.note != null) put("note", JsonPrimitive(r.note))
-                                        }
-                                    }
-                                    val resp = withContext(Dispatchers.IO) {
-                                        ServiceLocator.eventService.registerToEventMany(JsonArray(regsJson))
-                                    }
-
-                                    if (resp == null) {
-                                        regResultMessage.value = "Network error"
-                                    } else {
-                                        val jsonObj = resp.jsonObject
-                                        val errors = jsonObj["errors"]
-                                        if (errors != null) {
-                                            regResultMessage.value = "Server errors: ${errors}"
-                                        } else {
-                                            val data = jsonObj["data"]?.jsonObject
-                                            val created = data?.get("registerToEventMany")?.jsonObject?.get("eventRegistrations")
-                                            if (created != null) {
-                                                navController.navigateUp()
-                                            } else {
-                                                regResultMessage.value = "Unexpected response: ${resp}"
-                                            }
-                                        }
-                                    }
-                                } catch (ex: Exception) {
-                                    regResultMessage.value = ex.message ?: "Unknown error"
+                            val regsJson = regs.map { r ->
+                                buildJsonObject {
+                                    put("eventId", JsonPrimitive(eventId))
+                                    if (r.personId != null) put("personId", JsonPrimitive(r.personId))
+                                    if (r.coupleId != null) put("coupleId", JsonPrimitive(r.coupleId))
+                                    put("lessons", JsonArray(r.lessons.map { l -> buildJsonObject { put("trainerId", JsonPrimitive(l.trainerId)); put("lessonCount", JsonPrimitive(l.lessonCount)) } }))
+                                    if (r.note != null) put("note", JsonPrimitive(r.note))
                                 }
                             }
+                            val resp = withContext(Dispatchers.IO) {
+                                ServiceLocator.eventService.registerToEventMany(JsonArray(regsJson))
+                            }
+                            val jsonObj = resp?.jsonObject ?: throw Exception("Network error")
+                            val errors = jsonObj["errors"]
+                            if (errors != null) throw Exception("Server errors: $errors")
+                            val data = jsonObj["data"]?.jsonObject
+                            val created = data?.get("registerToEventMany")?.jsonObject?.get("eventRegistrations")
+                                ?: throw Exception("Unexpected response: $resp")
                         },
                         onSetLessonDemand = { registrationId, trainerId, lessonCount ->
                             coroutineScope.launch {
@@ -1091,33 +1072,15 @@ fun AppNavHost(
                             }
                         },
                         onDelete = { registrationId ->
-                            coroutineScope.launch {
-                                try {
-                                    val resp = withContext(Dispatchers.IO) {
-                                        ServiceLocator.eventService.deleteEventRegistration(registrationId)
-                                    }
-
-                                    if (resp == null) {
-                                        regResultMessage.value = "Network error"
-                                    } else {
-                                        val jsonObj = resp.jsonObject
-                                        val errors = jsonObj["errors"]
-                                        if (errors != null) {
-                                            regResultMessage.value = "Server errors: ${errors}"
-                                        } else {
-                                            val data = jsonObj["data"]?.jsonObject
-                                            val canceled = data?.get("cancelRegistration")?.jsonObject?.get("clientMutationId")
-                                            if (canceled != null) {
-                                                navController.navigateUp()
-                                            } else {
-                                                regResultMessage.value = "Unexpected response: ${resp}"
-                                            }
-                                        }
-                                    }
-                                } catch (ex: Exception) {
-                                    regResultMessage.value = ex.message ?: "Unknown error"
-                                }
+                            val resp = withContext(Dispatchers.IO) {
+                                ServiceLocator.eventService.deleteEventRegistration(registrationId)
                             }
+                            val jsonObj = resp?.jsonObject ?: throw Exception("Network error")
+                            val errors = jsonObj["errors"]
+                            if (errors != null) throw Exception("Server errors: $errors")
+                            val data = jsonObj["data"]?.jsonObject
+                            data?.get("cancelRegistration")?.jsonObject?.get("clientMutationId")
+                                ?: throw Exception("Unexpected response: $resp")
                         }
                     )
                     

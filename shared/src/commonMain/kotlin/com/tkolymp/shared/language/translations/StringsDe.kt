@@ -196,6 +196,7 @@ val StringsDe = Strings(
         deleteRegistrationConfirmTitle = "Anmeldung löschen",
         deleteRegistrationConfirmText = "Möchten Sie die ausgewählte Anmeldung wirklich löschen?",
         noRegistrationOwned = "Keine eigene Anmeldung gefunden",
+        registrationSuccess = "Anmeldung erfolgreich",
     ),
     announcements = AnnouncementStrings(
         announcements = "Ankündigungen",

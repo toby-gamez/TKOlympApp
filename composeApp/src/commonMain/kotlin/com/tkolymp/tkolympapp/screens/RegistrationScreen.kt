@@ -1,9 +1,14 @@
 package com.tkolymp.tkolympapp.screens
 import com.tkolymp.tkolympapp.SwipeToReload
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,12 +16,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -43,6 +51,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -58,6 +70,7 @@ import com.tkolymp.shared.registration.filterOwnedRegistrations
 import com.tkolymp.shared.registration.RegMode
 import com.tkolymp.shared.registration.LessonInput
 import com.tkolymp.shared.registration.RegistrationInput
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.JsonArray
@@ -99,9 +112,9 @@ fun RegistrationScreen(
     enableNotes: Boolean = false,
     eventType: String? = null,
     onClose: () -> Unit,
-    onRegister: (List<RegistrationInput>) -> Unit,
+    onRegister: suspend (List<RegistrationInput>) -> Unit,
     onSetLessonDemand: (String, Int, Int) -> Unit,
-    onDelete: (String) -> Unit,
+    onDelete: suspend (String) -> Unit,
     onSetNote: ((String, String) -> Unit)? = null
 ) {
     Scaffold(
@@ -117,6 +130,13 @@ fun RegistrationScreen(
         }
     ) { padding ->
         val scope = rememberCoroutineScope()
+        val showSuccess = remember { mutableStateOf(false) }
+        LaunchedEffect(showSuccess.value) {
+            if (showSuccess.value) {
+                delay(1500)
+                onClose()
+            }
+        }
 
         // cache trainer display names (shared across modes) — moved to shared ViewModel
         val showLessonSelection = eventType?.trim()?.lowercase().let { it == "camp" || it == "rezervation" }
@@ -147,7 +167,53 @@ fun RegistrationScreen(
             onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
         }
 
-        SwipeToReload(isRefreshing = regState.isLoading, onRefresh = {
+        if (showSuccess.value) {
+            val iconScaleTarget = remember { mutableStateOf(0f) }
+            val textAlphaTarget = remember { mutableStateOf(0f) }
+            LaunchedEffect(Unit) {
+                iconScaleTarget.value = 1f
+                delay(280)
+                textAlphaTarget.value = 1f
+            }
+            val iconScale by animateFloatAsState(
+                targetValue = iconScaleTarget.value,
+                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+                label = "iconScale"
+            )
+            val textAlpha by animateFloatAsState(
+                targetValue = textAlphaTarget.value,
+                animationSpec = tween(durationMillis = 350),
+                label = "textAlpha"
+            )
+            Box(
+                modifier = Modifier.fillMaxSize().padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(
+                        modifier = Modifier
+                            .size(128.dp)
+                            .scale(iconScale)
+                            .background(Color(0xFF43A047), shape = CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(72.dp),
+                            tint = Color.White
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(28.dp))
+                    Text(
+                        text = AppStrings.current.registration.registrationSuccess,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.alpha(textAlpha)
+                    )
+                }
+            }
+        } else SwipeToReload(isRefreshing = regState.isLoading, onRefresh = {
             scope.launch {
                 try {
                     regViewModel.invalidateAndRefresh(trainers, registrations, myPersonId, myCoupleIds)
@@ -292,6 +358,7 @@ fun RegistrationScreen(
                             Text(AppStrings.current.registration.noRegistrationSelected, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                             Spacer(modifier = Modifier.height(8.dp))
                         }
+                        val isSubmitting = remember { mutableStateOf(false) }
                         Button(onClick = {
                             val registrant = selectedRegistrant.value
                             if (registrant.first.isNullOrBlank() && registrant.second.isNullOrBlank()) {
@@ -309,14 +376,18 @@ fun RegistrationScreen(
                             }
                             val noteToSend = noteState.value.takeIf { it.isNotBlank() }
                             val regInput = RegistrationInput(registrant.first, registrant.second, lessons, note = noteToSend)
-                            try {
-                                onRegister(listOf(regInput))
-                                onClose()
-                            } catch (e: CancellationException) { throw e } catch (t: Exception) {
-                                Logger.d("RegScreen", "Register failed: ${t.message}")
-                                showRegisterError.value = t.message ?: "Chyba při registraci"
+                            scope.launch {
+                                isSubmitting.value = true
+                                try {
+                                    onRegister(listOf(regInput))
+                                    showSuccess.value = true
+                                } catch (e: CancellationException) { throw e } catch (t: Exception) {
+                                    Logger.d("RegScreen", "Register failed: ${t.message}")
+                                    showRegisterError.value = t.message ?: "Chyba při registraci"
+                                    isSubmitting.value = false
+                                }
                             }
-                        }, modifier = Modifier.fillMaxWidth()) { Text(AppStrings.current.registration.confirmRegistrationTitle) }
+                        }, enabled = !isSubmitting.value, modifier = Modifier.fillMaxWidth()) { Text(AppStrings.current.registration.confirmRegistrationTitle) }
                         if (!showRegisterError.value.isNullOrBlank()) {
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(showRegisterError.value ?: "", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
@@ -522,18 +593,19 @@ fun RegistrationScreen(
                                         showConfirmDelete.value = false
                                         showDeleteError.value = null
                                         selectedReg.value?.let { selId ->
-                                            // verify ownership before deleting
                                             val owned = ownedRegistrations.firstOrNull { (it as? JsonObject)?.get("id")?.jsonPrimitive?.contentOrNull == selId } != null
                                             if (!owned) {
                                                 showDeleteError.value = AppStrings.current.registration.noRegistrationOwned
                                                 return@TextButton
                                             }
-                                            try {
-                                                onDelete(selId)
-                                                onClose()
-                                            } catch (e: CancellationException) { throw e } catch (t: Exception) {
-                                                Logger.d("RegScreen", "Delete failed: ${t.message}")
-                                                showDeleteError.value = t.message ?: "Chyba při mazání"
+                                            scope.launch {
+                                                try {
+                                                    onDelete(selId)
+                                                    onClose()
+                                                } catch (e: CancellationException) { throw e } catch (t: Exception) {
+                                                    Logger.d("RegScreen", "Delete failed: ${t.message}")
+                                                    showDeleteError.value = t.message ?: "Chyba při mazání"
+                                                }
                                             }
                                         }
                                     }) { Text(AppStrings.current.commonActions.delete) }

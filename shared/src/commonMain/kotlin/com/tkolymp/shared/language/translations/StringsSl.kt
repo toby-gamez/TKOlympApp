@@ -196,6 +196,7 @@ val StringsSl = Strings(
         deleteRegistrationConfirmTitle = "Izbriši registracijo",
         deleteRegistrationConfirmText = "Ali res želite izbrisati izbrano registracijo?",
         noRegistrationOwned = "Lastna registracija ni bila najdena",
+        registrationSuccess = "Registracija je bila uspešna",
     ),
     announcements = AnnouncementStrings(
         announcements = "Obvestila",

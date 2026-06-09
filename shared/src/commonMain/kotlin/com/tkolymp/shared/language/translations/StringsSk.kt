@@ -224,6 +224,7 @@ val StringsSk = Strings(
         deleteRegistrationConfirmTitle = "Zmazať registráciu",
         deleteRegistrationConfirmText = "Naozaj chcete zmazať vybranú registráciu?",
         noRegistrationOwned = "Nenašla sa žiadna vlastná registrácia",
+        registrationSuccess = "Registrácia prebehla úspešne",
     ),
     announcements = AnnouncementStrings(
         announcements = "Oznámenia",

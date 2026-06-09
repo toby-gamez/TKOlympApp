@@ -196,6 +196,7 @@ val StringsUa = Strings(
         deleteRegistrationConfirmTitle = "Видалити реєстрацію",
         deleteRegistrationConfirmText = "Ви впевнені, що хочете видалити вибрану реєстрацію?",
         noRegistrationOwned = "Власну реєстрацію не знайдено",
+        registrationSuccess = "Реєстрація пройшла успішно",
     ),
     announcements = AnnouncementStrings(
         announcements = "Оголошення",

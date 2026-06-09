@@ -1,8 +1,13 @@
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.runtime.remember
 import androidx.compose.ui.draw.scale
 import androidx.compose.foundation.background
@@ -58,24 +63,29 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.OnboardingViewModel
 import com.tkolymp.shared.models.UserRole
+import com.tkolymp.tkolympapp.components.BackgroundPluses
 import com.tkolymp.tkolympapp.platform.AppLogo
 import com.tkolymp.tkolympapp.ui.brandLightPrimary
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
+
+private const val PAGE_COUNT = 5
+private data class Feature(val icon: ImageVector, val label: String)
 
 @Composable
 fun OnboardingScreen(
-    viewModel: OnboardingViewModel = OnboardingViewModel(),
+    viewModel: OnboardingViewModel = viewModel(),
     onFinish: () -> Unit
 ) {
     val strings = AppStrings.current
-    val pageCount = 5
-    val pagerState = rememberPagerState(pageCount = { pageCount })
+    val pagerState = rememberPagerState(pageCount = { PAGE_COUNT })
     val scope = rememberCoroutineScope()
     val isWelcomePage = pagerState.currentPage == 0
-    val isLastPage = pagerState.currentPage == pageCount - 1
+    val isLastPage = pagerState.currentPage == PAGE_COUNT - 1
 
     Column(
         modifier = Modifier
@@ -105,14 +115,19 @@ fun OnboardingScreen(
             }
         }
 
-        if (!isWelcomePage) {
+        AnimatedVisibility(
+            visible = !isWelcomePage,
+            enter = fadeIn(tween(280)) + expandVertically(tween(280)),
+            exit = fadeOut(tween(200)) + shrinkVertically(tween(200))
+        ) {
             // Dot indicators
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(vertical = 24.dp)
             ) {
-                (1 until pageCount).forEach { index ->
+                (1 until PAGE_COUNT).forEach { index ->
                     val width by animateDpAsState(
                         targetValue = if (pagerState.currentPage == index) 24.dp else 8.dp,
                         label = "dot_width"
@@ -137,7 +152,9 @@ fun OnboardingScreen(
                 onClick = {
                     if (isLastPage) {
                         scope.launch {
-                            viewModel.completeOnboarding()
+                            try { viewModel.completeOnboarding() }
+                            catch (e: CancellationException) { throw e }
+                            catch (_: Exception) {}
                             onFinish()
                         }
                     } else {
@@ -161,6 +178,7 @@ fun OnboardingScreen(
                     fontWeight = FontWeight.SemiBold
                 )
             }
+            }
         }
     }
 }
@@ -169,15 +187,16 @@ fun OnboardingScreen(
 private fun WelcomeOnboardingPage(onNext: () -> Unit) {
     val logoScale = remember { Animatable(1f) }
     val scope = rememberCoroutineScope()
+    var clicking by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         BackgroundPluses(modifier = Modifier.fillMaxSize())
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
         Spacer(modifier = Modifier.weight(1f))
 
         Box(
@@ -203,21 +222,33 @@ private fun WelcomeOnboardingPage(onNext: () -> Unit) {
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Text(
-            text = AppStrings.current.onboarding.welcomeSubtitle,
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
+                .border(3.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(16.dp))
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = AppStrings.current.onboarding.welcomeSubtitle,
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
 
         Spacer(modifier = Modifier.weight(1f))
 
         Button(
             onClick = {
+                if (clicking) return@Button
+                clicking = true
                 scope.launch {
                     logoScale.animateTo(0.45f, animationSpec = tween(320))
                     onNext()
                     logoScale.snapTo(1f)
+                    clicking = false
                 }
             },
             modifier = Modifier.fillMaxWidth().height(88.dp),
@@ -232,8 +263,8 @@ private fun WelcomeOnboardingPage(onNext: () -> Unit) {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+        }
     }
-    } // Box
 }
 
 @Composable
@@ -285,7 +316,6 @@ private fun OnboardingPageScaffold(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // App logo in primary circle (~2 cm)
         Box(
             modifier = Modifier
                 .size(88.dp)
@@ -510,7 +540,6 @@ private fun MockBoardPostCard(title: String, author: String, preview: String, mo
 @Composable
 private fun OtherFeaturesIconGrid(modifier: Modifier = Modifier) {
     val strings = AppStrings.current
-    data class Feature(val icon: ImageVector, val label: String)
     val features = listOf(
         Feature(Icons.Filled.Groups, strings.otherScreen.people),
         Feature(Icons.Filled.EmojiEvents, strings.otherScreen.leaderboard),
@@ -564,8 +593,8 @@ private fun OtherFeaturesIconGrid(modifier: Modifier = Modifier) {
 private fun RoleSelectionPage(
     title: String,
     description: String,
-    selectedRole: com.tkolymp.shared.models.UserRole,
-    onSelect: (com.tkolymp.shared.models.UserRole) -> Unit,
+    selectedRole: UserRole,
+    onSelect: (UserRole) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -595,16 +624,16 @@ private fun RoleSelectionPage(
                 icon = Icons.Filled.Groups,
                 label = AppStrings.current.onboarding.roleDancer,
                 description = AppStrings.current.onboarding.roleDancerDesc,
-                selected = selectedRole == com.tkolymp.shared.models.UserRole.DANCER,
-                onClick = { onSelect(com.tkolymp.shared.models.UserRole.DANCER) },
+                selected = selectedRole == UserRole.DANCER,
+                onClick = { onSelect(UserRole.DANCER) },
                 modifier = Modifier.weight(1f)
             )
             RoleOptionCard(
                 icon = Icons.Filled.AccountCircle,
                 label = AppStrings.current.onboarding.roleParent,
                 description = AppStrings.current.onboarding.roleParentDesc,
-                selected = selectedRole == com.tkolymp.shared.models.UserRole.PARENT,
-                onClick = { onSelect(com.tkolymp.shared.models.UserRole.PARENT) },
+                selected = selectedRole == UserRole.PARENT,
+                onClick = { onSelect(UserRole.PARENT) },
                 modifier = Modifier.weight(1f)
             )
         }
@@ -647,7 +676,7 @@ private fun RoleOptionCard(
 
 @Composable
 fun RoleSelectionScreen(
-    viewModel: OnboardingViewModel = OnboardingViewModel(),
+    viewModel: OnboardingViewModel = viewModel(),
     onFinish: () -> Unit
 ) {
     val strings = AppStrings.current
@@ -673,7 +702,9 @@ fun RoleSelectionScreen(
         Button(
             onClick = {
                 scope.launch {
-                    viewModel.setUserRole(selectedRole)
+                    try { viewModel.setUserRole(selectedRole) }
+                    catch (e: CancellationException) { throw e }
+                    catch (_: Exception) {}
                     onFinish()
                 }
             },

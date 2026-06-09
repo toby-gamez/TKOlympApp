@@ -203,6 +203,7 @@ val StringsCs = Strings(
         deleteRegistrationConfirmTitle = "Smazat registraci",
         deleteRegistrationConfirmText = "Opravdu chcete smazat vybranou registraci?",
         noRegistrationOwned = "Žádná vlastní registrace nenalezena",
+        registrationSuccess = "Registrace proběhla úspěšně",
     ),
     announcements = AnnouncementStrings(
         announcements = "Oznámení",

@@ -25,4 +25,5 @@ data class RegistrationStrings(
     val deleteRegistrationConfirmTitle: String,
     val deleteRegistrationConfirmText: String,
     val noRegistrationOwned: String,
+    val registrationSuccess: String,
 )
