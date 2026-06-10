@@ -97,6 +97,7 @@ import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.utils.formatFullCalendarDate
 import com.tkolymp.tkolympapp.LocalBottomBarPadding
 import com.tkolymp.tkolympapp.SwipeToReload
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.DateTimeUnit
@@ -128,11 +129,16 @@ fun CalendarScreen(
 
     val tutorialActive by com.tkolymp.shared.tutorial.TutorialManager.isActive.collectAsState()
     val tutorialStep by com.tkolymp.shared.tutorial.TutorialManager.currentStep.collectAsState()
+
+    var contentBounds by remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
+    var filterBounds by remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
+
     LaunchedEffect(tutorialStep, tutorialActive) {
-        if (tutorialActive) when (tutorialStep) {
-            5 -> selectedTab = 0   // calendarMine
-            6 -> selectedTab = 1   // calendarAll
-            7 -> selectedTab = 0   // calendarFilter — reset to Mine
+        if (!tutorialActive || tutorialStep !in 6..8) return@LaunchedEffect
+        when (tutorialStep) {
+            6 -> { selectedTab = 0; delay(100); contentBounds?.let { TutorialHighlight.rect = it } }
+            7 -> { selectedTab = 1; delay(100); contentBounds?.let { TutorialHighlight.rect = it } }
+            8 -> { selectedTab = 0; delay(100); filterBounds?.let { TutorialHighlight.rect = it } }
         }
     }
     val calendarViewModel = viewModel<com.tkolymp.shared.viewmodels.CalendarViewModel>()
@@ -217,7 +223,15 @@ fun CalendarScreen(
                     }
                 },
                 actions = {
-                    Box(modifier = Modifier.padding(end = 4.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .padding(end = 4.dp)
+                            .onGloballyPositioned { coords ->
+                                val b = coords.boundsInRoot()
+                                filterBounds = b
+                                if (tutorialActive && tutorialStep == 8) TutorialHighlight.rect = b
+                            }
+                    ) {
                         BadgedBox(
                             badge = {
                                 if (calState.hasCancelledMineToShow || selectedTrainers.isNotEmpty() || selectedLocations.isNotEmpty()) {
@@ -250,13 +264,7 @@ fun CalendarScreen(
             ) {
                 PrimaryTabRow(
                     selectedTabIndex = selectedTab,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .onGloballyPositioned { coords ->
-                            if (tutorialActive && tutorialStep in 5..6) {
-                                TutorialHighlight.rect = coords.boundsInRoot()
-                            }
-                        }
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     tabs.forEachIndexed { index, title ->
                         Tab(
@@ -312,7 +320,13 @@ fun CalendarScreen(
                     targetState = contentKey,
                     transitionSpec = { tabContentTransitionSpec() },
                     label = "calendarContent",
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .onGloballyPositioned { coords ->
+                            val b = coords.boundsInRoot()
+                            contentBounds = b
+                            if (tutorialActive && tutorialStep in 6..7) TutorialHighlight.rect = b
+                        }
                 ) { key ->
                     var datesVisible by remember { mutableStateOf(false) }
                     LaunchedEffect(key) { datesVisible = false }

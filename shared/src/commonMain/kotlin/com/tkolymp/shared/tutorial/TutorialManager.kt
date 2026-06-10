@@ -8,6 +8,8 @@ data class TutorialStep(val route: String, val key: String)
 
 object TutorialManager {
     val steps = listOf(
+        // Intro
+        TutorialStep("overview", "intro"),
         // Overview sections
         TutorialStep("overview", "overviewUpcoming"),
         TutorialStep("overview", "overviewBoard"),
@@ -20,11 +22,15 @@ object TutorialManager {
         TutorialStep("calendar", "calendarFilter"),
         // Board sections
         TutorialStep("board", "boardList"),
-        TutorialStep("board", "boardSearch"),
+        TutorialStep("board", "boardSticky"),
         // Events sections
         TutorialStep("events", "eventsPlanned"),
         TutorialStep("events", "eventsPast"),
-        // Other (closing step)
+        // Other sections
+        TutorialStep("other", "otherAccount"),
+        TutorialStep("other", "otherQr"),
+        TutorialStep("other", "otherPeople"),
+        // Closing step
         TutorialStep("other", "other"),
     )
 

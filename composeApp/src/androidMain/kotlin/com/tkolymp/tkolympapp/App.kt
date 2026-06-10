@@ -196,6 +196,9 @@ fun App() {
         val tutorialStep by com.tkolymp.shared.tutorial.TutorialManager.currentStep.collectAsState()
 
         androidx.compose.runtime.LaunchedEffect(tutorialStep, tutorialActive) {
+            // Always clear the stale spotlight so the previous screen's highlight
+            // doesn't show while navigating to the next screen.
+            com.tkolymp.tkolympapp.TutorialHighlight.rect = null
             if (tutorialActive) {
                 val route = com.tkolymp.shared.tutorial.TutorialManager.steps[tutorialStep].route
                 val currentRoute = navController.currentBackStackEntry?.destination?.route
@@ -244,7 +247,10 @@ fun App() {
                 }
             }
         ) { padding ->
-            CompositionLocalProvider(LocalBottomBarPadding provides padding.calculateBottomPadding()) {
+            CompositionLocalProvider(
+                LocalBottomBarPadding provides padding.calculateBottomPadding(),
+                LocalTopBarPadding provides padding.calculateTopPadding()
+            ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()

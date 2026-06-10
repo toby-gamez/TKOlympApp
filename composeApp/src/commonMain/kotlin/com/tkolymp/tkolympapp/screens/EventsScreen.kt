@@ -62,6 +62,7 @@ import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.LessonView
 import com.tkolymp.tkolympapp.components.RenderSingleEventCard
 import com.tkolymp.tkolympapp.util.normalizeForSearch
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -78,11 +79,17 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
 
     val tutorialActive by com.tkolymp.shared.tutorial.TutorialManager.isActive.collectAsState()
     val tutorialStep by com.tkolymp.shared.tutorial.TutorialManager.currentStep.collectAsState()
+
+    var contentBounds by remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
+
     LaunchedEffect(tutorialStep, tutorialActive) {
-        if (tutorialActive) when (tutorialStep) {
-            10 -> selectedTab = 0  // eventsPlanned
-            11 -> selectedTab = 1  // eventsPast
+        if (!tutorialActive || tutorialStep !in 11..12) return@LaunchedEffect
+        when (tutorialStep) {
+            11 -> selectedTab = 0
+            12 -> selectedTab = 1
         }
+        delay(100)
+        contentBounds?.let { TutorialHighlight.rect = it }
     }
 
     val viewModel = viewModel<EventsViewModel>()
@@ -133,11 +140,7 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
             ) {
             PrimaryTabRow(
                 selectedTabIndex = selectedTab,
-                modifier = Modifier.onGloballyPositioned { coords ->
-                    if (tutorialActive && tutorialStep in 10..11) {
-                        TutorialHighlight.rect = coords.boundsInRoot()
-                    }
-                }
+                modifier = Modifier.fillMaxWidth()
             ) {
                 tabs.forEachIndexed { index, title ->
                     Tab(selected = selectedTab == index, onClick = { selectedTab = index }, text = { Text(title) })
@@ -201,7 +204,12 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
             AnimatedContent(
                 targetState = selectedTab,
                 transitionSpec = { tabContentTransitionSpec() },
-                label = "eventsTabContent"
+                label = "eventsTabContent",
+                modifier = Modifier.onGloballyPositioned { coords ->
+                    val b = coords.boundsInRoot()
+                    contentBounds = b
+                    if (tutorialActive && tutorialStep in 11..12) TutorialHighlight.rect = b
+                }
             ) { tab ->
                 var sectionsVisible by remember { mutableStateOf(false) }
                 LaunchedEffect(tab) { sectionsVisible = false }

@@ -48,6 +48,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import com.tkolymp.tkolympapp.util.StaggeredItem
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
@@ -64,6 +65,7 @@ import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.TutorialHighlight
 import com.tkolymp.tkolympapp.components.LessonView
 import com.tkolymp.tkolympapp.components.RenderSingleEventCard
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -114,14 +116,29 @@ fun OverviewScreen(
         val bvrCamps = remember { BringIntoViewRequester() }
         val bvrBirthdays = remember { BringIntoViewRequester() }
 
+        // Always-fresh bounds per section — updated unconditionally by onGloballyPositioned
+        var boundsStats by remember { mutableStateOf<Rect?>(null) }
+        var boundsUpcoming by remember { mutableStateOf<Rect?>(null) }
+        var boundsBoard by remember { mutableStateOf<Rect?>(null) }
+        var boundsCamps by remember { mutableStateOf<Rect?>(null) }
+        var boundsBirthdays by remember { mutableStateOf<Rect?>(null) }
+
         LaunchedEffect(tutorialStep, tutorialActive) {
-            if (tutorialActive) when (tutorialStep) {
-                0 -> bvrUpcoming.bringIntoView()
-                1 -> bvrBoard.bringIntoView()
-                2 -> bvrCamps.bringIntoView()
-                3 -> bvrBirthdays.bringIntoView()
-                4 -> bvrStats.bringIntoView()
+            if (!tutorialActive || tutorialStep !in 1..5) return@LaunchedEffect
+            val bvr = when (tutorialStep) {
+                1 -> bvrUpcoming; 2 -> bvrBoard; 3 -> bvrCamps
+                4 -> bvrBirthdays; else -> bvrStats
             }
+
+            bvr.bringIntoView()
+            // BVR suspends until the item is visible but layout takes another frame to settle
+            delay(200)
+
+            val bounds = when (tutorialStep) {
+                1 -> boundsUpcoming; 2 -> boundsBoard; 3 -> boundsCamps
+                4 -> boundsBirthdays; else -> boundsStats
+            }
+            if (bounds != null) TutorialHighlight.rect = bounds
         }
 
         SwipeToReload(
@@ -139,71 +156,74 @@ fun OverviewScreen(
 
             val announcements = state.recentAnnouncements
 
-            // Stats scroll anchor (step 4) — always present so BVR can bring it into view
-            Spacer(modifier = Modifier.height(0.dp).bringIntoViewRequester(bvrStats))
-
-            if (state.isDancer && state.upcomingEvents.isNotEmpty()) {
-                val weekVibes = remember(state.upcomingEvents, state.todayString) {
-                    computeOverviewWeekVibes(state.upcomingEvents, state.todayString)
-                }
-                if (weekVibes != null) {
-                    val ps = AppStrings.current.weekPersona
-                    val personaLabel = when (weekVibes.persona) {
-                        WeekPersona.HUSTLE -> ps.hustle
-                        WeekPersona.EASY -> ps.easy
-                        WeekPersona.SPRINT -> ps.sprint
-                        WeekPersona.MIX -> ps.mix
-                        WeekPersona.SOCIAL -> ps.social
-                        WeekPersona.CAMP -> ps.camp
-                        WeekPersona.ALL_ROUNDER -> ps.allRounder
+            Column(
+                modifier = Modifier
+                    .bringIntoViewRequester(bvrStats)
+                    .onGloballyPositioned { coords ->
+                        val b = coords.boundsInRoot()
+                        boundsStats = b
+                        if (tutorialActive && tutorialStep == 5) TutorialHighlight.rect = b
                     }
-                    WeekPersonaBadge(
-                        vibes = weekVibes,
-                        personaLabel = personaLabel,
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp, vertical = 6.dp)
-                            .onGloballyPositioned { coords ->
-                                if (tutorialActive && tutorialStep == 4) {
-                                    TutorialHighlight.rect = coords.boundsInRoot()
-                                }
-                            }
+            ) {
+                if (state.isDancer && state.upcomingEvents.isNotEmpty()) {
+                    val weekVibes = remember(state.upcomingEvents, state.todayString) {
+                        computeOverviewWeekVibes(state.upcomingEvents, state.todayString)
+                    }
+                    if (weekVibes != null) {
+                        val ps = AppStrings.current.weekPersona
+                        val personaLabel = when (weekVibes.persona) {
+                            WeekPersona.HUSTLE -> ps.hustle
+                            WeekPersona.EASY -> ps.easy
+                            WeekPersona.SPRINT -> ps.sprint
+                            WeekPersona.MIX -> ps.mix
+                            WeekPersona.SOCIAL -> ps.social
+                            WeekPersona.CAMP -> ps.camp
+                            WeekPersona.ALL_ROUNDER -> ps.allRounder
+                        }
+                        WeekPersonaBadge(
+                            vibes = weekVibes,
+                            personaLabel = personaLabel,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                        )
+                    }
+                }
+
+                if (state.isDancer && !state.isLoading) {
+                    MiniStatsRow(
+                        sessionCount = state.currentWeekCount,
+                        minutes = state.currentWeekMinutes,
+                        thisWeekLabel = AppStrings.current.stats.thisWeek,
+                        sessionsUnit = AppStrings.current.stats.sessionsUnit,
+                        hoursUnit = AppStrings.current.stats.hoursUnit,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp)
+                    )
+                }
+
+                if (state.isDancer && state.weeklyGoal > 0) {
+                    WeeklyGoalIndicator(
+                        goal = state.weeklyGoal,
+                        count = state.currentWeekCount,
+                        thisWeekLabel = AppStrings.current.stats.thisWeek,
+                        sessionsPerWeek = AppStrings.current.stats.sessionsPerWeek,
+                        goalReached = AppStrings.current.stats.goalReached,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                     )
                 }
             }
 
-            if (state.isDancer && !state.isLoading) {
-                MiniStatsRow(
-                    sessionCount = state.currentWeekCount,
-                    minutes = state.currentWeekMinutes,
-                    thisWeekLabel = AppStrings.current.stats.thisWeek,
-                    sessionsUnit = AppStrings.current.stats.sessionsUnit,
-                    hoursUnit = AppStrings.current.stats.hoursUnit,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp)
-                )
-            }
-
-            if (state.isDancer && state.weeklyGoal > 0) {
-                WeeklyGoalIndicator(
-                    goal = state.weeklyGoal,
-                    count = state.currentWeekCount,
-                    thisWeekLabel = AppStrings.current.stats.thisWeek,
-                    sessionsPerWeek = AppStrings.current.stats.sessionsPerWeek,
-                    goalReached = AppStrings.current.stats.goalReached,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-                )
-            }
-
             // Trainings section
             Spacer(modifier = Modifier.height(8.dp))
-            Row(
+            Column(
                 modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 4.dp)
                     .bringIntoViewRequester(bvrUpcoming)
                     .onGloballyPositioned { coords ->
-                        if (tutorialActive && tutorialStep == 0) {
-                            TutorialHighlight.rect = coords.boundsInRoot()
-                        }
-                    },
+                        val b = coords.boundsInRoot()
+                        boundsUpcoming = b
+                        if (tutorialActive && tutorialStep == 1) TutorialHighlight.rect = b
+                    }
+            ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(AppStrings.current.overview.upcomingTrainings, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -250,6 +270,7 @@ fun OverviewScreen(
                     Text(if (state.trainingSelectedDate == null) AppStrings.current.overview.browseOthers else AppStrings.current.overview.more)
                 }
             }
+            } // Trainings section
 
             state.paymentDaysUntilDue?.let { days ->
                 PaymentDueBanner(
@@ -263,15 +284,17 @@ fun OverviewScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             // Board announcements
-            Row(
+            Column(
                 modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 4.dp)
                     .bringIntoViewRequester(bvrBoard)
                     .onGloballyPositioned { coords ->
-                        if (tutorialActive && tutorialStep == 1) {
-                            TutorialHighlight.rect = coords.boundsInRoot()
-                        }
-                    },
+                        val b = coords.boundsInRoot()
+                        boundsBoard = b
+                        if (tutorialActive && tutorialStep == 2) TutorialHighlight.rect = b
+                    }
+            ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(AppStrings.current.overview.fromTheBoard, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -327,18 +350,21 @@ fun OverviewScreen(
                     Text(if (announcements.isEmpty()) AppStrings.current.overview.browseOthers else AppStrings.current.overview.more)
                 }
             }
+            } // Board section
             Spacer(modifier = Modifier.height(8.dp))
 
             // Camps section
-            Row(
+            Column(
                 modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 4.dp)
                     .bringIntoViewRequester(bvrCamps)
                     .onGloballyPositioned { coords ->
-                        if (tutorialActive && tutorialStep == 2) {
-                            TutorialHighlight.rect = coords.boundsInRoot()
-                        }
-                    },
+                        val b = coords.boundsInRoot()
+                        boundsCamps = b
+                        if (tutorialActive && tutorialStep == 3) TutorialHighlight.rect = b
+                    }
+            ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(AppStrings.current.overview.upcomingCamps, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -373,16 +399,19 @@ fun OverviewScreen(
                     Text(if (state.campsMapByDay.isEmpty()) AppStrings.current.overview.browseOthers else AppStrings.current.overview.more)
                 }
             }
+            } // Camps section
             // Upcoming birthdays
-            Row(
+            Column(
                 modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 6.dp)
                     .bringIntoViewRequester(bvrBirthdays)
                     .onGloballyPositioned { coords ->
-                        if (tutorialActive && tutorialStep == 3) {
-                            TutorialHighlight.rect = coords.boundsInRoot()
-                        }
-                    },
+                        val b = coords.boundsInRoot()
+                        boundsBirthdays = b
+                        if (tutorialActive && tutorialStep == 4) TutorialHighlight.rect = b
+                    }
+            ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(AppStrings.current.profile.birthdays, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -457,6 +486,7 @@ fun OverviewScreen(
                     }
                 }
             }
+            } // Birthdays section
             if (state.isLoading) {
                 Text(AppStrings.current.commonActions.loading, modifier = Modifier.padding(12.dp))
             }

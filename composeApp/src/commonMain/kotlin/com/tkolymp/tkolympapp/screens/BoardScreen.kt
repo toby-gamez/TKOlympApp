@@ -51,6 +51,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.delay
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import com.tkolymp.shared.tutorial.TutorialManager
@@ -77,6 +78,20 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
 
     val tutorialActive by TutorialManager.isActive.collectAsState()
     val tutorialStep by TutorialManager.currentStep.collectAsState()
+
+    var contentBounds by remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
+    var localSelectedTab by rememberSaveable { mutableIntStateOf(state.selectedTab) }
+
+    LaunchedEffect(state.selectedTab) {
+        if (localSelectedTab != state.selectedTab) localSelectedTab = state.selectedTab
+    }
+
+    LaunchedEffect(tutorialStep, tutorialActive) {
+        if (!tutorialActive || tutorialStep !in 9..10) return@LaunchedEffect
+        if (tutorialStep == 10) localSelectedTab = 1  // switch to permanent board tab
+        delay(100)
+        contentBounds?.let { TutorialHighlight.rect = it }
+    }
 
     var showSearch by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
@@ -113,21 +128,9 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
-            var localSelectedTab by rememberSaveable { mutableIntStateOf(state.selectedTab) }
-
-            LaunchedEffect(state.selectedTab) {
-                if (localSelectedTab != state.selectedTab) localSelectedTab = state.selectedTab
-            }
-
             PrimaryTabRow(
                 selectedTabIndex = localSelectedTab,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .onGloballyPositioned { coords ->
-                        if (tutorialActive && tutorialStep in 8..9) {
-                            TutorialHighlight.rect = coords.boundsInRoot()
-                        }
-                    }
+                modifier = Modifier.fillMaxWidth()
             ) {
                 tabs.forEachIndexed { index, title ->
                     Tab(
@@ -176,7 +179,12 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
                 AnimatedContent(
                     targetState = localSelectedTab,
                     transitionSpec = { tabContentTransitionSpec() },
-                    label = "boardTabContent"
+                    label = "boardTabContent",
+                    modifier = Modifier.onGloballyPositioned { coords ->
+                        val b = coords.boundsInRoot()
+                        contentBounds = b
+                        if (tutorialActive && tutorialStep == 9) TutorialHighlight.rect = b
+                    }
                 ) { tab ->
                     var listVisible by remember { mutableStateOf(false) }
                     LaunchedEffect(tab) { listVisible = false }

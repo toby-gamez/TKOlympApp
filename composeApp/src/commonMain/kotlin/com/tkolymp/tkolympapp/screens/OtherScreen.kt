@@ -1,8 +1,10 @@
 package com.tkolymp.tkolympapp.screens
 
-// coroutine helpers not needed here; avoid importing isActive directly
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,9 +51,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tkolymp.tkolympapp.TutorialHighlight
+import kotlinx.coroutines.delay
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.tutorial.TutorialManager
@@ -93,7 +100,7 @@ private fun formatDateString(raw: String): String? {
     return formatShortDate(ld)
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun OtherScreen(
     onProfileClick: () -> Unit = {},
@@ -116,6 +123,31 @@ fun OtherScreen(
 
     var itemsVisible by remember { mutableStateOf(false) }
 
+    val tutorialActive by TutorialManager.isActive.collectAsState()
+    val tutorialStep by TutorialManager.currentStep.collectAsState()
+
+    val scrollState = androidx.compose.foundation.rememberScrollState()
+    val bvrPeople = remember { BringIntoViewRequester() }
+
+    var accountBounds by remember { mutableStateOf<Rect?>(null) }
+    var qrBounds by remember { mutableStateOf<Rect?>(null) }
+    var peopleSectionBounds by remember { mutableStateOf<Rect?>(null) }
+
+    LaunchedEffect(tutorialStep, tutorialActive) {
+        if (!tutorialActive || tutorialStep !in 13..15) return@LaunchedEffect
+        if (tutorialStep == 15) {
+            bvrPeople.bringIntoView()
+        } else {
+            scrollState.animateScrollTo(0)
+        }
+        delay(200)
+        when (tutorialStep) {
+            13 -> accountBounds?.let { TutorialHighlight.rect = it }
+            14 -> (qrBounds ?: accountBounds)?.let { TutorialHighlight.rect = it }
+            15 -> peopleSectionBounds?.let { TutorialHighlight.rect = it }
+        }
+    }
+
     LaunchedEffect(Unit) {
         viewModel.load()
         itemsVisible = true
@@ -127,7 +159,7 @@ fun OtherScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
                 .padding(innerPadding)
                 .padding(bottom = bottomPadding),
             verticalArrangement = Arrangement.Top,
@@ -138,6 +170,11 @@ fun OtherScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 12.dp, bottom = 5.dp, start = 16.dp, end = 16.dp)
+                    .onGloballyPositioned { coords ->
+                        val b = coords.boundsInRoot()
+                        accountBounds = b
+                        if (tutorialActive && tutorialStep == 13) TutorialHighlight.rect = b
+                    }
                     .clickable { onProfileClick() },
                 shape = RoundedCornerShape(20.dp)
             ) {
@@ -183,7 +220,14 @@ fun OtherScreen(
                     }
 
                     if (state.cstsId != null) {
-                        IconButton(onClick = onBarcodeClick) {
+                        IconButton(
+                            onClick = onBarcodeClick,
+                            modifier = Modifier.onGloballyPositioned { coords ->
+                                val b = coords.boundsInRoot()
+                                qrBounds = b
+                                if (tutorialActive && tutorialStep == 14) TutorialHighlight.rect = b
+                            }
+                        ) {
                             Icon(
                                 imageVector = Icons.Filled.QrCode2,
                                 contentDescription = "Barcode",
@@ -284,6 +328,15 @@ fun OtherScreen(
             }
 
             // První sekce - Členové a klub
+            Column(
+                modifier = Modifier
+                    .bringIntoViewRequester(bvrPeople)
+                    .onGloballyPositioned { coords ->
+                        val b = coords.boundsInRoot()
+                        peopleSectionBounds = b
+                        if (tutorialActive && tutorialStep == 15) TutorialHighlight.rect = b
+                    }
+            ) {
             Text(
                 text = AppStrings.current.otherScreen.membersAndClub,
                 style = MaterialTheme.typography.titleMedium,
@@ -357,6 +410,7 @@ fun OtherScreen(
                 }
                 } // StaggeredItem
             }
+            } // people section Column
 
             Spacer(modifier = Modifier.width(16.dp))
 
