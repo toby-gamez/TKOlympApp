@@ -1,7 +1,6 @@
 package com.tkolymp.tkolympapp.screens
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -43,12 +41,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.event.EventInstance
-import com.tkolymp.shared.utils.formatTimesWithDate
-import com.tkolymp.shared.utils.formatTimesWithDateAlways
 import com.tkolymp.shared.utils.formatTimesWithDayOfWeek
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TextButton
 import com.tkolymp.shared.viewmodels.FreeLessonResult
 import com.tkolymp.shared.viewmodels.FreeLessonsViewModel
 import com.tkolymp.shared.language.AppStrings
@@ -126,6 +124,14 @@ fun FreeLessonsScreen(
                         .padding(horizontal = 12.dp)
                         .verticalScroll(rememberScrollState())
                 ) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        AppStrings.current.freeLessons.screenSubtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    )
+
                     // Section: Nahradit za zrušené
                     if (state.hasCancelledToShow) {
                         Spacer(modifier = Modifier.height(12.dp))
@@ -150,28 +156,27 @@ fun FreeLessonsScreen(
                         }
                     }
 
-                    // Section: Nejlepší nálezy
-                    val bestLabel = AppStrings.current.freeLessons.bestLabel
+                    // Section: Doporučeno pro tebe
                     if (state.bestFinds.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            bestLabel,
-                            style = MaterialTheme.typography.titleLarge,
+                            AppStrings.current.freeLessons.bestLabel,
+                            style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.padding(vertical = 4.dp)
                         )
                         state.bestFinds.forEachIndexed { i, result ->
                             StaggeredItem(index = i, visible = cardsVisible, baseDelayMs = 50) {
-                                FreeLessonCard(result = result, onOpenEvent = onOpenEvent)
+                                FreeLessonCard(result = result, onOpenEvent = onOpenEvent, isTopPick = i == 0)
                             }
                         }
                     }
 
-                    // Section: Ostatní (only when there are NO cancelled to show)
+                    // Section: Další možnosti (only when there are NO cancelled to show)
                     if (!state.hasCancelledToShow && state.otherFinds.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             AppStrings.current.freeLessons.otherLabel,
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.padding(vertical = 4.dp)
                         )
                         state.otherFinds.forEachIndexed { i, result ->
@@ -191,8 +196,14 @@ fun FreeLessonsScreen(
                     }
 
                     if (state.bestFinds.isEmpty() && state.otherFinds.isEmpty() && !state.isLoading) {
-                        Spacer(modifier = Modifier.height(32.dp))
-                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Spacer(modifier = Modifier.height(48.dp))
+                        Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                Icons.Default.Search,
+                                contentDescription = null,
+                                modifier = Modifier.padding(bottom = 12.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                            )
                             Text(
                                 AppStrings.current.freeLessons.noneFound,
                                 style = MaterialTheme.typography.bodyMedium,
@@ -215,10 +226,12 @@ fun FreeLessonsScreen(
                 Column {
                     Text(AppStrings.current.freeLessons.scoringHeader)
                     Spacer(modifier = Modifier.height(6.dp))
-                    Text(AppStrings.current.freeLessons.scoringBase)
-                    Text(AppStrings.current.freeLessons.scoringDay)
-                    Text(AppStrings.current.freeLessons.scoringNoTraining)
-                    Text(AppStrings.current.freeLessons.scoringSameLocation)
+                    listOf(
+                        AppStrings.current.freeLessons.scoringBase,
+                        AppStrings.current.freeLessons.scoringDay,
+                        AppStrings.current.freeLessons.scoringNoTraining,
+                        AppStrings.current.freeLessons.scoringSameLocation,
+                    ).filter { it.isNotBlank() }.forEach { Text(it) }
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(AppStrings.current.freeLessons.scoringNote)
                 }
@@ -301,7 +314,8 @@ private fun CancelledLessonBlock(
 private fun FreeLessonCard(
     result: FreeLessonResult,
     onOpenEvent: (Long) -> Unit,
-    compact: Boolean = false
+    compact: Boolean = false,
+    isTopPick: Boolean = false
 ) {
     val inst = result.instance
     val eventId = (inst.event?.id as? Number)?.toLong() ?: return
@@ -312,19 +326,26 @@ private fun FreeLessonCard(
             .padding(vertical = 4.dp)
             .clickable { onOpenEvent(eventId) }
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(if (compact) 8.dp else 12.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(if (compact) 8.dp else 12.dp)
         ) {
-            RenderEventContent(item = inst, tip = result.tip, showType = false, showDayOfWeek = true, modifier = Modifier.weight(1f))
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "★ ${result.score}",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary
-            )
+            if (isTopPick && !compact) {
+                Box(
+                    modifier = Modifier
+                        .padding(bottom = 8.dp)
+                        .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(8.dp))
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        AppStrings.current.freeLessons.topPickLabel,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
+            RenderEventContent(item = inst, tip = result.tip, showType = false, showDayOfWeek = true, modifier = Modifier.fillMaxWidth())
         }
     }
 }
