@@ -60,7 +60,6 @@ import com.tkolymp.tkolympapp.LocalBottomBarPadding
 import com.tkolymp.tkolympapp.LocalTopBarPadding
 import com.tkolymp.tkolympapp.TutorialHighlight
 import kotlinx.coroutines.launch
-import ui.theme.BrandLightPrimary
 
 @Composable
 fun TutorialOverlay(
@@ -198,7 +197,7 @@ fun TutorialOverlay(
                     LinearProgressIndicator(
                         progress = { (step + 1).toFloat() / TutorialManager.stepCount.toFloat() },
                         modifier = Modifier.fillMaxWidth(),
-                        color = BrandLightPrimary,
+                        color = MaterialTheme.colorScheme.primary,
                         trackColor = MaterialTheme.colorScheme.surfaceVariant,
                         strokeCap = StrokeCap.Round,
                     )
@@ -269,7 +268,7 @@ fun TutorialOverlay(
 
                         Button(
                             onClick = onNext,
-                            colors = ButtonDefaults.buttonColors(containerColor = BrandLightPrimary)
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                         ) {
                             Text(if (step == TutorialManager.stepCount - 1) strings.done else strings.next)
                         }

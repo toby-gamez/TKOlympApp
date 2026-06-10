@@ -27,4 +27,12 @@ actual class OnboardingStorage actual constructor(platformContext: Any) {
             null
         }
     }
+
+    actual suspend fun hasSeenTutorial(): Boolean =
+        defaults.boolForKey("tutorial_seen")
+
+    actual suspend fun setTutorialSeen() {
+        defaults.setBool(true, "tutorial_seen")
+        defaults.synchronize()
+    }
 }

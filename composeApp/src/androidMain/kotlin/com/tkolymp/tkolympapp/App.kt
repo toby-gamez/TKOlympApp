@@ -115,6 +115,7 @@ fun App() {
         var loggedIn by remember { mutableStateOf<Boolean?>(null) }
         var showOnboarding by remember { mutableStateOf<Boolean?>(null) }
         var showRoleSelection by remember { mutableStateOf(false) }
+        var tutorialSeen by remember { mutableStateOf(false) }
         var integrityFailed by remember { mutableStateOf(false) }
         val preferTimeline by AppearanceSettings.preferTimeline.collectAsState()
         var weekOffset by remember { mutableIntStateOf(0) }
@@ -162,6 +163,7 @@ fun App() {
                     AppearanceSettings.setPreferTimeline(prefTimeline)
                     val themeRaw = try { ServiceLocator.calendarPreferenceStorage.getThemeMode() } catch (_: Exception) { "system" }
                     AppearanceSettings.setThemeMode(when (themeRaw) { "light" -> ThemeMode.LIGHT; "dark" -> ThemeMode.DARK; else -> ThemeMode.SYSTEM })
+                    tutorialSeen = try { ServiceLocator.onboardingStorage.hasSeenTutorial() } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
                     showOnboarding = !seen
                     loggedIn = has
                     // Start a best-effort offline sync in background when network is available
@@ -280,7 +282,13 @@ fun App() {
                     })
                     showRoleSelection -> RoleSelectionScreen(onFinish = {
                         showRoleSelection = false
-                        com.tkolymp.shared.tutorial.TutorialManager.start()
+                        if (!tutorialSeen) {
+                            tutorialSeen = true
+                            scope.launch {
+                                try { com.tkolymp.shared.ServiceLocator.onboardingStorage.setTutorialSeen() } catch (_: Exception) {}
+                            }
+                            com.tkolymp.shared.tutorial.TutorialManager.start()
+                        }
                     })
                     else -> AppNavHost(
                         navController = navController,

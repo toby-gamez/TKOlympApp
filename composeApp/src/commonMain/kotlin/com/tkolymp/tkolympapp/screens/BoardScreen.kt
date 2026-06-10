@@ -88,7 +88,7 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
 
     LaunchedEffect(tutorialStep, tutorialActive) {
         if (!tutorialActive || tutorialStep !in 9..10) return@LaunchedEffect
-        if (tutorialStep == 10) localSelectedTab = 1  // switch to permanent board tab
+        localSelectedTab = if (tutorialStep == 10) 1 else 0
         delay(100)
         contentBounds?.let { TutorialHighlight.rect = it }
     }

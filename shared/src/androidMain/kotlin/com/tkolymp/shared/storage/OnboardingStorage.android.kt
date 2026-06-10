@@ -26,4 +26,11 @@ actual class OnboardingStorage actual constructor(platformContext: Any) {
             null
         }
     }
+
+    actual suspend fun hasSeenTutorial(): Boolean =
+        prefs.getBoolean("tutorial_seen", false)
+
+    actual suspend fun setTutorialSeen() {
+        prefs.edit().putBoolean("tutorial_seen", true).apply()
+    }
 }
