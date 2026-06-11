@@ -1,6 +1,7 @@
 package com.tkolymp.tkolympapp.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,15 +20,17 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.ViewTimeline
 import androidx.compose.material.icons.filled.ViewWeek
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -57,6 +61,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.appearance.ThemeMode
 import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.shared.tutorial.TutorialManager
 import com.tkolymp.shared.viewmodels.SettingsViewModel
 import com.tkolymp.tkolympapp.util.StaggeredItem
 import kotlinx.coroutines.launch
@@ -105,137 +110,278 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(bottom = 16.dp),
             verticalArrangement = Arrangement.Top
         ) {
             // Appearance
-            StaggeredItem(index = 0, visible = itemsVisible, baseDelayMs = 60) {
-            Column {
-            SectionHeader(text = s.appearanceSection)
-            SettingsCard {
-                SettingsRow(icon = Icons.Filled.LightMode, label = s.themeLabel, control = {
-                    val modes = listOf(ThemeMode.SYSTEM, ThemeMode.LIGHT, ThemeMode.DARK)
-                    val labels = listOf(s.themeSystem, s.themeLight, s.themeDark)
-                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                        modes.forEachIndexed { index, mode ->
-                            SegmentedButton(
-                                selected = state.themeMode == mode,
-                                onClick = { scope.launch { viewModel.setThemeMode(mode) } },
-                                shape = SegmentedButtonDefaults.itemShape(index = index, count = modes.size),
-                                icon = {}
-                            ) { Text(labels[index], style = MaterialTheme.typography.labelSmall) }
+            StaggeredItem(index = 0, visible = itemsVisible, baseDelayMs = 50) {
+                Column {
+                    SettingsSectionHeader(text = s.appearanceSection)
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                SettingsIconBox(Icons.Filled.LightMode)
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Text(
+                                    text = s.themeLabel,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(10.dp))
+                            val modes = listOf(ThemeMode.SYSTEM, ThemeMode.LIGHT, ThemeMode.DARK)
+                            val labels = listOf(s.themeSystem, s.themeLight, s.themeDark)
+                            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                                modes.forEachIndexed { index, mode ->
+                                    SegmentedButton(
+                                        selected = state.themeMode == mode,
+                                        onClick = { scope.launch { viewModel.setThemeMode(mode) } },
+                                        shape = SegmentedButtonDefaults.itemShape(index = index, count = modes.size),
+                                        icon = {}
+                                    ) { Text(labels[index], style = MaterialTheme.typography.labelSmall) }
+                                }
+                            }
                         }
                     }
-                })
+                }
             }
-            }
-            } // StaggeredItem appearance
-
-            Spacer(modifier = Modifier.height(16.dp))
 
             // Calendar
-            StaggeredItem(index = 1, visible = itemsVisible, baseDelayMs = 60) {
-            Column {
-            SectionHeader(text = s.calendarSection)
-            SettingsCard {
-                SettingsRow(icon = Icons.Filled.CalendarMonth, label = s.calendarDefaultView, control = {
-                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                        SegmentedButton(
-                            selected = !state.preferTimeline,
-                            onClick = { scope.launch { viewModel.setPreferTimeline(false) } },
-                            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-                            icon = {
-                                Icon(
-                                    Icons.Filled.ViewWeek,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(SegmentedButtonDefaults.IconSize).rotate(90f)
+            StaggeredItem(index = 1, visible = itemsVisible, baseDelayMs = 50) {
+                Column {
+                    SettingsSectionHeader(text = s.calendarSection)
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                SettingsIconBox(Icons.Filled.CalendarMonth)
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Text(
+                                    text = s.calendarDefaultView,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.weight(1f)
                                 )
                             }
-                        ) { Text(s.calendarViewList, style = MaterialTheme.typography.labelSmall) }
+                            Spacer(modifier = Modifier.height(10.dp))
+                            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                                SegmentedButton(
+                                    selected = !state.preferTimeline,
+                                    onClick = { scope.launch { viewModel.setPreferTimeline(false) } },
+                                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                                    icon = {
+                                        Icon(
+                                            Icons.Filled.ViewWeek,
+                                            contentDescription = null,
+                                            modifier = Modifier
+                                                .size(SegmentedButtonDefaults.IconSize)
+                                                .rotate(90f)
+                                        )
+                                    }
+                                ) { Text(s.calendarViewList, style = MaterialTheme.typography.labelSmall) }
 
-                        SegmentedButton(
-                            selected = state.preferTimeline,
-                            onClick = { scope.launch { viewModel.setPreferTimeline(true) } },
-                            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                            icon = {
-                                Icon(
-                                    Icons.Filled.ViewTimeline,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(SegmentedButtonDefaults.IconSize)
+                                SegmentedButton(
+                                    selected = state.preferTimeline,
+                                    onClick = { scope.launch { viewModel.setPreferTimeline(true) } },
+                                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                                    icon = {
+                                        Icon(
+                                            Icons.Filled.ViewTimeline,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(SegmentedButtonDefaults.IconSize)
+                                        )
+                                    }
+                                ) { Text(s.calendarViewTimeline, style = MaterialTheme.typography.labelSmall) }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Language
+            StaggeredItem(index = 2, visible = itemsVisible, baseDelayMs = 50) {
+                Column {
+                    SettingsSectionHeader(text = AppStrings.current.otherScreen.languages)
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                            .clickable { onOpenLanguages() }
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp)
+                        ) {
+                            SettingsIconBox(Icons.Filled.Psychology)
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text(
+                                text = AppStrings.current.languageScreen.selectLanguage,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Icon(
+                                imageVector = Icons.Default.ChevronRight,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Notifications
+            StaggeredItem(index = 3, visible = itemsVisible, baseDelayMs = 50) {
+                Column {
+                    SettingsSectionHeader(text = AppStrings.current.otherScreen.notificationSettings)
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                            .clickable { onOpenNotifications() }
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp)
+                        ) {
+                            SettingsIconBox(Icons.Filled.Notifications)
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text(
+                                text = AppStrings.current.otherScreen.notificationSettings,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Icon(
+                                imageVector = Icons.Default.ChevronRight,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Tutorial
+            StaggeredItem(index = 4, visible = itemsVisible, baseDelayMs = 50) {
+                Column {
+                    SettingsSectionHeader(text = AppStrings.current.tutorial.tutorialRowLabel)
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                            .clickable { TutorialManager.start() }
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp)
+                        ) {
+                            SettingsIconBox(Icons.Filled.School)
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = AppStrings.current.tutorial.tutorialRowLabel,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    text = AppStrings.current.tutorial.tutorialRowSubtitle,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                        ) { Text(s.calendarViewTimeline, style = MaterialTheme.typography.labelSmall) }
+                            Icon(
+                                imageVector = Icons.Default.ChevronRight,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
-                })
+                }
             }
-
-            }
-            } // StaggeredItem calendar
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Language button — navigates via parent NavController
-            StaggeredItem(index = 2, visible = itemsVisible, baseDelayMs = 60) {
-            Column {
-            SectionHeader(text = AppStrings.current.otherScreen.languages)
-            SettingsCard {
-                SettingsRow(icon = Icons.Filled.Psychology, label = AppStrings.current.languageScreen.selectLanguage, control = {
-                    Button(modifier = Modifier.fillMaxWidth(), onClick = onOpenLanguages) {
-                        Text(AppStrings.current.otherScreen.languages)
-                    }
-                })
-            }
-            }
-            } // StaggeredItem language
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Notifications settings — navigates via parent NavController
-            StaggeredItem(index = 3, visible = itemsVisible, baseDelayMs = 60) {
-            Column {
-            SectionHeader(text = AppStrings.current.otherScreen.notificationSettings)
-            SettingsCard {
-                SettingsRow(icon = Icons.Filled.Notifications, label = AppStrings.current.otherScreen.notificationSettings, control = {
-                    Button(modifier = Modifier.fillMaxWidth(), onClick = onOpenNotifications) {
-                        Text(AppStrings.current.otherScreen.notificationSettings)
-                    }
-                })
-            }
-            }
-            } // StaggeredItem notifications
 
             // Offline download
-            StaggeredItem(index = 4, visible = itemsVisible, baseDelayMs = 60) {
-            Column {
-            SectionHeader(text = s.offlineSection)
-            SettingsCard {
-                SettingsRow(icon = Icons.Filled.ViewWeek, label = s.offlineDownloadLabel, control = {
-                    Button(modifier = Modifier.fillMaxWidth(), onClick = {
-                        scope.launch {
-                            downloading.value = true
-                            progressStage.value = "starting"
-                            progressDone.value = 0
-                            progressTotal.value = 0
-                            try {
-                                ServiceLocator.offlineSyncManager.downloadAll { stage, done, total ->
-                                    progressStage.value = stage
-                                    progressDone.value = done
-                                    progressTotal.value = total
+            StaggeredItem(index = 5, visible = itemsVisible, baseDelayMs = 50) {
+                Column {
+                    SettingsSectionHeader(text = s.offlineSection)
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                SettingsIconBox(Icons.Filled.Download)
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Text(
+                                    text = s.offlineDownloadLabel,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Button(
+                                modifier = Modifier.fillMaxWidth(),
+                                onClick = {
+                                    scope.launch {
+                                        downloading.value = true
+                                        progressStage.value = "starting"
+                                        progressDone.value = 0
+                                        progressTotal.value = 0
+                                        try {
+                                            ServiceLocator.offlineSyncManager.downloadAll { stage, done, total ->
+                                                progressStage.value = stage
+                                                progressDone.value = done
+                                                progressTotal.value = total
+                                            }
+                                        } catch (_: Exception) {}
+                                        downloading.value = false
+                                    }
                                 }
-                            } catch (_: Exception) {}
-                            downloading.value = false
+                            ) { Text(s.offlineDownloadButton) }
                         }
-                    }) { Text(s.offlineDownloadButton) }
-                })
+                    }
+                }
             }
-            }
-            } // StaggeredItem offline
+        }
 
-            // Download progress dialog
-            if (downloading.value) {
-                AlertDialog(onDismissRequest = {}, confirmButton = {}, title = { Text(s.offlineDownloadingTitle) }, text = {
+        // Download progress dialog
+        if (downloading.value) {
+            AlertDialog(
+                onDismissRequest = {},
+                confirmButton = {},
+                title = { Text(s.offlineDownloadingTitle) },
+                text = {
                     Column {
                         Text("${s.offlineStageLabel} ${progressStage.value}")
                         Spacer(modifier = Modifier.height(8.dp))
@@ -243,49 +389,36 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         CircularProgressIndicator()
                     }
-                })
-            }
+                }
+            )
         }
     }
 }
 
 @Composable
-private fun SectionHeader(text: String, modifier: Modifier = Modifier) {
+private fun SettingsSectionHeader(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
-        modifier = modifier.padding(start = 4.dp, top = 8.dp, bottom = 6.dp)
+        modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp)
     )
 }
 
 @Composable
-private fun SettingsCard(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+private fun SettingsIconBox(icon: ImageVector) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .size(44.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surface)
     ) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) { content() }
-    }
-}
-
-@Composable
-private fun SettingsRow(icon: ImageVector, label: String, control: @Composable () -> Unit, modifier: Modifier = Modifier) {
-    Column(modifier = modifier.fillMaxWidth()) {
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
-            ) { Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp)) }
-
-            Text(text = label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f).padding(horizontal = 12.dp))
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        control()
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(22.dp)
+        )
     }
 }
