@@ -20,9 +20,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -56,8 +60,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.tutorial.TutorialManager
-import com.tkolymp.tkolympapp.LocalBottomBarPadding
-import com.tkolymp.tkolympapp.LocalTopBarPadding
 import com.tkolymp.tkolympapp.TutorialHighlight
 import kotlinx.coroutines.launch
 
@@ -73,8 +75,8 @@ fun TutorialOverlay(
     LaunchedEffect(isActive) { if (!isActive) TutorialHighlight.rect = null }
 
     val highlightRect = TutorialHighlight.rect
-    val bottomPadding = LocalBottomBarPadding.current
-    val topPadding = LocalTopBarPadding.current
+    val bottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val topPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
     // Animated spotlight — four edges + scale (0=closed, 1=open)
     val animLeft   = remember { Animatable(0f) }

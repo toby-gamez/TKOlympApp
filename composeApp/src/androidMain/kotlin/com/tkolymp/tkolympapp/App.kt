@@ -206,14 +206,15 @@ fun App() {
                 val currentRoute = navController.currentBackStackEntry?.destination?.route
                 if (route != currentRoute) {
                     navController.navigate(route) {
-                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                        popUpTo(navController.graph.findStartDestination().id) { saveState = false }
                         launchSingleTop = true
-                        restoreState = true
+                        restoreState = false
                     }
                 }
             }
         }
 
+        Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = MaterialTheme.colorScheme.surface,
@@ -305,18 +306,20 @@ fun App() {
                     )
                 }
 
-                if (loggedIn == true && showOnboarding == false && !showRoleSelection) {
-                    com.tkolymp.tkolympapp.components.TutorialOverlay(
-                        isActive = tutorialActive,
-                        step = tutorialStep,
-                        onNext = { com.tkolymp.shared.tutorial.TutorialManager.next() },
-                        onPrevious = { com.tkolymp.shared.tutorial.TutorialManager.previous() },
-                        onSkip = { com.tkolymp.shared.tutorial.TutorialManager.skip() }
-                    )
-                }
             }
             } // CompositionLocalProvider
         }
+
+        if (loggedIn == true && showOnboarding == false && !showRoleSelection) {
+            com.tkolymp.tkolympapp.components.TutorialOverlay(
+                isActive = tutorialActive,
+                step = tutorialStep,
+                onNext = { com.tkolymp.shared.tutorial.TutorialManager.next() },
+                onPrevious = { com.tkolymp.shared.tutorial.TutorialManager.previous() },
+                onSkip = { com.tkolymp.shared.tutorial.TutorialManager.skip() }
+            )
+        }
+        } // end outer Box
         } // end Crossfade(currentLanguage)
     }
 }
