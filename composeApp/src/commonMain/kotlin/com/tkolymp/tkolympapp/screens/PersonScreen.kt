@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Female
 import androidx.compose.material.icons.filled.Male
 import androidx.compose.material3.Card
+import androidx.compose.material3.ElevatedSuggestionChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -45,6 +46,8 @@ import com.tkolymp.tkolympapp.util.StaggeredItem
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
@@ -91,12 +94,21 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
             // Header (name)
             val baseName = listOf(p.prefixTitle, p.firstName, p.lastName).filterNotNull().filter { it.isNotBlank() }.joinToString(" ")
             val fullName = if (!p.suffixTitle.isNullOrBlank()) "$baseName, ${p.suffixTitle}" else baseName
-            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(fullName.ifBlank { p.id }, style = MaterialTheme.typography.headlineSmall)
-                if (p.isTrainer == true) {
-                    Text(AppStrings.current.profile.trainer, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp))
+            Text(
+                fullName.ifBlank { p.id },
+                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.padding(top = 12.dp, bottom = 4.dp).fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+            if (p.isTrainer == true) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                    ElevatedSuggestionChip(
+                        onClick = {},
+                        label = { Text(AppStrings.current.profile.trainer) }
+                    )
                 }
             }
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Basic Info - like EventScreen (Row with two Cards, then Card for email)
             StaggeredItem(index = 0, visible = cardsVisible, baseDelayMs = 50) {
