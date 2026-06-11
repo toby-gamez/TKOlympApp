@@ -117,7 +117,7 @@ import kotlinx.datetime.todayIn
 @Composable
 fun CalendarViewScreen(
     viewModel: CalendarViewViewModel = viewModel(),
-    onEventClick: (Long) -> Unit = {},
+    onEventClick: (Long, Long?) -> Unit = { _, _ -> },
     onBack: (() -> Unit)? = null,
     onSwitchToBlocks: (() -> Unit)? = null,
     onFindFreeLessons: (() -> Unit)? = null,
@@ -485,7 +485,7 @@ private fun TimelineBottomSheetContent(
 internal fun SingleDayTimelineView(
     events: List<EventLayoutData>,
     selectedDate: LocalDate,
-    onEventClick: (Long) -> Unit,
+    onEventClick: (Long, Long?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
@@ -550,13 +550,13 @@ internal fun SingleDayTimelineView(
                     TimelineEventCard(
                         layoutData = layoutData,
                         minuteHeight = minuteHeight,
-                        onClick = { 
+                        onClick = {
                             val evId = layoutData.event.event?.id ?: return@TimelineEventCard
-                            onEventClick(evId)
+                            onEventClick(evId, layoutData.event.id)
                         }
                     )
                 }
-                
+
                 // Now line (on top of events)
                 NowLine(
                     modifier = Modifier.fillMaxWidth(),
@@ -575,7 +575,7 @@ internal fun SingleDayTimelineView(
 internal fun MultiDayTimelineView(
     dates: List<LocalDate>,
     getEventsForDate: (LocalDate) -> List<EventLayoutData>,
-    onEventClick: (Long) -> Unit,
+    onEventClick: (Long, Long?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val verticalScrollState = rememberScrollState()
@@ -676,9 +676,9 @@ internal fun MultiDayTimelineView(
                                     layoutData = layoutData,
                                     minuteHeight = minuteHeight,
                                     compact = true,
-                                    onClick = { 
+                                    onClick = {
                                         val evId = layoutData.event.event?.id ?: return@TimelineEventCard
-                                        onEventClick(evId)
+                                        onEventClick(evId, layoutData.event.id)
                                     }
                                 )
                             }

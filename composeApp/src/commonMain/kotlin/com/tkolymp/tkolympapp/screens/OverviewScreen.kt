@@ -83,7 +83,7 @@ import com.tkolymp.tkolympapp.components.WeekPersonaBadge
 @Composable
 fun OverviewScreen(
     bottomPadding: Dp = 0.dp,
-    onOpenEvent: (Long) -> Unit = {},
+    onOpenEvent: (Long, Long?) -> Unit = { _, _ -> },
     onOpenNotice: (Long) -> Unit = {},
     onOpenCalendar: () -> Unit = {},
     onOpenBoard: () -> Unit = {},
@@ -252,14 +252,14 @@ fun OverviewScreen(
                                     isAllTab = false,
                                     myPersonId = state.myPersonId,
                                     myCoupleIds = state.myCoupleIds,
-                                    onEventClick = { id: Long -> onOpenEvent(id) }
+                                    onEventClick = { id, instId -> onOpenEvent(id, instId) }
                                 )
                             }
                         }
                         val trainerCount = state.trainingLessonsByTrainer.size
                         state.trainingOtherEvents.forEachIndexed { i, item ->
                             StaggeredItem(index = trainerCount + i, visible = cardsVisible) {
-                                RenderSingleEventCard(item = item, onEventClick = { id: Long -> onOpenEvent(id) })
+                                RenderSingleEventCard(item = item, onEventClick = { id, instId -> onOpenEvent(id, instId) })
                             }
                         }
                     }
@@ -387,7 +387,7 @@ fun OverviewScreen(
                                 Text(header, style = MaterialTheme.typography.titleMedium)
                                 Spacer(modifier = Modifier.height(4.dp))
                                 list.forEach { item ->
-                                    RenderSingleEventCard(item = item, onEventClick = { id: Long -> onOpenEvent(id) })
+                                    RenderSingleEventCard(item = item, onEventClick = { id, instId -> onOpenEvent(id, instId) })
                                 }
                             }
                         }

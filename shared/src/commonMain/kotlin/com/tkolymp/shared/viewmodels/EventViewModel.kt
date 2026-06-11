@@ -15,6 +15,8 @@ import kotlinx.coroutines.withContext
 import kotlin.time.Instant
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 import kotlin.time.Duration.Companion.days
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.utils.asJsonObjectOrNull
@@ -54,6 +56,7 @@ data class EventState(
     val eventDateText: String = "",
     val myPersonId: String? = null,
     val myCoupleIds: List<String> = emptyList(),
+    val isCancelled: Boolean = false,
     val isPast: Boolean = false,
     val userRegistered: Boolean = false,
     val registerButtonVisible: Boolean = false,
@@ -86,7 +89,7 @@ class EventViewModel(
     private val _sideEffect = Channel<EventSideEffect>(Channel.BUFFERED)
     val sideEffect: Flow<EventSideEffect> = _sideEffect.receiveAsFlow()
 
-    suspend fun loadEvent(eventId: Long, forceRefresh: Boolean = false) {
+    suspend fun loadEvent(eventId: Long, instanceId: Long? = null, forceRefresh: Boolean = false) {
         _state.value = _state.value.copy(isLoading = true, error = null)
         try {
             // Eagerly check if already added to calendar
@@ -199,6 +202,15 @@ class EventViewModel(
                     ?.str("name")
             }.joinToString(", ")
 
+            val isCancelled = if (instanceId != null) {
+                instances.any { inst ->
+                    val obj = inst.asJsonObjectOrNull() ?: return@any false
+                    obj["id"]?.jsonPrimitive?.longOrNull == instanceId && obj.bool("isCancelled") == true
+                }
+            } else {
+                instances.isNotEmpty() && instances.all { it.asJsonObjectOrNull()?.bool("isCancelled") == true }
+            }
+
             val eventDateText = when {
                 firstDate != null && lastDate != null && firstDate != lastDate ->
                     "${formatTimesWithDateAlways(firstDate, null)} - ${formatTimesWithDateAlways(lastDate, null)}"
@@ -230,6 +242,7 @@ class EventViewModel(
                 eventDateText = eventDateText,
                 myPersonId = myPerson,
                 myCoupleIds = myCouples,
+                isCancelled = isCancelled,
                 isPast = isPast,
                 userRegistered = userRegistered,
                 registerButtonVisible = registerButtonVisible,

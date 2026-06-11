@@ -47,7 +47,7 @@ internal fun LessonView(
     isAllTab: Boolean,
     myPersonId: String?,
     myCoupleIds: List<String>,
-    onEventClick: (Long) -> Unit,
+    onEventClick: (Long, Long?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -129,7 +129,7 @@ internal fun LessonView(
                             .fillMaxWidth()
                             .clickable {
                                 val evId = inst.event?.id ?: return@clickable
-                                onEventClick(evId)
+                                onEventClick(evId, inst.id)
                             }
                             .padding(vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically

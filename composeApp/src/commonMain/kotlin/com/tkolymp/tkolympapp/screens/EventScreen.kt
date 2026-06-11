@@ -42,7 +42,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
+import androidx.compose.material3.ElevatedSuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -59,6 +59,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
@@ -81,7 +82,7 @@ import com.tkolymp.tkolympapp.platform.FullscreenImageViewer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration: ((String, String?) -> Unit)? = null, onOpenPerson: ((String) -> Unit)? = null) {
+fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? = null, onOpenRegistration: ((String, String?) -> Unit)? = null, onOpenPerson: ((String) -> Unit)? = null) {
     val viewModel = viewModel<EventViewModel>()
     val state by viewModel.state.collectAsState()
     val showAllInstances = remember { mutableStateOf(false) }
@@ -90,7 +91,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
     var showReminderDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(eventId) {
-        viewModel.loadEvent(eventId, forceRefresh = true)
+        viewModel.loadEvent(eventId, instanceId = instanceId, forceRefresh = true)
     }
 
     LaunchedEffect(Unit) {
@@ -156,7 +157,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
 
         SwipeToReload(
             isRefreshing = state.isLoading,
-            onRefresh = { scope.launch { viewModel.loadEvent(eventId, forceRefresh = true) } },
+            onRefresh = { scope.launch { viewModel.loadEvent(eventId, instanceId = instanceId, forceRefresh = true) } },
             modifier = Modifier.padding(padding)
         ) {
             if (ev == null) {
@@ -164,7 +165,7 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(state.error?.message ?: "", modifier = Modifier.padding(16.dp))
-                            TextButton(onClick = { scope.launch { viewModel.loadEvent(eventId, forceRefresh = true) } }) {
+                            TextButton(onClick = { scope.launch { viewModel.loadEvent(eventId, instanceId = instanceId, forceRefresh = true) } }) {
                                 Text(AppStrings.current.commonActions.retry)
                             }
                         }
@@ -178,9 +179,11 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
                     .verticalScroll(rememberScrollState())
                     .padding(12.dp)
                 ) {
-            Text(state.eventName, style = MaterialTheme.typography.titleLarge)
-            Spacer(modifier = Modifier.height(6.dp))
+            Text(state.eventName, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier.padding(top = 12.dp, bottom = 4.dp).fillMaxWidth(), textAlign = TextAlign.Center)
+            Spacer(modifier = Modifier.height(10.dp))
+            // isError = true → errorContainer, false → secondaryContainer
             val statusChips = buildList<String> {
+                if (state.isCancelled) add(AppStrings.current.stats.cancelled)
                 if (state.isVisible) add(AppStrings.current.events.isVisible)
                 if (state.isPublic) add(AppStrings.current.events.isPublic)
                 if (state.isLocked) add(AppStrings.current.events.registrationClosed)
@@ -188,21 +191,15 @@ fun EventScreen(eventId: Long, onBack: (() -> Unit)? = null, onOpenRegistration:
             }
             if (statusChips.isNotEmpty()) {
                 FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     statusChips.forEach { label ->
-                        Surface(
-                            shape = RoundedCornerShape(50),
-                            color = MaterialTheme.colorScheme.secondaryContainer
-                        ) {
-                            Text(
-                                label,
-                                style = MaterialTheme.typography.labelSmall,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                color = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                        }
+                        ElevatedSuggestionChip(
+                            onClick = {},
+                            label = { Text(label) }
+                        )
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))

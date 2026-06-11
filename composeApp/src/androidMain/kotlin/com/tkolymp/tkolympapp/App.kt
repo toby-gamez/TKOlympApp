@@ -386,7 +386,7 @@ fun AppNavHost(
         ) {
             OverviewScreen(
                 bottomPadding = bottomPadding,
-                onOpenEvent = { id -> navController.navigate("event/$id") },
+                onOpenEvent = { id, instId -> navController.navigate("event/$id" + if (instId != null) "?instanceId=$instId" else "") },
                 onOpenNotice = { id -> navController.navigate("notice/$id") },
                 onOpenCalendar = { navController.navigate("calendar") },
                 onOpenBoard = { navController.navigate("board") },
@@ -405,7 +405,7 @@ fun AppNavHost(
             CalendarScreen(
                 weekOffset = weekOffset,
                 onWeekOffsetChange = onWeekOffsetChange,
-                onOpenEvent = { id -> navController.navigate("event/$id") },
+                onOpenEvent = { id, instId -> navController.navigate("event/$id" + if (instId != null) "?instanceId=$instId" else "") },
                 onNavigateTimeline = if (preferTimeline) ({ navController.navigateUp() }) else ({ navController.navigate("timeline") }),
                 onBack = if (preferTimeline) ({ navController.navigateUp() }) else null,
                 onFindFreeLessons = { navController.navigate("free-lessons") },
@@ -927,7 +927,7 @@ fun AppNavHost(
             popExitTransition = { if (preferTimeline) fadeOut(tween(300)) else slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(400)) }
         ) {
             CalendarViewScreen(
-                onEventClick = { id -> navController.navigate("event/$id") },
+                onEventClick = { id, instId -> navController.navigate("event/$id" + if (instId != null) "?instanceId=$instId" else "") },
                 onBack = if (!preferTimeline) ({ navController.navigateUp() }) else null,
                 onSwitchToBlocks = if (preferTimeline) ({ navController.navigate("calendar") }) else null,
                 onFindFreeLessons = { navController.navigate("free-lessons") },
@@ -937,8 +937,11 @@ fun AppNavHost(
         }
         
         composable(
-            route = "event/{eventId}",
-            arguments = listOf(navArgument("eventId") { type = NavType.LongType }),
+            route = "event/{eventId}?instanceId={instanceId}",
+            arguments = listOf(
+                navArgument("eventId") { type = NavType.LongType },
+                navArgument("instanceId") { type = NavType.LongType; defaultValue = -1L }
+            ),
             enterTransition = {
                 slideIntoContainer(
                     towards = AnimatedContentTransitionScope.SlideDirection.Left,
@@ -965,9 +968,11 @@ fun AppNavHost(
             }
         ) { backStackEntry ->
             val eventId = backStackEntry.arguments?.getLong("eventId")
+            val instanceId = backStackEntry.arguments?.getLong("instanceId")?.takeIf { it != -1L }
             eventId?.let { eid ->
                 EventScreen(
                     eventId = eid,
+                    instanceId = instanceId,
                     onBack = { navController.navigateUp() },
                     onOpenRegistration = { mode, _ ->
                         navController.navigate("event/$eid/registration/$mode")

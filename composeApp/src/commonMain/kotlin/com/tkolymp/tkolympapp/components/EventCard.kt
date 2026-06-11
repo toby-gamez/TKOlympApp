@@ -133,14 +133,14 @@ internal fun RenderEventContent(item: EventInstance, tip: String? = null, showTy
 
 
 @Composable
-internal fun RenderSingleEventCard(item: EventInstance, onEventClick: (Long) -> Unit, showType: Boolean = true, modifier: Modifier = Modifier) {
+internal fun RenderSingleEventCard(item: EventInstance, onEventClick: (Long, Long?) -> Unit, showType: Boolean = true, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp)
             .clip(RoundedCornerShape(12.dp))
             .clickable {
-                item.event?.id?.let { onEventClick(it) }
+                item.event?.id?.let { onEventClick(it, item.id) }
             }
             .then(Modifier),
         shape = RoundedCornerShape(12.dp)

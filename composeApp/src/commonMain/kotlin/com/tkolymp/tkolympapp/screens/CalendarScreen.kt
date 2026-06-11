@@ -116,7 +116,7 @@ import com.tkolymp.tkolympapp.util.tabContentTransitionSpec
 fun CalendarScreen(
     weekOffset: Int = 0,
     onWeekOffsetChange: (Int) -> Unit = {},
-    onOpenEvent: (Long) -> Unit = {},
+    onOpenEvent: (Long, Long?) -> Unit = { _, _ -> },
     onNavigateTimeline: (() -> Unit)? = null,
     onBack: (() -> Unit)? = null,
     onCreatePersonalEvent: (() -> Unit)? = null,
@@ -362,14 +362,14 @@ fun CalendarScreen(
                                         isAllTab = (selectedTab == 1),
                                         myPersonId = calState.myPersonId,
                                         myCoupleIds = calState.myCoupleIds,
-                                        onEventClick = { id: Long -> onOpenEvent(id) }
+                                        onEventClick = { id, instId -> onOpenEvent(id, instId) }
                                     )
                                 }
                             }
 
                             filteredOther.forEach { item ->
                                 key(item.id) {
-                                    RenderSingleEventCard(item = item, onEventClick = { id: Long -> onOpenEvent(id) })
+                                    RenderSingleEventCard(item = item, onEventClick = { id, instId -> onOpenEvent(id, instId) })
                                 }
                             }
                         }

@@ -263,12 +263,12 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                                     isAllTab = false,
                                     myPersonId = null,
                                     myCoupleIds = emptyList(),
-                                    onEventClick = onOpenEvent
+                                    onEventClick = { id, _ -> onOpenEvent(id) }
                                 )
                             }
 
                             other.sortedBy { it.since }.forEach { item ->
-                                RenderSingleEventCard(item = item, onEventClick = onOpenEvent, showType = false)
+                                RenderSingleEventCard(item = item, onEventClick = { id, _ -> onOpenEvent(id) }, showType = false)
                             }
                         }
                         } // StaggeredItem
@@ -320,12 +320,12 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                                     isAllTab = false,
                                     myPersonId = null,
                                     myCoupleIds = emptyList(),
-                                    onEventClick = onOpenEvent
+                                    onEventClick = { id, _ -> onOpenEvent(id) }
                                 )
                             }
 
                             other.sortedByDescending { it.since }.forEach { item ->
-                                RenderSingleEventCard(item = item, onEventClick = onOpenEvent, showType = false)
+                                RenderSingleEventCard(item = item, onEventClick = { id, _ -> onOpenEvent(id) }, showType = false)
                             }
                         }
                         } // StaggeredItem
