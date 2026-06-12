@@ -13,10 +13,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -28,21 +28,29 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsOff
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
+import com.tkolymp.tkolympapp.components.CoupleAvatar
+import com.tkolymp.tkolympapp.components.InitialsAvatar
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.ElevatedSuggestionChip
+import androidx.compose.material3.SplitButtonDefaults
+import androidx.compose.material3.SplitButtonLayout
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -61,6 +69,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.utils.asJsonArrayOrNull
@@ -80,7 +89,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonArray
 import com.tkolymp.tkolympapp.platform.FullscreenImageViewer
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? = null, onOpenRegistration: ((String, String?) -> Unit)? = null, onOpenPerson: ((String) -> Unit)? = null) {
     val viewModel = viewModel<EventViewModel>()
@@ -89,6 +98,7 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var showReminderDialog by remember { mutableStateOf(false) }
+    var showRegistrationDropdown by remember { mutableStateOf(false) }
 
     LaunchedEffect(eventId) {
         viewModel.loadEvent(eventId, instanceId = instanceId, forceRefresh = true)
@@ -154,6 +164,7 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                 )
             }
         ) { padding ->
+        Box(modifier = Modifier.fillMaxSize()) {
 
         SwipeToReload(
             isRefreshing = state.isLoading,
@@ -196,7 +207,7 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     statusChips.forEach { label ->
-                        ElevatedSuggestionChip(
+                        SuggestionChip(
                             onClick = {},
                             label = { Text(label) }
                         )
@@ -209,61 +220,69 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
 
             // Typ a základní info
             val displayType = translateEventType(state.eventType)
-            Row(
+            Card(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                shape = RoundedCornerShape(16.dp)
             ) {
-                Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp)) {
+                @Composable
+                fun InfoRow(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
                     Row(
-                        modifier = Modifier.padding(12.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 11.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            Icons.Default.Category,
+                            icon,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(18.dp)
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            if (!displayType.isNullOrBlank()) displayType else "—",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(text, style = MaterialTheme.typography.bodyMedium)
                     }
                 }
-                Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp)) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.Place,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            state.locationName?.takeIf { it.isNotBlank() } ?: "—",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+
+                InfoRow(Icons.Default.Category, if (!displayType.isNullOrBlank()) displayType else "—")
+
+                if (!state.locationName.isNullOrBlank() || state.eventDateText.isNotBlank()) {
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 14.dp))
+                }
+
+                val locationName = state.locationName
+                if (!locationName.isNullOrBlank()) {
+                    InfoRow(Icons.Default.Place, locationName)
+                    if (state.eventDateText.isNotBlank()) {
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 14.dp))
                     }
                 }
-            }
-            if (state.eventDateText.isNotBlank()) {
-                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.Schedule,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(state.eventDateText, style = MaterialTheme.typography.bodyMedium)
+
+                if (state.scheduleText != null || state.eventDateText.isNotBlank()) {
+                    val scheduleText = state.scheduleText
+                    if (scheduleText != null) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 11.dp),
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Icon(
+                                Icons.Default.Schedule,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp).padding(top = 2.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(scheduleText, style = MaterialTheme.typography.bodyMedium)
+                                if (state.eventDateText.isNotBlank()) {
+                                    Text(
+                                        state.eventDateText,
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        InfoRow(Icons.Default.Schedule, state.eventDateText)
                     }
                 }
             }
@@ -314,49 +333,6 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                         Spacer(modifier = Modifier.height(8.dp))
                         TextButton(onClick = { showAllInstances.value = false }) {
                             Text(AppStrings.current.commonActions.showLess)
-                        }
-                    }
-                }
-            }
-        }
-
-        // Registrační tlačítka
-        if (state.registerButtonVisible || state.registrationActionsRowVisible) {
-            Spacer(modifier = Modifier.height(8.dp))
-            val deleteFullWidth = state.trainers.size == 1
-            Column(modifier = Modifier.fillMaxWidth()) {
-                if (state.registerButtonVisible) {
-                    Button(onClick = { onOpenRegistration?.invoke("register", null) }, modifier = Modifier.fillMaxWidth()) {
-                        Text(AppStrings.current.registration.register)
-                    }
-                    Spacer(modifier = Modifier.height(6.dp))
-                }
-
-                if (state.registrationActionsRowVisible) {
-                    if (state.editRegistrationButtonVisible) {
-                        Box(modifier = Modifier.fillMaxWidth()) {
-                            Button(
-                                onClick = { onOpenRegistration?.invoke("register", null) },
-                                modifier = Modifier.widthIn(max = 300.dp).padding(end = 112.dp)
-                            ) {
-                                Text(AppStrings.current.registration.registerAnother)
-                            }
-                            Row(modifier = Modifier.align(Alignment.CenterEnd), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                FilledTonalButton(onClick = { onOpenRegistration?.invoke("edit", null) }) {
-                                    Icon(Icons.Default.Edit, contentDescription = AppStrings.current.registration.editRegistration)
-                                }
-                                FilledTonalButton(onClick = { onOpenRegistration?.invoke("delete", null) }) {
-                                    Icon(Icons.Default.Delete, contentDescription = AppStrings.current.registration.deleteRegistration)
-                                }
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(6.dp))
-                    } else {
-                        Button(
-                            onClick = { onOpenRegistration?.invoke("delete", null) },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(AppStrings.current.registration.deleteRegistration)
                         }
                     }
                 }
@@ -434,14 +410,9 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                                 .padding(vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                Icons.Default.Person,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(label, style = MaterialTheme.typography.bodySmall)
+                            InitialsAvatar(name = trainerName, size = 28.dp, fontSize = 11.sp)
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(label, style = MaterialTheme.typography.bodyMedium)
                         }
                     }
                 }
@@ -501,7 +472,14 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                     }
                     val columns = if (coupleCount * 2 > state.registrations.size) 1 else 2
 
-                    val participantList = buildList<Triple<String, Boolean, List<String>>> {
+                    data class ParticipantItem(
+                        val name: String,
+                        val isMe: Boolean,
+                        val subItems: List<String>,
+                        val womanName: String? = null,
+                        val manName: String? = null,
+                    )
+                    val participantList = buildList<ParticipantItem> {
                         state.registrations.forEach { regEl ->
                             val reg = regEl.asJsonObjectOrNull() ?: return@forEach
                             val person = reg["person"].asJsonObjectOrNull()
@@ -509,20 +487,23 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                             val note = reg.str("note")
                             val lessonDemands = reg["eventLessonDemandsByRegistrationIdList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
 
-                            val nameText = when {
-                                couple != null -> {
-                                    val woman = couple["woman"].asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() }
-                                    val man = couple["man"].asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() }
-                                    when {
-                                        woman != null && man != null -> "$woman - $man"
-                                        woman != null -> woman
-                                        man != null -> man
-                                        else -> null
-                                    }
+                            val womanName: String?
+                            val manName: String?
+                            val nameText: String
+                            if (couple != null) {
+                                womanName = couple["woman"].asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() }
+                                manName = couple["man"].asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() }
+                                nameText = when {
+                                    womanName != null && manName != null -> "$womanName - $manName"
+                                    womanName != null -> womanName
+                                    manName != null -> manName
+                                    else -> return@forEach
                                 }
-                                person != null -> person.str("name")?.takeIf { it.isNotBlank() }
-                                else -> null
-                            } ?: return@forEach
+                            } else {
+                                womanName = null
+                                manName = null
+                                nameText = person?.str("name")?.takeIf { it.isNotBlank() } ?: return@forEach
+                            }
 
                             val personId = person?.str("id")
                             val coupleId = couple?.str("id")
@@ -543,7 +524,7 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                                 if (!note.isNullOrBlank()) add("Poznámka: $note")
                             }
 
-                            add(Triple(nameText, isMe, subItems))
+                            add(ParticipantItem(nameText, isMe, subItems, womanName, manName))
                         }
 
                         state.externalRegistrations.forEach { extRegEl ->
@@ -556,34 +537,42 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                                 if (!email.isNullOrBlank()) add("Email: $email")
                                 if (!note.isNullOrBlank()) add("Poznámka: $note")
                             }
-                            add(Triple("$firstName $lastName (externí)", false, subItems))
+                            add(ParticipantItem("$firstName $lastName (externí)", false, subItems))
                         }
                     }
 
                     participantList.chunked(columns).forEach { pair ->
                         Row(modifier = Modifier.fillMaxWidth()) {
-                            pair.forEach { (name, isMe, subItems) ->
-                                Column(modifier = Modifier.weight(1f).padding(vertical = 2.dp)) {
+                            pair.forEach { item ->
+                                Column(modifier = Modifier.weight(1f).padding(vertical = 5.dp)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            Icons.Default.Person,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(16.dp),
-                                            tint = if (isMe) MaterialTheme.colorScheme.primary
-                                                   else MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
+                                        if (item.womanName != null || item.manName != null) {
+                                            CoupleAvatar(
+                                                womanName = item.womanName,
+                                                manName = item.manName,
+                                                size = 24.dp,
+                                                fontSize = 9.sp,
+                                            )
+                                        } else {
+                                            InitialsAvatar(
+                                                name = item.name,
+                                                size = 24.dp,
+                                                fontSize = 9.sp,
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            name,
-                                            style = if (isMe)
-                                                MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold)
+                                            item.name,
+                                            style = if (item.isMe)
+                                                MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
                                             else
-                                                MaterialTheme.typography.bodySmall
+                                                MaterialTheme.typography.bodyMedium
                                         )
                                     }
-                                    subItems.forEach { sub ->
+                                    item.subItems.forEach { sub ->
                                         Text(
-                                            "   $sub",
+                                            sub,
+                                            modifier = Modifier.padding(start = 32.dp, top = 1.dp),
                                             style = MaterialTheme.typography.bodySmall.copy(
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
@@ -600,16 +589,101 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(if (state.registerButtonVisible || state.registrationActionsRowVisible) 96.dp else 16.dp))
     }
 }
 } // StaggeredItem
 }   // closes SwipeToReload
 
+        // Floating registration button — no background, overlays scroll content
+        val showRegistrationBar = state.registerButtonVisible || state.registrationActionsRowVisible
+        if (showRegistrationBar && onOpenRegistration != null) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .padding(bottom = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                when {
+                    state.editRegistrationButtonVisible -> {
+                        Box {
+                            SplitButtonLayout(
+                                modifier = Modifier.height(56.dp),
+                                leadingButton = {
+                                    SplitButtonDefaults.LeadingButton(
+                                        onClick = { onOpenRegistration.invoke("edit", null) },
+                                        shapes = SplitButtonDefaults.leadingButtonShapesFor(SplitButtonDefaults.MediumContainerHeight),
+                                        contentPadding = SplitButtonDefaults.leadingButtonContentPaddingFor(SplitButtonDefaults.MediumContainerHeight)
+                                    ) {
+                                        Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(20.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(AppStrings.current.registration.editRegistration)
+                                    }
+                                },
+                                trailingButton = {
+                                    SplitButtonDefaults.TrailingButton(
+                                        checked = showRegistrationDropdown,
+                                        onCheckedChange = { showRegistrationDropdown = it },
+                                        shapes = SplitButtonDefaults.trailingButtonShapesFor(SplitButtonDefaults.MediumContainerHeight),
+                                        contentPadding = SplitButtonDefaults.trailingButtonContentPaddingFor(SplitButtonDefaults.MediumContainerHeight)
+                                    ) {
+                                        Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                                    }
+                                }
+                            )
+                            DropdownMenu(
+                                expanded = showRegistrationDropdown,
+                                onDismissRequest = { showRegistrationDropdown = false }
+                            ) {
+                                if (state.registerButtonVisible) {
+                                    DropdownMenuItem(
+                                        text = { Text(AppStrings.current.registration.registerAnother) },
+                                        leadingIcon = { Icon(Icons.Default.Add, null) },
+                                        onClick = {
+                                            showRegistrationDropdown = false
+                                            onOpenRegistration.invoke("register", null)
+                                        }
+                                    )
+                                }
+                                DropdownMenuItem(
+                                    text = { Text(AppStrings.current.registration.deleteRegistration) },
+                                    leadingIcon = { Icon(Icons.Default.Delete, null) },
+                                    onClick = {
+                                        showRegistrationDropdown = false
+                                        onOpenRegistration.invoke("delete", null)
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    state.registerButtonVisible -> {
+                        Button(
+                            onClick = { onOpenRegistration.invoke("register", null) },
+                            modifier = Modifier.height(56.dp),
+                            shape = RoundedCornerShape(50)
+                        ) {
+                            Text(AppStrings.current.registration.register, style = MaterialTheme.typography.labelLarge)
+                        }
+                    }
+                    else -> {
+                        Button(
+                            onClick = { onOpenRegistration.invoke("delete", null) },
+                            modifier = Modifier.height(56.dp),
+                            shape = RoundedCornerShape(50)
+                        ) {
+                            Text(AppStrings.current.registration.deleteRegistration, style = MaterialTheme.typography.labelLarge)
+                        }
+                    }
+                }
+            }
+        }
+
         // Fullscreen image viewer for clicked images
         fullScreenImageUrl.value?.let { url ->
             FullscreenImageViewer(imageUrl = url) { fullScreenImageUrl.value = null }
         }
+        } // closes Box(fillMaxSize)
 
     // Reminder dialog
     if (showReminderDialog) {

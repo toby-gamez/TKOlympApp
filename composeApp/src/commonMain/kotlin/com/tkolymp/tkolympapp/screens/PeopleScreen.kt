@@ -2,15 +2,12 @@ package com.tkolymp.tkolympapp.screens
 
 // no manual refresh button
  
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,7 +23,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -56,11 +52,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.people.Person
@@ -68,6 +64,7 @@ import com.tkolymp.shared.utils.formatShortDate
 import com.tkolymp.shared.utils.parseToLocal
 import com.tkolymp.shared.viewmodels.PeopleViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
+import com.tkolymp.tkolympapp.components.InitialsAvatar
 import com.tkolymp.tkolympapp.components.parseColorOrDefault
 import com.tkolymp.tkolympapp.util.StaggeredItem
 import com.tkolymp.tkolympapp.util.normalizeForSearch
@@ -263,38 +260,32 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
                         ) {
                             Row(modifier = Modifier
                                 .fillMaxWidth()
-                                .height(IntrinsicSize.Min)
                                 .padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                                val cohortColors = p.cohortMembershipsList
-                                                        .mapNotNull { it.cohort }
-                                                        .filter { it.isVisible != false }
-                                                        .mapNotNull { it.colorRgb }
-                                                        .mapNotNull { hex ->
-                                                            try {
-                                                                parseColorOrDefault(hex)
-                                                            } catch (_: Exception) { null }
-                                                        }
-
-                                Column(modifier = Modifier
-                                    .width(6.dp)
-                                    .fillMaxHeight()
-                                    .clip(RoundedCornerShape(6.dp))
-                                ) {
-                                    if (cohortColors.isNotEmpty()) {
-                                        cohortColors.forEach { color ->
-                                            Box(modifier = Modifier
-                                                .fillMaxWidth()
-                                                .weight(1f)
-                                                .background(color)
-                                            )
-                                        }
-                                    } else {
-                                        Box(modifier = Modifier
-                                            .fillMaxSize()
-                                            .background(MaterialTheme.colorScheme.primary)
-                                        )
+                                val todayIso = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault()).toString()
+                                val cohortBorderColor = p.cohortMembershipsList
+                                    .filter { m ->
+                                        val since = m.since
+                                        val until = m.until
+                                        (since == null || since <= todayIso) &&
+                                        (until == null || until >= todayIso)
                                     }
-                                }
+                                    .mapNotNull { it.cohort }
+                                    .filter { it.isVisible != false }
+                                    .firstNotNullOfOrNull { c ->
+                                        c.colorRgb?.let { hex ->
+                                            try { parseColorOrDefault(hex) } catch (_: Exception) { null }
+                                        }
+                                    }
+                                val personName = listOfNotNull(p.firstName, p.lastName)
+                                    .filter { it.isNotBlank() }.joinToString(" ")
+
+                                InitialsAvatar(
+                                    name = personName.ifBlank { p.id },
+                                    size = 40.dp,
+                                    fontSize = 14.sp,
+                                    borderColor = cohortBorderColor,
+                                    borderWidth = 3.dp,
+                                )
 
                                 Spacer(modifier = Modifier.width(12.dp))
 

@@ -2,6 +2,8 @@ package com.tkolymp.shared.utils
 
 import com.tkolymp.shared.event.Event
 import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.shared.utils.asJsonObjectOrNull
+import com.tkolymp.shared.utils.str
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -152,6 +154,41 @@ fun formatTimesWithDayOfWeek(since: String?, until: String?): String {
         untilData != null -> "${untilData.first} ${untilData.second} ${untilData.third}"
         else -> ""
     }
+}
+
+/**
+ * Analyses a list of event instances (each a JsonObject with "since"/"until" ISO strings)
+ * and returns a human-readable recurring schedule description, e.g. "every Tuesday, 17:30 – 18:15".
+ * Returns null when no clear weekly pattern is detected (fall back to the raw date span).
+ */
+fun describeSchedule(instances: kotlinx.serialization.json.JsonArray, languageCode: String): String? {
+    if (instances.size < 2) return null
+
+    val millis = instances.mapNotNull { el ->
+        val s = el.asJsonObjectOrNull()?.str("since") ?: return@mapNotNull null
+        try { Instant.parse(s).toEpochMilliseconds() } catch (_: Exception) { null }
+    }
+    if (millis.size < 2) return null
+
+    // All consecutive gaps must be ≈ 7 days
+    val weekly = millis.zipWithNext().all { (a, b) ->
+        val days = (b - a) / 86_400_000.0
+        days in AppConstants.WEEKLY_RECURRENCE_MIN_DAYS..AppConstants.WEEKLY_RECURRENCE_MAX_DAYS
+    }
+    if (!weekly) return null
+
+    val firstEl = instances.firstOrNull()?.asJsonObjectOrNull() ?: return null
+    val sinceLocal = parseToLocal(firstEl.str("since")) ?: return null
+    val untilLocal = parseToLocal(firstEl.str("until"))
+
+    val everyDay = getLocalizedEveryWeekday(sinceLocal.dayOfWeek, languageCode)
+    fun Int.hhmm() = toString().padStart(2, '0')
+    val sinceTime = "${sinceLocal.hour.hhmm()}:${sinceLocal.minute.hhmm()}"
+    val timeRange = if (untilLocal != null)
+        "$sinceTime – ${untilLocal.hour.hhmm()}:${untilLocal.minute.hhmm()}"
+    else sinceTime
+
+    return "$everyDay, $timeRange"
 }
 
 fun durationMinutes(since: String?, until: String?): String? {

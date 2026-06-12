@@ -26,6 +26,7 @@ import com.tkolymp.shared.utils.int
 import com.tkolymp.shared.utils.bool
 import com.tkolymp.shared.utils.AppConstants
 import com.tkolymp.shared.utils.formatTimesWithDateAlways
+import com.tkolymp.shared.utils.describeSchedule
 import kotlinx.serialization.json.jsonObject
 import com.tkolymp.shared.json.AppJson
 import com.tkolymp.shared.event.EventType
@@ -54,6 +55,7 @@ data class EventState(
     val trainerDisplayNames: String = "",
     val cohortDisplayNames: String = "",
     val eventDateText: String = "",
+    val scheduleText: String? = null,
     val myPersonId: String? = null,
     val myCoupleIds: List<String> = emptyList(),
     val isCancelled: Boolean = false,
@@ -217,6 +219,7 @@ class EventViewModel(
                 firstDate != null -> formatTimesWithDateAlways(firstDate, lastDate)
                 else -> ""
             }
+            val scheduleText = describeSchedule(instances, AppStrings.currentLanguage.code)
 
             _state.value = _state.value.copy(
                 eventJson = ev,
@@ -240,6 +243,7 @@ class EventViewModel(
                 trainerDisplayNames = trainerDisplayNames,
                 cohortDisplayNames = cohortDisplayNames,
                 eventDateText = eventDateText,
+                scheduleText = scheduleText,
                 myPersonId = myPerson,
                 myCoupleIds = myCouples,
                 isCancelled = isCancelled,

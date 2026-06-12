@@ -110,6 +110,24 @@ fun getLocalizedDayName(dayOfWeek: DayOfWeek, languageCode: String): String {
     return days.getOrElse(dayOfWeek.ordinal) { dayOfWeek.name }
 }
 
+/** Pre-formed "every {weekday}" phrases per language, Monday = index 0. */
+private val DAY_NAMES_EVERY: Map<String, List<String>> = mapOf(
+    "cs" to listOf("každé pondělí", "každé úterý", "každou středu", "každý čtvrtek", "každý pátek", "každou sobotu", "každou neděli"),
+    "de" to listOf("jeden Montag", "jeden Dienstag", "jeden Mittwoch", "jeden Donnerstag", "jeden Freitag", "jeden Samstag", "jeden Sonntag"),
+    "sk" to listOf("každý pondelok", "každý utorok", "každú stredu", "každý štvrtok", "každý piatok", "každú sobotu", "každú nedeľu"),
+    "sl" to listOf("vsak ponedeljek", "vsak torek", "vsako sredo", "vsak četrtek", "vsak petek", "vsako soboto", "vsako nedeljo"),
+    "ua" to listOf("щопонеділка", "щовівторка", "щосереди", "щочетверга", "щоп'ятниці", "щосуботи", "щонеділі"),
+    "vi" to listOf("Mỗi thứ Hai", "Mỗi thứ Ba", "Mỗi thứ Tư", "Mỗi thứ Năm", "Mỗi thứ Sáu", "Mỗi thứ Bảy", "Mỗi chủ nhật"),
+    "en" to listOf("every Monday", "every Tuesday", "every Wednesday", "every Thursday", "every Friday", "every Saturday", "every Sunday"),
+    "brainrot" to listOf("every Monday", "every Tuesday", "every Wednesday", "every Thursday", "every Friday", "every Saturday", "every Sunday"),
+)
+
+/** Returns "every Tuesday"-style phrase for the given day in the current language. */
+fun getLocalizedEveryWeekday(dayOfWeek: DayOfWeek, languageCode: String): String {
+    val days = DAY_NAMES_EVERY[languageCode.lowercase()] ?: DAY_NAMES_EVERY["en"]!!
+    return days.getOrElse(dayOfWeek.ordinal) { "every ${getLocalizedDayName(dayOfWeek, languageCode)}" }
+}
+
 /**
  * Formats a date as "d. MMMM" or "d. MMMM yyyy" with locale-aware month name.
  * Equivalent to DateTimeFormatter.ofPattern("d. MMMM [yyyy]", locale).
