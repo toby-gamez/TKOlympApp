@@ -1,5 +1,10 @@
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,6 +22,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -37,8 +43,7 @@ import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
@@ -598,6 +603,55 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
         // Floating registration button — no background, overlays scroll content
         val showRegistrationBar = state.registerButtonVisible || state.registrationActionsRowVisible
         if (showRegistrationBar && onOpenRegistration != null) {
+            // Menu card — separate align so the button below never moves
+            if (state.editRegistrationButtonVisible) {
+                AnimatedVisibility(
+                    visible = showRegistrationDropdown,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .navigationBarsPadding()
+                        .padding(bottom = 80.dp, end = 24.dp),
+                    enter = fadeIn() + slideInVertically(initialOffsetY = { it / 3 }),
+                    exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 3 })
+                ) {
+                Card(
+                    modifier = Modifier.widthIn(max = 260.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                ) {
+                    if (state.registerButtonVisible) {
+                        Row(
+                            modifier = Modifier
+                                .clickable {
+                                    showRegistrationDropdown = false
+                                    onOpenRegistration.invoke("register", null)
+                                }
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp))
+                            Spacer(Modifier.width(12.dp))
+                            Text(AppStrings.current.registration.registerAnother, style = MaterialTheme.typography.bodyLarge)
+                        }
+                        HorizontalDivider()
+                    }
+                    Row(
+                        modifier = Modifier
+                            .clickable {
+                                showRegistrationDropdown = false
+                                onOpenRegistration.invoke("delete", null)
+                            }
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(12.dp))
+                        Text(AppStrings.current.registration.deleteRegistration, style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
+                } // close AnimatedVisibility
+            }
+            // Button — anchored independently, never shifts
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -607,55 +661,32 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
             ) {
                 when {
                     state.editRegistrationButtonVisible -> {
-                        Box {
-                            SplitButtonLayout(
-                                modifier = Modifier.height(56.dp),
-                                leadingButton = {
-                                    SplitButtonDefaults.LeadingButton(
-                                        onClick = { onOpenRegistration.invoke("edit", null) },
-                                        shapes = SplitButtonDefaults.leadingButtonShapesFor(SplitButtonDefaults.MediumContainerHeight),
-                                        contentPadding = SplitButtonDefaults.leadingButtonContentPaddingFor(SplitButtonDefaults.MediumContainerHeight)
-                                    ) {
-                                        Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(20.dp))
-                                        Spacer(Modifier.width(8.dp))
-                                        Text(AppStrings.current.registration.editRegistration)
-                                    }
-                                },
-                                trailingButton = {
-                                    SplitButtonDefaults.TrailingButton(
-                                        checked = showRegistrationDropdown,
-                                        onCheckedChange = { showRegistrationDropdown = it },
-                                        shapes = SplitButtonDefaults.trailingButtonShapesFor(SplitButtonDefaults.MediumContainerHeight),
-                                        contentPadding = SplitButtonDefaults.trailingButtonContentPaddingFor(SplitButtonDefaults.MediumContainerHeight)
-                                    ) {
-                                        Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-                                    }
+                        SplitButtonLayout(
+                            modifier = Modifier.height(56.dp),
+                            leadingButton = {
+                                SplitButtonDefaults.LeadingButton(
+                                    onClick = { onOpenRegistration.invoke("edit", null) },
+                                    modifier = Modifier.fillMaxHeight(),
+                                    shapes = SplitButtonDefaults.leadingButtonShapesFor(SplitButtonDefaults.MediumContainerHeight),
+                                    contentPadding = SplitButtonDefaults.leadingButtonContentPaddingFor(SplitButtonDefaults.MediumContainerHeight)
+                                ) {
+                                    Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(20.dp))
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(AppStrings.current.registration.editRegistration)
                                 }
-                            )
-                            DropdownMenu(
-                                expanded = showRegistrationDropdown,
-                                onDismissRequest = { showRegistrationDropdown = false }
-                            ) {
-                                if (state.registerButtonVisible) {
-                                    DropdownMenuItem(
-                                        text = { Text(AppStrings.current.registration.registerAnother) },
-                                        leadingIcon = { Icon(Icons.Default.Add, null) },
-                                        onClick = {
-                                            showRegistrationDropdown = false
-                                            onOpenRegistration.invoke("register", null)
-                                        }
-                                    )
+                            },
+                            trailingButton = {
+                                SplitButtonDefaults.TrailingButton(
+                                    checked = showRegistrationDropdown,
+                                    onCheckedChange = { showRegistrationDropdown = it },
+                                    modifier = Modifier.fillMaxHeight(),
+                                    shapes = SplitButtonDefaults.trailingButtonShapesFor(SplitButtonDefaults.MediumContainerHeight),
+                                    contentPadding = SplitButtonDefaults.trailingButtonContentPaddingFor(SplitButtonDefaults.MediumContainerHeight)
+                                ) {
+                                    Icon(Icons.Default.ArrowDropDown, contentDescription = null)
                                 }
-                                DropdownMenuItem(
-                                    text = { Text(AppStrings.current.registration.deleteRegistration) },
-                                    leadingIcon = { Icon(Icons.Default.Delete, null) },
-                                    onClick = {
-                                        showRegistrationDropdown = false
-                                        onOpenRegistration.invoke("delete", null)
-                                    }
-                                )
                             }
-                        }
+                        )
                     }
                     state.registerButtonVisible -> {
                         Button(
