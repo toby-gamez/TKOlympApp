@@ -1,6 +1,10 @@
 package com.tkolymp.tkolympapp.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -38,6 +42,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import com.tkolymp.tkolympapp.components.CoupleAvatar
 import com.tkolymp.tkolympapp.components.InitialsAvatar
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.shadow
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
@@ -49,6 +55,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -604,37 +611,38 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
         val showRegistrationBar = state.registerButtonVisible || state.registrationActionsRowVisible
         if (showRegistrationBar && onOpenRegistration != null) {
             // Menu card — separate align so the button below never moves
-            if (state.editRegistrationButtonVisible) {
+            if (state.registrationActionsRowVisible && state.editRegistrationButtonVisible) {
                 AnimatedVisibility(
                     visible = showRegistrationDropdown,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .navigationBarsPadding()
                         .padding(bottom = 80.dp, end = 24.dp),
-                    enter = fadeIn() + slideInVertically(initialOffsetY = { it / 3 }),
-                    exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 3 })
+                    enter = fadeIn(tween(120)) + slideInVertically(tween(180, easing = FastOutSlowInEasing), initialOffsetY = { it / 3 }),
+                    exit = fadeOut(tween(80)) + slideOutVertically(tween(130, easing = FastOutLinearInEasing), targetOffsetY = { it / 3 })
                 ) {
                 Card(
-                    modifier = Modifier.widthIn(max = 260.dp),
+                    modifier = Modifier
+                        .widthIn(max = 260.dp)
+                        .shadow(8.dp, RoundedCornerShape(16.dp), clip = false),
                     shape = RoundedCornerShape(16.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
-                    if (state.registerButtonVisible) {
-                        Row(
-                            modifier = Modifier
-                                .clickable {
-                                    showRegistrationDropdown = false
-                                    onOpenRegistration.invoke("register", null)
-                                }
-                                .padding(horizontal = 16.dp, vertical = 14.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp))
-                            Spacer(Modifier.width(12.dp))
-                            Text(AppStrings.current.registration.registerAnother, style = MaterialTheme.typography.bodyLarge)
-                        }
-                        HorizontalDivider()
+                    Row(
+                        modifier = Modifier
+                            .clickable {
+                                showRegistrationDropdown = false
+                                onOpenRegistration.invoke("register", null)
+                            }
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(12.dp))
+                        Text(AppStrings.current.registration.registerAnother, style = MaterialTheme.typography.bodyLarge)
                     }
+                    HorizontalDivider()
                     Row(
                         modifier = Modifier
                             .clickable {
@@ -660,7 +668,7 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                 contentAlignment = Alignment.Center
             ) {
                 when {
-                    state.editRegistrationButtonVisible -> {
+                    state.registrationActionsRowVisible && state.editRegistrationButtonVisible -> {
                         SplitButtonLayout(
                             modifier = Modifier.height(56.dp),
                             leadingButton = {
@@ -676,14 +684,26 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                                 }
                             },
                             trailingButton = {
+                                val arrowRotation by animateFloatAsState(
+                                    targetValue = if (showRegistrationDropdown) 180f else 0f,
+                                    animationSpec = tween(180, easing = FastOutSlowInEasing),
+                                    label = "arrow"
+                                )
                                 SplitButtonDefaults.TrailingButton(
                                     checked = showRegistrationDropdown,
                                     onCheckedChange = { showRegistrationDropdown = it },
                                     modifier = Modifier.fillMaxHeight(),
                                     shapes = SplitButtonDefaults.trailingButtonShapesFor(SplitButtonDefaults.MediumContainerHeight),
+                                    colors = if (showRegistrationDropdown)
+                                        ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                                        )
+                                    else
+                                        ButtonDefaults.buttonColors(),
                                     contentPadding = SplitButtonDefaults.trailingButtonContentPaddingFor(SplitButtonDefaults.MediumContainerHeight)
                                 ) {
-                                    Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                                    Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.rotate(arrowRotation))
                                 }
                             }
                         )
@@ -694,6 +714,8 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                             modifier = Modifier.height(56.dp),
                             shape = RoundedCornerShape(50)
                         ) {
+                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
                             Text(AppStrings.current.registration.register, style = MaterialTheme.typography.labelLarge)
                         }
                     }
@@ -703,6 +725,8 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                             modifier = Modifier.height(56.dp),
                             shape = RoundedCornerShape(50)
                         ) {
+                            Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
                             Text(AppStrings.current.registration.deleteRegistration, style = MaterialTheme.typography.labelLarge)
                         }
                     }

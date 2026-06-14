@@ -166,7 +166,11 @@ fun describeSchedule(instances: kotlinx.serialization.json.JsonArray, languageCo
 
     val millis = instances.mapNotNull { el ->
         val s = el.asJsonObjectOrNull()?.str("since") ?: return@mapNotNull null
-        try { Instant.parse(s).toEpochMilliseconds() } catch (_: Exception) { null }
+        try { Instant.parse(s).toEpochMilliseconds() }
+        catch (_: Exception) {
+            try { LocalDateTime.parse(s).toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds() }
+            catch (_: Exception) { null }
+        }
     }
     if (millis.size < 2) return null
 
