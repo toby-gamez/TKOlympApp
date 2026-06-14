@@ -296,6 +296,7 @@ val StringsVi = Strings(
     boardTabs = BoardTabStrings(
         news = "Tin tức",
         permanentBoard = "Bảng cố định",
+        competitions = "Thi đấu",
     ),
     eventCalendarTabs = EventCalendarTabStrings(
         planned = "Đã lên kế hoạch",
@@ -629,5 +630,19 @@ val StringsVi = Strings(
         skip = "Bỏ qua",
         done = "Xong",
         stepOf = "/",
+    ),
+    competition = com.tkolymp.shared.language.CompetitionStrings(
+        competitions = "Thi đấu",
+        upcoming = "Sắp tới",
+        results = "Kết quả",
+        nearestCompetition = "Cuộc thi gần nhất",
+        noUpcoming = "Không có cuộc thi sắp tới",
+        noResults = "Không có kết quả",
+        checkIn = "Check-in đến",
+        participants = "Người tham gia",
+        ranking = "Xếp hạng",
+        pointGain = "Điểm",
+        isFinal = "Chung kết",
+        category = "Hạng mục",
     ),
 )

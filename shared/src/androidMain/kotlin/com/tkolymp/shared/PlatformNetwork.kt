@@ -20,6 +20,7 @@ import com.tkolymp.shared.storage.OfflineDataStorageAndroid
 import com.tkolymp.shared.network.NetworkMonitorAndroid
 import com.tkolymp.shared.sync.OfflineSyncManager
 import com.tkolymp.shared.personalevents.PersonalEventService
+import com.tkolymp.shared.competitions.CompetitionService
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -78,6 +79,7 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
     val networkMonitor = NetworkMonitorAndroid(context)
     val offlineSyncManager = OfflineSyncManager(eventSvc, announcementSvc, peopleSvc, offlineDataStorage, networkMonitor, userSvc, notificationSvc, clubSvc, paymentSvc)
     val personalEventService = PersonalEventService(offlineDataStorage, notificationScheduler, notificationStorage)
+    val competitionSvc = CompetitionService(gql, cache)
 
     val container = AppContainer(
         tokenStorage = storage,
@@ -103,6 +105,7 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
         networkMonitor = networkMonitor,
         offlineSyncManager = offlineSyncManager,
         announcementBadgeStorage = AnnouncementBadgeStorage(context),
+        competitionService = competitionSvc,
     )
 
     ServiceLocator.init(container)

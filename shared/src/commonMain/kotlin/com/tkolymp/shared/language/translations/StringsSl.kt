@@ -307,6 +307,7 @@ val StringsSl = Strings(
     boardTabs = BoardTabStrings(
         news = "Novice",
         permanentBoard = "Stalna tabla",
+        competitions = "Tekmovanja",
     ),
     eventCalendarTabs = EventCalendarTabStrings(
         planned = "Načrtovano",
@@ -629,5 +630,19 @@ val StringsSl = Strings(
         skip = "Preskoči",
         done = "Končano",
         stepOf = "od",
+    ),
+    competition = com.tkolymp.shared.language.CompetitionStrings(
+        competitions = "Tekmovanja",
+        upcoming = "Prihajajoče",
+        results = "Rezultati",
+        nearestCompetition = "Naslednje tekmovanje",
+        noUpcoming = "Ni prihajajočih tekmovanj",
+        noResults = "Ni rezultatov",
+        checkIn = "Prijava do",
+        participants = "Udeleženci",
+        ranking = "Uvrstitev",
+        pointGain = "Točke",
+        isFinal = "Final",
+        category = "Kategorija",
     ),
 )

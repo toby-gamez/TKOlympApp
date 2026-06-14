@@ -23,6 +23,7 @@ import com.tkolymp.shared.storage.OfflineDataStorage
 import com.tkolymp.shared.network.NetworkMonitor
 import com.tkolymp.shared.sync.OfflineSyncManager
 import com.tkolymp.shared.personalevents.PersonalEventService
+import com.tkolymp.shared.competitions.ICompetitionService
 
 /**
  * Holds all application-level service instances with explicit constructor injection.
@@ -53,4 +54,5 @@ class AppContainer(
     val networkMonitor: NetworkMonitor,
     val offlineSyncManager: OfflineSyncManager,
     val announcementBadgeStorage: AnnouncementBadgeStorage,
+    val competitionService: ICompetitionService,
 )

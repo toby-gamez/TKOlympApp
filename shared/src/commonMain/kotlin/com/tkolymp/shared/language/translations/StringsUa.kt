@@ -307,6 +307,7 @@ val StringsUa = Strings(
     boardTabs = BoardTabStrings(
         news = "Новини",
         permanentBoard = "Постійна дошка",
+        competitions = "Змагання",
     ),
     eventCalendarTabs = EventCalendarTabStrings(
         planned = "Заплановано",
@@ -629,5 +630,19 @@ val StringsUa = Strings(
         skip = "Пропустити",
         done = "Готово",
         stepOf = "з",
+    ),
+    competition = com.tkolymp.shared.language.CompetitionStrings(
+        competitions = "Змагання",
+        upcoming = "Майбутні",
+        results = "Результати",
+        nearestCompetition = "Найближче змагання",
+        noUpcoming = "Немає майбутніх змагань",
+        noResults = "Немає результатів",
+        checkIn = "Реєстрація до",
+        participants = "Учасники",
+        ranking = "Місце",
+        pointGain = "Очки",
+        isFinal = "Фінал",
+        category = "Категорія",
     ),
 )

@@ -38,6 +38,8 @@ import com.tkolymp.shared.utils.AppConstants
 import com.tkolymp.shared.event.EventType
 import com.tkolymp.shared.event.toEventType
 import com.tkolymp.shared.calendar.parseCalendarJson
+import com.tkolymp.shared.competitions.Competition
+import com.tkolymp.shared.competitions.ICompetitionService
 
 data class CalendarState(
     val eventsByDay: Map<String, List<EventInstance>> = emptyMap(),
@@ -50,6 +52,7 @@ data class CalendarState(
     val myCoupleIds: List<String> = emptyList(),
     val isOffline: Boolean = false,
     val hasCancelledMineToShow: Boolean = false,
+    val competitionsByDay: Map<String, List<Competition>> = emptyMap(),
     override val isLoading: Boolean = false,
     override val error: AppError? = null
 ) : ViewModelState
@@ -58,7 +61,8 @@ class CalendarViewModel(
     private val eventService: com.tkolymp.shared.event.IEventService = ServiceLocator.eventService,
     private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService,
     private val cache: CacheService = ServiceLocator.cacheService,
-    private val offlineDataStorage: OfflineDataStorage = ServiceLocator.offlineDataStorage
+    private val offlineDataStorage: OfflineDataStorage = ServiceLocator.offlineDataStorage,
+    private val competitionService: ICompetitionService = ServiceLocator.competitionService
 ) : ViewModel() {
     private val _state = MutableStateFlow(CalendarState())
     val state: StateFlow<CalendarState> = _state.asStateFlow()
@@ -267,6 +271,13 @@ class CalendarViewModel(
                 _state.value.hasCancelledMineToShow
             }
 
+            val competitionsByDay = try {
+                competitionService.getUpcomingCompetitions(
+                    pSince = weekStart.toString(),
+                    pUntil = endDay.toString()
+                ).groupBy { it.competitionDate }
+            } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyMap() }
+
             _state.value = _state.value.copy(
                 eventsByDay = mergedMap,
                 lessonsByTrainerByDay = lessonsByTrainerByDay,
@@ -277,6 +288,7 @@ class CalendarViewModel(
                 myPersonId = pid,
                 myCoupleIds = cids,
                 hasCancelledMineToShow = hasCancelledMineToShow,
+                competitionsByDay = competitionsByDay,
                 isLoading = false
             )
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {

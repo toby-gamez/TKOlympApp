@@ -314,6 +314,7 @@ val StringsCs = Strings(
     boardTabs = BoardTabStrings(
         news = "Aktuality",
         permanentBoard = "Stálá nástěnka",
+        competitions = "Soutěže",
     ),
     eventCalendarTabs = EventCalendarTabStrings(
         planned = "Naplánováno",
@@ -657,5 +658,19 @@ val StringsCs = Strings(
         skip = "Přeskočit",
         done = "Hotovo",
         stepOf = "z",
+    ),
+    competition = com.tkolymp.shared.language.CompetitionStrings(
+        competitions = "Soutěže",
+        upcoming = "Nadcházející",
+        results = "Výsledky",
+        nearestCompetition = "Nejbližší soutěž",
+        noUpcoming = "Žádné nadcházející soutěže",
+        noResults = "Žádné výsledky",
+        checkIn = "Check-in do",
+        participants = "Účastníci",
+        ranking = "Pořadí",
+        pointGain = "Body",
+        isFinal = "Finále",
+        category = "Kategorie",
     ),
 )

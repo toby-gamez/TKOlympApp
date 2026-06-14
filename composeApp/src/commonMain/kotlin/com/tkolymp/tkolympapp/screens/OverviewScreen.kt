@@ -78,6 +78,7 @@ import com.tkolymp.shared.event.EventType
 import com.tkolymp.shared.event.firstTrainerOrEmpty
 import com.tkolymp.shared.event.toEventType
 import com.tkolymp.tkolympapp.components.WeekPersonaBadge
+import com.tkolymp.shared.competitions.Competition
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -400,6 +401,27 @@ fun OverviewScreen(
                 }
             }
             } // Camps section
+            Spacer(modifier = Modifier.height(8.dp))
+            // Nearest competition section
+            Column {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(AppStrings.current.competition.nearestCompetition, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                }
+                Column(modifier = Modifier.padding(horizontal = 12.dp)) {
+                    val comp = state.nearestCompetition
+                    if (comp == null) {
+                        Text(AppStrings.current.competition.noUpcoming, modifier = Modifier.padding(vertical = 6.dp))
+                    } else {
+                        StaggeredItem(index = 0, visible = cardsVisible) {
+                            NearestCompetitionCard(competition = comp)
+                        }
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
             // Upcoming birthdays
             Column(
                 modifier = Modifier
@@ -641,6 +663,63 @@ private fun dateHeader(date: String, todayString: String, tomorrowString: String
             if (ld == null) date else {
                 val todayYear = try { LocalDate.parse(todayString).year } catch (_: Exception) { -1 }
                 formatFullCalendarDate(ld, AppStrings.currentLanguage.code, ld.year != todayYear)
+            }
+        }
+    }
+}
+
+@Composable
+private fun NearestCompetitionCard(competition: Competition) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            val dateStr = try {
+                val ld = LocalDate.parse(competition.competitionDate)
+                formatFullCalendarDate(ld, AppStrings.currentLanguage.code, false)
+            } catch (_: Exception) { competition.competitionDate }
+
+            Text(
+                text = competition.eventName ?: competition.competitorName ?: "",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            competition.eventLocation?.takeIf { it.isNotBlank() }?.let { loc ->
+                Text(
+                    text = loc,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Text(
+                text = dateStr,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            competition.competitionType?.takeIf { it.isNotBlank() }?.let { ct ->
+                Text(
+                    text = ct,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            competition.checkInEnd?.takeIf { it.isNotBlank() }?.let { ci ->
+                Text(
+                    text = "${AppStrings.current.competition.checkIn} $ci",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            competition.category?.name?.takeIf { it.isNotBlank() }?.let { catName ->
+                Text(
+                    text = catName,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

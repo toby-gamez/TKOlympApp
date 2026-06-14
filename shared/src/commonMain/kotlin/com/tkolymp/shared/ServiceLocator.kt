@@ -22,6 +22,7 @@ import com.tkolymp.shared.storage.OfflineDataStorage
 import com.tkolymp.shared.network.NetworkMonitor
 import com.tkolymp.shared.sync.OfflineSyncManager
 import com.tkolymp.shared.personalevents.PersonalEventService
+import com.tkolymp.shared.competitions.ICompetitionService
 
 /**
  * Thin read-only facade over [AppContainer]. All mutable state lives in a single
@@ -69,4 +70,5 @@ object ServiceLocator {
     val networkMonitor: NetworkMonitor get() = container.networkMonitor
     val offlineSyncManager: OfflineSyncManager get() = container.offlineSyncManager
     val announcementBadgeStorage: AnnouncementBadgeStorage get() = container.announcementBadgeStorage
+    val competitionService: ICompetitionService get() = container.competitionService
 }

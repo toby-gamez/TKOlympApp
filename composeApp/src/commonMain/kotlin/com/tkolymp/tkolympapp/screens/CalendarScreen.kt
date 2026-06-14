@@ -490,7 +490,8 @@ fun CalendarScreen(
                     onResetFilters = {
                         selectedTrainers = emptySet()
                         selectedLocations = emptySet()
-                    }
+                    },
+                    competitionDates = calState.competitionsByDay.keys
                 )
             }
         }
@@ -573,7 +574,8 @@ private fun CalendarBottomSheetContent(
     selectedLocations: Set<String> = emptySet(),
     onTrainerToggle: (String) -> Unit = {},
     onLocationToggle: (String) -> Unit = {},
-    onResetFilters: (() -> Unit)? = null
+    onResetFilters: (() -> Unit)? = null,
+    competitionDates: Set<String> = emptySet()
 ) {
     var displayMonth by remember(currentWeekStart) {
         mutableStateOf(LocalDate(currentWeekStart.year, currentWeekStart.month, 1))
@@ -740,7 +742,8 @@ private fun CalendarBottomSheetContent(
                         onDayClick = { day ->
                             val monday = day.plus(-day.dayOfWeek.ordinal, DateTimeUnit.DAY)
                             onWeekSelected(monday)
-                        }
+                        },
+                        competitionDates = competitionDates
                     )
                 }
 
@@ -761,7 +764,8 @@ private fun MonthCalendarGrid(
     displayMonth: LocalDate,
     today: LocalDate,
     selectedWeekStart: LocalDate,
-    onDayClick: (LocalDate) -> Unit
+    onDayClick: (LocalDate) -> Unit,
+    competitionDates: Set<String> = emptySet()
 ) {
     val selectedWeekEnd = remember(selectedWeekStart) { selectedWeekStart.plus(6, DateTimeUnit.DAY) }
 
@@ -774,6 +778,7 @@ private fun MonthCalendarGrid(
     val circleColor = MaterialTheme.colorScheme.primary
     val onCircleColor = MaterialTheme.colorScheme.onPrimary
     val onSurfaceColor = MaterialTheme.colorScheme.onSurface
+    val competitionDotColor = MaterialTheme.colorScheme.tertiary
 
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         for (row in 0..5) {
@@ -840,6 +845,7 @@ private fun MonthCalendarGrid(
                     val isToday = date == today
                     val isRangeEdge = date == selectedWeekStart || date == selectedWeekEnd
                     val showCircle = isToday || isRangeEdge
+                    val hasCompetition = date.toString() in competitionDates
 
                     Box(
                         modifier = Modifier
@@ -865,6 +871,15 @@ private fun MonthCalendarGrid(
                                 else -> onSurfaceColor
                             }
                         )
+                        if (hasCompetition) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.BottomCenter)
+                                    .padding(bottom = 3.dp)
+                                    .size(4.dp)
+                                    .background(competitionDotColor, CircleShape)
+                            )
+                        }
                     }
                 }
             }

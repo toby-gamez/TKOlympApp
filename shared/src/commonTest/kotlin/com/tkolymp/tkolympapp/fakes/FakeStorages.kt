@@ -43,12 +43,15 @@ class FakeUserStorage : IUserStorage {
 
 class FakeCalendarPreferenceStorage : ICalendarPreferenceStorage {
     private val eventIds = mutableSetOf<Long>()
+    private var weeklyGoal: Int = 0
     override suspend fun getPreferTimeline(): Boolean = false
     override suspend fun setPreferTimeline(value: Boolean) {}
     override suspend fun getThemeMode(): String = "system"
     override suspend fun setThemeMode(value: String) {}
     override suspend fun isEventInCalendar(eventId: Long): Boolean = eventIds.contains(eventId)
     override suspend fun setEventInCalendar(eventId: Long) { eventIds.add(eventId) }
+    override suspend fun getWeeklyGoal(): Int = weeklyGoal
+    override suspend fun setWeeklyGoal(value: Int) { weeklyGoal = value }
 }
 
 class FakeNotificationStorage : INotificationStorage {

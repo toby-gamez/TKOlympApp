@@ -3,6 +3,8 @@ package com.tkolymp.tkolympapp.fakes
 import com.tkolymp.shared.announcements.Announcement
 import com.tkolymp.shared.announcements.IAnnouncementService
 import com.tkolymp.shared.auth.IAuthService
+import com.tkolymp.shared.competitions.Competition
+import com.tkolymp.shared.competitions.ICompetitionService
 import com.tkolymp.shared.event.EventInstance
 import com.tkolymp.shared.event.IEventService
 import com.tkolymp.shared.network.IGraphQlClient
@@ -59,6 +61,15 @@ class FakeAnnouncementService(
         return announcements
     }
     override suspend fun getAnnouncementById(id: Long, forceRefresh: Boolean): Announcement? = null
+}
+
+class FakeCompetitionService(
+    private val upcoming: List<Competition> = emptyList(),
+    private val past: List<Competition> = emptyList()
+) : ICompetitionService {
+    override suspend fun getUpcomingCompetitions(pSince: String?, pUntil: String?, first: Int): List<Competition> = upcoming
+    override suspend fun getPastCompetitions(pSince: String?, pUntil: String?, first: Int): List<Competition> = past
+    override suspend fun getNearestUpcoming(): Competition? = upcoming.firstOrNull()
 }
 
 class FakeNotificationScheduler : INotificationScheduler {

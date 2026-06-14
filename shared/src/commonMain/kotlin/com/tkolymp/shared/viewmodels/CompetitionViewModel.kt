@@ -1,0 +1,68 @@
+package com.tkolymp.shared.viewmodels
+
+import androidx.lifecycle.ViewModel
+import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.competitions.Competition
+import com.tkolymp.shared.competitions.ICompetitionService
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
+import kotlinx.datetime.todayIn
+import kotlin.time.Clock
+
+data class CompetitionState(
+    val upcomingCompetitions: List<Competition> = emptyList(),
+    val pastCompetitions: List<Competition> = emptyList(),
+    override val isLoading: Boolean = false,
+    override val error: AppError? = null
+) : ViewModelState
+
+class CompetitionViewModel(
+    private val competitionService: ICompetitionService = ServiceLocator.competitionService
+) : ViewModel() {
+    private val _state = MutableStateFlow(CompetitionState())
+    val state: StateFlow<CompetitionState> = _state.asStateFlow()
+
+    suspend fun load(forceRefresh: Boolean = false) {
+        _state.value = _state.value.copy(isLoading = true, error = null)
+        if (forceRefresh) {
+            try {
+                ServiceLocator.cacheService.invalidatePrefix("competitions_")
+            } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+        }
+        try {
+            val tz = TimeZone.currentSystemDefault()
+            val today = Clock.System.todayIn(tz)
+            val upcoming = competitionService.getUpcomingCompetitions(
+                pSince = today.toString(),
+                pUntil = today.plus(365, DateTimeUnit.DAY).toString()
+            )
+            val yearStart = LocalDate(today.year, 1, 1)
+            val past = competitionService.getPastCompetitions(
+                pSince = yearStart.toString(),
+                pUntil = today.toString()
+            )
+            _state.value = _state.value.copy(
+                upcomingCompetitions = upcoming,
+                pastCompetitions = past,
+                isLoading = false
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            _state.value = _state.value.copy(
+                isLoading = false,
+                error = AppError.generic("Failed to load competitions: ${e.message}")
+            )
+        }
+    }
+
+    fun clearError() {
+        _state.value = _state.value.copy(error = null)
+    }
+}

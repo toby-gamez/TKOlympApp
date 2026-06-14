@@ -307,6 +307,7 @@ val StringsDe = Strings(
     boardTabs = BoardTabStrings(
         news = "Neuigkeiten",
         permanentBoard = "Permanente Pinnwand",
+        competitions = "Wettkämpfe",
     ),
     eventCalendarTabs = EventCalendarTabStrings(
         planned = "Geplant",
@@ -628,5 +629,19 @@ val StringsDe = Strings(
         skip = "Überspringen",
         done = "Fertig",
         stepOf = "von",
+    ),
+    competition = com.tkolymp.shared.language.CompetitionStrings(
+        competitions = "Wettkämpfe",
+        upcoming = "Bevorstehend",
+        results = "Ergebnisse",
+        nearestCompetition = "Nächster Wettkampf",
+        noUpcoming = "Keine bevorstehenden Wettkämpfe",
+        noResults = "Keine Ergebnisse",
+        checkIn = "Check-in bis",
+        participants = "Teilnehmer",
+        ranking = "Platzierung",
+        pointGain = "Punkte",
+        isFinal = "Finale",
+        category = "Kategorie",
     ),
 )

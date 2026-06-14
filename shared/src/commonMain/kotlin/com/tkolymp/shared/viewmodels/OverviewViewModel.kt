@@ -40,6 +40,8 @@ import com.tkolymp.shared.event.toEventType
 import com.tkolymp.shared.calendar.parseCalendarJson
 import com.tkolymp.shared.payments.PaymentService
 import com.tkolymp.shared.models.UserRole
+import com.tkolymp.shared.competitions.Competition
+import com.tkolymp.shared.competitions.ICompetitionService
 
 data class BirthdayEntry(
     val personId: String,
@@ -70,6 +72,7 @@ data class OverviewState(
     val currentWeekMinutes: Long = 0L,
     val paymentDaysUntilDue: Int? = null,
     val isDancer: Boolean = true,
+    val nearestCompetition: Competition? = null,
     override val isLoading: Boolean = false,
     override val error: AppError? = null
 ) : ViewModelState
@@ -82,7 +85,8 @@ class OverviewViewModel(
     private val cache: CacheService = ServiceLocator.cacheService,
     private val calendarPreferenceStorage: com.tkolymp.shared.storage.ICalendarPreferenceStorage = ServiceLocator.calendarPreferenceStorage,
     private val paymentService: PaymentService = ServiceLocator.paymentService,
-    private val onboardingStorage: com.tkolymp.shared.storage.OnboardingStorage = ServiceLocator.onboardingStorage
+    private val onboardingStorage: com.tkolymp.shared.storage.OnboardingStorage? = ServiceLocator.onboardingStorage,
+    private val competitionService: ICompetitionService = ServiceLocator.competitionService
 ) : ViewModel() {
     private val _state = MutableStateFlow(OverviewState())
     val state: StateFlow<OverviewState> = _state.asStateFlow()
@@ -413,7 +417,7 @@ class OverviewViewModel(
                 }
             } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("OverviewViewModel", "fetchPeople failed: ${e.message}"); emptyList() }
 
-            val isDancer = try { onboardingStorage.getUserRole() != UserRole.PARENT } catch (_: Exception) { true }
+            val isDancer = try { onboardingStorage?.getUserRole() != UserRole.PARENT } catch (_: Exception) { true }
 
             val weeklyGoal = try { calendarPreferenceStorage.getWeeklyGoal() } catch (_: Exception) { 0 }
             val mondayStr = weekMonday.toString()
@@ -439,6 +443,10 @@ class OverviewViewModel(
                 } else null
             } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
 
+            val nearestCompetition = try {
+                competitionService.getNearestUpcoming()
+            } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+
             _state.value = _state.value.copy(
                 upcomingEvents = events,
                 recentAnnouncements = announcements,
@@ -456,6 +464,7 @@ class OverviewViewModel(
                 currentWeekMinutes = currentWeekMinutes,
                 paymentDaysUntilDue = paymentDaysUntilDue,
                 isDancer = isDancer,
+                nearestCompetition = nearestCompetition,
                 isLoading = false
             )
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {

@@ -308,6 +308,7 @@ val StringsBrainrot = Strings(
     boardTabs = BoardTabStrings(
         news = "fresh tea",
         permanentBoard = "permanent wall of W",
+        competitions = "Comps",
     ),
     eventCalendarTabs = EventCalendarTabStrings(
         planned = "on the agenda fr",
@@ -630,5 +631,19 @@ val StringsBrainrot = Strings(
         skip = "Skip (NPC move)",
         done = "Ate fr",
         stepOf = "of",
+    ),
+    competition = com.tkolymp.shared.language.CompetitionStrings(
+        competitions = "Comps",
+        upcoming = "Upcoming Slay",
+        results = "W/L Report",
+        nearestCompetition = "Next Comp",
+        noUpcoming = "No comps on the radar fr",
+        noResults = "No cap, no results yet",
+        checkIn = "Check-in deadline",
+        participants = "Competitors",
+        ranking = "Placement",
+        pointGain = "Points earned",
+        isFinal = "Final (main character energy)",
+        category = "Category",
     ),
 )
