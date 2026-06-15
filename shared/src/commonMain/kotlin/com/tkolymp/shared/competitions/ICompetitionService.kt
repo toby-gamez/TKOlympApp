@@ -4,13 +4,15 @@ interface ICompetitionService {
     suspend fun getUpcomingCompetitions(
         pSince: String? = null,
         pUntil: String? = null,
-        first: Int = 50
+        first: Int = 50,
+        pPersonIds: List<Long>? = null
     ): List<Competition>
 
     suspend fun getPastCompetitions(
         pSince: String? = null,
         pUntil: String? = null,
-        first: Int = 50
+        first: Int = 50,
+        pPersonIds: List<Long>? = null
     ): List<Competition>
 
     suspend fun getNearestUpcoming(): Competition?

@@ -53,7 +53,7 @@ internal fun LessonView(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
+            .padding(vertical = 4.dp),
         shape = RoundedCornerShape(12.dp)
     ) {
         Row(modifier = Modifier

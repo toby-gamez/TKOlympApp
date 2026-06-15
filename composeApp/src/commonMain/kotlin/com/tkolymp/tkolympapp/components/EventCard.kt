@@ -137,7 +137,7 @@ internal fun RenderSingleEventCard(item: EventInstance, onEventClick: (Long, Lon
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp)
+            .padding(vertical = 4.dp)
             .clip(RoundedCornerShape(12.dp))
             .clickable {
                 item.event?.id?.let { onEventClick(it, item.id) }

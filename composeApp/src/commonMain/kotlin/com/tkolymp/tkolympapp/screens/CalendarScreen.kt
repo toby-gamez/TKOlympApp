@@ -354,7 +354,7 @@ fun CalendarScreen(
                         val competitions = competitionsByDay[date] ?: emptyList()
 
                         StaggeredItem(index = idx, visible = datesVisible, baseDelayMs = 50) {
-                        Column(modifier = Modifier.padding(8.dp)) {
+                        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                             val header = when (date) {
                                 calState.todayString -> AppStrings.current.timeline.today.lowercase()
                                 calState.tomorrowString -> AppStrings.current.timeline.tomorrow.lowercase()

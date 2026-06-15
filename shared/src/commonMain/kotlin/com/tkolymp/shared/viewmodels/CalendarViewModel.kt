@@ -271,10 +271,12 @@ class CalendarViewModel(
                 _state.value.hasCancelledMineToShow
             }
 
+            val competitionPersonIds = if (onlyMine) pid?.toLongOrNull()?.let { listOf(it) } else null
             val competitionsByDay = try {
                 competitionService.getUpcomingCompetitions(
                     pSince = weekStart.toString(),
-                    pUntil = endDay.plus(1, DateTimeUnit.DAY).toString()
+                    pUntil = endDay.plus(1, DateTimeUnit.DAY).toString(),
+                    pPersonIds = competitionPersonIds
                 ).groupBy { it.competitionDate }
             } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyMap() }
 

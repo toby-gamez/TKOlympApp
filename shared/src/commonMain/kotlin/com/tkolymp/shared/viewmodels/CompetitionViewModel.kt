@@ -71,7 +71,7 @@ class CompetitionViewModel(
                 pSince = today.minus(365, DateTimeUnit.DAY).toString(),
                 pUntil = today.toString(),
                 first = 5000
-            ).take(100)
+            )
             _state.value = _state.value.copy(pastCompetitions = past, isLoading = false)
         } catch (e: CancellationException) {
             throw e

@@ -55,16 +55,16 @@ class CompetitionService(
         get() = try { ServiceLocator.offlineSyncManager } catch (_: Exception) { null }
 
     private val briefQuery = """
-        query CompetitionBrief(${'$'}first: Int, ${'$'}pSince: Date, ${'$'}pUntil: Date) {
-            competitionBriefList(first: ${'$'}first, offset: 0, pCohortId: null, pPersonIds: null, pSince: ${'$'}pSince, pUntil: ${'$'}pUntil) {
+        query CompetitionBrief(${'$'}first: Int, ${'$'}pSince: Date, ${'$'}pUntil: Date, ${'$'}pPersonIds: [BigInt]) {
+            competitionBriefList(first: ${'$'}first, offset: 0, pCohortId: null, pPersonIds: ${'$'}pPersonIds, pSince: ${'$'}pSince, pUntil: ${'$'}pUntil) {
                 $FIELD_BLOCK
             }
         }
     """.trimIndent()
 
     private val reportQuery = """
-        query CompetitionReport(${'$'}first: Int, ${'$'}pSince: Date, ${'$'}pUntil: Date) {
-            competitionReportList(first: ${'$'}first, offset: 0, pCohortId: null, pPersonIds: null, pSince: ${'$'}pSince, pUntil: ${'$'}pUntil) {
+        query CompetitionReport(${'$'}first: Int, ${'$'}pSince: Date, ${'$'}pUntil: Date, ${'$'}pPersonIds: [BigInt]) {
+            competitionReportList(first: ${'$'}first, offset: 0, pCohortId: null, pPersonIds: ${'$'}pPersonIds, pSince: ${'$'}pSince, pUntil: ${'$'}pUntil) {
                 $FIELD_BLOCK
             }
         }
@@ -73,15 +73,18 @@ class CompetitionService(
     override suspend fun getUpcomingCompetitions(
         pSince: String?,
         pUntil: String?,
-        first: Int
+        first: Int,
+        pPersonIds: List<Long>?
     ): List<Competition> {
-        val cacheKey = "competitions_upcoming_${pSince}_${pUntil}_$first"
+        val personKey = pPersonIds?.joinToString(",") ?: "all"
+        val cacheKey = "competitions_upcoming_${pSince}_${pUntil}_${first}_$personKey"
         cache.get<List<Competition>>(cacheKey)?.let { return it }
 
         val vars = buildJsonObject {
             put("first", JsonPrimitive(first))
             if (pSince != null) put("pSince", JsonPrimitive(pSince))
             if (pUntil != null) put("pUntil", JsonPrimitive(pUntil))
+            if (pPersonIds != null) put("pPersonIds", kotlinx.serialization.json.JsonArray(pPersonIds.map { JsonPrimitive(it) }))
         }
         val list = try {
             val resp = client.post(briefQuery, vars)
@@ -104,15 +107,18 @@ class CompetitionService(
     override suspend fun getPastCompetitions(
         pSince: String?,
         pUntil: String?,
-        first: Int
+        first: Int,
+        pPersonIds: List<Long>?
     ): List<Competition> {
-        val cacheKey = "competitions_past_${pSince}_${pUntil}_$first"
+        val personKey = pPersonIds?.joinToString(",") ?: "all"
+        val cacheKey = "competitions_past_${pSince}_${pUntil}_${first}_$personKey"
         cache.get<List<Competition>>(cacheKey)?.let { return it }
 
         val vars = buildJsonObject {
             put("first", JsonPrimitive(first))
             if (pSince != null) put("pSince", JsonPrimitive(pSince))
             if (pUntil != null) put("pUntil", JsonPrimitive(pUntil))
+            if (pPersonIds != null) put("pPersonIds", kotlinx.serialization.json.JsonArray(pPersonIds.map { JsonPrimitive(it) }))
         }
         val resp = client.post(reportQuery, vars)
         Logger.d("CompetitionService", "reportList raw response: $resp")
