@@ -62,6 +62,8 @@ class CalendarViewViewModel(
     // Track last requested range start and filter to avoid unnecessary cache invalidation
     private var lastRangeStartIso: String? = null
     private var lastShowOnlyMine: Boolean? = null
+    // Stale-load guard: discard results from superseded loadEvents() calls
+    private var loadRevision = 0
     
     /**
      * Load cached user information (lazy loading)
@@ -88,6 +90,7 @@ class CalendarViewViewModel(
      * Load events for the current date range and view mode
      */
     suspend fun loadEvents() {
+        val revision = ++loadRevision
         _state.value = _state.value.copy(isLoading = true, error = null)
         var isOfflineUsed = false
         
@@ -120,18 +123,33 @@ class CalendarViewViewModel(
                 try {
                     val bucketName = if (currentState.showOnlyMine) "MINE" else "ALL"
                     val startDate = timeRange.start.date
+                    val mondayOfWeek = startDate.minus(startDate.dayOfWeek.ordinal, DateTimeUnit.DAY)
                     val weekKey = OfflineKeys.CAL_PREFIX + "${bucketName}_${startDate}"
                     var raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(weekKey) } catch (_: Exception) { null }
                     if (raw == null) {
-                        // try to find any compatible offline_cal_* key for this bucket (some buckets use different suffixes)
                         try {
                             val keys = try { ServiceLocator.offlineSyncManager.listOfflineKeys() } catch (_: Exception) { emptySet() }
                             val candidates = keys.filter { it.startsWith(OfflineKeys.CAL_PREFIX + "${bucketName}_") }
-                            // prefer exact weekStart match
                             val exact = candidates.firstOrNull { it.endsWith(startDate.toString()) }
-                            val anyKey = exact ?: candidates.firstOrNull()
+                            val mondayKey = if (exact == null) candidates.firstOrNull { it.endsWith(mondayOfWeek.toString()) } else null
+                            // For MINE bucket skip the anyKey fallback (wrong-week mine data would show 0 events
+                            // after date filtering and clear the view). Fall through to ALL bucket fallback instead.
+                            val anyKey = if (bucketName == "MINE") exact ?: mondayKey
+                                         else exact ?: mondayKey ?: candidates.firstOrNull()
                             if (anyKey != null) Logger.d("CalendarViewViewModel", "found offline key for bucket=${bucketName}: ${anyKey}")
                             if (anyKey != null) raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(anyKey) } catch (_: Exception) { null }
+
+                            // If MINE bucket not found, fall back to ALL bucket with client-side filter
+                            if (raw == null && currentState.showOnlyMine) {
+                                val allCandidates = keys.filter { it.startsWith(OfflineKeys.CAL_PREFIX + "ALL_") }
+                                val allExact = allCandidates.firstOrNull { it.endsWith(startDate.toString()) }
+                                val allMondayKey = if (allExact == null) allCandidates.firstOrNull { it.endsWith(mondayOfWeek.toString()) } else null
+                                val allAnyKey = allExact ?: allMondayKey ?: allCandidates.firstOrNull()
+                                if (allAnyKey != null) {
+                                    Logger.d("CalendarViewViewModel", "MINE offline not found, falling back to ALL: $allAnyKey")
+                                    raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(allAnyKey) } catch (_: Exception) { null }
+                                }
+                            }
                         } catch (_: Exception) {}
                     }
                     if (raw != null) {
@@ -147,6 +165,8 @@ class CalendarViewViewModel(
                             .filter { event ->
                                 event.startTime.date >= timeRange.start.date && event.startTime.date <= timeRange.end.date
                             }
+                            // Client-side mine filter: handles the case where ALL bucket is used as fallback
+                            .filter { event -> !currentState.showOnlyMine || event.isMyEvent }
 
                         val personalTimeline = try { expandPersonalEventsToTimeline(startIso, endIso) } catch (_: Exception) { emptyList() }
                         val allTimelineEvents = (serverTimeline + personalTimeline).sortedBy { it.startTime }
@@ -159,6 +179,7 @@ class CalendarViewViewModel(
                                 .associate { it.key to it.value }
                         }
 
+                        if (revision != loadRevision) return
                         _state.value = currentState.copy(
                             events = allTimelineEvents,
                             layoutData = layoutData,
@@ -205,7 +226,9 @@ class CalendarViewViewModel(
                             val keys = try { ServiceLocator.offlineSyncManager.listOfflineKeys() } catch (_: Exception) { emptySet() }
                             val candidates = keys.filter { it.startsWith(OfflineKeys.CAL_PREFIX + "${bucketName}_") }
                             val exact = candidates.firstOrNull { it.endsWith(startDate.toString()) }
-                            val anyKey = exact ?: candidates.firstOrNull()
+                            val mondayOfWeek = startDate.minus(startDate.dayOfWeek.ordinal, DateTimeUnit.DAY)
+                            val mondayKey = if (exact == null) candidates.firstOrNull { it.endsWith(mondayOfWeek.toString()) } else null
+                            val anyKey = exact ?: mondayKey ?: candidates.firstOrNull()
                             if (anyKey != null) raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(anyKey) } catch (_: Exception) { null }
                         } catch (_: Exception) {}
                     }
@@ -226,23 +249,35 @@ class CalendarViewViewModel(
                 try {
                     val bucketName = if (currentState.showOnlyMine) "MINE" else "ALL"
                     val startDate = timeRange.start.date
+                    val mondayOfWeek = startDate.minus(startDate.dayOfWeek.ordinal, DateTimeUnit.DAY)
                     val weekKey = OfflineKeys.CAL_PREFIX + "${bucketName}_${startDate}"
                     var raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(weekKey) } catch (_: Exception) { null }
                     if (raw == null) {
-                        // try to find any compatible offline_cal_* key for this bucket
                         try {
                             val keys = try { ServiceLocator.offlineSyncManager.listOfflineKeys() } catch (_: Exception) { emptySet() }
                             val candidates = keys.filter { it.startsWith(OfflineKeys.CAL_PREFIX + "${bucketName}_") }
                             val exact = candidates.firstOrNull { it.endsWith(startDate.toString()) }
-                            val anyKey = exact ?: candidates.firstOrNull()
+                            val mondayKey = if (exact == null) candidates.firstOrNull { it.endsWith(mondayOfWeek.toString()) } else null
+                            val anyKey = exact ?: mondayKey ?: candidates.firstOrNull()
                             if (anyKey != null) raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(anyKey) } catch (_: Exception) { null }
+
+                            // If MINE bucket not found, fall back to ALL bucket with client-side filter
+                            if (raw == null && currentState.showOnlyMine) {
+                                val allCandidates = keys.filter { it.startsWith(OfflineKeys.CAL_PREFIX + "ALL_") }
+                                val allExact = allCandidates.firstOrNull { it.endsWith(startDate.toString()) }
+                                val allMondayKey = if (allExact == null) allCandidates.firstOrNull { it.endsWith(mondayOfWeek.toString()) } else null
+                                val allAnyKey = allExact ?: allMondayKey ?: allCandidates.firstOrNull()
+                                if (allAnyKey != null) {
+                                    Logger.d("CalendarViewViewModel", "MINE offline not found, falling back to ALL: $allAnyKey")
+                                    raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(allAnyKey) } catch (_: Exception) { null }
+                                }
+                            }
                         } catch (_: Exception) {}
                     }
                     if (raw != null) {
                         var parsed = parseCalendarJson(raw)
                         parsed = try { enrichParsedWithEventDetails(parsed) } catch (_: Exception) { parsed }
                         isOfflineUsed = true
-                        // replace eventsGrouped with parsed offline data
                         eventsGrouped = parsed
                     }
                 } catch (_: Exception) {}
@@ -262,6 +297,11 @@ class CalendarViewViewModel(
                     // Filter by date range
                     event.startTime.date >= timeRange.start.date &&
                     event.startTime.date <= timeRange.end.date
+                }
+                // Client-side mine filter for offline fallback: when MINE offline bucket is unavailable
+                // and we're using ALL bucket data, filter client-side to avoid showing all events.
+                .let { events ->
+                    if (isOfflineUsed && currentState.showOnlyMine) events.filter { it.isMyEvent } else events
                 }
 
             // Load personal (local) events and expand recurrences into TimelineEvent
@@ -284,6 +324,7 @@ class CalendarViewViewModel(
                     .associate { it.key to it.value }
             }
 
+            if (revision != loadRevision) return
             _state.value = currentState.copy(
                 events = allTimelineEvents,
                 layoutData = layoutData,
@@ -295,10 +336,12 @@ class CalendarViewViewModel(
             lastShowOnlyMine = currentState.showOnlyMine
 
         } catch (e: Exception) {
-            _state.value = _state.value.copy(
-                isLoading = false,
-                error = AppError.generic(e.message ?: AppStrings.current.errorMessages.errorLoadingEvent)
-            )
+            if (revision == loadRevision) {
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    error = AppError.generic(e.message ?: AppStrings.current.errorMessages.errorLoadingEvent)
+                )
+            }
         }
     }
 

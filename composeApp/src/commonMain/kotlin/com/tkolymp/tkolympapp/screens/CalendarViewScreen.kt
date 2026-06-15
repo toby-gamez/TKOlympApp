@@ -500,8 +500,8 @@ internal fun SingleDayTimelineView(
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
     val viewportHeightPx = with(density) { maxHeight.toPx() }
 
-    // Auto-scroll: center current time for today, or 7 AM for other days
-    LaunchedEffect(selectedDate) {
+    // Auto-scroll only on initial load; preserve position when navigating days
+    LaunchedEffect(Unit) {
         val targetMinute = if (selectedDate == today) {
             now.hour * 60 + now.minute
         } else {
@@ -593,8 +593,8 @@ internal fun MultiDayTimelineView(
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
     val viewportHeightPx = with(density) { maxHeight.toPx() }
 
-    // Auto-scroll: center current time if today is visible, or 7 AM otherwise
-    LaunchedEffect(dates) {
+    // Auto-scroll only on initial load; preserve position when navigating
+    LaunchedEffect(Unit) {
         val targetMinute = if (today in dates) {
             now.hour * 60 + now.minute
         } else {

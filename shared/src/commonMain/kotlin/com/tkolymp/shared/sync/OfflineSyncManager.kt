@@ -17,6 +17,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
 import com.tkolymp.shared.json.AppJson
@@ -174,7 +175,8 @@ class OfflineSyncManager(
             Logger.d("OfflineSyncManager", "syncCalendarBuckets: bucket=${bucket.name}")
             for (weekOffset in -1..2) {
                 Logger.d("OfflineSyncManager", "syncCalendarBuckets: bucket=${bucket.name} weekOffset=${weekOffset}")
-                val weekStart = today.plus(weekOffset * 7, DateTimeUnit.DAY)
+                val rawWeekStart = today.plus(weekOffset * 7, DateTimeUnit.DAY)
+                val weekStart = rawWeekStart.minus(rawWeekStart.dayOfWeek.ordinal, DateTimeUnit.DAY)
                 val endDay = weekStart.plus(6, DateTimeUnit.DAY)
                 val startIso = "${weekStart}" + "T00:00:00Z"
                 val endIso = "${endDay}" + "T23:59:59Z"
@@ -389,7 +391,8 @@ class OfflineSyncManager(
         for (bucket in buckets) {
             for (weekOffset in weekOffsets) {
                 onProgress("calendar", ++calDone, totalCalendar)
-                val weekStart = today.plus(weekOffset * 7, DateTimeUnit.DAY)
+                val rawWeekStart = today.plus(weekOffset * 7, DateTimeUnit.DAY)
+                val weekStart = rawWeekStart.minus(rawWeekStart.dayOfWeek.ordinal, DateTimeUnit.DAY)
                 val endDay = weekStart.plus(6, DateTimeUnit.DAY)
                 val startIso = "${weekStart}T00:00:00Z"
                 val endIso = "${endDay}T23:59:59Z"
