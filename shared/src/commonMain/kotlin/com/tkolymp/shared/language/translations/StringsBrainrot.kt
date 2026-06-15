@@ -643,7 +643,13 @@ val StringsBrainrot = Strings(
         participants = "Competitors",
         ranking = "Placement",
         pointGain = "Points earned",
+        pointsSuffix = "pts",
         isFinal = "Final (main character energy)",
+        ageGroupAdult = "Adult",
+        ageGroupJunior = "Junior",
+        ageGroupJuvenile = "Kids",
+        ageGroupSenior = "Senior",
+        ageGroupYouth = "Youth",
         category = "Category",
     ),
 )

@@ -641,7 +641,13 @@ val StringsDe = Strings(
         participants = "Teilnehmer",
         ranking = "Platzierung",
         pointGain = "Punkte",
+        pointsSuffix = "P",
         isFinal = "Finale",
+        ageGroupAdult = "Erwachsene",
+        ageGroupJunior = "Junior",
+        ageGroupJuvenile = "Kinder",
+        ageGroupSenior = "Senior",
+        ageGroupYouth = "Jugend",
         category = "Kategorie",
     ),
 )

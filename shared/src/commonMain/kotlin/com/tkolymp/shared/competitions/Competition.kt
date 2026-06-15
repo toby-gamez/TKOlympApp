@@ -1,5 +1,8 @@
 package com.tkolymp.shared.competitions
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class CompetitionCategory(
     val id: Long?,
     val name: String?,
@@ -12,6 +15,7 @@ data class CompetitionCategory(
     val baseDanceProgramId: Long?
 )
 
+@Serializable
 data class Competition(
     val competitionId: Long?,
     val competitionDate: String,

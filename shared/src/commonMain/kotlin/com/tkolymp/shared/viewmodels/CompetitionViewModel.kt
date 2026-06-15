@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
 import kotlin.time.Clock
@@ -40,16 +40,11 @@ class CompetitionViewModel(
             val today = Clock.System.todayIn(tz)
             val upcoming = competitionService.getUpcomingCompetitions(
                 pSince = today.toString(),
-                pUntil = today.plus(365, DateTimeUnit.DAY).toString()
-            )
-            val yearStart = LocalDate(today.year, 1, 1)
-            val past = competitionService.getPastCompetitions(
-                pSince = yearStart.toString(),
-                pUntil = today.toString()
+                pUntil = today.plus(365, DateTimeUnit.DAY).toString(),
+                first = 500
             )
             _state.value = _state.value.copy(
                 upcomingCompetitions = upcoming,
-                pastCompetitions = past,
                 isLoading = false
             )
         } catch (e: CancellationException) {
@@ -58,6 +53,32 @@ class CompetitionViewModel(
             _state.value = _state.value.copy(
                 isLoading = false,
                 error = AppError.generic("Failed to load competitions: ${e.message}")
+            )
+        }
+    }
+
+    suspend fun loadPast(forceRefresh: Boolean = false) {
+        _state.value = _state.value.copy(isLoading = true, error = null)
+        if (forceRefresh) {
+            try {
+                ServiceLocator.cacheService.invalidatePrefix("competitions_past")
+            } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+        }
+        try {
+            val tz = TimeZone.currentSystemDefault()
+            val today = Clock.System.todayIn(tz)
+            val past = competitionService.getPastCompetitions(
+                pSince = today.minus(365, DateTimeUnit.DAY).toString(),
+                pUntil = today.toString(),
+                first = 5000
+            ).take(100)
+            _state.value = _state.value.copy(pastCompetitions = past, isLoading = false)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            _state.value = _state.value.copy(
+                isLoading = false,
+                error = AppError.generic("Failed to load past competitions: ${e.message}")
             )
         }
     }

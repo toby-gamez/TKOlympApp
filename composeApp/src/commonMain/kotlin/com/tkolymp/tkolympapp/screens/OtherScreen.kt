@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.MilitaryTech
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Security
@@ -69,7 +70,7 @@ import com.tkolymp.shared.viewmodels.OtherViewModel
 import kotlinx.datetime.LocalDate
 import kotlin.coroutines.cancellation.CancellationException
 
-private enum class MainItem { PEOPLE, TRAINERS, GROUPS, LEADERBOARD, }
+private enum class MainItem { PEOPLE, TRAINERS, GROUPS, LEADERBOARD, COMPETITIONS }
 private enum class SettingsItem { ABOUT, PRIVACY, SETTINGS }
 
 // Helper: do not surface internal/cancellation/compose runtime messages to the UI
@@ -114,6 +115,7 @@ fun OtherScreen(
     onSettingsClick: () -> Unit = {},
     onPersonalEventsClick: () -> Unit = {},
     onBarcodeClick: () -> Unit = {},
+    onCompetitionsClick: () -> Unit = {},
     bottomPadding: Dp = 0.dp
 ) {
     val viewModel = viewModel<OtherViewModel>()
@@ -348,7 +350,8 @@ fun OtherScreen(
                 Pair(MainItem.PEOPLE, Icons.Filled.People),
                 Pair(MainItem.TRAINERS, Icons.Filled.FitnessCenter),
                 Pair(MainItem.GROUPS, Icons.Filled.Groups),
-                Pair(MainItem.LEADERBOARD, Icons.Filled.EmojiEvents)
+                Pair(MainItem.LEADERBOARD, Icons.Filled.EmojiEvents),
+                Pair(MainItem.COMPETITIONS, Icons.Filled.MilitaryTech)
             )
 
             mainItems.forEachIndexed { i, (item, icon) ->
@@ -357,6 +360,7 @@ fun OtherScreen(
                     MainItem.TRAINERS -> AppStrings.current.otherScreen.trainersAndSpaces
                     MainItem.GROUPS -> AppStrings.current.otherScreen.trainingGroups
                     MainItem.LEADERBOARD -> AppStrings.current.otherScreen.leaderboard
+                    MainItem.COMPETITIONS -> AppStrings.current.competition.competitions
                 }
                 StaggeredItem(index = i, visible = itemsVisible, baseDelayMs = 35) {
                 Card(
@@ -369,6 +373,7 @@ fun OtherScreen(
                                 MainItem.TRAINERS -> onTrainersClick()
                                 MainItem.GROUPS -> onGroupsClick()
                                 MainItem.LEADERBOARD -> onLeaderboardClick()
+                                MainItem.COMPETITIONS -> onCompetitionsClick()
                             }
                         },
                     shape = RoundedCornerShape(16.dp),

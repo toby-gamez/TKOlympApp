@@ -670,7 +670,13 @@ val StringsCs = Strings(
         participants = "Účastníci",
         ranking = "Pořadí",
         pointGain = "Body",
+        pointsSuffix = "b",
         isFinal = "Finále",
+        ageGroupAdult = "Dospělí",
+        ageGroupJunior = "Junior",
+        ageGroupJuvenile = "Děti",
+        ageGroupSenior = "Senior",
+        ageGroupYouth = "Mládež",
         category = "Kategorie",
     ),
 )

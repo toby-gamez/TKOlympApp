@@ -332,12 +332,27 @@ fun CalendarScreen(
                     LaunchedEffect(key) { datesVisible = false }
                     LaunchedEffect(calState.visibleDates) { if (calState.visibleDates.isNotEmpty()) datesVisible = true }
 
+                    val competitionsByDay = calState.competitionsByDay
+                    val visibleDateSet = calState.visibleDates.toSet()
+                    val filteredByDate = remember(filteredEventsByDay) {
+                        filteredEventsByDay.associateBy { it.first }
+                    }
+                    val allDatesToShow = remember(filteredEventsByDay, competitionsByDay, calState.visibleDates) {
+                        (filteredEventsByDay.map { it.first } + competitionsByDay.keys.filter { it in visibleDateSet })
+                            .distinct().sorted()
+                    }
+
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
                             .verticalScroll(rememberScrollState())
                     ) {
-                    filteredEventsByDay.forEachIndexed { idx, (date, filteredLessons, filteredOther) ->
+                    allDatesToShow.forEachIndexed { idx, date ->
+                        val triple = filteredByDate[date]
+                        val filteredLessons = triple?.second ?: emptyMap()
+                        val filteredOther = triple?.third ?: emptyList()
+                        val competitions = competitionsByDay[date] ?: emptyList()
+
                         StaggeredItem(index = idx, visible = datesVisible, baseDelayMs = 50) {
                         Column(modifier = Modifier.padding(8.dp)) {
                             val header = when (date) {
@@ -371,6 +386,15 @@ fun CalendarScreen(
                                 key(item.id) {
                                     RenderSingleEventCard(item = item, onEventClick = { id, instId -> onOpenEvent(id, instId) })
                                 }
+                            }
+
+                            if (competitions.isNotEmpty()) {
+                                competitions
+                                    .groupBy { it.eventId?.toString() ?: it.eventName ?: it.competitionDate }
+                                    .values
+                                    .forEach { eventComps ->
+                                        CompetitionEventCard(competitions = eventComps)
+                                    }
                             }
                         }
                         } // StaggeredItem

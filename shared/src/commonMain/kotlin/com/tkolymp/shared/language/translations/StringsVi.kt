@@ -642,7 +642,13 @@ val StringsVi = Strings(
         participants = "Người tham gia",
         ranking = "Xếp hạng",
         pointGain = "Điểm",
+        pointsSuffix = "đ",
         isFinal = "Chung kết",
+        ageGroupAdult = "Người lớn",
+        ageGroupJunior = "Junior",
+        ageGroupJuvenile = "Thiếu nhi",
+        ageGroupSenior = "Senior",
+        ageGroupYouth = "Thanh niên",
         category = "Hạng mục",
     ),
 )

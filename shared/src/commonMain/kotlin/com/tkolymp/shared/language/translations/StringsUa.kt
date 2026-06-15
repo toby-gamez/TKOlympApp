@@ -642,7 +642,13 @@ val StringsUa = Strings(
         participants = "Учасники",
         ranking = "Місце",
         pointGain = "Очки",
+        pointsSuffix = "о",
         isFinal = "Фінал",
+        ageGroupAdult = "Дорослі",
+        ageGroupJunior = "Юніор",
+        ageGroupJuvenile = "Діти",
+        ageGroupSenior = "Сеньйор",
+        ageGroupYouth = "Молодь",
         category = "Категорія",
     ),
 )

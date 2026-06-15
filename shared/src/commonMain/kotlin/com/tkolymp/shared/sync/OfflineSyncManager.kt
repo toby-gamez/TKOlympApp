@@ -2,6 +2,8 @@ package com.tkolymp.shared.sync
 
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.announcements.IAnnouncementService
+import com.tkolymp.shared.competitions.Competition
+import com.tkolymp.shared.competitions.ICompetitionService
 import com.tkolymp.shared.event.EventInstance
 import com.tkolymp.shared.event.IEventService
 import com.tkolymp.shared.network.NetworkMonitor
@@ -41,7 +43,8 @@ class OfflineSyncManager(
     private val userService: com.tkolymp.shared.user.UserService,
     private val notificationService: com.tkolymp.shared.notification.NotificationService,
     private val clubService: com.tkolymp.shared.club.ClubService,
-    private val paymentService: com.tkolymp.shared.payments.PaymentService
+    private val paymentService: com.tkolymp.shared.payments.PaymentService,
+    private val competitionService: ICompetitionService
 ) {
     
 
@@ -74,6 +77,7 @@ class OfflineSyncManager(
             syncCalendarBuckets()
             syncAnnouncements()
             syncPeople()
+            try { syncCompetitions() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "syncCompetitions failed: ${ex.message}") }
             // Ensure basic club data is saved for offline UIs that read `offline_club`.
             try { syncClub() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "syncClub failed: ${ex.message}") }
             try { syncAttendance() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "syncAttendance failed: ${ex.message}") }
@@ -646,6 +650,10 @@ class OfflineSyncManager(
             } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll event ${evId} failed: ${ex.message}") }
         }
 
+        // Competitions
+        onProgress("competitions", 0, 1)
+        try { syncCompetitions() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll competitions failed: ${ex.message}") }
+
         // Attendance
         onProgress("attendance", 0, 1)
         try { syncAttendance() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll attendance failed: ${ex.message}") }
@@ -653,6 +661,27 @@ class OfflineSyncManager(
         saveLastSyncTime(kotlin.time.Clock.System.now().toString())
         Logger.d("OfflineSyncManager", "downloadAll: completed")
     }
+
+    private suspend fun syncCompetitions() {
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val list = competitionService.getUpcomingCompetitions(
+            pSince = today.toString(),
+            pUntil = today.plus(21, DateTimeUnit.DAY).toString()
+        )
+        if (list.isNotEmpty()) {
+            val json = AppJson.encodeToString(
+                kotlinx.serialization.builtins.ListSerializer(Competition.serializer()),
+                list
+            )
+            offlineDataStorage.save(OfflineKeys.COMPETITIONS, json)
+            Logger.d("OfflineSyncManager", "syncCompetitions: saved ${list.size} entries")
+        }
+    }
+
+    suspend fun loadCompetitions(): List<Competition> = try {
+        val json = offlineDataStorage.load(OfflineKeys.COMPETITIONS) ?: return emptyList()
+        AppJson.decodeFromString(kotlinx.serialization.builtins.ListSerializer(Competition.serializer()), json)
+    } catch (_: Exception) { emptyList() }
 
     private suspend fun syncAttendance() {
         val personId = try { userService.getCachedPersonId() } catch (_: Exception) { null }

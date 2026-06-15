@@ -642,7 +642,13 @@ val StringsSl = Strings(
         participants = "Udeleženci",
         ranking = "Uvrstitev",
         pointGain = "Točke",
+        pointsSuffix = "t",
         isFinal = "Final",
+        ageGroupAdult = "Odrasli",
+        ageGroupJunior = "Junior",
+        ageGroupJuvenile = "Otroci",
+        ageGroupSenior = "Senior",
+        ageGroupYouth = "Mladina",
         category = "Kategorija",
     ),
 )

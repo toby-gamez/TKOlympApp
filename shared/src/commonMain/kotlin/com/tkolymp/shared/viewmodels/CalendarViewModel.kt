@@ -274,7 +274,7 @@ class CalendarViewModel(
             val competitionsByDay = try {
                 competitionService.getUpcomingCompetitions(
                     pSince = weekStart.toString(),
-                    pUntil = endDay.toString()
+                    pUntil = endDay.plus(1, DateTimeUnit.DAY).toString()
                 ).groupBy { it.competitionDate }
             } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyMap() }
 

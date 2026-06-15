@@ -4,6 +4,7 @@ import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.cache.CacheService
 import com.tkolymp.shared.network.IGraphQlClient
+import com.tkolymp.shared.sync.OfflineSyncManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
@@ -50,6 +51,8 @@ class CompetitionService(
     private val client: IGraphQlClient = ServiceLocator.graphQlClient,
     private val cache: CacheService = ServiceLocator.cacheService
 ) : ICompetitionService {
+    private val offlineSyncManager: OfflineSyncManager?
+        get() = try { ServiceLocator.offlineSyncManager } catch (_: Exception) { null }
 
     private val briefQuery = """
         query CompetitionBrief(${'$'}first: Int, ${'$'}pSince: Date, ${'$'}pUntil: Date) {
@@ -80,10 +83,20 @@ class CompetitionService(
             if (pSince != null) put("pSince", JsonPrimitive(pSince))
             if (pUntil != null) put("pUntil", JsonPrimitive(pUntil))
         }
-        val resp = client.post(briefQuery, vars)
-        Logger.d("CompetitionService", "briefList raw response: $resp")
-        val list = parseList(resp.jsonObject["data"]?.jsonObject?.get("competitionBriefList"))
-            .sortedBy { it.competitionDate }
+        val list = try {
+            val resp = client.post(briefQuery, vars)
+            Logger.d("CompetitionService", "briefList raw response: $resp")
+            parseList(resp.jsonObject["data"]?.jsonObject?.get("competitionBriefList"))
+                .sortedBy { it.competitionDate }
+        } catch (e: CancellationException) { throw e } catch (_: Exception) {
+            offlineSyncManager?.loadCompetitions()?.let { offline ->
+                val sinceFilter = pSince; val untilFilter = pUntil
+                offline.filter { c ->
+                    (sinceFilter == null || c.competitionDate >= sinceFilter) &&
+                    (untilFilter == null || c.competitionDate <= untilFilter)
+                }.sortedBy { it.competitionDate }.take(first)
+            } ?: emptyList()
+        }
         try { cache.put(cacheKey, list, ttl = 5.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         return list
     }

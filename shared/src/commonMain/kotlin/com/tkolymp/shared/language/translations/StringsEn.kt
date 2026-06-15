@@ -642,7 +642,13 @@ val StringsEn = Strings(
         participants = "Participants",
         ranking = "Ranking",
         pointGain = "Points",
+        pointsSuffix = "pts",
         isFinal = "Final",
+        ageGroupAdult = "Adult",
+        ageGroupJunior = "Junior",
+        ageGroupJuvenile = "Juvenile",
+        ageGroupSenior = "Senior",
+        ageGroupYouth = "Youth",
         category = "Category",
     ),
 )
