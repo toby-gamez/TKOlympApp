@@ -650,5 +650,6 @@ val StringsVi = Strings(
         ageGroupSenior = "Senior",
         ageGroupYouth = "Thanh niên",
         category = "Hạng mục",
+        openInBrowser = "Mở propozice trong trình duyệt",
     ),
 )

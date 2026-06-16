@@ -649,5 +649,6 @@ val StringsDe = Strings(
         ageGroupSenior = "Senior",
         ageGroupYouth = "Jugend",
         category = "Kategorie",
+        openInBrowser = "Propozice im Browser öffnen",
     ),
 )

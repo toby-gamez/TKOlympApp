@@ -651,5 +651,6 @@ val StringsBrainrot = Strings(
         ageGroupSenior = "Senior",
         ageGroupYouth = "Youth",
         category = "Category",
+        openInBrowser = "Open propozice in browser fr fr no cap",
     ),
 )

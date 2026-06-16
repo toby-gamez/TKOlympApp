@@ -650,5 +650,6 @@ val StringsEn = Strings(
         ageGroupSenior = "Senior",
         ageGroupYouth = "Youth",
         category = "Category",
+        openInBrowser = "Open propozice in browser",
     ),
 )

@@ -650,5 +650,6 @@ val StringsSl = Strings(
         ageGroupSenior = "Senior",
         ageGroupYouth = "Mladina",
         category = "Kategorija",
+        openInBrowser = "Odpri propozicije v brskalniku",
     ),
 )

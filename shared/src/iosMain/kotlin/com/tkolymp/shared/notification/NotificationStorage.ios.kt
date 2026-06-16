@@ -6,19 +6,8 @@ import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.value
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.booleanOrNull
-import kotlinx.serialization.json.buildJsonArray
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.intOrNull
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.longOrNull
 import platform.CoreFoundation.CFDictionaryRef
 import platform.CoreFoundation.CFTypeRefVar
 import platform.CoreFoundation.kCFBooleanTrue
@@ -45,189 +34,34 @@ actual class NotificationStorage actual constructor(platformContext: Any) {
     private val service = "com.tkolymp.tkolympapp"
     private val json = Json { ignoreUnknownKeys = true }
 
-    actual suspend fun saveSettings(settings: NotificationSettings) {
-        val obj = buildJsonObject {
-            put("globalEnabled", JsonPrimitive(settings.globalEnabled))
-            put("rules", buildJsonArray {
-                settings.rules.forEach { r ->
-                    add(buildJsonObject {
-                        put("id", JsonPrimitive(r.id))
-                        put("name", JsonPrimitive(r.name))
-                        put("enabled", JsonPrimitive(r.enabled))
-                        put("filterType", JsonPrimitive(r.filterType.name))
-                        put("locations", JsonArray(r.locations.map { JsonPrimitive(it) }))
-                        put("trainers", JsonArray(r.trainers.map { JsonPrimitive(it) }))
-                        put("types", JsonArray(r.types.map { JsonPrimitive(it) }))
-                        put("timesBeforeMinutes", JsonArray(r.timesBeforeMinutes.map { JsonPrimitive(it) }))
-                    })
-                }
-            })
-        }
-        keychainSave("notification_settings", obj.toString())
+    private inline fun <reified T> save(key: String, value: T) {
+        keychainSave(key, json.encodeToString(value))
     }
 
-    actual suspend fun getSettings(): NotificationSettings? {
-        val s = keychainGet("notification_settings") ?: return null
+    private inline fun <reified T> load(key: String): T? {
+        val s = keychainGet(key) ?: return null
         return try {
-            val jo = json.parseToJsonElement(s).jsonObject
-            val global = jo["globalEnabled"]?.jsonPrimitive?.booleanOrNull ?: true
-            val rulesArr = jo["rules"]?.jsonArray ?: JsonArray(emptyList())
-            val rules = rulesArr.mapNotNull { rEl ->
-                val rj = rEl.jsonObject
-                val id = rj["id"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
-                val name = rj["name"]?.jsonPrimitive?.contentOrNull ?: ""
-                val enabled = rj["enabled"]?.jsonPrimitive?.booleanOrNull ?: true
-                val filterTypeName = rj["filterType"]?.jsonPrimitive?.contentOrNull ?: "BY_LOCATION"
-                val filterType = try { FilterType.valueOf(filterTypeName) } catch (e: CancellationException) { throw e } catch (_: Exception) { FilterType.BY_LOCATION }
-                val locations = rj["locations"]?.jsonArray?.mapNotNull { it.jsonPrimitive.contentOrNull } ?: emptyList()
-                val trainers = rj["trainers"]?.jsonArray?.mapNotNull { it.jsonPrimitive.contentOrNull } ?: emptyList()
-                val types = rj["types"]?.jsonArray?.mapNotNull { it.jsonPrimitive.contentOrNull } ?: emptyList()
-                val times = rj["timesBeforeMinutes"]?.jsonArray?.mapNotNull { it.jsonPrimitive.intOrNull } ?: listOf(60, 5)
-                NotificationRule(
-                    id = id, name = name, enabled = enabled, filterType = filterType,
-                    locations = locations, trainers = trainers, types = types, timesBeforeMinutes = times
-                )
-            }
-            NotificationSettings(globalEnabled = global, rules = rules)
+            json.decodeFromString<T>(s)
         } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
     }
 
-    actual suspend fun saveScheduledNotifications(list: List<ScheduledNotification>) {
-        val arr = buildJsonArray {
-            list.forEach { sn ->
-                add(buildJsonObject {
-                    put("notificationId", JsonPrimitive(sn.notificationId))
-                    put("eventId", sn.eventId?.let { JsonPrimitive(it) } ?: JsonNull)
-                    put("eventName", sn.eventName?.let { JsonPrimitive(it) } ?: JsonNull)
-                    put("triggerEpochMs", JsonPrimitive(sn.triggerEpochMs))
-                })
-            }
-        }
-        keychainSave("scheduled_notifications", arr.toString())
-    }
+    actual suspend fun saveSettings(settings: NotificationSettings) = save("notification_settings", settings)
+    actual suspend fun getSettings(): NotificationSettings? = load("notification_settings")
 
-    actual suspend fun getScheduledNotifications(): List<ScheduledNotification> {
-        val s = keychainGet("scheduled_notifications") ?: return emptyList()
-        return try {
-            json.parseToJsonElement(s).jsonArray.mapNotNull { jo ->
-                try {
-                    val o = jo.jsonObject
-                    val nid = o["notificationId"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
-                    val eventId = o["eventId"]?.let { if (it is JsonNull) null else it.jsonPrimitive.content.toLongOrNull() }
-                    val eventName = o["eventName"]?.let { if (it is JsonNull) null else it.jsonPrimitive.contentOrNull }
-                    val trigger = o["triggerEpochMs"]?.jsonPrimitive?.longOrNull ?: return@mapNotNull null
-                    ScheduledNotification(notificationId = nid, eventId = eventId, eventName = eventName, triggerEpochMs = trigger)
-                } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
-            }
-        } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
-    }
+    actual suspend fun saveScheduledNotifications(list: List<ScheduledNotification>) = save("scheduled_notifications", list)
+    actual suspend fun getScheduledNotifications(): List<ScheduledNotification> = load("scheduled_notifications") ?: emptyList()
 
-    actual suspend fun saveReceivedNotifications(list: List<ReceivedMessage>) {
-        val arr = buildJsonArray {
-            list.forEach { rm ->
-                add(buildJsonObject {
-                    put("id", JsonPrimitive(rm.id))
-                    put("title", rm.title?.let { JsonPrimitive(it) } ?: JsonNull)
-                    put("body", rm.body?.let { JsonPrimitive(it) } ?: JsonNull)
-                    put("sender", rm.sender?.let { JsonPrimitive(it) } ?: JsonNull)
-                    put("topic", rm.topic?.let { JsonPrimitive(it) } ?: JsonNull)
-                    put("epochMs", JsonPrimitive(rm.epochMs))
-                })
-            }
-        }
-        keychainSave("received_notifications", arr.toString())
-    }
+    actual suspend fun saveReceivedNotifications(list: List<ReceivedMessage>) = save("received_notifications", list)
+    actual suspend fun getReceivedNotifications(): List<ReceivedMessage> = load("received_notifications") ?: emptyList()
 
-    actual suspend fun getReceivedNotifications(): List<ReceivedMessage> {
-        val s = keychainGet("received_notifications") ?: return emptyList()
-        return try {
-            json.parseToJsonElement(s).jsonArray.mapNotNull { jo ->
-                try {
-                    val o = jo.jsonObject
-                    val id = o["id"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
-                    val title = o["title"]?.jsonPrimitive?.contentOrNull
-                    val body = o["body"]?.jsonPrimitive?.contentOrNull
-                    val sender = o["sender"]?.jsonPrimitive?.contentOrNull
-                    val topic = o["topic"]?.jsonPrimitive?.contentOrNull
-                    val epoch = o["epochMs"]?.jsonPrimitive?.longOrNull ?: return@mapNotNull null
-                    ReceivedMessage(id = id, title = title, body = body, sender = sender, topic = topic, epochMs = epoch)
-                } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
-            }
-        } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
-    }
+    actual suspend fun saveEventReminders(list: List<EventReminder>) = save("event_reminders", list)
+    actual suspend fun getEventReminders(): List<EventReminder> = load("event_reminders") ?: emptyList()
 
-    actual suspend fun saveEventReminders(list: List<EventReminder>) {
-        val arr = buildJsonArray {
-            list.forEach { r ->
-                add(buildJsonObject {
-                    put("id", JsonPrimitive(r.id))
-                    put("eventId", JsonPrimitive(r.eventId))
-                    put("eventName", JsonPrimitive(r.eventName))
-                    put("eventStartIso", JsonPrimitive(r.eventStartIso))
-                    put("minutesBefore", JsonPrimitive(r.minutesBefore))
-                    put("scheduledNotificationId", r.scheduledNotificationId?.let { JsonPrimitive(it) } ?: JsonNull)
-                })
-            }
-        }
-        keychainSave("event_reminders", arr.toString())
-    }
+    actual suspend fun saveBirthdaySettings(settings: BirthdayNotificationSettings) = save("birthday_notification_settings", settings)
+    actual suspend fun getBirthdaySettings(): BirthdayNotificationSettings? = load("birthday_notification_settings")
 
-    actual suspend fun getEventReminders(): List<EventReminder> {
-        val s = keychainGet("event_reminders") ?: return emptyList()
-        return try {
-            json.parseToJsonElement(s).jsonArray.mapNotNull { jo ->
-                try {
-                    val o = jo.jsonObject
-                    val id = o["id"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
-                    val eventId = o["eventId"]?.jsonPrimitive?.longOrNull ?: return@mapNotNull null
-                    val eventName = o["eventName"]?.jsonPrimitive?.contentOrNull ?: ""
-                    val startIso = o["eventStartIso"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
-                    val minutes = o["minutesBefore"]?.jsonPrimitive?.intOrNull ?: 30
-                    val notifId = o["scheduledNotificationId"]?.let { if (it is JsonNull) null else it.jsonPrimitive.contentOrNull }
-                    EventReminder(id = id, eventId = eventId, eventName = eventName, eventStartIso = startIso, minutesBefore = minutes, scheduledNotificationId = notifId)
-                } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
-            }
-        } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
-    }
-
-    actual suspend fun saveBirthdaySettings(settings: BirthdayNotificationSettings) {
-        val obj = buildJsonObject {
-            put("enabled", JsonPrimitive(settings.enabled))
-            put("notifyAll", JsonPrimitive(settings.notifyAll))
-            put("notifyTrainers", JsonPrimitive(settings.notifyTrainers))
-            put("selectedCohortIds", JsonArray(settings.selectedCohortIds.map { JsonPrimitive(it) }))
-            put("selectedPersonIds", JsonArray(settings.selectedPersonIds.map { JsonPrimitive(it) }))
-            put("notificationHour", JsonPrimitive(settings.notificationHour))
-            put("daysBefore", JsonPrimitive(settings.daysBefore))
-        }
-        keychainSave("birthday_notification_settings", obj.toString())
-    }
-
-    actual suspend fun getBirthdaySettings(): BirthdayNotificationSettings? {
-        val s = keychainGet("birthday_notification_settings") ?: return null
-        return try {
-            val jo = json.parseToJsonElement(s).jsonObject
-            val enabled = jo["enabled"]?.jsonPrimitive?.booleanOrNull ?: false
-            val notifyAll = jo["notifyAll"]?.jsonPrimitive?.booleanOrNull ?: true
-            val notifyTrainers = jo["notifyTrainers"]?.jsonPrimitive?.booleanOrNull ?: false
-            val cohortIds = jo["selectedCohortIds"]?.jsonArray?.mapNotNull { it.jsonPrimitive.contentOrNull } ?: emptyList()
-            val personIds = jo["selectedPersonIds"]?.jsonArray?.mapNotNull { it.jsonPrimitive.contentOrNull } ?: emptyList()
-            val hour = jo["notificationHour"]?.jsonPrimitive?.intOrNull ?: 8
-            val daysBefore = jo["daysBefore"]?.jsonPrimitive?.intOrNull ?: 0
-            BirthdayNotificationSettings(enabled = enabled, notifyAll = notifyAll, notifyTrainers = notifyTrainers, selectedCohortIds = cohortIds, selectedPersonIds = personIds, notificationHour = hour, daysBefore = daysBefore)
-        } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
-    }
-
-    actual suspend fun saveScheduledBirthdayNotificationIds(ids: List<String>) {
-        keychainSave("scheduled_birthday_ids", JsonArray(ids.map { JsonPrimitive(it) }).toString())
-    }
-
-    actual suspend fun getScheduledBirthdayNotificationIds(): List<String> {
-        val s = keychainGet("scheduled_birthday_ids") ?: return emptyList()
-        return try {
-            json.parseToJsonElement(s).jsonArray.mapNotNull { it.jsonPrimitive.contentOrNull }
-        } catch (_: Exception) { emptyList() }
-    }
+    actual suspend fun saveScheduledBirthdayNotificationIds(ids: List<String>) = save("scheduled_birthday_ids", ids)
+    actual suspend fun getScheduledBirthdayNotificationIds(): List<String> = load("scheduled_birthday_ids") ?: emptyList()
 
     private fun keychainSave(account: String, value: String) {
         val data = (value as NSString).dataUsingEncoding(NSUTF8StringEncoding) ?: return

@@ -650,5 +650,6 @@ val StringsUa = Strings(
         ageGroupSenior = "Сеньйор",
         ageGroupYouth = "Молодь",
         category = "Категорія",
+        openInBrowser = "Відкрити пропозиції в браузері",
     ),
 )

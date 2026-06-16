@@ -2,9 +2,11 @@ package com.tkolymp.tkolympapp.screens
 
 import com.tkolymp.tkolympapp.SwipeToReload
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,13 +14,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -45,6 +52,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -53,6 +61,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.competitions.Competition
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.utils.formatFullCalendarDate
+import com.tkolymp.tkolympapp.components.CoupleAvatar
+import com.tkolymp.tkolympapp.components.InitialsAvatar
 import com.tkolymp.tkolympapp.util.tabContentTransitionSpec
 import com.tkolymp.shared.viewmodels.CompetitionViewModel
 import kotlinx.coroutines.launch
@@ -216,6 +226,7 @@ private fun CompetitionsListContent(
 @Composable
 internal fun CompetitionEventCard(competitions: List<Competition>) {
     val first = competitions.first()
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -230,24 +241,37 @@ internal fun CompetitionEventCard(competitions: List<Competition>) {
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            val boxBg = MaterialTheme.colorScheme.surfaceVariant
+            FlowRow(modifier = Modifier.fillMaxWidth()) {
                 first.eventLocation?.takeIf { it.isNotBlank() }?.let { loc ->
-                    Text(loc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    InfoChip(icon = Icons.Default.Place, text = loc, background = boxBg)
                 }
-                Text(formatCompetitionDate(first.competitionDate), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                InfoChip(icon = Icons.Default.CalendarMonth, text = formatCompetitionDate(first.competitionDate), background = boxBg)
             }
 
             val byCompetitor = competitions.groupBy { it.competitorName?.takeIf { n -> n.isNotBlank() } ?: it.personName ?: "" }
             byCompetitor.values.forEach { competitorComps ->
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 val rep = competitorComps.first()
                 val nameDisplay = rep.competitorName?.takeIf { it.isNotBlank() } ?: rep.personName ?: ""
                 if (nameDisplay.isNotBlank()) {
-                    Text(nameDisplay, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                    Spacer(modifier = Modifier.height(3.dp))
+                    val coupleNames = nameDisplay.split(" - ", limit = 2).map { it.trim() }.takeIf { it.size == 2 }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (coupleNames != null) {
+                            CoupleAvatar(womanName = coupleNames[0], manName = coupleNames[1], size = 24.dp)
+                        } else {
+                            InitialsAvatar(name = nameDisplay, size = 24.dp)
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(nameDisplay, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
                 }
 
                 val scheduled = competitorComps.filter { !it.hasResult }.sortedBy { it.checkInEnd }
@@ -256,12 +280,12 @@ internal fun CompetitionEventCard(competitions: List<Competition>) {
                 scheduled.forEach { comp -> CompetitionEntryRow(comp) }
 
                 if (scheduled.isNotEmpty() && results.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(3.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 2.dp),
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                     )
-                    Spacer(modifier = Modifier.height(1.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                 }
 
                 results.forEach { comp -> CompetitionEntryRow(comp) }
@@ -276,56 +300,109 @@ private fun formatCompetitionDate(raw: String): String {
 }
 
 @Composable
+private fun InfoChip(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String, background: Color, trailingMargin: Boolean = true) {
+    Box(
+        modifier = Modifier
+            .then(if (trailingMargin) Modifier.padding(end = 8.dp, bottom = 6.dp) else Modifier)
+            .background(background, RoundedCornerShape(8.dp))
+            .padding(horizontal = 8.dp, vertical = 6.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(text, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+@Composable
 internal fun CompetitionEntryRow(comp: Competition) {
     val rawCategory = comp.category?.name?.takeIf { it.isNotBlank() }
         ?: comp.competitionType?.takeIf { it.isNotBlank() }
         ?: ""
     val categoryName = AppStrings.current.competition.formatType(rawCategory)
+
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 1.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = comp.checkInEnd?.take(5) ?: "",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.widthIn(min = 60.dp)
-        )
+        comp.checkInEnd?.take(5)?.takeIf { it.isNotBlank() }?.let { time ->
+            InfoChip(
+                icon = Icons.Default.Schedule,
+                text = time,
+                background = MaterialTheme.colorScheme.surfaceVariant,
+                trailingMargin = false
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+
         Text(
             text = categoryName,
             style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
+
         if (comp.hasResult && comp.ranking != null) {
             val rankNum = comp.rankingTo?.takeIf { it != comp.ranking }
                 ?.let { "${comp.ranking}-$it." } ?: "${comp.ranking}."
-            val total = comp.participants?.let { " z $it" } ?: ""
-            Text(
-                text = rankNum + total,
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(start = 6.dp)
-            )
+            val total = comp.participants?.let { " / $it" } ?: ""
+            Row(
+                modifier = Modifier
+                    .padding(start = 6.dp)
+                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(6.dp))
+                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.EmojiEvents,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(13.dp)
+                )
+                Spacer(modifier = Modifier.width(3.dp))
+                Text(
+                    text = rankNum + total,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
         }
+
         val rightLabel = buildString {
-            comp.pointGain?.takeIf { it.isNotBlank() }?.let { raw ->
-                val formatted = raw.toDoubleOrNull()?.let { d ->
-                    if (d % 1.0 == 0.0) d.toInt().toString() else raw
-                } ?: raw
+            val pointsValue = comp.pointGain?.takeIf { it.isNotBlank() }?.toDoubleOrNull()
+            if (pointsValue != null && pointsValue != 0.0) {
+                val formatted = if (pointsValue % 1.0 == 0.0) pointsValue.toInt().toString() else pointsValue.toString()
+                if (pointsValue > 0) append("+")
                 append(formatted)
                 append(AppStrings.current.competition.pointsSuffix)
             }
             if (comp.isFinal) { if (isNotEmpty()) append(" "); append("F") }
         }
         if (rightLabel.isNotBlank()) {
-            Text(
-                text = rightLabel,
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.tertiary,
-                modifier = Modifier.padding(start = 4.dp)
-            )
+            Row(
+                modifier = Modifier
+                    .padding(start = 4.dp)
+                    .background(MaterialTheme.colorScheme.tertiaryContainer, RoundedCornerShape(6.dp))
+                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.BarChart,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                    modifier = Modifier.size(13.dp)
+                )
+                Spacer(modifier = Modifier.width(3.dp))
+                Text(
+                    text = rightLabel,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+            }
         }
     }
 }

@@ -678,5 +678,6 @@ val StringsCs = Strings(
         ageGroupSenior = "Senior",
         ageGroupYouth = "Mládež",
         category = "Kategorie",
+        openInBrowser = "Otevřít propozice v prohlížeči",
     ),
 )
