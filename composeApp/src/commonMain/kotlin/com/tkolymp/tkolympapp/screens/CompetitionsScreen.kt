@@ -323,7 +323,7 @@ internal fun InfoChip(icon: androidx.compose.ui.graphics.vector.ImageVector, tex
 }
 
 @Composable
-internal fun CompetitionEntryRow(comp: Competition) {
+internal fun CompetitionEntryRow(comp: Competition, showCategory: Boolean = true, showCheckIn: Boolean = true) {
     val rawCategory = comp.category?.name?.takeIf { it.isNotBlank() }
         ?: comp.competitionType?.takeIf { it.isNotBlank() }
         ?: ""
@@ -333,23 +333,29 @@ internal fun CompetitionEntryRow(comp: Competition) {
         modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        comp.checkInEnd?.take(5)?.takeIf { it.isNotBlank() }?.let { time ->
-            InfoChip(
-                icon = Icons.Default.Schedule,
-                text = time,
-                background = MaterialTheme.colorScheme.surfaceVariant,
-                trailingMargin = false
-            )
-            Spacer(modifier = Modifier.width(8.dp))
+        if (showCheckIn) {
+            comp.checkInEnd?.take(5)?.takeIf { it.isNotBlank() }?.let { time ->
+                InfoChip(
+                    icon = Icons.Default.Schedule,
+                    text = time,
+                    background = MaterialTheme.colorScheme.surfaceVariant,
+                    trailingMargin = false
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+            }
         }
 
-        Text(
-            text = categoryName,
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.weight(1f),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
+        if (showCategory) {
+            Text(
+                text = categoryName,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.weight(1f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        } else {
+            Spacer(modifier = Modifier.weight(1f))
+        }
 
         if (comp.hasResult && comp.ranking != null) {
             val rankNum = comp.rankingTo?.takeIf { it != comp.ranking }

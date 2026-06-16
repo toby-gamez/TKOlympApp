@@ -2,18 +2,22 @@ package com.tkolymp.tkolympapp.screens
 
 // no manual refresh button
  
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.draw.clip
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -260,9 +264,10 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
                         ) {
                             Row(modifier = Modifier
                                 .fillMaxWidth()
+                                .height(IntrinsicSize.Min)
                                 .padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                                 val todayIso = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault()).toString()
-                                val cohortBorderColor = p.cohortMembershipsList
+                                val cohortColors = p.cohortMembershipsList
                                     .filter { m ->
                                         val since = m.since
                                         val until = m.until
@@ -271,11 +276,26 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
                                     }
                                     .mapNotNull { it.cohort }
                                     .filter { it.isVisible != false }
-                                    .firstNotNullOfOrNull { c ->
+                                    .mapNotNull { c ->
                                         c.colorRgb?.let { hex ->
                                             try { parseColorOrDefault(hex) } catch (_: Exception) { null }
                                         }
                                     }
+                                Column(
+                                    modifier = Modifier
+                                        .width(6.dp)
+                                        .fillMaxHeight()
+                                        .clip(RoundedCornerShape(6.dp))
+                                ) {
+                                    if (cohortColors.isNotEmpty()) {
+                                        cohortColors.forEach { color ->
+                                            Box(modifier = Modifier.fillMaxWidth().weight(1f).background(color))
+                                        }
+                                    } else {
+                                        Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primary))
+                                    }
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
                                 val personName = listOfNotNull(p.firstName, p.lastName)
                                     .filter { it.isNotBlank() }.joinToString(" ")
 
@@ -283,8 +303,6 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
                                     name = personName.ifBlank { p.id },
                                     size = 40.dp,
                                     fontSize = 14.sp,
-                                    borderColor = cohortBorderColor,
-                                    borderWidth = 3.dp,
                                 )
 
                                 Spacer(modifier = Modifier.width(12.dp))
