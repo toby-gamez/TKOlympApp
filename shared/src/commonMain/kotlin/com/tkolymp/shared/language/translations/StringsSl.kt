@@ -300,7 +300,7 @@ val StringsSl = Strings(
     overview = OverviewStrings(
         upcomingTrainings = "Prihajajoča vadba",
         upcomingCamps = "Prihajajoči tabori",
-        fromTheBoard = "Iz oglasne deske",
+        fromTheBoard = "Novice kluba",
         more = "Več",
         browseOthers = "Ogled ostalih",
     ),
@@ -638,7 +638,7 @@ val StringsSl = Strings(
         nearestCompetition = "Naslednje tekmovanje",
         noUpcoming = "Ni prihajajočih tekmovanj",
         noResults = "Ni rezultatov",
-        checkIn = "Prijava do",
+        checkIn = "Čas prijave",
         participants = "Udeleženci",
         ranking = "Uvrstitev",
         pointGain = "Točke",

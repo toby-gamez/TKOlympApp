@@ -52,9 +52,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.competitions.Competition
 import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.shared.utils.formatFullCalendarDate
 import com.tkolymp.tkolympapp.util.tabContentTransitionSpec
 import com.tkolymp.shared.viewmodels.CompetitionViewModel
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -232,7 +234,7 @@ internal fun CompetitionEventCard(competitions: List<Competition>) {
                 first.eventLocation?.takeIf { it.isNotBlank() }?.let { loc ->
                     Text(loc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                Text(first.competitionDate, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(formatCompetitionDate(first.competitionDate), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
             val byCompetitor = competitions.groupBy { it.competitorName?.takeIf { n -> n.isNotBlank() } ?: it.personName ?: "" }
@@ -266,6 +268,11 @@ internal fun CompetitionEventCard(competitions: List<Competition>) {
             }
         }
     }
+}
+
+private fun formatCompetitionDate(raw: String): String {
+    val date = try { LocalDate.parse(raw.substringBefore('T')) } catch (_: Exception) { return raw }
+    return formatFullCalendarDate(date, AppStrings.currentLanguage.code, false)
 }
 
 @Composable

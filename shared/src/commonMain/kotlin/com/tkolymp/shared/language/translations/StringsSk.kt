@@ -330,7 +330,7 @@ val StringsSk = Strings(
     overview = OverviewStrings(
         upcomingTrainings = "Najbližšie tréningy",
         upcomingCamps = "Najbližšie sústredenia",
-        fromTheBoard = "Niečo z nástenky",
+        fromTheBoard = "Aktuality klubu",
         more = "Viac",
         browseOthers = "Pozrieť na ostatných",
     ),
@@ -638,7 +638,7 @@ val StringsSk = Strings(
         nearestCompetition = "Najbližšia súťaž",
         noUpcoming = "Žiadne nadchádzajúce súťaže",
         noResults = "Žiadne výsledky",
-        checkIn = "Check-in do",
+        checkIn = "Čas prezencie",
         participants = "Účastníci",
         ranking = "Poradie",
         pointGain = "Body",

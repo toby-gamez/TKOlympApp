@@ -301,7 +301,7 @@ val StringsBrainrot = Strings(
     overview = OverviewStrings(
         upcomingTrainings = "Upcoming grind sessions fr",
         upcomingCamps = "Upcoming rizz camps",
-        fromTheBoard = "Board slay updates",
+        fromTheBoard = "Club tea no cap",
         more = "moar",
         browseOthers = "check out the other lowkeys",
     ),

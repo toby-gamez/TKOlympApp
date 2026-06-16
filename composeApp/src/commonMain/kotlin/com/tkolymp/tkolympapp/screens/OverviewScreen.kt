@@ -25,6 +25,9 @@ import androidx.compose.ui.draw.clip
 import com.tkolymp.tkolympapp.components.parseColorOrDefault
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cake
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -49,6 +52,7 @@ import com.tkolymp.tkolympapp.util.StaggeredItem
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
@@ -676,9 +680,9 @@ private fun NearestCompetitionCard(competition: Competition) {
             .padding(vertical = 4.dp),
         shape = RoundedCornerShape(16.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.padding(14.dp)) {
             val dateStr = try {
-                val ld = LocalDate.parse(competition.competitionDate)
+                val ld = LocalDate.parse(competition.competitionDate.substringBefore('T'))
                 formatFullCalendarDate(ld, AppStrings.currentLanguage.code, false)
             } catch (_: Exception) { competition.competitionDate }
 
@@ -689,38 +693,99 @@ private fun NearestCompetitionCard(competition: Competition) {
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
-            competition.eventLocation?.takeIf { it.isNotBlank() }?.let { loc ->
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Filled.CalendarMonth,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = loc,
+                    text = dateStr,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    fontWeight = FontWeight.Medium
                 )
             }
-            Text(
-                text = dateStr,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            competition.competitionType?.takeIf { it.isNotBlank() }?.let { ct ->
-                Text(
-                    text = ct,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
+
+            competition.eventLocation?.takeIf { it.isNotBlank() }?.let { loc ->
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.Place,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = loc,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
+
             competition.checkInEnd?.takeIf { it.isNotBlank() }?.let { ci ->
-                Text(
-                    text = "${AppStrings.current.competition.checkIn} $ci",
-                    style = MaterialTheme.typography.bodySmall
-                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.Schedule,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "${AppStrings.current.competition.checkIn}: ${ci.take(5)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
-            competition.category?.name?.takeIf { it.isNotBlank() }?.let { catName ->
-                Text(
-                    text = catName,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+
+            val categoryName = competition.category?.name?.takeIf { it.isNotBlank() }
+            val typeName = competition.competitionType?.takeIf { it.isNotBlank() }
+                ?.let { AppStrings.current.competition.formatType(it) }
+
+            if (categoryName != null || typeName != null) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    typeName?.let {
+                        AssistChip(
+                            label = it,
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                    categoryName?.let {
+                        AssistChip(
+                            label = it,
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun AssistChip(label: String, containerColor: Color, contentColor: Color) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(containerColor)
+            .padding(horizontal = 10.dp, vertical = 4.dp)
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = contentColor
+        )
     }
 }

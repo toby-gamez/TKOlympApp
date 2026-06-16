@@ -300,7 +300,7 @@ val StringsDe = Strings(
     overview = OverviewStrings(
         upcomingTrainings = "Nächste Trainings",
         upcomingCamps = "Nächste Lehrgänge",
-        fromTheBoard = "Aus der Pinnwand",
+        fromTheBoard = "Vereinsneuigkeiten",
         more = "Mehr",
         browseOthers = "Andere anzeigen",
     ),
@@ -637,7 +637,7 @@ val StringsDe = Strings(
         nearestCompetition = "Nächster Wettkampf",
         noUpcoming = "Keine bevorstehenden Wettkämpfe",
         noResults = "Keine Ergebnisse",
-        checkIn = "Check-in bis",
+        checkIn = "Check-in-Zeit",
         participants = "Teilnehmer",
         ranking = "Platzierung",
         pointGain = "Punkte",

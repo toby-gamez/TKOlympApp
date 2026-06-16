@@ -300,7 +300,7 @@ val StringsUa = Strings(
     overview = OverviewStrings(
         upcomingTrainings = "Майбутні тренування",
         upcomingCamps = "Майбутні табори",
-        fromTheBoard = "З дошки оголошень",
+        fromTheBoard = "Новини клубу",
         more = "Більше",
         browseOthers = "Переглянути інших",
     ),
@@ -638,7 +638,7 @@ val StringsUa = Strings(
         nearestCompetition = "Найближче змагання",
         noUpcoming = "Немає майбутніх змагань",
         noResults = "Немає результатів",
-        checkIn = "Реєстрація до",
+        checkIn = "Час реєстрації",
         participants = "Учасники",
         ranking = "Місце",
         pointGain = "Очки",

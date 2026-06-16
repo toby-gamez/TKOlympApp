@@ -289,7 +289,7 @@ val StringsVi = Strings(
     overview = OverviewStrings(
         upcomingTrainings = "Buổi tập sắp tới",
         upcomingCamps = "Trại hè sắp tới",
-        fromTheBoard = "Từ bảng tin",
+        fromTheBoard = "Tin tức câu lạc bộ",
         more = "Thêm",
         browseOthers = "Xem người khác",
     ),
@@ -638,7 +638,7 @@ val StringsVi = Strings(
         nearestCompetition = "Cuộc thi gần nhất",
         noUpcoming = "Không có cuộc thi sắp tới",
         noResults = "Không có kết quả",
-        checkIn = "Check-in đến",
+        checkIn = "Thời gian check-in",
         participants = "Người tham gia",
         ranking = "Xếp hạng",
         pointGain = "Điểm",
