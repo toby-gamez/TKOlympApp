@@ -164,7 +164,7 @@ internal fun LessonView(
                         Column(modifier = Modifier.weight(1f)) {
                             if (participantsEmpty) {
                                 androidx.compose.material3.Text(
-                                    "VOLNO",
+                                    AppStrings.current.calendarView.freeLesson,
                                     style = MaterialTheme.typography.bodySmall.copy(textDecoration = deco, fontWeight = FontWeight.SemiBold),
                                     color = Color(0xFF4CAF50)
                                 )

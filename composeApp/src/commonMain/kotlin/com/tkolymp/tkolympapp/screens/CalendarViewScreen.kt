@@ -878,11 +878,11 @@ internal fun TimelineEventCard(
                         } else {
                             MaterialTheme.typography.bodyMedium
                         },
-                        fontWeight = if (event.isMyEvent) FontWeight.Bold else FontWeight.Normal,
+                        fontWeight = if (isFreeLesson || event.isMyEvent) FontWeight.Bold else FontWeight.Normal,
                         textDecoration = if (event.isCancelled) TextDecoration.LineThrough else null,
                         maxLines = titleMaxLines,
                         overflow = TextOverflow.Ellipsis,
-                        color = contentColor
+                        color = if (isFreeLesson) Color(0xFF2E7D32) else contentColor
                     )
                     
                     // Show short subtitle (e.g. personal training type) if present as first line of description
