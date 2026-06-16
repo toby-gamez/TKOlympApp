@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,17 +23,18 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.draw.clip
+import com.tkolymp.tkolympapp.components.InitialsAvatar
 import com.tkolymp.tkolympapp.components.parseColorOrDefault
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -52,13 +54,13 @@ import com.tkolymp.tkolympapp.util.StaggeredItem
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.tutorial.TutorialManager
@@ -93,7 +95,8 @@ fun OverviewScreen(
     onOpenCalendar: () -> Unit = {},
     onOpenBoard: () -> Unit = {},
     onOpenEvents: () -> Unit = {},
-    onOpenPerson: (String) -> Unit = {}
+    onOpenPerson: (String) -> Unit = {},
+    onOpenCompetitions: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -420,8 +423,15 @@ fun OverviewScreen(
                         Text(AppStrings.current.competition.noUpcoming, modifier = Modifier.padding(vertical = 6.dp))
                     } else {
                         StaggeredItem(index = 0, visible = cardsVisible) {
-                            NearestCompetitionCard(competition = comp)
+                            NearestCompetitionCard(competition = comp, onOpenCompetitions = onOpenCompetitions)
                         }
+                    }
+                }
+            }
+            if (state.nearestCompetition != null) {
+                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.Center) {
+                    TextButton(onClick = onOpenCompetitions) {
+                        Text(AppStrings.current.overview.more)
                     }
                 }
             }
@@ -477,6 +487,8 @@ fun OverviewScreen(
                                         Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primary))
                                     }
                                 }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                InitialsAvatar(name = entry.name, size = 36.dp, fontSize = 13.sp)
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
@@ -673,119 +685,37 @@ private fun dateHeader(date: String, todayString: String, tomorrowString: String
 }
 
 @Composable
-private fun NearestCompetitionCard(competition: Competition) {
+private fun NearestCompetitionCard(competition: Competition, onOpenCompetitions: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 4.dp)
+            .clickable { onOpenCompetitions() },
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
-            val dateStr = try {
-                val ld = LocalDate.parse(competition.competitionDate.substringBefore('T'))
-                formatFullCalendarDate(ld, AppStrings.currentLanguage.code, false)
-            } catch (_: Exception) { competition.competitionDate }
-
             Text(
                 text = competition.eventName ?: competition.competitorName ?: "",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                fontWeight = FontWeight.SemiBold
             )
 
+            Spacer(modifier = Modifier.height(6.dp))
+
+            val boxBg = MaterialTheme.colorScheme.surfaceVariant
+            FlowRow(modifier = Modifier.fillMaxWidth()) {
+                competition.eventLocation?.takeIf { it.isNotBlank() }?.let { loc ->
+                    InfoChip(icon = Icons.Default.Place, text = loc, background = boxBg)
+                }
+                InfoChip(icon = Icons.Default.CalendarMonth, text = formatCompetitionDate(competition.competitionDate), background = boxBg)
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Spacer(modifier = Modifier.height(8.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Filled.CalendarMonth,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = dateStr,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-
-            competition.eventLocation?.takeIf { it.isNotBlank() }?.let { loc ->
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Filled.Place,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = loc,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            competition.checkInEnd?.takeIf { it.isNotBlank() }?.let { ci ->
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Filled.Schedule,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "${AppStrings.current.competition.checkIn}: ${ci.take(5)}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            val categoryName = competition.category?.name?.takeIf { it.isNotBlank() }
-            val typeName = competition.competitionType?.takeIf { it.isNotBlank() }
-                ?.let { AppStrings.current.competition.formatType(it) }
-
-            if (categoryName != null || typeName != null) {
-                Spacer(modifier = Modifier.height(10.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    typeName?.let {
-                        AssistChip(
-                            label = it,
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                    categoryName?.let {
-                        AssistChip(
-                            label = it,
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
+            CompetitionEntryRow(competition)
         }
     }
 }
 
-@Composable
-private fun AssistChip(label: String, containerColor: Color, contentColor: Color) {
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(containerColor)
-            .padding(horizontal = 10.dp, vertical = 4.dp)
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = contentColor
-        )
-    }
-}

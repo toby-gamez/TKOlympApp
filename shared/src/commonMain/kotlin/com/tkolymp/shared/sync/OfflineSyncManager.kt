@@ -134,37 +134,39 @@ class OfflineSyncManager(
     private suspend fun syncClub() {
         try {
             val cd = try { clubService.fetchClubData() } catch (_: Exception) { null }
-            if (cd != null) {
-                try {
-                    val rawEl = cd.raw
-                    when (rawEl) {
-                        is kotlinx.serialization.json.JsonObject -> {
-                            val dataObj = rawEl["data"] as? kotlinx.serialization.json.JsonObject ?: rawEl
-                            // Extract cohortsList and save separately
-                            val cohortsEl = (dataObj["getCurrentTenant"] as? kotlinx.serialization.json.JsonObject)?.get("cohortsList")
-                            if (cohortsEl != null) {
-                                try { offlineDataStorage.save(OfflineKeys.CLUB_COHORTS, cohortsEl.toString()) } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save offline_club_cohorts failed: ${ex.message}") }
-                            }
-                            // Save basic data (locations + trainers)
-                            try {
-                                val basics = buildJsonObject {
-                                    put("tenantLocationsList", dataObj["tenantLocationsList"] ?: kotlinx.serialization.json.JsonArray(emptyList()))
-                                    put("tenantTrainersList", dataObj["tenantTrainersList"] ?: kotlinx.serialization.json.JsonArray(emptyList()))
-                                }
-                                offlineDataStorage.save(OfflineKeys.CLUB_BASIC, basics.toString())
-                            } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save offline_club_basic failed: ${ex.message}") }
-                        }
-                        null -> { /* nothing to save */ }
-                        else -> {
-                            // Fallback: save the whole payload as basic
-                            try { offlineDataStorage.save(OfflineKeys.CLUB_BASIC, rawEl.toString()) } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save offline_club_basic failed: ${ex.message}") }
-                        }
-                    }
-                } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save offline_club failed: ${ex.message}") }
-            }
+            if (cd != null) persistClubData(cd.raw)
         } catch (ex: Exception) {
             Logger.d("OfflineSyncManager", "syncClub exception: ${ex.message}")
         }
+    }
+
+    /** Splits a club GraphQL payload into the cohorts and locations/trainers offline keys. Shared by [syncClub] and [downloadAll]. */
+    private suspend fun persistClubData(rawEl: kotlinx.serialization.json.JsonElement?) {
+        try {
+            when (rawEl) {
+                is kotlinx.serialization.json.JsonObject -> {
+                    val dataObj = rawEl["data"] as? kotlinx.serialization.json.JsonObject ?: rawEl
+                    // Extract cohortsList and save separately
+                    val cohortsEl = (dataObj["getCurrentTenant"] as? kotlinx.serialization.json.JsonObject)?.get("cohortsList")
+                    if (cohortsEl != null) {
+                        try { offlineDataStorage.save(OfflineKeys.CLUB_COHORTS, cohortsEl.toString()) } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save offline_club_cohorts failed: ${ex.message}") }
+                    }
+                    // Save basic data (locations + trainers)
+                    try {
+                        val basics = buildJsonObject {
+                            put("tenantLocationsList", dataObj["tenantLocationsList"] ?: kotlinx.serialization.json.JsonArray(emptyList()))
+                            put("tenantTrainersList", dataObj["tenantTrainersList"] ?: kotlinx.serialization.json.JsonArray(emptyList()))
+                        }
+                        offlineDataStorage.save(OfflineKeys.CLUB_BASIC, basics.toString())
+                    } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save offline_club_basic failed: ${ex.message}") }
+                }
+                null -> { /* nothing to save */ }
+                else -> {
+                    // Fallback: save the whole payload as basic
+                    try { offlineDataStorage.save(OfflineKeys.CLUB_BASIC, rawEl.toString()) } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save offline_club_basic failed: ${ex.message}") }
+                }
+            }
+        } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save offline_club failed: ${ex.message}") }
     }
 
     private suspend fun syncCalendarBuckets() {
@@ -193,30 +195,7 @@ class OfflineSyncManager(
 
                 // Build lightweight JSON summary
                 val weekKey = OfflineKeys.calendarWeek(bucket, weekStart.toString())
-                val jo = buildJsonObject {
-                    grouped.forEach { (date, list) ->
-                        put(date, buildJsonArray {
-                            list.forEach { inst ->
-                                add(buildJsonObject {
-                                    put("id", JsonPrimitive(inst.id))
-                                    put("isCancelled", JsonPrimitive(inst.isCancelled))
-                                    put("since", JsonPrimitive(inst.since ?: ""))
-                                    put("until", JsonPrimitive(inst.until ?: ""))
-                                    put("updatedAt", JsonPrimitive(inst.updatedAt ?: ""))
-                                    val ev = inst.event
-                                    if (ev != null) {
-                                        put("eventId", JsonPrimitive(ev.id ?: -1))
-                                        put("eventName", JsonPrimitive(ev.name ?: ""))
-                                        put("eventType", JsonPrimitive(ev.type ?: ""))
-                                        put("locationText", JsonPrimitive(ev.locationText ?: ""))
-                                        put("trainers", buildJsonArray { ev.eventTrainersList.forEach { add(JsonPrimitive(it)) } })
-                                        put("isRegistrationOpen", JsonPrimitive(ev.isRegistrationOpen))
-                                    }
-                                })
-                            }
-                        })
-                    }
-                }
+                val jo = buildCalendarWeekJson(grouped)
 
                 try {
                     if (grouped.isNotEmpty()) {
@@ -245,6 +224,82 @@ class OfflineSyncManager(
         }
     }
 
+    /** Lightweight per-instance summary used in calendar week caches. Shared by [syncCalendarBuckets] and [downloadAll]. */
+    private fun buildEventInstanceJson(inst: EventInstance): JsonObject = buildJsonObject {
+        put("id", JsonPrimitive(inst.id))
+        put("isCancelled", JsonPrimitive(inst.isCancelled))
+        put("since", JsonPrimitive(inst.since ?: ""))
+        put("until", JsonPrimitive(inst.until ?: ""))
+        put("updatedAt", JsonPrimitive(inst.updatedAt ?: ""))
+        val ev = inst.event
+        if (ev != null) {
+            put("eventId", JsonPrimitive(ev.id ?: -1))
+            put("eventName", JsonPrimitive(ev.name ?: ""))
+            put("eventType", JsonPrimitive(ev.type ?: ""))
+            put("locationText", JsonPrimitive(ev.locationText ?: ""))
+            put("trainers", buildJsonArray { ev.eventTrainersList.forEach { add(JsonPrimitive(it)) } })
+            put("isRegistrationOpen", JsonPrimitive(ev.isRegistrationOpen))
+        }
+    }
+
+    /** `{"<date>": [eventInstanceJson, ...]}` shape used for all calendar week/camps offline caches. */
+    private fun buildCalendarWeekJson(grouped: Map<String, List<EventInstance>>): JsonObject = buildJsonObject {
+        grouped.forEach { (date, list) ->
+            put(date, buildJsonArray { list.forEach { add(buildEventInstanceJson(it)) } })
+        }
+    }
+
+    /**
+     * Fetches per-person details (trainer flag, birth date, titles) in concurrent batches and builds the
+     * offline PEOPLE array. Shared by [syncPeople] and [downloadAll].
+     */
+    private suspend fun buildPeopleJson(people: List<com.tkolymp.shared.people.Person>): JsonArray = buildJsonArray {
+        val chunks = people.chunked(20)
+        val detailsMap = mutableMapOf<String, com.tkolymp.shared.people.PersonDetails?>()
+        for (chunk in chunks) {
+            coroutineScope {
+                val deferred = chunk.map { p -> async {
+                    try { withRetry { peopleService.fetchPerson(p.id) } } catch (_: Exception) { null }
+                } }
+                val results = deferred.map { d -> try { d.await() } catch (_: Exception) { null } }
+                chunk.forEachIndexed { idx, p -> detailsMap[p.id] = results.getOrNull(idx) }
+            }
+        }
+
+        people.forEach { p ->
+            val details = detailsMap[p.id]
+            val birth = details?.birthDate ?: p.birthDate
+            val prefix = details?.prefixTitle ?: p.prefixTitle
+            val suffix = details?.suffixTitle ?: p.suffixTitle
+            val isTrainer = details?.isTrainer ?: false
+
+            add(buildJsonObject {
+                put("id", JsonPrimitive(p.id))
+                put("firstName", JsonPrimitive(p.firstName ?: ""))
+                put("lastName", JsonPrimitive(p.lastName ?: ""))
+                put("prefixTitle", JsonPrimitive(prefix ?: ""))
+                put("suffixTitle", JsonPrimitive(suffix ?: ""))
+                put("birthDate", JsonPrimitive(birth ?: ""))
+                put("isTrainer", JsonPrimitive(isTrainer.toString()))
+                put("cohortMembershipsList", buildJsonArray {
+                    p.cohortMembershipsList.forEach { cm ->
+                        add(buildJsonObject {
+                            val c = cm.cohort
+                            put("cohort", buildJsonObject {
+                                put("id", JsonPrimitive(c?.id ?: ""))
+                                put("name", JsonPrimitive(c?.name ?: ""))
+                                put("colorRgb", JsonPrimitive(c?.colorRgb ?: ""))
+                                put("isVisible", JsonPrimitive(c?.isVisible?.toString() ?: "false"))
+                            })
+                            put("since", JsonPrimitive(cm.since ?: ""))
+                            put("until", JsonPrimitive(cm.until ?: ""))
+                        })
+                    }
+                })
+            })
+        }
+    }
+
     private suspend fun syncAnnouncements() {
         try {
             val sticky = announcementService.getAnnouncements(true)
@@ -270,53 +325,7 @@ class OfflineSyncManager(
         try {
             val people = peopleService.fetchPeople()
             // Save people with additional details (try fetching full person details to get isTrainer/birthDate)
-            val peopleJson = buildJsonArray {
-                // Fetch details in concurrent batches to avoid sequential N+1 latency
-                val chunks = people.chunked(20)
-                val detailsMap = mutableMapOf<String, com.tkolymp.shared.people.PersonDetails?>()
-                for (chunk in chunks) {
-                    coroutineScope {
-                        val deferred = chunk.map { p -> async {
-                            try { withRetry { peopleService.fetchPerson(p.id) } } catch (_: Exception) { null }
-                        } }
-                        val results = deferred.map { d -> try { d.await() } catch (_: Exception) { null } }
-                        chunk.forEachIndexed { idx, p -> detailsMap[p.id] = results.getOrNull(idx) }
-                    }
-                }
-
-                people.forEach { p ->
-                    val details = detailsMap[p.id]
-                    val birth = details?.birthDate ?: p.birthDate
-                    val prefix = details?.prefixTitle ?: p.prefixTitle
-                    val suffix = details?.suffixTitle ?: p.suffixTitle
-                    val isTrainer = details?.isTrainer ?: false
-
-                    add(buildJsonObject {
-                        put("id", JsonPrimitive(p.id))
-                        put("firstName", JsonPrimitive(p.firstName ?: ""))
-                        put("lastName", JsonPrimitive(p.lastName ?: ""))
-                        put("prefixTitle", JsonPrimitive(prefix ?: ""))
-                        put("suffixTitle", JsonPrimitive(suffix ?: ""))
-                        put("birthDate", JsonPrimitive(birth ?: ""))
-                        put("isTrainer", JsonPrimitive(isTrainer.toString()))
-                        put("cohortMembershipsList", buildJsonArray {
-                            p.cohortMembershipsList.forEach { cm ->
-                                add(buildJsonObject {
-                                    val c = cm.cohort
-                                    put("cohort", buildJsonObject {
-                                        put("id", JsonPrimitive(c?.id ?: ""))
-                                        put("name", JsonPrimitive(c?.name ?: ""))
-                                        put("colorRgb", JsonPrimitive(c?.colorRgb ?: ""))
-                                        put("isVisible", JsonPrimitive(c?.isVisible?.toString() ?: "false"))
-                                    })
-                                    put("since", JsonPrimitive(cm.since ?: ""))
-                                    put("until", JsonPrimitive(cm.until ?: ""))
-                                })
-                            }
-                        })
-                    })
-                }
-            }
+            val peopleJson = buildPeopleJson(people)
             if (people.isNotEmpty()) {
                 offlineDataStorage.save(OfflineKeys.PEOPLE, AppJson.encodeToString(JsonArray.serializer(), peopleJson))
             } else Logger.d("OfflineSyncManager", "skipping save offline_people: empty")
@@ -400,30 +409,7 @@ class OfflineSyncManager(
                 val onlyType = if (bucket == CalendarBucket.CAMPS) EventType.CAMP.rawValue else null
                 val grouped = try { withRetry { eventService.fetchEventsGroupedByDay(startIso, endIso, onlyMine = onlyMine, first = AppConstants.FETCH_LIMIT_PERIOD, offset = 0, onlyType = onlyType, cacheNamespace = null) } } catch (ex: Exception) { emptyMap<String, List<EventInstance>>() }
                 if (grouped.isNotEmpty()) {
-                    val jo = buildJsonObject {
-                        grouped.forEach { (date, list) ->
-                            put(date, buildJsonArray {
-                                list.forEach { inst ->
-                                    add(buildJsonObject {
-                                        put("id", JsonPrimitive(inst.id))
-                                        put("isCancelled", JsonPrimitive(inst.isCancelled))
-                                        put("since", JsonPrimitive(inst.since ?: ""))
-                                        put("until", JsonPrimitive(inst.until ?: ""))
-                                        put("updatedAt", JsonPrimitive(inst.updatedAt ?: ""))
-                                        val ev = inst.event
-                                        if (ev != null) {
-                                            put("eventId", JsonPrimitive(ev.id ?: -1))
-                                            put("eventName", JsonPrimitive(ev.name ?: ""))
-                                            put("eventType", JsonPrimitive(ev.type ?: ""))
-                                            put("locationText", JsonPrimitive(ev.locationText ?: ""))
-                                            put("trainers", buildJsonArray { ev.eventTrainersList.forEach { add(JsonPrimitive(it)) } })
-                                            put("isRegistrationOpen", JsonPrimitive(ev.isRegistrationOpen))
-                                        }
-                                    })
-                                }
-                            })
-                        }
-                    }
+                    val jo = buildCalendarWeekJson(grouped)
                     try { offlineDataStorage.save(OfflineKeys.calendarWeek(bucket, weekStart.toString()), AppJson.encodeToString(JsonObject.serializer(), jo)) } catch (_: Exception) {}
                     collectedEventIds += grouped.values.flatten().mapNotNull { it.event?.id }
                 }
@@ -459,53 +445,7 @@ class OfflineSyncManager(
         try {
             val ppl = withRetry { peopleService.fetchPeople() }
             if (ppl.isNotEmpty()) {
-                val peopleJson = buildJsonArray {
-                    // Fetch details in concurrent batches to reduce round-trips
-                    val chunks = ppl.chunked(20)
-                    val detailsMap = mutableMapOf<String, com.tkolymp.shared.people.PersonDetails?>()
-                    for (chunk in chunks) {
-                        coroutineScope {
-                            val deferred = chunk.map { p -> async {
-                                try { withRetry { peopleService.fetchPerson(p.id) } } catch (_: Exception) { null }
-                            } }
-                            val results = deferred.map { d -> try { d.await() } catch (_: Exception) { null } }
-                            chunk.forEachIndexed { idx, p -> detailsMap[p.id] = results.getOrNull(idx) }
-                        }
-                    }
-
-                    ppl.forEach { p ->
-                        val details = detailsMap[p.id]
-                        val birth = details?.birthDate ?: p.birthDate
-                        val prefix = details?.prefixTitle ?: p.prefixTitle
-                        val suffix = details?.suffixTitle ?: p.suffixTitle
-                        val isTrainer = details?.isTrainer ?: false
-
-                        add(buildJsonObject {
-                            put("id", JsonPrimitive(p.id))
-                            put("firstName", JsonPrimitive(p.firstName ?: ""))
-                            put("lastName", JsonPrimitive(p.lastName ?: ""))
-                            put("prefixTitle", JsonPrimitive(prefix ?: ""))
-                            put("suffixTitle", JsonPrimitive(suffix ?: ""))
-                            put("birthDate", JsonPrimitive(birth ?: ""))
-                            put("isTrainer", JsonPrimitive(isTrainer.toString()))
-                            put("cohortMembershipsList", buildJsonArray {
-                                p.cohortMembershipsList.forEach { cm ->
-                                    add(buildJsonObject {
-                                        val c = cm.cohort
-                                        put("cohort", buildJsonObject {
-                                            put("id", JsonPrimitive(c?.id ?: ""))
-                                            put("name", JsonPrimitive(c?.name ?: ""))
-                                            put("colorRgb", JsonPrimitive(c?.colorRgb ?: ""))
-                                            put("isVisible", JsonPrimitive(c?.isVisible?.toString() ?: "false"))
-                                        })
-                                        put("since", JsonPrimitive(cm.since ?: ""))
-                                        put("until", JsonPrimitive(cm.until ?: ""))
-                                    })
-                                }
-                            })
-                        })
-                    }
-                }
+                val peopleJson = buildPeopleJson(ppl)
                 val encoded = AppJson.encodeToString(JsonArray.serializer(), peopleJson)
                 try {
                     offlineDataStorage.save(OfflineKeys.PEOPLE, encoded)
@@ -558,32 +498,7 @@ class OfflineSyncManager(
         onProgress("club", 0, 1)
         try {
             val cd = try { withRetry { clubService.fetchClubData() } } catch (ex: Exception) { null }
-            if (cd != null) {
-                try {
-                    val rawEl = cd.raw
-                    when (rawEl) {
-                        is kotlinx.serialization.json.JsonObject -> {
-                            val dataObj = rawEl["data"] as? kotlinx.serialization.json.JsonObject ?: rawEl
-                            val cohortsEl = (dataObj["getCurrentTenant"] as? kotlinx.serialization.json.JsonObject)?.get("cohortsList")
-                            if (cohortsEl != null) {
-                                try { offlineDataStorage.save(OfflineKeys.CLUB_COHORTS, cohortsEl.toString()) } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll: save offline_club_cohorts failed: ${ex.message}") }
-                            }
-                            try {
-                                val basics = buildJsonObject {
-                                    put("tenantLocationsList", dataObj["tenantLocationsList"] ?: kotlinx.serialization.json.JsonArray(emptyList()))
-                                    put("tenantTrainersList", dataObj["tenantTrainersList"] ?: kotlinx.serialization.json.JsonArray(emptyList()))
-                                }
-                                offlineDataStorage.save(OfflineKeys.CLUB_BASIC, basics.toString())
-                                Logger.d("OfflineSyncManager", "downloadAll: saved offline_club_basic")
-                            } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll: save offline_club_basic failed: ${ex.message}") }
-                        }
-                        null -> { /* nothing */ }
-                        else -> {
-                            try { offlineDataStorage.save(OfflineKeys.CLUB_BASIC, rawEl.toString()); Logger.d("OfflineSyncManager", "downloadAll: saved offline_club_basic (fallback)") } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll: save offline_club_basic failed: ${ex.message}") }
-                        }
-                    }
-                } catch (_: Exception) {}
-            }
+            if (cd != null) persistClubData(cd.raw)
         } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll club failed: ${ex.message}") }
 
         // Event details
@@ -609,30 +524,7 @@ class OfflineSyncManager(
             }
 
             if (allCamps.isNotEmpty()) {
-                val joAll = buildJsonObject {
-                    allCamps.forEach { (d, list) ->
-                        put(d, buildJsonArray {
-                            list.forEach { inst ->
-                                add(buildJsonObject {
-                                    put("id", JsonPrimitive(inst.id))
-                                    put("isCancelled", JsonPrimitive(inst.isCancelled))
-                                    put("since", JsonPrimitive(inst.since ?: ""))
-                                    put("until", JsonPrimitive(inst.until ?: ""))
-                                    put("updatedAt", JsonPrimitive(inst.updatedAt ?: ""))
-                                    val ev = inst.event
-                                    if (ev != null) {
-                                        put("eventId", JsonPrimitive(ev.id ?: -1))
-                                        put("eventName", JsonPrimitive(ev.name ?: ""))
-                                        put("eventType", JsonPrimitive(ev.type ?: ""))
-                                        put("locationText", JsonPrimitive(ev.locationText ?: ""))
-                                        put("trainers", buildJsonArray { ev.eventTrainersList.forEach { add(JsonPrimitive(it)) } })
-                                        put("isRegistrationOpen", JsonPrimitive(ev.isRegistrationOpen))
-                                    }
-                                })
-                            }
-                        })
-                    }
-                }
+                val joAll = buildCalendarWeekJson(allCamps)
 
                 try {
                     offlineDataStorage.save(OfflineKeys.CAL_CAMPS_ALL, AppJson.encodeToString(JsonObject.serializer(), joAll))

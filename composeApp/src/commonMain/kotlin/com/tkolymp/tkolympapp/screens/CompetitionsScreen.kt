@@ -16,7 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -46,6 +46,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -63,6 +64,7 @@ import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.utils.formatFullCalendarDate
 import com.tkolymp.tkolympapp.components.CoupleAvatar
 import com.tkolymp.tkolympapp.components.InitialsAvatar
+import com.tkolymp.tkolympapp.util.StaggeredItem
 import com.tkolymp.tkolympapp.util.tabContentTransitionSpec
 import com.tkolymp.shared.viewmodels.CompetitionViewModel
 import kotlinx.coroutines.launch
@@ -182,6 +184,9 @@ private fun CompetitionsListContent(
     var displayCount by remember { mutableIntStateOf(PAGE_SIZE) }
     val lazyState = rememberLazyListState()
 
+    var cardsVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(grouped) { if (grouped.isNotEmpty()) cardsVisible = true }
+
     val reachedBottom by remember {
         derivedStateOf {
             val last = lazyState.layoutInfo.visibleItemsInfo.lastOrNull()
@@ -205,8 +210,10 @@ private fun CompetitionsListContent(
                 )
             }
         } else {
-            items(visibleGroups, key = { (key, _) -> key }) { (_, eventComps) ->
-                CompetitionEventCard(competitions = eventComps)
+            itemsIndexed(visibleGroups, key = { _, (key, _) -> key }) { index, (_, eventComps) ->
+                StaggeredItem(index = index, visible = cardsVisible, baseDelayMs = 50) {
+                    CompetitionEventCard(competitions = eventComps)
+                }
             }
             if (displayCount < grouped.size) {
                 item {
@@ -294,13 +301,13 @@ internal fun CompetitionEventCard(competitions: List<Competition>) {
     }
 }
 
-private fun formatCompetitionDate(raw: String): String {
+internal fun formatCompetitionDate(raw: String): String {
     val date = try { LocalDate.parse(raw.substringBefore('T')) } catch (_: Exception) { return raw }
     return formatFullCalendarDate(date, AppStrings.currentLanguage.code, false)
 }
 
 @Composable
-private fun InfoChip(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String, background: Color, trailingMargin: Boolean = true) {
+internal fun InfoChip(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String, background: Color, trailingMargin: Boolean = true) {
     Box(
         modifier = Modifier
             .then(if (trailingMargin) Modifier.padding(end = 8.dp, bottom = 6.dp) else Modifier)

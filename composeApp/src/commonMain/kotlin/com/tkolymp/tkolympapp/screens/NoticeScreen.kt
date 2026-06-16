@@ -25,7 +25,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -49,11 +48,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import com.tkolymp.tkolympapp.platform.HtmlText
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.tkolymp.shared.viewmodels.NoticeViewModel
 import com.tkolymp.shared.language.AppStrings
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.tkolymp.tkolympapp.components.InitialsAvatar
 import com.tkolymp.tkolympapp.platform.FullscreenImageViewer
 import com.tkolymp.tkolympapp.util.StaggeredItem
 
@@ -137,7 +138,9 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(20.dp))
+                                if (authorName.isNotBlank()) {
+                                    InitialsAvatar(name = authorName, size = 20.dp, fontSize = 8.sp)
+                                }
                                 Text(
                                     authorName.ifBlank { "–" },
                                     style = MaterialTheme.typography.bodySmall

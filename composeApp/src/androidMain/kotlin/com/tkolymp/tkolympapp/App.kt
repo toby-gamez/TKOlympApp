@@ -83,6 +83,7 @@ import com.tkolymp.tkolympapp.screens.PersonalEventEditScreen
 import com.tkolymp.tkolympapp.screens.PersonalEventsScreen
 import com.tkolymp.tkolympapp.screens.PrivacyPolicyScreen
 import com.tkolymp.tkolympapp.screens.ProfileScreen
+import com.tkolymp.tkolympapp.screens.TermsOfUseScreen
 import com.tkolymp.tkolympapp.screens.RegistrationScreen
 import com.tkolymp.tkolympapp.screens.SettingsScreen
 import com.tkolymp.tkolympapp.screens.StatsScreen
@@ -392,7 +393,8 @@ fun AppNavHost(
                 onOpenCalendar = { navController.navigate("calendar") },
                 onOpenBoard = { navController.navigate("board") },
                 onOpenEvents = { navController.navigate("events") },
-                onOpenPerson = { id -> navController.navigate("person/$id") }
+                onOpenPerson = { id -> navController.navigate("person/$id") },
+                onOpenCompetitions = { navController.navigate("competitions") }
             )
         }
         
@@ -457,7 +459,6 @@ fun AppNavHost(
                 onPaymentsClick = { navController.navigate("payments") },
                 onStatsClick = { navController.navigate("stats") },
                 onAboutClick = { navController.navigate("about") },
-                onPrivacyClick = { navController.navigate("privacy") },
                 onSettingsClick = { navController.navigate("settings") },
                 onPersonalEventsClick = { navController.navigate("personal_events") },
                 onBarcodeClick = { navController.navigate("barcode") },
@@ -660,7 +661,9 @@ fun AppNavHost(
             AboutScreen(
                 onBack = { navController.navigateUp() },
                 appVersionName = pkgInfo?.versionName,
-                appVersionCode = pkgInfo?.let { PackageInfoCompat.getLongVersionCode(it) }
+                appVersionCode = pkgInfo?.let { PackageInfoCompat.getLongVersionCode(it) },
+                onPrivacyClick = { navController.navigate("privacy") },
+                onTermsClick = { navController.navigate("terms") }
             )
         }
 
@@ -692,6 +695,36 @@ fun AppNavHost(
             }
         ) {
             PrivacyPolicyScreen(onBack = { navController.navigateUp() })
+        }
+
+        composable(
+            route = "terms",
+            enterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(400)
+                )
+            },
+            popEnterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(400)
+                )
+            }
+        ) {
+            TermsOfUseScreen(onBack = { navController.navigateUp() })
         }
 
         composable(

@@ -19,6 +19,7 @@ data class CompetitionStrings(
     val ageGroupJuvenile: String = "Děti",
     val ageGroupSenior: String = "Senior",
     val ageGroupYouth: String = "Mládež",
+    val openInBrowser: String = "Otevřít propozice v prohlížeči",
 ) {
     fun formatType(raw: String): String = raw
         .removePrefix("DanceSport ")

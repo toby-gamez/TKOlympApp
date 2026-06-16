@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -49,12 +48,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import com.tkolymp.shared.club.Trainer
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.TrainersLocationsViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
+import com.tkolymp.tkolympapp.components.InitialsAvatar
 import com.tkolymp.tkolympapp.util.StaggeredItem
 import kotlinx.coroutines.launch
 
@@ -199,17 +200,18 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                                                 ) {
                                                     Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                                         Row(verticalAlignment = Alignment.CenterVertically) {
-                                                            Icon(imageVector = Icons.Filled.Person, contentDescription = AppStrings.current.profile.trainer, modifier = Modifier.size(28.dp))
+                                                            val p = t.person
+                                                            val name = listOfNotNull(
+                                                                p?.prefixTitle?.takeIf { it.isNotBlank() },
+                                                                p?.firstName?.takeIf { it.isNotBlank() },
+                                                                p?.lastName?.takeIf { it.isNotBlank() }
+                                                            ).joinToString(" ")
+                                                            val suffix = p?.suffixTitle?.takeIf { it.isNotBlank() }
+                                                            val displayName = if (suffix != null) "$name, $suffix" else name
+                                                            val avatarName = if (displayName.isBlank()) (p?.id ?: "?") else displayName
+                                                            InitialsAvatar(name = avatarName, size = 28.dp, fontSize = 11.sp)
                                                             Spacer(modifier = Modifier.width(12.dp))
                                                             Column {
-                                                                val p = t.person
-                                                                val name = listOfNotNull(
-                                                                    p?.prefixTitle?.takeIf { it.isNotBlank() },
-                                                                    p?.firstName?.takeIf { it.isNotBlank() },
-                                                                    p?.lastName?.takeIf { it.isNotBlank() }
-                                                                ).joinToString(" ")
-                                                                val suffix = p?.suffixTitle?.takeIf { it.isNotBlank() }
-                                                                val displayName = if (suffix != null) "$name, $suffix" else name
                                                                 Text(text = if (displayName.isBlank()) (p?.id ?: "(trenér)") else displayName, style = MaterialTheme.typography.bodyLarge)
                                                             }
                                                         }

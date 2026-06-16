@@ -49,6 +49,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.people.PersonDetails
@@ -56,6 +57,7 @@ import com.tkolymp.shared.utils.formatShortDate
 import com.tkolymp.shared.utils.parseToLocal
 import com.tkolymp.shared.viewmodels.PersonViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
+import com.tkolymp.tkolympapp.components.InitialsAvatar
 import com.tkolymp.tkolympapp.components.parseColorOrDefault
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
@@ -94,10 +96,13 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
             // Header (name)
             val baseName = listOf(p.prefixTitle, p.firstName, p.lastName).filterNotNull().filter { it.isNotBlank() }.joinToString(" ")
             val fullName = if (!p.suffixTitle.isNullOrBlank()) "$baseName, ${p.suffixTitle}" else baseName
+            Row(modifier = Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.Center) {
+                InitialsAvatar(name = fullName.ifBlank { p.id }, size = 64.dp, fontSize = 22.sp)
+            }
             Text(
                 fullName.ifBlank { p.id },
                 style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                modifier = Modifier.padding(top = 12.dp, bottom = 4.dp).fillMaxWidth(),
+                modifier = Modifier.padding(top = 8.dp, bottom = 4.dp).fillMaxWidth(),
                 textAlign = TextAlign.Center
             )
             if (p.isTrainer == true) {

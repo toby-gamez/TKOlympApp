@@ -43,12 +43,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.language.NationalityHelper
 import com.tkolymp.shared.user.fmtProfileDate
 import com.tkolymp.shared.viewmodels.ProfileViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
+import com.tkolymp.tkolympapp.components.InitialsAvatar
 import com.tkolymp.tkolympapp.components.parseColorOrDefault
 import com.tkolymp.tkolympapp.util.StaggeredItem
 import kotlinx.coroutines.launch
@@ -123,6 +125,8 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
 
                 val displayName = derived.titleText ?: profileState.currentUser?.uLogin
                 Column(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    InitialsAvatar(name = displayName ?: "Uživatel", size = 64.dp, fontSize = 22.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(displayName ?: "Uživatel", style = MaterialTheme.typography.headlineSmall)
                 }
                 // show login under name if available

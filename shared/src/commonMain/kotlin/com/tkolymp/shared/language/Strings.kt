@@ -35,6 +35,7 @@ data class Strings(
     val errorMessages: ErrorMessageStrings,
     val about: AboutStrings,
     val privacy: PrivacyStrings,
+    val terms: TermsOfUseStrings,
     val stats: StatsStrings,
     val settings: SettingsStrings,
     val personalEvents: PersonalEventStrings = PersonalEventStrings(),

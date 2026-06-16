@@ -28,8 +28,6 @@ import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MilitaryTech
 import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.IconButton
@@ -57,7 +55,9 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.tkolymp.tkolympapp.TutorialHighlight
+import com.tkolymp.tkolympapp.components.InitialsAvatar
 import kotlinx.coroutines.delay
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
@@ -71,7 +71,7 @@ import kotlinx.datetime.LocalDate
 import kotlin.coroutines.cancellation.CancellationException
 
 private enum class MainItem { PEOPLE, TRAINERS, GROUPS, LEADERBOARD, COMPETITIONS }
-private enum class SettingsItem { ABOUT, PRIVACY, SETTINGS }
+private enum class SettingsItem { ABOUT, SETTINGS }
 
 // Helper: do not surface internal/cancellation/compose runtime messages to the UI
 private fun shouldShowErrorMessage(msg: String?): Boolean {
@@ -111,7 +111,6 @@ fun OtherScreen(
     onStatsClick: () -> Unit = {},
     onPaymentsClick: () -> Unit = {},
     onAboutClick: () -> Unit = {},
-    onPrivacyClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
     onPersonalEventsClick: () -> Unit = {},
     onBarcodeClick: () -> Unit = {},
@@ -185,20 +184,11 @@ fun OtherScreen(
                         .fillMaxWidth()
                         .padding(16.dp)
                 ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .size(56.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Person,
-                            contentDescription = AppStrings.current.profile.myProfile,
-                            tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
+                    InitialsAvatar(
+                        name = state.name ?: AppStrings.current.otherScreen.myAccount,
+                        size = 56.dp,
+                        fontSize = 20.sp
+                    )
 
                     Spacer(modifier = Modifier.width(16.dp))
 
@@ -430,15 +420,13 @@ fun OtherScreen(
 
             val settingsItems = listOf(
                 Pair(SettingsItem.SETTINGS, Icons.Filled.Settings),
-                Pair(SettingsItem.ABOUT, Icons.Filled.Info),
-                Pair(SettingsItem.PRIVACY, Icons.Filled.Security)
+                Pair(SettingsItem.ABOUT, Icons.Filled.Info)
             )
 
             settingsItems.forEachIndexed { i, (item, icon) ->
                 val label = when (item) {
                     SettingsItem.SETTINGS -> AppStrings.current.otherScreen.settings
                     SettingsItem.ABOUT -> AppStrings.current.otherScreen.aboutApp
-                    SettingsItem.PRIVACY -> AppStrings.current.otherScreen.privacyPolicy
                 }
                 StaggeredItem(index = i + 4, visible = itemsVisible, baseDelayMs = 35) {
                 Card(
@@ -450,7 +438,6 @@ fun OtherScreen(
                                 SettingsItem.SETTINGS -> onSettingsClick()
                                 // LANGUAGES removed
                                 SettingsItem.ABOUT -> onAboutClick()
-                                SettingsItem.PRIVACY -> onPrivacyClick()
                             }
                         },
                     shape = RoundedCornerShape(16.dp),
