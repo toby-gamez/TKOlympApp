@@ -621,16 +621,7 @@ class CalendarViewViewModel(
             dates.add(currentDate)
             currentDate = currentDate.plus(1, DateTimeUnit.DAY)
         }
-        
+
         return dates
-    }
-    
-    /**
-     * Get events for a specific date (used in multi-day views)
-     */
-    fun getEventsForDate(date: LocalDate): List<EventLayoutData> {
-        return _state.value.layoutData.values.filter { 
-            it.event.startTime.date == date 
-        }
     }
 }

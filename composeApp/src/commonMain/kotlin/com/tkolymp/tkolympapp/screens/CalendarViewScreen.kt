@@ -232,7 +232,7 @@ fun CalendarViewScreen(
                     ViewMode.THREE_DAY, ViewMode.WEEK -> {
                         MultiDayTimelineView(
                             dates = viewModel.getDatesInRange(),
-                            getEventsForDate = { date -> viewModel.getEventsForDate(date) },
+                            events = state.layoutData.values.toList(),
                             onEventClick = onEventClick
                         )
                     }
@@ -574,10 +574,11 @@ internal fun SingleDayTimelineView(
 @Composable
 internal fun MultiDayTimelineView(
     dates: List<LocalDate>,
-    getEventsForDate: (LocalDate) -> List<EventLayoutData>,
+    events: List<EventLayoutData>,
     onEventClick: (Long, Long?) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val eventsByDate = remember(events) { events.groupBy { it.event.startTime.date } }
     val verticalScrollState = rememberScrollState()
     val horizontalScrollState = rememberScrollState()
     val minuteHeight = 0.8.dp // Slightly compressed for multi-day view
@@ -602,6 +603,13 @@ internal fun MultiDayTimelineView(
         }
         val positionPx = with(density) { (minuteHeight * targetMinute).toPx() }
         verticalScrollState.scrollTo((positionPx - viewportHeightPx / 2).coerceAtLeast(0f).toInt())
+    }
+
+    // Reset horizontal scroll to the start of the range whenever the visible dates change
+    // (e.g. navigating to a different week) — otherwise the previous scroll offset can land
+    // on a day with no events, making it look like nothing loaded.
+    LaunchedEffect(dates.firstOrNull()) {
+        horizontalScrollState.scrollTo(0)
     }
 
     Row(
@@ -671,7 +679,7 @@ internal fun MultiDayTimelineView(
                             }
                             
                             // Events for this day
-                            getEventsForDate(date).forEach { layoutData ->
+                            (eventsByDate[date] ?: emptyList()).forEach { layoutData ->
                                 TimelineEventCard(
                                     layoutData = layoutData,
                                     minuteHeight = minuteHeight,
