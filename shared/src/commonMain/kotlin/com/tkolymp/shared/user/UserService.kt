@@ -94,7 +94,7 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
     suspend fun fetchAndStorePersonDetails(personId: String): JsonObject? {
         // Try sending id as numeric BigInt when possible (server expects BigInt)
         val idLong = personId.toLongOrNull()
-        val baseSelection = "person(id: \$id) { id birthDate lastName firstName email phone prefixTitle suffixTitle wdsfId cstsId gender isTrainer nationality nationalIdNumber address { city conscriptionNumber district orientationNumber postalCode region street } activeCouplesList { id man { firstName lastName } woman { firstName lastName } } cohortMembershipsList { cohort { id colorRgb name isVisible } since until } }"
+        val baseSelection = "person(id: \$id) { id birthDate lastName firstName email phone prefixTitle suffixTitle wdsfId cstsId gender isTrainer nationality nationalIdNumber address { city conscriptionNumber district orientationNumber postalCode region street } activeCouplesList { id man { firstName lastName } woman { firstName lastName } } cohortMembershipsList { cohort { id colorRgb name isVisible } since until } cstsProgressList { points finals competitorName category { id name series discipline ageGroup genderGroup class competitorType baseDanceProgramId } } }"
 
         var query: String
         var variables: JsonObject
@@ -156,7 +156,30 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
         val address = addrObj?.let { a ->
             AddressDetails(street = a["street"]?.jsonPrimitive?.contentOrNull, city = a["city"]?.jsonPrimitive?.contentOrNull, postalCode = a["postalCode"]?.jsonPrimitive?.contentOrNull, region = a["region"]?.jsonPrimitive?.contentOrNull, district = a["district"]?.jsonPrimitive?.contentOrNull, conscriptionNumber = a["conscriptionNumber"]?.jsonPrimitive?.contentOrNull, orientationNumber = a["orientationNumber"]?.jsonPrimitive?.contentOrNull)
         }
-        PersonDetails(id = id, firstName = p["firstName"]?.jsonPrimitive?.contentOrNull, lastName = p["lastName"]?.jsonPrimitive?.contentOrNull, prefixTitle = p["prefixTitle"]?.jsonPrimitive?.contentOrNull, suffixTitle = p["suffixTitle"]?.jsonPrimitive?.contentOrNull, birthDate = p["birthDate"]?.jsonPrimitive?.contentOrNull, cstsId = p["cstsId"]?.jsonPrimitive?.contentOrNull, email = p["email"]?.jsonPrimitive?.contentOrNull, gender = p["gender"]?.jsonPrimitive?.contentOrNull, isTrainer = p["isTrainer"]?.jsonPrimitive?.contentOrNull?.let { it == "true" }, phone = p["phone"]?.jsonPrimitive?.contentOrNull, wdsfId = p["wdsfId"]?.jsonPrimitive?.contentOrNull, activeCouplesList = couplesArr, cohortMembershipsList = memberships, rawResponse = AppJson.parseToJsonElement(jsonStr), address = address, nationality = p["nationality"]?.jsonPrimitive?.contentOrNull, nationalIdNumber = p["nationalIdNumber"]?.jsonPrimitive?.contentOrNull)
+        val cstsProgress = (p["cstsProgressList"] as? JsonArray)?.mapNotNull { pEl ->
+            val pObj = pEl as? JsonObject ?: return@mapNotNull null
+            val catObj = pObj["category"] as? JsonObject
+            val cat = catObj?.let { cat ->
+                com.tkolymp.shared.competitions.CompetitionCategory(
+                    id = cat["id"]?.jsonPrimitive?.longOrNull ?: cat["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull(),
+                    name = cat["name"]?.jsonPrimitive?.contentOrNull,
+                    series = cat["series"]?.jsonPrimitive?.contentOrNull,
+                    discipline = cat["discipline"]?.jsonPrimitive?.contentOrNull,
+                    ageGroup = cat["ageGroup"]?.jsonPrimitive?.contentOrNull,
+                    genderGroup = cat["genderGroup"]?.jsonPrimitive?.contentOrNull,
+                    competitorClass = cat["class"]?.jsonPrimitive?.contentOrNull,
+                    competitorType = cat["competitorType"]?.jsonPrimitive?.contentOrNull,
+                    baseDanceProgramId = cat["baseDanceProgramId"]?.jsonPrimitive?.longOrNull ?: cat["baseDanceProgramId"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                )
+            }
+            com.tkolymp.shared.competitions.CstsProgress(
+                points = pObj["points"]?.jsonPrimitive?.contentOrNull,
+                finals = pObj["finals"]?.jsonPrimitive?.intOrNull,
+                competitorName = pObj["competitorName"]?.jsonPrimitive?.contentOrNull,
+                category = cat
+            )
+        } ?: emptyList()
+        PersonDetails(id = id, firstName = p["firstName"]?.jsonPrimitive?.contentOrNull, lastName = p["lastName"]?.jsonPrimitive?.contentOrNull, prefixTitle = p["prefixTitle"]?.jsonPrimitive?.contentOrNull, suffixTitle = p["suffixTitle"]?.jsonPrimitive?.contentOrNull, birthDate = p["birthDate"]?.jsonPrimitive?.contentOrNull, cstsId = p["cstsId"]?.jsonPrimitive?.contentOrNull, email = p["email"]?.jsonPrimitive?.contentOrNull, gender = p["gender"]?.jsonPrimitive?.contentOrNull, isTrainer = p["isTrainer"]?.jsonPrimitive?.contentOrNull?.let { it == "true" }, phone = p["phone"]?.jsonPrimitive?.contentOrNull, wdsfId = p["wdsfId"]?.jsonPrimitive?.contentOrNull, activeCouplesList = couplesArr, cohortMembershipsList = memberships, rawResponse = AppJson.parseToJsonElement(jsonStr), address = address, nationality = p["nationality"]?.jsonPrimitive?.contentOrNull, nationalIdNumber = p["nationalIdNumber"]?.jsonPrimitive?.contentOrNull, cstsProgressList = cstsProgress)
     } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
 
     private fun parseStoredCurrentUser(jsonStr: String): CurrentUser? = try {

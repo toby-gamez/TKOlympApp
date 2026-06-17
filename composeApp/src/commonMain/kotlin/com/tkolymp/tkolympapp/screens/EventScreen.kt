@@ -86,7 +86,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.utils.asJsonArrayOrNull
 import com.tkolymp.shared.utils.asJsonObjectOrNull
-import com.tkolymp.shared.utils.formatTimesWithDateAlways
 import com.tkolymp.shared.utils.int
 import com.tkolymp.shared.utils.str
 import com.tkolymp.shared.utils.translateEventType
@@ -106,7 +105,6 @@ import com.tkolymp.tkolympapp.platform.FullscreenImageViewer
 fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? = null, onOpenRegistration: ((String, String?) -> Unit)? = null, onOpenPerson: ((String) -> Unit)? = null) {
     val viewModel = viewModel<EventViewModel>()
     val state by viewModel.state.collectAsState()
-    val showAllInstances = remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var showReminderDialog by remember { mutableStateOf(false) }
@@ -298,58 +296,6 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                     }
                 }
             }
-
-        // Seznam termínů
-        // Show the instances card only when there is more than one instance
-        if (state.instances.size > 1) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Text(AppStrings.current.events.eventDates, style = MaterialTheme.typography.titleMedium)
-                    Spacer(modifier = Modifier.height(6.dp))
-                    
-                    val instancesToShow = if (showAllInstances.value || state.instances.size <= 3) {
-                        state.instances
-                    } else {
-                        state.instances.take(3)
-                    }
-                    
-                    instancesToShow.forEachIndexed { index, instanceEl ->
-                        val instance = instanceEl.asJsonObjectOrNull() ?: return@forEachIndexed
-                        val since = instance.str("since")
-                        val until = instance.str("until")
-                        val instLocation = instance["location"].asJsonObjectOrNull()?.str("name")
-                        
-                        if (index > 0) Spacer(modifier = Modifier.height(4.dp))
-                        
-                        Text("${index + 1}. ${formatTimesWithDateAlways(since, until)}", 
-                            style = MaterialTheme.typography.bodySmall)
-                        
-                        if (!instLocation.isNullOrBlank() && instLocation != state.locationName) {
-                            Text("   ${AppStrings.current.events.place}: $instLocation", 
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                ))
-                        }
-                    }
-                    
-                    if (state.instances.size > 3 && !showAllInstances.value) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        TextButton(onClick = { showAllInstances.value = true }) {
-                            Text("${AppStrings.current.commonActions.showAll.replace("vše", "všech")} ${state.instances.size} ${AppStrings.current.events.eventDates.lowercase()}")
-                        }
-                    } else if (state.instances.size > 3 && showAllInstances.value) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        TextButton(onClick = { showAllInstances.value = false }) {
-                            Text(AppStrings.current.commonActions.showLess)
-                        }
-                    }
-                }
-            }
-        }
 
         // Popis a shrnutí
         if (state.summary.isNotBlank() || state.eventDescription.isNotBlank()) {

@@ -21,11 +21,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Cake
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Female
 import androidx.compose.material.icons.filled.Male
 import androidx.compose.material3.Card
-import androidx.compose.material3.ElevatedSuggestionChip
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -48,6 +50,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -57,6 +60,7 @@ import com.tkolymp.shared.utils.formatShortDate
 import com.tkolymp.shared.utils.parseToLocal
 import com.tkolymp.shared.viewmodels.PersonViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
+import com.tkolymp.tkolympapp.components.CoupleAvatar
 import com.tkolymp.tkolympapp.components.InitialsAvatar
 import com.tkolymp.tkolympapp.components.parseColorOrDefault
 import kotlinx.coroutines.launch
@@ -107,7 +111,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
             )
             if (p.isTrainer == true) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                    ElevatedSuggestionChip(
+                    SuggestionChip(
                         onClick = {},
                         label = { Text(AppStrings.current.profile.trainer) }
                     )
@@ -271,6 +275,95 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                     }
                 }
                 } // StaggeredItem couples
+            }
+            // ČSTS Progress
+            val cstsProgressList = p.cstsProgressList
+            if (cstsProgressList.isNotEmpty()) {
+                StaggeredItem(index = 4, visible = cardsVisible, baseDelayMs = 50) {
+                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(AppStrings.current.competition.cstsProgress, style = MaterialTheme.typography.labelLarge)
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                            val byCompetitor = cstsProgressList.groupBy { it.competitorName?.takeIf { n -> n.isNotBlank() } ?: "" }
+                            byCompetitor.entries.forEachIndexed { idx, (competitorName, entries) ->
+                                if (idx > 0) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                }
+                                if (competitorName.isNotBlank()) {
+                                    val coupleNames = competitorName.split(" - ", limit = 2).map { it.trim() }.takeIf { it.size == 2 }
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        if (coupleNames != null) {
+                                            CoupleAvatar(womanName = coupleNames[0], manName = coupleNames[1], size = 24.dp)
+                                        } else {
+                                            InitialsAvatar(name = competitorName, size = 24.dp)
+                                        }
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(competitorName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                                    }
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                }
+                                entries.forEach { entry ->
+                                    val rawCat = entry.category?.name?.takeIf { it.isNotBlank() } ?: ""
+                                    val catFormatted = AppStrings.current.competition.formatType(rawCat)
+                                    val entryPoints = entry.points
+                                    val entryFinals = entry.finals
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = catFormatted,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            modifier = Modifier.weight(1f),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        val pts = entryPoints?.toDoubleOrNull()
+                                        if (pts != null && pts != 0.0) {
+                                            val ptsStr = if (pts % 1.0 == 0.0) pts.toInt().toString() else "%.1f".format(pts)
+                                            Row(
+                                                modifier = Modifier
+                                                    .padding(start = 4.dp)
+                                                    .background(MaterialTheme.colorScheme.tertiaryContainer, RoundedCornerShape(6.dp))
+                                                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Icon(Icons.Default.BarChart, contentDescription = null, tint = MaterialTheme.colorScheme.onTertiaryContainer, modifier = Modifier.size(13.dp))
+                                                Spacer(modifier = Modifier.width(3.dp))
+                                                Text(
+                                                    text = "$ptsStr${AppStrings.current.competition.pointsSuffix}",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                                                )
+                                            }
+                                        }
+                                        if (entryFinals != null && entryFinals > 0) {
+                                            Row(
+                                                modifier = Modifier
+                                                    .padding(start = 4.dp)
+                                                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(6.dp))
+                                                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Icon(Icons.Default.EmojiEvents, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.size(13.dp))
+                                                Spacer(modifier = Modifier.width(3.dp))
+                                                Text(
+                                                    text = "${entryFinals}F",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
             // (duplicate UI removed)
                 }

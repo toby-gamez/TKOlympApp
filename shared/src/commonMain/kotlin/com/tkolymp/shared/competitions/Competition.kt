@@ -16,6 +16,14 @@ data class CompetitionCategory(
 )
 
 @Serializable
+data class CstsProgress(
+    val points: String?,
+    val finals: Int?,
+    val competitorName: String?,
+    val category: CompetitionCategory?
+)
+
+@Serializable
 data class Competition(
     val competitionId: Long?,
     val competitionDate: String,

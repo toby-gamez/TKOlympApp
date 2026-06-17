@@ -121,6 +121,7 @@ fun OverviewScreen(
         val bvrUpcoming = remember { BringIntoViewRequester() }
         val bvrBoard = remember { BringIntoViewRequester() }
         val bvrCamps = remember { BringIntoViewRequester() }
+        val bvrCompetitions = remember { BringIntoViewRequester() }
         val bvrBirthdays = remember { BringIntoViewRequester() }
 
         // Always-fresh bounds per section — updated unconditionally by onGloballyPositioned
@@ -128,13 +129,14 @@ fun OverviewScreen(
         var boundsUpcoming by remember { mutableStateOf<Rect?>(null) }
         var boundsBoard by remember { mutableStateOf<Rect?>(null) }
         var boundsCamps by remember { mutableStateOf<Rect?>(null) }
+        var boundsCompetitions by remember { mutableStateOf<Rect?>(null) }
         var boundsBirthdays by remember { mutableStateOf<Rect?>(null) }
 
         LaunchedEffect(tutorialStep, tutorialActive) {
-            if (!tutorialActive || tutorialStep !in 1..5) return@LaunchedEffect
+            if (!tutorialActive || tutorialStep !in 1..6) return@LaunchedEffect
             val bvr = when (tutorialStep) {
                 1 -> bvrUpcoming; 2 -> bvrBoard; 3 -> bvrCamps
-                4 -> bvrBirthdays; else -> bvrStats
+                4 -> bvrCompetitions; 5 -> bvrBirthdays; else -> bvrStats
             }
 
             bvr.bringIntoView()
@@ -143,7 +145,7 @@ fun OverviewScreen(
 
             val bounds = when (tutorialStep) {
                 1 -> boundsUpcoming; 2 -> boundsBoard; 3 -> boundsCamps
-                4 -> boundsBirthdays; else -> boundsStats
+                4 -> boundsCompetitions; 5 -> boundsBirthdays; else -> boundsStats
             }
             if (bounds != null) TutorialHighlight.rect = bounds
         }
@@ -169,7 +171,7 @@ fun OverviewScreen(
                     .onGloballyPositioned { coords ->
                         val b = coords.boundsInRoot()
                         boundsStats = b
-                        if (tutorialActive && tutorialStep == 5) TutorialHighlight.rect = b
+                        if (tutorialActive && tutorialStep == 6) TutorialHighlight.rect = b
                     }
             ) {
                 if (state.isDancer && state.upcomingEvents.isNotEmpty()) {
@@ -409,7 +411,15 @@ fun OverviewScreen(
             } // Camps section
             Spacer(modifier = Modifier.height(8.dp))
             // Nearest competition section
-            Column {
+            Column(
+                modifier = Modifier
+                    .bringIntoViewRequester(bvrCompetitions)
+                    .onGloballyPositioned { coords ->
+                        val b = coords.boundsInRoot()
+                        boundsCompetitions = b
+                        if (tutorialActive && tutorialStep == 4) TutorialHighlight.rect = b
+                    }
+            ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -419,15 +429,13 @@ fun OverviewScreen(
                 Column(modifier = Modifier.padding(horizontal = 12.dp)) {
                     val comp = state.nearestCompetition
                     if (comp == null) {
-                        Text(AppStrings.current.competition.noUpcoming, modifier = Modifier.padding(vertical = 6.dp))
+                        Text(AppStrings.current.competition.noUpcomingMine, modifier = Modifier.padding(vertical = 6.dp))
                     } else {
                         StaggeredItem(index = 0, visible = cardsVisible) {
                             NearestCompetitionCard(competition = comp, onOpenCompetitions = onOpenCompetitions)
                         }
                     }
                 }
-            }
-            if (state.nearestCompetition != null) {
                 Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.Center) {
                     TextButton(onClick = onOpenCompetitions) {
                         Text(AppStrings.current.overview.more)
@@ -442,7 +450,7 @@ fun OverviewScreen(
                     .onGloballyPositioned { coords ->
                         val b = coords.boundsInRoot()
                         boundsBirthdays = b
-                        if (tutorialActive && tutorialStep == 4) TutorialHighlight.rect = b
+                        if (tutorialActive && tutorialStep == 5) TutorialHighlight.rect = b
                     }
             ) {
             Row(

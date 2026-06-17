@@ -1,28 +1,31 @@
 package com.tkolymp.shared
 
+import com.tkolymp.shared.ServiceLocator.container
+import com.tkolymp.shared.ServiceLocator.init
 import com.tkolymp.shared.announcements.IAnnouncementService
 import com.tkolymp.shared.auth.IAuthService
 import com.tkolymp.shared.cache.CacheService
 import com.tkolymp.shared.club.ClubService
+import com.tkolymp.shared.competitions.ICompetitionService
 import com.tkolymp.shared.event.IEventService
 import com.tkolymp.shared.network.IGraphQlClient
+import com.tkolymp.shared.network.NetworkMonitor
 import com.tkolymp.shared.notification.INotificationScheduler
-import com.tkolymp.shared.notification.NotificationService
 import com.tkolymp.shared.notification.INotificationStorage
+import com.tkolymp.shared.notification.NotificationService
 import com.tkolymp.shared.people.PeopleService
+import com.tkolymp.shared.personalevents.PersonalEventService
+import com.tkolymp.shared.storage.AnnouncementBadgeStorage
 import com.tkolymp.shared.storage.ICalendarPreferenceStorage
-import com.tkolymp.shared.storage.LanguageStorage
-import com.tkolymp.shared.storage.OnboardingStorage
 import com.tkolymp.shared.storage.ITokenStorage
 import com.tkolymp.shared.storage.IUserStorage
+import com.tkolymp.shared.storage.LanguageStorage
+import com.tkolymp.shared.storage.OfflineDataStorage
+import com.tkolymp.shared.storage.OnboardingStorage
+import com.tkolymp.shared.sync.OfflineSyncManager
 import com.tkolymp.shared.systemcalendar.ISystemCalendarService
 import com.tkolymp.shared.user.UserService
-import com.tkolymp.shared.storage.AnnouncementBadgeStorage
-import com.tkolymp.shared.storage.OfflineDataStorage
-import com.tkolymp.shared.network.NetworkMonitor
-import com.tkolymp.shared.sync.OfflineSyncManager
-import com.tkolymp.shared.personalevents.PersonalEventService
-import com.tkolymp.shared.competitions.ICompetitionService
+import kotlin.concurrent.Volatile
 
 /**
  * Thin read-only facade over [AppContainer]. All mutable state lives in a single
@@ -33,7 +36,8 @@ import com.tkolymp.shared.competitions.ICompetitionService
  * or service accesses the properties below.
  */
 object ServiceLocator {
-    @Volatile private var _container: AppContainer? = null
+    @Volatile
+    private var _container: AppContainer? = null
     // Optional platform-provided topic manager (set by platform initializer if available)
     @Volatile var topicManager: com.tkolymp.shared.notification.ITopicManager? = null
 

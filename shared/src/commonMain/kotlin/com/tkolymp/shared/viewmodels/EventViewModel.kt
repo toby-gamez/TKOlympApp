@@ -213,13 +213,25 @@ class EventViewModel(
                 instances.isNotEmpty() && instances.all { it.asJsonObjectOrNull()?.bool("isCancelled") == true }
             }
 
+            val selectedInstance = if (instanceId != null) {
+                instances.firstOrNull { inst ->
+                    inst.asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.longOrNull == instanceId
+                }?.asJsonObjectOrNull()
+            } else null
+
             val eventDateText = when {
+                selectedInstance != null -> {
+                    val since = selectedInstance.str("since")
+                    val until = selectedInstance.str("until")
+                    formatTimesWithDateAlways(since, until)
+                }
                 firstDate != null && lastDate != null && firstDate != lastDate ->
                     "${formatTimesWithDateAlways(firstDate, null)} - ${formatTimesWithDateAlways(lastDate, null)}"
                 firstDate != null -> formatTimesWithDateAlways(firstDate, lastDate)
                 else -> ""
             }
-            val scheduleText = describeSchedule(instances, AppStrings.currentLanguage.code)
+            val scheduleText = if (selectedInstance != null) null
+                               else describeSchedule(instances, AppStrings.currentLanguage.code)
 
             _state.value = _state.value.copy(
                 eventJson = ev,

@@ -12,7 +12,9 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 
 data class PersonName(val firstName: String?, val lastName: String?)
 
@@ -59,7 +61,8 @@ data class PersonDetails(
     val rawResponse: JsonElement? = null,
     val address: AddressDetails? = null,
     val nationality: String? = null,
-    val nationalIdNumber: String? = null
+    val nationalIdNumber: String? = null,
+    val cstsProgressList: List<com.tkolymp.shared.competitions.CstsProgress> = emptyList()
 )
 
 data class ScoreboardEntry(
@@ -233,6 +236,12 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                                     since
                                     until
                                 }
+                                cstsProgressList {
+                                    points
+                                    finals
+                                    competitorName
+                                    category { id name series discipline ageGroup genderGroup class competitorType baseDanceProgramId }
+                                }
                             }
                         }
                 """.trimIndent()
@@ -301,7 +310,30 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                 CohortMembership(Cohort(cId, cName, cColor, cVis), since, until)
             } ?: emptyList()
 
-            val pd = PersonDetails(id, first, last, prefix, suffix, birth, csts, email, gender, isTrainer, phone, wdsf, couplesArr, memberships, el)
+            val cstsProgress = (personObj?.get("cstsProgressList") as? kotlinx.serialization.json.JsonArray)?._safeMap { pEl ->
+                val pObj = pEl as? kotlinx.serialization.json.JsonObject ?: return@_safeMap null
+                val catObj = pObj["category"] as? kotlinx.serialization.json.JsonObject
+                val cat = catObj?.let { cat ->
+                    com.tkolymp.shared.competitions.CompetitionCategory(
+                        id = cat["id"]?.jsonPrimitive?.longOrNull ?: cat["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull(),
+                        name = cat["name"]?.jsonPrimitive?.contentOrNull,
+                        series = cat["series"]?.jsonPrimitive?.contentOrNull,
+                        discipline = cat["discipline"]?.jsonPrimitive?.contentOrNull,
+                        ageGroup = cat["ageGroup"]?.jsonPrimitive?.contentOrNull,
+                        genderGroup = cat["genderGroup"]?.jsonPrimitive?.contentOrNull,
+                        competitorClass = cat["class"]?.jsonPrimitive?.contentOrNull,
+                        competitorType = cat["competitorType"]?.jsonPrimitive?.contentOrNull,
+                        baseDanceProgramId = cat["baseDanceProgramId"]?.jsonPrimitive?.longOrNull ?: cat["baseDanceProgramId"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                    )
+                }
+                com.tkolymp.shared.competitions.CstsProgress(
+                    points = pObj["points"]?.jsonPrimitive?.contentOrNull,
+                    finals = pObj["finals"]?.jsonPrimitive?.intOrNull,
+                    competitorName = pObj["competitorName"]?.jsonPrimitive?.contentOrNull,
+                    category = cat
+                )
+            } ?: emptyList()
+            val pd = PersonDetails(id, first, last, prefix, suffix, birth, csts, email, gender, isTrainer, phone, wdsf, couplesArr, memberships, el, cstsProgressList = cstsProgress)
             try { cache.put(cacheKey, pd, ttl = 15.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
             return pd
         }

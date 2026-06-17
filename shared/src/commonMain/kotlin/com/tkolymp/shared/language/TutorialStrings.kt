@@ -15,6 +15,8 @@ data class TutorialStrings(
     val overviewBoardDesc: String = "A preview of the three most recent club announcements. Tap a post for the full text, or head to the Board tab to see all posts.",
     val overviewCampsTitle: String = "Upcoming Events",
     val overviewCampsDesc: String = "Club events and activities coming up soon. Tap any item to see details or sign up.",
+    val overviewCompetitionsTitle: String = "Nearest Competition",
+    val overviewCompetitionsDesc: String = "Your next registered competition at a glance — name, location, and date. Tap to open the full competition list.",
     val overviewBirthdaysTitle: String = "Birthdays",
     val overviewBirthdaysDesc: String = "Upcoming birthdays of club members — so you never miss a chance to celebrate.",
     val overviewStatsTitle: String = "Weekly Stats",

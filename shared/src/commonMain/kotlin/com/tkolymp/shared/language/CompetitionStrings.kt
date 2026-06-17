@@ -6,6 +6,7 @@ data class CompetitionStrings(
     val results: String = "Výsledky",
     val nearestCompetition: String = "Nejbližší soutěž",
     val noUpcoming: String = "Žádné nadcházející soutěže",
+    val noUpcomingMine: String = "Žádné tvoje nadcházející soutěže",
     val noResults: String = "Žádné výsledky",
     val checkIn: String = "Čas prezence",
     val participants: String = "Účastníci",
@@ -20,6 +21,9 @@ data class CompetitionStrings(
     val ageGroupSenior: String = "Senior",
     val ageGroupYouth: String = "Mládež",
     val openInBrowser: String = "Otevřít propozice v prohlížeči",
+    val finals: String = "Finálí",
+    val cstsProgress: String = "Výsledky ČSTS",
+    val noCstsProgress: String = "Žádné výsledky ČSTS",
 ) {
     fun formatType(raw: String): String = raw
         .removePrefix("DanceSport ")

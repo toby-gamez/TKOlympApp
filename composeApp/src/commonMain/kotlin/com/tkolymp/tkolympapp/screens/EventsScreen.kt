@@ -83,10 +83,10 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
     var contentBounds by remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
 
     LaunchedEffect(tutorialStep, tutorialActive) {
-        if (!tutorialActive || tutorialStep !in 11..12) return@LaunchedEffect
+        if (!tutorialActive || tutorialStep !in 12..13) return@LaunchedEffect
         when (tutorialStep) {
-            11 -> selectedTab = 0
-            12 -> selectedTab = 1
+            12 -> selectedTab = 0
+            13 -> selectedTab = 1
         }
         delay(100)
         contentBounds?.let { TutorialHighlight.rect = it }
@@ -208,7 +208,7 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                 modifier = Modifier.onGloballyPositioned { coords ->
                     val b = coords.boundsInRoot()
                     contentBounds = b
-                    if (tutorialActive && tutorialStep in 11..12) TutorialHighlight.rect = b
+                    if (tutorialActive && tutorialStep in 12..13) TutorialHighlight.rect = b
                 }
             ) { tab ->
                 var sectionsVisible by remember { mutableStateOf(false) }

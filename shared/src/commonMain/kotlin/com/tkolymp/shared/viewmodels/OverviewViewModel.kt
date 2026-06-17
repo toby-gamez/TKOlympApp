@@ -444,7 +444,9 @@ class OverviewViewModel(
             } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
 
             val nearestCompetition = try {
-                competitionService.getNearestUpcoming()
+                val pidLong = pid?.toLongOrNull()
+                val personFilter = if (pidLong != null) listOf(pidLong) else null
+                competitionService.getNearestUpcoming(pPersonIds = personFilter)
             } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
 
             _state.value = _state.value.copy(

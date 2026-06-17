@@ -15,5 +15,5 @@ interface ICompetitionService {
         pPersonIds: List<Long>? = null
     ): List<Competition>
 
-    suspend fun getNearestUpcoming(): Competition?
+    suspend fun getNearestUpcoming(pPersonIds: List<Long>? = null): Competition?
 }

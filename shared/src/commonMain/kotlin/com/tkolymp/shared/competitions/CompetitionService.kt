@@ -128,10 +128,10 @@ class CompetitionService(
         return list
     }
 
-    override suspend fun getNearestUpcoming(): Competition? {
+    override suspend fun getNearestUpcoming(pPersonIds: List<Long>?): Competition? {
         val today = Clock.System.todayIn(TimeZone.currentSystemDefault()).toString()
         return try {
-            getUpcomingCompetitions(pSince = today, first = 10).firstOrNull()
+            getUpcomingCompetitions(pSince = today, first = 10, pPersonIds = pPersonIds).firstOrNull()
         } catch (e: CancellationException) { throw e } catch (e: Exception) {
             Logger.d("CompetitionService", "getNearestUpcoming failed: ${e.message}")
             null

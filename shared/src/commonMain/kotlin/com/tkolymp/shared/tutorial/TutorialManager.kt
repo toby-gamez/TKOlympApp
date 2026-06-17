@@ -14,6 +14,7 @@ object TutorialManager {
         TutorialStep("overview", "overviewUpcoming"),
         TutorialStep("overview", "overviewBoard"),
         TutorialStep("overview", "overviewCamps"),
+        TutorialStep("overview", "overviewCompetitions"),
         TutorialStep("overview", "overviewBirthdays"),
         TutorialStep("overview", "overviewStats"),
         // Calendar sections

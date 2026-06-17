@@ -311,8 +311,10 @@ fun RegistrationScreen(
                         }
 
                         if (showLessonSelection) {
-                            Text(AppStrings.current.registration.selectTrainersAndLessons, style = MaterialTheme.typography.bodyMedium)
-                            Spacer(modifier = Modifier.height(6.dp))
+                            if (trainers.isNotEmpty()) {
+                                Text(AppStrings.current.registration.selectTrainersAndLessons, style = MaterialTheme.typography.bodyMedium)
+                                Spacer(modifier = Modifier.height(6.dp))
+                            }
 
                             trainers.forEachIndexed { idx, tEl ->
                                 val tObj = tEl as? JsonObject

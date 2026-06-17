@@ -87,8 +87,8 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
     }
 
     LaunchedEffect(tutorialStep, tutorialActive) {
-        if (!tutorialActive || tutorialStep !in 9..10) return@LaunchedEffect
-        localSelectedTab = if (tutorialStep == 10) 1 else 0
+        if (!tutorialActive || tutorialStep !in 10..11) return@LaunchedEffect
+        localSelectedTab = if (tutorialStep == 11) 1 else 0
         delay(100)
         contentBounds?.let { TutorialHighlight.rect = it }
     }
@@ -185,7 +185,7 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
                     modifier = Modifier.onGloballyPositioned { coords ->
                         val b = coords.boundsInRoot()
                         contentBounds = b
-                        if (tutorialActive && tutorialStep == 9) TutorialHighlight.rect = b
+                        if (tutorialActive && tutorialStep == 10) TutorialHighlight.rect = b
                     }
                 ) { tab ->
                     var listVisible by remember { mutableStateOf(false) }
