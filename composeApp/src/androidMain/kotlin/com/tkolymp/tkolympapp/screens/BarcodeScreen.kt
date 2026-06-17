@@ -44,6 +44,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.shared.people.PersonDetails
+import com.tkolymp.shared.user.fmtProfileDate
 
 private val L_CODES = arrayOf(
     "0001101", "0011001", "0010011", "0111101", "0100011",
@@ -98,9 +100,11 @@ fun BarcodeScreen(onBack: () -> Unit = {}) {
     }
 
     var cstsId by remember { mutableStateOf<String?>(null) }
+    var personDetails by remember { mutableStateOf<PersonDetails?>(null) }
     var showInfo by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         cstsId = try { ServiceLocator.userService.getCachedCstsId() } catch (_: Exception) { null }
+        personDetails = try { ServiceLocator.userService.getCachedPersonDetails() } catch (_: Exception) { null }
     }
 
     if (showInfo) {
@@ -193,6 +197,33 @@ fun BarcodeScreen(onBack: () -> Unit = {}) {
                             fontSize = 18.sp,
                             letterSpacing = 4.sp,
                             color = MaterialTheme.colorScheme.onBackground
+                        )
+                        val person = personDetails
+                        val fullName = listOfNotNull(person?.firstName, person?.lastName)
+                            .joinToString(" ").takeIf { it.isNotBlank() }
+                        if (fullName != null) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = fullName,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                        val birthDateFmt = fmtProfileDate(person?.birthDate)
+                        if (birthDateFmt != null) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = birthDateFmt,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "TK OLYMP OLOMOUC, 12-5",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
