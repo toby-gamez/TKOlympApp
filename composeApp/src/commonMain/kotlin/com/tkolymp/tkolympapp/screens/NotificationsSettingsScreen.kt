@@ -95,7 +95,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
         "PERSONAL_TRAINING" to AppStrings.current.notifications.eventTypePersonalTraining
     )
     val viewModel = viewModel<NotificationsSettingsViewModel>()
-    val vmState by viewModel.state.collectAsState()
+    val vmState by viewModel.state.collectAsStateWithLifecycle()
     var showDialog by remember { mutableStateOf(false) }
     var editRule by remember { mutableStateOf<NotificationRule?>(null) }
     var deletingRuleId by remember { mutableStateOf<String?>(null) }

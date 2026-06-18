@@ -63,7 +63,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun BirthdayNotificationsScreen(onBack: () -> Unit = {}) {
     val viewModel = viewModel<BirthdayNotificationViewModel>()
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) { viewModel.load() }
 

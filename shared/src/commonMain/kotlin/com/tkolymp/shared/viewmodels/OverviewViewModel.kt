@@ -127,16 +127,59 @@ class OverviewViewModel(
             } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("OverviewViewModel", "cache invalidation failed: ${e.message}") }
         }
         try {
-            var events = try {
-                val grouped = withContext(Dispatchers.Default) {
-                    eventService.fetchEventsGroupedByDay(startIso, endIso, onlyMine = true, first = AppConstants.FETCH_LIMIT_WEEK, cacheNamespace = "overview_")
-                }
-                val flattened = grouped.values.flatten()
+            val pid = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("OverviewViewModel", "getCachedPersonId failed: ${e.message}"); null }
+            val cids = try { userService.getCachedCoupleIds() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("OverviewViewModel", "getCachedCoupleIds failed: ${e.message}"); emptyList<String>() }
 
-                // If server returned empty result while we're offline, try offline storage fallback
-                if (flattened.isEmpty()) {
-                    val online = try { ServiceLocator.networkMonitor.isConnected() } catch (_: Exception) { true }
-                    if (!online) {
+            var events: List<EventInstance> = emptyList()
+            var announcements: List<Announcement> = emptyList()
+            var upcomingBirthdays: List<BirthdayEntry> = emptyList()
+            var paymentDaysUntilDue: Int? = null
+            var nearestCompetition: Competition? = null
+
+            coroutineScope {
+                val eventsDef = async {
+                    var fetched = try {
+                        val grouped = withContext(Dispatchers.Default) {
+                            eventService.fetchEventsGroupedByDay(startIso, endIso, onlyMine = true, first = AppConstants.FETCH_LIMIT_WEEK, cacheNamespace = "overview_")
+                        }
+                        val flattened = grouped.values.flatten()
+
+                        if (flattened.isEmpty()) {
+                            val online = try { ServiceLocator.networkMonitor.isConnected() } catch (_: Exception) { true }
+                            if (!online) {
+                                try {
+                                    val startDay = try { kotlinx.datetime.LocalDate.parse(startIso.substringBefore('T')) } catch (_: Exception) { null }
+                                    val endDay = try { kotlinx.datetime.LocalDate.parse(endIso.substringBefore('T')) } catch (_: Exception) { null }
+                                    val keys = ServiceLocator.offlineDataStorage.allKeys().filter { it.startsWith(OfflineKeys.CAL_PREFIX + "MINE_") }
+                                        .filter { k ->
+                                            try {
+                                                val suffix = k.removePrefix(OfflineKeys.CAL_PREFIX + "MINE_")
+                                                val wk = kotlinx.datetime.LocalDate.parse(suffix)
+                                                if (startDay != null && endDay != null) {
+                                                    wk <= endDay && wk >= startDay
+                                                } else true
+                                            } catch (_: Exception) { false }
+                                        }
+                                    val parsed = mutableListOf<EventInstance>()
+                                    for (k in keys) {
+                                        try {
+                                            val raw = ServiceLocator.offlineDataStorage.load(k) ?: continue
+                                            val map = parseCalendarJson(raw)
+                                            parsed += map.values.flatten()
+                                        } catch (_: Exception) {}
+                                    }
+                                    val deduped = parsed.groupBy { it.id }.mapNotNull { (_, list) ->
+                                        list.maxByOrNull { it.updatedAt ?: it.since ?: "" }
+                                    }
+                                    if (deduped.isNotEmpty()) {
+                                        _state.value = _state.value.copy(isOffline = true)
+                                        deduped
+                                    } else flattened
+                                } catch (_: Exception) { flattened }
+                            } else flattened
+                        } else flattened
+                    } catch (e: CancellationException) { throw e } catch (e: Exception) {
+                        Logger.d("OverviewViewModel", "fetchEvents failed: ${e.message}")
                         try {
                             val startDay = try { kotlinx.datetime.LocalDate.parse(startIso.substringBefore('T')) } catch (_: Exception) { null }
                             val endDay = try { kotlinx.datetime.LocalDate.parse(endIso.substringBefore('T')) } catch (_: Exception) { null }
@@ -146,7 +189,6 @@ class OverviewViewModel(
                                         val suffix = k.removePrefix(OfflineKeys.CAL_PREFIX + "MINE_")
                                         val wk = kotlinx.datetime.LocalDate.parse(suffix)
                                         if (startDay != null && endDay != null) {
-                                            // include weeks that start within the requested range
                                             wk <= endDay && wk >= startDay
                                         } else true
                                     } catch (_: Exception) { false }
@@ -159,107 +201,86 @@ class OverviewViewModel(
                                     parsed += map.values.flatten()
                                 } catch (_: Exception) {}
                             }
-                            // Deduplicate by instance id, preferring the most-recent updatedAt/since
-                            val deduped = parsed.groupBy { it.id }.mapNotNull { (_, list) ->
-                                list.maxByOrNull { it.updatedAt ?: it.since ?: "" }
-                            }
+                            val deduped = parsed.groupBy { it.id }.mapNotNull { (_, list) -> list.maxByOrNull { it.updatedAt ?: it.since ?: "" } }
                             if (deduped.isNotEmpty()) {
                                 _state.value = _state.value.copy(isOffline = true)
                                 deduped
-                            } else flattened
-                        } catch (_: Exception) { flattened }
-                    } else flattened
-                } else flattened
-            } catch (e: CancellationException) { throw e } catch (e: Exception) {
-                Logger.d("OverviewViewModel", "fetchEvents failed: ${e.message}")
-                // Try offline fallback: collect available offline_cal_MINE_* keys
-                try {
-                    val startDay = try { kotlinx.datetime.LocalDate.parse(startIso.substringBefore('T')) } catch (_: Exception) { null }
-                    val endDay = try { kotlinx.datetime.LocalDate.parse(endIso.substringBefore('T')) } catch (_: Exception) { null }
-                    val keys = ServiceLocator.offlineDataStorage.allKeys().filter { it.startsWith(OfflineKeys.CAL_PREFIX + "MINE_") }
-                        .filter { k ->
-                            try {
-                                val suffix = k.removePrefix(OfflineKeys.CAL_PREFIX + "MINE_")
-                                val wk = kotlinx.datetime.LocalDate.parse(suffix)
-                                if (startDay != null && endDay != null) {
-                                    wk <= endDay && wk >= startDay
-                                } else true
-                            } catch (_: Exception) { false }
-                        }
-                    val parsed = mutableListOf<EventInstance>()
-                    for (k in keys) {
-                        try {
-                            val raw = ServiceLocator.offlineDataStorage.load(k) ?: continue
-                            val map = parseCalendarJson(raw)
-                            parsed += map.values.flatten()
-                        } catch (_: Exception) {}
+                            } else emptyList()
+                        } catch (_: Exception) { emptyList<EventInstance>() }
                     }
-                    val deduped = parsed.groupBy { it.id }.mapNotNull { (_, list) -> list.maxByOrNull { it.updatedAt ?: it.since ?: "" } }
-                    if (deduped.isNotEmpty()) {
-                        _state.value = _state.value.copy(isOffline = true)
-                        deduped
-                    } else emptyList()
-                } catch (_: Exception) { emptyList<EventInstance>() }
-            }
-            // If some events came from offline minimal JSON (no registrations), try to fetch full
-            // event details for those event ids (from cache or offline storage) so we can show
-            // participant names like in CalendarScreen.
-            events = coroutineScope {
-                events.map { inst ->
-                    async {
-                        val ev = inst.event ?: return@async inst
-                        if (!ev.eventRegistrationsList.isNullOrEmpty()) return@async inst
-                        val evId = ev.id ?: return@async inst
 
-                        var regs: List<com.tkolymp.shared.event.Registration> = emptyList()
-                        try {
-                            val fullJson = try { eventService.fetchEventById(evId, forceRefresh = false) } catch (_: Exception) { null }
-                            val regArr = fullJson?.let { fj ->
-                                when {
-                                    fj["eventRegistrationsList"] is kotlinx.serialization.json.JsonArray -> fj["eventRegistrationsList"] as kotlinx.serialization.json.JsonArray
-                                    fj["eventRegistrations"] is kotlinx.serialization.json.JsonObject -> (fj["eventRegistrations"] as kotlinx.serialization.json.JsonObject)["nodes"] as? kotlinx.serialization.json.JsonArray
-                                    else -> null
-                                }
-                            }
-                            if (regArr != null) {
-                                regs = parseRegistrationsFromJson(regArr)
-                            }
-                        } catch (_: Exception) {}
+                    coroutineScope {
+                        fetched.map { inst ->
+                            async {
+                                val ev = inst.event ?: return@async inst
+                                if (!ev.eventRegistrationsList.isNullOrEmpty()) return@async inst
+                                val evId = ev.id ?: return@async inst
 
-                        if (regs.isEmpty()) {
-                            try {
-                                val raw = try { ServiceLocator.offlineSyncManager.loadEventDetail(evId) } catch (_: Exception) { null }
-                                if (!raw.isNullOrBlank()) {
-                                    val parsed = try { AppJson.parseToJsonElement(raw).jsonObject } catch (_: Exception) { null }
-                                    val regArr2 = parsed?.let { pj ->
+                                var regs: List<com.tkolymp.shared.event.Registration> = emptyList()
+                                try {
+                                    val fullJson = try { eventService.fetchEventById(evId, forceRefresh = false) } catch (_: Exception) { null }
+                                    val regArr = fullJson?.let { fj ->
                                         when {
-                                            pj["eventRegistrationsList"] is kotlinx.serialization.json.JsonArray -> pj["eventRegistrationsList"] as kotlinx.serialization.json.JsonArray
-                                            pj["eventRegistrations"] is kotlinx.serialization.json.JsonObject -> (pj["eventRegistrations"] as kotlinx.serialization.json.JsonObject)["nodes"] as? kotlinx.serialization.json.JsonArray
+                                            fj["eventRegistrationsList"] is kotlinx.serialization.json.JsonArray -> fj["eventRegistrationsList"] as kotlinx.serialization.json.JsonArray
+                                            fj["eventRegistrations"] is kotlinx.serialization.json.JsonObject -> (fj["eventRegistrations"] as kotlinx.serialization.json.JsonObject)["nodes"] as? kotlinx.serialization.json.JsonArray
                                             else -> null
                                         }
                                     }
-                                    if (regArr2 != null) {
-                                        regs = parseRegistrationsFromJson(regArr2)
+                                    if (regArr != null) {
+                                        regs = parseRegistrationsFromJson(regArr)
                                     }
-                                }
-                            } catch (_: Exception) {}
-                        }
+                                } catch (_: Exception) {}
 
-                        if (regs.isEmpty()) inst else inst.copy(event = ev.copy(eventRegistrationsList = regs))
+                                if (regs.isEmpty()) {
+                                    try {
+                                        val raw = try { ServiceLocator.offlineSyncManager.loadEventDetail(evId) } catch (_: Exception) { null }
+                                        if (!raw.isNullOrBlank()) {
+                                            val parsed = try { AppJson.parseToJsonElement(raw).jsonObject } catch (_: Exception) { null }
+                                            val regArr2 = parsed?.let { pj ->
+                                                when {
+                                                    pj["eventRegistrationsList"] is kotlinx.serialization.json.JsonArray -> pj["eventRegistrationsList"] as kotlinx.serialization.json.JsonArray
+                                                    pj["eventRegistrations"] is kotlinx.serialization.json.JsonObject -> (pj["eventRegistrations"] as kotlinx.serialization.json.JsonObject)["nodes"] as? kotlinx.serialization.json.JsonArray
+                                                    else -> null
+                                                }
+                                            }
+                                            if (regArr2 != null) {
+                                                regs = parseRegistrationsFromJson(regArr2)
+                                            }
+                                        }
+                                    } catch (_: Exception) {}
+                                }
+
+                                if (regs.isEmpty()) inst else inst.copy(event = ev.copy(eventRegistrationsList = regs))
+                            }
+                        }.awaitAll()
                     }
-                }.awaitAll()
-            }
-            val announcements = try {
-                val fetched = when (val r = withContext(Dispatchers.Default) { announcementService.getAnnouncements(false) }) {
-                    is DataResult.Success -> r.data
-                    is DataResult.Error -> emptyList()
                 }
-                if (fetched.isNotEmpty()) {
-                    fetched.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }.take(3)
-                } else {
-                    // If server returned empty result while we're offline, try offline storage fallback
-                    val online = try { ServiceLocator.networkMonitor.isConnected() } catch (_: Exception) { true }
-                    if (!online) {
+
+                val announcementsDef = async {
+                    try {
+                        val fetched = when (val r = withContext(Dispatchers.Default) { announcementService.getAnnouncements(false) }) {
+                            is DataResult.Success -> r.data
+                            is DataResult.Error -> emptyList()
+                        }
+                        if (fetched.isNotEmpty()) {
+                            fetched.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }.take(3)
+                        } else {
+                            val online = try { ServiceLocator.networkMonitor.isConnected() } catch (_: Exception) { true }
+                            if (!online) {
+                                try {
+                                    val raw = try { ServiceLocator.offlineSyncManager.loadAnnouncements(false) } catch (_: Exception) { null }
+                                    if (!raw.isNullOrBlank()) {
+                                        val parsed = try { AppJson.decodeFromString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), raw) } catch (_: Exception) { null }
+                                        if (!parsed.isNullOrEmpty()) {
+                                            _state.value = _state.value.copy(isOffline = true)
+                                            parsed.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }.take(3)
+                                        } else emptyList()
+                                    } else emptyList()
+                                } catch (_: Exception) { emptyList<Announcement>() }
+                            } else emptyList()
+                        }
+                    } catch (e: CancellationException) { throw e } catch (e: Exception) {
+                        Logger.d("OverviewViewModel", "getAnnouncements failed: ${e.message}")
                         try {
                             val raw = try { ServiceLocator.offlineSyncManager.loadAnnouncements(false) } catch (_: Exception) { null }
                             if (!raw.isNullOrBlank()) {
@@ -270,197 +291,203 @@ class OverviewViewModel(
                                 } else emptyList()
                             } else emptyList()
                         } catch (_: Exception) { emptyList<Announcement>() }
-                    } else emptyList()
+                    }
                 }
-            } catch (e: CancellationException) { throw e } catch (e: Exception) {
-                Logger.d("OverviewViewModel", "getAnnouncements failed: ${e.message}")
-                // As a secondary fallback, try loading offline announcements
-                try {
-                    val raw = try { ServiceLocator.offlineSyncManager.loadAnnouncements(false) } catch (_: Exception) { null }
-                    if (!raw.isNullOrBlank()) {
-                        val parsed = try { AppJson.decodeFromString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), raw) } catch (_: Exception) { null }
-                        if (!parsed.isNullOrEmpty()) {
-                            _state.value = _state.value.copy(isOffline = true)
-                            parsed.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }.take(3)
-                        } else emptyList()
-                    } else emptyList()
-                } catch (_: Exception) { emptyList<Announcement>() }
-            }
 
-            val pid = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("OverviewViewModel", "getCachedPersonId failed: ${e.message}"); null }
-            val cids = try { userService.getCachedCoupleIds() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("OverviewViewModel", "getCachedCoupleIds failed: ${e.message}"); emptyList<String>() }
-
-            // Derive camps: events with type containing "CAMP", capped at 2
-            val camps = events.filter { it.event?.type?.toEventType() == EventType.CAMP == true }
-            val campsMapByDay = camps
-                .sortedBy { it.since ?: it.updatedAt ?: "" }
-                .take(2)
-                .groupBy { inst ->
-                    val s = inst.since ?: inst.until ?: inst.updatedAt ?: ""
-                    s.substringBefore('T').ifEmpty { s }
-                }
-                .entries.sortedBy { it.key }
-                .associate { it.key to it.value }
-
-            // Derive trainings: all events, grouped by day, show one selected day
-            val trainings = events.sortedBy { it.since ?: it.updatedAt ?: "" }
-            val trainingsMapByDay = trainings
-                .groupBy { inst ->
-                    val s = inst.since ?: inst.until ?: inst.updatedAt ?: ""
-                    s.substringBefore('T').ifEmpty { s }
-                }
-                .entries.sortedBy { it.key }
-                .associate { it.key to it.value }
-
-            val nowInstant = Clock.System.now()
-            val sortedKeys = trainingsMapByDay.keys.sorted()
-            val selectedKey = if (sortedKeys.isEmpty()) null
-            else if (sortedKeys.contains(todayString)) {
-                val todayList = trainingsMapByDay[todayString] ?: emptyList()
-                val hasFutureToday = todayList.any { inst ->
-                    val timeStr = inst.until ?: inst.since ?: inst.updatedAt ?: ""
-                    val instInstant = try { Instant.parse(timeStr) } catch (_: Exception) { null }
-                    instInstant != null && instInstant > nowInstant
-                }
-                if (hasFutureToday) todayString else sortedKeys.find { it > todayString } ?: sortedKeys.firstOrNull()
-            } else {
-                sortedKeys.find { it > todayString } ?: sortedKeys.firstOrNull()
-            }
-
-            val selectedDayList = if (selectedKey != null) trainingsMapByDay[selectedKey] ?: emptyList() else emptyList()
-            val lessons = selectedDayList.filter { isLesson(it) }
-            val otherEvents = (selectedDayList - lessons.toSet()).sortedBy { it.since }
-            val lessonsByTrainer = lessons
-                .groupBy { it.event.firstTrainerOrEmpty() }
-                .mapValues { (_, insts) -> insts.sortedBy { it.since } }
-
-            // Birthdays via PeopleService with offline fallback
-            val upcomingBirthdays = try {
-                val people = withContext(Dispatchers.Default) { peopleService.fetchPeople() }
-                if (people.isNotEmpty()) {
-                    people
-                        .mapNotNull { p ->
-                            val days = daysUntilNextBirthday(p.birthDate)
-                            if (days == Int.MAX_VALUE) null else {
-                                val name = buildList {
-                                    p.prefixTitle?.takeIf { it.isNotBlank() }?.let { add(it) }
-                                    p.firstName?.takeIf { it.isNotBlank() }?.let { add(it) }
-                                    p.lastName?.takeIf { it.isNotBlank() }?.let { add(it) }
-                                }.joinToString(" ").let { base ->
-                                    if (!p.suffixTitle.isNullOrBlank()) "$base, ${p.suffixTitle}" else base.ifBlank { p.id }
-                                }
-                                val cohortColors = p.cohortMembershipsList
-                                    .mapNotNull { it.cohort }
-                                    .filter { it.isVisible != false }
-                                    .mapNotNull { it.colorRgb }
-                                    .filter { it.isNotBlank() }
-                                BirthdayEntry(
-                                    personId = p.id,
-                                    name = name,
-                                    formattedBirthDate = formatBirthDateString(p.birthDate),
-                                    days = days,
-                                    cohortColors = cohortColors
-                                )
-                            }
-                        }
-                        .sortedBy { it.days }
-                        .take(3)
-                } else {
-                    // try offline fallback when server returned empty
-                    val online = try { ServiceLocator.networkMonitor.isConnected() } catch (_: Exception) { true }
-                    if (!online) {
-                        try {
-                            val raw = try { ServiceLocator.offlineSyncManager.loadPeople() } catch (_: Exception) { null }
-                            if (!raw.isNullOrBlank()) {
-                                val arr = try { AppJson.parseToJsonElement(raw).jsonArray } catch (_: Exception) { null }
-                                if (arr != null) {
-                                    val parsedPeople = arr.mapNotNull { node ->
-                                        try {
-                                            val obj = node.jsonObject
-                                            val id = obj["id"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
-                                            val first = obj["firstName"]?.jsonPrimitive?.contentOrNull
-                                            val last = obj["lastName"]?.jsonPrimitive?.contentOrNull
-                                            val prefix = obj["prefixTitle"]?.jsonPrimitive?.contentOrNull
-                                            val suffix = obj["suffixTitle"]?.jsonPrimitive?.contentOrNull
-                                            val birth = obj["birthDate"]?.jsonPrimitive?.contentOrNull
-                                            val memberships = (obj["cohortMembershipsList"] as? kotlinx.serialization.json.JsonArray)?.mapNotNull { mEl ->
-                                                val mObj = mEl as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null
-                                                val cohortObj = mObj["cohort"] as? kotlinx.serialization.json.JsonObject
-                                                val cId = cohortObj?.get("id")?.jsonPrimitive?.contentOrNull
-                                                val cName = cohortObj?.get("name")?.jsonPrimitive?.contentOrNull
-                                                val cColor = cohortObj?.get("colorRgb")?.jsonPrimitive?.contentOrNull
-                                                val cVis = cohortObj?.get("isVisible")?.jsonPrimitive?.contentOrNull?.let { it == "true" }
-                                                com.tkolymp.shared.people.CohortMembership(com.tkolymp.shared.people.Cohort(cId, cName, cColor, cVis), mObj["since"]?.jsonPrimitive?.contentOrNull, mObj["until"]?.jsonPrimitive?.contentOrNull)
-                                            } ?: emptyList()
-                                            com.tkolymp.shared.people.Person(id, first, last, prefix, suffix, birth, memberships)
-                                        } catch (_: Exception) { null }
-                                    }
-                                    _state.value = _state.value.copy(isOffline = true)
-                                    parsedPeople
-                                        .mapNotNull { p ->
-                                            val days = daysUntilNextBirthday(p.birthDate)
-                                            if (days == Int.MAX_VALUE) null else {
-                                                val name = buildList {
-                                                    p.prefixTitle?.takeIf { it.isNotBlank() }?.let { add(it) }
-                                                    p.firstName?.takeIf { it.isNotBlank() }?.let { add(it) }
-                                                    p.lastName?.takeIf { it.isNotBlank() }?.let { add(it) }
-                                                }.joinToString(" ").let { base ->
-                                                    if (!p.suffixTitle.isNullOrBlank()) "$base, ${p.suffixTitle}" else base.ifBlank { p.id }
-                                                }
-                                                val cohortColors = p.cohortMembershipsList
-                                                    .mapNotNull { it.cohort }
-                                                    .filter { it.isVisible != false }
-                                                    .mapNotNull { it.colorRgb }
-                                                    .filter { it.isNotBlank() }
-                                                BirthdayEntry(
-                                                    personId = p.id,
-                                                    name = name,
-                                                    formattedBirthDate = formatBirthDateString(p.birthDate),
-                                                    days = days,
-                                                    cohortColors = cohortColors
-                                                )
-                                            }
+                val birthdaysDef = async {
+                    try {
+                        val people = withContext(Dispatchers.Default) { peopleService.fetchPeople() }
+                        if (people.isNotEmpty()) {
+                            people
+                                .mapNotNull { p ->
+                                    val days = daysUntilNextBirthday(p.birthDate)
+                                    if (days == Int.MAX_VALUE) null else {
+                                        val name = buildList {
+                                            p.prefixTitle?.takeIf { it.isNotBlank() }?.let { add(it) }
+                                            p.firstName?.takeIf { it.isNotBlank() }?.let { add(it) }
+                                            p.lastName?.takeIf { it.isNotBlank() }?.let { add(it) }
+                                        }.joinToString(" ").let { base ->
+                                            if (!p.suffixTitle.isNullOrBlank()) "$base, ${p.suffixTitle}" else base.ifBlank { p.id }
                                         }
-                                        .sortedBy { it.days }
-                                        .take(3)
-                                } else emptyList()
+                                        val cohortColors = p.cohortMembershipsList
+                                            .mapNotNull { it.cohort }
+                                            .filter { it.isVisible != false }
+                                            .mapNotNull { it.colorRgb }
+                                            .filter { it.isNotBlank() }
+                                        BirthdayEntry(
+                                            personId = p.id,
+                                            name = name,
+                                            formattedBirthDate = formatBirthDateString(p.birthDate),
+                                            days = days,
+                                            cohortColors = cohortColors
+                                        )
+                                    }
+                                }
+                                .sortedBy { it.days }
+                                .take(3)
+                        } else {
+                            val online = try { ServiceLocator.networkMonitor.isConnected() } catch (_: Exception) { true }
+                            if (!online) {
+                                try {
+                                    val raw = try { ServiceLocator.offlineSyncManager.loadPeople() } catch (_: Exception) { null }
+                                    if (!raw.isNullOrBlank()) {
+                                        val arr = try { AppJson.parseToJsonElement(raw).jsonArray } catch (_: Exception) { null }
+                                        if (arr != null) {
+                                            val parsedPeople = arr.mapNotNull { node ->
+                                                try {
+                                                    val obj = node.jsonObject
+                                                    val id = obj["id"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+                                                    val first = obj["firstName"]?.jsonPrimitive?.contentOrNull
+                                                    val last = obj["lastName"]?.jsonPrimitive?.contentOrNull
+                                                    val prefix = obj["prefixTitle"]?.jsonPrimitive?.contentOrNull
+                                                    val suffix = obj["suffixTitle"]?.jsonPrimitive?.contentOrNull
+                                                    val birth = obj["birthDate"]?.jsonPrimitive?.contentOrNull
+                                                    val memberships = (obj["cohortMembershipsList"] as? kotlinx.serialization.json.JsonArray)?.mapNotNull { mEl ->
+                                                        val mObj = mEl as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null
+                                                        val cohortObj = mObj["cohort"] as? kotlinx.serialization.json.JsonObject
+                                                        val cId = cohortObj?.get("id")?.jsonPrimitive?.contentOrNull
+                                                        val cName = cohortObj?.get("name")?.jsonPrimitive?.contentOrNull
+                                                        val cColor = cohortObj?.get("colorRgb")?.jsonPrimitive?.contentOrNull
+                                                        val cVis = cohortObj?.get("isVisible")?.jsonPrimitive?.contentOrNull?.let { it == "true" }
+                                                        com.tkolymp.shared.people.CohortMembership(com.tkolymp.shared.people.Cohort(cId, cName, cColor, cVis), mObj["since"]?.jsonPrimitive?.contentOrNull, mObj["until"]?.jsonPrimitive?.contentOrNull)
+                                                    } ?: emptyList()
+                                                    com.tkolymp.shared.people.Person(id, first, last, prefix, suffix, birth, memberships)
+                                                } catch (_: Exception) { null }
+                                            }
+                                            _state.value = _state.value.copy(isOffline = true)
+                                            parsedPeople
+                                                .mapNotNull { p ->
+                                                    val days = daysUntilNextBirthday(p.birthDate)
+                                                    if (days == Int.MAX_VALUE) null else {
+                                                        val name = buildList {
+                                                            p.prefixTitle?.takeIf { it.isNotBlank() }?.let { add(it) }
+                                                            p.firstName?.takeIf { it.isNotBlank() }?.let { add(it) }
+                                                            p.lastName?.takeIf { it.isNotBlank() }?.let { add(it) }
+                                                        }.joinToString(" ").let { base ->
+                                                            if (!p.suffixTitle.isNullOrBlank()) "$base, ${p.suffixTitle}" else base.ifBlank { p.id }
+                                                        }
+                                                        val cohortColors = p.cohortMembershipsList
+                                                            .mapNotNull { it.cohort }
+                                                            .filter { it.isVisible != false }
+                                                            .mapNotNull { it.colorRgb }
+                                                            .filter { it.isNotBlank() }
+                                                        BirthdayEntry(
+                                                            personId = p.id,
+                                                            name = name,
+                                                            formattedBirthDate = formatBirthDateString(p.birthDate),
+                                                            days = days,
+                                                            cohortColors = cohortColors
+                                                        )
+                                                    }
+                                                }
+                                                .sortedBy { it.days }
+                                                .take(3)
+                                        } else emptyList()
+                                    } else emptyList()
+                                } catch (_: Exception) { emptyList<BirthdayEntry>() }
                             } else emptyList()
-                        } catch (_: Exception) { emptyList<BirthdayEntry>() }
-                    } else emptyList()
+                        }
+                    } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("OverviewViewModel", "fetchPeople failed: ${e.message}"); emptyList() }
                 }
-            } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("OverviewViewModel", "fetchPeople failed: ${e.message}"); emptyList() }
+
+                val paymentsDef = async {
+                    try {
+                        val debtors = withContext(Dispatchers.Default) { paymentService.fetchDebtorsForPerson(pid) }
+                        val soonestDueAt = debtors
+                            .filter { it.isUnpaid == true }
+                            .mapNotNull { it.payment?.dueAt?.takeIf { s -> s.isNotBlank() } }
+                            .minOrNull()
+                        if (soonestDueAt != null) {
+                            val dueDate = try {
+                                kotlinx.datetime.LocalDate.parse(soonestDueAt.substringBefore('T'))
+                            } catch (_: Exception) { null }
+                            dueDate?.let { (it.toEpochDays() - today.toEpochDays()).toInt() }
+                        } else null
+                    } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                }
+
+                val competitionDef = async {
+                    try {
+                        val pidLong = pid?.toLongOrNull()
+                        val personFilter = if (pidLong != null) listOf(pidLong) else null
+                        competitionService.getNearestUpcoming(pPersonIds = personFilter)
+                    } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                }
+
+                events = eventsDef.await()
+                announcements = announcementsDef.await()
+                upcomingBirthdays = birthdaysDef.await()
+                paymentDaysUntilDue = paymentsDef.await()
+                nearestCompetition = competitionDef.await()
+            }
 
             val isDancer = try { onboardingStorage?.getUserRole() != UserRole.PARENT } catch (_: Exception) { true }
 
             val weeklyGoal = try { calendarPreferenceStorage.getWeeklyGoal() } catch (_: Exception) { 0 }
             val mondayStr = weekMonday.toString()
             val sundayStr = weekMonday.plus(6, DateTimeUnit.DAY).toString()
-            val thisWeekEvents = events.filter { inst ->
-                val ds = (inst.since ?: inst.until ?: "").substringBefore('T')
-                ds in mondayStr..sundayStr && !inst.isCancelled
+
+            val campsMapByDay = withContext(Dispatchers.Default) {
+                events.filter { it.event?.type?.toEventType() == EventType.CAMP == true }
+                    .sortedBy { it.since ?: it.updatedAt ?: "" }
+                    .take(2)
+                    .groupBy { inst ->
+                        val s = inst.since ?: inst.until ?: inst.updatedAt ?: ""
+                        s.substringBefore('T').ifEmpty { s }
+                    }
+                    .entries.sortedBy { it.key }
+                    .associate { it.key to it.value }
+            }
+
+            val trainings = withContext(Dispatchers.Default) {
+                events.sortedBy { it.since ?: it.updatedAt ?: "" }
+            }
+            val trainingsMapByDay = withContext(Dispatchers.Default) {
+                trainings
+                    .groupBy { inst ->
+                        val s = inst.since ?: inst.until ?: inst.updatedAt ?: ""
+                        s.substringBefore('T').ifEmpty { s }
+                    }
+                    .entries.sortedBy { it.key }
+                    .associate { it.key to it.value }
+            }
+
+            val nowInstant = Clock.System.now()
+            val sortedKeys = withContext(Dispatchers.Default) { trainingsMapByDay.keys.sorted() }
+            val selectedKey = withContext(Dispatchers.Default) {
+                if (sortedKeys.isEmpty()) null
+                else if (sortedKeys.contains(todayString)) {
+                    val todayList = trainingsMapByDay[todayString] ?: emptyList()
+                    val hasFutureToday = todayList.any { inst ->
+                        val timeStr = inst.until ?: inst.since ?: inst.updatedAt ?: ""
+                        val instInstant = try { Instant.parse(timeStr) } catch (_: Exception) { null }
+                        instInstant != null && instInstant > nowInstant
+                    }
+                    if (hasFutureToday) todayString else sortedKeys.find { it > todayString } ?: sortedKeys.firstOrNull()
+                } else {
+                    sortedKeys.find { it > todayString } ?: sortedKeys.firstOrNull()
+                }
+            }
+
+            val selectedDayList = if (selectedKey != null) trainingsMapByDay[selectedKey] ?: emptyList() else emptyList()
+            val lessons = selectedDayList.filter { isLesson(it) }
+            val otherEvents = (selectedDayList - lessons.toSet()).sortedBy { it.since }
+            val lessonsByTrainer = withContext(Dispatchers.Default) {
+                lessons
+                    .groupBy { it.event.firstTrainerOrEmpty() }
+                    .mapValues { (_, insts) -> insts.sortedBy { it.since } }
+            }
+
+            val thisWeekEvents = withContext(Dispatchers.Default) {
+                events.filter { inst ->
+                    val ds = (inst.since ?: inst.until ?: "").substringBefore('T')
+                    ds in mondayStr..sundayStr && !inst.isCancelled
+                }
             }
             val currentWeekCount = thisWeekEvents.size
-            val currentWeekMinutes = thisWeekEvents.sumOf { inst -> overviewDurationMin(inst.since, inst.until) }
-
-            val paymentDaysUntilDue: Int? = try {
-                val debtors = withContext(Dispatchers.Default) { paymentService.fetchDebtorsForPerson(pid) }
-                val soonestDueAt = debtors
-                    .filter { it.isUnpaid == true }
-                    .mapNotNull { it.payment?.dueAt?.takeIf { s -> s.isNotBlank() } }
-                    .minOrNull()
-                if (soonestDueAt != null) {
-                    val dueDate = try {
-                        kotlinx.datetime.LocalDate.parse(soonestDueAt.substringBefore('T'))
-                    } catch (_: Exception) { null }
-                    dueDate?.let { (it.toEpochDays() - today.toEpochDays()).toInt() }
-                } else null
-            } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
-
-            val nearestCompetition = try {
-                val pidLong = pid?.toLongOrNull()
-                val personFilter = if (pidLong != null) listOf(pidLong) else null
-                competitionService.getNearestUpcoming(pPersonIds = personFilter)
-            } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+            val currentWeekMinutes = withContext(Dispatchers.Default) {
+                thisWeekEvents.sumOf { inst -> overviewDurationMin(inst.since, inst.until) }
+            }
 
             _state.value = _state.value.copy(
                 upcomingEvents = events,

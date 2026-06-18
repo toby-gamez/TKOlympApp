@@ -48,7 +48,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -85,7 +85,7 @@ private enum class SortMode { ALPHABETICAL, BIRTHDAY }
 @Composable
 fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, onBirthdayNotificationsClick: () -> Unit = {}) {
     val viewModel = viewModel<PeopleViewModel>()
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val trainerPersonIds = state.trainerPersonIds
     var sortMode by remember { mutableStateOf<SortMode>(SortMode.ALPHABETICAL) }
     var showSearch by remember { mutableStateOf(false) }
@@ -101,6 +101,7 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
     }
 
     var cardsVisible by remember { mutableStateOf(false) }
+    val todayIso = remember { kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault()).toString() }
 
     LaunchedEffect(Unit) {
         viewModel.loadPeople()
@@ -266,21 +267,22 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
                                 .fillMaxWidth()
                                 .height(IntrinsicSize.Min)
                                 .padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                                val todayIso = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault()).toString()
-                                val cohortColors = p.cohortMembershipsList
-                                    .filter { m ->
-                                        val since = m.since
-                                        val until = m.until
-                                        (since == null || since <= todayIso) &&
-                                        (until == null || until >= todayIso)
-                                    }
-                                    .mapNotNull { it.cohort }
-                                    .filter { it.isVisible != false }
-                                    .mapNotNull { c ->
-                                        c.colorRgb?.let { hex ->
-                                            try { parseColorOrDefault(hex) } catch (_: Exception) { null }
+                                val cohortColors = remember(p.id, p.cohortMembershipsList) {
+                                    p.cohortMembershipsList
+                                        .filter { m ->
+                                            val since = m.since
+                                            val until = m.until
+                                            (since == null || since <= todayIso) &&
+                                            (until == null || until >= todayIso)
                                         }
-                                    }
+                                        .mapNotNull { it.cohort }
+                                        .filter { it.isVisible != false }
+                                        .mapNotNull { c ->
+                                            c.colorRgb?.let { hex ->
+                                                try { parseColorOrDefault(hex) } catch (_: Exception) { null }
+                                            }
+                                        }
+                                }
                                 Column(
                                     modifier = Modifier
                                         .width(6.dp)
@@ -307,7 +309,7 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
 
                                 Spacer(modifier = Modifier.width(12.dp))
 
-                                val daysLeft = daysUntilNextBirthday(p.birthDate)
+                                val daysLeft = remember(p.birthDate) { daysUntilNextBirthday(p.birthDate) }
                                 Column(modifier = Modifier.weight(1f)) {
                                             val isBirthdayToday = daysLeft == 0
                                             val isTrainer = p.id in trainerPersonIds

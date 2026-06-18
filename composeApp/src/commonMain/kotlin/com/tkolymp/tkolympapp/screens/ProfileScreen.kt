@@ -101,7 +101,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
     val refreshTriggerState = remember { mutableStateOf(0) }
 
     val profileViewModel = viewModel<ProfileViewModel>()
-    val profileState by profileViewModel.state.collectAsState()
+    val profileState by profileViewModel.state.collectAsStateWithLifecycle()
     val derived = profileState.derived
     LaunchedEffect(refreshTriggerState.value) { profileViewModel.load() }
 

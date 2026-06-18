@@ -72,7 +72,7 @@ fun PersonalEventsScreen(
 ) {
     val vm = viewModel<PersonalEventsViewModel>()
     val scope = rememberCoroutineScope()
-    val state by vm.state.collectAsState()
+    val state by vm.state.collectAsStateWithLifecycle()
     var showConfirm by remember { mutableStateOf(false) }
     var selectedId by remember { mutableStateOf<String?>(null) }
     var showFab by remember { mutableStateOf(false) }

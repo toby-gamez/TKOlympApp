@@ -311,8 +311,8 @@ fun OverviewScreen(
             ) {
                 Text(AppStrings.current.overview.fromTheBoard, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
-            val plainBodies = remember(state.announcements) {
-                state.announcements.associate { a -> a.id to formatHtmlContent(a.body ?: "").trimEnd() }
+            val plainBodies = remember(announcements) {
+                announcements.associate { a -> a.id to formatHtmlContent(a.body ?: "").trimEnd() }
             }
             Column(modifier = Modifier.padding(horizontal = 12.dp)) {
                 if (announcements.isEmpty()) {

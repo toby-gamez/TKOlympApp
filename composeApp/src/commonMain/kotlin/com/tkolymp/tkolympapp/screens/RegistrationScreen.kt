@@ -142,7 +142,7 @@ fun RegistrationScreen(
         val showLessonSelection = eventType?.trim()?.lowercase().let { it == "camp" || it == "rezervation" }
 
         val regViewModel = viewModel<RegistrationViewModel>()
-        val regState by regViewModel.state.collectAsState()
+        val regState by regViewModel.state.collectAsStateWithLifecycle()
         // Reload names whenever the inputs that affect them change so updates appear automatically
         LaunchedEffect(trainers, registrations, myPersonId, myCoupleIds, myPersonName, myCoupleNames) {
             regViewModel.loadNames(trainers, registrations, myPersonId, myCoupleIds, myPersonName, myCoupleNames)

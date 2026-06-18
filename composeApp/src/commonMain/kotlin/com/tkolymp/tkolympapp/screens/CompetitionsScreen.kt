@@ -77,7 +77,7 @@ fun CompetitionsScreen(
     bottomPadding: Dp = 0.dp
 ) {
     val viewModel = viewModel<CompetitionViewModel>()
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }

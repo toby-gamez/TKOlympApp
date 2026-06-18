@@ -61,7 +61,7 @@ fun FreeLessonsScreen(
     onOpenEvent: (Long) -> Unit = {}
 ) {
     val viewModel = viewModel<FreeLessonsViewModel>()
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val expandedCancelledIds = remember { mutableStateMapOf<String, Boolean>() }
     var showScoring by remember { mutableStateOf(false) }

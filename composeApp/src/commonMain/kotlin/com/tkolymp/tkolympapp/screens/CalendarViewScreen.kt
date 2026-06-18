@@ -62,7 +62,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -123,7 +123,7 @@ fun CalendarViewScreen(
     onFindFreeLessons: (() -> Unit)? = null,
     bottomPadding: Dp = 0.dp
 ) {
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
     val resumeSeen = remember { mutableStateOf(false) }
@@ -493,8 +493,8 @@ internal fun SingleDayTimelineView(
     val hourHeight = 60.dp // 60 minutes
     val totalHeight = hourHeight * 24 // 24 hours
 
-    val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
-    val now = kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+    val today = remember { kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault()) }
+    val now = remember { kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()) }
     val density = LocalDensity.current
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
@@ -587,8 +587,8 @@ internal fun MultiDayTimelineView(
     val dayWidth = 200.dp
     val dayHeaderHeight = 40.dp // Fixed height for day headers
 
-    val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
-    val now = kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+    val today = remember { kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault()) }
+    val now = remember { kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()) }
     val density = LocalDensity.current
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
@@ -692,7 +692,7 @@ internal fun MultiDayTimelineView(
                             }
                             
                             // Now line on top of events (only for today)
-                            if (date == kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())) {
+                            if (date == today) {
                                 NowLine(
                                     modifier = Modifier.fillMaxWidth(),
                                     minuteHeight = minuteHeight
@@ -753,7 +753,13 @@ internal fun NowLine(
     modifier: Modifier = Modifier,
     minuteHeight: Dp
 ) {
-    val now = kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+    var now by remember { mutableStateOf(kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            now = kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+            kotlinx.coroutines.delay(60_000)
+        }
+    }
     val minutesFromMidnight = now.hour * 60 + now.minute
     val offsetDp = minuteHeight * minutesFromMidnight
     

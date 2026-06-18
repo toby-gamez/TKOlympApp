@@ -395,9 +395,9 @@ class StatsViewModel(
             val capDate = if (today <= season.end) today else season.end
             val elapsedWeeks = maxOf(1.0, (capDate.toEpochDays() - season.start.toEpochDays()).toDouble() / 7.0)
             val avgPerWeek = totalSessions.toDouble() / elapsedWeeks
-            val monthlyData = buildMonthlyData(instances, season.start, season.end)
-            val typeData = buildTypeData(instances)
-            val trainerData = buildTrainerData(instances)
+            val monthlyData = withContext(Dispatchers.Default) { buildMonthlyData(instances, season.start, season.end) }
+            val typeData = withContext(Dispatchers.Default) { buildTypeData(instances) }
+            val trainerData = withContext(Dispatchers.Default) { buildTrainerData(instances) }
             val detail = SeasonDetailStats(season, totalSessions, totalMinutes, avgPerWeek, monthlyData, typeData, trainerData)
             val newData = _state.value.compareData.toMutableList().also { it[slotIndex] = detail }
             val doneLoading = _state.value.isLoadingCompare.toMutableList().also { it[slotIndex] = false }

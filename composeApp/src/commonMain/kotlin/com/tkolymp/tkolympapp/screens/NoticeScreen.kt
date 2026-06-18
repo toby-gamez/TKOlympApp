@@ -62,7 +62,7 @@ import com.tkolymp.tkolympapp.util.StaggeredItem
 @Composable
 fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
     val viewModel = viewModel<NoticeViewModel>()
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(announcementId) {
         viewModel.load(announcementId, forceRefresh = true)

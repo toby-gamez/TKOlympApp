@@ -41,7 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -687,7 +687,7 @@ internal fun CompareScreenContent(
     strings: com.tkolymp.shared.language.StatsStrings,
     modifier: Modifier = Modifier
 ) {
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val slotLetters = listOf("A", "B", "C", "D", "E")
 
@@ -1232,7 +1232,7 @@ internal fun AttendanceSessionRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            val timeText = formatTimesWithDateAlways(session.since, session.until)
+            val timeText = remember(session.since, session.until) { formatTimesWithDateAlways(session.since, session.until) }
             Text(
                 text = timeText,
                 style = MaterialTheme.typography.bodySmall,

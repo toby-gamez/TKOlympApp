@@ -51,7 +51,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun GroupsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
     val vm = viewModel<GroupsViewModel>()
-    val state by vm.state.collectAsState()
+    val state by vm.state.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { vm.load() }
 
     val scrollState = rememberScrollState()

@@ -524,7 +524,7 @@ class CalendarViewViewModel(
      */
     suspend fun setSelectedDate(date: LocalDate) {
         if (_state.value.selectedDate != date) {
-            _state.value = _state.value.copy(selectedDate = date)
+            _state.value = _state.value.copy(selectedDate = date, isLoading = true)
             loadEvents()
         }
     }

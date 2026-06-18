@@ -127,8 +127,8 @@ fun CalendarScreen(
     var localWeekOffset by rememberSaveable { mutableIntStateOf(weekOffset) }
     val tabs = listOf(AppStrings.current.people.mine, AppStrings.current.commonActions.all)
 
-    val tutorialActive by com.tkolymp.shared.tutorial.TutorialManager.isActive.collectAsState()
-    val tutorialStep by com.tkolymp.shared.tutorial.TutorialManager.currentStep.collectAsState()
+    val tutorialActive by com.tkolymp.shared.tutorial.TutorialManager.isActive.collectAsStateWithLifecycle()
+    val tutorialStep by com.tkolymp.shared.tutorial.TutorialManager.currentStep.collectAsStateWithLifecycle()
 
     var contentBounds by remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
     var filterBounds by remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
@@ -142,7 +142,7 @@ fun CalendarScreen(
         }
     }
     val calendarViewModel = viewModel<com.tkolymp.shared.viewmodels.CalendarViewModel>()
-    val calState by calendarViewModel.state.collectAsState()
+    val calState by calendarViewModel.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val today = remember { kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault()) }
     // null → floating today-based view; non-null → a specific Monday chosen from the picker

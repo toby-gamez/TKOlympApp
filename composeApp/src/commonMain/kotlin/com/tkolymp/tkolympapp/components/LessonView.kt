@@ -169,12 +169,14 @@ internal fun LessonView(
                                     color = Color(0xFF4CAF50)
                                 )
                             } else {
-                                val annotated = buildAnnotatedString {
-                                    parts.forEachIndexed { idx, (display, isMine) ->
-                                        if (isAllTab && isMine) {
-                                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) { append(display) }
-                                        } else append(display)
-                                        if (idx != parts.lastIndex) append(", ")
+                                val annotated = remember(parts, isAllTab) {
+                                    buildAnnotatedString {
+                                        parts.forEachIndexed { idx, (display, isMine) ->
+                                            if (isAllTab && isMine) {
+                                                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) { append(display) }
+                                            } else append(display)
+                                            if (idx != parts.lastIndex) append(", ")
+                                        }
                                     }
                                 }
                                 androidx.compose.material3.Text(annotated, style = MaterialTheme.typography.bodyMedium.copy(textDecoration = deco))

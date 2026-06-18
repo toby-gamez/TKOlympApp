@@ -54,7 +54,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun LoginScreen(onSuccess: () -> Unit = {}) {
     val viewModel = viewModel<LoginViewModel>()
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     var contentVisible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { contentVisible = true }

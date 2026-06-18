@@ -38,7 +38,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -70,7 +70,7 @@ import kotlinx.datetime.LocalDate
 @Composable
 fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (String) -> Unit = {}) {
     val viewModel = viewModel<PersonViewModel>()
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     var cardsVisible by remember { mutableStateOf(false) }
 
@@ -205,7 +205,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                         Column {
                             visibleGroups.forEach { mem ->
                                     val c = mem.cohort ?: return@forEach
-                                    val color = try { parseColorOrDefault(c.colorRgb) } catch (_: Exception) { Color.Gray }
+                                    val color = remember(c.colorRgb) { try { parseColorOrDefault(c.colorRgb) } catch (_: Exception) { Color.Gray } }
                                     Card(modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(vertical = 2.dp)

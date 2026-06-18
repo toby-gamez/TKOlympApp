@@ -181,13 +181,6 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
 
             // Offline fallback handled in EventsViewModel; UI should not scan storage directly.
 
-            val allItems = remember(state.eventsByDay) {
-                state.eventsByDay.values.flatten()
-            }
-            val plainDescriptions = remember(allItems) {
-                allItems.associate { item -> item.event?.id to try { formatHtmlContent(item.event?.description ?: "") } catch (_: Exception) { "" } }
-            }
-
             // If search is active, filter across all dates (not limited to planned/past)
             val filteredGrouped = if (searchQuery.isBlank()) {
                 grouped
@@ -197,7 +190,7 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                     .filter { (_dateStr, item) ->
                         val title = item.event?.name ?: ""
                         val titleOk = title.isNotBlank() && normalizeForSearch(title).contains(nq)
-                        val body = plainDescriptions[item.event?.id] ?: ""
+                        val body = try { formatHtmlContent(item.event?.description ?: "") } catch (_: Exception) { "" }
                         val bodyOk = body.isNotBlank() && normalizeForSearch(body).contains(nq)
                         val trainers = (item.event?.eventTrainersList ?: emptyList()).joinToString(" ")
                         val trainersOk = trainers.isNotBlank() && normalizeForSearch(trainers).contains(nq)

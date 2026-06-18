@@ -74,7 +74,7 @@ fun SettingsScreen(
     onOpenNotifications: () -> Unit = {}
 ) {
     val viewModel = viewModel<SettingsViewModel>()
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val s = AppStrings.current.settings
 

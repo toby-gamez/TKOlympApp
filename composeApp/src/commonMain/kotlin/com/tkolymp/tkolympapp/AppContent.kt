@@ -23,7 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import com.tkolymp.tkolympapp.screens.RegistrationRoute
@@ -101,20 +101,20 @@ fun AppContent(
     platformInit: suspend () -> Unit,
     integrityFailed: Boolean = false,
 ) {
-    val themeMode by AppearanceSettings.themeMode.collectAsState()
+    val themeMode by AppearanceSettings.themeMode.collectAsStateWithLifecycle()
     val isDark = when (themeMode) {
         ThemeMode.LIGHT -> false
         ThemeMode.DARK -> true
         ThemeMode.SYSTEM -> isSystemInDarkTheme()
     }
     AppTheme(darkTheme = isDark) {
-        val currentLanguage by AppStrings.languageFlow.collectAsState()
+        val currentLanguage by AppStrings.languageFlow.collectAsStateWithLifecycle()
 
         var loggedIn by remember { mutableStateOf<Boolean?>(null) }
         var showOnboarding by remember { mutableStateOf<Boolean?>(null) }
         var showRoleSelection by remember { mutableStateOf(false) }
         var tutorialSeen by remember { mutableStateOf(false) }
-        val preferTimeline by AppearanceSettings.preferTimeline.collectAsState()
+        val preferTimeline by AppearanceSettings.preferTimeline.collectAsStateWithLifecycle()
         var weekOffset by remember { mutableIntStateOf(0) }
 
         LaunchedEffect(Unit) {
@@ -167,9 +167,9 @@ fun AppContent(
             val navController = rememberNavController()
             val currentBackStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = currentBackStackEntry?.destination?.route
-            val boardHasUnread by com.tkolymp.shared.announcements.AnnouncementBadge.hasUnread.collectAsState()
-            val tutorialActive by com.tkolymp.shared.tutorial.TutorialManager.isActive.collectAsState()
-            val tutorialStep by com.tkolymp.shared.tutorial.TutorialManager.currentStep.collectAsState()
+            val boardHasUnread by com.tkolymp.shared.announcements.AnnouncementBadge.hasUnread.collectAsStateWithLifecycle()
+            val tutorialActive by com.tkolymp.shared.tutorial.TutorialManager.isActive.collectAsStateWithLifecycle()
+            val tutorialStep by com.tkolymp.shared.tutorial.TutorialManager.currentStep.collectAsStateWithLifecycle()
 
             LaunchedEffect(tutorialStep, tutorialActive) {
                 TutorialHighlight.rect = null

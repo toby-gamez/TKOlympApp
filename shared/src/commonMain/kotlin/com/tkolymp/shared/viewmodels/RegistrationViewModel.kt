@@ -88,19 +88,23 @@ class RegistrationViewModel(
 
             val regDisplayNames = mutableMapOf<String, String>()
             try {
-                withContext(Dispatchers.Default) {
-                    filterOwnedRegistrations(registrations, myPersonId, myCoupleIds).forEach { rEl ->
-                        val r = rEl as? JsonObject
-                        val rid = r?.get("id")?.jsonPrimitive?.contentOrNull ?: return@forEach
-                        val personId = r.get("person").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
-                        val coupleId = r.get("couple").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
-                        val fetched = when {
-                            !personId.isNullOrBlank() -> try { peopleService.fetchPersonDisplayName(personId, false) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
-                            !coupleId.isNullOrBlank() -> try { peopleService.fetchCoupleDisplayName(coupleId) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
-                            else -> null
+                coroutineScope {
+                    filterOwnedRegistrations(registrations, myPersonId, myCoupleIds).map { rEl ->
+                        async {
+                            try {
+                                val r = rEl as? JsonObject
+                                val rid = r?.get("id")?.jsonPrimitive?.contentOrNull ?: return@async null
+                                val personId = r.get("person").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
+                                val coupleId = r.get("couple").asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
+                                val fetched = when {
+                                    !personId.isNullOrBlank() -> try { peopleService.fetchPersonDisplayName(personId, false) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                                    !coupleId.isNullOrBlank() -> try { peopleService.fetchCoupleDisplayName(coupleId) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                                    else -> null
+                                }
+                                if (!fetched.isNullOrBlank()) rid to fetched else null
+                            } catch (_: Exception) { null }
                         }
-                        if (!fetched.isNullOrBlank()) regDisplayNames[rid] = fetched
-                    }
+                    }.awaitAll().forEach { pair -> if (pair != null) regDisplayNames[pair.first] = pair.second!! }
                 }
             } catch (e: CancellationException) { throw e } catch (_: Exception) {}
 

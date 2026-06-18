@@ -65,7 +65,7 @@ private const val NAME_WEIGHT = 2.5f
 @Composable
 fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
     val vm = viewModel<TrainersLocationsViewModel>()
-    val state by vm.state.collectAsState()
+    val state by vm.state.collectAsStateWithLifecycle()
     val uriHandler = LocalUriHandler.current
 
     LaunchedEffect(Unit) { vm.load() }

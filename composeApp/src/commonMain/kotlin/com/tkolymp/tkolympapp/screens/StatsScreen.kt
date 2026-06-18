@@ -30,7 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,7 +59,7 @@ fun StatsScreen(
     onOpenLeaderboard: () -> Unit = {},
     viewModel: StatsViewModel = viewModel()
 ) {
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val totalSessions = state.totalSessions
     val totalMinutes = state.totalMinutes
     val avgPerWeek = state.avgSessionsPerWeek
@@ -82,6 +82,7 @@ fun StatsScreen(
     var selectedTab by remember { mutableStateOf(0) }
     var showShareDialog by remember { mutableStateOf(false) }
     var sectionsVisible by remember { mutableStateOf(false) }
+    val seasons = remember { SeasonSelection.recent() }
 
     LaunchedEffect(Unit) {
         viewModel.loadStats(SeasonSelection.default())
@@ -173,7 +174,7 @@ fun StatsScreen(
                         totalSessions = totalSessions,
                         isLoading = isLoading,
                         selectedSeason = selectedSeason,
-                        seasons = SeasonSelection.recent(),
+                        seasons = seasons,
                         strings = strings,
                         onSeasonSelect = { season -> scope.launch { viewModel.loadStats(season) } }
                     )
@@ -196,7 +197,7 @@ fun StatsScreen(
                 ) {
                     SeasonSelector(
                         selected = selectedSeason,
-                        seasons = SeasonSelection.recent(),
+                        seasons = seasons,
                         currentLabel = strings.currentSeason,
                         lastLabel = strings.lastSeason,
                         onSelect = { season ->

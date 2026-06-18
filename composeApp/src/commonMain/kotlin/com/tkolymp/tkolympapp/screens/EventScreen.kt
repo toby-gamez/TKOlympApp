@@ -104,7 +104,7 @@ import com.tkolymp.tkolympapp.platform.FullscreenImageViewer
 @Composable
 fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? = null, onOpenRegistration: ((String, String?) -> Unit)? = null, onOpenPerson: ((String) -> Unit)? = null) {
     val viewModel = viewModel<EventViewModel>()
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var showReminderDialog by remember { mutableStateOf(false) }

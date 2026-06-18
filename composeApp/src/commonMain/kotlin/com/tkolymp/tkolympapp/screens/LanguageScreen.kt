@@ -49,7 +49,7 @@ import com.tkolymp.shared.viewmodels.LanguageViewModel
 @Composable
 fun LanguageScreen(onBack: () -> Unit = {}) {
     val viewModel = viewModel<LanguageViewModel>()
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         viewModel.load()

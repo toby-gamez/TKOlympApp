@@ -118,13 +118,13 @@ fun OtherScreen(
     bottomPadding: Dp = 0.dp
 ) {
     val viewModel = viewModel<OtherViewModel>()
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     var showDebug by remember { mutableStateOf(false) }
 
     var itemsVisible by remember { mutableStateOf(false) }
 
-    val tutorialActive by TutorialManager.isActive.collectAsState()
-    val tutorialStep by TutorialManager.currentStep.collectAsState()
+    val tutorialActive by TutorialManager.isActive.collectAsStateWithLifecycle()
+    val tutorialStep by TutorialManager.currentStep.collectAsStateWithLifecycle()
 
     val scrollState = androidx.compose.foundation.rememberScrollState()
     val bvrPeople = remember { BringIntoViewRequester() }

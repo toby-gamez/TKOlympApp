@@ -192,15 +192,12 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
                     LaunchedEffect(tab) { listVisible = false }
                     val announcements = if (tab == 1) state.permanentAnnouncements else state.currentAnnouncements
                     LaunchedEffect(tab, announcements.isNotEmpty()) { if (announcements.isNotEmpty()) listVisible = true }
-                    val plainBodies = remember(announcements) {
-                        announcements.associate { a -> a.id to formatHtmlContent(a.body ?: "") }
-                    }
                     val filtered = announcements.filter { a ->
                         val q = searchQuery.trim()
                         if (q.isBlank()) return@filter true
                         val nq = normalizeForSearch(q)
                         val titleOk = a.title?.let { normalizeForSearch(it).contains(nq) } == true
-                        val bodyOk = normalizeForSearch(plainBodies[a.id] ?: "").contains(nq)
+                        val bodyOk = try { normalizeForSearch(formatHtmlContent(a.body ?: "")).contains(nq) } catch (_: Exception) { false }
                         titleOk || bodyOk
                     }
                     LazyColumn(modifier = Modifier.fillMaxWidth()) {
@@ -224,7 +221,7 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
                                             Text(authorName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Spacer(modifier = Modifier.height(6.dp))
-                                        val plainBody = plainBodies[a.id] ?: ""
+                                        val plainBody = remember(a.id, a.body) { formatHtmlContent(a.body ?: "") }
                                         Text(
                                             plainBody,
                                             style = MaterialTheme.typography.bodyMedium,

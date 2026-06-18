@@ -40,6 +40,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -70,7 +71,7 @@ fun PaymentsScreen(vm: com.tkolymp.shared.payments.PaymentsViewModel, onBack: ()
     // `vm` is provided by the platform (lifecycle-aware wrapper) to avoid
     // manual construction inside a Composable which is not lifecycle-aware.
 
-    val isLoading by vm.isLoading.collectAsState()
+    val isLoading by vm.isLoading.collectAsStateWithLifecycle()
     val payments by vm.items.collectAsState(initial = emptyList())
 
     val scope = rememberCoroutineScope()
