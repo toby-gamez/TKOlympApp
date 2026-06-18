@@ -11,8 +11,10 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import androidx.compose.runtime.Immutable
 import kotlinx.coroutines.launch
 
+@Immutable
 data class LanguageState(
     val selectedLanguage: AppLanguage = AppLanguage.CS,
     override val isLoading: Boolean = false,

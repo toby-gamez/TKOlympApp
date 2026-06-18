@@ -1,5 +1,6 @@
 package com.tkolymp.shared.user
 
+import androidx.compose.runtime.Immutable
 import com.tkolymp.shared.people.PersonDetails
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -9,6 +10,7 @@ import kotlin.time.Instant
 
 data class CohortDisplay(val name: String, val colorRgb: String?, val since: String?, val until: String?)
 
+@Immutable
 data class ProfileDerivedState(
     val titleText: String?,
     val addrText: String?,

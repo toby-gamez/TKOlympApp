@@ -16,8 +16,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.json.jsonObject
+import androidx.compose.runtime.Immutable
 import com.tkolymp.shared.json.AppJson
 
+@Immutable
 data class ProfileState(
     val person: PersonDetails? = null,
     val currentUser: CurrentUser? = null,

@@ -6,8 +6,10 @@ import com.tkolymp.shared.personalevents.PersonalEvent
 import com.tkolymp.shared.personalevents.PersonalEventService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import androidx.compose.runtime.Immutable
 import kotlinx.coroutines.flow.asStateFlow
 
+@Immutable
 data class PersonalEventsState(
     val events: List<PersonalEvent> = emptyList(),
     val isLoading: Boolean = false,

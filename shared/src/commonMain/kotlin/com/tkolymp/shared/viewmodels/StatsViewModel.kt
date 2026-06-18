@@ -11,6 +11,9 @@ import com.tkolymp.shared.utils.getLocalizedMonthNameNominative
 import com.tkolymp.shared.utils.parseToLocal
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,6 +32,7 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import androidx.compose.runtime.Immutable
 import kotlin.time.Instant
 import com.tkolymp.shared.utils.AppConstants
 
@@ -92,6 +96,7 @@ data class TypeStat(
 data class TrainerStat(val name: String, val count: Int, val minutes: Long)
 
 /** A single training session shown in the attendance tab. */
+@Immutable
 data class SessionItem(
     val date: String,
     val eventName: String,
@@ -131,6 +136,7 @@ data class SeasonDetailStats(
     val trainerData: List<TrainerStat>
 )
 
+@Immutable
 data class StatsState(
     val totalSessions: Int = 0,
     val totalMinutes: Long = 0L,
@@ -208,53 +214,70 @@ class StatsViewModel(
 
             val instances = allInstances.filter { !it.isCancelled }
 
-            // ── Aggregations ──────────────────────────────────────────────────
-            val totalSessions = instances.size
-            val totalMinutes = instances.sumOf { inst -> durationMin(inst.since, inst.until) }
-
-            // Weeks in season (at most seasonEnd-seasonStart in weeks, but cap shown to 16 most recent)
-            val tWeekly = kotlin.time.TimeSource.Monotonic.markNow()
-            val weeklyData = buildWeeklyData(instances, today, seasonStart, seasonEnd)
-            try { Logger.d("StatsViewModel", "buildWeeklyData took=${tWeekly.elapsedNow().inWholeMilliseconds}ms") } catch (_: Exception) {}
-
-            // Monthly breakdown
-            val tMonthly = kotlin.time.TimeSource.Monotonic.markNow()
-            val monthlyData = buildMonthlyData(instances, seasonStart, seasonEnd)
-            try { Logger.d("StatsViewModel", "buildMonthlyData took=${tMonthly.elapsedNow().inWholeMilliseconds}ms") } catch (_: Exception) {}
-
-            // avgPerWeek: total sessions / elapsed weeks (min 1), using fractional weeks for accuracy
-            val elapsedWeeks = maxOf(1.0, (today.toEpochDays() - seasonStart.toEpochDays()).toDouble() / 7.0)
-            val avgPerWeek = totalSessions.toDouble() / elapsedWeeks
-
-            // Streak: consecutive weeks ending at current week with ≥1 training
-            val currentStreak = computeStreak(weeklyData)
-            val longestStreak = computeLongestStreak(weeklyData)
-            val weeklyGoal = calendarPreferenceStorage.getWeeklyGoal()
-            val currentWeekCount = weeklyData.find { it.isCurrent }?.count ?: 0
-
-            // Debug: log weekly buckets for easier inspection during testing
-            try { Logger.d("StatsViewModel", "weeklyData=${weeklyData.map { it.weekStartIso + ':' + it.count }}") } catch (_: Exception) {}
-
-            // Type breakdown
-            val tType = kotlin.time.TimeSource.Monotonic.markNow()
-            val typeData = buildTypeData(instances)
-            try { Logger.d("StatsViewModel", "buildTypeData took=${tType.elapsedNow().inWholeMilliseconds}ms") } catch (_: Exception) {}
-
-            // Trainer breakdown (top 5)
-            val tTrainer = kotlin.time.TimeSource.Monotonic.markNow()
-            val trainerData = buildTrainerData(instances)
-            try { Logger.d("StatsViewModel", "buildTrainerData took=${tTrainer.elapsedNow().inWholeMilliseconds}ms") } catch (_: Exception) {}
-
-            // Attendance tab data (all instances including cancelled)
+            // ── Aggregations (offloaded to Default dispatcher) ─────────────────
             val langCode = AppStrings.currentLanguage.code
-            // ── Fetch attendance statuses ─────────────────────────────────────
             val myPersonId = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
             val attendanceMap: Map<Long, String> = if (myPersonId != null) {
                 try { fetchAttendanceStatuses(myPersonId) } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyMap() }
             } else emptyMap()
-            val attendanceMonths = buildAttendanceMonths(allInstances, langCode, attendanceMap)
-            try { Logger.d("StatsViewModel", "attendance: allInstances=${allInstances.size} months=${attendanceMonths.size} attendanceEntries=${attendanceMap.size}") } catch (_: Exception) {}
-            val cancelledCount = allInstances.count { it.isCancelled }
+
+            data class Aggregated(
+                val totalSessions: Int,
+                val totalMinutes: Long,
+                val weeklyData: List<WeekStats>,
+                val monthlyData: List<MonthStats>,
+                val typeData: List<TypeStat>,
+                val trainerData: List<TrainerStat>,
+                val attendanceMonths: List<AttendanceMonth>,
+                val cancelledCount: Int,
+                val currentStreak: Int,
+                val longestStreak: Int,
+                val currentWeekCount: Int
+            )
+
+            val aggregated = withContext(Dispatchers.Default) {
+                val totalSessions = instances.size
+                val totalMinutes = instances.sumOf { inst -> durationMin(inst.since, inst.until) }
+
+                // Weeks in season (at most seasonEnd-seasonStart in weeks, but cap shown to 16 most recent)
+                val tWeekly = kotlin.time.TimeSource.Monotonic.markNow()
+                val weeklyData = buildWeeklyData(instances, today, seasonStart, seasonEnd)
+                try { Logger.d("StatsViewModel", "buildWeeklyData took=${tWeekly.elapsedNow().inWholeMilliseconds}ms") } catch (_: Exception) {}
+
+                // Monthly breakdown
+                val tMonthly = kotlin.time.TimeSource.Monotonic.markNow()
+                val monthlyData = buildMonthlyData(instances, seasonStart, seasonEnd)
+                try { Logger.d("StatsViewModel", "buildMonthlyData took=${tMonthly.elapsedNow().inWholeMilliseconds}ms") } catch (_: Exception) {}
+
+                // Debug: log weekly buckets for easier inspection during testing
+                try { Logger.d("StatsViewModel", "weeklyData=${weeklyData.map { it.weekStartIso + ':' + it.count }}") } catch (_: Exception) {}
+
+                // Type breakdown
+                val tType = kotlin.time.TimeSource.Monotonic.markNow()
+                val typeData = buildTypeData(instances)
+                try { Logger.d("StatsViewModel", "buildTypeData took=${tType.elapsedNow().inWholeMilliseconds}ms") } catch (_: Exception) {}
+
+                // Trainer breakdown (top 5)
+                val tTrainer = kotlin.time.TimeSource.Monotonic.markNow()
+                val trainerData = buildTrainerData(instances)
+                try { Logger.d("StatsViewModel", "buildTrainerData took=${tTrainer.elapsedNow().inWholeMilliseconds}ms") } catch (_: Exception) {}
+
+                // Attendance tab data (all instances including cancelled)
+                val attendanceMonths = buildAttendanceMonths(allInstances, langCode, attendanceMap)
+                try { Logger.d("StatsViewModel", "attendance: allInstances=${allInstances.size} months=${attendanceMonths.size} attendanceEntries=${attendanceMap.size}") } catch (_: Exception) {}
+                val cancelledCount = allInstances.count { it.isCancelled }
+
+                val currentStreak = computeStreak(weeklyData)
+                val longestStreak = computeLongestStreak(weeklyData)
+                val currentWeekCount = weeklyData.find { it.isCurrent }?.count ?: 0
+
+                Aggregated(totalSessions, totalMinutes, weeklyData, monthlyData, typeData, trainerData, attendanceMonths, cancelledCount, currentStreak, longestStreak, currentWeekCount)
+            }
+
+            // avgPerWeek: total sessions / elapsed weeks (min 1), using fractional weeks for accuracy
+            val elapsedWeeks = maxOf(1.0, (today.toEpochDays() - seasonStart.toEpochDays()).toDouble() / 7.0)
+            val avgPerWeek = aggregated.totalSessions.toDouble() / elapsedWeeks
+            val weeklyGoal = calendarPreferenceStorage.getWeeklyGoal()
 
             // ── Scoreboard ────────────────────────────────────────────────────
             val scoreEntry: ScoreboardEntry? = if (myPersonId != null) {
@@ -266,21 +289,21 @@ class StatsViewModel(
             } else null
 
             _state.value = _state.value.copy(
-                totalSessions = totalSessions,
-                totalMinutes = totalMinutes,
+                totalSessions = aggregated.totalSessions,
+                totalMinutes = aggregated.totalMinutes,
                 avgSessionsPerWeek = avgPerWeek,
-                currentStreak = currentStreak,
-                longestStreak = longestStreak,
+                currentStreak = aggregated.currentStreak,
+                longestStreak = aggregated.longestStreak,
                 weeklyGoal = weeklyGoal,
-                currentWeekCount = currentWeekCount,
-                weeklyData = weeklyData,
-                monthlyData = monthlyData,
-                typeData = typeData,
-                trainerData = trainerData,
+                currentWeekCount = aggregated.currentWeekCount,
+                weeklyData = aggregated.weeklyData,
+                monthlyData = aggregated.monthlyData,
+                typeData = aggregated.typeData,
+                trainerData = aggregated.trainerData,
                 scoreEntry = scoreEntry,
                 selectedSeason = season,
-                attendanceMonths = attendanceMonths,
-                cancelledCount = cancelledCount,
+                attendanceMonths = aggregated.attendanceMonths,
+                cancelledCount = aggregated.cancelledCount,
                 isLoading = false,
                 error = null
             )
@@ -298,27 +321,31 @@ class StatsViewModel(
         try {
             val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
             val seasons = SeasonSelection.recent(count, today)
-            val summaries = seasons.map { season ->
-                val startIso = season.start.toString() + "T00:00:00Z"
-                val endIso = season.end.toString() + "T23:59:59Z"
-                val instances = try {
-                    withContext(Dispatchers.Default) {
-                        eventService.fetchEventsGroupedByDay(
-                            startRangeIso = startIso,
-                            endRangeIso = endIso,
-                            onlyMine = true,
-                            first = AppConstants.FETCH_LIMIT_PERIOD,
-                            cacheNamespace = "stats_"
-                        ).values.flatten()
-                    }.filter { !it.isCancelled }
-                } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
+            val summaries = coroutineScope {
+                seasons.map { season ->
+                    async {
+                        val startIso = season.start.toString() + "T00:00:00Z"
+                        val endIso = season.end.toString() + "T23:59:59Z"
+                        val instances = try {
+                            withContext(Dispatchers.Default) {
+                                eventService.fetchEventsGroupedByDay(
+                                    startRangeIso = startIso,
+                                    endRangeIso = endIso,
+                                    onlyMine = true,
+                                    first = AppConstants.FETCH_LIMIT_PERIOD,
+                                    cacheNamespace = "stats_"
+                                ).values.flatten()
+                            }.filter { !it.isCancelled }
+                        } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
 
-                val totalSessions = instances.size
-                val totalMinutes = instances.sumOf { durationMin(it.since, it.until) }
-                val capDate = if (today <= season.end) today else season.end
-                val elapsedWeeks = maxOf(1.0, (capDate.toEpochDays() - season.start.toEpochDays()).toDouble() / 7.0)
-                val avgPerWeek = totalSessions.toDouble() / elapsedWeeks
-                SeasonSummary(season, totalSessions, totalMinutes, avgPerWeek)
+                        val totalSessions = instances.size
+                        val totalMinutes = instances.sumOf { durationMin(it.since, it.until) }
+                        val capDate = if (today <= season.end) today else season.end
+                        val elapsedWeeks = maxOf(1.0, (capDate.toEpochDays() - season.start.toEpochDays()).toDouble() / 7.0)
+                        val avgPerWeek = totalSessions.toDouble() / elapsedWeeks
+                        SeasonSummary(season, totalSessions, totalMinutes, avgPerWeek)
+                    }
+                }.awaitAll()
             }
             // Auto-assign slots A (0) and B (1) to the two most recent seasons
             val newSeasons = _state.value.compareSeasons.toMutableList()
@@ -374,7 +401,7 @@ class StatsViewModel(
             val detail = SeasonDetailStats(season, totalSessions, totalMinutes, avgPerWeek, monthlyData, typeData, trainerData)
             val newData = _state.value.compareData.toMutableList().also { it[slotIndex] = detail }
             val doneLoading = _state.value.isLoadingCompare.toMutableList().also { it[slotIndex] = false }
-            _state.value = _state.value.copy(compareData = newData, isLoadingCompare = doneLoading)
+            _state.value = _state.value.copy(compareData = newData, isLoadingCompare = doneLoading, compareSeasons = newSeasons)
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             val doneLoading = _state.value.isLoadingCompare.toMutableList().also { it[slotIndex] = false }
             _state.value = _state.value.copy(isLoadingCompare = doneLoading)

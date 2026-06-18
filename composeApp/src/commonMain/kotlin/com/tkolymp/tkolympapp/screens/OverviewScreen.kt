@@ -43,8 +43,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -105,7 +105,7 @@ fun OverviewScreen(
     ) { padding ->
         val scrollState = rememberScrollState()
         val viewModel = viewModel<OverviewViewModel>()
-        val state by viewModel.state.collectAsState()
+        val state by viewModel.state.collectAsStateWithLifecycle()
         val scope = rememberCoroutineScope()
 
         LaunchedEffect(Unit) {
@@ -115,8 +115,8 @@ fun OverviewScreen(
         var cardsVisible by remember { mutableStateOf(false) }
         LaunchedEffect(state.isLoading) { if (!state.isLoading) cardsVisible = true }
 
-        val tutorialActive by TutorialManager.isActive.collectAsState()
-        val tutorialStep by TutorialManager.currentStep.collectAsState()
+        val tutorialActive by TutorialManager.isActive.collectAsStateWithLifecycle()
+        val tutorialStep by TutorialManager.currentStep.collectAsStateWithLifecycle()
 
         val bvrStats = remember { BringIntoViewRequester() }
         val bvrUpcoming = remember { BringIntoViewRequester() }
@@ -249,12 +249,14 @@ fun OverviewScreen(
                     ) { CircularProgressIndicator() }
                 } else {
                     val date = state.trainingSelectedDate ?: return@Column
+                    val trainerList = remember(state.trainingLessonsByTrainer) { state.trainingLessonsByTrainer.entries.toList() }
                     Column(modifier = Modifier.padding(vertical = 6.dp)) {
                         val header = dateHeader(date, state.todayString, state.tomorrowString)
                         Text(header, style = MaterialTheme.typography.titleMedium)
                         Spacer(modifier = Modifier.height(4.dp))
 
-                        state.trainingLessonsByTrainer.entries.toList().forEachIndexed { i, (trainer, instances) ->
+                        val handleEventClick = remember(onOpenEvent) { { id: Long, instId: Long? -> onOpenEvent(id, instId) } }
+                        trainerList.forEachIndexed { i, (trainer, instances) ->
                             StaggeredItem(index = i, visible = cardsVisible) {
                                 LessonView(
                                     trainerName = trainer,
@@ -262,14 +264,14 @@ fun OverviewScreen(
                                     isAllTab = false,
                                     myPersonId = state.myPersonId,
                                     myCoupleIds = state.myCoupleIds,
-                                    onEventClick = { id, instId -> onOpenEvent(id, instId) }
+                                    onEventClick = handleEventClick
                                 )
                             }
                         }
                         val trainerCount = state.trainingLessonsByTrainer.size
                         state.trainingOtherEvents.forEachIndexed { i, item ->
                             StaggeredItem(index = trainerCount + i, visible = cardsVisible) {
-                                RenderSingleEventCard(item = item, onEventClick = { id, instId -> onOpenEvent(id, instId) })
+                                RenderSingleEventCard(item = item, onEventClick = handleEventClick)
                             }
                         }
                     }
@@ -309,6 +311,9 @@ fun OverviewScreen(
             ) {
                 Text(AppStrings.current.overview.fromTheBoard, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
+            val plainBodies = remember(state.announcements) {
+                state.announcements.associate { a -> a.id to formatHtmlContent(a.body ?: "").trimEnd() }
+            }
             Column(modifier = Modifier.padding(horizontal = 12.dp)) {
                 if (announcements.isEmpty()) {
                     if (state.isLoading) {
@@ -340,8 +345,7 @@ fun OverviewScreen(
                                         Text(authorName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                     Spacer(modifier = Modifier.height(4.dp))
-                                    var plainBody = formatHtmlContent(a.body ?: "")
-                                    if (plainBody.isNotBlank()) plainBody = plainBody.trimEnd() + "..."
+                                    val plainBody = (plainBodies[a.id] ?: "").let { if (it.isNotBlank()) "$it..." else it }
                                     Text(
                                         plainBody,
                                         style = MaterialTheme.typography.bodyMedium,
@@ -390,14 +394,16 @@ fun OverviewScreen(
                         Text(AppStrings.current.timeline.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
                     }
                 } else {
-                    state.campsMapByDay.entries.toList().forEachIndexed { i, (date, list) ->
+                    val campsMapList = remember(state.campsMapByDay) { state.campsMapByDay.entries.toList() }
+                    val handleCampEventClick = remember(onOpenEvent) { { id: Long, instId: Long? -> onOpenEvent(id, instId) } }
+                    campsMapList.forEachIndexed { i, (date, list) ->
                         StaggeredItem(index = i, visible = cardsVisible) {
                             Column(modifier = Modifier.padding(vertical = 6.dp)) {
                                 val header = dateHeader(date, state.todayString, state.tomorrowString)
                                 Text(header, style = MaterialTheme.typography.titleMedium)
                                 Spacer(modifier = Modifier.height(4.dp))
                                 list.forEach { item ->
-                                    RenderSingleEventCard(item = item, onEventClick = { id, instId -> onOpenEvent(id, instId) })
+                                    RenderSingleEventCard(item = item, onEventClick = handleCampEventClick)
                                 }
                             }
                         }
@@ -478,8 +484,10 @@ fun OverviewScreen(
                                     .padding(12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                val cohortColors = entry.cohortColors.mapNotNull { hex ->
-                                    try { parseColorOrDefault(hex) } catch (_: Exception) { null }
+                                val cohortColors = remember(entry.cohortColors) {
+                                    entry.cohortColors.mapNotNull { hex ->
+                                        try { parseColorOrDefault(hex) } catch (_: Exception) { null }
+                                    }
                                 }
                                 Column(
                                     modifier = Modifier

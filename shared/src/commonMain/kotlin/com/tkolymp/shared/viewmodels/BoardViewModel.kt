@@ -16,8 +16,10 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import com.tkolymp.shared.json.AppJson
 import com.tkolymp.shared.language.AppStrings
+import androidx.compose.runtime.Immutable
 import kotlin.time.Clock
 
+@Immutable
 data class BoardState(
     val selectedTab: Int = 0,
     val currentAnnouncements: List<Announcement> = emptyList(),

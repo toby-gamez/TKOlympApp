@@ -13,8 +13,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.sync.Mutex
+import androidx.compose.runtime.Immutable
 import kotlinx.coroutines.sync.withLock
 
+@Immutable
 data class LoginState(
     val username: String = "",
     val password: String = "",

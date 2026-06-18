@@ -7,13 +7,17 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import com.tkolymp.shared.json.AppJson
+import androidx.compose.runtime.Immutable
 import com.tkolymp.shared.language.AppStrings
 
+@Immutable
 data class OtherState(
     val name: String? = null,
     val subtitle: String? = null,
@@ -80,37 +84,39 @@ class OtherViewModel(
                 var personPrefix: String? = null
                 var personSuffix: String? = null
 
-                try {
-                    raw?.let {
-                        val obj = AppJson.parseToJsonElement(it).jsonObject
-                        val jmeno = obj["uJmeno"]?.jsonPrimitive?.contentOrNull
-                        val prijmeni = obj["uPrijmeni"]?.jsonPrimitive?.contentOrNull
-                        name = listOfNotNull(jmeno?.takeIf { it.isNotBlank() }, prijmeni?.takeIf { it.isNotBlank() }).joinToString(" ")
-                        subtitle = obj["uLogin"]?.jsonPrimitive?.contentOrNull
-                    }
-                } catch (e: CancellationException) { throw e } catch (_: Exception) { }
-
-                try {
-                    personDetails?.let {
-                        val p = AppJson.parseToJsonElement(it).jsonObject
-                        personFirstName = p["firstName"]?.jsonPrimitive?.contentOrNull
-                        personLastName = p["lastName"]?.jsonPrimitive?.contentOrNull
-                        personDob = p["birthDate"]?.jsonPrimitive?.contentOrNull
-                            ?: p["dateOfBirth"]?.jsonPrimitive?.contentOrNull
-                            ?: p["dob"]?.jsonPrimitive?.contentOrNull
-                        personPrefix = p["prefixTitle"]?.jsonPrimitive?.contentOrNull
-                        personSuffix = p["suffixTitle"]?.jsonPrimitive?.contentOrNull
-                            ?: p["postfixTitle"]?.jsonPrimitive?.contentOrNull
-                            ?: p["suffix"]?.jsonPrimitive?.contentOrNull
-                        if (!personFirstName.isNullOrBlank() || !personLastName.isNullOrBlank()) {
-                            val parts = listOf(personPrefix, personFirstName, personLastName)
-                                .filterNotNull()
-                                .filter { it.isNotBlank() }
-                            val base = parts.joinToString(" ")
-                            name = if (!personSuffix.isNullOrBlank()) "$base, $personSuffix" else base
+                withContext(Dispatchers.Default) {
+                    try {
+                        raw?.let {
+                            val obj = AppJson.parseToJsonElement(it).jsonObject
+                            val jmeno = obj["uJmeno"]?.jsonPrimitive?.contentOrNull
+                            val prijmeni = obj["uPrijmeni"]?.jsonPrimitive?.contentOrNull
+                            name = listOfNotNull(jmeno?.takeIf { it.isNotBlank() }, prijmeni?.takeIf { it.isNotBlank() }).joinToString(" ")
+                            subtitle = obj["uLogin"]?.jsonPrimitive?.contentOrNull
                         }
-                    }
-                } catch (e: CancellationException) { throw e } catch (_: Exception) { }
+                    } catch (_: Exception) { }
+
+                    try {
+                        personDetails?.let {
+                            val p = AppJson.parseToJsonElement(it).jsonObject
+                            personFirstName = p["firstName"]?.jsonPrimitive?.contentOrNull
+                            personLastName = p["lastName"]?.jsonPrimitive?.contentOrNull
+                            personDob = p["birthDate"]?.jsonPrimitive?.contentOrNull
+                                ?: p["dateOfBirth"]?.jsonPrimitive?.contentOrNull
+                                ?: p["dob"]?.jsonPrimitive?.contentOrNull
+                            personPrefix = p["prefixTitle"]?.jsonPrimitive?.contentOrNull
+                            personSuffix = p["suffixTitle"]?.jsonPrimitive?.contentOrNull
+                                ?: p["postfixTitle"]?.jsonPrimitive?.contentOrNull
+                                ?: p["suffix"]?.jsonPrimitive?.contentOrNull
+                            if (!personFirstName.isNullOrBlank() || !personLastName.isNullOrBlank()) {
+                                val parts = listOf(personPrefix, personFirstName, personLastName)
+                                    .filterNotNull()
+                                    .filter { it.isNotBlank() }
+                                val base = parts.joinToString(" ")
+                                name = if (!personSuffix.isNullOrBlank()) "$base, $personSuffix" else base
+                            }
+                        }
+                    } catch (_: Exception) { }
+                }
 
                 val updated = _state.value.copy(
                     name = name,

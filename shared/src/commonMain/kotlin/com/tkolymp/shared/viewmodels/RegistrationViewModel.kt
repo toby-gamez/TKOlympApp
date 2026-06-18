@@ -6,12 +6,17 @@ import com.tkolymp.shared.registration.filterOwnedRegistrations
 import com.tkolymp.shared.utils.asJsonObjectOrNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import androidx.compose.runtime.Immutable
 import kotlinx.serialization.json.*
 
+@Immutable
 data class RegistrationState(
     val trainerNames: Map<String, String> = emptyMap(),
     val myPersonName: String? = null,
@@ -38,34 +43,45 @@ class RegistrationViewModel(
         try {
             val trainerMap = mutableMapOf<String, String>()
                 try {
-                withContext(Dispatchers.Default) {
-                    trainers.forEachIndexed { idx, tEl ->
-                        try {
-                            val tObj = tEl as? kotlinx.serialization.json.JsonObject
-                            val tIdStr = tObj?.get("id")?.jsonPrimitive?.contentOrNull ?: idx.toString()
-                            val personRef = tObj?.get("person")?.asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
-                                ?: tObj?.get("personId")?.jsonPrimitive?.contentOrNull
-                            val fetched = if (!personRef.isNullOrBlank()) try { peopleService.fetchPersonDisplayName(personRef, false) } catch (e: CancellationException) { throw e } catch (_: Exception) { null } else null
-                            if (!fetched.isNullOrBlank()) trainerMap[tIdStr] = fetched
-                        } catch (e: CancellationException) { throw e } catch (_: Exception) {}
-                    }
+                coroutineScope {
+                    trainers.mapIndexed { idx, tEl ->
+                        async {
+                            try {
+                                val tObj = tEl as? kotlinx.serialization.json.JsonObject
+                                val tIdStr = tObj?.get("id")?.jsonPrimitive?.contentOrNull ?: idx.toString()
+                                val personRef = tObj?.get("person")?.asJsonObjectOrNull()?.get("id")?.jsonPrimitive?.contentOrNull
+                                    ?: tObj?.get("personId")?.jsonPrimitive?.contentOrNull
+                                val fetched = if (!personRef.isNullOrBlank()) try { peopleService.fetchPersonDisplayName(personRef, false) } catch (e: CancellationException) { throw e } catch (_: Exception) { null } else null
+                                if (!fetched.isNullOrBlank()) tIdStr to fetched else null
+                            } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                        }
+                    }.awaitAll().forEach { pair -> if (pair != null) trainerMap[pair.first] = pair.second!! }
                 }
             } catch (e: CancellationException) { throw e } catch (_: Exception) {}
 
             var personName = myPersonNameHint
             val coupleNames = myCoupleNamesHint.toMutableMap()
                 try {
-                withContext(Dispatchers.Default) {
-                    if (personName.isNullOrBlank() && myPersonId != null) {
-                        personName = try { peopleService.fetchPersonDisplayName(myPersonId, true) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                coroutineScope {
+                    val personJob = async {
+                        if (personName.isNullOrBlank() && myPersonId != null) {
+                            try { peopleService.fetchPersonDisplayName(myPersonId, true) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                        } else personName
                     }
-                    myCoupleIds.forEach { cid ->
-                        if (coupleNames[cid].isNullOrBlank()) {
-                            try {
-                                val fetched = peopleService.fetchCoupleDisplayName(cid)
-                                if (!fetched.isNullOrBlank()) coupleNames[cid] = fetched
-                            } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+                    val coupleJobs = myCoupleIds
+                        .filter { cid -> coupleNames[cid].isNullOrBlank() }
+                        .map { cid ->
+                            cid to async {
+                                try {
+                                    val fetched = peopleService.fetchCoupleDisplayName(cid)
+                                    fetched.takeUnless { it.isNullOrBlank() }
+                                } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                            }
                         }
+                    personName = personJob.await()
+                    coupleJobs.forEach { (cid, job) ->
+                        val fetched = job.await()
+                        if (!fetched.isNullOrBlank()) coupleNames[cid] = fetched!!
                     }
                 }
             } catch (e: CancellationException) { throw e } catch (_: Exception) {}

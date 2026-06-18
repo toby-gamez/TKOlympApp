@@ -39,8 +39,10 @@ import com.tkolymp.shared.event.EventType
 import com.tkolymp.shared.event.toEventType
 import com.tkolymp.shared.calendar.parseCalendarJson
 import com.tkolymp.shared.competitions.Competition
+import androidx.compose.runtime.Immutable
 import com.tkolymp.shared.competitions.ICompetitionService
 
+@Immutable
 data class CalendarState(
     val eventsByDay: Map<String, List<EventInstance>> = emptyMap(),
     val lessonsByTrainerByDay: Map<String, Map<String, List<EventInstance>>> = emptyMap(),

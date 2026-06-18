@@ -1,5 +1,6 @@
 package com.tkolymp.shared.calendar
 
+import androidx.compose.runtime.Immutable
 import com.tkolymp.shared.event.BigInt
 import com.tkolymp.shared.event.Event
 import com.tkolymp.shared.viewmodels.AppError
@@ -10,6 +11,7 @@ import kotlinx.datetime.LocalDateTime
 /**
  * Represents a single event instance with additional timeline layout data
  */
+@Immutable
 data class TimelineEvent(
     val id: BigInt,
     val eventId: BigInt?,
@@ -28,6 +30,7 @@ data class TimelineEvent(
  * Layout data for positioning an event in the timeline grid
  * Used for collision detection and positioning
  */
+@Immutable
 data class EventLayoutData(
     val event: TimelineEvent,
     val column: Int,        // which column (0-based)
@@ -39,6 +42,7 @@ data class EventLayoutData(
 /**
  * Group of overlapping events that need to be laid out side-by-side
  */
+@Immutable
 data class CollisionGroup(
     val events: List<TimelineEvent>
 )
@@ -46,6 +50,7 @@ data class CollisionGroup(
 /**
  * State for the calendar view
  */
+@Immutable
 data class CalendarViewState(
     val viewMode: ViewMode = ViewMode.DAY,
     val selectedDate: LocalDate,

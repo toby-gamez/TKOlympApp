@@ -22,8 +22,10 @@ import kotlin.time.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
+import androidx.compose.runtime.Immutable
 import kotlinx.datetime.todayIn
 
+@Immutable
 data class TrainersLocationsState(
     val clubData: ClubData? = null,
     val trainerLessonCounts: Map<String, IntArray> = emptyMap(),

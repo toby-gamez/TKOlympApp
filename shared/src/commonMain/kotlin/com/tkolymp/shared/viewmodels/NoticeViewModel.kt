@@ -7,10 +7,14 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.tkolymp.shared.json.AppJson
+import androidx.compose.runtime.Immutable
 import com.tkolymp.shared.language.AppStrings
 
+@Immutable
 data class NoticeState(
     val announcement: com.tkolymp.shared.announcements.Announcement? = null,
     val isOffline: Boolean = false,
@@ -28,24 +32,28 @@ class NoticeViewModel(
         _state.value = _state.value.copy(isLoading = true, error = null)
         viewModelScope.launch {
             try {
-                var a = when (val r = announcementService.getAnnouncementById(announcementId, forceRefresh)) {
-                    is DataResult.Success -> r.data
-                    is DataResult.Error -> null
+                data class FetchResult(val announcement: com.tkolymp.shared.announcements.Announcement?, val usedOffline: Boolean)
+                val result = withContext(Dispatchers.Default) {
+                    var a = when (val r = announcementService.getAnnouncementById(announcementId, forceRefresh)) {
+                        is DataResult.Success -> r.data
+                        is DataResult.Error -> null
+                    }
+                    var usedOffline = false
+                    if (a == null) {
+                        try {
+                            val raw = ServiceLocator.offlineSyncManager.loadAnnouncementDetail(announcementId)
+                            if (raw != null) {
+                                a = AppJson.decodeFromString(com.tkolymp.shared.announcements.Announcement.serializer(), raw)
+                                usedOffline = true
+                            }
+                        } catch (_: Exception) { }
+                    }
+                    FetchResult(a, usedOffline)
                 }
-                var usedOffline = false
-                if (a == null) {
-                    try {
-                        val raw = ServiceLocator.offlineSyncManager.loadAnnouncementDetail(announcementId)
-                        if (raw != null) {
-                            a = AppJson.decodeFromString(com.tkolymp.shared.announcements.Announcement.serializer(), raw)
-                            usedOffline = true
-                        }
-                    } catch (_: Exception) { }
-                }
-                if (a == null) {
+                if (result.announcement == null) {
                     _state.value = _state.value.copy(isLoading = false, error = AppError.generic("Oznámení nenalezeno"))
                 } else {
-                    _state.value = _state.value.copy(announcement = a, isLoading = false, isOffline = usedOffline)
+                    _state.value = _state.value.copy(announcement = result.announcement, isLoading = false, isOffline = result.usedOffline)
                 }
             } catch (e: CancellationException) { throw e } catch (ex: Exception) {
                 _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoading))

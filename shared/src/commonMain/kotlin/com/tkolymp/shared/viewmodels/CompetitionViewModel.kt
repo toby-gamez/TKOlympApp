@@ -13,8 +13,10 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
+import androidx.compose.runtime.Immutable
 import kotlin.time.Clock
 
+@Immutable
 data class CompetitionState(
     val upcomingCompetitions: List<Competition> = emptyList(),
     val pastCompetitions: List<Competition> = emptyList(),
@@ -58,6 +60,7 @@ class CompetitionViewModel(
     }
 
     suspend fun loadPast(forceRefresh: Boolean = false) {
+        if (_state.value.pastCompetitions.isNotEmpty() && !forceRefresh) return
         _state.value = _state.value.copy(isLoading = true, error = null)
         if (forceRefresh) {
             try {

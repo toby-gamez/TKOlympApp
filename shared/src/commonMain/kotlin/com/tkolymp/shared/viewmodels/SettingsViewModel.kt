@@ -6,8 +6,10 @@ import com.tkolymp.shared.appearance.AppearanceSettings
 import com.tkolymp.shared.appearance.ThemeMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import androidx.compose.runtime.Immutable
 import kotlinx.coroutines.flow.update
 
+@Immutable
 data class SettingsState(
     val preferTimeline: Boolean = false,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,

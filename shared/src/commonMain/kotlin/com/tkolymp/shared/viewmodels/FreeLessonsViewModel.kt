@@ -35,6 +35,7 @@ import com.tkolymp.shared.event.EventType
 import com.tkolymp.shared.event.toEventType
 import com.tkolymp.shared.sync.OfflineKeys
 import com.tkolymp.shared.utils.AppConstants
+import androidx.compose.runtime.Immutable
 import com.tkolymp.shared.calendar.parseCalendarJson
 
 private const val TAG = "FreeLessonsViewModel"
@@ -50,6 +51,7 @@ data class FreeLessonResult(
     val tip: String?
 )
 
+@Immutable
 data class FreeLessonsState(
     val cancelledMineInstances: List<EventInstance> = emptyList(),
     val replacementResults: Map<String, List<FreeLessonResult>> = emptyMap(),

@@ -14,8 +14,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
@@ -33,7 +33,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -77,8 +77,8 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
     var selectedTab by rememberSaveable { mutableStateOf(0) }
     val tabs = listOf(AppStrings.current.eventCalendarTabs.planned, AppStrings.current.eventCalendarTabs.past)
 
-    val tutorialActive by com.tkolymp.shared.tutorial.TutorialManager.isActive.collectAsState()
-    val tutorialStep by com.tkolymp.shared.tutorial.TutorialManager.currentStep.collectAsState()
+    val tutorialActive by com.tkolymp.shared.tutorial.TutorialManager.isActive.collectAsStateWithLifecycle()
+    val tutorialStep by com.tkolymp.shared.tutorial.TutorialManager.currentStep.collectAsStateWithLifecycle()
 
     var contentBounds by remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
 
@@ -93,7 +93,7 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
     }
 
     val viewModel = viewModel<EventsViewModel>()
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
 
@@ -181,6 +181,13 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
 
             // Offline fallback handled in EventsViewModel; UI should not scan storage directly.
 
+            val allItems = remember(state.eventsByDay) {
+                state.eventsByDay.values.flatten()
+            }
+            val plainDescriptions = remember(allItems) {
+                allItems.associate { item -> item.event?.id to try { formatHtmlContent(item.event?.description ?: "") } catch (_: Exception) { "" } }
+            }
+
             // If search is active, filter across all dates (not limited to planned/past)
             val filteredGrouped = if (searchQuery.isBlank()) {
                 grouped
@@ -190,7 +197,7 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                     .filter { (_dateStr, item) ->
                         val title = item.event?.name ?: ""
                         val titleOk = title.isNotBlank() && normalizeForSearch(title).contains(nq)
-                        val body = try { formatHtmlContent(item.event?.description ?: "") } catch (_: Exception) { "" }
+                        val body = plainDescriptions[item.event?.id] ?: ""
                         val bodyOk = body.isNotBlank() && normalizeForSearch(body).contains(nq)
                         val trainers = (item.event?.eventTrainersList ?: emptyList()).joinToString(" ")
                         val trainersOk = trainers.isNotBlank() && normalizeForSearch(trainers).contains(nq)
@@ -215,11 +222,6 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                 LaunchedEffect(tab) { sectionsVisible = false }
                 LaunchedEffect(tab, state.eventsByDay.isNotEmpty()) { if (state.eventsByDay.isNotEmpty()) sectionsVisible = true }
 
-                Column(modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 12.dp)
-                ) {
                 if (tab == 0) {
                     // Naplánováno: today..future (ascending)
                     val planned = filteredGrouped.filter { (dateStr, _) ->
@@ -227,51 +229,60 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                         d != null && d >= today
                     }.entries.sortedBy { it.key }.associate { it.key to it.value }
 
-                    if (planned.isEmpty()) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(AppStrings.current.events.noEventsPlanned, style = MaterialTheme.typography.bodyMedium)
-                    }
-
-                    planned.entries.forEachIndexed { i, (date, list) ->
-                        StaggeredItem(index = i, visible = sectionsVisible) {
-                        Column(modifier = Modifier.padding(vertical = 6.dp)) {
-                            val header = when (date) {
-                                today.toString() -> AppStrings.current.timeline.today.lowercase()
-                                today.plus(1, DateTimeUnit.DAY).toString() -> AppStrings.current.timeline.tomorrow.lowercase()
-                                else -> {
-                                    val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
-                                    if (ld == null) date else
-                                        formatMonthDay(ld, AppStrings.currentLanguage.code, ld.year != today.year)
-                                }
-                            }
-                            Text(header, style = MaterialTheme.typography.titleMedium)
-                            Spacer(modifier = Modifier.height(4.dp))
-
-                            val lessons = list.filter {
-                                it.event?.type?.equals("lesson", ignoreCase = true) == true &&
-                                        !it.event?.eventTrainersList.isNullOrEmpty() &&
-                                        !it.event?.eventTrainersList?.firstOrNull().isNullOrBlank()
-                            }
-                            val other = list - lessons
-
-                            val lessonsByTrainer = lessons.groupBy { it.event.firstTrainerOrEmpty() }
-
-                            lessonsByTrainer.forEach { (trainer, instances) ->
-                                LessonView(
-                                    trainerName = trainer,
-                                    instances = instances.sortedBy { it.since },
-                                    isAllTab = false,
-                                    myPersonId = null,
-                                    myCoupleIds = emptyList(),
-                                    onEventClick = { id, _ -> onOpenEvent(id) }
-                                )
-                            }
-
-                            other.sortedBy { it.since }.forEach { item ->
-                                RenderSingleEventCard(item = item, onEventClick = { id, _ -> onOpenEvent(id) }, showType = false)
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 12.dp)
+                    ) {
+                        if (planned.isEmpty()) {
+                            item {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text(AppStrings.current.events.noEventsPlanned, style = MaterialTheme.typography.bodyMedium)
                             }
                         }
-                        } // StaggeredItem
+
+                        items(planned.entries.toList()) { (date, list) ->
+                            val i = planned.keys.toList().indexOf(date)
+                            StaggeredItem(index = i, visible = sectionsVisible) {
+                                Column(modifier = Modifier.padding(vertical = 6.dp)) {
+                                    val header = when (date) {
+                                        today.toString() -> AppStrings.current.timeline.today.lowercase()
+                                        today.plus(1, DateTimeUnit.DAY).toString() -> AppStrings.current.timeline.tomorrow.lowercase()
+                                        else -> {
+                                            val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
+                                            if (ld == null) date else
+                                                formatMonthDay(ld, AppStrings.currentLanguage.code, ld.year != today.year)
+                                        }
+                                    }
+                                    Text(header, style = MaterialTheme.typography.titleMedium)
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    val lessons = list.filter {
+                                        it.event?.type?.equals("lesson", ignoreCase = true) == true &&
+                                                !it.event?.eventTrainersList.isNullOrEmpty() &&
+                                                !it.event?.eventTrainersList?.firstOrNull().isNullOrBlank()
+                                    }
+                                    val other = list - lessons
+
+                                    val lessonsByTrainer = lessons.groupBy { it.event.firstTrainerOrEmpty() }
+
+                                    lessonsByTrainer.forEach { (trainer, instances) ->
+                                        LessonView(
+                                            trainerName = trainer,
+                                            instances = instances.sortedBy { it.since },
+                                            isAllTab = false,
+                                            myPersonId = null,
+                                            myCoupleIds = emptyList(),
+                                            onEventClick = { id, _ -> onOpenEvent(id) }
+                                        )
+                                    }
+
+                                    other.sortedBy { it.since }.forEach { item ->
+                                        RenderSingleEventCard(item = item, onEventClick = { id, _ -> onOpenEvent(id) }, showType = false)
+                                    }
+                                }
+                            }
+                        }
                     }
 
                 } else {
@@ -284,54 +295,62 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                         try { LocalDate.parse(dateStr) } catch (_: Exception) { LocalDate(1, 1, 1) }
                     }
 
-                    if (past.isEmpty()) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(AppStrings.current.events.noPastEvents, style = MaterialTheme.typography.bodyMedium)
-                    }
-
-                    past.forEachIndexed { i, (date, list) ->
-                        StaggeredItem(index = i, visible = sectionsVisible) {
-                        Column(modifier = Modifier.padding(vertical = 6.dp)) {
-                            val header = when (date) {
-                                today.toString() -> AppStrings.current.timeline.today.lowercase()
-                                today.plus(1, DateTimeUnit.DAY).toString() -> AppStrings.current.timeline.tomorrow.lowercase()
-                                else -> {
-                                    val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
-                                    if (ld == null) date else
-                                        formatMonthDay(ld, AppStrings.currentLanguage.code, ld.year != today.year)
-                                }
-                            }
-                            Text(header, style = MaterialTheme.typography.titleMedium)
-                            Spacer(modifier = Modifier.height(4.dp))
-
-                            val lessons = list.filter {
-                                it.event?.type?.equals("lesson", ignoreCase = true) == true &&
-                                        !it.event?.eventTrainersList.isNullOrEmpty() &&
-                                        !it.event?.eventTrainersList?.firstOrNull().isNullOrBlank()
-                            }
-                            val other = list - lessons
-
-                            val lessonsByTrainer = lessons.groupBy { it.event.firstTrainerOrEmpty() }
-
-                            lessonsByTrainer.forEach { (trainer, instances) ->
-                                LessonView(
-                                    trainerName = trainer,
-                                    instances = instances.sortedBy { it.since },
-                                    isAllTab = false,
-                                    myPersonId = null,
-                                    myCoupleIds = emptyList(),
-                                    onEventClick = { id, _ -> onOpenEvent(id) }
-                                )
-                            }
-
-                            other.sortedByDescending { it.since }.forEach { item ->
-                                RenderSingleEventCard(item = item, onEventClick = { id, _ -> onOpenEvent(id) }, showType = false)
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 12.dp)
+                    ) {
+                        if (past.isEmpty()) {
+                            item {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text(AppStrings.current.events.noPastEvents, style = MaterialTheme.typography.bodyMedium)
                             }
                         }
-                        } // StaggeredItem
+
+                        items(past) { (date, list) ->
+                            val i = past.indexOfFirst { it.first == date }
+                            StaggeredItem(index = i, visible = sectionsVisible) {
+                                Column(modifier = Modifier.padding(vertical = 6.dp)) {
+                                    val header = when (date) {
+                                        today.toString() -> AppStrings.current.timeline.today.lowercase()
+                                        today.plus(1, DateTimeUnit.DAY).toString() -> AppStrings.current.timeline.tomorrow.lowercase()
+                                        else -> {
+                                            val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
+                                            if (ld == null) date else
+                                                formatMonthDay(ld, AppStrings.currentLanguage.code, ld.year != today.year)
+                                        }
+                                    }
+                                    Text(header, style = MaterialTheme.typography.titleMedium)
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    val lessons = list.filter {
+                                        it.event?.type?.equals("lesson", ignoreCase = true) == true &&
+                                                !it.event?.eventTrainersList.isNullOrEmpty() &&
+                                                !it.event?.eventTrainersList?.firstOrNull().isNullOrBlank()
+                                    }
+                                    val other = list - lessons
+
+                                    val lessonsByTrainer = lessons.groupBy { it.event.firstTrainerOrEmpty() }
+
+                                    lessonsByTrainer.forEach { (trainer, instances) ->
+                                        LessonView(
+                                            trainerName = trainer,
+                                            instances = instances.sortedBy { it.since },
+                                            isAllTab = false,
+                                            myPersonId = null,
+                                            myCoupleIds = emptyList(),
+                                            onEventClick = { id, _ -> onOpenEvent(id) }
+                                        )
+                                    }
+
+                                    other.sortedByDescending { it.since }.forEach { item ->
+                                        RenderSingleEventCard(item = item, onEventClick = { id, _ -> onOpenEvent(id) }, showType = false)
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
-            }
             } // AnimatedContent
 
             state.error?.let { err ->

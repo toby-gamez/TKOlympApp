@@ -9,9 +9,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,7 +24,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -72,12 +72,12 @@ import kotlinx.coroutines.launch
 @Composable
 fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
     val viewModel = viewModel<BoardViewModel>()
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val tabs = listOf(AppStrings.current.boardTabs.news, AppStrings.current.boardTabs.permanentBoard)
     val scope = rememberCoroutineScope()
 
-    val tutorialActive by TutorialManager.isActive.collectAsState()
-    val tutorialStep by TutorialManager.currentStep.collectAsState()
+    val tutorialActive by TutorialManager.isActive.collectAsStateWithLifecycle()
+    val tutorialStep by TutorialManager.currentStep.collectAsStateWithLifecycle()
 
     var contentBounds by remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
     var localSelectedTab by rememberSaveable { mutableIntStateOf(state.selectedTab) }
@@ -192,17 +192,20 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
                     LaunchedEffect(tab) { listVisible = false }
                     val announcements = if (tab == 1) state.permanentAnnouncements else state.currentAnnouncements
                     LaunchedEffect(tab, announcements.isNotEmpty()) { if (announcements.isNotEmpty()) listVisible = true }
+                    val plainBodies = remember(announcements) {
+                        announcements.associate { a -> a.id to formatHtmlContent(a.body ?: "") }
+                    }
                     val filtered = announcements.filter { a ->
                         val q = searchQuery.trim()
                         if (q.isBlank()) return@filter true
                         val nq = normalizeForSearch(q)
                         val titleOk = a.title?.let { normalizeForSearch(it).contains(nq) } == true
-                        val bodyText = formatHtmlContent(a.body ?: "")
-                        val bodyOk = normalizeForSearch(bodyText).contains(nq)
+                        val bodyOk = normalizeForSearch(plainBodies[a.id] ?: "").contains(nq)
                         titleOk || bodyOk
                     }
-                    Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
-                        filtered.forEachIndexed { i, a ->
+                    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                        items(filtered) { a ->
+                            val i = filtered.indexOf(a)
                             StaggeredItem(index = i, visible = listVisible) {
                                 Card(
                                     modifier = Modifier
@@ -221,7 +224,7 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
                                             Text(authorName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         Spacer(modifier = Modifier.height(6.dp))
-                                        val plainBody = formatHtmlContent(a.body ?: "")
+                                        val plainBody = plainBodies[a.id] ?: ""
                                         Text(
                                             plainBody,
                                             style = MaterialTheme.typography.bodyMedium,

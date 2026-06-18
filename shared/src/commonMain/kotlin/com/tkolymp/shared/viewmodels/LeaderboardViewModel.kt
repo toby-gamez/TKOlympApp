@@ -15,8 +15,10 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import com.tkolymp.shared.json.AppJson
 import com.tkolymp.shared.language.AppStrings
+import androidx.compose.runtime.Immutable
 import com.tkolymp.shared.sync.OfflineKeys
 
+@Immutable
 data class LeaderboardState(
     val rankings: List<ScoreboardEntry> = emptyList(),
     val peopleById: Map<String, com.tkolymp.shared.people.Person> = emptyMap(),

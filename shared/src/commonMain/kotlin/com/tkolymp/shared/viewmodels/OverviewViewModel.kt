@@ -11,6 +11,9 @@ import com.tkolymp.shared.utils.daysUntilNextBirthday
 import com.tkolymp.shared.utils.formatBirthDateString
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,8 +44,10 @@ import com.tkolymp.shared.calendar.parseCalendarJson
 import com.tkolymp.shared.payments.PaymentService
 import com.tkolymp.shared.models.UserRole
 import com.tkolymp.shared.competitions.Competition
+import androidx.compose.runtime.Immutable
 import com.tkolymp.shared.competitions.ICompetitionService
 
+@Immutable
 data class BirthdayEntry(
     val personId: String,
     val name: String,
@@ -51,6 +56,7 @@ data class BirthdayEntry(
     val cohortColors: List<String> = emptyList()
 )
 
+@Immutable
 data class OverviewState(
     val upcomingEvents: List<EventInstance> = emptyList(),
     val recentAnnouncements: List<Announcement> = emptyList(),
@@ -198,46 +204,50 @@ class OverviewViewModel(
             // If some events came from offline minimal JSON (no registrations), try to fetch full
             // event details for those event ids (from cache or offline storage) so we can show
             // participant names like in CalendarScreen.
-            events = events.map { inst ->
-                val ev = inst.event ?: return@map inst
-                if (!ev.eventRegistrationsList.isNullOrEmpty()) return@map inst
-                val evId = ev.id ?: return@map inst
+            events = coroutineScope {
+                events.map { inst ->
+                    async {
+                        val ev = inst.event ?: return@async inst
+                        if (!ev.eventRegistrationsList.isNullOrEmpty()) return@async inst
+                        val evId = ev.id ?: return@async inst
 
-                var regs: List<com.tkolymp.shared.event.Registration> = emptyList()
-                try {
-                    val fullJson = try { eventService.fetchEventById(evId, forceRefresh = false) } catch (_: Exception) { null }
-                    val regArr = fullJson?.let { fj ->
-                        when {
-                            fj["eventRegistrationsList"] is kotlinx.serialization.json.JsonArray -> fj["eventRegistrationsList"] as kotlinx.serialization.json.JsonArray
-                            fj["eventRegistrations"] is kotlinx.serialization.json.JsonObject -> (fj["eventRegistrations"] as kotlinx.serialization.json.JsonObject)["nodes"] as? kotlinx.serialization.json.JsonArray
-                            else -> null
-                        }
-                    }
-                    if (regArr != null) {
-                        regs = parseRegistrationsFromJson(regArr)
-                    }
-                } catch (_: Exception) {}
-
-                if (regs.isEmpty()) {
-                    try {
-                        val raw = try { ServiceLocator.offlineSyncManager.loadEventDetail(evId) } catch (_: Exception) { null }
-                        if (!raw.isNullOrBlank()) {
-                            val parsed = try { AppJson.parseToJsonElement(raw).jsonObject } catch (_: Exception) { null }
-                            val regArr2 = parsed?.let { pj ->
+                        var regs: List<com.tkolymp.shared.event.Registration> = emptyList()
+                        try {
+                            val fullJson = try { eventService.fetchEventById(evId, forceRefresh = false) } catch (_: Exception) { null }
+                            val regArr = fullJson?.let { fj ->
                                 when {
-                                    pj["eventRegistrationsList"] is kotlinx.serialization.json.JsonArray -> pj["eventRegistrationsList"] as kotlinx.serialization.json.JsonArray
-                                    pj["eventRegistrations"] is kotlinx.serialization.json.JsonObject -> (pj["eventRegistrations"] as kotlinx.serialization.json.JsonObject)["nodes"] as? kotlinx.serialization.json.JsonArray
+                                    fj["eventRegistrationsList"] is kotlinx.serialization.json.JsonArray -> fj["eventRegistrationsList"] as kotlinx.serialization.json.JsonArray
+                                    fj["eventRegistrations"] is kotlinx.serialization.json.JsonObject -> (fj["eventRegistrations"] as kotlinx.serialization.json.JsonObject)["nodes"] as? kotlinx.serialization.json.JsonArray
                                     else -> null
                                 }
                             }
-                            if (regArr2 != null) {
-                                regs = parseRegistrationsFromJson(regArr2)
+                            if (regArr != null) {
+                                regs = parseRegistrationsFromJson(regArr)
                             }
-                        }
-                    } catch (_: Exception) {}
-                }
+                        } catch (_: Exception) {}
 
-                if (regs.isEmpty()) inst else inst.copy(event = ev.copy(eventRegistrationsList = regs))
+                        if (regs.isEmpty()) {
+                            try {
+                                val raw = try { ServiceLocator.offlineSyncManager.loadEventDetail(evId) } catch (_: Exception) { null }
+                                if (!raw.isNullOrBlank()) {
+                                    val parsed = try { AppJson.parseToJsonElement(raw).jsonObject } catch (_: Exception) { null }
+                                    val regArr2 = parsed?.let { pj ->
+                                        when {
+                                            pj["eventRegistrationsList"] is kotlinx.serialization.json.JsonArray -> pj["eventRegistrationsList"] as kotlinx.serialization.json.JsonArray
+                                            pj["eventRegistrations"] is kotlinx.serialization.json.JsonObject -> (pj["eventRegistrations"] as kotlinx.serialization.json.JsonObject)["nodes"] as? kotlinx.serialization.json.JsonArray
+                                            else -> null
+                                        }
+                                    }
+                                    if (regArr2 != null) {
+                                        regs = parseRegistrationsFromJson(regArr2)
+                                    }
+                                }
+                            } catch (_: Exception) {}
+                        }
+
+                        if (regs.isEmpty()) inst else inst.copy(event = ev.copy(eventRegistrationsList = regs))
+                    }
+                }.awaitAll()
             }
             val announcements = try {
                 val fetched = when (val r = withContext(Dispatchers.Default) { announcementService.getAnnouncements(false) }) {

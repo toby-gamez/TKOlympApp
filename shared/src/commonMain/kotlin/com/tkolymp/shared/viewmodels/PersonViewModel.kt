@@ -11,8 +11,10 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import com.tkolymp.shared.json.AppJson
+import androidx.compose.runtime.Immutable
 import com.tkolymp.shared.language.AppStrings
 
+@Immutable
 data class PersonState(
     val personId: String? = null,
     val person: Any? = null,

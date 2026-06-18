@@ -15,8 +15,10 @@ import com.tkolymp.shared.notification.FilterType
 import com.tkolymp.shared.notification.NotificationRule
 import com.tkolymp.shared.notification.NotificationSettings
 import com.tkolymp.shared.notification.ReceivedMessage
+import androidx.compose.runtime.Immutable
 import com.tkolymp.shared.language.AppStrings
 
+@Immutable
 data class NotificationsSettingsState(
     val enabledCategories: Set<String> = emptySet(),
     val settings: NotificationSettings? = null,

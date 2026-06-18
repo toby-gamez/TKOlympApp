@@ -12,8 +12,10 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import com.tkolymp.shared.people.Person
 import com.tkolymp.shared.json.AppJson
+import androidx.compose.runtime.Immutable
 import com.tkolymp.shared.language.AppStrings
 
+@Immutable
 data class PeopleState(
     val people: List<Person> = emptyList(),
     val filteredPeople: List<Person> = emptyList(),
@@ -30,7 +32,8 @@ class PeopleViewModel(
     private val _state = MutableStateFlow(PeopleState())
     val state: StateFlow<PeopleState> = _state.asStateFlow()
 
-    suspend fun loadPeople() {
+    suspend fun loadPeople(forceRefresh: Boolean = false) {
+        if (_state.value.people.isNotEmpty() && !forceRefresh) return
         _state.value = _state.value.copy(isLoading = true, error = null)
         try {
             // preserve existing people if fetch fails or returns empty while offline

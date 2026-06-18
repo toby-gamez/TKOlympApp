@@ -30,8 +30,10 @@ import com.tkolymp.shared.utils.describeSchedule
 import kotlinx.serialization.json.jsonObject
 import com.tkolymp.shared.json.AppJson
 import com.tkolymp.shared.event.EventType
+import androidx.compose.runtime.Immutable
 import com.tkolymp.shared.event.toEventType
 
+@Immutable
 data class EventState(
     val eventJson: JsonObject? = null,
     // Parsed display fields

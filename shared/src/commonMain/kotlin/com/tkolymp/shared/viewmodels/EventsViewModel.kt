@@ -23,8 +23,10 @@ import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.sync.OfflineKeys
 import com.tkolymp.shared.event.EventType
 import com.tkolymp.shared.event.toEventType
+import androidx.compose.runtime.Immutable
 import com.tkolymp.shared.utils.AppConstants
 
+@Immutable
 data class EventsState(
     val eventsByDay: Map<String, List<EventInstance>> = emptyMap(),
     override val isLoading: Boolean = false,
