@@ -32,6 +32,7 @@ import kotlin.time.Instant
 import com.tkolymp.shared.sync.OfflineKeys
 import com.tkolymp.shared.utils.AppConstants
 import com.tkolymp.shared.event.EventType
+import com.tkolymp.shared.viewmodels.DataResult
 
 enum class CalendarBucket { MINE, ALL, CAMPS }
 
@@ -304,8 +305,8 @@ class OfflineSyncManager(
 
     private suspend fun syncAnnouncements() {
         try {
-            val sticky = announcementService.getAnnouncements(true)
-            val non = announcementService.getAnnouncements(false)
+            val sticky = when (val r = announcementService.getAnnouncements(true)) { is DataResult.Success -> r.data; else -> emptyList() }
+            val non = when (val r = announcementService.getAnnouncements(false)) { is DataResult.Success -> r.data; else -> emptyList() }
             try {
                 offlineDataStorage.save(OfflineKeys.ANN_STICKY, AppJson.encodeToString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), sticky))
             } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save sticky announcements failed: ${ex.message}") }
@@ -445,8 +446,8 @@ class OfflineSyncManager(
         // Announcements
         onProgress("announcements", 0, 1)
         try {
-            val sticky = withRetry { announcementService.getAnnouncements(true) }
-            val non = withRetry { announcementService.getAnnouncements(false) }
+            val sticky = withRetry { announcementService.getAnnouncements(true) }.let { r -> if (r is DataResult.Success) r.data else emptyList() }
+            val non = withRetry { announcementService.getAnnouncements(false) }.let { r -> if (r is DataResult.Success) r.data else emptyList() }
             if (sticky.isNotEmpty()) offlineDataStorage.save(OfflineKeys.ANN_STICKY, AppJson.encodeToString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), sticky))
             if (non.isNotEmpty()) offlineDataStorage.save(OfflineKeys.ANN_NONSTICKY, AppJson.encodeToString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), non))
         } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll announcements failed: ${ex.message}") }

@@ -240,7 +240,10 @@ class OverviewViewModel(
                 if (regs.isEmpty()) inst else inst.copy(event = ev.copy(eventRegistrationsList = regs))
             }
             val announcements = try {
-                val fetched = withContext(Dispatchers.Default) { announcementService.getAnnouncements(false) }
+                val fetched = when (val r = withContext(Dispatchers.Default) { announcementService.getAnnouncements(false) }) {
+                    is DataResult.Success -> r.data
+                    is DataResult.Error -> emptyList()
+                }
                 if (fetched.isNotEmpty()) {
                     fetched.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }.take(3)
                 } else {

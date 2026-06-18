@@ -28,7 +28,10 @@ class NoticeViewModel(
         _state.value = _state.value.copy(isLoading = true, error = null)
         viewModelScope.launch {
             try {
-                var a = try { announcementService.getAnnouncementById(announcementId, forceRefresh) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                var a = when (val r = announcementService.getAnnouncementById(announcementId, forceRefresh)) {
+                    is DataResult.Success -> r.data
+                    is DataResult.Error -> null
+                }
                 var usedOffline = false
                 if (a == null) {
                     try {

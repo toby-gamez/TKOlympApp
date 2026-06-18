@@ -110,46 +110,50 @@ class BoardViewModel : ViewModel() {
                 } catch (e: CancellationException) { throw e } catch (_: Exception) {}
             }
 
-            try {
-                val fetched = withContext(Dispatchers.Default) { announcementService.getAnnouncements(sticky) }
-                    .sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }
-                list = fetched
-                if (sticky) {
-                    _state.value = _state.value.copy(permanentAnnouncements = fetched, isOffline = false, isLoading = false)
-                } else {
-                    val lastSeen = try { badgeStorage.getLastSeenTimestamp() } catch (_: Exception) { null }
-                    val latestTs = fetched.mapNotNull { it.updatedAt ?: it.createdAt }.maxOrNull()
-                    val unread = latestTs != null && (lastSeen == null || latestTs > lastSeen)
-                    _state.value = _state.value.copy(currentAnnouncements = fetched, isOffline = false, isLoading = false, hasUnread = unread)
-                    AnnouncementBadge.set(unread)
+            val dataResult = withContext(Dispatchers.Default) { announcementService.getAnnouncements(sticky) }
+            when (dataResult) {
+                is DataResult.Success -> {
+                    val fetched = dataResult.data.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }
+                    list = fetched
+                    if (sticky) {
+                        _state.value = _state.value.copy(permanentAnnouncements = fetched, isOffline = false, isLoading = false)
+                    } else {
+                        val lastSeen = try { badgeStorage.getLastSeenTimestamp() } catch (_: Exception) { null }
+                        val latestTs = fetched.mapNotNull { it.updatedAt ?: it.createdAt }.maxOrNull()
+                        val unread = latestTs != null && (lastSeen == null || latestTs > lastSeen)
+                        _state.value = _state.value.copy(currentAnnouncements = fetched, isOffline = false, isLoading = false, hasUnread = unread)
+                        AnnouncementBadge.set(unread)
+                    }
+                    Logger.d("BoardViewModel", "fetched online announcements for sticky=$sticky count=${fetched.size}")
                 }
-                Logger.d("BoardViewModel", "fetched online announcements for sticky=$sticky count=${fetched.size}")
-            } catch (e: CancellationException) { throw e } catch (netEx: Exception) {
-                if (list != null && list.isNotEmpty()) {
-                    _state.value = _state.value.copy(isOffline = true, isLoading = false)
-                } else {
-                    try {
-                        val raw = ServiceLocator.offlineSyncManager.loadAnnouncements(sticky)
-                        if (raw != null) {
-                            val parsed = AppJson.decodeFromString(ListSerializer(Announcement.serializer()), raw)
-                            val parsedSorted = parsed.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }
-                            if (sticky) {
-                                _state.value = _state.value.copy(permanentAnnouncements = parsedSorted, isOffline = true, isLoading = false)
+                is DataResult.Error -> {
+                    val errorMsg = dataResult.error.message
+                    if (list != null && list.isNotEmpty()) {
+                        _state.value = _state.value.copy(isOffline = true, isLoading = false)
+                    } else {
+                        try {
+                            val raw = ServiceLocator.offlineSyncManager.loadAnnouncements(sticky)
+                            if (raw != null) {
+                                val parsed = AppJson.decodeFromString(ListSerializer(Announcement.serializer()), raw)
+                                val parsedSorted = parsed.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }
+                                if (sticky) {
+                                    _state.value = _state.value.copy(permanentAnnouncements = parsedSorted, isOffline = true, isLoading = false)
+                                } else {
+                                    val lastSeen = try { badgeStorage.getLastSeenTimestamp() } catch (_: Exception) { null }
+                                    val latestTs = parsedSorted.mapNotNull { it.updatedAt ?: it.createdAt }.maxOrNull()
+                                    val unread = latestTs != null && (lastSeen == null || latestTs > lastSeen)
+                                    _state.value = _state.value.copy(currentAnnouncements = parsedSorted, isOffline = true, isLoading = false, hasUnread = unread)
+                                    AnnouncementBadge.set(unread)
+                                }
+                                Logger.d("BoardViewModel", "fallback offline announcements for sticky=$sticky count=${parsedSorted.size}")
                             } else {
-                                val lastSeen = try { badgeStorage.getLastSeenTimestamp() } catch (_: Exception) { null }
-                                val latestTs = parsedSorted.mapNotNull { it.updatedAt ?: it.createdAt }.maxOrNull()
-                                val unread = latestTs != null && (lastSeen == null || latestTs > lastSeen)
-                                _state.value = _state.value.copy(currentAnnouncements = parsedSorted, isOffline = true, isLoading = false, hasUnread = unread)
-                                AnnouncementBadge.set(unread)
+                                if (sticky) _state.value = _state.value.copy(permanentAnnouncements = previousPermanent, isLoading = false, error = AppError.generic(errorMsg))
+                                else _state.value = _state.value.copy(currentAnnouncements = previousCurrent, isLoading = false, error = AppError.generic(errorMsg))
                             }
-                            Logger.d("BoardViewModel", "fallback offline announcements for sticky=$sticky count=${parsedSorted.size}")
-                        } else {
-                            if (sticky) _state.value = _state.value.copy(permanentAnnouncements = previousPermanent, isLoading = false, error = AppError.generic(netEx.message ?: AppStrings.current.errorMessages.errorLoading))
-                            else _state.value = _state.value.copy(currentAnnouncements = previousCurrent, isLoading = false, error = AppError.generic(netEx.message ?: AppStrings.current.errorMessages.errorLoading))
+                        } catch (_: Exception) {
+                            if (sticky) _state.value = _state.value.copy(permanentAnnouncements = previousPermanent, isLoading = false, error = AppError.generic(errorMsg))
+                            else _state.value = _state.value.copy(currentAnnouncements = previousCurrent, isLoading = false, error = AppError.generic(errorMsg))
                         }
-                    } catch (_: Exception) {
-                        if (sticky) _state.value = _state.value.copy(permanentAnnouncements = previousPermanent, isLoading = false, error = AppError.generic(netEx.message ?: AppStrings.current.errorMessages.errorLoading))
-                        else _state.value = _state.value.copy(currentAnnouncements = previousCurrent, isLoading = false, error = AppError.generic(netEx.message ?: AppStrings.current.errorMessages.errorLoading))
                     }
                 }
             }

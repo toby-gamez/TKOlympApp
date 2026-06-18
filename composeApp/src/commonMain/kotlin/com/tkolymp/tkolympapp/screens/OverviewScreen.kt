@@ -74,6 +74,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import com.tkolymp.shared.calendar.WeekPersona
 import com.tkolymp.shared.calendar.WeekVibesData
@@ -654,7 +655,8 @@ private fun computeOverviewWeekVibes(
     todayString: String
 ): WeekVibesData? {
     val today = try { LocalDate.parse(todayString) } catch (_: Exception) { return null }
-    val visibleDates = (0..6).map { today.plus(it, DateTimeUnit.DAY).toString() }
+    val monday = today.minus(today.dayOfWeek.ordinal, DateTimeUnit.DAY)
+    val visibleDates = (0..6).map { monday.plus(it, DateTimeUnit.DAY).toString() }
     val weekEvents = events.filter { inst ->
         val ds = (inst.since ?: inst.until ?: "").substringBefore('T')
         ds in visibleDates

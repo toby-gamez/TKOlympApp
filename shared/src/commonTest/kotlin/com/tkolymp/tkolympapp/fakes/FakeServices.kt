@@ -11,6 +11,8 @@ import com.tkolymp.shared.network.IGraphQlClient
 import com.tkolymp.shared.network.NetworkMonitor
 import com.tkolymp.shared.notification.INotificationScheduler
 import com.tkolymp.shared.systemcalendar.ISystemCalendarService
+import com.tkolymp.shared.viewmodels.AppError
+import com.tkolymp.shared.viewmodels.DataResult
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -57,11 +59,11 @@ class FakeAnnouncementService(
     private val announcements: List<Announcement> = emptyList(),
     private val throwOnFetch: Boolean = false
 ) : IAnnouncementService {
-    override suspend fun getAnnouncements(sticky: Boolean): List<Announcement> {
-        if (throwOnFetch) throw RuntimeException("Network error")
-        return announcements
+    override suspend fun getAnnouncements(sticky: Boolean): DataResult<List<Announcement>> {
+        if (throwOnFetch) return DataResult.Error(AppError.generic("Network error"))
+        return DataResult.Success(announcements)
     }
-    override suspend fun getAnnouncementById(id: Long, forceRefresh: Boolean): Announcement? = null
+    override suspend fun getAnnouncementById(id: Long, forceRefresh: Boolean): DataResult<Announcement> = DataResult.Error(AppError.notFound("Not found"))
 }
 
 class FakeCompetitionService(

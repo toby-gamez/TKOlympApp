@@ -14,10 +14,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.tkolymp.shared.language.AppStrings
 
 @Composable
 actual fun IntegrityBlockedScreen() {
     val activity = LocalContext.current as? android.app.Activity
+    val strings = AppStrings.current.misc
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -29,12 +31,12 @@ actual fun IntegrityBlockedScreen() {
             modifier = Modifier.padding(32.dp)
         ) {
             Text(
-                text = "Chyba integrity aplikace",
+                text = strings.integrityError,
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onErrorContainer
             )
             Text(
-                text = "Tato kopie aplikace nebyla vydána oficiálním vývojářem. Stáhněte si originální verzi z Google Play.",
+                text = strings.integrityDescription,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onErrorContainer,
                 modifier = Modifier.padding(top = 16.dp)
@@ -44,7 +46,7 @@ actual fun IntegrityBlockedScreen() {
                 modifier = Modifier.padding(top = 24.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
             ) {
-                Text("Zavřít aplikaci")
+                Text(strings.closeApp)
             }
         }
     }
