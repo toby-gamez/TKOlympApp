@@ -29,15 +29,6 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
     private val mutex = Mutex()
     private var lastApiError: String? = null
 
-    private fun checkAndSetErrors(resp: JsonElement) {
-        try {
-            val errors = resp.jsonObject["errors"]
-            lastApiError = errors?.toString()
-        } catch (e: CancellationException) { throw e } catch (e: Exception) {
-            lastApiError = null
-        }
-    }
-
     suspend fun initializeAfterLogin(versionId: String = "") {
         mutex.withLock {
             fetchAndStorePersonId()
@@ -49,7 +40,6 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
     suspend fun fetchAndStorePersonId(): String? {
         val query = "query MyQuery { userProxiesList { person { id } } }"
         val resp = try { client.post(query, null) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return null }
-        checkAndSetErrors(resp)
         val personId = try {
             val arr = resp.jsonObject["data"]?.jsonObject?.get("userProxiesList")?.jsonArray
             arr?.firstOrNull()?.jsonObject?.get("person")?.jsonObject?.get("id")?.jsonPrimitive?.contentOrNull
@@ -63,7 +53,6 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
         val query = "query MyQuery(\$versionId: String!) { getCurrentUser(versionId: \$versionId) { uEmail uJmeno uLogin createdAt id lastActiveAt lastLogin tenantId uPrijmeni updatedAt } }"
         val variables = buildJsonObject { put("versionId", JsonPrimitive(versionId)) }
         val resp = try { client.post(query, variables) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return null }
-        checkAndSetErrors(resp)
         val data = resp.jsonObject["data"]?.jsonObject?.get("getCurrentUser")?.jsonObject
         if (data != null) storage.saveCurrentUserJson(data.toString())
         return data
@@ -72,7 +61,6 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
     suspend fun fetchAndStoreActiveCouples(): List<String> {
         val query = "query kveri { users { nodes { userProxiesList { person { activeCouplesList { id man { firstName lastName } woman { firstName lastName } } cohortMembershipsList { cohort { id colorRgb name } } } } } } }"
         val resp = try { client.post(query, null) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return emptyList() }
-        checkAndSetErrors(resp)
         val ids = mutableListOf<String>()
         try {
             val users = resp.jsonObject["data"]?.jsonObject?.get("users")?.jsonObject?.get("nodes")?.jsonArray
@@ -104,13 +92,11 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
             query = "query MyQuery(\$id: BigInt!) { $baseSelection }"
             variables = buildJsonObject { put("id", JsonPrimitive(idLong)) }
             resp = try { client.post(query, variables) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return null }
-            checkAndSetErrors(resp)
         } else {
             // fallback to string variable if id is not numeric
             query = "query MyQuery(\$id: String!) { $baseSelection }"
             variables = buildJsonObject { put("id", JsonPrimitive(personId)) }
             resp = try { client.post(query, variables) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return null }
-            checkAndSetErrors(resp)
         }
 
         val data = resp.jsonObject["data"]?.jsonObject?.get("person")?.jsonObject
@@ -196,9 +182,6 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
         val esc = newPass.replace("\\", "\\\\").replace("\"", "\\\"")
         val query = "mutation { changePassword(input: {newPass: \"$esc\"}) { clientMutationId } }"
         val resp = try { client.post(query, null) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return false }
-        checkAndSetErrors(resp)
-        val errors = try { resp.jsonObject["errors"] } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
-        if (errors != null) return false
         val data = try { resp.jsonObject["data"]?.jsonObject?.get("changePassword") } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
         return data != null
     }
@@ -269,9 +252,6 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
         Logger.d("UserService", "UpdatePerson variables: $variables")
 
         val resp = try { client.post(query, variables) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return false }
-        checkAndSetErrors(resp)
-        val errors = try { resp.jsonObject["errors"] } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
-        if (errors != null) return false
         val data = try { resp.jsonObject["data"]?.jsonObject?.get("updatePerson") } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
         if (data != null) {
             // refresh cached person details so UI reads the updated data

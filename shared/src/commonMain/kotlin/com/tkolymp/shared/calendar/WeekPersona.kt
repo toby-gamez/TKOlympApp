@@ -52,7 +52,7 @@ fun computeWeekVibes(
     val uniqueTrainers = lessonsByTrainerByDay.values
         .flatMap { day -> day.keys }
         .filter { it.isNotBlank() }
-        .toSortedSet()
+        .toSet()
 
     val eventTypes = mutableSetOf<String>()
     for ((_, lessons) in lessonsByTrainerByDay) {

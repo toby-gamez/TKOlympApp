@@ -430,7 +430,7 @@ class OverviewViewModel(
             val currentWeekMinutes = thisWeekEvents.sumOf { inst -> overviewDurationMin(inst.since, inst.until) }
 
             val paymentDaysUntilDue: Int? = try {
-                val debtors = withContext(Dispatchers.IO) { paymentService.fetchDebtorsForPerson(pid) }
+                val debtors = withContext(Dispatchers.Default) { paymentService.fetchDebtorsForPerson(pid) }
                 val soonestDueAt = debtors
                     .filter { it.isUnpaid == true }
                     .mapNotNull { it.payment?.dueAt?.takeIf { s -> s.isNotBlank() } }

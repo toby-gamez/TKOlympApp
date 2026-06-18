@@ -54,50 +54,13 @@ class EventsViewModel(
             // Use a broad fixed range (multiplatform-safe) to fetch upcoming camps
             val startIso = DateRangeConstants.FAR_PAST
             val endIso = DateRangeConstants.FAR_FUTURE
-            val map = try { withContext(Dispatchers.IO) { eventService.fetchEventsGroupedByDay(startIso, endIso, false, AppConstants.FETCH_LIMIT_PERIOD, 0, "CAMP", cacheNamespace = "camps_") } } catch (e: CancellationException) { throw e } catch (ex: Exception) { emptyMap<String, List<EventInstance>>() }
+            val map = try { withContext(Dispatchers.Default) { eventService.fetchEventsGroupedByDay(startIso, endIso, false, AppConstants.FETCH_LIMIT_PERIOD, 0, "CAMP", cacheNamespace = "camps_") } } catch (e: CancellationException) { throw e } catch (ex: Exception) { emptyMap<String, List<EventInstance>>() }
             val filtered = map.mapValues { entry -> entry.value.filter { it.event?.isVisible != false } }.filterValues { it.isNotEmpty() }
 
             if (filtered.isNotEmpty()) {
                 _state.value = _state.value.copy(eventsByDay = filtered, isLoading = false)
             } else {
-                // Try offline fallback when server returns no data
-                val offlineGrouped = try {
-                    // Only read cached calendar data for CAMPS to avoid duplicates across buckets
-                    val keys = ServiceLocator.offlineDataStorage.allKeys().filter { it.startsWith(OfflineKeys.CAL_PREFIX + "CAMPS_") }
-                    val parsed = mutableListOf<EventInstance>()
-                    for (k in keys) {
-                        try {
-                            val raw = ServiceLocator.offlineDataStorage.load(k) ?: continue
-                            val json = AppJson.parseToJsonElement(raw).jsonObject
-                            json.entries.forEach { (_, elem) ->
-                                val arr = elem.jsonArray
-                                arr.forEach { item ->
-                                    val obj = item.jsonObject
-                                    val eventType = obj["eventType"]?.jsonPrimitive?.contentOrNull
-                                    if (eventType == null || eventType.toEventType() != EventType.CAMP) return@forEach
-                                    val id = obj["id"]?.jsonPrimitive?.longOrNull ?: obj["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull() ?: 0L
-                                    val isCancelled = obj["isCancelled"]?.jsonPrimitive?.booleanOrNull ?: false
-                                    val since = obj["since"]?.jsonPrimitive?.contentOrNull
-                                    val until = obj["until"]?.jsonPrimitive?.contentOrNull
-                                    val eventId = obj["eventId"]?.jsonPrimitive?.longOrNull
-                                    val eventName = obj["eventName"]?.jsonPrimitive?.contentOrNull
-                                    val locationText = obj["locationText"]?.jsonPrimitive?.contentOrNull
-                                    val ev = com.tkolymp.shared.event.Event(eventId, eventName, null, eventType, locationText, false, false, false, emptyList(), emptyList(), emptyList(), null)
-                                    // validate date key and skip invalid entries
-                                    val updatedAt = obj["updatedAt"]?.jsonPrimitive?.contentOrNull
-                                    val inst = com.tkolymp.shared.event.EventInstance(id, isCancelled, since, until, updatedAt, ev)
-                                    val dateKey = inst.since?.substringBefore('T') ?: inst.updatedAt?.substringBefore('T') ?: inst.until?.substringBefore('T')
-                                    if (dateKey.isNullOrBlank()) return@forEach
-                                    try { kotlinx.datetime.LocalDate.parse(dateKey); parsed += inst } catch (_: Exception) {}
-                                }
-                            }
-                        } catch (_: Exception) {}
-                    }
-                    // Deduplicate instances (same event id + since + until) before grouping to avoid repeats
-                    val unique = parsed.distinctBy { Triple(it.event?.id, it.since, it.until) }
-                    unique.groupBy { inst -> inst.since?.substringBefore('T') ?: inst.updatedAt?.substringBefore('T') ?: inst.until?.substringBefore('T') ?: "" }.filterValues { it.isNotEmpty() }
-                } catch (_: Exception) { emptyMap() }
-
+                val offlineGrouped = try { loadOfflineCamps() } catch (_: Exception) { emptyMap() }
                 if (offlineGrouped.isNotEmpty()) {
                     _state.value = _state.value.copy(eventsByDay = offlineGrouped, isLoading = false)
                 } else {
@@ -105,38 +68,8 @@ class EventsViewModel(
                 }
             }
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            // Try offline fallback: scan offline calendar data saved by OfflineSyncManager
             try {
-                // Only read cached calendar data for CAMPS to avoid duplicates across buckets
-                val keys = ServiceLocator.offlineDataStorage.allKeys().filter { it.startsWith(OfflineKeys.CAL_PREFIX + "CAMPS_") }
-                val parsed = mutableListOf<EventInstance>()
-                for (k in keys) {
-                    try {
-                        val raw = ServiceLocator.offlineDataStorage.load(k) ?: continue
-                        val json = AppJson.parseToJsonElement(raw).jsonObject
-                        json.entries.forEach { (_, elem) ->
-                            val arr = elem.jsonArray
-                            arr.forEach { item ->
-                                val obj = item.jsonObject
-                                val eventType = obj["eventType"]?.jsonPrimitive?.contentOrNull
-                                if (eventType == null || eventType.toEventType() != EventType.CAMP) return@forEach
-                                // reuse CalendarViewViewModel parser would be nicer; construct minimal EventInstance
-                                val id = obj["id"]?.jsonPrimitive?.longOrNull ?: obj["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull() ?: 0L
-                                val isCancelled = obj["isCancelled"]?.jsonPrimitive?.booleanOrNull ?: false
-                                val since = obj["since"]?.jsonPrimitive?.contentOrNull
-                                val until = obj["until"]?.jsonPrimitive?.contentOrNull
-                                val eventId = obj["eventId"]?.jsonPrimitive?.longOrNull
-                                val eventName = obj["eventName"]?.jsonPrimitive?.contentOrNull
-                                val locationText = obj["locationText"]?.jsonPrimitive?.contentOrNull
-                                val ev = com.tkolymp.shared.event.Event(eventId, eventName, null, eventType, locationText, false, false, false, emptyList(), emptyList(), emptyList(), null)
-                                parsed += com.tkolymp.shared.event.EventInstance(id, isCancelled, since, until, obj["updatedAt"]?.jsonPrimitive?.contentOrNull, ev)
-                            }
-                        }
-                    } catch (_: Exception) {}
-                }
-                // Deduplicate instances (same event id + since + until) before grouping to avoid repeats
-                val uniqueParsed = parsed.distinctBy { Triple(it.event?.id, it.since, it.until) }
-                val grouped = uniqueParsed.groupBy { inst -> inst.since?.substringBefore('T') ?: inst.updatedAt?.substringBefore('T') ?: "" }.filterValues { it.isNotEmpty() }
+                val grouped = loadOfflineCamps()
                 if (grouped.isNotEmpty()) {
                     _state.value = _state.value.copy(eventsByDay = grouped, isLoading = false)
                 } else {
@@ -146,6 +79,45 @@ class EventsViewModel(
                 _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingEvents))
             }
         }
+    }
+
+    private suspend fun loadOfflineCamps(): Map<String, List<EventInstance>> {
+        val keys = ServiceLocator.offlineDataStorage.allKeys()
+            .filter { it.startsWith(OfflineKeys.CAL_PREFIX + "CAMPS_") }
+        val parsed = mutableListOf<EventInstance>()
+        for (k in keys) {
+            try {
+                val raw = ServiceLocator.offlineDataStorage.load(k) ?: continue
+                val json = AppJson.parseToJsonElement(raw).jsonObject
+                json.entries.forEach { (_, elem) ->
+                    val arr = elem.jsonArray
+                    arr.forEach { item ->
+                        val obj = item.jsonObject
+                        val eventType = obj["eventType"]?.jsonPrimitive?.contentOrNull
+                        if (eventType == null || eventType.toEventType() != EventType.CAMP) return@forEach
+                        val id = obj["id"]?.jsonPrimitive?.longOrNull ?: obj["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull() ?: 0L
+                        val isCancelled = obj["isCancelled"]?.jsonPrimitive?.booleanOrNull ?: false
+                        val since = obj["since"]?.jsonPrimitive?.contentOrNull
+                        val until = obj["until"]?.jsonPrimitive?.contentOrNull
+                        val eventId = obj["eventId"]?.jsonPrimitive?.longOrNull
+                        val eventName = obj["eventName"]?.jsonPrimitive?.contentOrNull
+                        val locationText = obj["locationText"]?.jsonPrimitive?.contentOrNull
+                        val updatedAt = obj["updatedAt"]?.jsonPrimitive?.contentOrNull
+                        val ev = com.tkolymp.shared.event.Event(eventId, eventName, null, eventType, locationText, false, false, false, emptyList(), emptyList(), emptyList(), null)
+                        val inst = com.tkolymp.shared.event.EventInstance(id, isCancelled, since, until, updatedAt, ev)
+                        val dateKey = inst.since?.substringBefore('T') ?: inst.updatedAt?.substringBefore('T') ?: inst.until?.substringBefore('T')
+                        if (dateKey.isNullOrBlank()) return@forEach
+                        try { kotlinx.datetime.LocalDate.parse(dateKey); parsed += inst } catch (_: Exception) {}
+                    }
+                }
+            } catch (_: Exception) {}
+        }
+        return parsed
+            .distinctBy { Triple(it.event?.id, it.since, it.until) }
+            .groupBy { inst ->
+                inst.since?.substringBefore('T') ?: inst.updatedAt?.substringBefore('T') ?: inst.until?.substringBefore('T') ?: ""
+            }
+            .filterValues { it.isNotEmpty() }
     }
 
     fun clearError() {

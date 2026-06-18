@@ -1,16 +1,9 @@
 package com.tkolymp.shared.notification
 
 import kotlinx.cinterop.ExperimentalForeignApi
-import kotlinx.cinterop.ObjCObjectVar
-import kotlinx.cinterop.alloc
-import kotlinx.cinterop.memScoped
-import kotlinx.cinterop.ptr
-import kotlinx.cinterop.value
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.datetime.Instant
 import platform.Foundation.NSDate
-import platform.Foundation.NSError
-import platform.Foundation.timeIntervalSinceReferenceDate
 import platform.UserNotifications.UNAuthorizationOptionAlert
 import platform.UserNotifications.UNAuthorizationOptionBadge
 import platform.UserNotifications.UNAuthorizationOptionSound
@@ -37,10 +30,10 @@ class NotificationSchedulerIos : INotificationScheduler {
         } catch (_: Exception) { return null }
 
         val triggerEpochMillis = instant.toEpochMilliseconds() - minutesBefore * 60_000L
-        val nowMillis = System.currentTimeMillis()
+        val nowMillis = (NSDate(timeIntervalSinceNow = 0.0).timeIntervalSince1970 * 1000.0).toLong()
         if (triggerEpochMillis <= nowMillis) return null
 
-        val delaySeconds = (triggerEpochMillis - nowMillis) / 1000.0
+        val delaySeconds = (triggerEpochMillis - nowMillis).toDouble() / 1000.0
 
         val content = UNMutableNotificationContent().apply {
             if (title != null) setTitle(title)

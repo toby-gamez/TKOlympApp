@@ -101,7 +101,7 @@ class EventViewModel(
             val isCurrentlyOnline = try { ServiceLocator.networkMonitor.isConnected() } catch (_: Exception) { true }
             Logger.d("EventViewModel", "loadEvent($eventId): online=$isCurrentlyOnline forceRefresh=$forceRefresh")
             val effectiveForceRefresh = forceRefresh && isCurrentlyOnline
-            var ev = try { withContext(Dispatchers.IO) { eventService.fetchEventById(eventId, effectiveForceRefresh) } } catch (e: CancellationException) { throw e } catch (ex: Exception) {
+            var ev = try { withContext(Dispatchers.Default) { eventService.fetchEventById(eventId, effectiveForceRefresh) } } catch (e: CancellationException) { throw e } catch (ex: Exception) {
                 Logger.d("EventViewModel", "fetchEventById($eventId) exception: ${ex.message}"); null }
             Logger.d("EventViewModel", "fetchEventById($eventId) result: ${if (ev == null) "null" else "JsonObject(keys=${ev.keys})"} ")
             var isOfflineUsed = false
@@ -129,7 +129,7 @@ class EventViewModel(
             var myPerson: String? = null
             var myCouples: List<String> = emptyList()
             try {
-                withContext(Dispatchers.IO) {
+                withContext(Dispatchers.Default) {
                     myPerson = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("EventViewModel", "getCachedPersonId failed: ${e.message}"); null }
                     myCouples = try { userService.getCachedCoupleIds() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("EventViewModel", "getCachedCoupleIds failed: ${e.message}"); emptyList() }
                 }
@@ -307,7 +307,7 @@ class EventViewModel(
         }
 
         val success = try {
-            withContext(Dispatchers.IO) {
+            withContext(Dispatchers.Default) {
                 systemCalendarService.addEvent(title, description, location, startMs, endMs, weeklyRepeatCount)
             }
         } catch (e: CancellationException) { throw e } catch (_: Exception) { false }

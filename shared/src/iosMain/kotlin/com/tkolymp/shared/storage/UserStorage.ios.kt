@@ -2,6 +2,7 @@ package com.tkolymp.shared.storage
 
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.alloc
+import kotlinx.cinterop.interpretObjCPointerOrNull
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.value
@@ -10,8 +11,10 @@ import platform.CoreFoundation.CFTypeRefVar
 import platform.CoreFoundation.kCFBooleanTrue
 import platform.Foundation.NSData
 import platform.Foundation.NSMutableDictionary
+import kotlinx.cinterop.ObjCObject
 import platform.Foundation.NSString
 import platform.Foundation.NSUTF8StringEncoding
+import platform.Foundation.create
 import platform.Foundation.dataUsingEncoding
 import platform.Security.SecItemAdd
 import platform.Security.SecItemCopyMatching
@@ -26,44 +29,29 @@ import platform.Security.kSecReturnData
 import platform.Security.kSecValueData
 
 @OptIn(ExperimentalForeignApi::class)
-actual class UserStorage actual constructor(platformContext: Any) {
+actual class UserStorage actual constructor(platformContext: Any) : IUserStorage {
 
     private val service = "com.tkolymp.tkolympapp"
 
-    actual suspend fun savePersonId(personId: String) {
-        keychainSave("person_id", personId)
-    }
+    actual override suspend fun savePersonId(personId: String) = keychainSave("person_id", personId)
+    actual override suspend fun getPersonId(): String? = keychainGet("person_id")
+    actual override suspend fun saveCstsId(cstsId: String) = keychainSave("csts_id", cstsId)
+    actual override suspend fun getCstsId(): String? = keychainGet("csts_id")
 
-    actual suspend fun getPersonId(): String? = keychainGet("person_id")
-
-    actual suspend fun saveCstsId(cstsId: String) {
-        keychainSave("csts_id", cstsId)
-    }
-
-    actual suspend fun getCstsId(): String? = keychainGet("csts_id")
-
-    actual suspend fun saveCoupleIds(coupleIds: List<String>) {
+    actual override suspend fun saveCoupleIds(coupleIds: List<String>) =
         keychainSave("couple_ids", coupleIds.joinToString(","))
-    }
 
-    actual suspend fun getCoupleIds(): List<String> {
+    actual override suspend fun getCoupleIds(): List<String> {
         val raw = keychainGet("couple_ids") ?: return emptyList()
         return if (raw.isEmpty()) emptyList() else raw.split(",")
     }
 
-    actual suspend fun saveCurrentUserJson(json: String) {
-        keychainSave("current_user_json", json)
-    }
+    actual override suspend fun saveCurrentUserJson(json: String) = keychainSave("current_user_json", json)
+    actual override suspend fun getCurrentUserJson(): String? = keychainGet("current_user_json")
+    actual override suspend fun savePersonDetailsJson(json: String) = keychainSave("person_details_json", json)
+    actual override suspend fun getPersonDetailsJson(): String? = keychainGet("person_details_json")
 
-    actual suspend fun getCurrentUserJson(): String? = keychainGet("current_user_json")
-
-    actual suspend fun savePersonDetailsJson(json: String) {
-        keychainSave("person_details_json", json)
-    }
-
-    actual suspend fun getPersonDetailsJson(): String? = keychainGet("person_details_json")
-
-    actual suspend fun clear() {
+    actual override suspend fun clear() {
         listOf("person_id", "csts_id", "couple_ids", "current_user_json", "person_details_json")
             .forEach { keychainDelete(it) }
     }
@@ -72,21 +60,21 @@ actual class UserStorage actual constructor(platformContext: Any) {
         val data = (value as NSString).dataUsingEncoding(NSUTF8StringEncoding) ?: return
         keychainDelete(account)
         val query = NSMutableDictionary().apply {
-            setObject(kSecClassGenericPassword, kSecClass)
-            setObject(service, kSecAttrService)
-            setObject(account, kSecAttrAccount)
-            setObject(data, kSecValueData)
+            cfString(kSecClass)?.let { setObject(cfAny(kSecClassGenericPassword), forKey = it) }
+            cfString(kSecAttrService)?.let { setObject(service, forKey = it) }
+            cfString(kSecAttrAccount)?.let { setObject(account, forKey = it) }
+            cfString(kSecValueData)?.let { setObject(data, forKey = it) }
         }
         SecItemAdd(query as CFDictionaryRef, null)
     }
 
     private fun keychainGet(account: String): String? = memScoped {
         val query = NSMutableDictionary().apply {
-            setObject(kSecClassGenericPassword, kSecClass)
-            setObject(service, kSecAttrService)
-            setObject(account, kSecAttrAccount)
-            setObject(kCFBooleanTrue, kSecReturnData)
-            setObject(kSecMatchLimitOne, kSecMatchLimit)
+            cfString(kSecClass)?.let { setObject(cfAny(kSecClassGenericPassword), forKey = it) }
+            cfString(kSecAttrService)?.let { setObject(service, forKey = it) }
+            cfString(kSecAttrAccount)?.let { setObject(account, forKey = it) }
+            cfString(kSecReturnData)?.let { setObject(cfAny(kCFBooleanTrue), forKey = it) }
+            cfString(kSecMatchLimit)?.let { setObject(cfAny(kSecMatchLimitOne), forKey = it) }
         }
         val result = alloc<CFTypeRefVar>()
         val status = SecItemCopyMatching(query as CFDictionaryRef, result.ptr)
@@ -97,10 +85,18 @@ actual class UserStorage actual constructor(platformContext: Any) {
 
     private fun keychainDelete(account: String) {
         val query = NSMutableDictionary().apply {
-            setObject(kSecClassGenericPassword, kSecClass)
-            setObject(service, kSecAttrService)
-            setObject(account, kSecAttrAccount)
+            cfString(kSecClass)?.let { setObject(cfAny(kSecClassGenericPassword), forKey = it) }
+            cfString(kSecAttrService)?.let { setObject(service, forKey = it) }
+            cfString(kSecAttrAccount)?.let { setObject(account, forKey = it) }
         }
         SecItemDelete(query as CFDictionaryRef)
     }
 }
+
+@OptIn(ExperimentalForeignApi::class)
+private fun cfString(ptr: platform.CoreFoundation.CFStringRef?): NSString? =
+    ptr?.let { interpretObjCPointerOrNull<NSString>(it.rawValue) }
+
+@OptIn(ExperimentalForeignApi::class)
+private fun cfAny(ptr: kotlinx.cinterop.CPointer<*>?): ObjCObject? =
+    ptr?.let { interpretObjCPointerOrNull<ObjCObject>(it.rawValue) }

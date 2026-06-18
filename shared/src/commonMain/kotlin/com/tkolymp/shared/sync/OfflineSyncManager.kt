@@ -49,7 +49,7 @@ class OfflineSyncManager(
 ) {
     
 
-    suspend fun syncAll() = withContext(Dispatchers.IO) {
+    suspend fun syncAll() = withContext(Dispatchers.Default) {
         Logger.d("OfflineSyncManager", "syncAll: starting")
         migrateIfNeeded()
         if (!networkMonitor.isConnected()) {
@@ -395,7 +395,7 @@ class OfflineSyncManager(
         throw lastEx ?: Exception("unknown")
     }
 
-    suspend fun downloadAll(onProgress: (String, Int, Int) -> Unit = { _, _, _ -> }) = withContext(Dispatchers.IO) {
+    suspend fun downloadAll(onProgress: (String, Int, Int) -> Unit = { _, _, _ -> }) = withContext(Dispatchers.Default) {
         migrateIfNeeded()
         if (!networkMonitor.isConnected()) throw Exception("Network unavailable")
         Logger.d("OfflineSyncManager", "downloadAll: starting")

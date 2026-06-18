@@ -1,9 +1,16 @@
 package com.tkolymp.shared.storage
 
+import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.UByteVar
+import kotlinx.cinterop.allocArray
+import kotlinx.cinterop.convert
+import kotlinx.cinterop.memScoped
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import platform.CoreCrypto.CC_SHA256
+import platform.CoreCrypto.CC_SHA256_DIGEST_LENGTH
 import platform.Foundation.NSApplicationSupportDirectory
 import platform.Foundation.NSData
 import platform.Foundation.NSFileManager
@@ -14,14 +21,6 @@ import platform.Foundation.NSUserDomainMask
 import platform.Foundation.create
 import platform.Foundation.dataUsingEncoding
 import platform.Foundation.writeToFile
-import platform.darwin.UInt8
-import kotlinx.cinterop.ExperimentalForeignApi
-import kotlinx.cinterop.allocArray
-import kotlinx.cinterop.convert
-import kotlinx.cinterop.memScoped
-import kotlinx.cinterop.readBytes
-import platform.CoreCrypto.CC_SHA256
-import platform.CoreCrypto.CC_SHA256_DIGEST_LENGTH
 
 @OptIn(ExperimentalForeignApi::class)
 class OfflineDataStorageIos : OfflineDataStorage {
@@ -48,13 +47,17 @@ class OfflineDataStorageIos : OfflineDataStorage {
 
     private fun sha256Hex(input: String): String {
         val data = (input as NSString).dataUsingEncoding(NSUTF8StringEncoding) ?: return input.hashCode().toString()
-        val length = data.length.convert<Int>()
         return memScoped {
-            val digest = allocArray<UInt8>(CC_SHA256_DIGEST_LENGTH)
+            val digest = allocArray<UByteVar>(CC_SHA256_DIGEST_LENGTH)
             CC_SHA256(data.bytes, data.length.convert(), digest)
-            (0 until CC_SHA256_DIGEST_LENGTH).joinToString("") {
-                "%02x".format(digest[it].toInt() and 0xFF)
+            val hexChars = "0123456789abcdef"
+            val sb = StringBuilder(CC_SHA256_DIGEST_LENGTH * 2)
+            for (i in 0 until CC_SHA256_DIGEST_LENGTH) {
+                val b = digest[i].toInt() and 0xFF
+                sb.append(hexChars[(b ushr 4) and 0xF])
+                sb.append(hexChars[b and 0xF])
             }
+            sb.toString()
         }
     }
 
@@ -70,7 +73,8 @@ class OfflineDataStorageIos : OfflineDataStorage {
         val path = indexFile()
         if (!NSFileManager.defaultManager.fileExistsAtPath(path)) return idx
         try {
-            val content = NSString.create(contentsOfFile = path, encoding = NSUTF8StringEncoding)?.toString() ?: return idx
+            val content = NSString.create(contentsOfFile = path, encoding = NSUTF8StringEncoding, error = null)
+                ?.toString() ?: return idx
             content.lines().forEach { line ->
                 val parts = line.split('\t', limit = 2)
                 if (parts.size == 2) idx[parts[0]] = parts[1]
@@ -84,8 +88,7 @@ class OfflineDataStorageIos : OfflineDataStorage {
         val tmpPath = "$path.tmp"
         try {
             val content = map.entries.joinToString("\n") { "${it.key}\t${it.value}" }
-            val nsString = NSString.create(string = content)
-            nsString.writeToFile(tmpPath, atomically = true, encoding = NSUTF8StringEncoding, error = null)
+            (content as NSString).writeToFile(tmpPath, atomically = true, encoding = NSUTF8StringEncoding, error = null)
             NSFileManager.defaultManager.moveItemAtPath(tmpPath, toPath = path, error = null)
         } catch (_: Exception) {}
     }
@@ -117,7 +120,7 @@ class OfflineDataStorageIos : OfflineDataStorage {
             m.withLock {
                 if (!NSFileManager.defaultManager.fileExistsAtPath(path)) return@withContext null
                 try {
-                    NSString.create(contentsOfFile = path, encoding = NSUTF8StringEncoding)?.toString()
+                    NSString.create(contentsOfFile = path, encoding = NSUTF8StringEncoding, error = null)?.toString()
                 } catch (_: Exception) { null }
             }
         }

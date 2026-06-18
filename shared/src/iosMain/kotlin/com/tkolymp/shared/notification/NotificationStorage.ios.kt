@@ -1,8 +1,8 @@
 package com.tkolymp.shared.notification
 
 import kotlinx.cinterop.ExperimentalForeignApi
-import kotlinx.coroutines.CancellationException
 import kotlinx.cinterop.alloc
+import kotlinx.cinterop.interpretObjCPointerOrNull
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.value
@@ -13,8 +13,10 @@ import platform.CoreFoundation.CFTypeRefVar
 import platform.CoreFoundation.kCFBooleanTrue
 import platform.Foundation.NSData
 import platform.Foundation.NSMutableDictionary
+import kotlinx.cinterop.ObjCObject
 import platform.Foundation.NSString
 import platform.Foundation.NSUTF8StringEncoding
+import platform.Foundation.create
 import platform.Foundation.dataUsingEncoding
 import platform.Security.SecItemAdd
 import platform.Security.SecItemCopyMatching
@@ -29,7 +31,7 @@ import platform.Security.kSecReturnData
 import platform.Security.kSecValueData
 
 @OptIn(ExperimentalForeignApi::class)
-actual class NotificationStorage actual constructor(platformContext: Any) {
+actual class NotificationStorage actual constructor(platformContext: Any) : INotificationStorage {
 
     private val service = "com.tkolymp.tkolympapp"
     private val json = Json { ignoreUnknownKeys = true }
@@ -42,46 +44,46 @@ actual class NotificationStorage actual constructor(platformContext: Any) {
         val s = keychainGet(key) ?: return null
         return try {
             json.decodeFromString<T>(s)
-        } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+        } catch (_: Exception) { null }
     }
 
-    actual suspend fun saveSettings(settings: NotificationSettings) = save("notification_settings", settings)
-    actual suspend fun getSettings(): NotificationSettings? = load("notification_settings")
+    actual override suspend fun saveSettings(settings: NotificationSettings) = save("notification_settings", settings)
+    actual override suspend fun getSettings(): NotificationSettings? = load("notification_settings")
 
-    actual suspend fun saveScheduledNotifications(list: List<ScheduledNotification>) = save("scheduled_notifications", list)
-    actual suspend fun getScheduledNotifications(): List<ScheduledNotification> = load("scheduled_notifications") ?: emptyList()
+    actual override suspend fun saveScheduledNotifications(list: List<ScheduledNotification>) = save("scheduled_notifications", list)
+    actual override suspend fun getScheduledNotifications(): List<ScheduledNotification> = load("scheduled_notifications") ?: emptyList()
 
-    actual suspend fun saveReceivedNotifications(list: List<ReceivedMessage>) = save("received_notifications", list)
-    actual suspend fun getReceivedNotifications(): List<ReceivedMessage> = load("received_notifications") ?: emptyList()
+    actual override suspend fun saveReceivedNotifications(list: List<ReceivedMessage>) = save("received_notifications", list)
+    actual override suspend fun getReceivedNotifications(): List<ReceivedMessage> = load("received_notifications") ?: emptyList()
 
-    actual suspend fun saveEventReminders(list: List<EventReminder>) = save("event_reminders", list)
-    actual suspend fun getEventReminders(): List<EventReminder> = load("event_reminders") ?: emptyList()
+    actual override suspend fun saveEventReminders(list: List<EventReminder>) = save("event_reminders", list)
+    actual override suspend fun getEventReminders(): List<EventReminder> = load("event_reminders") ?: emptyList()
 
-    actual suspend fun saveBirthdaySettings(settings: BirthdayNotificationSettings) = save("birthday_notification_settings", settings)
-    actual suspend fun getBirthdaySettings(): BirthdayNotificationSettings? = load("birthday_notification_settings")
+    actual override suspend fun saveBirthdaySettings(settings: BirthdayNotificationSettings) = save("birthday_notification_settings", settings)
+    actual override suspend fun getBirthdaySettings(): BirthdayNotificationSettings? = load("birthday_notification_settings")
 
-    actual suspend fun saveScheduledBirthdayNotificationIds(ids: List<String>) = save("scheduled_birthday_ids", ids)
-    actual suspend fun getScheduledBirthdayNotificationIds(): List<String> = load("scheduled_birthday_ids") ?: emptyList()
+    actual override suspend fun saveScheduledBirthdayNotificationIds(ids: List<String>) = save("scheduled_birthday_ids", ids)
+    actual override suspend fun getScheduledBirthdayNotificationIds(): List<String> = load("scheduled_birthday_ids") ?: emptyList()
 
     private fun keychainSave(account: String, value: String) {
         val data = (value as NSString).dataUsingEncoding(NSUTF8StringEncoding) ?: return
         keychainDelete(account)
         val query = NSMutableDictionary().apply {
-            setObject(kSecClassGenericPassword, kSecClass)
-            setObject(service, kSecAttrService)
-            setObject(account, kSecAttrAccount)
-            setObject(data, kSecValueData)
+            cfString(kSecClass)?.let { setObject(cfAny(kSecClassGenericPassword), forKey = it) }
+            cfString(kSecAttrService)?.let { setObject(service, forKey = it) }
+            cfString(kSecAttrAccount)?.let { setObject(account, forKey = it) }
+            cfString(kSecValueData)?.let { setObject(data, forKey = it) }
         }
         SecItemAdd(query as CFDictionaryRef, null)
     }
 
     private fun keychainGet(account: String): String? = memScoped {
         val query = NSMutableDictionary().apply {
-            setObject(kSecClassGenericPassword, kSecClass)
-            setObject(service, kSecAttrService)
-            setObject(account, kSecAttrAccount)
-            setObject(kCFBooleanTrue, kSecReturnData)
-            setObject(kSecMatchLimitOne, kSecMatchLimit)
+            cfString(kSecClass)?.let { setObject(cfAny(kSecClassGenericPassword), forKey = it) }
+            cfString(kSecAttrService)?.let { setObject(service, forKey = it) }
+            cfString(kSecAttrAccount)?.let { setObject(account, forKey = it) }
+            cfString(kSecReturnData)?.let { setObject(cfAny(kCFBooleanTrue), forKey = it) }
+            cfString(kSecMatchLimit)?.let { setObject(cfAny(kSecMatchLimitOne), forKey = it) }
         }
         val result = alloc<CFTypeRefVar>()
         val status = SecItemCopyMatching(query as CFDictionaryRef, result.ptr)
@@ -92,10 +94,18 @@ actual class NotificationStorage actual constructor(platformContext: Any) {
 
     private fun keychainDelete(account: String) {
         val query = NSMutableDictionary().apply {
-            setObject(kSecClassGenericPassword, kSecClass)
-            setObject(service, kSecAttrService)
-            setObject(account, kSecAttrAccount)
+            cfString(kSecClass)?.let { setObject(cfAny(kSecClassGenericPassword), forKey = it) }
+            cfString(kSecAttrService)?.let { setObject(service, forKey = it) }
+            cfString(kSecAttrAccount)?.let { setObject(account, forKey = it) }
         }
         SecItemDelete(query as CFDictionaryRef)
     }
 }
+
+@OptIn(ExperimentalForeignApi::class)
+private fun cfString(ptr: platform.CoreFoundation.CFStringRef?): NSString? =
+    ptr?.let { interpretObjCPointerOrNull<NSString>(it.rawValue) }
+
+@OptIn(ExperimentalForeignApi::class)
+private fun cfAny(ptr: kotlinx.cinterop.CPointer<*>?): ObjCObject? =
+    ptr?.let { interpretObjCPointerOrNull<ObjCObject>(it.rawValue) }

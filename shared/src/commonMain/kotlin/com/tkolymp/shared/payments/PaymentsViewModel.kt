@@ -32,10 +32,10 @@ class PaymentsViewModel : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val pid = withContext(Dispatchers.IO) { com.tkolymp.shared.ServiceLocator.userService.getCachedPersonId() }
+                val pid = withContext(Dispatchers.Default) { com.tkolymp.shared.ServiceLocator.userService.getCachedPersonId() }
 
                 val list = try {
-                    withContext(Dispatchers.IO) { com.tkolymp.shared.ServiceLocator.paymentService.fetchDebtorsForPerson(pid) }
+                    withContext(Dispatchers.Default) { com.tkolymp.shared.ServiceLocator.paymentService.fetchDebtorsForPerson(pid) }
                 } catch (_: Exception) {
                     emptyList<com.tkolymp.shared.payments.PaymentDebtorItem>()
                 }
@@ -44,7 +44,7 @@ class PaymentsViewModel : ViewModel() {
                     _items.value = list.sortedByDescending { it.payment?.dueAt }
                 } else {
                     // fallback: try offline cache (per-person then global)
-                    val offlineJson = withContext(Dispatchers.IO) {
+                    val offlineJson = withContext(Dispatchers.Default) {
                         val storage = com.tkolymp.shared.ServiceLocator.offlineDataStorage
                         if (!pid.isNullOrBlank()) {
                             try { storage.load(OfflineKeys.paymentsForPerson(pid)) } catch (_: Exception) { null }
