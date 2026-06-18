@@ -74,7 +74,7 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
         viewModel.loadLeaderboard()
 ;        // try to load current person id for highlighting
         try {
-            currentPersonId.value = withContext(Dispatchers.IO) { com.tkolymp.shared.ServiceLocator.userService.getCachedPersonId() }
+            currentPersonId.value = withContext(Dispatchers.Default) { com.tkolymp.shared.ServiceLocator.userService.getCachedPersonId() }
         } catch (e: CancellationException) { throw e } catch (_: Exception) { /* ignore */ }
         // Use people loaded by ViewModel (it already includes offline fallback)
         peopleById.value = viewModel.state.value.peopleById
@@ -195,7 +195,7 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                                                     }
                                                     Column(modifier = Modifier.wrapContentWidth(align = ComposeAlignment.End), horizontalAlignment = ComposeAlignment.End) {
                                                         val total = item.totalScore
-                                                        val totalText = total?.let { if (it % 1.0 == 0.0) it.toInt().toString() else String.format("%.1f", it) } ?: "-"
+                                                        val totalText = total?.let { if (it % 1.0 == 0.0) it.toInt().toString() else formatScore(it) } ?: "-"
                                                         Text(text = totalText, style = MaterialTheme.typography.titleMedium)
                                                     }
                                                 }
@@ -208,7 +208,7 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                                     val rank = entry.ranking ?: (state.rankings.indexOf(entry) + 1)
                                     val isTop = rank in 1..3
                                     val name = listOfNotNull(entry.personFirstName, entry.personLastName).joinToString(" ")
-                                    val totalText = entry.totalScore?.let { if (it % 1.0 == 0.0) it.toInt().toString() else String.format("%.1f", it) } ?: "-"
+                                    val totalText = entry.totalScore?.let { if (it % 1.0 == 0.0) it.toInt().toString() else formatScore(it) } ?: "-"
                                     Card(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -246,4 +246,8 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
     }
 }
 
-private fun formatScore(v: Double): String = if (v % 1.0 == 0.0) v.toInt().toString() else String.format("%.1f", v)
+private fun formatScore(v: Double): String {
+    if (v % 1.0 == 0.0) return v.toInt().toString()
+    val scaled = kotlin.math.round(v * 10).toLong()
+    return "${scaled / 10}.${kotlin.math.abs(scaled % 10)}"
+}

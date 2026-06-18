@@ -26,6 +26,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import com.tkolymp.tkolympapp.screens.RegistrationRoute
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -42,13 +43,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.savedstate.read
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.appearance.AppearanceSettings
 import com.tkolymp.shared.appearance.ThemeMode
 import com.tkolymp.shared.language.AppLanguage
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.language.getDeviceLanguageCode
-import com.tkolymp.shared.registration.RegMode
 import com.tkolymp.shared.viewmodels.OnboardingViewModel
 import com.tkolymp.tkolympapp.platform.getAppVersion
 import com.tkolymp.tkolympapp.screens.AboutScreen
@@ -77,7 +78,6 @@ import com.tkolymp.tkolympapp.screens.PersonalEventEditScreen
 import com.tkolymp.tkolympapp.screens.PersonalEventsScreen
 import com.tkolymp.tkolympapp.screens.PrivacyPolicyScreen
 import com.tkolymp.tkolympapp.screens.ProfileScreen
-import com.tkolymp.tkolympapp.screens.RegistrationScreen
 import com.tkolymp.tkolympapp.screens.RoleSelectionScreen
 import com.tkolymp.tkolympapp.screens.SettingsScreen
 import com.tkolymp.tkolympapp.screens.StatsScreen
@@ -87,15 +87,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.booleanOrNull
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonObject
-import ui.theme.AppTheme
+import com.tkolymp.tkolympapp.ui.theme.AppTheme
 
 /**
  * Common app shell: theme, language, navigation, state management.
@@ -449,7 +441,7 @@ fun AppNavHost(
             popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
             popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) }
         ) { backStackEntry ->
-            val eventId = backStackEntry.arguments?.getString("eventId")
+            val eventId = backStackEntry.arguments?.read { getString("eventId") }
             PersonalEventEditScreen(eventId = eventId?.ifEmpty { null }, onSaved = { navController.navigateUp() }, onBack = { navController.navigateUp() }, bottomPadding = bottomPadding)
         }
 
@@ -611,7 +603,7 @@ fun AppNavHost(
             popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) },
             popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) }
         ) { backStackEntry ->
-            val personId = backStackEntry.arguments?.getString("personId")
+            val personId = backStackEntry.arguments?.read { getString("personId") }
             personId?.let { pid ->
                 PersonScreen(
                     personId = pid,
@@ -648,8 +640,8 @@ fun AppNavHost(
             popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) },
             popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) }
         ) { backStackEntry ->
-            val eventId = backStackEntry.arguments?.getLong("eventId")
-            val instanceId = backStackEntry.arguments?.getLong("instanceId")?.takeIf { it != -1L }
+            val eventId = backStackEntry.arguments?.read { getLong("eventId") }
+            val instanceId = backStackEntry.arguments?.read { getLong("instanceId") }?.takeIf { it != -1L }
             eventId?.let { eid ->
                 EventScreen(
                     eventId = eid,
@@ -671,135 +663,13 @@ fun AppNavHost(
             popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
             popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) }
         ) { backStackEntry ->
-            val eventId = backStackEntry.arguments?.getLong("eventId")
-            val modeStr = backStackEntry.arguments?.getString("mode")
-            val coroutineScope = rememberCoroutineScope()
-            var loading by remember { mutableStateOf(true) }
-            var error by remember { mutableStateOf<String?>(null) }
-            var evJson by remember { mutableStateOf<JsonObject?>(null) }
-
-            LaunchedEffect(eventId) {
-                loading = true
-                try {
-                    if (eventId == null) {
-                        error = "Missing event id"
-                    } else {
-                        val svc = ServiceLocator.eventService
-                        evJson = withContext(Dispatchers.Default) { svc.fetchEventById(eventId) }
-                    }
-                } catch (ex: Exception) {
-                    error = ex.message
-                } finally {
-                    loading = false
-                }
-            }
-
-            if (loading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-            } else if (error != null) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(error ?: "Chyba") }
-            } else {
-                evJson?.let { ev ->
-                    val trainers = (ev["eventTrainersList"] as? JsonArray) ?: JsonArray(emptyList())
-                    val registrations = (ev["eventRegistrationsList"] as? JsonArray) ?: JsonArray(emptyList())
-
-                    val myPersonIdState = remember { mutableStateOf<String?>(null) }
-                    val myCoupleIdsState = remember { mutableStateOf<List<String>>(emptyList()) }
-
-                    LaunchedEffect(Unit) {
-                        try {
-                            val pid = withContext(Dispatchers.Default) { ServiceLocator.userService.getCachedPersonId() }
-                            myPersonIdState.value = pid
-                        } catch (_: Exception) {}
-                        try {
-                            val cids = withContext(Dispatchers.Default) { ServiceLocator.userService.getCachedCoupleIds() }
-                            myCoupleIdsState.value = cids
-                        } catch (_: Exception) {}
-                    }
-
-                    val mode = when (modeStr) {
-                        "register" -> RegMode.Register
-                        "edit" -> RegMode.Edit
-                        "delete" -> RegMode.Delete
-                        else -> RegMode.Register
-                    }
-
-                    val regResultMessage = remember { mutableStateOf<String?>(null) }
-
-                    Column {
-                        val safeEventId = eventId ?: 0L
-                        RegistrationScreen(
-                            eventId = safeEventId,
-                            mode = mode,
-                            trainers = trainers,
-                            registrations = registrations,
-                            myPersonId = myPersonIdState.value,
-                            myCoupleIds = myCoupleIdsState.value,
-                            enableNotes = (ev["enableNotes"] as? kotlinx.serialization.json.JsonPrimitive)?.booleanOrNull ?: false,
-                            eventType = (ev["type"] as? kotlinx.serialization.json.JsonPrimitive)?.contentOrNull,
-                            onClose = { navController.navigateUp() },
-                            onRegister = { regs ->
-                                val regsJson = regs.map { r ->
-                                    buildJsonObject {
-                                        put("eventId", JsonPrimitive(eventId))
-                                        if (r.personId != null) put("personId", JsonPrimitive(r.personId))
-                                        if (r.coupleId != null) put("coupleId", JsonPrimitive(r.coupleId))
-                                        put("lessons", JsonArray(r.lessons.map { l -> buildJsonObject { put("trainerId", JsonPrimitive(l.trainerId)); put("lessonCount", JsonPrimitive(l.lessonCount)) } }))
-                                        if (r.note != null) put("note", JsonPrimitive(r.note))
-                                    }
-                                }
-                                val resp = withContext(Dispatchers.Default) {
-                                    ServiceLocator.eventService.registerToEventMany(JsonArray(regsJson))
-                                }
-                                val jsonObj = resp?.jsonObject ?: throw Exception("Network error")
-                                val errors = jsonObj["errors"]
-                                if (errors != null) throw Exception("Server errors: $errors")
-                                val data = jsonObj["data"]?.jsonObject
-                                data?.get("registerToEventMany")?.jsonObject?.get("eventRegistrations")
-                                    ?: throw Exception("Unexpected response: $resp")
-                            },
-                            onSetLessonDemand = { registrationId, trainerId, lessonCount ->
-                                coroutineScope.launch {
-                                    try {
-                                        val success = withContext(Dispatchers.Default) {
-                                            ServiceLocator.eventService.setLessonDemand(registrationId, trainerId, lessonCount)
-                                        }
-                                        if (success) {
-                                            regResultMessage.value = "Uloženo"
-                                        } else {
-                                            regResultMessage.value = "Chyba při ukládání"
-                                        }
-                                    } catch (_: Exception) {}
-                                }
-                            },
-                            onSetNote = { registrationId, note ->
-                                coroutineScope.launch {
-                                    try {
-                                        withContext(Dispatchers.Default) {
-                                            ServiceLocator.eventService.setRegistrationNote(registrationId, note)
-                                        }
-                                    } catch (_: Exception) {}
-                                }
-                            },
-                            onDelete = { registrationId ->
-                                val resp = withContext(Dispatchers.Default) {
-                                    ServiceLocator.eventService.deleteEventRegistration(registrationId)
-                                }
-                                val jsonObj = resp?.jsonObject ?: throw Exception("Network error")
-                                val errors = jsonObj["errors"]
-                                if (errors != null) throw Exception("Server errors: $errors")
-                                val data = jsonObj["data"]?.jsonObject
-                                data?.get("cancelRegistration")?.jsonObject?.get("clientMutationId")
-                                    ?: throw Exception("Unexpected response: $resp")
-                            }
-                        )
-
-                        regResultMessage.value?.let { msg ->
-                            Text(msg, modifier = Modifier.padding(8.dp), color = MaterialTheme.colorScheme.error)
-                        }
-                    }
-                }
-            }
+            val eventId = backStackEntry.arguments?.read { getLong("eventId") }
+            val modeStr = backStackEntry.arguments?.read { getString("mode") }
+            RegistrationRoute(
+                eventId = eventId,
+                modeStr = modeStr,
+                onClose = { navController.navigateUp() }
+            )
         }
 
         composable(
@@ -810,7 +680,7 @@ fun AppNavHost(
             popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) },
             popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) }
         ) { backStackEntry ->
-            val noticeId = backStackEntry.arguments?.getLong("noticeId")
+            val noticeId = backStackEntry.arguments?.read { getLong("noticeId") }
             noticeId?.let { nid ->
                 NoticeScreen(
                     announcementId = nid,

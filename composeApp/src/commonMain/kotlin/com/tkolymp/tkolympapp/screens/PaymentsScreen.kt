@@ -170,7 +170,7 @@ private fun PaymentItemCard(modifier: Modifier = Modifier, item: com.tkolymp.sha
     val name = listOfNotNull(item.person?.firstName, item.person?.lastName).joinToString(" ")
     val amount = item.price?.amount?.let { cents ->
         if (cents % 100L == 0L) (cents / 100L).toString()
-        else "%.2f".format(cents / 100.0)
+        else { val v = cents / 100.0; val s = kotlin.math.round(v * 100).toLong(); "${s / 100}.${kotlin.math.abs(s % 100).toString().padStart(2, '0')}" }
     } ?: "-"
 
     fun fmtDate(raw: String?): String {

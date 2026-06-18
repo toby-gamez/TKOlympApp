@@ -12,7 +12,8 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.viewinterop.UIKitView
-import platform.CoreGraphics.CGRectZero
+import kotlinx.cinterop.cValue
+import platform.CoreGraphics.CGRect
 import platform.Foundation.NSURL
 import platform.Foundation.NSURLRequest
 import platform.WebKit.WKNavigation
@@ -47,7 +48,7 @@ actual fun HtmlText(
     fun colorToHex(color: Color, fallback: String): String {
         if (color == Color.Unspecified) return fallback
         val argb = color.toArgb()
-        return "#%06X".format(0xFFFFFF and argb)
+        return "#${(0xFFFFFF and argb).toString(16).uppercase().padStart(6, '0')}"
     }
 
     val textHex = colorToHex(textColor, "#000000")
@@ -75,7 +76,7 @@ img, picture, video { width:100% !important; max-width:100% !important; height:a
                 }
                 config.userContentController.addScriptMessageHandler(imageClickHandler, "imageClick")
             }
-            WKWebView(frame = CGRectZero.readValue(), configuration = config).apply {
+            WKWebView(frame = cValue<CGRect>(), configuration = config).apply {
                 scrollView.scrollEnabled = selectable
                 scrollView.bounces = false
                 opaque = false

@@ -155,13 +155,13 @@ fun CalendarScreen(
     var selectedLocations by remember { mutableStateOf<Set<String>>(emptySet()) }
 
     val availableTrainers = remember(calState.lessonsByTrainerByDay) {
-        calState.lessonsByTrainerByDay.values.flatMap { it.keys }.toSortedSet()
+        calState.lessonsByTrainerByDay.values.flatMap { it.keys }.sorted().toSet()
     }
     val availableLocations = remember(calState.eventsByDay) {
         calState.eventsByDay.values.flatten().mapNotNull { inst ->
             inst.event?.locationText?.takeIf { it.isNotBlank() }
                 ?: inst.event?.location?.name?.takeIf { it.isNotBlank() }
-        }.toSortedSet()
+        }.sorted().toSet()
     }
 
     LaunchedEffect(localWeekOffset, customStartDate) {
@@ -292,10 +292,10 @@ fun CalendarScreen(
                         cachedVisibleDates.value.orEmpty() else calState.visibleDates
                     visibleDates.mapNotNull { date ->
                         val lessonsByTrainer = if ((calState.lessonsByTrainerByDay[date].orEmpty().isEmpty()) && calState.isOffline && cachedLessonsByTrainer.value != null)
-                            cachedLessonsByTrainer.value?.getOrDefault(date, emptyMap()) ?: emptyMap()
+                            cachedLessonsByTrainer.value?.getOrElse(date) { emptyMap() } ?: emptyMap()
                         else calState.lessonsByTrainerByDay[date] ?: emptyMap()
                         val otherList = if ((calState.otherEventsByDay[date].orEmpty().isEmpty()) && calState.isOffline && cachedOtherEvents.value != null)
-                            cachedOtherEvents.value?.getOrDefault(date, emptyList()) ?: emptyList()
+                            cachedOtherEvents.value?.getOrElse(date) { emptyList() } ?: emptyList()
                         else calState.otherEventsByDay[date] ?: emptyList()
                         val fl = lessonsByTrainer
                             .let { if (selectedTrainers.isEmpty()) it else it.filterKeys { k -> k in selectedTrainers } }

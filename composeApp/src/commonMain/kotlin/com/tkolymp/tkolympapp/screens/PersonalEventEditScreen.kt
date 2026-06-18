@@ -142,7 +142,7 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, o
                     OutlinedTextField(
                         value = try {
                             val tm = Instant.parse(startIso.value).toLocalDateTime(TimeZone.currentSystemDefault()).time
-                            "%02d:%02d".format(tm.hour, tm.minute)
+                            "${tm.hour.toString().padStart(2,'0')}:${tm.minute.toString().padStart(2,'0')}"
                         } catch (_: Exception) { "" },
                         onValueChange = {},
                         label = { Text(AppStrings.current.personalEvents.startTime) },
@@ -171,7 +171,7 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, o
                     OutlinedTextField(
                         value = try {
                             val tm2 = Instant.parse(endIso.value).toLocalDateTime(TimeZone.currentSystemDefault()).time
-                            "%02d:%02d".format(tm2.hour, tm2.minute)
+                            "${tm2.hour.toString().padStart(2,'0')}:${tm2.minute.toString().padStart(2,'0')}"
                         } catch (_: Exception) { "" },
                         onValueChange = {},
                         label = { Text(AppStrings.current.personalEvents.endTime) },

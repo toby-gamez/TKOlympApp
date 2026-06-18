@@ -3,7 +3,7 @@ package com.tkolymp.shared.notification
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.datetime.Instant
-import platform.Foundation.NSDate
+import platform.posix.time
 import platform.UserNotifications.UNAuthorizationOptionAlert
 import platform.UserNotifications.UNAuthorizationOptionBadge
 import platform.UserNotifications.UNAuthorizationOptionSound
@@ -30,7 +30,7 @@ class NotificationSchedulerIos : INotificationScheduler {
         } catch (_: Exception) { return null }
 
         val triggerEpochMillis = instant.toEpochMilliseconds() - minutesBefore * 60_000L
-        val nowMillis = (NSDate(timeIntervalSinceNow = 0.0).timeIntervalSince1970 * 1000.0).toLong()
+        val nowMillis = time(null).toLong() * 1000L
         if (triggerEpochMillis <= nowMillis) return null
 
         val delaySeconds = (triggerEpochMillis - nowMillis).toDouble() / 1000.0

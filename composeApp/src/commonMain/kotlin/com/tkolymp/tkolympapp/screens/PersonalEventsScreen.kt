@@ -54,8 +54,8 @@ private fun formatEventTime(ev: PersonalEvent): String {
     return try {
         val s = Instant.parse(ev.startIso).toLocalDateTime(TimeZone.currentSystemDefault())
         val e = Instant.parse(ev.endIso).toLocalDateTime(TimeZone.currentSystemDefault())
-        val startTime = "%02d:%02d".format(s.time.hour, s.time.minute)
-        val endTime = "%02d:%02d".format(e.time.hour, e.time.minute)
+        val startTime = "${s.time.hour.toString().padStart(2,'0')}:${s.time.minute.toString().padStart(2,'0')}"
+        val endTime = "${e.time.hour.toString().padStart(2,'0')}:${e.time.minute.toString().padStart(2,'0')}"
         "$startTime–$endTime"
     } catch (_: Exception) {
         ev.startIso

@@ -356,7 +356,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                                             )
                                             val pts = entryPoints?.toDoubleOrNull()
                                             if (pts != null && pts != 0.0) {
-                                                val ptsStr = if (pts % 1.0 == 0.0) pts.toInt().toString() else "%.1f".format(pts)
+                                                val ptsStr = if (pts % 1.0 == 0.0) pts.toInt().toString() else { val s = kotlin.math.round(pts * 10).toLong(); "${s / 10}.${kotlin.math.abs(s % 10)}" }
                                                 Row(
                                                     modifier = Modifier
                                                         .padding(start = 4.dp)

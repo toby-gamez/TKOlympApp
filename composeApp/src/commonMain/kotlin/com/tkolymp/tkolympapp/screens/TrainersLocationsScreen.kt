@@ -179,7 +179,7 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                                     fun formatPrice(amount: Double?, currency: String?): String? {
                                         if (amount == null) return null
                                         val isWhole = amount.rem(1.0) == 0.0
-                                        val amtStr = if (isWhole) amount.toInt().toString() else String.format("%.2f", amount)
+                                        val amtStr = if (isWhole) amount.toInt().toString() else { val s = kotlin.math.round(amount * 100).toLong(); "${s / 100}.${kotlin.math.abs(s % 100).toString().padStart(2, '0')}" }
                                         val cur = currency?.uppercase()
                                         val c = AppStrings.current.profile.couple
                                         return when (cur) {

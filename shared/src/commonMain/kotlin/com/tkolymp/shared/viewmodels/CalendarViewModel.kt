@@ -189,7 +189,7 @@ class CalendarViewModel(
                 // If we reach here and the server map is empty and we have existing data,
                 // avoid overwriting the current non-empty state with an empty result.
                 // But still re-merge personal events so newly saved ones appear.
-                if (_state.value.eventsByDay.isNotEmpty()) {
+                if (map.isEmpty() && _state.value.eventsByDay.isNotEmpty()) {
                     val currentMap = _state.value.eventsByDay
                     val remerged = try { mergePersonalEventsIntoMap(currentMap, startIso, endIso) } catch (_: Exception) { currentMap }
                     val (lessons, other) = splitEventMaps(remerged)

@@ -20,6 +20,7 @@ import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSURL
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSUserDomainMask
+import platform.Foundation.writeToFile
 import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIApplication
 import platform.UIKit.UIGraphicsBeginImageContextWithOptions
@@ -89,8 +90,9 @@ private fun shareImageBitmapOnMainThread(bitmap: ImageBitmap) {
             val tmpDir = NSSearchPathForDirectoriesInDomains(
                 NSDocumentDirectory, NSUserDomainMask, true
             ).firstOrNull() as? String ?: return
-            val fileUrl = NSURL.fileURLWithPath("$tmpDir/stats_share.png")
-            pngData.writeToURL(fileUrl, atomically = true)
+            val filePath = "$tmpDir/stats_share.png"
+            pngData.writeToFile(filePath, atomically = true)
+            val fileUrl = NSURL.fileURLWithPath(filePath)
 
             val activityVc = UIActivityViewController(
                 activityItems = listOf(fileUrl),

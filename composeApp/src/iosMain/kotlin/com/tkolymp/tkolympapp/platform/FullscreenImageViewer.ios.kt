@@ -14,11 +14,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.viewinterop.UIKitView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.cValue
+import platform.CoreGraphics.CGRect
 import platform.Foundation.NSURL
 import platform.Foundation.NSURLRequest
 import platform.WebKit.WKWebView
-import platform.CoreGraphics.CGRectZero
 
+@OptIn(ExperimentalForeignApi::class)
 @Composable
 actual fun FullscreenImageViewer(imageUrl: String, onDismiss: () -> Unit) {
     Dialog(
@@ -32,7 +35,7 @@ actual fun FullscreenImageViewer(imageUrl: String, onDismiss: () -> Unit) {
         ) {
             UIKitView(
                 factory = {
-                    WKWebView(frame = CGRectZero.readValue()).apply {
+                    WKWebView(frame = cValue<CGRect>()).apply {
                         NSURL.URLWithString(imageUrl)?.let { url ->
                             loadRequest(NSURLRequest.requestWithURL(url))
                         }

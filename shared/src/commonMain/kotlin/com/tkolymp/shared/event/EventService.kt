@@ -6,6 +6,7 @@ import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.cache.CacheService
 import kotlin.time.Duration.Companion.minutes
 import com.tkolymp.shared.network.IGraphQlClient
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 
 interface IEventService {
@@ -51,42 +52,51 @@ interface IEventService {
 typealias BigInt = Long
 typealias DateTime = String
 
+@Serializable
 data class EventInstance(
     val id: BigInt,
     val isCancelled: Boolean,
-    val since: DateTime?,
-    val until: DateTime?,
-    val updatedAt: DateTime?,
-    val event: Event?
+    val since: DateTime? = null,
+    val until: DateTime? = null,
+    val updatedAt: DateTime? = null,
+    val event: Event? = null
 )
 
-data class Cohort(val id: BigInt?, val name: String?, val colorRgb: String?)
+@Serializable
+data class Cohort(val id: BigInt? = null, val name: String? = null, val colorRgb: String? = null)
 
-data class TargetCohort(val cohortId: BigInt?, val cohort: Cohort?)
+@Serializable
+data class TargetCohort(val cohortId: BigInt? = null, val cohort: Cohort? = null)
 
-data class Person(val id: BigInt?, val name: String?, val firstName: String?, val lastName: String?)
+@Serializable
+data class Person(val id: BigInt? = null, val name: String? = null, val firstName: String? = null, val lastName: String? = null)
 
-data class SimpleName(val firstName: String?, val lastName: String?)
+@Serializable
+data class SimpleName(val firstName: String? = null, val lastName: String? = null)
 
-data class Couple(val id: BigInt?, val man: SimpleName?, val woman: SimpleName?)
+@Serializable
+data class Couple(val id: BigInt? = null, val man: SimpleName? = null, val woman: SimpleName? = null)
 
-data class Registration(val id: BigInt?, val person: Person?, val couple: Couple?)
+@Serializable
+data class Registration(val id: BigInt? = null, val person: Person? = null, val couple: Couple? = null)
 
-data class Location(val id: BigInt?, val name: String?)
+@Serializable
+data class Location(val id: BigInt? = null, val name: String? = null)
 
+@Serializable
 data class Event(
-    val id: BigInt?,
-    val name: String?,
-    val description: String?,
-    val type: String?,
-    val locationText: String?,
-    val isRegistrationOpen: Boolean,
-    val isVisible: Boolean,
-    val isPublic: Boolean,
-    val eventTrainersList: List<String>,
-    val eventTargetCohortsList: List<TargetCohort>,
-    val eventRegistrationsList: List<Registration>,
-    val location: Location?
+    val id: BigInt? = null,
+    val name: String? = null,
+    val description: String? = null,
+    val type: String? = null,
+    val locationText: String? = null,
+    val isRegistrationOpen: Boolean = false,
+    val isVisible: Boolean = false,
+    val isPublic: Boolean = false,
+    val eventTrainersList: List<String> = emptyList(),
+    val eventTargetCohortsList: List<TargetCohort> = emptyList(),
+    val eventRegistrationsList: List<Registration> = emptyList(),
+    val location: Location? = null
 )
 
 class EventService(

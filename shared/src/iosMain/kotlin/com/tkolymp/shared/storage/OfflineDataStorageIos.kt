@@ -2,9 +2,10 @@ package com.tkolymp.shared.storage
 
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.UByteVar
-import kotlinx.cinterop.allocArray
+import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.convert
-import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.reinterpret
+import kotlinx.cinterop.usePinned
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -47,18 +48,18 @@ class OfflineDataStorageIos : OfflineDataStorage {
 
     private fun sha256Hex(input: String): String {
         val data = (input as NSString).dataUsingEncoding(NSUTF8StringEncoding) ?: return input.hashCode().toString()
-        return memScoped {
-            val digest = allocArray<UByteVar>(CC_SHA256_DIGEST_LENGTH)
-            CC_SHA256(data.bytes, data.length.convert(), digest)
-            val hexChars = "0123456789abcdef"
-            val sb = StringBuilder(CC_SHA256_DIGEST_LENGTH * 2)
-            for (i in 0 until CC_SHA256_DIGEST_LENGTH) {
-                val b = digest[i].toInt() and 0xFF
-                sb.append(hexChars[(b ushr 4) and 0xF])
-                sb.append(hexChars[b and 0xF])
-            }
-            sb.toString()
+        val digest = ByteArray(CC_SHA256_DIGEST_LENGTH)
+        digest.usePinned { pinned ->
+            CC_SHA256(data.bytes, data.length.convert(), pinned.addressOf(0).reinterpret<UByteVar>())
         }
+        val hexChars = "0123456789abcdef"
+        val sb = StringBuilder(CC_SHA256_DIGEST_LENGTH * 2)
+        for (i in 0 until CC_SHA256_DIGEST_LENGTH) {
+            val b = digest[i].toInt() and 0xFF
+            sb.append(hexChars[(b ushr 4) and 0xF])
+            sb.append(hexChars[b and 0xF])
+        }
+        return sb.toString()
     }
 
     private fun fileForKey(key: String): String {

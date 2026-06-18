@@ -1,4 +1,4 @@
-package ui.theme
+package com.tkolymp.tkolympapp.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme

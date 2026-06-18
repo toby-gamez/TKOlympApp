@@ -385,7 +385,7 @@ fun RegistrationScreen(
                                     showSuccess.value = true
                                 } catch (e: CancellationException) { throw e } catch (t: Exception) {
                                     Logger.d("RegScreen", "Register failed: ${t.message}")
-                                    showRegisterError.value = t.message ?: "Chyba při registraci"
+                                    showRegisterError.value = t.message ?: AppStrings.current.errorMessages.unknownError
                                     isSubmitting.value = false
                                 }
                             }
@@ -606,7 +606,7 @@ fun RegistrationScreen(
                                                     onClose()
                                                 } catch (e: CancellationException) { throw e } catch (t: Exception) {
                                                     Logger.d("RegScreen", "Delete failed: ${t.message}")
-                                                    showDeleteError.value = t.message ?: "Chyba při mazání"
+                                                    showDeleteError.value = t.message ?: AppStrings.current.errorMessages.unknownError
                                                 }
                                             }
                                         }

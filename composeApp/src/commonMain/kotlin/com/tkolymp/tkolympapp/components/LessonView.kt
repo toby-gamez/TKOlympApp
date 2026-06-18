@@ -188,18 +188,7 @@ internal fun LessonView(
                                 .padding(horizontal = 8.dp, vertical = 6.dp)
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                val context = androidx.compose.ui.platform.LocalContext.current
-                                val resId = remember { context.resources.getIdentifier("clock_loader_80", "drawable", context.packageName) }
-                                if (resId != 0) {
-                                    Icon(
-                                        painter = androidx.compose.ui.res.painterResource(id = resId),
-                                        contentDescription = null,
-                                        tint = Color.Unspecified,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                } else {
-                                    Icon(Icons.Default.Schedule, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
-                                }
+                                Icon(Icons.Default.Schedule, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 androidx.compose.material3.Text(
                                     durationMin ?: "",
