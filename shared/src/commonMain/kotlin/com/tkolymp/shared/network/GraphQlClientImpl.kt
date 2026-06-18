@@ -7,6 +7,11 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlinx.serialization.json.*
 
+/**
+ * Thrown when the GraphQL server returns HTTP 200 but includes an `errors` array in the payload.
+ * Without this check callers silently receive null/empty data instead of a failure signal.
+ */
+
 class GraphQlClientImpl(
     private val httpClient: HttpClient,
     private val endpoint: String,
@@ -31,6 +36,14 @@ class GraphQlClientImpl(
             if (token != null) header("Authorization", "Bearer $token")
             setBody(body)
         }.body()
+
+        val errors = (resp as? JsonObject)?.get("errors") as? JsonArray
+        if (!errors.isNullOrEmpty()) {
+            val msg = errors.joinToString("; ") { el ->
+                (el as? JsonObject)?.get("message")?.jsonPrimitive?.contentOrNull ?: "error"
+            }
+            throw GraphQlException(msg)
+        }
 
         return resp
     }

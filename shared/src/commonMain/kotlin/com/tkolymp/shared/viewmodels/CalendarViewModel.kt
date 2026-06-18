@@ -114,33 +114,16 @@ class CalendarViewModel(
         // makes all individual-lesson slots appear as "VOLNO" until the user manually refreshes.
         if (onlyMineChanged && !forceRefresh && !isCurrentlyOnline) {
             try {
-                val bucketName = if (onlyMine) "MINE" else "ALL"
-                val weekKey = OfflineKeys.CAL_PREFIX + "${bucketName}_$weekStart"
-                val raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(weekKey) } catch (_: Exception) { null }
-                if (raw != null) {
-                    var parsed = parseCalendarJson(raw)
-                    // enrich parsed week summary with full event details saved separately
-                    parsed = try { enrichParsedWithEventDetails(parsed) } catch (_: Exception) { parsed }
-                    // include local/personal events saved by the user
-                    parsed = try { mergePersonalEventsIntoMap(parsed, startIso, endIso) } catch (_: Exception) { parsed }
-
-                    val lessonsByTrainerByDay = parsed.mapValues { (_, list) ->
-                        list.filter { isLesson(it) }
-                            .groupBy { it.event.firstTrainerOrEmpty() }
-                            .mapValues { (_, instances) -> instances.sortedBy { it.since } }
-                    }
-                    val otherEventsByDay = parsed.mapValues { (_, list) ->
-                        val lessonSet = list.filter { isLesson(it) }.toSet()
-                        (list - lessonSet).sortedBy { it.since }
-                    }
-
+                val bucket = loadOfflineBucket(onlyMine, weekStart, startIso, endIso)
+                if (bucket != null) {
+                    val parsed = try { mergePersonalEventsIntoMap(bucket, startIso, endIso) } catch (_: Exception) { bucket }
+                    val (lessons, other) = splitEventMaps(parsed)
                     lastWeekStart = weekStart
                     lastOnlyMine = onlyMine
-
                     _state.value = _state.value.copy(
                         eventsByDay = parsed,
-                        lessonsByTrainerByDay = lessonsByTrainerByDay,
-                        otherEventsByDay = otherEventsByDay,
+                        lessonsByTrainerByDay = lessons,
+                        otherEventsByDay = other,
                         visibleDates = visibleDates,
                         todayString = todayString,
                         tomorrowString = tomorrowString,
@@ -170,48 +153,28 @@ class CalendarViewModel(
                     eventService.fetchEventsGroupedByDay(startIso, endIso, onlyMine, AppConstants.FETCH_LIMIT_WEEK, 0, null, cacheNamespace = "calendar_")
                 }
             } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-                // offline fallback
-                val bucketName = if (onlyMine) "MINE" else "ALL"
-                val weekKey = OfflineKeys.CAL_PREFIX + "${bucketName}_$weekStart"
-                val raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(weekKey) } catch (_: Exception) { null }
-                if (raw != null) {
-                    var parsed = parseCalendarJson(raw)
-                    parsed = try { enrichParsedWithEventDetails(parsed) } catch (_: Exception) { parsed }
-                    parsed = try { mergePersonalEventsIntoMap(parsed, startIso, endIso) } catch (_: Exception) { parsed }
+                // offline fallback — personal events will be merged in the main flow below
+                val bucket = loadOfflineBucket(onlyMine, weekStart, startIso, endIso)
+                if (bucket != null) {
                     _state.value = _state.value.copy(isOffline = true)
-                    parsed
+                    bucket
                 } else throw ex
             }
 
             // If the server returned an empty map (possible when offline but no exception thrown),
             // try to load the offline week summary saved by OfflineSyncManager.
-                if (map.isEmpty()) {
+            if (map.isEmpty()) {
                 try {
-                    val bucketName = if (onlyMine) "MINE" else "ALL"
-                    val weekKey = OfflineKeys.CAL_PREFIX + "${bucketName}_$weekStart"
-                    val raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(weekKey) } catch (_: Exception) { null }
-                    if (raw != null) {
-                        var parsed = parseCalendarJson(raw)
-                        parsed = try { enrichParsedWithEventDetails(parsed) } catch (_: Exception) { parsed }
-                        parsed = try { mergePersonalEventsIntoMap(parsed, startIso, endIso) } catch (_: Exception) { parsed }
-
-                        val lessonsByTrainerByDay = parsed.mapValues { (_, list) ->
-                            list.filter { isLesson(it) }
-                                .groupBy { it.event.firstTrainerOrEmpty() }
-                                .mapValues { (_, instances) -> instances.sortedBy { it.since } }
-                        }
-                        val otherEventsByDay = parsed.mapValues { (_, list) ->
-                            val lessonSet = list.filter { isLesson(it) }.toSet()
-                            (list - lessonSet).sortedBy { it.since }
-                        }
-
+                    val bucket = loadOfflineBucket(onlyMine, weekStart, startIso, endIso)
+                    if (bucket != null) {
+                        val parsed = try { mergePersonalEventsIntoMap(bucket, startIso, endIso) } catch (_: Exception) { bucket }
+                        val (lessons, other) = splitEventMaps(parsed)
                         lastWeekStart = weekStart
                         lastOnlyMine = onlyMine
-
                         _state.value = _state.value.copy(
                             eventsByDay = parsed,
-                            lessonsByTrainerByDay = lessonsByTrainerByDay,
-                            otherEventsByDay = otherEventsByDay,
+                            lessonsByTrainerByDay = lessons,
+                            otherEventsByDay = other,
                             visibleDates = visibleDates,
                             todayString = todayString,
                             tomorrowString = tomorrowString,
@@ -226,40 +189,23 @@ class CalendarViewModel(
                 // If we reach here and the server map is empty and we have existing data,
                 // avoid overwriting the current non-empty state with an empty result.
                 // But still re-merge personal events so newly saved ones appear.
-                if (map.isEmpty() && _state.value.eventsByDay.isNotEmpty()) {
+                if (_state.value.eventsByDay.isNotEmpty()) {
                     val currentMap = _state.value.eventsByDay
                     val remerged = try { mergePersonalEventsIntoMap(currentMap, startIso, endIso) } catch (_: Exception) { currentMap }
-                    val updatedLessons = remerged.mapValues { (_, list) ->
-                        list.filter { isLesson(it) }
-                            .groupBy { it.event.firstTrainerOrEmpty() }
-                            .mapValues { (_, instances) -> instances.sortedBy { it.since } }
-                    }
-                    val updatedOther = remerged.mapValues { (_, list) ->
-                        val lessonSet = list.filter { isLesson(it) }.toSet()
-                        (list - lessonSet).sortedBy { it.since }
-                    }
+                    val (lessons, other) = splitEventMaps(remerged)
                     _state.value = _state.value.copy(
                         eventsByDay = remerged,
-                        lessonsByTrainerByDay = updatedLessons,
-                        otherEventsByDay = updatedOther,
+                        lessonsByTrainerByDay = lessons,
+                        otherEventsByDay = other,
                         isLoading = false
                     )
                     return
                 }
             }
 
-            // merge personal events into server map as well
+            // merge personal events into server map (or offline bucket from exception fallback)
             val mergedMap = try { mergePersonalEventsIntoMap(map, startIso, endIso) } catch (_: Exception) { map }
-
-            val lessonsByTrainerByDay = mergedMap.mapValues { (_, list) ->
-                list.filter { isLesson(it) }
-                    .groupBy { it.event.firstTrainerOrEmpty() }
-                    .mapValues { (_, instances) -> instances.sortedBy { it.since } }
-            }
-            val otherEventsByDay = mergedMap.mapValues { (_, list) ->
-                val lessonSet = list.filter { isLesson(it) }.toSet()
-                (list - lessonSet).sortedBy { it.since }
-            }
+            val (lessons, other) = splitEventMaps(mergedMap)
 
             lastWeekStart = weekStart
             lastOnlyMine = onlyMine
@@ -282,8 +228,8 @@ class CalendarViewModel(
 
             _state.value = _state.value.copy(
                 eventsByDay = mergedMap,
-                lessonsByTrainerByDay = lessonsByTrainerByDay,
-                otherEventsByDay = otherEventsByDay,
+                lessonsByTrainerByDay = lessons,
+                otherEventsByDay = other,
                 visibleDates = visibleDates,
                 todayString = todayString,
                 tomorrowString = tomorrowString,
@@ -296,6 +242,36 @@ class CalendarViewModel(
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoading))
         }
+    }
+
+    private fun splitEventMaps(events: Map<String, List<EventInstance>>): Pair<
+        Map<String, Map<String, List<EventInstance>>>,
+        Map<String, List<EventInstance>>
+    > {
+        val lessons = events.mapValues { (_, list) ->
+            list.filter { isLesson(it) }
+                .groupBy { it.event.firstTrainerOrEmpty() }
+                .mapValues { (_, instances) -> instances.sortedBy { it.since } }
+        }
+        val other = events.mapValues { (_, list) ->
+            val lessonSet = list.filter { isLesson(it) }.toSet()
+            (list - lessonSet).sortedBy { it.since }
+        }
+        return lessons to other
+    }
+
+    private suspend fun loadOfflineBucket(
+        onlyMine: Boolean,
+        weekStart: kotlinx.datetime.LocalDate,
+        startIso: String,
+        endIso: String
+    ): Map<String, List<EventInstance>>? {
+        val bucketName = if (onlyMine) "MINE" else "ALL"
+        val weekKey = OfflineKeys.CAL_PREFIX + "${bucketName}_$weekStart"
+        val raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(weekKey) } catch (_: Exception) { null } ?: return null
+        var parsed = parseCalendarJson(raw)
+        parsed = try { enrichParsedWithEventDetails(parsed) } catch (_: Exception) { parsed }
+        return parsed
     }
 
     private suspend fun mergePersonalEventsIntoMap(

@@ -51,6 +51,7 @@ class OfflineSyncManager(
 
     suspend fun syncAll() = withContext(Dispatchers.IO) {
         Logger.d("OfflineSyncManager", "syncAll: starting")
+        migrateIfNeeded()
         if (!networkMonitor.isConnected()) {
             Logger.d("OfflineSyncManager", "syncAll: network not available, skipping")
             return@withContext
@@ -370,6 +371,14 @@ class OfflineSyncManager(
 
     private suspend fun saveLastSyncTime(iso: String) = offlineDataStorage.save(OfflineKeys.META_LAST_SYNC, iso)
 
+    internal suspend fun migrateIfNeeded() {
+        val stored = try { offlineDataStorage.load(OfflineKeys.META_SCHEMA_VERSION) } catch (_: Exception) { null }
+        if (stored?.toIntOrNull() == OfflineKeys.SCHEMA_VERSION) return
+        Logger.d("OfflineSyncManager", "schema mismatch (stored=$stored, current=${OfflineKeys.SCHEMA_VERSION}), clearing cached data")
+        try { offlineDataStorage.deleteByPrefix("offline_") } catch (_: Exception) {}
+        try { offlineDataStorage.save(OfflineKeys.META_SCHEMA_VERSION, OfflineKeys.SCHEMA_VERSION.toString()) } catch (_: Exception) {}
+    }
+
     private suspend fun <T> withRetry(attempts: Int = 3, initialDelayMs: Long = 500, block: suspend () -> T): T {
         var lastEx: Exception? = null
         var delayMs = initialDelayMs
@@ -387,6 +396,7 @@ class OfflineSyncManager(
     }
 
     suspend fun downloadAll(onProgress: (String, Int, Int) -> Unit = { _, _, _ -> }) = withContext(Dispatchers.IO) {
+        migrateIfNeeded()
         if (!networkMonitor.isConnected()) throw Exception("Network unavailable")
         Logger.d("OfflineSyncManager", "downloadAll: starting")
 

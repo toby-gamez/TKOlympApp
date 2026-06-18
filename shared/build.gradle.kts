@@ -43,6 +43,16 @@ kotlin {
                 implementation(libs.androidx.core.ktx)
             }
         }
+        val iosArm64Main by getting {
+            dependencies {
+                implementation(libs.ktor.darwin)
+            }
+        }
+        val iosSimulatorArm64Main by getting {
+            dependencies {
+                implementation(libs.ktor.darwin)
+            }
+        }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)

@@ -4,7 +4,6 @@ import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.cache.CacheService
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.*
-import kotlin.math.roundToLong
 
 data class Money(val amount: Long?, val currency: String?)
 
@@ -65,7 +64,7 @@ class PaymentService(
                 val obj = el as? JsonObject ?: return@mapNotNull null
                 val priceObj = obj["price"] as? JsonObject
                 val price = priceObj?.let {
-                    val amountMinor = it["amount"]?.jsonPrimitive?.contentOrNull?.toDoubleOrNull()?.let { d -> (d * 100).roundToLong() }
+                    val amountMinor = it["amount"]?.jsonPrimitive?.contentOrNull?.let(::parseDecimalToMinorUnits)
                     Money(amountMinor, it["currency"]?.jsonPrimitive?.contentOrNull)
                 }
 
@@ -105,4 +104,18 @@ class PaymentService(
         val all = fetchPaymentDebtors()
         return all.filter { it.personId != null && it.personId == personId }
     }
+}
+
+// Parses a decimal string (e.g. "1500.5") to minor currency units (e.g. 150050) without
+// going through Double, which would introduce floating-point error for certain values.
+internal fun parseDecimalToMinorUnits(raw: String): Long? {
+    val negative = raw.startsWith('-')
+    val abs = if (negative) raw.substring(1) else raw
+    val dotIdx = abs.indexOf('.')
+    val intPart = if (dotIdx < 0) abs else abs.substring(0, dotIdx)
+    val fracPart = if (dotIdx < 0) "" else abs.substring(dotIdx + 1)
+    val major = intPart.toLongOrNull() ?: return null
+    val minor = fracPart.padEnd(2, '0').take(2).toLongOrNull() ?: return null
+    val result = major * 100 + minor
+    return if (negative) -result else result
 }

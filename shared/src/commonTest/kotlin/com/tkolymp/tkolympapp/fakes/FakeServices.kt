@@ -8,6 +8,7 @@ import com.tkolymp.shared.competitions.ICompetitionService
 import com.tkolymp.shared.event.EventInstance
 import com.tkolymp.shared.event.IEventService
 import com.tkolymp.shared.network.IGraphQlClient
+import com.tkolymp.shared.network.NetworkMonitor
 import com.tkolymp.shared.notification.INotificationScheduler
 import com.tkolymp.shared.systemcalendar.ISystemCalendarService
 import kotlinx.serialization.json.JsonArray
@@ -67,9 +68,13 @@ class FakeCompetitionService(
     private val upcoming: List<Competition> = emptyList(),
     private val past: List<Competition> = emptyList()
 ) : ICompetitionService {
-    override suspend fun getUpcomingCompetitions(pSince: String?, pUntil: String?, first: Int): List<Competition> = upcoming
-    override suspend fun getPastCompetitions(pSince: String?, pUntil: String?, first: Int): List<Competition> = past
-    override suspend fun getNearestUpcoming(): Competition? = upcoming.firstOrNull()
+    override suspend fun getUpcomingCompetitions(pSince: String?, pUntil: String?, first: Int, pPersonIds: List<Long>?): List<Competition> = upcoming
+    override suspend fun getPastCompetitions(pSince: String?, pUntil: String?, first: Int, pPersonIds: List<Long>?): List<Competition> = past
+    override suspend fun getNearestUpcoming(pPersonIds: List<Long>?): Competition? = upcoming.firstOrNull()
+}
+
+class FakeNetworkMonitor(private val connected: Boolean = true) : NetworkMonitor {
+    override fun isConnected(): Boolean = connected
 }
 
 class FakeNotificationScheduler : INotificationScheduler {

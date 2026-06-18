@@ -14,7 +14,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
+import androidx.core.content.pm.PackageInfoCompat
 import androidx.lifecycle.lifecycleScope
+import com.tkolymp.tkolympapp.platform.appVersionCode
+import com.tkolymp.tkolympapp.platform.appVersionName
 import com.google.firebase.messaging.FirebaseMessaging
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
@@ -36,6 +39,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+
+        // Store app version for the About screen (read from commonMain via getAppVersion())
+        try {
+            val pkgInfo = packageManager.getPackageInfo(packageName, 0)
+            appVersionName = pkgInfo.versionName
+            appVersionCode = PackageInfoCompat.getLongVersionCode(pkgInfo)
+        } catch (_: Exception) {}
 
         // Load language asynchronously before first composition.
         lifecycleScope.launch {

@@ -4,5 +4,44 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+
+	<!-- API configuration — update TENANT_ID for each club deployment -->
+	<key>API_BASE_URL</key>
+	<string>https://api.rozpisovnik.cz/graphql</string>
+	<key>TENANT_ID</key>
+	<string>1</string>
+
+	<!-- Privacy usage descriptions (required by App Store Review) -->
+	<key>NSCalendarsUsageDescription</key>
+	<string>TK Olymp přidává tréninky a události přímo do vašeho kalendáře.</string>
+	<key>NSCalendarsWriteOnlyAccessDescription</key>
+	<string>TK Olymp přidává tréninky a události přímo do vašeho kalendáře.</string>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>Upozornění vás připomenou na nadcházející tréninky a události.</string>
+
+	<!-- Status bar: let Compose manage it via ComposeUIViewController -->
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<false/>
+
+	<!-- Required device capabilities -->
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>arm64</string>
+	</array>
+
+	<!-- Supported orientations -->
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
 </dict>
 </plist>

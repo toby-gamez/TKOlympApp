@@ -34,5 +34,13 @@ object OfflineKeys {
 
     const val META_LAST_SYNC = "offline_meta_last_sync"
 
+    /**
+     * Bump this whenever the shape of any offline blob changes in a breaking way.
+     * OfflineSyncManager.migrateIfNeeded() wipes all "offline_*" keys and re-saves the new
+     * version so stale blobs are never deserialized with the wrong structure.
+     */
+    const val SCHEMA_VERSION = 1
+    const val META_SCHEMA_VERSION = "offline_meta_schema_version"
+
     const val DISMISSED_CANCELLED = "dismissed_cancelled_replacements"
 }

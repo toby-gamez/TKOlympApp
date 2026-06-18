@@ -1,6 +1,5 @@
 package com.tkolymp.tkolympapp.screens
 
-import android.app.Activity
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -25,7 +24,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,7 +34,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -46,6 +43,7 @@ import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.people.PersonDetails
 import com.tkolymp.shared.user.fmtProfileDate
+import com.tkolymp.tkolympapp.platform.MaxScreenBrightness
 
 private val L_CODES = arrayOf(
     "0001101", "0011001", "0010011", "0111101", "0100011",
@@ -80,24 +78,7 @@ private fun encodeEan8(input: String): Pair<String, String>? {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BarcodeScreen(onBack: () -> Unit = {}) {
-    val context = LocalContext.current
-    val activity = context as? Activity
-
-    DisposableEffect(Unit) {
-        val attrs = activity?.window?.attributes
-        val original = attrs?.screenBrightness ?: -1f
-        if (attrs != null) {
-            attrs.screenBrightness = 1.0f
-            activity.window.attributes = attrs
-        }
-        onDispose {
-            val a = activity?.window?.attributes
-            if (a != null) {
-                a.screenBrightness = original
-                activity.window.attributes = a
-            }
-        }
-    }
+    MaxScreenBrightness()
 
     var cstsId by remember { mutableStateOf<String?>(null) }
     var personDetails by remember { mutableStateOf<PersonDetails?>(null) }
