@@ -38,11 +38,10 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
     }
 
     suspend fun fetchAndStorePersonId(): String? {
-        val query = "query MyQuery { userProxiesList { person { id } } }"
+        val query = "query MyQuery { getCurrentUser { userProxiesList { person { id } } } }"
         val resp = try { client.post(query, null) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return null }
         val personId = try {
-            val arr = resp.jsonObject["data"]?.jsonObject?.get("userProxiesList")?.jsonArray
-            arr?.firstOrNull()?.jsonObject?.get("person")?.jsonObject?.get("id")?.jsonPrimitive?.contentOrNull
+            resp.jsonObject["data"]?.jsonObject?.get("getCurrentUser")?.jsonObject?.get("userProxiesList")?.jsonArray?.firstOrNull()?.jsonObject?.get("person")?.jsonObject?.get("id")?.jsonPrimitive?.contentOrNull
         } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
 
         if (personId != null) storage.savePersonId(personId)

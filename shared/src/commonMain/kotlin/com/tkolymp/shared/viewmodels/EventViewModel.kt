@@ -316,7 +316,9 @@ class EventViewModel(
             try { calendarStorage.setEventInCalendar(eventId) } catch (_: Exception) {}
         }
         _state.value = _state.value.copy(isAddedToCalendar = if (success) true else _state.value.isAddedToCalendar)
-        _sideEffect.trySend(EventSideEffect.CalendarResult(success))
+        if (_sideEffect.trySend(EventSideEffect.CalendarResult(success)).isFailure) {
+            Logger.w("EventViewModel", "calendar result side-effect channel full, event dropped")
+        }
     }
 
     suspend fun setReminder(eventId: Long, minutesBefore: Int) {
@@ -332,9 +334,13 @@ class EventViewModel(
             )
             val saved = notificationService.addOrUpdateReminder(reminder)
             _state.value = _state.value.copy(reminderMinutesBefore = saved.minutesBefore, reminderId = saved.id)
-            _sideEffect.trySend(EventSideEffect.ReminderResult(set = true))
+            if (_sideEffect.trySend(EventSideEffect.ReminderResult(set = true)).isFailure) {
+                Logger.w("EventViewModel", "reminder result side-effect channel full, event dropped")
+            }
         } catch (e: CancellationException) { throw e } catch (_: Exception) {
-            _sideEffect.trySend(EventSideEffect.ReminderResult(set = false))
+            if (_sideEffect.trySend(EventSideEffect.ReminderResult(set = false)).isFailure) {
+                Logger.w("EventViewModel", "reminder result side-effect channel full, event dropped")
+            }
         }
     }
 
@@ -343,7 +349,9 @@ class EventViewModel(
         try {
             notificationService.deleteReminder(id)
             _state.value = _state.value.copy(reminderMinutesBefore = null, reminderId = null)
-            _sideEffect.trySend(EventSideEffect.ReminderResult(set = false))
+            if (_sideEffect.trySend(EventSideEffect.ReminderResult(set = false)).isFailure) {
+                Logger.w("EventViewModel", "reminder result side-effect channel full, event dropped")
+            }
         } catch (e: CancellationException) { throw e } catch (_: Exception) {}
     }
 }

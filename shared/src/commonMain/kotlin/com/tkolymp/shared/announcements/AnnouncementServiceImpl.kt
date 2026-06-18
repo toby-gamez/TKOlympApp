@@ -1,12 +1,15 @@
 package com.tkolymp.shared.announcements
 
-import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.network.IGraphQlClient
 import kotlinx.coroutines.CancellationException
 import com.tkolymp.shared.cache.CacheService
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.serialization.json.*
 
-class AnnouncementServiceImpl(private val cache: CacheService = ServiceLocator.cacheService) : IAnnouncementService {
+class AnnouncementServiceImpl(
+    private val client: IGraphQlClient,
+    private val cache: CacheService
+) : IAnnouncementService {
     private val query = """
         query MyQuery(${'$'}sticky: Boolean) { myAnnouncements(sticky: ${'$'}sticky) { nodes { body createdAt id isSticky isVisible title author { id uJmeno uPrijmeni } updatedAt } } }
     """.trimIndent()
@@ -15,7 +18,7 @@ class AnnouncementServiceImpl(private val cache: CacheService = ServiceLocator.c
         val cacheKey = "announcements_sticky_$sticky"
         cache.get<List<Announcement>>(cacheKey)?.let { return it }
         val variables = buildJsonObject { put("sticky", JsonPrimitive(sticky)) }
-        val resp = ServiceLocator.graphQlClient.post(query, variables)
+        val resp = client.post(query, variables)
         val data = resp.jsonObject["data"] ?: return emptyList()
         val myAnnouncements = (data.jsonObject["myAnnouncements"] ?: return emptyList())
         val nodes = myAnnouncements.jsonObject["nodes"] ?: return emptyList()
@@ -66,7 +69,7 @@ class AnnouncementServiceImpl(private val cache: CacheService = ServiceLocator.c
         val cacheKey = "announcement_${'$'}id"
         if (!forceRefresh) cache.get<Announcement>(cacheKey)?.let { return it }
         val variables = buildJsonObject { put("id", JsonPrimitive(id)) }
-        val resp = ServiceLocator.graphQlClient.post(singleQuery, variables)
+        val resp = client.post(singleQuery, variables)
         val data = resp.jsonObject["data"] ?: return null
         val ann = (data.jsonObject["announcement"] ?: return null)
         val obj = ann.jsonObject

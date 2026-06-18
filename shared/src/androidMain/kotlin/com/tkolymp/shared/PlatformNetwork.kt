@@ -65,7 +65,7 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
 
     val cache = com.tkolymp.shared.cache.CacheService()
     val eventSvc = EventService(gql, cache)
-    val announcementSvc = com.tkolymp.shared.announcements.AnnouncementServiceImpl(cache)
+    val announcementSvc = com.tkolymp.shared.announcements.AnnouncementServiceImpl(gql, cache)
     val userStorage = UserStorage(context)
     val userSvc = UserService(gql, userStorage)
     val clubSvc = com.tkolymp.shared.club.ClubService(gql, cache)

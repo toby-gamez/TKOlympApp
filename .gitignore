@@ -45,7 +45,6 @@ composeApp/build/*
 composeApp/.cxx/*
 .gradle/9.1.0/*
 .kotlin/sessions/*
-composeApp/build.gradle.kts
 .vscode/*
 local.properties
 composeApp/google-services.json
