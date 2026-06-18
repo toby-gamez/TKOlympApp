@@ -1,6 +1,7 @@
 package com.tkolymp.shared.club
 
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.Logger
 import kotlinx.coroutines.CancellationException
 import com.tkolymp.shared.cache.CacheService
 import kotlin.time.Duration
@@ -42,15 +43,14 @@ class ClubService(private val client: IGraphQlClient = ServiceLocator.graphQlCli
         } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         val query = """
             query Query {
-              tenantLocationsList { name }
-              tenantTrainersList {
-                person { id firstName lastName prefixTitle suffixTitle }
-                guestPrice45Min { amount currency }
-                guestPayout45Min { amount currency }
-                isVisible
-              }
-              getCurrentTenant {
-                id
+              tenant(id: "1") {
+                tenantLocationsList { name }
+                tenantTrainersList {
+                  person { id firstName lastName prefixTitle suffixTitle }
+                  guestPrice45Min { amount currency }
+                  guestPayout45Min { amount currency }
+                  isVisible
+                }
                 cohortsList(condition: { isVisible: true }, orderBy: [NAME_ASC]) {
                   colorRgb
                   name
@@ -62,15 +62,16 @@ class ClubService(private val client: IGraphQlClient = ServiceLocator.graphQlCli
         """.trimIndent()
 
         val el: JsonElement = try { client.post(query, null) } catch (ex: Exception) {
+            Logger.d("ClubService", "fetchClubData failed: ${ex.message}")
             return ClubData(emptyList(), emptyList(), emptyList(), null)
         }
 
         val root = (el as? JsonObject)?.get("data") as? JsonObject
         if (root == null) return ClubData(emptyList(), emptyList(), emptyList(), el)
 
-        val locationsArr = (root["tenantLocationsList"] as? JsonArray) ?: JsonArray(emptyList())
-        val trainersArr = (root["tenantTrainersList"] as? JsonArray) ?: JsonArray(emptyList())
-        val tenantObj = root["getCurrentTenant"] as? JsonObject
+        val tenantObj = root["tenant"] as? JsonObject
+        val locationsArr = (tenantObj?.get("tenantLocationsList") as? JsonArray) ?: JsonArray(emptyList())
+        val trainersArr = (tenantObj?.get("tenantTrainersList") as? JsonArray) ?: JsonArray(emptyList())
         val cohortsArr = (tenantObj?.get("cohortsList") as? JsonArray) ?: JsonArray(emptyList())
 
         val locations = locationsArr.mapNotNull { it as? JsonObject }.map { obj ->

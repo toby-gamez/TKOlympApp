@@ -66,11 +66,12 @@ class TrainersLocationsViewModel(
         try {
             val d = try {
                 withContext(Dispatchers.Default) { clubService.fetchClubData() }
-            } catch (e: CancellationException) { throw e } catch (ex: Exception) {
+            } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+            if (d == null || d.raw == null) {
                 // Try offline fallback: load saved club JSON
                 try {
                     val rawBasic = try { ServiceLocator.offlineSyncManager.loadClubBasics() } catch (_: Exception) { null } ?: run {
-                        _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingClub))
+                        _state.value = _state.value.copy(isLoading = false, error = AppError.generic(AppStrings.current.errorMessages.errorLoadingClub))
                         return
                     }
                     try { com.tkolymp.shared.Logger.d("TrainersLocationsVM", "offline_club_basic loaded, len=${rawBasic.length}") } catch (_: Exception) {}
@@ -124,7 +125,7 @@ class TrainersLocationsViewModel(
                     _state.value = _state.value.copy(clubData = com.tkolymp.shared.club.ClubData(locations, trainers, cohorts, null), trainerLessonCounts = lessonCounts, isLoading = false)
                     return
                 } catch (_: Exception) {
-                    _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingClub))
+                    _state.value = _state.value.copy(isLoading = false, error = AppError.generic(AppStrings.current.errorMessages.errorLoadingClub))
                     return
                 }
             }
