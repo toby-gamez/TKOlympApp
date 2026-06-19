@@ -24,4 +24,5 @@ data class CommonActionStrings(
     val decrease: String = "Decrease",
     val increase: String = "Increase",
     val options: String = "Options",
+    val openInWeb: String = "Open in web",
 )

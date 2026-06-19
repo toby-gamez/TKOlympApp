@@ -361,6 +361,7 @@ val StringsBrainrot = Strings(
         calendarOptionsTitle = "vibe",
         weekDayAbbreviations = listOf("Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"),
         resetToToday = "back to today fr",
+        emptyCalendar = "no events this week ngl",
     ),
     onboarding = OnboardingStrings(
         welcomeSubtitle = "Training sched, comp sign-ups, the board and all ur dance vibes – everything in one place fr no cap.",

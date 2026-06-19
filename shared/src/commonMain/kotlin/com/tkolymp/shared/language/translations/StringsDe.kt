@@ -360,6 +360,7 @@ val StringsDe = Strings(
         calendarOptionsTitle = "Ansicht",
         weekDayAbbreviations = listOf("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"),
         resetToToday = "Zurück zu heute",
+        emptyCalendar = "Keine Ereignisse diese Woche",
     ),
     onboarding = OnboardingStrings(
         welcomeSubtitle = "Trainingsplan, Wettkampfanmeldungen, Pinnwand und alles über dein Tanzen – übersichtlich an einem Ort.",

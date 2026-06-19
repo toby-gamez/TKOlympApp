@@ -390,6 +390,7 @@ val StringsSk = Strings(
         calendarOptionsTitle = "Zobrazenie",
         weekDayAbbreviations = listOf("Po", "Ut", "St", "Št", "Pi", "So", "Ne"),
         resetToToday = "Späť na dnes",
+        emptyCalendar = "Tento týždeň žiadne udalosti",
     ),
     onboarding = OnboardingStrings(
         welcomeSubtitle = "Tréningový rozvrh, prihlasovanie na súťaže, nástenka a všetko o vašom tancovaní – prehľadne na jednom mieste.",

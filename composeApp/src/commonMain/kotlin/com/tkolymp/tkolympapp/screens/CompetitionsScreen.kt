@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
@@ -54,6 +55,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -79,6 +81,7 @@ fun CompetitionsScreen(
     val viewModel = viewModel<CompetitionViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
+    val uriHandler = LocalUriHandler.current
 
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     val tabs = listOf(
@@ -138,7 +141,8 @@ fun CompetitionsScreen(
                             competitions = state.upcomingCompetitions,
                             isLoading = state.isLoading,
                             emptyText = AppStrings.current.competition.noUpcoming,
-                            sortDescending = false
+                            sortDescending = false,
+                            onOpenWeb = { uriHandler.openUri("https://www.csts.cz/dancesport/kalendar_akci") }
                         )
                     } else {
                         CompetitionsListContent(
@@ -172,7 +176,8 @@ private fun CompetitionsListContent(
     competitions: List<Competition>,
     isLoading: Boolean,
     emptyText: String,
-    sortDescending: Boolean
+    sortDescending: Boolean,
+    onOpenWeb: (() -> Unit)? = null
 ) {
     val grouped = remember(competitions, sortDescending) {
         competitions
@@ -212,7 +217,7 @@ private fun CompetitionsListContent(
         } else {
             itemsIndexed(visibleGroups, key = { _, (key, _) -> key }) { index, (_, eventComps) ->
                 StaggeredItem(index = index, visible = cardsVisible, baseDelayMs = 50) {
-                    CompetitionEventCard(competitions = eventComps)
+                    CompetitionEventCard(competitions = eventComps, onOpenWeb = onOpenWeb)
                 }
             }
             if (displayCount < grouped.size) {
@@ -231,7 +236,7 @@ private fun CompetitionsListContent(
 }
 
 @Composable
-internal fun CompetitionEventCard(competitions: List<Competition>) {
+internal fun CompetitionEventCard(competitions: List<Competition>, onOpenWeb: (() -> Unit)? = null) {
     val first = competitions.first()
 
     Card(
@@ -241,13 +246,26 @@ internal fun CompetitionEventCard(competitions: List<Competition>) {
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
-            Text(
-                text = first.eventName ?: "",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = first.eventName ?: "",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+                if (onOpenWeb != null) {
+                    IconButton(onClick = onOpenWeb, modifier = Modifier.size(32.dp)) {
+                        Icon(
+                            Icons.Default.OpenInNew,
+                            contentDescription = AppStrings.current.commonActions.openInWeb,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(6.dp))
 

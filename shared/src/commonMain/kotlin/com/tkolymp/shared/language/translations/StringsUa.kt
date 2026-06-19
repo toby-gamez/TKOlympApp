@@ -360,6 +360,7 @@ val StringsUa = Strings(
         calendarOptionsTitle = "Перегляд",
         weekDayAbbreviations = listOf("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"),
         resetToToday = "На сьогодні",
+        emptyCalendar = "Цього тижня немає подій",
     ),
     onboarding = OnboardingStrings(
         welcomeSubtitle = "Розклад тренувань, реєстрація на змагання, дошка оголошень та все про ваш танець – зручно в одному місці.",

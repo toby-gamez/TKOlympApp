@@ -349,6 +349,7 @@ val StringsVi = Strings(
         calendarOptionsTitle = "Xem",
         weekDayAbbreviations = listOf("T2", "T3", "T4", "T5", "T6", "T7", "CN"),
         resetToToday = "Về hôm nay",
+        emptyCalendar = "Không có sự kiện tuần này",
     ),
     onboarding = OnboardingStrings(
         welcomeSubtitle = "Lịch tập luyện, đăng ký thi đấu, bảng thông báo và tất cả về hành trình khiêu vũ của bạn – mọi thứ trong một nơi.",

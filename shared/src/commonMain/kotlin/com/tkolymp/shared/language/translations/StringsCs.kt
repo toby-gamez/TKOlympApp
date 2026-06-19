@@ -371,6 +371,7 @@ val StringsCs = Strings(
         weekDayAbbreviations = listOf("Po", "Út", "St", "Čt", "Pá", "So", "Ne"),
         resetToToday = "Zpět na dnes",
         clearFilters = "Zrušit filtry",
+        emptyCalendar = "Tento týden žádné události",
     ),
     onboarding = OnboardingStrings(
         welcomeSubtitle = "Tréninkový rozvrh, přihlašování na soutěže, nástěnka a vše o vašem tancování – přehledně na jednom místě.",
