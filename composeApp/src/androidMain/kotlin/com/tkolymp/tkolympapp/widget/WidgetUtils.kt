@@ -10,6 +10,7 @@ import androidx.glance.layout.Box
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.tkolympapp.MainActivity
 import kotlinx.datetime.LocalDateTime
 
@@ -28,11 +29,8 @@ fun formatWidgetTime(dateTime: LocalDateTime): String {
     return "$day.$month $hour:$minute"
 }
 
-fun formatBirthdayLabel(daysUntil: Int, age: Int): String = when (daysUntil) {
-    0    -> "Today · turns $age"
-    1    -> "Tomorrow · turns $age"
-    else -> "In $daysUntil days · turns $age"
-}
+fun formatBirthdayLabel(daysUntil: Int, age: Int): String =
+    AppStrings.current.widget.formatBirthdayLabel(daysUntil, age)
 
 @androidx.glance.GlanceComposable
 @androidx.compose.runtime.Composable

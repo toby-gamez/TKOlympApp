@@ -682,4 +682,16 @@ val StringsSk = Strings(
         cstsProgress = "Výsledky ČSTS",
         noCstsProgress = "Žiadne výsledky ČSTS",
     ),
+    widget = com.tkolymp.shared.language.WidgetStrings(
+        myTrainings = "Moje tréningy",
+        notLoggedIn = "Neprihlásený",
+        noUpcomingEvents = "Žiadne nadchádzajúce tréningy",
+        noUpcomingBirthdays = "Žiadne nadchádzajúce narodeniny",
+        turns = "slaví",
+        todayLabel = "Dnes",
+        tomorrowLabel = "Zajtra",
+        inXDays = "O %d dní",
+        daysAway = "dní zostáva",
+        dayAway = "deň zostáva",
+    ),
 )

@@ -29,19 +29,21 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.tkolympapp.R
 
 private data class ToolboxItem(val iconRes: Int, val label: String, val route: String)
 
-private val toolboxItems = listOf(
-    ToolboxItem(R.drawable.ic_widget_calendar, "Calendar", "calendar"),
-    ToolboxItem(R.drawable.ic_widget_board, "Board", "board"),
-    ToolboxItem(R.drawable.ic_widget_events, "Events", "events"),
-    ToolboxItem(R.drawable.ic_widget_competitions, "Comps", "competitions"),
-)
-
 class ToolboxWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
+        WidgetDataProvider.ensureInitialized(context)
+        val nav = AppStrings.current.navigation
+        val toolboxItems = listOf(
+            ToolboxItem(R.drawable.ic_widget_calendar, nav.calendar, "calendar"),
+            ToolboxItem(R.drawable.ic_widget_board, nav.board, "board"),
+            ToolboxItem(R.drawable.ic_widget_events, nav.events, "events"),
+            ToolboxItem(R.drawable.ic_widget_competitions, AppStrings.current.competition.competitions, "competitions"),
+        )
         provideContent {
             GlanceTheme(colors = WidgetColorProviders) {
                 Row(

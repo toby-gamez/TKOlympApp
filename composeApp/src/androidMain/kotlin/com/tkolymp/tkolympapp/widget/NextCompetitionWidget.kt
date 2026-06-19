@@ -18,6 +18,9 @@ import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
+import androidx.glance.ColorFilter
+import androidx.glance.Image
+import androidx.glance.ImageProvider
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxHeight
@@ -30,7 +33,10 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import androidx.glance.layout.size
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.language.CompetitionStrings
+import com.tkolymp.tkolympapp.R
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
@@ -63,23 +69,35 @@ class NextCompetitionWidget : GlanceAppWidget() {
                             .fillMaxSize()
                             .padding(horizontal = 12.dp, vertical = 12.dp)
                     ) {
-                        Text(
-                            text = "Next Competition",
-                            style = TextStyle(
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = GlanceTheme.colors.onSurfaceVariant
+                        Row(
+                            modifier = GlanceModifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = AppStrings.current.competition.nearestCompetition,
+                                modifier = GlanceModifier.defaultWeight(),
+                                style = TextStyle(
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = GlanceTheme.colors.onSurfaceVariant
+                                )
                             )
-                        )
+                            Image(
+                                provider = ImageProvider(R.drawable.ic_launcher_monochrome),
+                                contentDescription = null,
+                                modifier = GlanceModifier.size(26.dp),
+                                colorFilter = ColorFilter.tint(GlanceTheme.colors.onSurfaceVariant)
+                            )
+                        }
 
                         when {
                             !loggedIn -> {
                                 Spacer(GlanceModifier.height(8.dp))
-                                WidgetEmptyState("Not logged in")
+                                WidgetEmptyState(AppStrings.current.widget.notLoggedIn)
                             }
                             competition == null -> {
                                 Spacer(GlanceModifier.height(8.dp))
-                                WidgetEmptyState("No upcoming competitions")
+                                WidgetEmptyState(AppStrings.current.competition.noUpcoming)
                             }
                             else -> {
                                 val days = daysUntil(competition.competitionDate)
@@ -115,7 +133,7 @@ class NextCompetitionWidget : GlanceAppWidget() {
                                     Column {
                                         Spacer(GlanceModifier.height(6.dp))
                                         Text(
-                                            text = if (days == 1) "day away" else "days away",
+                                            text = if (days == 1) AppStrings.current.widget.dayAway else AppStrings.current.widget.daysAway,
                                             style = TextStyle(
                                                 fontSize = 10.sp,
                                                 color = GlanceTheme.colors.onSurfaceVariant

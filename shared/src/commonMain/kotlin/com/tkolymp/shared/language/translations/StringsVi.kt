@@ -682,4 +682,16 @@ val StringsVi = Strings(
         cstsProgress = "Kết quả ČSTS",
         noCstsProgress = "Không có dữ liệu ČSTS",
     ),
+    widget = com.tkolymp.shared.language.WidgetStrings(
+        myTrainings = "Buổi tập của tôi",
+        notLoggedIn = "Chưa đăng nhập",
+        noUpcomingEvents = "Không có buổi tập sắp tới",
+        noUpcomingBirthdays = "Không có sinh nhật sắp tới",
+        turns = "tròn",
+        todayLabel = "Hôm nay",
+        tomorrowLabel = "Ngày mai",
+        inXDays = "Còn %d ngày",
+        daysAway = "ngày nữa",
+        dayAway = "ngày nữa",
+    ),
 )

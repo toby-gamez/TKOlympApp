@@ -3,15 +3,19 @@ package com.tkolymp.tkolympapp.widget
 import android.content.Context
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.calendar.CalendarUtils
-import com.tkolymp.shared.calendar.TimelineEvent
 import com.tkolymp.shared.competitions.Competition
+import com.tkolymp.shared.event.EventInstance
+import com.tkolymp.shared.event.firstTrainerOrEmpty
 import com.tkolymp.shared.initNetworking
+import com.tkolymp.shared.language.AppLanguage
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.people.Person
 import com.tkolymp.tkolympapp.BuildConfig
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
@@ -19,6 +23,14 @@ import kotlinx.datetime.todayIn
 import kotlin.time.Clock
 
 data class BirthdayEntry(val person: Person, val daysUntil: Int, val age: Int)
+
+data class GroupedWidgetEvent(
+    val eventId: Long?,
+    val title: String,
+    val colorRgb: String?,   // null = lesson (use surfaceVariant bar like LessonView)
+    val location: String?,
+    val slots: List<LocalDateTime>  // start times, sorted ascending
+)
 
 object WidgetDataProvider {
 
@@ -30,6 +42,11 @@ object WidgetDataProvider {
             if (ServiceLocator.isInitialized) return
             initNetworking(context.applicationContext, BuildConfig.API_BASE_URL, BuildConfig.TENANT_ID)
         }
+        // Apply saved language so widget strings match app language preference
+        try {
+            val code = ServiceLocator.languageStorage.getLanguageCode()
+            if (code != null) AppStrings.setLanguage(AppLanguage.fromCode(code))
+        } catch (_: Exception) {}
     }
 
     suspend fun isLoggedIn(context: Context): Boolean {
@@ -39,7 +56,7 @@ object WidgetDataProvider {
         } catch (_: Exception) { false }
     }
 
-    suspend fun fetchMyUpcomingEvents(context: Context, limit: Int = 3): List<TimelineEvent> {
+    suspend fun fetchMyUpcomingEvents(context: Context, limit: Int = 10): List<GroupedWidgetEvent> {
         return try {
             ensureInitialized(context)
             val tz = TimeZone.currentSystemDefault()
@@ -59,10 +76,51 @@ object WidgetDataProvider {
 
             val nowLocal = Clock.System.now().toLocalDateTime(tz)
 
-            grouped.values.flatten()
-                .mapNotNull { CalendarUtils.eventInstanceToTimelineEvent(it, personId, coupleIds) }
-                .filter { !it.isCancelled && it.isMyEvent && it.startTime >= nowLocal }
-                .sortedBy { it.startTime }
+            // Convert all instances to TimelineEvents, keeping the original EventInstance alongside
+            val all = grouped.values.flatten()
+                .mapNotNull { inst ->
+                    val te = CalendarUtils.eventInstanceToTimelineEvent(inst, personId, coupleIds)
+                        ?: return@mapNotNull null
+                    if (te.isCancelled || !te.isMyEvent || te.startTime < nowLocal) return@mapNotNull null
+                    Pair(inst, te)
+                }
+
+            val lessonPairs = all.filter { (inst, _) -> isLesson(inst) }
+            val otherPairs  = all.filter { (inst, _) -> !isLesson(inst) }
+
+            // Group lessons by trainer name — matches CalendarViewModel.splitEventMaps exactly
+            val lessonGroups = lessonPairs
+                .groupBy { (inst, _) -> inst.event.firstTrainerOrEmpty() }
+                .map { (trainer, pairs) ->
+                    val sorted = pairs.sortedBy { (_, te) -> te.startTime }
+                    val firstInst = sorted.first().first
+                    GroupedWidgetEvent(
+                        eventId = sorted.first().second.eventId,
+                        title = trainer,
+                        colorRgb = null,   // surfaceVariant bar, same as LessonView
+                        location = firstInst.event?.locationText?.takeIf { it.isNotBlank() },
+                        slots = sorted.map { (_, te) -> te.startTime }
+                    )
+                }
+
+            // Group other events by eventId (same event may appear once, but keep the groupBy for safety)
+            val otherGroups = otherPairs
+                .groupBy { (_, te) -> te.eventId ?: te.id }
+                .map { (_, pairs) ->
+                    val sorted = pairs.sortedBy { (_, te) -> te.startTime }
+                    val firstTe = sorted.first().second
+                    val firstInst = sorted.first().first
+                    GroupedWidgetEvent(
+                        eventId = firstTe.eventId,
+                        title = firstTe.title,
+                        colorRgb = firstTe.colorRgb,
+                        location = firstInst.event?.locationText?.takeIf { it.isNotBlank() },
+                        slots = sorted.map { (_, te) -> te.startTime }
+                    )
+                }
+
+            (lessonGroups + otherGroups)
+                .sortedBy { it.slots.first() }
                 .take(limit)
         } catch (_: Exception) { emptyList() }
     }
@@ -96,4 +154,9 @@ object WidgetDataProvider {
             ServiceLocator.competitionService.getNearestUpcoming(pPersonIds = null)
         } catch (_: Exception) { null }
     }
+
+    // Mirrors CalendarViewModel.isLesson — event has a non-blank trainer name
+    private fun isLesson(inst: EventInstance): Boolean =
+        inst.event?.eventTrainersList.orEmpty().isNotEmpty() &&
+        !inst.event?.eventTrainersList?.firstOrNull().isNullOrBlank()
 }

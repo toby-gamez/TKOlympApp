@@ -50,7 +50,7 @@
         <receiver
             android:name=".widget.MyEventsWidgetReceiver"
             android:exported="true"
-            android:label="My Events">
+            android:label="My Trainings">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>

@@ -683,4 +683,16 @@ val StringsBrainrot = Strings(
         cstsProgress = "ČSTS rizz points",
         noCstsProgress = "No ČSTS clout bestie",
     ),
+    widget = com.tkolymp.shared.language.WidgetStrings(
+        myTrainings = "My Rizz Trainings",
+        notLoggedIn = "Not logged in no cap",
+        noUpcomingEvents = "No trainings, ghosted fr fr",
+        noUpcomingBirthdays = "No birthdays sheesh",
+        turns = "hits",
+        todayLabel = "Today slay",
+        tomorrowLabel = "Tomorrow fr",
+        inXDays = "In %d days no cap",
+        daysAway = "days (bussin)",
+        dayAway = "day (W)",
+    ),
 )

@@ -693,4 +693,16 @@ val StringsEn = Strings(
         cstsProgress = "ČSTS Progress",
         noCstsProgress = "No ČSTS progress data",
     ),
+    widget = com.tkolymp.shared.language.WidgetStrings(
+        myTrainings = "My Trainings",
+        notLoggedIn = "Not logged in",
+        noUpcomingEvents = "No upcoming trainings",
+        noUpcomingBirthdays = "No upcoming birthdays",
+        turns = "turns",
+        todayLabel = "Today",
+        tomorrowLabel = "Tomorrow",
+        inXDays = "In %d days",
+        daysAway = "days away",
+        dayAway = "day away",
+    ),
 )

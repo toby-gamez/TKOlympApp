@@ -341,7 +341,7 @@ fun CalendarScreen(
                             .distinct().sorted()
                     }
 
-                    if (allDatesToShow.isEmpty() && !calState.isLoading) {
+                    if (filteredEventsByDay.isEmpty() && !calState.isLoading) {
                         EmptyState(
                             title = AppStrings.current.calendarView.emptyCalendar,
                             icon = Icons.Default.CalendarMonth,

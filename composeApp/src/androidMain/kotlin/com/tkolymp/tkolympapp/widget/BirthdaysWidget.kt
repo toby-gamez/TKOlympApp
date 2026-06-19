@@ -5,9 +5,12 @@ import android.content.Context
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.glance.ColorFilter
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
+import androidx.glance.Image
+import androidx.glance.ImageProvider
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
@@ -24,6 +27,7 @@ import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
+import androidx.glance.layout.size
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.layout.width
@@ -31,6 +35,8 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.tkolympapp.R
 
 class BirthdaysWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
@@ -48,18 +54,30 @@ class BirthdaysWidget : GlanceAppWidget() {
                         .clickable(actionStartActivity(deepLinkIntent(context, "people")))
                 ) {
                     Spacer(GlanceModifier.height(12.dp))
-                    Text(
-                        text = "Birthdays",
-                        style = TextStyle(
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = GlanceTheme.colors.onSurfaceVariant
+                    Row(
+                        modifier = GlanceModifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = AppStrings.current.profile.birthdays,
+                            modifier = GlanceModifier.defaultWeight(),
+                            style = TextStyle(
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = GlanceTheme.colors.onSurfaceVariant
+                            )
                         )
-                    )
+                        Image(
+                            provider = ImageProvider(R.drawable.ic_launcher_monochrome),
+                            contentDescription = null,
+                            modifier = GlanceModifier.size(26.dp),
+                            colorFilter = ColorFilter.tint(GlanceTheme.colors.onSurfaceVariant)
+                        )
+                    }
                     Spacer(GlanceModifier.height(8.dp))
                     when {
-                        !loggedIn -> WidgetEmptyState("Not logged in")
-                        birthdays.isEmpty() -> WidgetEmptyState("No upcoming birthdays")
+                        !loggedIn -> WidgetEmptyState(AppStrings.current.widget.notLoggedIn)
+                        birthdays.isEmpty() -> WidgetEmptyState(AppStrings.current.widget.noUpcomingBirthdays)
                         else -> LazyColumn(modifier = GlanceModifier.fillMaxSize()) {
                             items(
                                 birthdays,
