@@ -61,6 +61,7 @@ kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.
 compose-android-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-android-bom" }
 compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 ksafe = { module = "eu.anifantakis:ksafe", version.ref = "ksafe" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 glance-appwidget = { module = "androidx.glance:glance-appwidget", version.ref = "glance" }

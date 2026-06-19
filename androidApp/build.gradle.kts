@@ -48,4 +48,7 @@ android {
 
 dependencies {
     implementation(projects.composeApp)
+    implementation(projects.appRes)
+    implementation(projects.shared)
+    implementation(libs.kotlinx.coroutines.android)
 }

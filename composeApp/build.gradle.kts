@@ -34,6 +34,7 @@ kotlin {
 
     sourceSets {
         androidMain.dependencies {
+            implementation(projects.appRes)
             implementation(libs.androidx.activity.compose)
             implementation(libs.coil.compose)
             implementation(libs.glance.appwidget)

@@ -5,14 +5,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build & Run
 
 ```bash
-# Debug APK (output: composeApp/build/outputs/apk/debug/)
-./gradlew :composeApp:assembleDebug
+# Debug APK (output: androidApp/build/outputs/apk/debug/)
+./gradlew :androidApp:assembleDebug
 
 # Install on connected device/emulator
-adb install composeApp/build/outputs/apk/debug/composeApp-debug.apk
+adb install androidApp/build/outputs/apk/debug/androidApp-debug.apk
 
 # Release APK
-./gradlew :composeApp:assembleRelease
+./gradlew :androidApp:assembleRelease
 
 # iOS framework (then open iosApp/iosApp.xcodeproj in Xcode)
 ./gradlew :shared:linkDebugFrameworkIosSimulatorArm64
