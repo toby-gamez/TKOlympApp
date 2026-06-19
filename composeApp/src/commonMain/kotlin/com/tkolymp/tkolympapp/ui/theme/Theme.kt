@@ -15,6 +15,7 @@ fun AppTheme(
 
     MaterialTheme(
         colorScheme = colors,
+        typography = AppTypography,
         content = {
             Surface(color = colors.background) {
                 content()

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -44,7 +45,7 @@ internal fun parseColorOrDefault(hex: String?): Color {
 }
 
 @Composable
-internal fun RenderEventContent(item: EventInstance, tip: String? = null, showType: Boolean = true, showDayOfWeek: Boolean = false, modifier: Modifier = Modifier) {
+internal fun RenderEventContent(item: EventInstance, tip: String? = null, showType: Boolean = true, showDayOfWeek: Boolean = false, cohortNames: List<String> = emptyList(), modifier: Modifier = Modifier) {
     val name = run {
         val ev = item.event
         if (ev == null) return@run AppStrings.current.dialogs.noName
@@ -98,6 +99,15 @@ internal fun RenderEventContent(item: EventInstance, tip: String? = null, showTy
         Spacer(modifier = Modifier.height(6.dp))
         val boxBg = MaterialTheme.colorScheme.surfaceVariant
         FlowRow(modifier = Modifier.fillMaxWidth()) {
+            cohortNames.forEach { name ->
+                Box(modifier = Modifier
+                    .padding(end = 8.dp, bottom = 8.dp)
+                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(8.dp))
+                    .padding(horizontal = 8.dp, vertical = 6.dp)
+                ) {
+                    androidx.compose.material3.Text(name, style = MaterialTheme.typography.bodySmall, maxLines = 1, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                }
+            }
             if (locationOrTrainer.isNotBlank()) {
                 Box(modifier = Modifier
                     .padding(end = 8.dp, bottom = 8.dp)
@@ -137,6 +147,7 @@ internal fun RenderSingleEventCard(item: EventInstance, onEventClick: (Long, Lon
     Card(
         modifier = modifier
             .fillMaxWidth()
+            .defaultMinSize(minHeight = 48.dp)
             .padding(vertical = 4.dp)
             .clip(RoundedCornerShape(12.dp))
             .clickable {
@@ -155,6 +166,7 @@ internal fun RenderSingleEventCard(item: EventInstance, onEventClick: (Long, Lon
                 val hex = tc.cohort?.colorRgb
                 if (hex.isNullOrBlank()) null else try { parseColorOrDefault(hex) } catch (_: Exception) { null }
             }
+            val cohortNames = cohorts.mapNotNull { tc -> tc.cohort?.name?.takeIf { it.isNotBlank() } }
 
             Column(
                 modifier = Modifier
@@ -180,7 +192,7 @@ internal fun RenderSingleEventCard(item: EventInstance, onEventClick: (Long, Lon
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            RenderEventContent(item = item, tip = null, showType = showType, showDayOfWeek = false, modifier = Modifier.weight(1f))
+            RenderEventContent(item = item, tip = null, showType = showType, showDayOfWeek = false, cohortNames = cohortNames, modifier = Modifier.weight(1f))
         }
     }
 }

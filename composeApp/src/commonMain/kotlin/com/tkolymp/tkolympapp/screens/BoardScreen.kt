@@ -1,5 +1,6 @@
 package com.tkolymp.tkolympapp.screens
 import com.tkolymp.tkolympapp.SwipeToReload
+import com.tkolymp.tkolympapp.components.EmptyState
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -200,35 +201,39 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
                         val bodyOk = try { normalizeForSearch(formatHtmlContent(a.body ?: "")).contains(nq) } catch (_: Exception) { false }
                         titleOk || bodyOk
                     }
-                    LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                        items(filtered) { a ->
-                            val i = filtered.indexOf(a)
-                            StaggeredItem(index = i, visible = listVisible) {
-                                Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 12.dp, vertical = 4.dp)
-                                        .clickable {
-                                            a.id.toLongOrNull()?.let { nid -> onOpenNotice(nid) }
-                                        },
-                                    shape = RoundedCornerShape(16.dp)
-                                ) {
-                                    Column(modifier = Modifier.padding(14.dp)) {
-                                        Text(a.title ?: AppStrings.current.dialogs.noName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                                        val authorName = listOfNotNull(a.author?.uJmeno, a.author?.uPrijmeni).joinToString(" ").trim()
-                                        if (authorName.isNotEmpty()) {
-                                            Spacer(modifier = Modifier.height(2.dp))
-                                            Text(authorName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (filtered.isEmpty() && !state.isLoading) {
+                        EmptyState(title = AppStrings.current.announcements.noAnnouncementsToShow)
+                    } else {
+                        LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                            items(filtered) { a ->
+                                val i = filtered.indexOf(a)
+                                StaggeredItem(index = i, visible = listVisible) {
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                                            .clickable {
+                                                a.id.toLongOrNull()?.let { nid -> onOpenNotice(nid) }
+                                            },
+                                        shape = RoundedCornerShape(16.dp)
+                                    ) {
+                                        Column(modifier = Modifier.padding(14.dp)) {
+                                            Text(a.title ?: AppStrings.current.dialogs.noName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                                            val authorName = listOfNotNull(a.author?.uJmeno, a.author?.uPrijmeni).joinToString(" ").trim()
+                                            if (authorName.isNotEmpty()) {
+                                                Spacer(modifier = Modifier.height(2.dp))
+                                                Text(authorName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            }
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            val plainBody = remember(a.id, a.body) { formatHtmlContent(a.body ?: "") }
+                                            Text(
+                                                plainBody,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                maxLines = 2,
+                                                overflow = TextOverflow.Ellipsis,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
                                         }
-                                        Spacer(modifier = Modifier.height(6.dp))
-                                        val plainBody = remember(a.id, a.body) { formatHtmlContent(a.body ?: "") }
-                                        Text(
-                                            plainBody,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            maxLines = 2,
-                                            overflow = TextOverflow.Ellipsis,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
                                     }
                                 }
                             }

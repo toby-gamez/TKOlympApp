@@ -67,7 +67,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -107,6 +106,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
+import com.tkolymp.tkolympapp.components.EmptyState
 import com.tkolymp.tkolympapp.components.LessonView
 import com.tkolymp.tkolympapp.components.RenderSingleEventCard
 import com.tkolymp.tkolympapp.util.StaggeredItem
@@ -314,9 +314,7 @@ fun CalendarScreen(
                     }
                 }
 
-                // Tab changes are NOT in the content key — they recompose in place so the
-                // stagger animation does not replay every time Mine/All is toggled.
-                val contentKey = Pair(localWeekOffset, customStartDate)
+                val contentKey = Triple(localWeekOffset, customStartDate, selectedTab)
                 androidx.compose.animation.AnimatedContent(
                     targetState = contentKey,
                     transitionSpec = { tabContentTransitionSpec() },
@@ -344,30 +342,11 @@ fun CalendarScreen(
                     }
 
                     if (allDatesToShow.isEmpty() && !calState.isLoading) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(32.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.CalendarMonth,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(32.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    text = AppStrings.current.calendarView.emptyCalendar,
-                                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    textAlign = TextAlign.Center
-                                )
-                            }
-                        }
+                        EmptyState(
+                            title = AppStrings.current.calendarView.emptyCalendar,
+                            icon = Icons.Default.CalendarMonth,
+                            fullPage = true
+                        )
                     } else Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -396,22 +375,18 @@ fun CalendarScreen(
                             Spacer(modifier = Modifier.height(4.dp))
 
                             filteredLessons.forEach { (trainer, instances) ->
-                                key(trainer) {
-                                    LessonView(
-                                        trainerName = trainer,
-                                        instances = instances,
-                                        isAllTab = (selectedTab == 1),
-                                        myPersonId = calState.myPersonId,
-                                        myCoupleIds = calState.myCoupleIds,
-                                        onEventClick = { id, instId -> onOpenEvent(id, instId) }
-                                    )
-                                }
+                                LessonView(
+                                    trainerName = trainer,
+                                    instances = instances,
+                                    isAllTab = (selectedTab == 1),
+                                    myPersonId = calState.myPersonId,
+                                    myCoupleIds = calState.myCoupleIds,
+                                    onEventClick = { id, instId -> onOpenEvent(id, instId) }
+                                )
                             }
 
                             filteredOther.forEach { item ->
-                                key(item.id) {
-                                    RenderSingleEventCard(item = item, onEventClick = { id, instId -> onOpenEvent(id, instId) })
-                                }
+                                RenderSingleEventCard(item = item, onEventClick = { id, instId -> onOpenEvent(id, instId) })
                             }
 
                             if (competitions.isNotEmpty()) {

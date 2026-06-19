@@ -100,6 +100,7 @@ import com.tkolymp.tkolympapp.ui.theme.AppTheme
 fun AppContent(
     platformInit: suspend () -> Unit,
     integrityFailed: Boolean = false,
+    initialRoute: String? = null,
 ) {
     val themeMode by AppearanceSettings.themeMode.collectAsStateWithLifecycle()
     val isDark = when (themeMode) {
@@ -186,13 +187,22 @@ fun AppContent(
                 }
             }
 
+            LaunchedEffect(loggedIn) {
+                if (loggedIn == true && initialRoute != null) {
+                    navController.navigate(initialRoute) {
+                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                        launchSingleTop = true
+                    }
+                }
+            }
+
             Box(modifier = Modifier.fillMaxSize()) {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     containerColor = MaterialTheme.colorScheme.surface,
                     bottomBar = {
                         AnimatedVisibility(
-                            visible = showOnboarding != true && showRoleSelection != true && loggedIn == true && currentRoute in listOf("overview", "calendar", "timeline", "board", "events", "other"),
+                            visible = showOnboarding != true && showRoleSelection != true && loggedIn == true && currentRoute in listOf("overview", "calendar", "board", "events", "other"),
                             enter = slideInVertically(initialOffsetY = { it }, animationSpec = tween(300)),
                             exit = slideOutVertically(targetOffsetY = { it }, animationSpec = tween(300))
                         ) {
@@ -200,13 +210,6 @@ fun AppContent(
                                 val startId = navController.graph.findStartDestination().id
                                 if (it == "overview") {
                                     navController.navigate(it) {
-                                        popUpTo(startId) { }
-                                        launchSingleTop = true
-                                        restoreState = false
-                                    }
-                                } else if (it == "calendar") {
-                                    val destination = if (preferTimeline) "timeline" else "calendar"
-                                    navController.navigate(destination) {
                                         popUpTo(startId) { saveState = true }
                                         launchSingleTop = true
                                         restoreState = true
@@ -331,20 +334,28 @@ fun AppNavHost(
 
         composable(
             route = "calendar",
-            enterTransition = { if (preferTimeline) slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(400)) else fadeIn(tween(300)) },
-            exitTransition = { if (preferTimeline) slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(400)) else fadeOut(tween(300)) },
-            popEnterTransition = { if (preferTimeline) slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(400)) else fadeIn(tween(300)) },
-            popExitTransition = { if (preferTimeline) slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(400)) else fadeOut(tween(300)) }
+            enterTransition = { fadeIn(tween(300)) },
+            exitTransition = { fadeOut(tween(300)) }
         ) {
-            CalendarScreen(
-                weekOffset = weekOffset,
-                onWeekOffsetChange = onWeekOffsetChange,
-                onOpenEvent = { id, instId -> navController.navigate("event/$id" + if (instId != null) "?instanceId=$instId" else "") },
-                onNavigateTimeline = if (preferTimeline) ({ navController.navigateUp() }) else ({ navController.navigate("timeline") }),
-                onBack = if (preferTimeline) ({ navController.navigateUp() }) else null,
-                onFindFreeLessons = { navController.navigate("free-lessons") },
-                bottomPadding = bottomPadding
-            )
+            var isTimelineView by remember { mutableStateOf(preferTimeline) }
+
+            if (isTimelineView) {
+                CalendarViewScreen(
+                    onEventClick = { id, instId -> navController.navigate("event/$id" + if (instId != null) "?instanceId=$instId" else "") },
+                    onSwitchToBlocks = { isTimelineView = false },
+                    onFindFreeLessons = { navController.navigate("free-lessons") },
+                    bottomPadding = bottomPadding,
+                )
+            } else {
+                CalendarScreen(
+                    weekOffset = weekOffset,
+                    onWeekOffsetChange = onWeekOffsetChange,
+                    onOpenEvent = { id, instId -> navController.navigate("event/$id" + if (instId != null) "?instanceId=$instId" else "") },
+                    onNavigateTimeline = { isTimelineView = true },
+                    onFindFreeLessons = { navController.navigate("free-lessons") },
+                    bottomPadding = bottomPadding
+                )
+            }
         }
 
         composable(
@@ -611,22 +622,6 @@ fun AppNavHost(
                     onOpenCouple = { }
                 )
             }
-        }
-
-        composable(
-            route = "timeline",
-            enterTransition = { if (preferTimeline) fadeIn(tween(300)) else slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(400)) },
-            exitTransition = { if (preferTimeline) fadeOut(tween(300)) else slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(400)) },
-            popEnterTransition = { if (preferTimeline) fadeIn(tween(300)) else slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(400)) },
-            popExitTransition = { if (preferTimeline) fadeOut(tween(300)) else slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(400)) }
-        ) {
-            CalendarViewScreen(
-                onEventClick = { id, instId -> navController.navigate("event/$id" + if (instId != null) "?instanceId=$instId" else "") },
-                onBack = if (!preferTimeline) ({ navController.navigateUp() }) else null,
-                onSwitchToBlocks = if (preferTimeline) ({ navController.navigate("calendar") }) else null,
-                onFindFreeLessons = { navController.navigate("free-lessons") },
-                bottomPadding = bottomPadding,
-            )
         }
 
         composable(

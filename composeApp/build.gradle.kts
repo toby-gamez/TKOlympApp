@@ -31,6 +31,9 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
             implementation(libs.coil.compose)
+            implementation(libs.glance.appwidget)
+            implementation(libs.glance.material3)
+            implementation(libs.workmanager.ktx)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)

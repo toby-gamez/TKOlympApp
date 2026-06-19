@@ -59,6 +59,7 @@ import com.tkolymp.shared.utils.formatHtmlContent
 import com.tkolymp.shared.utils.formatMonthDay
 import com.tkolymp.shared.viewmodels.EventsViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
+import com.tkolymp.tkolympapp.components.EmptyState
 import com.tkolymp.tkolympapp.components.LessonView
 import com.tkolymp.tkolympapp.components.RenderSingleEventCard
 import com.tkolymp.tkolympapp.util.normalizeForSearch
@@ -228,10 +229,7 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                             .padding(horizontal = 12.dp)
                     ) {
                         if (planned.isEmpty()) {
-                            item {
-                                Spacer(modifier = Modifier.height(12.dp))
-                                Text(AppStrings.current.events.noEventsPlanned, style = MaterialTheme.typography.bodyMedium)
-                            }
+                            item { EmptyState(title = AppStrings.current.events.noEventsPlanned) }
                         }
 
                         items(planned.entries.toList()) { (date, list) ->
@@ -294,10 +292,7 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                             .padding(horizontal = 12.dp)
                     ) {
                         if (past.isEmpty()) {
-                            item {
-                                Spacer(modifier = Modifier.height(12.dp))
-                                Text(AppStrings.current.events.noPastEvents, style = MaterialTheme.typography.bodyMedium)
-                            }
+                            item { EmptyState(title = AppStrings.current.events.noPastEvents) }
                         }
 
                         items(past) { (date, list) ->

@@ -16,7 +16,7 @@ import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.integrity.IntegrityServiceAndroid
 
 @Composable
-fun App() {
+fun App(initialRoute: String? = null) {
     val ctx = LocalContext.current
     var integrityFailed by remember { mutableStateOf(false) }
     // In debug builds skip the integrity check immediately (mutableStateOf(true) = already checked)
@@ -36,8 +36,11 @@ fun App() {
     AppContent(
         integrityFailed = integrityFailed,
         platformInit = {
-            com.tkolymp.shared.initNetworking(ctx, BuildConfig.API_BASE_URL, BuildConfig.TENANT_ID)
+            if (!ServiceLocator.isInitialized) {
+                com.tkolymp.shared.initNetworking(ctx, BuildConfig.API_BASE_URL, BuildConfig.TENANT_ID)
+            }
             try { ServiceLocator.topicManager = AndroidTopicManager() } catch (_: Exception) {}
-        }
+        },
+        initialRoute = initialRoute
     )
 }

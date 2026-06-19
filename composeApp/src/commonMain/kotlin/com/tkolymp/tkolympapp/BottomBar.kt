@@ -54,7 +54,7 @@ fun AppBottomBar(
     modifier: Modifier = Modifier
 ) {
     NavigationBar(modifier = modifier) {
-        val calendarSelected = current == "calendar" || current == "timeline"
+        val calendarSelected = current == "calendar"
 
         NavigationBarItem(
             selected = current == "overview",

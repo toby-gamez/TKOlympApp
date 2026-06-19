@@ -306,9 +306,9 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     val headerText = when {
-                        state.summary.isNotBlank() && state.eventDescription.isNotBlank() -> "Shrnutí a popis"
-                        state.summary.isNotBlank() -> "Shrnutí"
-                        else -> "Popis"
+                        state.summary.isNotBlank() && state.eventDescription.isNotBlank() -> AppStrings.current.events.summaryAndDescription
+                        state.summary.isNotBlank() -> AppStrings.current.events.summaryOnly
+                        else -> AppStrings.current.events.descriptionOnly
                     }
                     Text(headerText, style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(6.dp))
@@ -358,7 +358,7 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                         val lessonsRemaining = trainer.int("lessonsRemaining")?.takeIf { it > 0 }
                         val label = when {
                             lessonsOffered != null && lessonsRemaining != null ->
-                                "$trainerName (nabízí: $lessonsOffered, zbývá: $lessonsRemaining)"
+                                "$trainerName (${AppStrings.current.events.trainerOffersLabel}: $lessonsOffered, ${AppStrings.current.events.trainerRemainingLabel}: $lessonsRemaining)"
                             else -> trainerName
                         }
                         Row(
@@ -476,10 +476,10 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                                     val trainerName = state.trainers.firstOrNull { trainerEl ->
                                         val trainer = trainerEl.asJsonObjectOrNull() ?: return@firstOrNull false
                                         trainer.int("id") == trainerId
-                                    }?.asJsonObjectOrNull()?.str("name") ?: "Trenér #$trainerId"
-                                    add(if (lessonCount != null && lessonCount > 0) "$trainerName: $lessonCount lekcí" else trainerName)
+                                    }?.asJsonObjectOrNull()?.str("name") ?: "${AppStrings.current.events.trainerFallbackPrefix}$trainerId"
+                                    add(if (lessonCount != null && lessonCount > 0) "$trainerName: $lessonCount ${AppStrings.current.events.lessonCountSuffix}" else trainerName)
                                 }
-                                if (!note.isNullOrBlank()) add("Poznámka: $note")
+                                if (!note.isNullOrBlank()) add("${AppStrings.current.registration.notePrefix}$note")
                             }
 
                             add(ParticipantItem(nameText, isMe, subItems, womanName, manName))
@@ -492,10 +492,10 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                             val email = extReg.str("email")
                             val note = extReg.str("note")
                             val subItems = buildList<String> {
-                                if (!email.isNullOrBlank()) add("Email: $email")
-                                if (!note.isNullOrBlank()) add("Poznámka: $note")
+                                if (!email.isNullOrBlank()) add("${AppStrings.current.registration.emailPrefix}$email")
+                                if (!note.isNullOrBlank()) add("${AppStrings.current.registration.notePrefix}$note")
                             }
-                            add(ParticipantItem("$firstName $lastName (externí)", false, subItems))
+                            add(ParticipantItem("$firstName $lastName${AppStrings.current.registration.externalSuffix}", false, subItems))
                         }
                     }
 

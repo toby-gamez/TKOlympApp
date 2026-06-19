@@ -137,10 +137,10 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
 
                 // Header
                 Row(modifier = Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.Center) {
-                    InitialsAvatar(name = displayName ?: "Uživatel", size = 64.dp, fontSize = 22.sp)
+                    InitialsAvatar(name = displayName ?: AppStrings.current.profile.displayNameFallback, size = 64.dp, fontSize = 22.sp)
                 }
                 Text(
-                    displayName ?: "Uživatel",
+                    displayName ?: AppStrings.current.profile.displayNameFallback,
                     style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier.padding(top = 8.dp, bottom = 4.dp).fillMaxWidth(),
                     textAlign = TextAlign.Center

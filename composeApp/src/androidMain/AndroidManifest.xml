@@ -46,6 +46,54 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <receiver
+            android:name=".widget.MyEventsWidgetReceiver"
+            android:exported="true"
+            android:label="My Events">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info_my_events" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.BirthdaysWidgetReceiver"
+            android:exported="true"
+            android:label="Upcoming Birthdays">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info_birthdays" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.NextCompetitionWidgetReceiver"
+            android:exported="true"
+            android:label="Next Competition">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info_next_competition" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.ToolboxWidgetReceiver"
+            android:exported="true"
+            android:label="TK Olymp Toolbox">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info_toolbox" />
+        </receiver>
     </application>
 
 </manifest>

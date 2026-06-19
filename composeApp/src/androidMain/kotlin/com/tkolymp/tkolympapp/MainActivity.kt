@@ -25,6 +25,7 @@ import com.tkolymp.shared.language.AppLanguage
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.language.getDeviceLanguageCode
 import com.tkolymp.shared.storage.LanguageStorage
+import com.tkolymp.tkolympapp.widget.WidgetUpdateWorker
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -47,6 +48,8 @@ class MainActivity : ComponentActivity() {
             appVersionCode = PackageInfoCompat.getLongVersionCode(pkgInfo)
         } catch (_: Exception) {}
 
+        val deepLinkRoute = intent.getStringExtra("DEEP_LINK_ROUTE")
+
         // Load language asynchronously before first composition.
         lifecycleScope.launch {
             val savedCode = try { LanguageStorage(this@MainActivity).getLanguageCode() } catch (_: Exception) { null }
@@ -58,8 +61,10 @@ class MainActivity : ComponentActivity() {
             AppStrings.setLanguage(language)
 
             setContent {
-                App()
+                App(initialRoute = deepLinkRoute)
             }
+
+            WidgetUpdateWorker.schedule(this@MainActivity)
 
             // Získání a zalogování FCM tokenu
             FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->

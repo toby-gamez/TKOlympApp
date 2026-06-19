@@ -41,6 +41,8 @@ object ServiceLocator {
     // Optional platform-provided topic manager (set by platform initializer if available)
     @Volatile var topicManager: com.tkolymp.shared.notification.ITopicManager? = null
 
+    val isInitialized: Boolean get() = _container != null
+
     val container: AppContainer
         get() = _container ?: error(
             "AppContainer is not initialized. Call ServiceLocator.init() in the platform initializer."

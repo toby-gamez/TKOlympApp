@@ -23,6 +23,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.draw.clip
+import com.tkolymp.tkolympapp.components.EmptyState
 import com.tkolymp.tkolympapp.components.InitialsAvatar
 import com.tkolymp.tkolympapp.components.parseColorOrDefault
 import androidx.compose.material.icons.Icons
@@ -241,7 +242,7 @@ fun OverviewScreen(
 
             Column(modifier = Modifier.padding(horizontal = 12.dp)) {
                 if (state.trainingSelectedDate == null && !state.isLoading) {
-                    Text(AppStrings.current.timeline.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
+                    EmptyState(title = AppStrings.current.timeline.nothingPlanned)
                 } else if (state.trainingSelectedDate == null) {
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
@@ -322,7 +323,7 @@ fun OverviewScreen(
                             horizontalArrangement = Arrangement.Center
                         ) { CircularProgressIndicator() }
                     } else {
-                        Text(AppStrings.current.timeline.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
+                        EmptyState(title = AppStrings.current.timeline.nothingPlanned)
                     }
                 } else {
                     announcements.forEachIndexed { i, a ->
@@ -391,7 +392,7 @@ fun OverviewScreen(
                             horizontalArrangement = Arrangement.Center
                         ) { CircularProgressIndicator() }
                     } else {
-                        Text(AppStrings.current.timeline.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
+                        EmptyState(title = AppStrings.current.timeline.nothingPlanned)
                     }
                 } else {
                     val campsMapList = remember(state.campsMapByDay) { state.campsMapByDay.entries.toList() }
@@ -436,7 +437,7 @@ fun OverviewScreen(
                 Column(modifier = Modifier.padding(horizontal = 12.dp)) {
                     val comp = state.nearestCompetition
                     if (comp == null) {
-                        Text(AppStrings.current.competition.noUpcomingMine, modifier = Modifier.padding(vertical = 6.dp))
+                        EmptyState(title = AppStrings.current.competition.noUpcomingMine)
                     } else {
                         StaggeredItem(index = 0, visible = cardsVisible) {
                             NearestCompetitionCard(competition = comp, onOpenCompetitions = onOpenCompetitions)
@@ -468,7 +469,7 @@ fun OverviewScreen(
             }
             Column(modifier = Modifier.padding(horizontal = 12.dp)) {
                 if (state.upcomingBirthdays.isEmpty()) {
-                    Text(AppStrings.current.timeline.nothingPlanned, modifier = Modifier.padding(vertical = 6.dp))
+                    EmptyState(title = AppStrings.current.timeline.nothingPlanned)
                 } else {
                     state.upcomingBirthdays.forEachIndexed { i, entry ->
                         StaggeredItem(index = i, visible = cardsVisible) {

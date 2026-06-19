@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -102,6 +103,7 @@ fun PersonalEventsScreen(
             items(state.events, key = { ev -> ev.id }) { ev: PersonalEvent ->
                 Card(modifier = Modifier
                     .fillMaxWidth()
+                    .defaultMinSize(minHeight = 48.dp)
                     .animateItem()
                     .padding(8.dp)
                     .clickable { onEdit(ev.id) }) {

@@ -32,4 +32,9 @@ data class EventStrings(
     val addToCalendarFailed: String,
     val trainerOffersLabel: String = "offers",
     val trainerRemainingLabel: String = "remaining",
+    val summaryAndDescription: String = "Summary & Description",
+    val summaryOnly: String = "Summary",
+    val descriptionOnly: String = "Description",
+    val trainerFallbackPrefix: String = "Trainer #",
+    val lessonCountSuffix: String = "lessons",
 )

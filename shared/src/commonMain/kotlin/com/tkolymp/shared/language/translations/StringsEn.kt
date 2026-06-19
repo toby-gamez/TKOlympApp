@@ -86,6 +86,8 @@ val StringsEn = Strings(
         all = "All",
         yes = "Yes",
         no = "No",
+        showPassword = "Show password",
+        hidePassword = "Hide password",
     ),
     auth = AuthStrings(
         emailOrUsername = "Email or Username",
@@ -133,6 +135,7 @@ val StringsEn = Strings(
         dateTo = "To",
         birthdays = "Birthdays",
         couple = "couple",
+        displayNameFallback = "User",
     ),
     address = AddressStrings(
         address = "Address",
@@ -173,6 +176,11 @@ val StringsEn = Strings(
         addedToCalendar = "Added to calendar",
         addToCalendarSuccess = "Event added to calendar",
         addToCalendarFailed = "Failed to add to calendar",
+        summaryAndDescription = "Summary & Description",
+        summaryOnly = "Summary",
+        descriptionOnly = "Description",
+        trainerFallbackPrefix = "Trainer #",
+        lessonCountSuffix = "lessons",
     ),
     registration = RegistrationStrings(
         registration = "Registration",
@@ -200,6 +208,9 @@ val StringsEn = Strings(
         deleteRegistrationConfirmText = "Are you sure you want to delete the selected registration?",
         noRegistrationOwned = "No own registration found",
         registrationSuccess = "Registration successful",
+        notePrefix = "Note: ",
+        emailPrefix = "Email: ",
+        externalSuffix = " (external)",
     ),
     announcements = AnnouncementStrings(
         announcements = "Announcements",

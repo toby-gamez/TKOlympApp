@@ -25,4 +25,6 @@ data class CommonActionStrings(
     val increase: String = "Increase",
     val options: String = "Options",
     val openInWeb: String = "Open in web",
+    val showPassword: String = "Show password",
+    val hidePassword: String = "Hide password",
 )
