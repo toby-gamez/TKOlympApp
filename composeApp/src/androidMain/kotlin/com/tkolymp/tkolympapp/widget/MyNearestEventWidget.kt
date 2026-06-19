@@ -36,11 +36,21 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.tkolympapp.R
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
+import kotlin.time.Clock
 
 class MyNearestEventWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val loggedIn = WidgetDataProvider.isLoggedIn(context)
-        val event = if (loggedIn) WidgetDataProvider.fetchMyUpcomingEvents(context, limit = 1).firstOrNull() else null
+        val result = if (loggedIn) WidgetDataProvider.fetchNearestTrainingDay(context) else null
+
+        val firstEvent = result?.events?.firstOrNull()
+        val eventRoute = if (firstEvent?.eventId != null) {
+            "event/${firstEvent.eventId}" +
+                if (firstEvent.instanceId != null) "?instanceId=${firstEvent.instanceId}" else ""
+        } else "calendar"
 
         provideContent {
             GlanceTheme(colors = WidgetColorProviders) {
@@ -49,12 +59,12 @@ class MyNearestEventWidget : GlanceAppWidget() {
                         .fillMaxSize()
                         .background(GlanceTheme.colors.surface)
                         .cornerRadius(16.dp)
-                        .clickable(actionStartActivity(deepLinkIntent(context, "calendar")))
+                        .clickable(actionStartActivity(deepLinkIntent(context, eventRoute)))
                 ) {
-                    // Left accent bar
-                    val barColor = if (event?.colorRgb != null) {
+                    // Left accent bar — cohort color for events, surfaceVariant for lessons
+                    val barColor = if (firstEvent?.colorRgb != null) {
                         runCatching {
-                            ColorProvider(Color(android.graphics.Color.parseColor(event.colorRgb)))
+                            ColorProvider(Color(android.graphics.Color.parseColor(firstEvent.colorRgb)))
                         }.getOrElse { ColorProvider(Color(0xFFEE1733)) }
                     } else {
                         GlanceTheme.colors.surfaceVariant
@@ -99,16 +109,17 @@ class MyNearestEventWidget : GlanceAppWidget() {
                                 Spacer(GlanceModifier.height(8.dp))
                                 WidgetEmptyState(AppStrings.current.widget.notLoggedIn)
                             }
-                            event == null -> {
+                            result == null || firstEvent == null -> {
                                 Spacer(GlanceModifier.height(8.dp))
                                 WidgetEmptyState(AppStrings.current.widget.noNearestEvent)
                             }
                             else -> {
-                                Spacer(GlanceModifier.height(8.dp))
+                                val days = daysUntil(result.dateString)
 
-                                // Event title — prominent
+                                // Event/trainer name — most prominent
+                                Spacer(GlanceModifier.height(6.dp))
                                 Text(
-                                    text = event.title,
+                                    text = firstEvent.title,
                                     style = TextStyle(
                                         fontSize = 15.sp,
                                         fontWeight = FontWeight.Medium,
@@ -120,45 +131,32 @@ class MyNearestEventWidget : GlanceAppWidget() {
 
                                 Spacer(GlanceModifier.height(8.dp))
 
-                                // Time slots
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    val visibleSlots = event.slots.take(3)
-                                    val overflow = event.slots.size - visibleSlots.size
-                                    visibleSlots.forEach { slotTime ->
-                                        Row(
-                                            modifier = GlanceModifier
-                                                .background(GlanceTheme.colors.surfaceVariant)
-                                                .cornerRadius(8.dp)
-                                                .padding(horizontal = 6.dp, vertical = 3.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Image(
-                                                provider = ImageProvider(R.drawable.ic_widget_time),
-                                                contentDescription = null,
-                                                modifier = GlanceModifier.size(12.dp),
-                                                colorFilter = ColorFilter.tint(GlanceTheme.colors.onSurfaceVariant)
+                                // Countdown — same layout as NextCompetitionWidget
+                                if (days == 0) {
+                                    Text(
+                                        text = AppStrings.current.timeline.today,
+                                        style = TextStyle(
+                                            fontSize = 22.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = GlanceTheme.colors.primary
+                                        )
+                                    )
+                                } else {
+                                    Row(verticalAlignment = Alignment.Bottom) {
+                                        Text(
+                                            text = "$days",
+                                            style = TextStyle(
+                                                fontSize = 26.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = GlanceTheme.colors.primary
                                             )
-                                            Spacer(GlanceModifier.width(3.dp))
-                                            Text(
-                                                text = formatWidgetTime(slotTime),
-                                                style = TextStyle(
-                                                    fontSize = 10.sp,
-                                                    color = GlanceTheme.colors.onSurface
-                                                ),
-                                                maxLines = 1
-                                            )
-                                        }
+                                        )
                                         Spacer(GlanceModifier.width(4.dp))
-                                    }
-                                    if (overflow > 0) {
-                                        Row(
-                                            modifier = GlanceModifier
-                                                .background(GlanceTheme.colors.surfaceVariant)
-                                                .cornerRadius(8.dp)
-                                                .padding(horizontal = 6.dp, vertical = 3.dp)
-                                        ) {
+                                        Column {
+                                            Spacer(GlanceModifier.height(6.dp))
                                             Text(
-                                                text = "+$overflow",
+                                                text = if (days == 1) AppStrings.current.widget.dayAway
+                                                       else AppStrings.current.widget.daysAway,
                                                 style = TextStyle(
                                                     fontSize = 10.sp,
                                                     color = GlanceTheme.colors.onSurfaceVariant
@@ -168,25 +166,22 @@ class MyNearestEventWidget : GlanceAppWidget() {
                                     }
                                 }
 
-                                // Location badge
-                                if (!event.location.isNullOrBlank()) {
-                                    Spacer(GlanceModifier.height(6.dp))
+                                Spacer(GlanceModifier.height(8.dp))
+
+                                // Metadata pill: first slot time · location
+                                val timeStr = firstEvent.slots.firstOrNull()?.let { slot ->
+                                    "${slot.hour.toString().padStart(2, '0')}:${slot.minute.toString().padStart(2, '0')}"
+                                }
+                                val meta = listOfNotNull(timeStr, firstEvent.location).joinToString(" · ")
+                                if (meta.isNotBlank()) {
                                     Row(
                                         modifier = GlanceModifier
                                             .background(GlanceTheme.colors.surfaceVariant)
                                             .cornerRadius(8.dp)
-                                            .padding(horizontal = 6.dp, vertical = 3.dp),
-                                        verticalAlignment = Alignment.CenterVertically
+                                            .padding(horizontal = 6.dp, vertical = 3.dp)
                                     ) {
-                                        Image(
-                                            provider = ImageProvider(R.drawable.ic_widget_place),
-                                            contentDescription = null,
-                                            modifier = GlanceModifier.size(12.dp),
-                                            colorFilter = ColorFilter.tint(GlanceTheme.colors.onSurfaceVariant)
-                                        )
-                                        Spacer(GlanceModifier.width(4.dp))
                                         Text(
-                                            text = event.location!!,
+                                            text = meta,
                                             style = TextStyle(
                                                 fontSize = 10.sp,
                                                 color = GlanceTheme.colors.onSurface
@@ -201,6 +196,14 @@ class MyNearestEventWidget : GlanceAppWidget() {
                 }
             }
         }
+    }
+
+    private fun daysUntil(dateString: String): Int {
+        return try {
+            val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+            val target = LocalDate.parse(dateString)
+            (target.toEpochDays() - today.toEpochDays()).toInt().coerceAtLeast(0)
+        } catch (_: Exception) { 0 }
     }
 }
 

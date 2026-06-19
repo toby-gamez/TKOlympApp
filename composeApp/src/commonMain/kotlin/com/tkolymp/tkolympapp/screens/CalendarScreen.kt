@@ -64,6 +64,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
@@ -315,10 +316,7 @@ fun CalendarScreen(
                 }
 
                 val contentKey = Triple(localWeekOffset, customStartDate, selectedTab)
-                androidx.compose.animation.AnimatedContent(
-                    targetState = contentKey,
-                    transitionSpec = { tabContentTransitionSpec() },
-                    label = "calendarContent",
+                Box(
                     modifier = Modifier
                         .weight(1f)
                         .onGloballyPositioned { coords ->
@@ -326,9 +324,10 @@ fun CalendarScreen(
                             contentBounds = b
                             if (tutorialActive && tutorialStep in 7..8) TutorialHighlight.rect = b
                         }
-                ) { key ->
+                ) {
+                    key(contentKey) {
                     var datesVisible by remember { mutableStateOf(false) }
-                    LaunchedEffect(key) { datesVisible = false }
+                    LaunchedEffect(contentKey) { datesVisible = false }
                     LaunchedEffect(calState.visibleDates) { if (calState.visibleDates.isNotEmpty()) datesVisible = true }
 
                     val competitionsByDay = calState.competitionsByDay
@@ -401,10 +400,11 @@ fun CalendarScreen(
                         } // StaggeredItem
                     }
                     }
+                    }
                 }
             }
         }
-
+        
         calState.error?.let { err ->
             AlertDialog(
                 onDismissRequest = { calendarViewModel.clearError() },
