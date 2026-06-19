@@ -160,7 +160,7 @@ private fun EventGroupRow(group: GroupedWidgetEvent) {
                     )
                     Spacer(GlanceModifier.width(4.dp))
                     Text(
-                        text = group.location!!,
+                        text = group.location,
                         style = TextStyle(fontSize = 10.sp, color = GlanceTheme.colors.onSurface),
                         maxLines = 1
                     )

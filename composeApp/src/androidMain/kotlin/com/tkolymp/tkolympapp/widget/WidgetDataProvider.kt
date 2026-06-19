@@ -8,13 +8,9 @@ import com.tkolymp.shared.event.EventInstance
 import com.tkolymp.shared.event.EventType
 import com.tkolymp.shared.event.firstTrainerOrEmpty
 import com.tkolymp.shared.event.toEventType
-import com.tkolymp.shared.initNetworking
 import com.tkolymp.shared.language.AppLanguage
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.people.Person
-import com.tkolymp.tkolympapp.BuildConfig
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -43,15 +39,9 @@ data class NearestDayResult(
 
 object WidgetDataProvider {
 
-    private val mutex = Mutex()
-
     suspend fun ensureInitialized(context: Context) {
-        if (ServiceLocator.isInitialized) return
-        mutex.withLock {
-            if (ServiceLocator.isInitialized) return
-            initNetworking(context.applicationContext, BuildConfig.API_BASE_URL, BuildConfig.TENANT_ID)
-        }
-        // Apply saved language so widget strings match app language preference
+        // TKOlympApplication.onCreate() initializes networking before any widget code runs.
+        // Apply saved language so widget strings match the app language preference.
         try {
             val code = ServiceLocator.languageStorage.getLanguageCode()
             if (code != null) AppStrings.setLanguage(AppLanguage.fromCode(code))
@@ -146,9 +136,9 @@ object WidgetDataProvider {
                 .mapNotNull { person ->
                     val bd = person.birthDate ?: return@mapNotNull null
                     val parsed = runCatching { LocalDate.parse(bd) }.getOrNull() ?: return@mapNotNull null
-                    val thisYearBd = LocalDate(today.year, parsed.month, parsed.dayOfMonth)
+                    val thisYearBd = LocalDate(today.year, parsed.month, parsed.day)
                     val nextBd = if (thisYearBd.toEpochDays() >= todayEpoch) thisYearBd
-                                 else LocalDate(today.year + 1, parsed.month, parsed.dayOfMonth)
+                                 else LocalDate(today.year + 1, parsed.month, parsed.day)
                     val daysUntil = (nextBd.toEpochDays() - todayEpoch).toInt()
                     if (daysUntil > 30) return@mapNotNull null
                     val age = nextBd.year - parsed.year

@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.androidKmpLibrary)
     alias(libs.plugins.kotlinSerialization)
 }
 
@@ -10,12 +10,16 @@ kotlin {
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
     }
-    androidTarget {
+
+    android {
+        namespace = "com.tkolymp.tkolympapp.shared"
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
         }
     }
-    
+
     listOf(
         iosArm64(),
         iosSimulatorArm64()
@@ -25,7 +29,7 @@ kotlin {
             isStatic = true
         }
     }
-    
+
     sourceSets {
         commonMain.dependencies {
             implementation(libs.ktor.core)
@@ -40,7 +44,6 @@ kotlin {
             dependencies {
                 implementation(libs.ksafe)
                 implementation(libs.ktor.okhttp)
-                // Removed biometric support; keep core dependencies as needed
                 implementation(libs.androidx.core.ktx)
             }
         }
@@ -58,23 +61,5 @@ kotlin {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
         }
-    }
-}
-
-android {
-    namespace = "com.tkolymp.tkolympapp.shared"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    defaultConfig {
-        minSdk = libs.versions.android.minSdk.get().toInt()
-    }
-    testOptions {
-        unitTests.isReturnDefaultValues = true
-    }
-    buildFeatures {
-        buildConfig = true
     }
 }

@@ -82,7 +82,7 @@ class BirthdaysWidget : GlanceAppWidget() {
                             items(
                                 birthdays,
                                 itemId = { entry ->
-                                    (entry.person.id ?: entry.person.firstName).hashCode().toLong()
+                                    entry.person.id.hashCode().toLong()
                                 }
                             ) { entry ->
                                 BirthdayRow(entry)

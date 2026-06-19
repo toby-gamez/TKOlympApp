@@ -28,6 +28,7 @@ import android.content.Context
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
     private val svcScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    @Suppress("OVERRIDE_DEPRECATION", "DEPRECATION")
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         Logger.d("FCM", "New token received")

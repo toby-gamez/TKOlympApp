@@ -12,6 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.integrity.IntegrityServiceAndroid
 
@@ -20,7 +21,7 @@ fun App(initialRoute: String? = null) {
     val ctx = LocalContext.current
     var integrityFailed by remember { mutableStateOf(false) }
     // In debug builds skip the integrity check immediately (mutableStateOf(true) = already checked)
-    var integrityChecked by remember { mutableStateOf(BuildConfig.DEBUG) }
+    var integrityChecked by remember { mutableStateOf(Logger.isDebug) }
 
     if (!integrityChecked) {
         LaunchedEffect(Unit) {
@@ -36,9 +37,6 @@ fun App(initialRoute: String? = null) {
     AppContent(
         integrityFailed = integrityFailed,
         platformInit = {
-            if (!ServiceLocator.isInitialized) {
-                com.tkolymp.shared.initNetworking(ctx, BuildConfig.API_BASE_URL, BuildConfig.TENANT_ID)
-            }
             try { ServiceLocator.topicManager = AndroidTopicManager() } catch (_: Exception) {}
         },
         initialRoute = initialRoute

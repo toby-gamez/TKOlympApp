@@ -21,10 +21,11 @@ fun deepLinkIntent(context: Context, route: String): Intent {
     }
 }
 
+@Suppress("DEPRECATION")
 fun formatWidgetTime(dateTime: LocalDateTime): String {
     val hour = dateTime.hour.toString().padStart(2, '0')
     val minute = dateTime.minute.toString().padStart(2, '0')
-    val day = dateTime.dayOfMonth.toString().padStart(2, '0')
+    val day = dateTime.day.toString().padStart(2, '0')
     val month = dateTime.monthNumber.toString().padStart(2, '0')
     return "$day.$month $hour:$minute"
 }

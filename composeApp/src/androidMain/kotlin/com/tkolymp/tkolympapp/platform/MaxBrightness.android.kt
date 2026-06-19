@@ -14,13 +14,13 @@ actual fun MaxScreenBrightness() {
         val original = attrs?.screenBrightness ?: -1f
         if (attrs != null) {
             attrs.screenBrightness = 1.0f
-            activity?.window?.attributes = attrs
+            activity.window.attributes = attrs
         }
         onDispose {
             val a = activity?.window?.attributes
             if (a != null) {
                 a.screenBrightness = original
-                activity?.window?.attributes = a
+                activity.window.attributes = a
             }
         }
     }

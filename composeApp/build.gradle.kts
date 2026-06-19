@@ -5,16 +5,21 @@ val localProps = Properties().apply {
     rootProject.file("local.properties").takeIf { it.exists() }?.reader()?.use { load(it) }
 }
 
+val bomFirebase = dependencies.platform(libs.firebase.bom)
+val bomCompose = dependencies.platform(libs.compose.android.bom)
+
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidApplication)
+    alias(libs.plugins.androidKmpLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
-    alias(libs.plugins.googleServices)
 }
 
 kotlin {
-    androidTarget {
+    android {
+        namespace = "com.tkolymp.tkolympapp"
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
         }
@@ -34,6 +39,12 @@ kotlin {
             implementation(libs.glance.appwidget)
             implementation(libs.glance.material3)
             implementation(libs.workmanager.ktx)
+            implementation(bomFirebase)
+            implementation(libs.firebase.messaging)
+            implementation(libs.firebase.analytics)
+            implementation(libs.compose.uiToolingPreview)
+            implementation(bomCompose)
+            implementation(libs.kotlinx.serialization.json)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -53,51 +64,3 @@ kotlin {
         }
     }
 }
-
-android {
-    namespace = "com.tkolymp.tkolympapp"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
-
-    defaultConfig {
-        applicationId = "com.tkolymp.tkolympapp"
-        minSdk = libs.versions.android.minSdk.get().toInt()
-        targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 18
-        versionName = "1.8"
-        buildConfigField("String", "API_BASE_URL", "\"${localProps["api.base.url"] ?: ""}\"")
-        buildConfigField("String", "TENANT_ID", "\"${localProps["tenant.id"] ?: ""}\"")
-    }
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
-    }
-    buildFeatures {
-        buildConfig = true
-    }
-    buildTypes {
-        getByName("release") {
-            isMinifyEnabled = true
-            isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-}
-
-dependencies {
-    debugImplementation(libs.compose.uiTooling)
-    implementation(libs.compose.uiToolingPreview)
-    implementation(platform(libs.compose.android.bom))
-    implementation(libs.kotlinx.serialization.json)
-    implementation(libs.firebase.messaging)
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.analytics)
-}
-

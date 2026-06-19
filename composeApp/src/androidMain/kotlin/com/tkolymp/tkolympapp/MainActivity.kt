@@ -67,7 +67,9 @@ class MainActivity : ComponentActivity() {
             WidgetUpdateWorker.schedule(this@MainActivity)
 
             // Získání a zalogování FCM tokenu
-            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            @Suppress("DEPRECATION")
+            val fcmTokenTask = FirebaseMessaging.getInstance().token
+            fcmTokenTask.addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     val token = task.result
                     Logger.d("FCM", "Current token obtained")

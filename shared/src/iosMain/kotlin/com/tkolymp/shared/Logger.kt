@@ -3,6 +3,8 @@ package com.tkolymp.shared
 import platform.Foundation.NSLog
 
 actual object Logger {
+    actual var isDebug: Boolean = false
+
     actual fun d(tag: String, msg: String) {
         NSLog("[$tag] D $msg")
     }

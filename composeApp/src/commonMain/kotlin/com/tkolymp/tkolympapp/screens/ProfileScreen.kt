@@ -184,7 +184,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                                     "WOMAN" -> AppStrings.current.gender.genderFemale
                                     "UNSPECIFIED" -> AppStrings.current.gender.genderUnspecified
                                     null, "" -> "—"
-                                    else -> (person?.gender ?: "").lowercase()
+                                    else -> (person.gender ?: "").lowercase()
                                 }
                                 Text(genderLabel, style = MaterialTheme.typography.bodyMedium)
                             }
