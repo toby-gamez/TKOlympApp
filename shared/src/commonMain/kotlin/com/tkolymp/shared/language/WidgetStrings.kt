@@ -4,6 +4,8 @@ data class WidgetStrings(
     val myTrainings: String = "My Trainings",
     val notLoggedIn: String = "Not logged in",
     val noUpcomingEvents: String = "No upcoming trainings",
+    val myNearestEvent: String = "My Nearest Event",
+    val noNearestEvent: String = "No upcoming events",
     val noUpcomingBirthdays: String = "No upcoming birthdays",
     val turns: String = "turns",
     val todayLabel: String = "Today",

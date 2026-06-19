@@ -22,6 +22,7 @@ class WidgetUpdateWorker(
         return try {
             WidgetDataProvider.ensureInitialized(applicationContext)
             MyEventsWidget().updateAll(applicationContext)
+            MyNearestEventWidget().updateAll(applicationContext)
             BirthdaysWidget().updateAll(applicationContext)
             NextCompetitionWidget().updateAll(applicationContext)
             Result.success()

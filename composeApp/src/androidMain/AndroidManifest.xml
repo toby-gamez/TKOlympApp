@@ -84,6 +84,18 @@
         </receiver>
 
         <receiver
+            android:name=".widget.MyNearestEventWidgetReceiver"
+            android:exported="true"
+            android:label="My Nearest Event">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info_my_nearest_event" />
+        </receiver>
+
+        <receiver
             android:name=".widget.ToolboxWidgetReceiver"
             android:exported="true"
             android:label="TK Olymp Toolbox">

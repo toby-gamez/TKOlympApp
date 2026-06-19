@@ -3,5 +3,6 @@
     <string name="widget_my_events_description">My upcoming trainings</string>
     <string name="widget_birthdays_description">Upcoming birthdays</string>
     <string name="widget_next_competition_description">Next competition countdown</string>
+    <string name="widget_my_nearest_event_description">Your next upcoming event</string>
     <string name="widget_toolbox_description">Quick navigation shortcuts</string>
 </resources>
