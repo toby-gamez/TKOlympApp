@@ -36,7 +36,7 @@ import androidx.glance.unit.ColorProvider
 import androidx.glance.layout.size
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.language.CompetitionStrings
-import com.tkolymp.tkolympapp.R
+import com.tkolymp.tkolympapp.res.R
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn

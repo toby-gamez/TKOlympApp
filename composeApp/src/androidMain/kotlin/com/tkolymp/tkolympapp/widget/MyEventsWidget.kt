@@ -37,7 +37,7 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.tkolymp.shared.language.AppStrings
-import com.tkolymp.tkolympapp.R
+import com.tkolymp.tkolympapp.res.R
 
 class MyEventsWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {

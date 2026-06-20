@@ -37,4 +37,5 @@ data class CompetitionStrings(
         .replace("Junior", ageGroupJunior)
         .replace("Senior", ageGroupSenior)
         .replace(" S ", " M ")
+        .replace("Under 21", "U21")
 }

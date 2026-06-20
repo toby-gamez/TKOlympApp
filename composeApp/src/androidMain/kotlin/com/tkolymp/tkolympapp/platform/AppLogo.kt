@@ -8,7 +8,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.size
-import com.tkolymp.tkolympapp.R
+import com.tkolymp.tkolympapp.res.R
 
 @Composable
 actual fun AppLogo(size: Dp, modifier: Modifier) {

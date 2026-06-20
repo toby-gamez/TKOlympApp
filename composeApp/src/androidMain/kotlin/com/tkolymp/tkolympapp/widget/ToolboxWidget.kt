@@ -30,7 +30,7 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import com.tkolymp.shared.language.AppStrings
-import com.tkolymp.tkolympapp.R
+import com.tkolymp.tkolympapp.res.R
 
 private data class ToolboxItem(val iconRes: Int, val label: String, val route: String)
 
