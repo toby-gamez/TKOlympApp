@@ -104,14 +104,18 @@ import kotlinx.serialization.json.JsonArray
 import com.tkolymp.tkolympapp.platform.FullscreenImageViewer
 
 private fun boldTimes(text: String) = buildAnnotatedString {
-    val regex = Regex("""\d{2}:\d{2}""")
-    var last = 0
-    for (match in regex.findAll(text)) {
-        append(text.substring(last, match.range.first))
-        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(match.value) }
-        last = match.range.last + 1
+    if (text.any { it == '.' || it.isLetter() }) {
+        val regex = Regex("""\d{2}:\d{2}""")
+        var last = 0
+        for (match in regex.findAll(text)) {
+            append(text.substring(last, match.range.first))
+            withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(match.value) }
+            last = match.range.last + 1
+        }
+        append(text.substring(last))
+    } else {
+        append(text)
     }
-    append(text.substring(last))
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)

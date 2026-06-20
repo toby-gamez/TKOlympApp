@@ -152,14 +152,18 @@ internal fun RenderEventContent(item: EventInstance, tip: String? = null, showTy
                         Icon(Icons.Default.Schedule, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         val timeAnnotated = buildAnnotatedString {
-                            val regex = Regex("""\d{2}:\d{2}""")
-                            var last = 0
-                            for (match in regex.findAll(timeText)) {
-                                append(timeText.substring(last, match.range.first))
-                                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(match.value) }
-                                last = match.range.last + 1
+                            if (timeText.any { it == '.' || it.isLetter() }) {
+                                val regex = Regex("""\d{2}:\d{2}""")
+                                var last = 0
+                                for (match in regex.findAll(timeText)) {
+                                    append(timeText.substring(last, match.range.first))
+                                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(match.value) }
+                                    last = match.range.last + 1
+                                }
+                                append(timeText.substring(last))
+                            } else {
+                                append(timeText)
                             }
-                            append(timeText.substring(last))
                         }
                         androidx.compose.material3.Text(timeAnnotated, style = MaterialTheme.typography.bodySmall)
                     }
