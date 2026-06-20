@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "com.tkolymp.tkolympapp"
+    namespace = "com.tkolymp.tkolympapp.res"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()

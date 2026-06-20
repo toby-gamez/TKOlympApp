@@ -55,7 +55,7 @@ class RegistrationViewModel(
                                 if (!fetched.isNullOrBlank()) tIdStr to fetched else null
                             } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                         }
-                    }.awaitAll().forEach { pair -> if (pair != null) trainerMap[pair.first] = pair.second!! }
+                    }.awaitAll().forEach { pair -> if (pair != null) trainerMap[pair.first] = pair.second }
                 }
             } catch (e: CancellationException) { throw e } catch (_: Exception) {}
 
@@ -81,7 +81,7 @@ class RegistrationViewModel(
                     personName = personJob.await()
                     coupleJobs.forEach { (cid, job) ->
                         val fetched = job.await()
-                        if (!fetched.isNullOrBlank()) coupleNames[cid] = fetched!!
+                        if (!fetched.isNullOrBlank()) coupleNames[cid] = fetched
                     }
                 }
             } catch (e: CancellationException) { throw e } catch (_: Exception) {}
@@ -104,7 +104,7 @@ class RegistrationViewModel(
                                 if (!fetched.isNullOrBlank()) rid to fetched else null
                             } catch (_: Exception) { null }
                         }
-                    }.awaitAll().forEach { pair -> if (pair != null) regDisplayNames[pair.first] = pair.second!! }
+                    }.awaitAll().forEach { pair -> if (pair != null) regDisplayNames[pair.first] = pair.second }
                 }
             } catch (e: CancellationException) { throw e } catch (_: Exception) {}
 
