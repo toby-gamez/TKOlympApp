@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.tkolymp.shared.event.EventInstance
 import com.tkolymp.shared.utils.formatTimesWithDate
 import com.tkolymp.shared.utils.formatTimesWithDayOfWeek
@@ -62,11 +63,13 @@ internal fun RenderEventContent(item: EventInstance, tip: String? = null, showTy
     }
     val cancelled = item.isCancelled
     val eventObj = item.event
-    val locationOrTrainer = listOfNotNull(
-        eventObj?.locationText?.takeIf { !it.isNullOrBlank() },
-        eventObj?.location?.name?.takeIf { !it.isNullOrBlank() },
-        eventObj?.eventTrainersList?.firstOrNull()?.takeIf { !it.isNullOrBlank() }
+    val locationText = listOfNotNull(
+        eventObj?.locationText?.takeIf { it.isNotBlank() },
+        eventObj?.location?.name?.takeIf { it.isNotBlank() }
     ).firstOrNull().orEmpty()
+    val trainerName = if (locationText.isBlank())
+        eventObj?.eventTrainersList?.firstOrNull()?.takeIf { it.isNotBlank() }.orEmpty()
+    else ""
     val timeText = if (showDayOfWeek) formatTimesWithDayOfWeek(item.since, item.until) else formatTimesWithDate(item.since, item.until)
 
     Column(modifier = modifier) {
@@ -112,7 +115,7 @@ internal fun RenderEventContent(item: EventInstance, tip: String? = null, showTy
                     androidx.compose.material3.Text(name, style = MaterialTheme.typography.bodySmall, maxLines = 1, color = MaterialTheme.colorScheme.onPrimaryContainer)
                 }
             }
-            if (locationOrTrainer.isNotBlank()) {
+            if (locationText.isNotBlank()) {
                 Box(modifier = Modifier
                     .padding(end = 8.dp, bottom = 8.dp)
                     .background(boxBg, RoundedCornerShape(8.dp))
@@ -121,7 +124,20 @@ internal fun RenderEventContent(item: EventInstance, tip: String? = null, showTy
                     Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                         Icon(Icons.Default.Place, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        androidx.compose.material3.Text(locationOrTrainer, style = MaterialTheme.typography.bodySmall, maxLines = 1)
+                        androidx.compose.material3.Text(locationText, style = MaterialTheme.typography.bodySmall, maxLines = 1)
+                    }
+                }
+            }
+            if (trainerName.isNotBlank()) {
+                Box(modifier = Modifier
+                    .padding(end = 8.dp, bottom = 8.dp)
+                    .background(boxBg, RoundedCornerShape(8.dp))
+                    .padding(horizontal = 8.dp, vertical = 6.dp)
+                ) {
+                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        InitialsAvatar(name = trainerName, size = 18.dp, fontSize = 7.sp)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        androidx.compose.material3.Text(trainerName, style = MaterialTheme.typography.bodySmall, maxLines = 1)
                     }
                 }
             }

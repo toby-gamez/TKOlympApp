@@ -219,7 +219,6 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
             // isError = true → errorContainer, false → secondaryContainer
             val statusChips = buildList<String> {
                 if (state.isCancelled) add(AppStrings.current.stats.cancelled)
-                if (state.isVisible) add(AppStrings.current.events.isVisible)
                 if (state.isPublic) add(AppStrings.current.events.isPublic)
                 if (state.isLocked) add(AppStrings.current.events.registrationClosed)
                 if (state.enableNotes) add(AppStrings.current.events.notesAllowed)
@@ -244,76 +243,61 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
 
             // Typ a základní info
             val displayType = translateEventType(state.eventType)
-            Card(
+            Row(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                shape = RoundedCornerShape(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                @Composable
-                fun InfoRow(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
+                Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp)) {
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 11.dp),
+                        modifier = Modifier.padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            icon,
+                            Icons.Default.Category,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
                         )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(text, style = MaterialTheme.typography.bodyMedium)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            if (!displayType.isNullOrBlank()) displayType else "—",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 }
-
-                InfoRow(Icons.Default.Category, if (!displayType.isNullOrBlank()) displayType else "—")
-
-                if (!state.locationName.isNullOrBlank() || state.eventDateText.isNotBlank()) {
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 14.dp))
-                }
-
-                val locationName = state.locationName
-                if (!locationName.isNullOrBlank()) {
-                    InfoRow(Icons.Default.Place, locationName)
-                    if (state.eventDateText.isNotBlank()) {
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 14.dp))
+                Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp)) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Place,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            if (!state.locationName.isNullOrBlank()) state.locationName!! else "—",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 }
-
-                if (state.scheduleText != null || state.eventDateText.isNotBlank()) {
-                    val scheduleText = state.scheduleText
-                    if (scheduleText != null) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 11.dp),
-                            verticalAlignment = Alignment.Top
-                        ) {
-                            Icon(
-                                Icons.Default.Schedule,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp).padding(top = 2.dp)
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(boldTimes(scheduleText), style = MaterialTheme.typography.bodyMedium)
-                                if (state.eventDateText.isNotBlank()) {
-                                    Text(
-                                        boldTimes(state.eventDateText),
-                                        style = MaterialTheme.typography.bodySmall.copy(
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                    } else {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 11.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(Icons.Default.Schedule, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(boldTimes(state.eventDateText), style = MaterialTheme.typography.bodyMedium)
-                        }
+            }
+            if (state.eventDateText.isNotBlank()) {
+                Card(modifier = Modifier.fillMaxWidth().padding(top = 4.dp), shape = RoundedCornerShape(16.dp)) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Schedule,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(boldTimes(state.eventDateText), style = MaterialTheme.typography.bodyMedium)
                     }
                 }
             }
