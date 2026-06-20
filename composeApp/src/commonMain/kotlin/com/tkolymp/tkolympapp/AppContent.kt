@@ -33,6 +33,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -76,12 +77,10 @@ import com.tkolymp.tkolympapp.screens.PeopleScreen
 import com.tkolymp.tkolympapp.screens.PersonScreen
 import com.tkolymp.tkolympapp.screens.PersonalEventEditScreen
 import com.tkolymp.tkolympapp.screens.PersonalEventsScreen
-import com.tkolymp.tkolympapp.screens.PrivacyPolicyScreen
 import com.tkolymp.tkolympapp.screens.ProfileScreen
 import com.tkolymp.tkolympapp.screens.RoleSelectionScreen
 import com.tkolymp.tkolympapp.screens.SettingsScreen
 import com.tkolymp.tkolympapp.screens.StatsScreen
-import com.tkolymp.tkolympapp.screens.TermsOfUseScreen
 import com.tkolymp.tkolympapp.screens.TrainersLocationsScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.CancellationException
@@ -499,33 +498,19 @@ fun AppNavHost(
             popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) }
         ) {
             val (versionName, versionCode) = getAppVersion()
+            val uriHandler = LocalUriHandler.current
+            val langCode = when (AppStrings.currentLanguage) {
+                AppLanguage.UA -> "uk"
+                AppLanguage.BRAINROT -> "en"
+                else -> AppStrings.currentLanguage.code
+            }
             AboutScreen(
                 onBack = { navController.navigateUp() },
                 appVersionName = versionName,
                 appVersionCode = versionCode,
-                onPrivacyClick = { navController.navigate("privacy") },
-                onTermsClick = { navController.navigate("terms") }
+                onPrivacyClick = { uriHandler.openUri("https://toby-gamez.github.io/tkolymp-docs.github.io/privacy/?lang=$langCode") },
+                onTermsClick = { uriHandler.openUri("https://toby-gamez.github.io/tkolymp-docs.github.io/terms/?lang=$langCode") }
             )
-        }
-
-        composable(
-            route = "privacy",
-            enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
-            exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
-            popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) },
-            popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) }
-        ) {
-            PrivacyPolicyScreen(onBack = { navController.navigateUp() })
-        }
-
-        composable(
-            route = "terms",
-            enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
-            exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
-            popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) },
-            popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) }
-        ) {
-            TermsOfUseScreen(onBack = { navController.navigateUp() })
         }
 
         composable(

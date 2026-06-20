@@ -27,8 +27,6 @@ import com.tkolymp.shared.language.WeekPersonaStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
-import com.tkolymp.shared.language.PrivacyStrings
-import com.tkolymp.shared.language.TermsOfUseStrings
 import com.tkolymp.shared.language.ProfileStrings
 import com.tkolymp.shared.language.RegistrationStrings
 import com.tkolymp.shared.language.SettingsStrings
@@ -462,55 +460,6 @@ val StringsEn = Strings(
         translatorRole = " - supporter and helper",
         bugReporterRole = " - loves finding and reporting bugs",
         brainrotDisclaimer = "Disclaimer: The 'Brainrot' language is a fun variant of the original app, spiced up with some 'brainrot' humor. It's all for fun and shouldn't be taken seriously.",
-    ),
-    privacy = PrivacyStrings(
-        effectiveDate = "Effective date: June 16, 2026",
-        summaryTitle = "Brief summary",
-        summaryText = "The TK Olymp app is a client of the service provided at api.rozpisovnik.cz. We collect only the data necessary to operate the app (authentication, event display, notifications and profile information), and we use Google Firebase to deliver push notifications and basic app analytics.",
-        section1Title = "1) What data we collect",
-        section1Bullet1 = "• Authentication token (JWT): stored locally in the device's secure storage to authorize API calls.",
-        section1Bullet2 = "• API data: events, instances, announcements, competitions, user/group information and leaderboards — loaded dynamically from the GraphQL API based on your login.",
-        section1Bullet3 = "• Optional data: if you fill in profile details or change settings in the app, they will be used to improve the user experience.",
-        section2Title = "2) Where and how data is stored",
-        section2Bullet1 = "• Network requests go to api.rozpisovnik.cz/graphql. The app does not maintain its own central data storage outside the API provider.",
-        section2Bullet2 = "• JWT is stored in SecureStorage (platform secure storage). To support offline use, the app also caches events, announcements and other API data locally on your device; this cache is cleared when you log out.",
-        section3Title = "3) Purpose of processing",
-        section3Text = "We use data for: authentication, authorization, displaying your events, sending and receiving notifications, leaderboard management and other features you expect from a service client.",
-        section4Title = "4) Sharing and third-party processing",
-        section4Bullet1 = "• Data is not sold or shared with third parties for marketing without your consent. We share data only with the API provider and necessary system services (e.g. maps) if you use them.",
-        section4Bullet2 = "• Push notifications are delivered via Google Firebase Cloud Messaging, and the app uses Google Firebase Analytics for basic, aggregated usage statistics. Google processes data associated with these services under its own privacy policy (policies.google.com/privacy).",
-        section5Title = "5) Permissions and local access",
-        section5Text = "The app requires only necessary permissions (e.g. for displaying maps or receiving notifications). We do not access your contacts, photo gallery or other sensitive resources without explicit permission.",
-        section6Title = "6) How long we retain data",
-        section6Text = "JWT is retained for the token's validity period or until you log out/delete your account. Locally cached API data (events, announcements, etc.) is retained for offline access and removed when you log out. API-side data is governed by the API provider's policy.",
-        section7Title = "7) Your rights",
-        section7Text = "You have the right to request access to your data, correction or deletion. For these requests, contact the service administrator or use the API provider's contact channels.",
-        section8Title = "8) Policy changes",
-        section8Text = "The policy may be updated. We recommend occasionally checking the effective date.",
-        contactTitle = "Contact",
-        contactText = "If you have a question about data protection or a deletion request, contact the service administrator: tkolymp.cz/kontakt",
-        technicalNote = "Technical details: authentication implementation and GraphQL calls can be found in AuthService and EventServices. Notifications are managed by NotificationManagerService and Firebase Cloud Messaging. Offline caching is managed by OfflineSyncManager and OfflineDataStorage.",
-    ),
-    terms = TermsOfUseStrings(
-        effectiveDate = "Effective date: June 16, 2026",
-        summaryTitle = "Brief summary",
-        summaryText = "By using the TK Olymp app you agree to these Terms of Use. The app is a client for the club's services provided via api.rozpisovnik.cz; please also read our Privacy Policy.",
-        section1Title = "1) Eligibility and account",
-        section1Text = "You must have a valid account provided by the club to log in. Minors should use the app under the supervision of a parent or legal guardian. You are responsible for keeping your login credentials confidential.",
-        section2Title = "2) Acceptable use",
-        section2Text = "Use the app only for its intended purpose: viewing your training schedule, events, competitions, leaderboards and related club information. Do not attempt to disrupt the service, access other members' data without authorization, or misuse the API.",
-        section3Title = "3) Competitions and registrations",
-        section3Text = "Information about competitions, registrations and check-ins is provided for convenience and reflects data from the club's service. Always verify important details (dates, locations, deadlines) with the organizer; the app is not responsible for changes made outside it.",
-        section4Title = "4) Notifications",
-        section4Text = "The app sends reminders and announcements via push notifications (Google Firebase Cloud Messaging) and local scheduling. You can disable notifications at any time in your device settings or in the app.",
-        section5Title = "5) Availability and liability",
-        section5Text = "The app is provided \"as is\", without warranty of uninterrupted availability. We are not liable for damages arising from reliance on data displayed in the app, service outages, or third-party service (API provider, Google Firebase) downtime.",
-        section6Title = "6) Changes to the app and these terms",
-        section6Text = "We may update the app and these terms over time. We recommend occasionally checking the effective date. Continued use of the app after changes take effect constitutes acceptance of the updated terms.",
-        section7Title = "7) Governing law",
-        section7Text = "These terms are governed by the laws of the Czech Republic. Any disputes will be resolved under Czech law.",
-        contactTitle = "Contact",
-        contactText = "If you have questions about these terms, contact the service administrator: tkolymp.cz/kontakt",
     ),
     stats = StatsStrings(
         statsTitle = "Statistics",

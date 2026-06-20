@@ -27,8 +27,6 @@ import com.tkolymp.shared.language.WeekPersonaStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
-import com.tkolymp.shared.language.PrivacyStrings
-import com.tkolymp.shared.language.TermsOfUseStrings
 import com.tkolymp.shared.language.ProfileStrings
 import com.tkolymp.shared.language.RegistrationStrings
 import com.tkolymp.shared.language.SettingsStrings
@@ -451,55 +449,6 @@ val StringsSl = Strings(
         translatorRole = " - podpornik in pomočnik",
         bugReporterRole = " - rad išče in sporoča napake",
         brainrotDisclaimer = "Izjava: Jezik 'Brainrot' je zabavna različica prvotne aplikacije, obogatena z nekoliko 'brainrot' humorja. Vse je zgolj za zabavo in ne bi smelo biti jemano resno.",
-    ),
-    privacy = PrivacyStrings(
-        effectiveDate = "Datum veljavnosti: 16. junij 2026",
-        summaryTitle = "Kratki povzetek",
-        summaryText = "Aplikacija TK Olymp je odjemalec storitve na api.rozpisovnik.cz. Zbiramo le podatke, ki so nujni za delovanje aplikacije (avtentikacija, prikaz dogodkov, obvestila in profilne informacije), ter uporabljamo Google Firebase za dostavo potisnih obvestil in osnovno analitiko uporabe aplikacije.",
-        section1Title = "1) Katere podatke zbiramo",
-        section1Bullet1 = "• Žeton za avtentikacijo (JWT): shranjen lokalno v varnem pomnilniku naprave za avtorizacijo klicev API.",
-        section1Bullet2 = "• Podatki iz API: dogodki, primerki, obvestila, tekmovanja, informacije o uporabnikih/skupinah in lestvice — dinamično naloženo iz GraphQL API glede na vašo prijavo.",
-        section1Bullet3 = "• Neobvezni podatki: če v aplikaciji izpolnite profilne podatke ali spremenite nastavitve, bodo uporabljeni za izboljšanje uporabniške izkušnje.",
-        section2Title = "2) Kje in kako so podatki shranjeni",
-        section2Bullet1 = "• Omrežne zahteve gredo na api.rozpisovnik.cz/graphql. Aplikacija ne vzdržuje lastnega centralnega shranjevanja podatkov zunaj ponudnika API.",
-        section2Bullet2 = "• JWT je shranjen v SecureStorage (platformno varno shranišče). Za podporo offline uporabe aplikacija na vašo napravo lokalno shrani tudi dogodke, obvestila in druge podatke iz API; ta lokalna kopija se izbriše ob odjavi.",
-        section3Title = "3) Namen obdelave",
-        section3Text = "Podatke uporabljamo za: avtentikacijo, avtorizacijo, prikaz vaših dogodkov, pošiljanje in prejemanje obvestil, upravljanje lestvic in druge funkcije, ki jih pričakujete od odjemalca storitve.",
-        section4Title = "4) Deljenje in obdelava s tretjimi osebami",
-        section4Bullet1 = "• Podatkov brez vašega soglasja ne prodajamo ali delimo s tretjimi osebami za trženje. Podatke delimo samo s ponudnikom API in nujnimi sistemskimi storitvami (npr. zemljevidi), če jih uporabljate.",
-        section4Bullet2 = "• Potisna obvestila so dostavljena prek Google Firebase Cloud Messaging, aplikacija pa uporablja Google Firebase Analytics za osnovne, agregirane statistike uporabe. Google obdeluje podatke, povezane s temi storitvami, v skladu s svojo lastno politiko zasebnosti (policies.google.com/privacy).",
-        section5Title = "5) Dovoljenja in lokalni dostop",
-        section5Text = "Aplikacija zahteva le nujna dovoljenja (npr. za prikaz zemljevidov ali prejemanje obvestil). Brez izrecnega dovoljenja ne dostopamo do vaših stikov, fotogalerije ali drugih občutljivih virov.",
-        section6Title = "6) Kako dolgo hranimo podatke",
-        section6Text = "JWT se hrani za čas veljavnosti žetona ali dokler se ne odjavite/izbrišete računa. Lokalno shranjeni podatki iz API (dogodki, obvestila itd.) so shranjeni za offline dostop in odstranjeni ob odjavi. Podatki na strani API se ravnajo po pravilih ponudnika API.",
-        section7Title = "7) Vaše pravice",
-        section7Text = "Imate pravico zahtevati dostop do svojih podatkov, popravek ali izbris. Za te zahteve se obrnite na skrbnika storitve ali uporabite kontaktne kanale ponudnika API.",
-        section8Title = "8) Spremembe pravilnika",
-        section8Text = "Pravilnik se lahko posodobi. Priporočamo, da občasno preverite datum veljavnosti.",
-        contactTitle = "Kontakt",
-        contactText = "Če imate vprašanje o varstvu podatkov ali zahtevo za izbris, se obrnite na skrbnika storitve: tkolymp.cz/kontakt",
-        technicalNote = "Tehnične podrobnosti: implementacijo avtentikacije in klice GraphQL najdete v AuthService in EventServices. Obvestila upravljata NotificationManagerService in Firebase Cloud Messaging. Offline predpomnjenje upravljata OfflineSyncManager in OfflineDataStorage.",
-    ),
-    terms = TermsOfUseStrings(
-        effectiveDate = "Datum veljavnosti: 16. junij 2026",
-        summaryTitle = "Kratki povzetek",
-        summaryText = "Z uporabo aplikacije TK Olymp soglašate s temi Pogoji uporabe. Aplikacija je odjemalec klubskih storitev, ki jih ponuja api.rozpisovnik.cz; prosimo, preberite tudi našo Politiko zasebnosti.",
-        section1Title = "1) Upravičenost in račun",
-        section1Text = "Za prijavo morate imeti veljaven račun, ki ga ustvari klub. Mladoletniki naj aplikacijo uporabljajo pod nadzorom starša ali zakonitega skrbnika. Sami ste odgovorni za zaupnost svojih podatkov za prijavo.",
-        section2Title = "2) Dovoljena uporaba",
-        section2Text = "Aplikacijo uporabljajte le za njen predvideni namen: ogled vadbenega urnika, dogodkov, tekmovanj, lestvic in povezanih klubskih informacij. Ne poskušajte motiti delovanja storitve, brez dovoljenja dostopati do podatkov drugih članov ali zlorabljati API.",
-        section3Title = "3) Tekmovanja in prijave",
-        section3Text = "Informacije o tekmovanjih, prijavah in prijavah ob prihodu so na voljo zaradi udobja in odražajo podatke klubske storitve. Pomembne podrobnosti (datume, lokacije, roke) vedno preverite pri organizatorju; aplikacija ni odgovorna za spremembe, izvedene zunaj nje.",
-        section4Title = "4) Obvestila",
-        section4Text = "Aplikacija pošilja opomnike in obvestila prek potisnih obvestil (Google Firebase Cloud Messaging) in lokalnega razvrščanja. Obvestila lahko kadar koli izklopite v nastavitvah naprave ali v aplikaciji.",
-        section5Title = "5) Razpoložljivost in odgovornost",
-        section5Text = "Aplikacija je na voljo „takšna, kakršna je“, brez garancije za neprekinjeno delovanje. Ne odgovarjamo za škodo, ki izhaja iz zanašanja na podatke, prikazane v aplikaciji, izpadov storitve ali izpadov storitev tretjih oseb (ponudnik API, Google Firebase).",
-        section6Title = "6) Spremembe aplikacije in teh pogojev",
-        section6Text = "Aplikacijo in te pogoje lahko sčasoma posodobimo. Priporočamo, da občasno preverite datum veljavnosti. Nadaljnja uporaba aplikacije po uveljavitvi sprememb pomeni sprejetje posodobljenih pogojev.",
-        section7Title = "7) Pravo, ki se uporablja",
-        section7Text = "Ti pogoji se urejajo po pravu Republike Češke. Morebitni spori bodo reševani po češkem pravu.",
-        contactTitle = "Kontakt",
-        contactText = "Če imate vprašanje o teh pogojih, se obrnite na skrbnika storitve: tkolymp.cz/kontakt",
     ),
     stats = StatsStrings(
         statsTitle = "Statistika",
