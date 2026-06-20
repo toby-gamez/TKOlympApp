@@ -308,6 +308,38 @@ fun daysUntilNextBirthday(raw: String?): Int {
     return (next.toEpochDays() - today.toEpochDays()).toInt()
 }
 
+fun turningAgeOnNextBirthday(raw: String?): Int? {
+    if (raw.isNullOrBlank()) return null
+    val s = raw.trim()
+    val datePrefix = Regex("\\d{4}-\\d{2}-\\d{2}").find(s)?.value
+    val ld = if (datePrefix != null) {
+        try { LocalDate.parse(datePrefix) } catch (_: Exception) { null }
+    } else {
+        parseToLocal(s)?.date
+    } ?: return null
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val thisYearBd = try { LocalDate(today.year, ld.month.number, ld.day) }
+        catch (_: Exception) { if (ld.month.number == 2 && ld.day == 29) LocalDate(today.year, 2, 28) else return null }
+    val nextYear = if (thisYearBd >= today) today.year else today.year + 1
+    return nextYear - ld.year
+}
+
+fun currentAge(raw: String?): Int? {
+    if (raw.isNullOrBlank()) return null
+    val s = raw.trim()
+    val datePrefix = Regex("\\d{4}-\\d{2}-\\d{2}").find(s)?.value
+    val ld = if (datePrefix != null) {
+        try { LocalDate.parse(datePrefix) } catch (_: Exception) { null }
+    } else {
+        parseToLocal(s)?.date
+    } ?: return null
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val age = today.year - ld.year
+    val thisYearBd = try { LocalDate(today.year, ld.month.number, ld.day) }
+        catch (_: Exception) { if (ld.month.number == 2 && ld.day == 29) LocalDate(today.year, 2, 28) else return age }
+    return if (today >= thisYearBd) age else age - 1
+}
+
 fun formatBirthDateString(raw: String?): String? {
     if (raw.isNullOrBlank()) return null
     val s = raw.trim()

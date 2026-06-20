@@ -38,4 +38,6 @@ data class ProfileStrings(
     val displayNameFallback: String = "User",
     val cstsNotAvailable: String = "ČSTS ID not available",
     val cstsInvalidFormat: String = "ČSTS ID has invalid format",
+    val turnsAge: String = "turns %d",
+    val yearsOld: String = "%d y",
 )

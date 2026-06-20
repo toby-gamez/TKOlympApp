@@ -66,6 +66,7 @@ import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.people.Person
 import com.tkolymp.shared.utils.formatShortDate
 import com.tkolymp.shared.utils.parseToLocal
+import com.tkolymp.shared.utils.turningAgeOnNextBirthday
 import com.tkolymp.shared.viewmodels.PeopleViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.InitialsAvatar
@@ -310,6 +311,7 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
                                 Spacer(modifier = Modifier.width(12.dp))
 
                                 val daysLeft = remember(p.birthDate) { daysUntilNextBirthday(p.birthDate) }
+                                val turningAge = remember(p.birthDate) { turningAgeOnNextBirthday(p.birthDate) }
                                 Column(modifier = Modifier.weight(1f)) {
                                             val isBirthdayToday = daysLeft == 0
                                             val isTrainer = p.id in trainerPersonIds
@@ -322,21 +324,20 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
                                     )
                                     p.birthDate?.let { raw ->
                                         val yearStr = raw.trim().take(4).takeIf { it.all { c -> c.isDigit() } }
-                                        Row(verticalAlignment = Alignment.Bottom) {
+                                        val subtitleColor = if (isBirthdayToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
                                             if (isBirthdayToday) {
                                                 Icon(
                                                     imageVector = Icons.Filled.Cake,
-                                                    contentDescription = "Dnes mají narozeniny",
-                                                    tint = MaterialTheme.colorScheme.primary,
-                                                    modifier = Modifier.size(18.dp)
+                                                    contentDescription = null,
+                                                    tint = subtitleColor,
+                                                    modifier = Modifier.size(14.dp)
                                                 )
-                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Spacer(modifier = Modifier.width(4.dp))
                                             }
-                                            Text(
-                                                yearStr ?: raw,
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = if (isBirthdayToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
+                                            val agePart = if (sortMode == SortMode.BIRTHDAY) turningAge?.let { AppStrings.current.profile.turnsAge.replace("%d", it.toString()) } ?: "" else ""
+                                            val subtitle = listOf(yearStr ?: raw, agePart).filter { it.isNotEmpty() }.joinToString(" · ")
+                                            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = subtitleColor)
                                             if (isTrainer) {
                                                 Spacer(modifier = Modifier.width(6.dp))
                                                 Text(

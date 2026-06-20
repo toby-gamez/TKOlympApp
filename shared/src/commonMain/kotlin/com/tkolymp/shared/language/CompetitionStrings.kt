@@ -26,6 +26,7 @@ data class CompetitionStrings(
     val noCstsProgress: String = "Žádné výsledky ČSTS",
 ) {
     fun formatType(raw: String): String = raw
+        .replace("DanceForAll", "TPV")
         .removePrefix("DanceSport ")
         .replace("_", " ")
         .replace("Standard", "STT")

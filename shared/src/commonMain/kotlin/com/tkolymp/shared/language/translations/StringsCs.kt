@@ -141,6 +141,8 @@ val StringsCs = Strings(
         displayNameFallback = "Uživatel",
         cstsNotAvailable = "ČSTS ID není k dispozici",
         cstsInvalidFormat = "ČSTS ID má nesprávný formát",
+        turnsAge = "bude mít %d",
+        yearsOld = "%d let",
     ),
     address = AddressStrings(
         address = "Adresa",

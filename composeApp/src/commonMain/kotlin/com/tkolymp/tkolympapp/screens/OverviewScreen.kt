@@ -513,22 +513,22 @@ fun OverviewScreen(
                                         style = MaterialTheme.typography.titleMedium,
                                         color = if (isBirthdayToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                                     )
-                                    entry.formattedBirthDate?.let {
-                                        Row(verticalAlignment = Alignment.Bottom) {
-                                            if (isBirthdayToday) {
-                                                Icon(
-                                                    imageVector = Icons.Filled.Cake,
-                                                    contentDescription = "Dnes mají narozeniny",
-                                                    tint = MaterialTheme.colorScheme.primary,
-                                                    modifier = Modifier.size(18.dp)
-                                                )
-                                                Spacer(modifier = Modifier.width(8.dp))
-                                            }
-                                            Text(
-                                                it,
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = if (isBirthdayToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                    val subtitleColor = if (isBirthdayToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        if (isBirthdayToday) {
+                                            Icon(
+                                                imageVector = Icons.Filled.Cake,
+                                                contentDescription = null,
+                                                tint = subtitleColor,
+                                                modifier = Modifier.size(14.dp)
                                             )
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                        }
+                                        val yearPart = entry.birthYear?.toString() ?: ""
+                                        val agePart = entry.turningAge?.let { AppStrings.current.profile.turnsAge.replace("%d", it.toString()) } ?: ""
+                                        val subtitle = listOf(yearPart, agePart).filter { it.isNotEmpty() }.joinToString(" · ")
+                                        if (subtitle.isNotEmpty()) {
+                                            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = subtitleColor)
                                         }
                                     }
                                 }

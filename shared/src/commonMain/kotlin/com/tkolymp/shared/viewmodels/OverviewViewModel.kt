@@ -9,6 +9,7 @@ import com.tkolymp.shared.event.EventInstance
 import com.tkolymp.shared.people.Person
 import com.tkolymp.shared.utils.daysUntilNextBirthday
 import com.tkolymp.shared.utils.formatBirthDateString
+import com.tkolymp.shared.utils.turningAgeOnNextBirthday
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -53,6 +54,8 @@ data class BirthdayEntry(
     val name: String,
     val formattedBirthDate: String?,
     val days: Int,
+    val turningAge: Int? = null,
+    val birthYear: Int? = null,
     val cohortColors: List<String> = emptyList()
 )
 
@@ -319,6 +322,8 @@ class OverviewViewModel(
                                             name = name,
                                             formattedBirthDate = formatBirthDateString(p.birthDate),
                                             days = days,
+                                            turningAge = turningAgeOnNextBirthday(p.birthDate),
+                                            birthYear = p.birthDate?.trim()?.take(4)?.toIntOrNull(),
                                             cohortColors = cohortColors
                                         )
                                     }
@@ -376,6 +381,7 @@ class OverviewViewModel(
                                                             name = name,
                                                             formattedBirthDate = formatBirthDateString(p.birthDate),
                                                             days = days,
+                                                            turningAge = turningAgeOnNextBirthday(p.birthDate),
                                                             cohortColors = cohortColors
                                                         )
                                                     }

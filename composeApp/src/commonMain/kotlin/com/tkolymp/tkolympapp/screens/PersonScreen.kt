@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.people.PersonDetails
+import com.tkolymp.shared.utils.currentAge
 import com.tkolymp.shared.utils.formatShortDate
 import com.tkolymp.shared.utils.parseToLocal
 import com.tkolymp.shared.viewmodels.PersonViewModel
@@ -138,7 +139,10 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         val bdText = p.birthDate?.let { formatDateStringSmall(it) ?: it } ?: "—"
-                        Text(bdText, style = MaterialTheme.typography.bodyMedium)
+                        val ageText = currentAge(p.birthDate)?.let {
+                            " · ${AppStrings.current.profile.yearsOld.replace("%d", it.toString())}"
+                        } ?: ""
+                        Text("$bdText$ageText", style = MaterialTheme.typography.bodyMedium)
                     }
                 }
                 Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp)) {
