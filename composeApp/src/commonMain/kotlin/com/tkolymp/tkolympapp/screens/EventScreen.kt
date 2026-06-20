@@ -78,8 +78,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -99,6 +102,17 @@ import com.tkolymp.tkolympapp.platform.HtmlText
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonArray
 import com.tkolymp.tkolympapp.platform.FullscreenImageViewer
+
+private fun boldTimes(text: String) = buildAnnotatedString {
+    val regex = Regex("""\d{2}:\d{2}""")
+    var last = 0
+    for (match in regex.findAll(text)) {
+        append(text.substring(last, match.range.first))
+        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(match.value) }
+        last = match.range.last + 1
+    }
+    append(text.substring(last))
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -280,10 +294,10 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
-                                Text(scheduleText, style = MaterialTheme.typography.bodyMedium)
+                                Text(boldTimes(scheduleText), style = MaterialTheme.typography.bodyMedium)
                                 if (state.eventDateText.isNotBlank()) {
                                     Text(
-                                        state.eventDateText,
+                                        boldTimes(state.eventDateText),
                                         style = MaterialTheme.typography.bodySmall.copy(
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -292,7 +306,14 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                             }
                         }
                     } else {
-                        InfoRow(Icons.Default.Schedule, state.eventDateText)
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 11.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Schedule, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(boldTimes(state.eventDateText), style = MaterialTheme.typography.bodyMedium)
+                        }
                     }
                 }
             }

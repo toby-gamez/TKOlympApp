@@ -25,7 +25,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.event.EventInstance
 import com.tkolymp.shared.utils.formatTimesWithDate
@@ -131,7 +135,17 @@ internal fun RenderEventContent(item: EventInstance, tip: String? = null, showTy
                     Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                         Icon(Icons.Default.Schedule, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        androidx.compose.material3.Text(timeText, style = MaterialTheme.typography.bodySmall)
+                        val timeAnnotated = buildAnnotatedString {
+                            val regex = Regex("""\d{2}:\d{2}""")
+                            var last = 0
+                            for (match in regex.findAll(timeText)) {
+                                append(timeText.substring(last, match.range.first))
+                                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(match.value) }
+                                last = match.range.last + 1
+                            }
+                            append(timeText.substring(last))
+                        }
+                        androidx.compose.material3.Text(timeAnnotated, style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
