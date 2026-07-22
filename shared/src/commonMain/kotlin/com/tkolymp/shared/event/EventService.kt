@@ -31,19 +31,21 @@ interface IEventService {
      */
     suspend fun fetchEventById(id: BigInt, forceRefresh: Boolean = false): JsonObject?
 
-    // Register many registrations at once. Accepts an array of registration objects
-    // matching the server input shape (each is a JsonObject with personId/coupleId and lessons array).
-    // Returns the raw GraphQL response element or null on network error.
-    suspend fun registerToEventMany(registrations: JsonArray): JsonElement?
+    // Register (isRegistered=true) or cancel (isRegistered=false) for a single event instance.
+    // lessonTrainerIds and lessonCounts must be the same length when provided.
+    // Throws on GraphQL error; returns null on network error.
+    suspend fun setEventInstanceRegistration(
+        instanceId: Long,
+        personId: Long?,
+        coupleId: Long?,
+        isRegistered: Boolean,
+        note: String? = null,
+        lessonTrainerIds: List<Long>? = null,
+        lessonCounts: List<Int>? = null
+    ): JsonObject?
 
-    // Set lesson demand for a single registration/trainer pair.
-    suspend fun setLessonDemand(registrationId: String, trainerId: Int, lessonCount: Int): Boolean
-
-    // Delete an event registration by id. Returns the raw GraphQL response element or null on network error.
-    suspend fun deleteEventRegistration(registrationId: String): kotlinx.serialization.json.JsonElement?
-
-    // Update the note on an existing registration. Returns true on success.
-    suspend fun setRegistrationNote(registrationId: String, note: String): Boolean
+    // Set lesson demand for a single registration/trainer pair (instanceRegistrationId + instanceTrainerId).
+    suspend fun setLessonDemand(registrationId: String, trainerId: Long, lessonCount: Int): Boolean
 }
 
 // Notes: GraphQL types
@@ -419,34 +421,69 @@ class EventService(
         return obj
     }
 
-    override suspend fun registerToEventMany(registrations: JsonArray): JsonElement? {
-        val mutation = """mutation RegisterToEvent(${'$'}input: RegisterToEventManyInput!) { registerToEventMany(input: ${'$'}input) { eventRegistrations { id } } }"""
+    private val setEventInstanceRegistrationMutation = """
+        mutation SetEventInstanceRegistration(${'$'}input: SetEventInstanceRegistrationInput!) {
+            setEventInstanceRegistration(input: ${'$'}input) {
+                eventInstanceRegistration { id registrationStatus }
+            }
+        }
+    """.trimIndent()
+
+    override suspend fun setEventInstanceRegistration(
+        instanceId: Long,
+        personId: Long?,
+        coupleId: Long?,
+        isRegistered: Boolean,
+        note: String?,
+        lessonTrainerIds: List<Long>?,
+        lessonCounts: List<Int>?
+    ): JsonObject? {
         val variables = buildJsonObject {
             put("input", buildJsonObject {
-                put("registrations", registrations)
-                put("clientMutationId", JsonPrimitive(kotlin.random.Random.Default.nextLong().toString()))
+                put("pInstanceId", JsonPrimitive(instanceId.toString()))
+                put("pPersonId", if (personId != null) JsonPrimitive(personId.toString()) else JsonNull)
+                put("pCoupleId", if (coupleId != null) JsonPrimitive(coupleId.toString()) else JsonNull)
+                put("pIsRegistered", JsonPrimitive(isRegistered))
+                if (note != null) put("pNote", JsonPrimitive(note))
+                if (lessonTrainerIds != null && lessonCounts != null) {
+                    put("pLessonTrainerIds", JsonArray(lessonTrainerIds.map { JsonPrimitive(it.toString()) }))
+                    put("pLessonCounts", JsonArray(lessonCounts.map { JsonPrimitive(it) }))
+                }
             })
         }
 
         val resp = try {
-            client.post(mutation, variables)
+            client.post(setEventInstanceRegistrationMutation, variables)
         } catch (ex: Exception) {
+            Logger.d("EventService", "setEventInstanceRegistration: network error: ${ex.message}")
             return null
         }
 
-        try { cache.invalidatePrefix("calendar_") } catch (_: Exception) {}
-        try { cache.invalidatePrefix("overview_") } catch (_: Exception) {}
-        return resp
+        val errors = resp.jsonObject["errors"]
+        if (errors != null && errors !is JsonNull) {
+            Logger.d("EventService", "setEventInstanceRegistration: GraphQL error: $errors")
+            throw Exception(errors.toString())
+        }
+
+        val reg = resp.jsonObject["data"]?.jsonObject
+            ?.get("setEventInstanceRegistration")?.jsonObject
+            ?.get("eventInstanceRegistration") as? JsonObject
+
+        if (reg != null) {
+            try { cache.invalidatePrefix("calendar_") } catch (_: Exception) {}
+            try { cache.invalidatePrefix("overview_") } catch (_: Exception) {}
+            try { cache.invalidate("event_$instanceId") } catch (_: Exception) {}
+        }
+        return reg
     }
 
-    override suspend fun setLessonDemand(registrationId: String, trainerId: Int, lessonCount: Int): Boolean {
+    override suspend fun setLessonDemand(registrationId: String, trainerId: Long, lessonCount: Int): Boolean {
         val mutation = """mutation SetLessonDemand(${'$'}input: SetLessonDemandInput!) { setLessonDemand(input: ${'$'}input) { eventLessonDemand { id } } }"""
         val variables = buildJsonObject {
             put("input", buildJsonObject {
-                put("registrationId", JsonPrimitive(registrationId))
-                put("trainerId", JsonPrimitive(trainerId))
+                put("instanceRegistrationId", JsonPrimitive(registrationId))
+                put("instanceTrainerId", JsonPrimitive(trainerId.toString()))
                 put("lessonCount", JsonPrimitive(lessonCount))
-                put("clientMutationId", JsonPrimitive(kotlin.random.Random.Default.nextLong().toString()))
             })
         }
 
@@ -456,44 +493,13 @@ class EventService(
             return false
         }
 
-        val data = resp.jsonObject["data"]?.jsonObject
-        val created = data?.get("setLessonDemand")?.jsonObject?.get("eventLessonDemand")
-        val ok = created != null
-        // Do not clear caches here; let consumers decide when to refresh their own cache.
-        return ok
-    }
-
-    override suspend fun setRegistrationNote(registrationId: String, note: String): Boolean {
-        val mutation = """mutation EditRegistration(${'$'}input: EditRegistrationInput!) { editRegistration(input: ${'$'}input) { clientMutationId } }"""
-        val variables = buildJsonObject {
-            put("input", buildJsonObject {
-                put("registrationId", JsonPrimitive(registrationId))
-                put("note", JsonPrimitive(note))
-                put("clientMutationId", JsonPrimitive(kotlin.random.Random.Default.nextLong().toString()))
-            })
+        val errors = resp.jsonObject["errors"]
+        if (errors != null && errors !is JsonNull) {
+            Logger.d("EventService", "setLessonDemand: GraphQL error: $errors")
+            return false
         }
-        val resp = try { client.post(mutation, variables) } catch (ex: Exception) { return false }
-        val data = resp.jsonObject["data"]?.jsonObject
-        return data?.get("editRegistration")?.jsonObject?.get("clientMutationId") != null
-    }
-
-    override suspend fun deleteEventRegistration(registrationId: String): kotlinx.serialization.json.JsonElement? {
-        val mutation = """mutation CancelReg(${'$'}input: CancelRegistrationInput!) { cancelRegistration(input: ${'$'}input) { clientMutationId } }"""
-        val variables = buildJsonObject {
-            put("input", buildJsonObject {
-                put("registrationId", JsonPrimitive(registrationId))
-                put("clientMutationId", JsonPrimitive(kotlin.random.Random.Default.nextLong().toString()))
-            })
-        }
-
-        val resp = try {
-            client.post(mutation, variables)
-        } catch (ex: Exception) {
-            return null
-        }
-
-        try { cache.invalidatePrefix("calendar_") } catch (_: Exception) {}
-        try { cache.invalidatePrefix("overview_") } catch (_: Exception) {}
-        return resp
+        return resp.jsonObject["data"]?.jsonObject
+            ?.get("setLessonDemand")?.jsonObject
+            ?.get("eventLessonDemand") != null
     }
 }

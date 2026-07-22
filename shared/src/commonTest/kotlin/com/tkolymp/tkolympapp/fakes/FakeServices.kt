@@ -49,10 +49,11 @@ class FakeEventService(
         if (throwOnFetch) throw RuntimeException("Network error")
         return eventById
     }
-    override suspend fun registerToEventMany(registrations: JsonArray): JsonElement? = null
-    override suspend fun setLessonDemand(registrationId: String, trainerId: Int, lessonCount: Int) = false
-    override suspend fun deleteEventRegistration(registrationId: String): JsonElement? = null
-    override suspend fun setRegistrationNote(registrationId: String, note: String) = false
+    override suspend fun setEventInstanceRegistration(
+        instanceId: Long, personId: Long?, coupleId: Long?, isRegistered: Boolean,
+        note: String?, lessonTrainerIds: List<Long>?, lessonCounts: List<Int>?
+    ): kotlinx.serialization.json.JsonObject? = null
+    override suspend fun setLessonDemand(registrationId: String, trainerId: Long, lessonCount: Int) = false
 }
 
 class FakeAnnouncementService(

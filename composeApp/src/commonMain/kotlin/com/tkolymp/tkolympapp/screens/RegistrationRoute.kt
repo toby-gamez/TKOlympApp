@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.language.AppStrings
-import com.tkolymp.shared.registration.LessonInput
 import com.tkolymp.shared.registration.RegMode
 import com.tkolymp.shared.registration.RegistrationInput
 import kotlinx.coroutines.Dispatchers
@@ -29,10 +28,13 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
-import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.put
+
+private fun kotlinx.serialization.json.JsonElement?.strContent(): String? =
+    (this as? JsonPrimitive)?.contentOrNull
+
+private fun kotlinx.serialization.json.JsonElement?.longContent(): Long? =
+    strContent()?.toLongOrNull()
 
 /**
  * Route-level composable that loads event data and user info,
@@ -115,30 +117,30 @@ fun RegistrationRoute(
                     eventType = (ev["type"] as? JsonPrimitive)?.contentOrNull,
                     onClose = onClose,
                     onRegister = { regs ->
-                        val regsJson = regs.map { r ->
-                            buildJsonObject {
-                                put("eventId", JsonPrimitive(eventId))
-                                if (r.personId != null) put("personId", JsonPrimitive(r.personId))
-                                if (r.coupleId != null) put("coupleId", JsonPrimitive(r.coupleId))
-                                put("lessons", JsonArray(r.lessons.map { l -> buildJsonObject { put("trainerId", JsonPrimitive(l.trainerId)); put("lessonCount", JsonPrimitive(l.lessonCount)) } }))
-                                if (r.note != null) put("note", JsonPrimitive(r.note))
-                            }
+                        val r = regs.first()
+                        val iid = eventId ?: throw Exception("Missing instance ID")
+                        val pid = r.personId?.toLongOrNull()
+                        val cid = r.coupleId?.toLongOrNull()
+                        val trainerIds = r.lessons.map { it.trainerId.toLong() }
+                        val counts = r.lessons.map { it.lessonCount }
+                        val result = withContext(Dispatchers.Default) {
+                            ServiceLocator.eventService.setEventInstanceRegistration(
+                                instanceId = iid,
+                                personId = pid,
+                                coupleId = cid,
+                                isRegistered = true,
+                                note = r.note,
+                                lessonTrainerIds = trainerIds.ifEmpty { null },
+                                lessonCounts = counts.ifEmpty { null }
+                            )
                         }
-                        val resp = withContext(Dispatchers.Default) {
-                            ServiceLocator.eventService.registerToEventMany(JsonArray(regsJson))
-                        }
-                        val jsonObj = resp?.jsonObject ?: throw Exception("Network error")
-                        val errors = jsonObj["errors"]
-                        if (errors != null) throw Exception("Server errors: $errors")
-                        val data = jsonObj["data"]?.jsonObject
-                        data?.get("registerToEventMany")?.jsonObject?.get("eventRegistrations")
-                            ?: throw Exception("Unexpected response: $resp")
+                        result ?: throw Exception("Network error")
                     },
                     onSetLessonDemand = { registrationId, trainerId, lessonCount ->
                         coroutineScope.launch {
                             try {
                                 val success = withContext(Dispatchers.Default) {
-                                    ServiceLocator.eventService.setLessonDemand(registrationId, trainerId, lessonCount)
+                                    ServiceLocator.eventService.setLessonDemand(registrationId, trainerId.toLong(), lessonCount)
                                 }
                                 regResultMessage.value = if (success) {
                                     AppStrings.current.dialogs.dataSaved
@@ -151,22 +153,44 @@ fun RegistrationRoute(
                     onSetNote = { registrationId, note ->
                         coroutineScope.launch {
                             try {
+                                val iid = eventId ?: return@launch
+                                val reg = registrations.firstOrNull {
+                                    (it as? JsonObject)?.get("id")?.strContent() == registrationId
+                                } as? JsonObject
+                                val pid = (reg?.get("person") as? JsonObject)?.get("id")?.longContent()
+                                    ?: reg?.get("personId")?.longContent()
+                                val cid = (reg?.get("couple") as? JsonObject)?.get("id")?.longContent()
+                                    ?: reg?.get("coupleId")?.longContent()
                                 withContext(Dispatchers.Default) {
-                                    ServiceLocator.eventService.setRegistrationNote(registrationId, note)
+                                    ServiceLocator.eventService.setEventInstanceRegistration(
+                                        instanceId = iid,
+                                        personId = pid,
+                                        coupleId = cid,
+                                        isRegistered = true,
+                                        note = note
+                                    )
                                 }
                             } catch (_: Exception) {}
                         }
                     },
                     onDelete = { registrationId ->
-                        val resp = withContext(Dispatchers.Default) {
-                            ServiceLocator.eventService.deleteEventRegistration(registrationId)
-                        }
-                        val jsonObj = resp?.jsonObject ?: throw Exception("Network error")
-                        val errors = jsonObj["errors"]
-                        if (errors != null) throw Exception("Server errors: $errors")
-                        val data = jsonObj["data"]?.jsonObject
-                        data?.get("cancelRegistration")?.jsonObject?.get("clientMutationId")
-                            ?: throw Exception("Unexpected response: $resp")
+                        val iid = eventId ?: throw Exception("Missing instance ID")
+                        val reg = registrations.firstOrNull {
+                            (it as? JsonObject)?.get("id")?.strContent() == registrationId
+                        } as? JsonObject
+                        val pid = (reg?.get("person") as? JsonObject)?.get("id")?.longContent()
+                            ?: reg?.get("personId")?.longContent()
+                        val cid = (reg?.get("couple") as? JsonObject)?.get("id")?.longContent()
+                            ?: reg?.get("coupleId")?.longContent()
+                        if (pid == null && cid == null) throw Exception("Cannot resolve registrant from registration $registrationId")
+                        withContext(Dispatchers.Default) {
+                            ServiceLocator.eventService.setEventInstanceRegistration(
+                                instanceId = iid,
+                                personId = pid,
+                                coupleId = cid,
+                                isRegistered = false
+                            )
+                        } ?: throw Exception("Network error")
                     }
                 )
 
