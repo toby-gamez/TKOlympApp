@@ -362,7 +362,7 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                     state.trainers.forEach { trainerEl ->
                         val trainer = trainerEl.asJsonObjectOrNull() ?: return@forEach
                         val personId = trainer.str("personId") ?: return@forEach
-                        val trainerName = trainer.str("name") ?: return@forEach
+                        val trainerName = (trainer["person"]?.asJsonObjectOrNull()?.str("name") ?: trainer.str("name")) ?: return@forEach
                         val lessonsOffered = trainer.int("lessonsOffered")?.takeIf { it > 0 }
                         val lessonsRemaining = trainer.int("lessonsRemaining")?.takeIf { it > 0 }
                         val label = when {
@@ -485,7 +485,9 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                                     val trainerName = state.trainers.firstOrNull { trainerEl ->
                                         val trainer = trainerEl.asJsonObjectOrNull() ?: return@firstOrNull false
                                         trainer.int("id") == trainerId
-                                    }?.asJsonObjectOrNull()?.str("name") ?: "${AppStrings.current.events.trainerFallbackPrefix}$trainerId"
+                                    }?.asJsonObjectOrNull()?.let { t ->
+                                        t["person"]?.asJsonObjectOrNull()?.str("name") ?: t.str("name")
+                                    } ?: "${AppStrings.current.events.trainerFallbackPrefix}$trainerId"
                                     add(if (lessonCount != null && lessonCount > 0) "$trainerName: $lessonCount ${AppStrings.current.events.lessonCountSuffix}" else trainerName)
                                 }
                                 if (!note.isNullOrBlank()) add("${AppStrings.current.registration.notePrefix}$note")

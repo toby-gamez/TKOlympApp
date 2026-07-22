@@ -106,59 +106,49 @@ class EventService(
     
 
     private val eventByIdQuery = """
-            query Event(${'$'}id: BigInt!) {
-                event(id: ${'$'}id) {
+            query EventDetail(${'$'}id: BigInt!) {
+                eventInstance(id: ${'$'}id) {
                     id
                     type
+                    name
                     summary
                     description
-                    name
+                    since
+                    until
+                    isCancelled
                     capacity
                     remainingPersonSpots
-                    remainingLessons
+                    isLocked
+                    isVisible
+                    isPublic
+                    enableNotes
+                    locationText
                     location {
                         id
                         name
                         __typename
                     }
-                    locationText
-                    isRegistrationOpen
-                    isLocked
-                    isVisible
-                    isPublic
-                    enableNotes
-                    eventTrainersList {
+                    eventTrainersList: eventInstanceTrainersByInstanceIdList {
                         id
-                        name
                         personId
                         lessonsOffered
                         lessonsRemaining
+                        person {
+                            id
+                            name
+                            __typename
+                        }
                         __typename
                     }
-                    eventInstancesList(orderBy: SINCE_ASC) {
+                    eventInstancesList: childEventInstancesList(orderBy: SINCE_ASC) {
                         id
                         since
                         until
                         isCancelled
-                        trainersList {
-                            id
-                            personId
-                            person {
-                                id
-                                name
-                                __typename
-                            }
-                            __typename
-                        }
-                        eventInstanceTrainersByInstanceIdList {
-                            id
-                            personId
-                            __typename
-                        }
                         __typename
                     }
-                    eventTargetCohortsList {
-                        id
+                    eventTargetCohortsList: targetCohortsList {
+                        cohortId
                         cohort {
                             id
                             name
@@ -167,10 +157,11 @@ class EventService(
                         }
                         __typename
                     }
-                    myRegistrationsList {
+                    eventRegistrationsList: eventInstanceRegistrationsByInstanceIdList(
+                        condition: { registrationStatus: ACTIVE }
+                    ) {
                         id
                         note
-                        eventId
                         personId
                         person {
                             id
@@ -182,17 +173,14 @@ class EventService(
                         coupleId
                         couple {
                             id
-                            status
-                            since
-                            until
-                            woman {
+                            man {
                                 id
                                 name
                                 firstName
                                 lastName
                                 __typename
                             }
-                            man {
+                            woman {
                                 id
                                 name
                                 firstName
@@ -210,111 +198,12 @@ class EventService(
                         createdAt
                         __typename
                     }
-                    eventRegistrationsList {
+                    eventExternalRegistrationsList: eventExternalRegistrationsByInstanceIdList {
                         id
                         note
-                        eventId
-                        personId
-                        person {
-                            id
-                            name
-                            firstName
-                            lastName
-                            __typename
-                        }
-                        coupleId
-                        couple {
-                            id
-                            status
-                            since
-                            until
-                            woman {
-                                id
-                                name
-                                firstName
-                                lastName
-                                __typename
-                            }
-                            man {
-                                id
-                                name
-                                firstName
-                                lastName
-                                __typename
-                            }
-                            __typename
-                        }
-                        eventLessonDemandsByRegistrationIdList {
-                            id
-                            lessonCount
-                            trainerId
-                            __typename
-                        }
-                        createdAt
-                        __typename
-                    }
-                    eventExternalRegistrationsList {
-                        id
-                        birthDate
-                        nationality
-                        note
-                        phone
-                        prefixTitle
-                        suffixTitle
-                        taxIdentificationNumber
-                        updatedAt
-                        createdAt
                         email
-                        eventId
                         firstName
                         lastName
-                        __typename
-                    }
-                    eventRegistrations(first: 3) {
-                        totalCount
-                        nodes {
-                            id
-                            note
-                            eventId
-                            personId
-                            person {
-                                id
-                                name
-                                firstName
-                                lastName
-                                __typename
-                            }
-                            coupleId
-                            couple {
-                                id
-                                status
-                                since
-                                until
-                                woman {
-                                    id
-                                    name
-                                    firstName
-                                    lastName
-                                    __typename
-                                }
-                                man {
-                                    id
-                                    name
-                                    firstName
-                                    lastName
-                                    __typename
-                                }
-                                __typename
-                            }
-                            eventLessonDemandsByRegistrationIdList {
-                                id
-                                lessonCount
-                                trainerId
-                                __typename
-                            }
-                            createdAt
-                            __typename
-                        }
                         __typename
                     }
                     __typename
@@ -521,7 +410,7 @@ class EventService(
             Logger.d("EventService", "fetchEventById($id): no 'data' in response, errors=$errorsNode")
             return null
         }
-        val ev = data["event"]
+        val ev = data["eventInstance"]
         Logger.d("EventService", "fetchEventById($id): event value type=${ev?.let { it::class.simpleName }}, value=$ev")
         val obj = (ev as? JsonObject)
         if (obj != null) {

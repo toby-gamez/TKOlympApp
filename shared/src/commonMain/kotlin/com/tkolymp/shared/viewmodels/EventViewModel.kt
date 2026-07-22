@@ -137,8 +137,11 @@ class EventViewModel(
                 }
             } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("EventViewModel", "failed to read user cache: ${e.message}") }
 
-            // Derive business-logic fields from loaded JSON
-            val instances = eventObj.get("eventInstancesList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
+            // Derive business-logic fields from loaded JSON.
+            // eventInstancesList holds child instances (e.g. camp days); for a single
+            // training the list is empty and we treat the event itself as the sole instance.
+            val childInstances = eventObj.get("eventInstancesList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
+            val instances = if (childInstances.isNotEmpty()) childInstances else JsonArray(listOf(eventObj))
             val firstDate = instances.firstOrNull()?.asJsonObjectOrNull()?.str("since")
             val lastDate = instances.lastOrNull()?.asJsonObjectOrNull()?.str("until")
             val isPast = try {
@@ -172,9 +175,11 @@ class EventViewModel(
             val rawName = eventObj.str("name")
             val eventName = when {
                 !rawName.isNullOrBlank() -> rawName
-                type.toEventType() == EventType.LESSON ->
-                    trainers.firstOrNull()?.asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() }
+                type.toEventType() == EventType.LESSON -> {
+                    val t = trainers.firstOrNull()?.asJsonObjectOrNull()
+                    (t?.get("person")?.asJsonObjectOrNull()?.str("name") ?: t?.str("name"))?.takeIf { it.isNotBlank() }
                         ?: AppStrings.current.dialogs.noName
+                }
                 else -> AppStrings.current.dialogs.noName
             }
             val eventDescription = eventObj.str("description") ?: ""
@@ -189,7 +194,8 @@ class EventViewModel(
 
             val trainerDisplayNames = trainers.mapNotNull { trainerEl ->
                 val trainer = trainerEl.asJsonObjectOrNull() ?: return@mapNotNull null
-                val trainerName = trainer.str("name") ?: AppStrings.current.dialogs.noName
+                val trainerName = trainer["person"]?.asJsonObjectOrNull()?.str("name")
+                    ?: trainer.str("name") ?: AppStrings.current.dialogs.noName
                 val lessonsOffered = trainer.int("lessonsOffered")?.takeIf { it > 0 }
                 val lessonsRemaining = trainer.int("lessonsRemaining")?.takeIf { it > 0 }
                 when {
@@ -211,8 +217,10 @@ class EventViewModel(
                     val obj = inst.asJsonObjectOrNull() ?: return@any false
                     obj["id"]?.jsonPrimitive?.longOrNull == instanceId && obj.bool("isCancelled") == true
                 }
+            } else if (childInstances.isEmpty()) {
+                eventObj.bool("isCancelled") ?: false
             } else {
-                instances.isNotEmpty() && instances.all { it.asJsonObjectOrNull()?.bool("isCancelled") == true }
+                childInstances.all { it.asJsonObjectOrNull()?.bool("isCancelled") == true }
             }
 
             val selectedInstance = if (instanceId != null) {
