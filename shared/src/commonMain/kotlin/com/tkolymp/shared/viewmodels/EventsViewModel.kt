@@ -56,7 +56,7 @@ class EventsViewModel(
             // Use a broad fixed range (multiplatform-safe) to fetch upcoming camps
             val startIso = DateRangeConstants.FAR_PAST
             val endIso = DateRangeConstants.FAR_FUTURE
-            val map = try { withContext(Dispatchers.Default) { eventService.fetchEventsGroupedByDay(startIso, endIso, false, AppConstants.FETCH_LIMIT_PERIOD, 0, "CAMP", cacheNamespace = "camps_") } } catch (e: CancellationException) { throw e } catch (ex: Exception) { emptyMap<String, List<EventInstance>>() }
+            val map = withContext(Dispatchers.Default) { eventService.fetchEventsGroupedByDay(startIso, endIso, false, AppConstants.FETCH_LIMIT_PERIOD, 0, "CAMP", cacheNamespace = "camps_") }
             val filtered = map.mapValues { entry -> entry.value.filter { it.event?.isVisible != false } }.filterValues { it.isNotEmpty() }
 
             if (filtered.isNotEmpty()) {
@@ -66,7 +66,7 @@ class EventsViewModel(
                 if (offlineGrouped.isNotEmpty()) {
                     _state.value = _state.value.copy(eventsByDay = offlineGrouped, isLoading = false)
                 } else {
-                    _state.value = _state.value.copy(eventsByDay = filtered, isLoading = false)
+                    _state.value = _state.value.copy(eventsByDay = emptyMap(), isLoading = false)
                 }
             }
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {

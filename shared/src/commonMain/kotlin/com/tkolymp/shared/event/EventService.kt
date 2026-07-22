@@ -337,24 +337,20 @@ class EventService(
                         since
                         until
                         updatedAt
-                        event {
+                        name
+                        description
+                        type
+                        locationText
+                        isVisible
+                        isPublic
+                        trainersList { person { name } }
+                        targetCohortsList { cohortId cohort { id name colorRgb } }
+                        eventInstanceRegistrationsByInstanceIdList {
                             id
-                            description
-                            name
-                            type
-                            locationText
-                            isRegistrationOpen
-                            isVisible
-                            isPublic
-                            eventTrainersList { name }
-                            eventTargetCohortsList { cohortId cohort { id name colorRgb } }
-                            eventRegistrationsList {
-                                id
-                                person { id name firstName lastName }
-                                couple { id man { firstName lastName } woman { firstName lastName } }
-                            }
-                            location { id name }
+                            person { id name firstName lastName }
+                            couple { id man { firstName lastName } woman { firstName lastName } }
                         }
+                        location { id name }
                     }
                 }
         """.trimIndent()
@@ -394,13 +390,19 @@ class EventService(
         val resp = try {
             client.post(query, variables)
         } catch (ex: Exception) {
-            return emptyMap()
+            Logger.d("EventService", "fetchEventsGroupedByDay: network error for $cacheKey: ${ex.message}")
+            throw ex
         }
 
         val instances = mutableListOf<EventInstance>()
 
         val data = resp.jsonObject["data"]?.jsonObject
-        val listElem = data?.get("eventInstancesForRangeList") ?: return emptyMap()
+        if (data == null) {
+            val errors = resp.jsonObject["errors"]
+            Logger.d("EventService", "fetchEventsGroupedByDay: GraphQL error for $cacheKey: $errors")
+            throw Exception("GraphQL error: $errors")
+        }
+        val listElem = data.get("eventInstancesForRangeList") ?: return emptyMap()
 
         if (listElem is JsonNull) return emptyMap()
 
@@ -419,52 +421,47 @@ class EventService(
             val until = obj["until"]?.jsonPrimitive?.contentOrNull
             val updatedAt = obj["updatedAt"]?.jsonPrimitive?.contentOrNull
 
-            val eventObj = obj["event"]?.jsonObject
-            val event = eventObj?.let { e ->
-                // parse id for event (may be BigInt as string)
-                val evIdPrim = e["id"]?.jsonPrimitive
-                val evId = evIdPrim?.longOrNull ?: evIdPrim?.contentOrNull?.toLongOrNull()
+            val trainers = (obj["trainersList"] as? JsonArray)
+                ?.mapNotNull { (it as? JsonObject)?.get("person")?.jsonObject?.get("name")?.jsonPrimitive?.contentOrNull }
+                ?: emptyList()
 
-                val trainers = (e["eventTrainersList"] as? JsonArray)?.mapNotNull { it as? JsonObject }?.mapNotNull { it["name"]?.jsonPrimitive?.contentOrNull } ?: emptyList()
-
-                val targetCohorts = (e["eventTargetCohortsList"] as? JsonArray)?.mapNotNull { item ->
-                    val o = item as? JsonObject ?: return@mapNotNull null
-                    val cohortIdPrim = o["cohortId"]?.jsonPrimitive
-                    val cohortId = cohortIdPrim?.longOrNull ?: cohortIdPrim?.contentOrNull?.toLongOrNull()
-                    val cohortObj = o["cohort"] as? JsonObject
-                    val cohort = cohortObj?.let { c ->
-                        val cidPrim = c["id"]?.jsonPrimitive
-                        val cid = cidPrim?.longOrNull ?: cidPrim?.contentOrNull?.toLongOrNull()
-                        Cohort(cid, c["name"]?.jsonPrimitive?.contentOrNull, c["colorRgb"]?.jsonPrimitive?.contentOrNull)
-                    }
-                    TargetCohort(cohortId, cohort)
-                } ?: emptyList()
-
-                val registrations = (e["eventRegistrationsList"] as? JsonArray)
-                    ?.let { parseRegistrationsFromJson(it) } ?: emptyList()
-
-                val locationObj = e["location"] as? JsonObject
-                val location = locationObj?.let { l ->
-                    val lidPrim = l["id"]?.jsonPrimitive
-                    val lid = lidPrim?.longOrNull ?: lidPrim?.contentOrNull?.toLongOrNull()
-                    Location(lid, l["name"]?.jsonPrimitive?.contentOrNull)
+            val targetCohorts = (obj["targetCohortsList"] as? JsonArray)?.mapNotNull { item ->
+                val o = item as? JsonObject ?: return@mapNotNull null
+                val cohortIdPrim = o["cohortId"]?.jsonPrimitive
+                val cohortId = cohortIdPrim?.longOrNull ?: cohortIdPrim?.contentOrNull?.toLongOrNull()
+                val cohortObj = o["cohort"] as? JsonObject
+                val cohort = cohortObj?.let { c ->
+                    val cidPrim = c["id"]?.jsonPrimitive
+                    val cid = cidPrim?.longOrNull ?: cidPrim?.contentOrNull?.toLongOrNull()
+                    Cohort(cid, c["name"]?.jsonPrimitive?.contentOrNull, c["colorRgb"]?.jsonPrimitive?.contentOrNull)
                 }
+                TargetCohort(cohortId, cohort)
+            } ?: emptyList()
 
-                Event(
-                    id = evId,
-                    name = e["name"]?.jsonPrimitive?.contentOrNull,
-                    description = e["description"]?.jsonPrimitive?.contentOrNull,
-                    type = e["type"]?.jsonPrimitive?.contentOrNull,
-                    locationText = e["locationText"]?.jsonPrimitive?.contentOrNull,
-                    isRegistrationOpen = e["isRegistrationOpen"]?.jsonPrimitive?.booleanOrNull ?: false,
-                    isVisible = e["isVisible"]?.jsonPrimitive?.booleanOrNull ?: false,
-                    isPublic = e["isPublic"]?.jsonPrimitive?.booleanOrNull ?: false,
-                    eventTrainersList = trainers,
-                    eventTargetCohortsList = targetCohorts,
-                    eventRegistrationsList = registrations,
-                    location = location
-                )
+            val registrations = (obj["eventInstanceRegistrationsByInstanceIdList"] as? JsonArray)
+                ?.let { parseRegistrationsFromJson(it) } ?: emptyList()
+
+            val locationObj = obj["location"] as? JsonObject
+            val location = locationObj?.let { l ->
+                val lidPrim = l["id"]?.jsonPrimitive
+                val lid = lidPrim?.longOrNull ?: lidPrim?.contentOrNull?.toLongOrNull()
+                Location(lid, l["name"]?.jsonPrimitive?.contentOrNull)
             }
+
+            val event = Event(
+                id = id,
+                name = obj["name"]?.jsonPrimitive?.contentOrNull,
+                description = obj["description"]?.jsonPrimitive?.contentOrNull,
+                type = obj["type"]?.jsonPrimitive?.contentOrNull,
+                locationText = obj["locationText"]?.jsonPrimitive?.contentOrNull,
+                isRegistrationOpen = false,
+                isVisible = obj["isVisible"]?.jsonPrimitive?.booleanOrNull ?: false,
+                isPublic = obj["isPublic"]?.jsonPrimitive?.booleanOrNull ?: false,
+                eventTrainersList = trainers,
+                eventTargetCohortsList = targetCohorts,
+                eventRegistrationsList = registrations,
+                location = location
+            )
 
             instances += EventInstance(id, isCancelled, since, until, updatedAt, event)
         }
