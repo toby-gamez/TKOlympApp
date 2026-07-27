@@ -57,12 +57,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SplitButtonDefaults
 import androidx.compose.material3.SplitButtonLayout
 import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -86,6 +88,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.tkolymp.shared.campschedule.isRozpisTabVisible
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.utils.asJsonArrayOrNull
 import com.tkolymp.shared.utils.asJsonObjectOrNull
@@ -96,10 +99,13 @@ import com.tkolymp.shared.viewmodels.EventSideEffect
 import com.tkolymp.shared.viewmodels.EventViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.QuantityInput
+import com.tkolymp.tkolympapp.screens.campschedule.RozpisTabContent
 import com.tkolymp.tkolympapp.util.StaggeredItem
 import com.tkolymp.tkolympapp.components.parseColorOrDefault
 import com.tkolymp.tkolympapp.platform.HtmlText
 import kotlinx.coroutines.launch
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 import kotlinx.serialization.json.JsonArray
 import com.tkolymp.tkolympapp.platform.FullscreenImageViewer
 
@@ -127,6 +133,8 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
     val scope = rememberCoroutineScope()
     var showReminderDialog by remember { mutableStateOf(false) }
     var showRegistrationDropdown by remember { mutableStateOf(false) }
+    var selectedTab by remember { mutableStateOf(0) }
+    val showRozpisTab = isRozpisTabVisible(state.eventType, state.firstInstanceIso, kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault()))
 
     LaunchedEffect(eventId) {
         viewModel.loadEvent(eventId, instanceId = instanceId, forceRefresh = true)
@@ -158,40 +166,55 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
-                TopAppBar(
-                    title = { Text(AppStrings.current.events.event) },
-                    navigationIcon = {
-                        onBack?.let {
-                            IconButton(onClick = it) {
-                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
-                            }
-                        }
-                    },
-                    actions = {
-                        if (!state.isPast && state.firstInstanceIso != null) {
-                            if (state.reminderId != null) {
-                                IconButton(onClick = { showReminderDialog = true }) {
-                                    Icon(Icons.Default.Notifications, contentDescription = AppStrings.current.notifications.remindMe)
-                                }
-                                IconButton(onClick = { scope.launch { viewModel.removeReminder(eventId) } }) {
-                                    Icon(Icons.Default.NotificationsOff, contentDescription = AppStrings.current.notifications.reminderRemoveAction)
-                                }
-                            } else {
-                                IconButton(onClick = { showReminderDialog = true }) {
-                                    Icon(Icons.Default.Notifications, contentDescription = AppStrings.current.notifications.remindMe)
+                Column {
+                    TopAppBar(
+                        title = { Text(AppStrings.current.events.event) },
+                        navigationIcon = {
+                            onBack?.let {
+                                IconButton(onClick = it) {
+                                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
                                 }
                             }
+                        },
+                        actions = {
+                            if (!state.isPast && state.firstInstanceIso != null) {
+                                if (state.reminderId != null) {
+                                    IconButton(onClick = { showReminderDialog = true }) {
+                                        Icon(Icons.Default.Notifications, contentDescription = AppStrings.current.notifications.remindMe)
+                                    }
+                                    IconButton(onClick = { scope.launch { viewModel.removeReminder(eventId) } }) {
+                                        Icon(Icons.Default.NotificationsOff, contentDescription = AppStrings.current.notifications.reminderRemoveAction)
+                                    }
+                                } else {
+                                    IconButton(onClick = { showReminderDialog = true }) {
+                                        Icon(Icons.Default.Notifications, contentDescription = AppStrings.current.notifications.remindMe)
+                                    }
+                                }
+                            }
+                            IconButton(
+                                onClick = { scope.launch { viewModel.addToCalendar(eventId) } },
+                                enabled = !state.isAddedToCalendar
+                            ) {
+                                Icon(Icons.Default.CalendarMonth, contentDescription = AppStrings.current.events.addToCalendar)
+                            }
                         }
-                        IconButton(
-                            onClick = { scope.launch { viewModel.addToCalendar(eventId) } },
-                            enabled = !state.isAddedToCalendar
-                        ) {
-                            Icon(Icons.Default.CalendarMonth, contentDescription = AppStrings.current.events.addToCalendar)
+                    )
+                    if (showRozpisTab) {
+                        PrimaryTabRow(selectedTabIndex = selectedTab) {
+                            Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text(AppStrings.current.campSchedule.aboutEventTab) })
+                            Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text(AppStrings.current.campSchedule.rozpisTab) })
                         }
                     }
-                )
+                }
             }
         ) { padding ->
+        if (showRozpisTab && selectedTab == 1) {
+            RozpisTabContent(
+                eventId = eventId,
+                instances = state.instances.mapNotNull { it.asJsonObjectOrNull() },
+                modifier = Modifier.fillMaxSize().padding(padding)
+            )
+        } else {
         Box(modifier = Modifier.fillMaxSize()) {
 
         SwipeToReload(
@@ -696,6 +719,7 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
             FullscreenImageViewer(imageUrl = url) { fullScreenImageUrl.value = null }
         }
         } // closes Box(fillMaxSize)
+        } // closes else (non-Rozpis tab content)
 
     // Reminder dialog
     if (showReminderDialog) {

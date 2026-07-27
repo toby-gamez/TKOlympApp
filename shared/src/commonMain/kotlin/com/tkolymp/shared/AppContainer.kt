@@ -3,6 +3,8 @@ package com.tkolymp.shared
 import com.tkolymp.shared.announcements.IAnnouncementService
 import com.tkolymp.shared.auth.IAuthService
 import com.tkolymp.shared.cache.CacheService
+import com.tkolymp.shared.campschedule.CampScheduleReminderService
+import com.tkolymp.shared.campschedule.CampScheduleService
 import com.tkolymp.shared.club.ClubService
 import com.tkolymp.shared.event.IEventService
 import com.tkolymp.shared.network.IGraphQlClient
@@ -55,4 +57,6 @@ class AppContainer(
     val offlineSyncManager: OfflineSyncManager,
     val announcementBadgeStorage: AnnouncementBadgeStorage,
     val competitionService: ICompetitionService,
+    val campScheduleService: CampScheduleService,
+    val campScheduleReminderService: CampScheduleReminderService,
 )

@@ -21,6 +21,8 @@ import com.tkolymp.shared.network.NetworkMonitorAndroid
 import com.tkolymp.shared.sync.OfflineSyncManager
 import com.tkolymp.shared.personalevents.PersonalEventService
 import com.tkolymp.shared.competitions.CompetitionService
+import com.tkolymp.shared.campschedule.CampScheduleService
+import com.tkolymp.shared.campschedule.CampScheduleReminderService
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -31,10 +33,10 @@ import okhttp3.CertificatePinner
 
 // Certificate pins for api.rozpisovnik.cz
 // Primary : leaf certificate public key (SHA-256/Base64)
-// Backup  : Let's Encrypt E8 intermediate public key — use as fallback when the leaf is rotated
+// Backup  : Let's Encrypt YE2 intermediate public key — use as fallback when the leaf is rotated
 private val certificatePinner = CertificatePinner.Builder()
-    .add("api.rozpisovnik.cz", "sha256/Im/lk9HBHiZ1ldzskHrfWIx2FVffonmmSwCb607rwP4=")  // leaf
-    .add("api.rozpisovnik.cz", "sha256/iFvwVyJSxnQdyaUvUERIf+8qk7gRze3612JMwoO3zdU=")  // Let's Encrypt E8 intermediate
+    .add("api.rozpisovnik.cz", "sha256/Q5SDlsyebwSuLU2EROPHxw0YP4+HhbPYfRZBMLFAqNo=")  // leaf
+    .add("api.rozpisovnik.cz", "sha256/s/tdAOmUzd8syaTuqfgGvFcn6DzA5Cmb+Vby1ST+U3Y=")  // Let's Encrypt YE2 intermediate
     .build()
 
 suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String = "1") {
@@ -80,6 +82,8 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
     val personalEventService = PersonalEventService(offlineDataStorage, notificationScheduler, notificationStorage)
     val competitionSvc = CompetitionService(gql, cache)
     val offlineSyncManager = OfflineSyncManager(eventSvc, announcementSvc, peopleSvc, offlineDataStorage, networkMonitor, userSvc, notificationSvc, clubSvc, paymentSvc, competitionSvc)
+    val campScheduleSvc = CampScheduleService(offlineDataStorage)
+    val campScheduleReminderSvc = CampScheduleReminderService(offlineDataStorage, notificationScheduler, campScheduleSvc)
 
     val container = AppContainer(
         tokenStorage = storage,
@@ -106,6 +110,8 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
         offlineSyncManager = offlineSyncManager,
         announcementBadgeStorage = AnnouncementBadgeStorage(context),
         competitionService = competitionSvc,
+        campScheduleService = campScheduleSvc,
+        campScheduleReminderService = campScheduleReminderSvc,
     )
 
     ServiceLocator.init(container)

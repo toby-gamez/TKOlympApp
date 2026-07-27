@@ -17,10 +17,20 @@ adb install androidApp/build/outputs/apk/debug/androidApp-debug.apk
 # iOS framework (then open iosApp/iosApp.xcodeproj in Xcode)
 ./gradlew :shared:linkDebugFrameworkIosSimulatorArm64
 
-# Run unit tests
-./gradlew :composeApp:testDebugUnitTest
-./gradlew :shared:jvmTest
+# Run shared module unit tests (commonTest, run on the JVM against the android target)
+./gradlew :shared:testAndroidHostTest
+
+# Run a single test class/method
+./gradlew :shared:testAndroidHostTest --tests "com.tkolymp.tkolympapp.CacheServiceTest"
+
+# Run shared tests across all targets (android host + iOS simulator; iOS leg requires macOS/Xcode)
+./gradlew :shared:allTests
+
+# Lint
+./gradlew :androidApp:lintDebug
 ```
+
+There is no `shared:jvmTest` task — `shared` targets `android` + `iosArm64`/`iosSimulatorArm64` only, no plain JVM target. Tests live in `shared/src/commonTest`; `composeApp` has no wired-up unit test task.
 
 ## Local Configuration
 
@@ -33,29 +43,29 @@ These are injected as `BuildConfig.API_BASE_URL` and `BuildConfig.TENANT_ID` at 
 
 ## Architecture
 
-Two Gradle modules:
+Four Gradle modules. `androidApp` is the installable Android application shell (applicationId, version, signing, `BuildConfig` fields); `appRes` holds shared Android resources (icons, strings XML, manifest bits) consumed by `androidApp`; `composeApp` and `shared` are KMM library modules also built for iOS and consumed by `iosApp`'s Xcode project.
 
 ### `shared` — KMM business logic (`commonMain`)
 All logic shared between Android and iOS lives here. Never import Android/UI framework classes.
 
-- **`ServiceLocator`** — read-only singleton facade; call `ServiceLocator.init(container)` exactly once (done in `PlatformNetwork.kt`). Access services via `ServiceLocator.eventService`, etc.
-- **`AppContainer`** — holds all service instances; constructed in `shared/src/androidMain/kotlin/com/tkolymp/shared/PlatformNetwork.kt` via `initNetworking()`.
-- **Services** — one interface + one impl per domain (`IAuthService`/`AuthService`, `IEventService`/`EventService`, etc.). All GraphQL calls go through `GraphQlClientImpl` (Ktor + OkHttp with certificate pinning to `api.rozpisovnik.cz`).
+- **`ServiceLocator`** — read-only singleton facade; call `ServiceLocator.init(container)` exactly once (done inside each platform's `initNetworking()`). Access services via `ServiceLocator.eventService`, etc.
+- **`AppContainer`** — holds all service instances; constructed by `initNetworking()`, once per platform: `shared/src/androidMain/.../PlatformNetwork.kt` (Android, OkHttp engine + certificate pinning) and `shared/src/iosMain/.../PlatformNetwork.ios.kt` (iOS, Darwin engine).
+- **Services** — one interface + one impl per domain (`IAuthService`/`AuthService`, `IEventService`/`EventService`, etc.), e.g. `event/`, `people/`, `club/`, `announcements/`, `payments/`, `registration/`, `competitions/`, `personalevents/`, `notification/`. All GraphQL calls go through `GraphQlClientImpl` (Ktor); the Android engine is OkHttp with certificate pinning to `api.rozpisovnik.cz`, iOS uses Darwin.
 - **ViewModels** — one per screen (`CalendarViewModel`, `EventsViewModel`, …), each implementing `ViewModelState` (has `isLoading: Boolean` and `error: String?`). Shared between Android and iOS.
 - **`CacheService`** — in-memory LRU (max 200 entries, default 5-minute TTL). Services call `cache.get(key)` / `cache.put(key, value, ttl)` and invalidate by key or prefix on mutations.
 - **Storage** — `TokenStorage`, `UserStorage`, `OnboardingStorage`, `LanguageStorage`, `CalendarPreferenceStorage`, `OfflineDataStorage`, `NotificationStorage`. Android implementations use the `ksafe` library.
-- **Localization** — `AppStrings.current.*` provides all UI strings; `AppStrings.setLanguage(AppLanguage.XX)` switches at runtime and emits to `languageFlow` (triggers a `Crossfade` in `App.kt`). Add new strings to `Strings.kt` and all translation objects in `shared/src/commonMain/kotlin/com/tkolymp/shared/language/translations/` (CS, DE, SK, SL, UA, VI, EN, BRAINROT).
+- **Localization** — `AppStrings.current.*` provides all UI strings; `AppStrings.setLanguage(AppLanguage.XX)` switches at runtime and emits to `languageFlow` (triggers a `Crossfade` in `AppContent.kt`). Add new strings to `Strings.kt` and all translation objects in `shared/src/commonMain/kotlin/com/tkolymp/shared/language/translations/` (CS, DE, SK, SL, UA, VI, EN, BRAINROT).
 - **Calendar collision algorithm** — `CollisionDetectionAlgorithm` in `calendar/` assigns column positions to overlapping events (similar to Google Calendar).
 - **Offline sync** — `OfflineSyncManager` calls `downloadAll()` on startup and after login when network is available.
 
 ### `composeApp` — Compose Multiplatform UI
-Screens are kept thin; all logic lives in `shared`. Android-only code goes in `androidMain`.
+Targets both `android` and `iosArm64`/`iosSimulatorArm64`. Screens are kept thin; all logic lives in `shared`. Platform-only code goes in `androidMain`/`iosMain`.
 
-- **Navigation** — `AppNavHost` in `composeApp/src/androidMain/kotlin/com/tkolymp/tkolympapp/App.kt` uses Jetpack Navigation Compose with string-based routes (`"event/{eventId}"`, `"person/{personId}"`, etc.). The bottom bar is visible only on the five main tabs: `overview`, `calendar`/`timeline`, `board`, `events`, `other`.
-- **Theme** — `ui/theme/Color.kt` + `ui/theme/Theme.kt`. Always use `MaterialTheme` tokens; do not hard-code colors.
+- **Navigation** — `AppContent`/`AppNavHost` live in `composeApp/src/commonMain/kotlin/com/tkolymp/tkolympapp/AppContent.kt` (shared by both platforms) and use Jetpack Navigation Compose with string-based routes (`"event/{eventId}"`, `"person/{personId}"`, etc.). Each platform has only a thin entry point: `androidMain/.../App.kt` (integrity check, then delegates to `AppContent`) and `iosMain/.../App.ios.kt` + `MainViewController.kt`. The bottom bar is visible only on five routes: `overview`, `calendar`, `board`, `events`, `other` (calendar vs. timeline is a view-mode toggle within the `calendar` route, not a separate tab).
+- **Theme** — `ui/theme/Color.kt` + `ui/theme/Theme.kt`. Always use `MaterialTheme` tokens; do not hard-code colors or numeric sizes.
 - **Screens** — `composeApp/src/commonMain/kotlin/com/tkolymp/tkolympapp/screens/`
 - **Reusable components** — `composeApp/src/commonMain/kotlin/com/tkolymp/tkolympapp/components/`
-- **Platform implementations** — `composeApp/src/androidMain/kotlin/com/tkolymp/tkolympapp/platform/` (e.g., `HtmlText.kt`, `ShareUtils.android.kt`)
+- **Platform implementations** — declared as `expect` in `commonMain/.../platform/`, with `androidMain`/`iosMain` `actual`s (e.g., `HtmlText`, `AppLogo`, `ShareUtils`, `FullscreenImageViewer`, `NotificationFileButtons`). Firebase Cloud Messaging and barcode scanning remain Android-only.
 
 ## Key Conventions
 
@@ -66,4 +76,5 @@ Screens are kept thin; all logic lives in `shared`. Android-only code goes in `a
 - Reusable composables accept `modifier: Modifier = Modifier` and apply it first; modifier order: size → padding → background → clickable → semantics.
 - Stateless composables preferred: accept state and event lambdas, lift state to ViewModels.
 - Touch targets ≥ 48 dp; provide `contentDescription` for non-text interactive elements.
+- New/changed composables should have a `@Preview` covering light and dark theme (see `docs/COMPOSABLES_PR_CHECKLIST.md`).
 - Integrity check (`IntegrityServiceAndroid`) is skipped in debug builds; release builds validate APK signing.

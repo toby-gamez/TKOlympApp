@@ -3,6 +3,8 @@ package com.tkolymp.shared
 import com.tkolymp.shared.announcements.AnnouncementServiceImpl
 import com.tkolymp.shared.auth.AuthService
 import com.tkolymp.shared.cache.CacheService
+import com.tkolymp.shared.campschedule.CampScheduleReminderService
+import com.tkolymp.shared.campschedule.CampScheduleService
 import com.tkolymp.shared.club.ClubService
 import com.tkolymp.shared.competitions.CompetitionService
 import com.tkolymp.shared.html.HtmlFormatter
@@ -33,8 +35,8 @@ import io.ktor.serialization.kotlinx.json.json
 
 // Certificate pins for api.rozpisovnik.cz (same as Android OkHttp pins)
 private val certPinner: CertificatePinner = CertificatePinner.Builder()
-    .add("api.rozpisovnik.cz", "sha256/Im/lk9HBHiZ1ldzskHrfWIx2FVffonmmSwCb607rwP4=")
-    .add("api.rozpisovnik.cz", "sha256/iFvwVyJSxnQdyaUvUERIf+8qk7gRze3612JMwoO3zdU=")
+    .add("api.rozpisovnik.cz", "sha256/Q5SDlsyebwSuLU2EROPHxw0YP4+HhbPYfRZBMLFAqNo=")
+    .add("api.rozpisovnik.cz", "sha256/s/tdAOmUzd8syaTuqfgGvFcn6DzA5Cmb+Vby1ST+U3Y=")
     .build()
 
 suspend fun initNetworking(baseUrl: String, tenantId: String = "1") {
@@ -76,6 +78,8 @@ suspend fun initNetworking(baseUrl: String, tenantId: String = "1") {
         eventSvc, announcementSvc, peopleSvc, offlineDataStorage,
         networkMonitor, userSvc, notificationSvc, clubSvc, paymentSvc, competitionSvc
     )
+    val campScheduleSvc = CampScheduleService(offlineDataStorage)
+    val campScheduleReminderSvc = CampScheduleReminderService(offlineDataStorage, notificationScheduler, campScheduleSvc)
 
     val container = AppContainer(
         tokenStorage = storage,
@@ -102,6 +106,8 @@ suspend fun initNetworking(baseUrl: String, tenantId: String = "1") {
         offlineSyncManager = offlineSyncManager,
         announcementBadgeStorage = AnnouncementBadgeStorage(""),
         competitionService = competitionSvc,
+        campScheduleService = campScheduleSvc,
+        campScheduleReminderService = campScheduleReminderSvc,
     )
 
     ServiceLocator.init(container)

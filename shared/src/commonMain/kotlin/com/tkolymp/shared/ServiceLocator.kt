@@ -5,6 +5,8 @@ import com.tkolymp.shared.ServiceLocator.init
 import com.tkolymp.shared.announcements.IAnnouncementService
 import com.tkolymp.shared.auth.IAuthService
 import com.tkolymp.shared.cache.CacheService
+import com.tkolymp.shared.campschedule.CampScheduleReminderService
+import com.tkolymp.shared.campschedule.CampScheduleService
 import com.tkolymp.shared.club.ClubService
 import com.tkolymp.shared.competitions.ICompetitionService
 import com.tkolymp.shared.event.IEventService
@@ -77,4 +79,6 @@ object ServiceLocator {
     val offlineSyncManager: OfflineSyncManager get() = container.offlineSyncManager
     val announcementBadgeStorage: AnnouncementBadgeStorage get() = container.announcementBadgeStorage
     val competitionService: ICompetitionService get() = container.competitionService
+    val campScheduleService: CampScheduleService get() = container.campScheduleService
+    val campScheduleReminderService: CampScheduleReminderService get() = container.campScheduleReminderService
 }

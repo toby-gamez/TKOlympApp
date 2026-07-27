@@ -29,6 +29,8 @@ firebase-bom = "34.15.0"
 firebase-analytics = "23.2.0"
 foundation = "1.11.3"
 foundationLayout = "1.11.3"
+mlkitTextRecognition = "16.0.1"
+opencv = "4.14.0"
 
 [libraries]
 firebase-messaging = { module = "com.google.firebase:firebase-messaging", version.ref = "firebaseMessaging" }
@@ -71,6 +73,8 @@ firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "fir
 firebase-analytics = {module = "com.google.firebase:firebase-analytics", version.ref = "firebase-analytics"}
 androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 androidx-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }
+mlkit-text-recognition = { module = "com.google.mlkit:text-recognition", version.ref = "mlkitTextRecognition" }
+opencv = { module = "org.opencv:opencv", version.ref = "opencv" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

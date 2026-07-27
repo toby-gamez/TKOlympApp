@@ -46,6 +46,8 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(bomCompose)
             implementation(libs.kotlinx.serialization.json)
+            implementation(libs.mlkit.text.recognition)
+            implementation(libs.opencv)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
