@@ -5,14 +5,15 @@ import androidx.compose.ui.Modifier
 import com.tkolymp.shared.campschedule.ScheduleDay
 
 /**
- * Lets the user photograph (or pick from the gallery) a schedule table and turns it
- * into a [ScheduleDay] entirely on-device (OpenCV grid detection + ML Kit OCR).
- * Android-only: OpenCV and ML Kit have no iOS equivalent in scope, so the iOS actual
- * renders a disabled hint instead.
+ * Icon buttons (camera + gallery) that let the user photograph or pick a schedule
+ * table and turn it into a [ScheduleDay] plus the original photo bytes, entirely
+ * on-device (OpenCV grid detection + ML Kit OCR). Android-only: OpenCV and ML Kit have
+ * no iOS equivalent in scope, so the iOS actual renders nothing.
  */
 @Composable
 expect fun CampScheduleUploadButton(
     dayLabel: String,
-    onScheduleBuilt: (ScheduleDay) -> Unit,
+    enabled: Boolean,
+    onScheduleBuilt: (ScheduleDay, ByteArray) -> Unit,
     modifier: Modifier = Modifier
 )

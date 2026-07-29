@@ -10,18 +10,22 @@ import kotlinx.coroutines.CancellationException
 class NotificationSchedulerAndroid(private val platformContext: Any) : INotificationScheduler {
     private val context = platformContext as Context
 
-    private fun makeIntent(notificationId: String, title: String?, text: String?): Intent {
+    private fun makeIntent(notificationId: String, title: String?, text: String?, eventId: Long?, tab: Int): Intent {
         return Intent("com.tkolymp.tkolympapp.SHOW_NOTIFICATION").apply {
             `package` = context.packageName
             putExtra("notificationId", notificationId)
             putExtra("title", title)
             putExtra("text", text)
+            if (eventId != null) {
+                putExtra("eventId", eventId)
+                putExtra("tab", tab)
+            }
         }
     }
 
     override suspend fun cancelNotification(notificationId: String) {
         val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = makeIntent(notificationId, null, null)
+        val intent = makeIntent(notificationId, null, null, null, 0)
         val flags = PendingIntent.FLAG_NO_CREATE or if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
         val pi = PendingIntent.getBroadcast(context, notificationId.hashCode(), intent, flags)
         if (pi != null) am.cancel(pi)
@@ -36,7 +40,7 @@ class NotificationSchedulerAndroid(private val platformContext: Any) : INotifica
         return true
     }
 
-    override suspend fun scheduleNotificationAt(notificationId: String, title: String?, text: String?, isoDateTime: String, minutesBefore: Int): Long? {
+    override suspend fun scheduleNotificationAt(notificationId: String, title: String?, text: String?, isoDateTime: String, minutesBefore: Int, eventId: Long?, tab: Int): Long? {
         val instant = try {
             java.time.OffsetDateTime.parse(isoDateTime).toInstant()
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
@@ -52,7 +56,7 @@ class NotificationSchedulerAndroid(private val platformContext: Any) : INotifica
         if (triggerAt <= now) return null
 
         val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = makeIntent(notificationId, title, text)
+        val intent = makeIntent(notificationId, title, text, eventId, tab)
         val flags = PendingIntent.FLAG_UPDATE_CURRENT or if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
         val pi = PendingIntent.getBroadcast(context, notificationId.hashCode(), intent, flags)
         // Use a regular (inexact) alarm instead of exact scheduling.

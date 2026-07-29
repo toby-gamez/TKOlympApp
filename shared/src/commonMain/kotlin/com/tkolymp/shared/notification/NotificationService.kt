@@ -193,7 +193,7 @@ class NotificationService(
                         }
                     }
 
-                    val trigger = try { scheduler.scheduleNotificationAt(nid, titleToShow, AppStrings.current.notifications.notificationEventStartsIn.replace("{0}", minutesBefore.toString()), since, minutesBefore) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                    val trigger = try { scheduler.scheduleNotificationAt(nid, titleToShow, AppStrings.current.notifications.notificationEventStartsIn.replace("{0}", minutesBefore.toString()), since, minutesBefore, eventId = ev.id) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                     if (trigger != null) {
                         scheduled += ScheduledNotification(nid, ev.id, titleToShow, trigger)
                     }
@@ -207,10 +207,10 @@ class NotificationService(
     suspend fun getReminders(): List<EventReminder> = storage.getEventReminders()
 
     suspend fun getReminderForEvent(eventId: Long): EventReminder? =
-        storage.getEventReminders().find { it.eventId == eventId }
+        storage.getEventReminders().find { it.eventId == eventId && it.campDayIndex == null }
 
     suspend fun addOrUpdateReminder(reminder: EventReminder): EventReminder {
-        val existing = storage.getEventReminders().find { it.eventId == reminder.eventId }
+        val existing = storage.getEventReminders().find { it.eventId == reminder.eventId && it.campDayIndex == null }
         if (existing?.scheduledNotificationId != null) {
             try { scheduler.cancelNotification(existing.scheduledNotificationId) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         }
@@ -218,10 +218,12 @@ class NotificationService(
         val title = reminder.eventName.ifBlank { AppStrings.current.events.event }
         val body = AppStrings.current.notifications.notificationEventStartsIn.replace("{0}", reminder.minutesBefore.toString())
         val trigger = try {
-            scheduler.scheduleNotificationAt(nid, title, body, reminder.eventStartIso, reminder.minutesBefore)
+            scheduler.scheduleNotificationAt(nid, title, body, reminder.eventStartIso, reminder.minutesBefore, eventId = reminder.eventId)
         } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
         val saved = reminder.copy(id = nid, scheduledNotificationId = if (trigger != null) nid else null)
-        val others = storage.getEventReminders().filter { it.eventId != reminder.eventId }
+        // Only replace the plain single-event reminder for this event id — camp-day
+        // reminders (campDayIndex != null) can share the same event id and must survive.
+        val others = storage.getEventReminders().filter { !(it.eventId == reminder.eventId && it.campDayIndex == null) }
         storage.saveEventReminders(others + saved)
         return saved
     }

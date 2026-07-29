@@ -644,4 +644,18 @@ val StringsDe = Strings(
         daysAway = "Tage noch",
         dayAway = "Tag noch",
     ),
+    campSchedule = com.tkolymp.shared.language.CampScheduleStrings(
+        aboutEventTab = "Über die Veranstaltung",
+        rozpisTab = "Zeitplan",
+        openRozpis = "Zeitplan öffnen",
+        headerDescription = "Lade den Tagesplan hoch und wir erstellen dir deinen Zeitplan inklusive Erinnerungen!",
+        takePhoto = "Zeitplan fotografieren",
+        pickFromGallery = "Aus Galerie wählen",
+        processingPhoto = "Foto wird verarbeitet…",
+        selectGroupsTitle = "Meine Gruppe",
+        reminderMinutesLabel = "Trainingserinnerung im Voraus",
+        mySchedule = "Mein Zeitplan",
+        nowLabel = "Jetzt",
+        notAvailableOnIos = "Das Hochladen von Zeitplan-Fotos ist derzeit nur auf Android verfügbar.",
+    ),
 )

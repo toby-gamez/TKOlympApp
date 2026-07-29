@@ -645,4 +645,18 @@ val StringsVi = Strings(
         daysAway = "ngày nữa",
         dayAway = "ngày nữa",
     ),
+    campSchedule = com.tkolymp.shared.language.CampScheduleStrings(
+        aboutEventTab = "Về sự kiện",
+        rozpisTab = "Lịch trình",
+        openRozpis = "Mở lịch trình",
+        headerDescription = "Tải lên lịch trình hàng ngày và chúng tôi sẽ tạo lịch trình cùng lời nhắc cho bạn!",
+        takePhoto = "Chụp ảnh lịch trình",
+        pickFromGallery = "Chọn từ thư viện",
+        processingPhoto = "Đang xử lý ảnh…",
+        selectGroupsTitle = "Nhóm của tôi",
+        reminderMinutesLabel = "Nhắc nhở buổi tập trước",
+        mySchedule = "Lịch trình của tôi",
+        nowLabel = "Bây giờ",
+        notAvailableOnIos = "Tải ảnh lịch trình hiện chỉ khả dụng trên Android.",
+    ),
 )

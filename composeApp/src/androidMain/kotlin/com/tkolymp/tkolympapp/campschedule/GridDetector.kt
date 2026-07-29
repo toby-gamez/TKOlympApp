@@ -4,37 +4,58 @@ import android.graphics.Bitmap
 import android.graphics.Rect
 import org.opencv.android.OpenCVLoader
 import org.opencv.android.Utils
+import org.opencv.core.Core
+import org.opencv.core.CvType
 import org.opencv.core.Mat
-import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
-import kotlin.math.abs
-import kotlin.math.atan2
-import kotlin.math.max
-import kotlin.math.min
 
 /**
  * Detects the black grid of a photographed schedule table and returns, for each row,
- * the cell bounding boxes in image pixel coordinates. Row 0 is the header row (time
- * corner + one cell per person column). A merged/full-width row (e.g. "Oběd") is
- * detected by the absence of internal vertical grid lines and is returned with only
- * 2 cells: the time cell and one cell spanning the rest of the row's width.
+ * the cell bounding boxes in image pixel coordinates. Row/column boundaries are found
+ * via projection profiles (summing "on" pixels per row/column after adaptive
+ * thresholding) rather than Hough line detection — for a table's long, straight grid
+ * lines this aggregates evidence across the whole line at once, which is far less
+ * sensitive to the per-pixel noise introduced by JPEG re-encoding/decoding than
+ * fragile line-continuity-based detection.
+ *
+ * A merged/full-width row (e.g. a title bar like "PONDĚLÍ" above the real header, or a
+ * note row like "Oběd") is detected by the absence of internal column dividers within
+ * that row's own y-range, and is returned with only 2 cells: the time/leading cell and
+ * one cell spanning the rest of the row's width. The real header row (time corner +
+ * one cell per person column) is therefore not necessarily row 0 — callers must find
+ * the first non-merged row themselves.
  */
 object GridDetector {
 
-    // Tuning constants. Modern phone photos are commonly 3000-4000px+ per side, so
-    // thresholds are expressed relative to image size rather than as fixed pixel
-    // counts — a fixed 12px merge distance (say) is generous for a scanned document
-    // but far too tight for a handheld photo, where a "straight" printed line can
-    // drift tens of pixels across a 4000px-wide frame from minor camera rotation.
     private const val ADAPTIVE_BLOCK_SIZE = 15
     private const val ADAPTIVE_C = 8.0
-    private const val LINE_MERGE_FRACTION = 0.006
-    private const val MIN_LINE_MERGE_DISTANCE_PX = 12
-    private const val LINE_KERNEL_DIVISOR = 25.0
-    private const val LINE_KERNEL_THICKNESS_PX = 2.0
-    private const val HOUGH_THRESHOLD = 60
-    private const val HOUGH_MAX_LINE_GAP_FRACTION = 0.01
-    private const val MAX_LINE_ANGLE_DEG = 5.0
+    // A boundary line is wherever the row/column "on"-pixel count is at least this
+    // fraction of the profile's peak — grid lines are the strongest, most consistent
+    // features in the image, so a fairly high fraction cleanly separates them from text.
+    private const val PEAK_THRESHOLD_FRACTION = 0.5
+    private const val MIN_PEAK_GAP_FRACTION = 0.02
+    private const val MIN_PEAK_GAP_FLOOR_PX = 5
+    private const val EDGE_MARGIN_FRACTION = 0.01
+    private const val EDGE_MARGIN_FLOOR_PX = 5
+    // A row counts as having an internal column divider only if some x-window near a
+    // column boundary is "on" for almost this row's entire height. A real grid line
+    // spans (close to) 100% of the row height; a tall text stroke that merely happens
+    // to fall near a column boundary (e.g. a "d"/"l" ascender in a merged note row's
+    // text) reaches at most ~60% in practice — measured against real sample photos,
+    // where genuine dividers sit at 1.00 and coincidental strokes cap around 0.56-0.61.
+    private const val ROW_INTERNAL_THRESHOLD_FRACTION = 0.85
+    private const val ROW_INTERNAL_WINDOW_PX = 3
+    // Row/column boundary pairs closer together than this are almost certainly noise
+    // (e.g. a table border line detected a second time a few px off) and are merged
+    // into the previous segment rather than kept as their own tiny sliver.
+    private const val MIN_SEGMENT_HEIGHT_PX = 8
+    // A merged/note row's OCR crop is tightened from the full table width down to just
+    // the horizontal span of actual ink, plus this margin — ML Kit's text recognizer
+    // reliably fails on the full-width crop (~40:1 width:height for a short row) but
+    // succeeds once the crop is closer to a normal cell's aspect ratio.
+    private const val MERGED_TEXT_MARGIN_PX = 10
+    private const val MERGED_INK_THRESHOLD_FRACTION = 0.15
+    private const val MERGED_BORDER_EXCLUSION_PX = 4
 
     private var openCvReady = false
 
@@ -61,45 +82,34 @@ object GridDetector {
 
         val width = binary.cols()
         val height = binary.rows()
-        val diagonal = kotlin.math.hypot(width.toDouble(), height.toDouble())
-        val lineMergeDistance = (diagonal * LINE_MERGE_FRACTION).toInt().coerceAtLeast(MIN_LINE_MERGE_DISTANCE_PX)
-        val houghMaxLineGap = diagonal * HOUGH_MAX_LINE_GAP_FRACTION
-        // The "thin" side of each kernel must stay close to the actual printed line's pixel
-        // thickness (a few px, regardless of photo resolution) — erosion erases any line
-        // thinner than the kernel, so this must NOT scale up with image size.
-        val kernelThickness = LINE_KERNEL_THICKNESS_PX
+        // Row separators are naturally much closer together (one per table row) than
+        // column separators (one per person column spanning the full width), so each
+        // axis's minimum peak gap must be relative to ITS OWN extent, not the other's —
+        // using max(width, height) for both made the row gap far too large for a dense
+        // table and silently merged distinct row lines together.
+        val rowMinPeakGap = (height * MIN_PEAK_GAP_FRACTION).toInt().coerceAtLeast(MIN_PEAK_GAP_FLOOR_PX)
+        val colMinPeakGap = (width * MIN_PEAK_GAP_FRACTION).toInt().coerceAtLeast(MIN_PEAK_GAP_FLOOR_PX)
+        val rowEdgeMargin = (height * EDGE_MARGIN_FRACTION).toInt().coerceAtLeast(EDGE_MARGIN_FLOOR_PX)
+        val colEdgeMargin = (width * EDGE_MARGIN_FRACTION).toInt().coerceAtLeast(EDGE_MARGIN_FLOOR_PX)
 
-        val horizontalSegments = detectLineSegments(
-            binary,
-            kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size((width / LINE_KERNEL_DIVISOR).coerceAtLeast(1.0), kernelThickness)),
-            minLineLength = width * 0.4,
-            maxLineGap = houghMaxLineGap,
-            horizontal = true
+        val rowBoundaries = dropThinSegments(
+            addEdges(findPeaks(rowSums(binary), PEAK_THRESHOLD_FRACTION, rowMinPeakGap), height, rowEdgeMargin)
         )
-        val verticalSegments = detectLineSegments(
-            binary,
-            kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(kernelThickness, (height / LINE_KERNEL_DIVISOR).coerceAtLeast(1.0))),
-            minLineLength = height * 0.015,
-            maxLineGap = houghMaxLineGap,
-            horizontal = false
+        val colBoundaries = dropThinSegments(
+            addEdges(findPeaks(colSums(binary), PEAK_THRESHOLD_FRACTION, colMinPeakGap), width, colEdgeMargin)
         )
-
-        // Real photos sometimes have a locally faint/broken separator line (shadow, glare,
-        // a crease) that Hough misses entirely, merging several real rows into one giant
-        // cell. As a fallback, any row gap far larger than the typical row height is split
-        // evenly rather than left as one oversized cell.
-        val rowBoundaries = subdivideOutlierGaps(clusterPositions(horizontalSegments.map { it.midY() }, height, lineMergeDistance))
-        val colBoundaries = clusterPositions(verticalSegments.map { it.midX() }, width, lineMergeDistance)
 
         if (rowBoundaries.size < 2 || colBoundaries.size < 2) return emptyList()
+
+        val internalCols = colBoundaries.drop(2).dropLast(1)
 
         return (0 until rowBoundaries.size - 1).map { row ->
             val rowTop = rowBoundaries[row]
             val rowBottom = rowBoundaries[row + 1]
-            if (row > 0 && !hasInternalVerticalSegments(verticalSegments, colBoundaries, rowTop, rowBottom, lineMergeDistance)) {
+            if (!hasInternalColumnDividers(binary, internalCols, rowTop, rowBottom)) {
                 listOf(
                     Rect(colBoundaries[0], rowTop, colBoundaries[1], rowBottom),
-                    Rect(colBoundaries[1], rowTop, colBoundaries.last(), rowBottom)
+                    tightenMergedCellRect(binary, rowTop, rowBottom, colBoundaries[1], colBoundaries.last())
                 )
             } else {
                 (0 until colBoundaries.size - 1).map { col ->
@@ -109,79 +119,133 @@ object GridDetector {
         }
     }
 
-    private data class Segment(val x1: Int, val y1: Int, val x2: Int, val y2: Int) {
-        fun midY() = (y1 + y2) / 2
-        fun midX() = (x1 + x2) / 2
-    }
-
-    private fun detectLineSegments(binary: Mat, kernel: Mat, minLineLength: Double, maxLineGap: Double, horizontal: Boolean): List<Segment> {
-        val isolated = Mat()
-        Imgproc.morphologyEx(binary, isolated, Imgproc.MORPH_OPEN, kernel)
-
-        val lines = Mat()
-        Imgproc.HoughLinesP(isolated, lines, 1.0, Math.PI / 180, HOUGH_THRESHOLD, minLineLength, maxLineGap)
-
-        val segments = mutableListOf<Segment>()
-        for (i in 0 until lines.rows()) {
-            val v = lines.get(i, 0)
-            val (x1, y1, x2, y2) = listOf(v[0].toInt(), v[1].toInt(), v[2].toInt(), v[3].toInt())
-            val angleDeg = Math.toDegrees(atan2((y2 - y1).toDouble(), (x2 - x1).toDouble()))
-            val isRoughlyHorizontal = abs(angleDeg) < MAX_LINE_ANGLE_DEG || abs(abs(angleDeg) - 180) < MAX_LINE_ANGLE_DEG
-            val isRoughlyVertical = abs(abs(angleDeg) - 90) < MAX_LINE_ANGLE_DEG
-            if (horizontal && isRoughlyHorizontal) segments += Segment(x1, y1, x2, y2)
-            if (!horizontal && isRoughlyVertical) segments += Segment(x1, y1, x2, y2)
-        }
-        return segments
-    }
-
-    /** Merges near-duplicate line positions and returns sorted boundary coordinates, including the image edges. */
-    private fun clusterPositions(positions: List<Int>, imageExtent: Int, mergeDistance: Int): List<Int> {
-        if (positions.isEmpty()) return emptyList()
-        val sorted = positions.sorted()
-        val clusters = mutableListOf(mutableListOf(sorted.first()))
-        for (p in sorted.drop(1)) {
-            if (p - clusters.last().last() <= mergeDistance) {
-                clusters.last() += p
-            } else {
-                clusters += mutableListOf(p)
-            }
-        }
-        val merged = clusters.map { it.sum() / it.size }.toMutableList()
-        if (merged.first() > mergeDistance) merged.add(0, 0)
-        if (merged.last() < imageExtent - mergeDistance) merged.add(imageExtent)
-        return merged.sorted()
-    }
-
-    /** Splits any gap much larger than the median gap into evenly-sized sub-gaps. */
-    private fun subdivideOutlierGaps(boundaries: List<Int>): List<Int> {
-        if (boundaries.size < 3) return boundaries
-        val gaps = boundaries.zipWithNext { a, b -> b - a }
-        val median = gaps.sorted()[gaps.size / 2]
-        if (median <= 0) return boundaries
-        val result = mutableListOf(boundaries.first())
-        for (i in boundaries.indices.drop(1)) {
-            val start = boundaries[i - 1]
-            val end = boundaries[i]
-            val gap = end - start
-            val subCount = (gap / median.toDouble()).toInt().coerceAtLeast(1)
-            if (subCount > 1 && gap > median * 1.6) {
-                for (k in 1 until subCount) result += start + (gap * k / subCount)
-            }
-            result += end
+    /** Count of "on" (thresholded) pixels in each row, i.e. a vertical profile of horizontal line strength. */
+    private fun rowSums(binary: Mat): IntArray {
+        val reduced = Mat()
+        Core.reduce(binary, reduced, 1, Core.REDUCE_SUM, CvType.CV_32S)
+        val result = IntArray(binary.rows())
+        val buf = IntArray(1)
+        for (i in result.indices) {
+            reduced.get(i, 0, buf)
+            result[i] = buf[0] / 255
         }
         return result
     }
 
-    /** True if a raw vertical segment spans this row's y-range at any internal (non-edge) column boundary. */
-    private fun hasInternalVerticalSegments(verticalSegments: List<Segment>, colBoundaries: List<Int>, rowTop: Int, rowBottom: Int, mergeDistance: Int): Boolean {
-        val internalCols = colBoundaries.drop(2).dropLast(1)
-        if (internalCols.isEmpty()) return true
-        return internalCols.any { colX ->
-            verticalSegments.any { seg ->
-                abs(seg.midX() - colX) <= mergeDistance &&
-                    max(seg.y1, seg.y2) >= rowTop &&
-                    min(seg.y1, seg.y2) <= rowBottom
+    /** Count of "on" pixels in each column, i.e. a horizontal profile of vertical line strength. */
+    private fun colSums(binary: Mat): IntArray {
+        val reduced = Mat()
+        Core.reduce(binary, reduced, 0, Core.REDUCE_SUM, CvType.CV_32S)
+        val result = IntArray(binary.cols())
+        val buf = IntArray(1)
+        for (j in result.indices) {
+            reduced.get(0, j, buf)
+            result[j] = buf[0] / 255
+        }
+        return result
+    }
+
+    /** Finds contiguous runs at/above [thresholdFraction] of the profile's peak, collapsing each to its center. */
+    private fun findPeaks(profile: IntArray, thresholdFraction: Double, minGap: Int): List<Int> {
+        val maxVal = profile.maxOrNull() ?: return emptyList()
+        if (maxVal == 0) return emptyList()
+        val threshold = maxVal * thresholdFraction
+        val rawPeaks = mutableListOf<Int>()
+        var start = -1
+        for (i in profile.indices) {
+            val above = profile[i] >= threshold
+            if (above && start < 0) {
+                start = i
+            } else if (!above && start >= 0) {
+                rawPeaks += (start + i - 1) / 2
+                start = -1
             }
+        }
+        if (start >= 0) rawPeaks += (start + profile.size - 1) / 2
+
+        val merged = mutableListOf<Int>()
+        for (p in rawPeaks) {
+            if (merged.isNotEmpty() && p - merged.last() < minGap) {
+                merged[merged.size - 1] = (merged.last() + p) / 2
+            } else {
+                merged += p
+            }
+        }
+        return merged
+    }
+
+    private fun addEdges(peaks: List<Int>, extent: Int, edgeMargin: Int): List<Int> {
+        if (peaks.isEmpty()) return emptyList()
+        val result = peaks.toMutableList()
+        if (result.first() > edgeMargin) result.add(0, 0)
+        if (result.last() < extent - edgeMargin) result.add(extent)
+        return result
+    }
+
+    /** Merges boundary pairs closer than [MIN_SEGMENT_HEIGHT_PX] into the previous segment (drops noise slivers). */
+    private fun dropThinSegments(boundaries: List<Int>): List<Int> {
+        if (boundaries.size < 2) return boundaries
+        val result = mutableListOf(boundaries.first())
+        for (i in 1 until boundaries.size) {
+            val b = boundaries[i]
+            if (b - result.last() >= MIN_SEGMENT_HEIGHT_PX) {
+                result += b
+            } else if (i == boundaries.size - 1) {
+                // The final boundary is too close to the previous one to be a real
+                // division (e.g. a few px of margin below the last content row) —
+                // replace rather than append, so it doesn't invent an empty sliver
+                // "row" out of pure whitespace at the image edge.
+                result[result.size - 1] = b
+            }
+        }
+        return result
+    }
+
+    /**
+     * Shrinks a merged/note row's full-width cell down to the horizontal span of its
+     * actual ink (plus [MERGED_TEXT_MARGIN_PX] margin on each side), so the OCR crop's
+     * aspect ratio is close to a normal cell's instead of the full table width — the
+     * latter reliably fails on-device text recognition for a short row. Falls back to
+     * the untightened full width if no ink is found (e.g. a genuinely blank row).
+     */
+    private fun tightenMergedCellRect(binary: Mat, rowTop: Int, rowBottom: Int, left: Int, right: Int): Rect {
+        val rowHeight = rowBottom - rowTop
+        val fullWidthRect = Rect(left, rowTop, right, rowBottom)
+        if (rowHeight <= 0 || right <= left) return fullWidthRect
+
+        val rowSlice = Mat(binary, org.opencv.core.Rect(left, rowTop, right - left, rowHeight))
+        val profile = colSums(rowSlice)
+        val threshold = rowHeight * MERGED_INK_THRESHOLD_FRACTION
+        val searchStart = MERGED_BORDER_EXCLUSION_PX.coerceAtMost(profile.size)
+        val searchEnd = (profile.size - MERGED_BORDER_EXCLUSION_PX).coerceAtLeast(searchStart)
+
+        var minInk = -1
+        var maxInk = -1
+        for (i in searchStart until searchEnd) {
+            if (profile[i] >= threshold) {
+                if (minInk < 0) minInk = i
+                maxInk = i
+            }
+        }
+        if (minInk < 0) return fullWidthRect
+
+        val tightLeft = (left + minInk - MERGED_TEXT_MARGIN_PX).coerceAtLeast(left)
+        val tightRight = (left + maxInk + MERGED_TEXT_MARGIN_PX).coerceAtMost(right)
+        return Rect(tightLeft, rowTop, tightRight, rowBottom)
+    }
+
+    /** True if some x-window near an internal column boundary is "on" for a real majority of this row's height. */
+    private fun hasInternalColumnDividers(binary: Mat, internalCols: List<Int>, rowTop: Int, rowBottom: Int): Boolean {
+        if (internalCols.isEmpty()) return true
+        val rowHeight = rowBottom - rowTop
+        if (rowHeight <= 0) return false
+        val rowSlice = Mat(binary, org.opencv.core.Rect(0, rowTop, binary.cols(), rowHeight))
+        val colProfile = colSums(rowSlice)
+        val threshold = rowHeight * ROW_INTERNAL_THRESHOLD_FRACTION
+        return internalCols.any { colX ->
+            val left = (colX - ROW_INTERNAL_WINDOW_PX).coerceAtLeast(0)
+            val right = (colX + ROW_INTERNAL_WINDOW_PX).coerceAtMost(colProfile.size - 1)
+            (left..right).any { colProfile[it] >= threshold }
         }
     }
 }

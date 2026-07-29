@@ -13,7 +13,8 @@ import com.tkolymp.shared.language.AppStrings
 @Composable
 actual fun CampScheduleUploadButton(
     dayLabel: String,
-    onScheduleBuilt: (ScheduleDay) -> Unit,
+    enabled: Boolean,
+    onScheduleBuilt: (ScheduleDay, ByteArray) -> Unit,
     modifier: Modifier
 ) {
     Text(

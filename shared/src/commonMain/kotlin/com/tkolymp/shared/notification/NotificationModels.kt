@@ -67,5 +67,15 @@ data class EventReminder(
     val eventName: String,
     val eventStartIso: String,
     val minutesBefore: Int = 30,
-    val scheduledNotificationId: String? = null
+    val scheduledNotificationId: String? = null,
+    // Non-null marks this as a camp schedule day's reminder (one entry summarizing all of
+    // that day's per-lesson notifications, see CampScheduleReminderService) rather than a
+    // regular single-notification event reminder — editing/deleting it must go through
+    // CampScheduleReminderService instead of NotificationService's single-id path.
+    val campDayIndex: Int? = null,
+    // The specific sub-item's own label (e.g. a lesson's block "STT 2" or a note's text
+    // "Oběd") shown alongside its time under the shared [eventName] header, when several
+    // reminders share one event id — null for a regular single-notification reminder,
+    // where the event name alone is enough.
+    val subLabel: String? = null
 )

@@ -11,6 +11,13 @@ import kotlin.coroutines.resume
 
 private const val CELL_PADDING_PX = 6
 
+// A crop shorter than this is upscaled before OCR — ML Kit's text recognizer becomes
+// unreliable on very short crops (e.g. a merged note row from a low-resolution photo,
+// only ~20-30px tall) regardless of aspect ratio, seemingly because such a short input
+// falls below the detector's practical working size. Upscaling doesn't add real detail,
+// but it reliably pushes short-but-legible crops back into a size the model handles.
+private const val MIN_OCR_HEIGHT_PX = 64
+
 /**
  * Runs ML Kit text recognition on every cell of [grid] independently (never on the
  * full [bitmap] at once), so OCR text can never be misattributed to the wrong
@@ -35,7 +42,13 @@ private suspend fun ocrOneCell(recognizer: TextRecognizer, bitmap: Bitmap, rect:
     if (width <= 0 || height <= 0) return null
 
     val cropped = Bitmap.createBitmap(bitmap, left, top, width, height)
-    val image = InputImage.fromBitmap(cropped, 0)
+    val scaled = if (height < MIN_OCR_HEIGHT_PX) {
+        val factor = MIN_OCR_HEIGHT_PX.toFloat() / height
+        Bitmap.createScaledBitmap(cropped, (width * factor).toInt().coerceAtLeast(1), MIN_OCR_HEIGHT_PX, true)
+    } else {
+        cropped
+    }
+    val image = InputImage.fromBitmap(scaled, 0)
     val text = suspendCancellableCoroutine<String?> { cont ->
         recognizer.process(image)
             .addOnSuccessListener { result -> cont.resume(result.text) }

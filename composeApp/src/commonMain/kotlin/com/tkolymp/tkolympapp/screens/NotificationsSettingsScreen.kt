@@ -79,10 +79,24 @@ import kotlinx.serialization.json.Json
 import com.tkolymp.tkolympapp.components.QuantityInput
 import com.tkolymp.shared.Logger
 import kotlinx.coroutines.CancellationException
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Instant
+
+/** (date "27. 7.", time "17:15") in the device's local time zone, or ("", "") if unparseable. */
+private fun formatReminderDateTime(iso: String): Pair<String, String> = try {
+    val local = Instant.parse(iso).toLocalDateTime(TimeZone.currentSystemDefault())
+    val date = "${local.day}. ${local.monthNumber}."
+    val time = "${local.hour.toString().padStart(2, '0')}:${local.minute.toString().padStart(2, '0')}"
+    date to time
+} catch (e: Exception) {
+    if (e is CancellationException) throw e
+    "" to ""
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
+fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
     val scope = rememberCoroutineScope()
     val json = remember { Json { prettyPrint = true; ignoreUnknownKeys = true } }
     val availableTypes = listOf("CAMP", "LESSON", "GROUP", "RESERVATION", "HOLIDAY", "PERSONAL_TRAINING")
@@ -116,7 +130,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
         } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.w("NotificationsSettings", "initial load failed: ${e.message}") }
     }
 
-    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+    var selectedTab by rememberSaveable { mutableIntStateOf(initialTab) }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text(AppStrings.current.otherScreen.notificationSettings) }, navigationIcon = {
@@ -246,19 +260,69 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}) {
                                         Text(AppStrings.current.notifications.noReminders, style = MaterialTheme.typography.titleMedium)
                                     }
                                 } else {
+                                    // Group every reminder sharing an event id under one card —
+                                    // one bold header for the (big) event, one compact
+                                    // time/name/minutes-before row per (small) sub-reminder.
+                                    val groupedReminders = remember(vmState.reminders) {
+                                        vmState.reminders.groupBy { it.eventId }.values
+                                            .map { group -> group.sortedBy { it.eventStartIso } }
+                                    }
                                     LazyColumn(modifier = Modifier.fillMaxSize()) {
-                                        items(vmState.reminders, key = { it.id }) { reminder ->
+                                        items(groupedReminders, key = { it.first().eventId }) { group ->
                                             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp)) {
-                                                Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                                                    Column(modifier = Modifier.weight(1f)) {
-                                                        Text(reminder.eventName.ifBlank { AppStrings.current.dialogs.noName }, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-                                                        Text(AppStrings.current.notifications.remindMeBefore.replace("{0}", reminder.minutesBefore.toString()), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
+                                                Column(modifier = Modifier.padding(12.dp)) {
+                                                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                                                        Text(
+                                                            group.first().eventName.ifBlank { AppStrings.current.dialogs.noName },
+                                                            style = MaterialTheme.typography.titleMedium,
+                                                            fontWeight = FontWeight.Bold,
+                                                            modifier = Modifier.weight(1f)
+                                                        )
+                                                        val headerDate = formatReminderDateTime(group.first().eventStartIso).first
+                                                        if (headerDate.isNotBlank()) {
+                                                            Text(
+                                                                headerDate,
+                                                                style = MaterialTheme.typography.bodySmall,
+                                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                            )
+                                                        }
                                                     }
-                                                    IconButton(onClick = { editingReminder = reminder }) {
-                                                        Icon(Icons.Default.Edit, contentDescription = AppStrings.current.commonActions.edit)
-                                                    }
-                                                    IconButton(onClick = { deletingReminder = reminder }) {
-                                                        Icon(Icons.Default.Delete, contentDescription = AppStrings.current.commonActions.delete)
+                                                    var lastDate = ""
+                                                    group.forEachIndexed { i, reminder ->
+                                                        val (date, time) = formatReminderDateTime(reminder.eventStartIso)
+                                                        if (i > 0) HorizontalDivider(modifier = Modifier.padding(top = 8.dp))
+                                                        if (date.isNotBlank() && date != lastDate) {
+                                                            lastDate = date
+                                                            Text(
+                                                                date,
+                                                                style = MaterialTheme.typography.labelSmall,
+                                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                                modifier = Modifier.padding(top = 12.dp, bottom = 2.dp)
+                                                            )
+                                                        }
+                                                        Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                                            Column(modifier = Modifier.weight(1f)) {
+                                                                Text(
+                                                                    reminder.subLabel?.takeIf { it.isNotBlank() } ?: reminder.eventName.ifBlank { AppStrings.current.dialogs.noName },
+                                                                    style = MaterialTheme.typography.bodyMedium,
+                                                                    fontWeight = FontWeight.Medium
+                                                                )
+                                                                if (time.isNotBlank()) {
+                                                                    Text(time, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
+                                                                }
+                                                                Text(
+                                                                    AppStrings.current.notifications.remindMeBefore.replace("{0}", reminder.minutesBefore.toString()),
+                                                                    style = MaterialTheme.typography.bodySmall
+                                                                )
+                                                            }
+                                                            IconButton(onClick = { editingReminder = reminder }, modifier = Modifier.size(32.dp)) {
+                                                                Icon(Icons.Default.Edit, contentDescription = AppStrings.current.commonActions.edit, modifier = Modifier.size(18.dp))
+                                                            }
+                                                            Spacer(Modifier.width(4.dp))
+                                                            IconButton(onClick = { deletingReminder = reminder }, modifier = Modifier.size(32.dp)) {
+                                                                Icon(Icons.Default.Delete, contentDescription = AppStrings.current.commonActions.delete, modifier = Modifier.size(18.dp))
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             }

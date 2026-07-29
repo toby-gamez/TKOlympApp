@@ -74,7 +74,7 @@ import kotlinx.datetime.todayIn
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
+fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}, onOpenRozpis: (Long) -> Unit = {}) {
     var selectedTab by rememberSaveable { mutableStateOf(0) }
     val tabs = listOf(AppStrings.current.eventCalendarTabs.planned, AppStrings.current.eventCalendarTabs.past)
 
@@ -269,7 +269,7 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                                     }
 
                                     other.sortedBy { it.since }.forEach { item ->
-                                        RenderSingleEventCard(item = item, onEventClick = { id, _ -> onOpenEvent(id) }, showType = false)
+                                        RenderSingleEventCard(item = item, onEventClick = { id, _ -> onOpenEvent(id) }, showType = false, onOpenRozpis = { id, _ -> onOpenRozpis(id) })
                                     }
                                 }
                             }
@@ -332,7 +332,7 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}) {
                                     }
 
                                     other.sortedByDescending { it.since }.forEach { item ->
-                                        RenderSingleEventCard(item = item, onEventClick = { id, _ -> onOpenEvent(id) }, showType = false)
+                                        RenderSingleEventCard(item = item, onEventClick = { id, _ -> onOpenEvent(id) }, showType = false, onOpenRozpis = { id, _ -> onOpenRozpis(id) })
                                     }
                                 }
                             }

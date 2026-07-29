@@ -79,6 +79,20 @@ class ScheduleJsonBuilderTest {
     }
 
     @Test
+    fun `blank or duplicate column headers do not silently collide in entries`() {
+        val messyColumns = listOf("", "Filip", "")
+        val cells = listOf(listOf("8:30", "Anička", "Jaro", "Mirek"))
+        val day = parseScheduleDay(buildJson("PONDĚLÍ", messyColumns, cells))
+
+        // Every column keeps its own distinct key, so no data is lost to overwrites.
+        assertEquals(3, day.columns.distinct().size)
+        val entry = day.schedule.single()
+        assertIs<ScheduleEntry.Lesson>(entry)
+        assertEquals(3, entry.entries.size)
+        assertEquals(listOf("Anička", "Jaro", "Mirek"), day.columns.map { entry.entries[it] })
+    }
+
+    @Test
     fun `availableGroupNumbers collects distinct numbers across the whole day`() {
         val day = ScheduleDay(
             day = "PONDĚLÍ",

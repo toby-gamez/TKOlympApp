@@ -43,7 +43,8 @@ class NotificationsSettingsViewModel(
     private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService,
     private val clubService: com.tkolymp.shared.club.ClubService = ServiceLocator.clubService,
     private val notificationStorage: com.tkolymp.shared.notification.INotificationStorage = ServiceLocator.notificationStorage,
-    private val personalEventService: com.tkolymp.shared.personalevents.PersonalEventService = ServiceLocator.personalEventService
+    private val personalEventService: com.tkolymp.shared.personalevents.PersonalEventService = ServiceLocator.personalEventService,
+    private val campScheduleReminderService: com.tkolymp.shared.campschedule.CampScheduleReminderService = ServiceLocator.campScheduleReminderService
 ) : ViewModel() {
     private val _state = MutableStateFlow(NotificationsSettingsState())
     val state: StateFlow<NotificationsSettingsState> = _state.asStateFlow()
@@ -179,16 +180,29 @@ class NotificationsSettingsViewModel(
 
     suspend fun deleteReminder(id: String) {
         try {
-            notificationService.deleteReminder(id)
+            val reminder = _state.value.reminders.find { it.id == id }
+            if (reminder?.campDayIndex != null) {
+                // Each camp lesson has its own reminder row/notification — cancel just this one.
+                campScheduleReminderService.cancelLessonReminder(reminder)
+            } else {
+                notificationService.deleteReminder(id)
+            }
             _state.value = _state.value.copy(reminders = _state.value.reminders.filter { it.id != id })
         } catch (e: CancellationException) { throw e } catch (_: Exception) {}
     }
 
     suspend fun updateReminderMinutes(reminder: EventReminder, minutesBefore: Int) {
         try {
-            val updated = notificationService.addOrUpdateReminder(reminder.copy(minutesBefore = minutesBefore))
-            val newList = _state.value.reminders.map { if (it.id == reminder.id) updated else it }
-            _state.value = _state.value.copy(reminders = newList)
+            if (reminder.campDayIndex != null) {
+                campScheduleReminderService.updateMinutesForLesson(reminder, minutesBefore)
+                val updated = reminder.copy(minutesBefore = minutesBefore)
+                val newList = _state.value.reminders.map { if (it.id == reminder.id) updated else it }
+                _state.value = _state.value.copy(reminders = newList)
+            } else {
+                val updated = notificationService.addOrUpdateReminder(reminder.copy(minutesBefore = minutesBefore))
+                val newList = _state.value.reminders.map { if (it.id == reminder.id) updated else it }
+                _state.value = _state.value.copy(reminders = newList)
+            }
         } catch (e: CancellationException) { throw e } catch (_: Exception) {}
     }
 

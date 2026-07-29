@@ -646,4 +646,18 @@ val StringsBrainrot = Strings(
         daysAway = "days (bussin)",
         dayAway = "day (W)",
     ),
+    campSchedule = com.tkolymp.shared.language.CampScheduleStrings(
+        aboutEventTab = "About the event fr",
+        rozpisTab = "The Schedule",
+        openRozpis = "Open schedule no cap",
+        headerDescription = "Upload the daily schedule bestie and we'll cook up your schedule with reminders, no cap!",
+        takePhoto = "Snap the schedule pic",
+        pickFromGallery = "Pull from gallery",
+        processingPhoto = "Cooking your photo…",
+        selectGroupsTitle = "My Squad",
+        reminderMinutesLabel = "Training reminder fr fr",
+        mySchedule = "My Schedule (bussin)",
+        nowLabel = "Rn",
+        notAvailableOnIos = "Uploading schedule pics only works on Android rn, iOS ratio'd fr.",
+    ),
 )

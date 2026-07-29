@@ -322,6 +322,7 @@ fun AppNavHost(
             OverviewScreen(
                 bottomPadding = bottomPadding,
                 onOpenEvent = { id, instId -> navController.navigate("event/$id" + if (instId != null) "?instanceId=$instId" else "") },
+                onOpenRozpis = { id, instId -> navController.navigate("event/$id?" + (if (instId != null) "instanceId=$instId&" else "") + "tab=1") },
                 onOpenNotice = { id -> navController.navigate("notice/$id") },
                 onOpenCalendar = { navController.navigate("calendar") },
                 onOpenBoard = { navController.navigate("board") },
@@ -350,6 +351,7 @@ fun AppNavHost(
                     weekOffset = weekOffset,
                     onWeekOffsetChange = onWeekOffsetChange,
                     onOpenEvent = { id, instId -> navController.navigate("event/$id" + if (instId != null) "?instanceId=$instId" else "") },
+                    onOpenRozpis = { id, instId -> navController.navigate("event/$id?" + (if (instId != null) "instanceId=$instId&" else "") + "tab=1") },
                     onNavigateTimeline = { isTimelineView = true },
                     onFindFreeLessons = { navController.navigate("free-lessons") },
                     bottomPadding = bottomPadding
@@ -383,7 +385,11 @@ fun AppNavHost(
             enterTransition = { fadeIn(animationSpec = tween(300)) },
             exitTransition = { fadeOut(animationSpec = tween(300)) }
         ) {
-            EventsScreen(bottomPadding = bottomPadding, onOpenEvent = { id -> navController.navigate("event/$id") })
+            EventsScreen(
+                bottomPadding = bottomPadding,
+                onOpenEvent = { id -> navController.navigate("event/$id") },
+                onOpenRozpis = { id -> navController.navigate("event/$id?tab=1") }
+            )
         }
 
         composable(
@@ -481,13 +487,15 @@ fun AppNavHost(
         }
 
         composable(
-            route = "notifications",
+            route = "notifications?tab={tab}",
+            arguments = listOf(navArgument("tab") { type = NavType.IntType; defaultValue = 0 }),
             enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
             exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
             popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) },
             popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) }
-        ) {
-            NotificationsSettingsScreen(onBack = { navController.navigateUp() })
+        ) { backStackEntry ->
+            val initialTab = backStackEntry.arguments?.getInt("tab") ?: 0
+            NotificationsSettingsScreen(onBack = { navController.navigateUp() }, initialTab = initialTab)
         }
 
         composable(
@@ -610,10 +618,11 @@ fun AppNavHost(
         }
 
         composable(
-            route = "event/{eventId}?instanceId={instanceId}",
+            route = "event/{eventId}?instanceId={instanceId}&tab={tab}",
             arguments = listOf(
                 navArgument("eventId") { type = NavType.LongType },
-                navArgument("instanceId") { type = NavType.LongType; defaultValue = -1L }
+                navArgument("instanceId") { type = NavType.LongType; defaultValue = -1L },
+                navArgument("tab") { type = NavType.IntType; defaultValue = 0 }
             ),
             enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
             exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
@@ -622,6 +631,7 @@ fun AppNavHost(
         ) { backStackEntry ->
             val eventId = backStackEntry.arguments?.read { getLong("eventId") }
             val instanceId = backStackEntry.arguments?.read { getLong("instanceId") }?.takeIf { it != -1L }
+            val initialTab = backStackEntry.arguments?.read { getInt("tab") } ?: 0
             eventId?.let { eid ->
                 EventScreen(
                     eventId = eid,
@@ -630,7 +640,9 @@ fun AppNavHost(
                     onOpenRegistration = { mode, _ ->
                         navController.navigate("event/$eid/registration/$mode")
                     },
-                    onOpenPerson = { personId -> navController.navigate("person/$personId") }
+                    onOpenPerson = { personId -> navController.navigate("person/$personId") },
+                    onOpenReminders = { navController.navigate("notifications?tab=1") },
+                    initialTab = initialTab
                 )
             }
         }

@@ -8,10 +8,19 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -55,7 +64,8 @@ private fun captureUri(context: Context) =
 @Composable
 actual fun CampScheduleUploadButton(
     dayLabel: String,
-    onScheduleBuilt: (ScheduleDay) -> Unit,
+    enabled: Boolean,
+    onScheduleBuilt: (ScheduleDay, ByteArray) -> Unit,
     modifier: Modifier
 ) {
     val context = LocalContext.current
@@ -68,10 +78,11 @@ actual fun CampScheduleUploadButton(
         ActivityResultContracts.TakePicture()
     ) { success ->
         if (success) {
-            val bitmap = BitmapFactory.decodeFile(captureFile(context).absolutePath)
+            val bytes = captureFile(context).readBytes()
+            val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
             if (bitmap != null) {
                 step = CaptureStep.Processing
-                scope.launch { buildAndDeliver(bitmap, dayLabel, onScheduleBuilt) { step = CaptureStep.Idle } }
+                scope.launch { buildAndDeliver(bitmap, bytes, dayLabel, onScheduleBuilt) { step = CaptureStep.Idle } }
             }
         }
     }
@@ -80,22 +91,31 @@ actual fun CampScheduleUploadButton(
         ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         if (uri != null) {
-            val bitmap = context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }
-            if (bitmap != null) {
+            val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+            bytes?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }?.let { bitmap ->
                 step = CaptureStep.Processing
-                scope.launch { buildAndDeliver(bitmap, dayLabel, onScheduleBuilt) { step = CaptureStep.Idle } }
+                scope.launch { buildAndDeliver(bitmap, bytes, dayLabel, onScheduleBuilt) { step = CaptureStep.Idle } }
             }
         }
     }
 
     when (step) {
         is CaptureStep.Idle -> {
-            Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = { cameraLauncher.launch(captureUri(context)) }) {
-                    Text(AppStrings.current.campSchedule.takePhoto)
-                }
-                Button(onClick = { galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }) {
+            Row(
+                modifier = modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
+            ) {
+                Button(
+                    onClick = { galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                    enabled = enabled
+                ) {
+                    Icon(Icons.Filled.PhotoLibrary, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
                     Text(AppStrings.current.campSchedule.pickFromGallery)
+                }
+                IconButton(onClick = { cameraLauncher.launch(captureUri(context)) }, enabled = enabled) {
+                    Icon(Icons.Filled.PhotoCamera, contentDescription = AppStrings.current.campSchedule.takePhoto)
                 }
             }
         }
@@ -109,14 +129,24 @@ actual fun CampScheduleUploadButton(
     }
 }
 
-private suspend fun buildAndDeliver(bitmap: Bitmap, dayLabel: String, onScheduleBuilt: (ScheduleDay) -> Unit, onDone: () -> Unit) {
+private suspend fun buildAndDeliver(
+    bitmap: Bitmap,
+    photoBytes: ByteArray,
+    dayLabel: String,
+    onScheduleBuilt: (ScheduleDay, ByteArray) -> Unit,
+    onDone: () -> Unit
+) {
     val day = withContext(Dispatchers.Default) {
         val grid = GridDetector.detectGrid(bitmap)
         val cells = ocrCells(bitmap, grid)
-        val columns = cells.firstOrNull()?.drop(1)?.map { it?.trim().orEmpty() } ?: emptyList()
-        val bodyCells = cells.drop(1)
+        // The header row is the first row GridDetector did NOT collapse to a merged
+        // (2-cell) row — anything before it (e.g. a "PONDĚLÍ" title bar) is not part of
+        // the grid's data and is skipped, rather than assumed to be row 0.
+        val headerIndex = cells.indexOfFirst { it.size > 2 }.let { if (it == -1) 0 else it }
+        val columns = cells.getOrNull(headerIndex)?.drop(1)?.map { it?.trim().orEmpty() } ?: emptyList()
+        val bodyCells = cells.drop(headerIndex + 1)
         parseScheduleDay(buildJson(dayLabel, columns, bodyCells))
     }
-    onScheduleBuilt(day)
+    onScheduleBuilt(day, photoBytes)
     onDone()
 }

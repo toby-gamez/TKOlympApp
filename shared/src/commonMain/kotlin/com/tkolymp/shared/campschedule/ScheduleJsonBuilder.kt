@@ -15,8 +15,22 @@ private val digitRegex = Regex("\\d+")
  * row) or by a single value (a merged full-width row, e.g. "Oběd").
  */
 fun buildJson(day: String, columns: List<String>, cells: List<List<String?>>): String {
-    val schedule = cells.map { row -> rowToEntry(row, columns) }
-    return AppJson.encodeToString(ScheduleDay.serializer(), ScheduleDay(day = day, columns = columns, schedule = schedule))
+    // Column headers become entries' map keys, so they must be unique — OCR very
+    // commonly returns blank or duplicate header text, which would otherwise silently
+    // collapse multiple columns' data into one key (last write wins).
+    val uniqueColumns = dedupeColumns(columns)
+    val schedule = cells.map { row -> rowToEntry(row, uniqueColumns) }
+    return AppJson.encodeToString(ScheduleDay.serializer(), ScheduleDay(day = day, columns = uniqueColumns, schedule = schedule))
+}
+
+private fun dedupeColumns(columns: List<String>): List<String> {
+    val seenCount = mutableMapOf<String, Int>()
+    return columns.mapIndexed { index, raw ->
+        val base = raw.trim().ifEmpty { "Sloupec ${index + 1}" }
+        val count = seenCount.getOrDefault(base, 0)
+        seenCount[base] = count + 1
+        if (count == 0) base else "$base ($count)"
+    }
 }
 
 fun parseScheduleDay(json: String): ScheduleDay =

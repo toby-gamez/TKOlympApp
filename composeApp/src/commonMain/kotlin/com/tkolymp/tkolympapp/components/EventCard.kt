@@ -15,12 +15,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Card
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,11 +36,14 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.tkolymp.shared.campschedule.isRozpisTabVisible
 import com.tkolymp.shared.event.EventInstance
 import com.tkolymp.shared.utils.formatTimesWithDate
 import com.tkolymp.shared.utils.formatTimesWithDayOfWeek
 import com.tkolymp.shared.utils.translateEventType
 import com.tkolymp.shared.language.AppStrings
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 
 internal fun parseColorOrDefault(hex: String?): Color {
     if (hex.isNullOrBlank()) return Color.Gray
@@ -177,7 +184,13 @@ internal fun RenderEventContent(item: EventInstance, tip: String? = null, showTy
 
 
 @Composable
-internal fun RenderSingleEventCard(item: EventInstance, onEventClick: (Long, Long?) -> Unit, showType: Boolean = true, modifier: Modifier = Modifier) {
+internal fun RenderSingleEventCard(
+    item: EventInstance,
+    onEventClick: (Long, Long?) -> Unit,
+    showType: Boolean = true,
+    onOpenRozpis: ((Long, Long?) -> Unit)? = null,
+    modifier: Modifier = Modifier
+) {
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -227,6 +240,27 @@ internal fun RenderSingleEventCard(item: EventInstance, onEventClick: (Long, Lon
             Spacer(modifier = Modifier.width(12.dp))
 
             RenderEventContent(item = item, tip = null, showType = showType, showDayOfWeek = false, cohortNames = cohortNames, modifier = Modifier.weight(1f))
+        }
+
+        if (onOpenRozpis != null) {
+            // Approximates campStartIso with this instance's own date — precise enough
+            // to decide whether *this* card should offer the shortcut; EventScreen does
+            // the authoritative check once it has fetched every instance.
+            val today = remember { kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault()) }
+            val showButton = remember(item.event?.type, item.since, today) {
+                isRozpisTabVisible(item.event?.type.orEmpty(), item.since, today)
+            }
+            if (showButton) {
+                HorizontalDivider()
+                TextButton(
+                    onClick = { item.event?.id?.let { onOpenRozpis(it, item.id) } },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.CalendarMonth, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    androidx.compose.material3.Text(AppStrings.current.campSchedule.openRozpis)
+                }
+            }
         }
     }
 }

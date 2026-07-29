@@ -92,6 +92,7 @@ import com.tkolymp.shared.competitions.Competition
 fun OverviewScreen(
     bottomPadding: Dp = 0.dp,
     onOpenEvent: (Long, Long?) -> Unit = { _, _ -> },
+    onOpenRozpis: (Long, Long?) -> Unit = { _, _ -> },
     onOpenNotice: (Long) -> Unit = {},
     onOpenCalendar: () -> Unit = {},
     onOpenBoard: () -> Unit = {},
@@ -272,7 +273,7 @@ fun OverviewScreen(
                         val trainerCount = state.trainingLessonsByTrainer.size
                         state.trainingOtherEvents.forEachIndexed { i, item ->
                             StaggeredItem(index = trainerCount + i, visible = cardsVisible) {
-                                RenderSingleEventCard(item = item, onEventClick = handleEventClick)
+                                RenderSingleEventCard(item = item, onEventClick = handleEventClick, onOpenRozpis = onOpenRozpis)
                             }
                         }
                     }
@@ -404,7 +405,7 @@ fun OverviewScreen(
                                 Text(header, style = MaterialTheme.typography.titleMedium)
                                 Spacer(modifier = Modifier.height(4.dp))
                                 list.forEach { item ->
-                                    RenderSingleEventCard(item = item, onEventClick = handleCampEventClick)
+                                    RenderSingleEventCard(item = item, onEventClick = handleCampEventClick, onOpenRozpis = onOpenRozpis)
                                 }
                             }
                         }

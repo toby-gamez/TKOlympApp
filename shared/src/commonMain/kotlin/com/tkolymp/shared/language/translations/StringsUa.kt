@@ -645,4 +645,18 @@ val StringsUa = Strings(
         daysAway = "днів",
         dayAway = "день",
     ),
+    campSchedule = com.tkolymp.shared.language.CampScheduleStrings(
+        aboutEventTab = "Про подію",
+        rozpisTab = "Розклад",
+        openRozpis = "Відкрити розклад",
+        headerDescription = "Завантаж денний розклад, і ми складемо твій розклад із нагадуваннями!",
+        takePhoto = "Сфотографувати розклад",
+        pickFromGallery = "Вибрати з галереї",
+        processingPhoto = "Обробляю фото…",
+        selectGroupsTitle = "Моя група",
+        reminderMinutesLabel = "Нагадування про тренування заздалегідь",
+        mySchedule = "Мій розклад",
+        nowLabel = "Зараз",
+        notAvailableOnIos = "Завантаження фотографій розкладу поки доступне лише на Android.",
+    ),
 )

@@ -645,4 +645,18 @@ val StringsSl = Strings(
         daysAway = "dni",
         dayAway = "dan",
     ),
+    campSchedule = com.tkolymp.shared.language.CampScheduleStrings(
+        aboutEventTab = "O dogodku",
+        rozpisTab = "Urnik",
+        openRozpis = "Odpri urnik",
+        headerDescription = "Naloži dnevni urnik in sestavili bomo tvoj urnik z opomniki!",
+        takePhoto = "Fotografiraj urnik",
+        pickFromGallery = "Izberi iz galerije",
+        processingPhoto = "Obdelujem fotografijo…",
+        selectGroupsTitle = "Moja skupina",
+        reminderMinutesLabel = "Opomnik pred treningom",
+        mySchedule = "Moj urnik",
+        nowLabel = "Zdaj",
+        notAvailableOnIos = "Nalaganje fotografij urnika je trenutno na voljo samo na Androidu.",
+    ),
 )

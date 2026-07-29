@@ -4,11 +4,14 @@ import com.tkolymp.shared.Logger
 import com.tkolymp.shared.json.AppJson
 import com.tkolymp.shared.storage.OfflineDataStorage
 import kotlinx.coroutines.CancellationException
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 /**
  * Local-only persistence for camp schedule days: the transcribed JSON per day, the
- * user's chosen group number per day, and the shared reminder-minutes preference for
- * the camp. Nothing here is synced or uploaded anywhere.
+ * uploaded photo per day, the user's chosen group number and name (both camp-wide,
+ * not per-day), and the shared reminder-minutes preference for the camp. Nothing here
+ * is synced or uploaded anywhere.
  */
 class CampScheduleService(
     private val offlineDataStorage: OfflineDataStorage
@@ -18,9 +21,9 @@ class CampScheduleService(
     }
 
     private fun dayKey(eventId: Long, dayIndex: Int) = "camp_schedule_${eventId}_day_$dayIndex"
-    private fun groupNumberKey(eventId: Long, dayIndex: Int) = "camp_schedule_groupnum_${eventId}_day_$dayIndex"
+    private fun photoKey(eventId: Long, dayIndex: Int) = "camp_schedule_photo_${eventId}_day_$dayIndex"
+    private fun groupNumberKey(eventId: Long) = "camp_schedule_groupnum_$eventId"
     private fun reminderMinutesKey(eventId: Long) = "camp_schedule_reminder_minutes_$eventId"
-    private fun myNameOverrideKey(eventId: Long) = "camp_schedule_myname_$eventId"
     fun reminderIdsKey(eventId: Long, dayIndex: Int) = "camp_schedule_reminder_ids_${eventId}_day_$dayIndex"
 
     suspend fun saveDay(eventId: Long, dayIndex: Int, day: ScheduleDay) {
@@ -54,16 +57,36 @@ class CampScheduleService(
         }
     }
 
-    suspend fun saveGroupNumber(eventId: Long, dayIndex: Int, groupNumber: Int) {
-        offlineDataStorage.save(groupNumberKey(eventId, dayIndex), groupNumber.toString())
+    /** The group number applies to the whole camp, chosen once, not per day. */
+    suspend fun saveGroupNumber(eventId: Long, groupNumber: Int) {
+        offlineDataStorage.save(groupNumberKey(eventId), groupNumber.toString())
     }
 
-    suspend fun loadGroupNumber(eventId: Long, dayIndex: Int): Int? {
-        val raw = try { offlineDataStorage.load(groupNumberKey(eventId, dayIndex)) } catch (e: Exception) {
+    suspend fun loadGroupNumber(eventId: Long): Int? {
+        val raw = try { offlineDataStorage.load(groupNumberKey(eventId)) } catch (e: Exception) {
             if (e is CancellationException) throw e
             null
         }
         return raw?.toIntOrNull()
+    }
+
+    @OptIn(ExperimentalEncodingApi::class)
+    suspend fun savePhoto(eventId: Long, dayIndex: Int, bytes: ByteArray) {
+        offlineDataStorage.save(photoKey(eventId, dayIndex), Base64.encode(bytes))
+    }
+
+    @OptIn(ExperimentalEncodingApi::class)
+    suspend fun loadPhoto(eventId: Long, dayIndex: Int): ByteArray? {
+        val raw = try { offlineDataStorage.load(photoKey(eventId, dayIndex)) } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Logger.w(TAG, "loadPhoto failed: ${e.message}")
+            null
+        } ?: return null
+        return try { Base64.decode(raw) } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Logger.w(TAG, "photo base64 decode failed: ${e.message}")
+            null
+        }
     }
 
     suspend fun getReminderMinutes(eventId: Long, default: Int = 30): Int {
@@ -76,18 +99,5 @@ class CampScheduleService(
 
     suspend fun setReminderMinutes(eventId: Long, minutes: Int) {
         offlineDataStorage.save(reminderMinutesKey(eventId), minutes.toString())
-    }
-
-    /** Manual override for "my table name", e.g. for testing against a name the logged-in account doesn't resolve to. */
-    suspend fun saveMyNameOverride(eventId: Long, name: String) {
-        offlineDataStorage.save(myNameOverrideKey(eventId), name)
-    }
-
-    suspend fun loadMyNameOverride(eventId: Long): String? {
-        val raw = try { offlineDataStorage.load(myNameOverrideKey(eventId)) } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            null
-        }
-        return raw?.takeIf { it.isNotBlank() }
     }
 }

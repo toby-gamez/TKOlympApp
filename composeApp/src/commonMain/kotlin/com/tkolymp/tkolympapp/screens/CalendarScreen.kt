@@ -119,6 +119,7 @@ fun CalendarScreen(
     weekOffset: Int = 0,
     onWeekOffsetChange: (Int) -> Unit = {},
     onOpenEvent: (Long, Long?) -> Unit = { _, _ -> },
+    onOpenRozpis: (Long, Long?) -> Unit = { _, _ -> },
     onNavigateTimeline: (() -> Unit)? = null,
     onBack: (() -> Unit)? = null,
     onCreatePersonalEvent: (() -> Unit)? = null,
@@ -385,7 +386,7 @@ fun CalendarScreen(
                             }
 
                             filteredOther.forEach { item ->
-                                RenderSingleEventCard(item = item, onEventClick = { id, instId -> onOpenEvent(id, instId) })
+                                RenderSingleEventCard(item = item, onEventClick = { id, instId -> onOpenEvent(id, instId) }, onOpenRozpis = onOpenRozpis)
                             }
 
                             if (competitions.isNotEmpty()) {

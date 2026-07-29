@@ -23,7 +23,9 @@ class NotificationSchedulerIos : INotificationScheduler {
         title: String?,
         text: String?,
         isoDateTime: String,
-        minutesBefore: Int
+        minutesBefore: Int,
+        eventId: Long?,
+        tab: Int
     ): Long? {
         val instant = try {
             Instant.parse(isoDateTime)
@@ -39,6 +41,7 @@ class NotificationSchedulerIos : INotificationScheduler {
             if (title != null) setTitle(title)
             if (text != null) setBody(text)
             setSound(platform.UserNotifications.UNNotificationSound.defaultSound())
+            if (eventId != null) setUserInfo(mapOf("eventId" to eventId.toString(), "tab" to tab.toString()))
         }
 
         val trigger = UNTimeIntervalNotificationTrigger.triggerWithTimeInterval(

@@ -689,4 +689,18 @@ val StringsCs = Strings(
         daysAway = "dní zbývá",
         dayAway = "den zbývá",
     ),
+    campSchedule = com.tkolymp.shared.language.CampScheduleStrings(
+        aboutEventTab = "O události",
+        rozpisTab = "Rozpis",
+        openRozpis = "Otevřít rozpis",
+        headerDescription = "Nahraj denní rozpis a sestavíme ti tvůj rozpis i s oznámeními!",
+        takePhoto = "Vyfotit rozvrh",
+        pickFromGallery = "Vybrat z galerie",
+        processingPhoto = "Zpracovávám fotku…",
+        selectGroupsTitle = "Moje skupina",
+        reminderMinutesLabel = "Připomenutí tréningů předem",
+        mySchedule = "Můj rozpis",
+        nowLabel = "Nyní",
+        notAvailableOnIos = "Nahrávání fotek rozvrhu je zatím dostupné jen na Androidu.",
+    ),
 )

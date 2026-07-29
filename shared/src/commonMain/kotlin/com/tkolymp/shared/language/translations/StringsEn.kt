@@ -656,4 +656,18 @@ val StringsEn = Strings(
         daysAway = "days away",
         dayAway = "day away",
     ),
+    campSchedule = com.tkolymp.shared.language.CampScheduleStrings(
+        aboutEventTab = "About the event",
+        rozpisTab = "Schedule",
+        openRozpis = "Open schedule",
+        headerDescription = "Upload the daily schedule and we'll build your schedule with reminders!",
+        takePhoto = "Take a photo of the schedule",
+        pickFromGallery = "Choose from gallery",
+        processingPhoto = "Processing photo…",
+        selectGroupsTitle = "My group",
+        reminderMinutesLabel = "Training reminder in advance",
+        mySchedule = "My schedule",
+        nowLabel = "Now",
+        notAvailableOnIos = "Uploading schedule photos is currently only available on Android.",
+    ),
 )

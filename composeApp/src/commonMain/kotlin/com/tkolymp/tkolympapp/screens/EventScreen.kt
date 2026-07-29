@@ -126,14 +126,14 @@ private fun boldTimes(text: String) = buildAnnotatedString {
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? = null, onOpenRegistration: ((String, String?) -> Unit)? = null, onOpenPerson: ((String) -> Unit)? = null) {
+fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? = null, onOpenRegistration: ((String, String?) -> Unit)? = null, onOpenPerson: ((String) -> Unit)? = null, onOpenReminders: (() -> Unit)? = null, initialTab: Int = 0) {
     val viewModel = viewModel<EventViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var showReminderDialog by remember { mutableStateOf(false) }
     var showRegistrationDropdown by remember { mutableStateOf(false) }
-    var selectedTab by remember { mutableStateOf(0) }
+    var selectedTab by remember { mutableStateOf(initialTab) }
     val showRozpisTab = isRozpisTabVisible(state.eventType, state.firstInstanceIso, kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault()))
 
     LaunchedEffect(eventId) {
@@ -212,6 +212,8 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
             RozpisTabContent(
                 eventId = eventId,
                 instances = state.instances.mapNotNull { it.asJsonObjectOrNull() },
+                eventName = state.eventName,
+                onOpenReminders = onOpenReminders,
                 modifier = Modifier.fillMaxSize().padding(padding)
             )
         } else {

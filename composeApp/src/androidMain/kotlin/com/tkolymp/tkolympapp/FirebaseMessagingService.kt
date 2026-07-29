@@ -2,6 +2,7 @@ package com.tkolymp.tkolympapp
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.os.Build
 import android.util.Log
 import com.tkolymp.shared.Logger
@@ -18,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.tkolymp.shared.notification.ReceivedMessage
 import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.tkolympapp.widget.deepLinkIntent
 import kotlin.time.Clock
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -124,13 +126,21 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             channelCoach.description = AppStrings.current.notifications.fromCoach
             nm.createNotificationChannel(channelCoach)
         }
+        val notificationId = System.currentTimeMillis().toInt()
+        val flags = PendingIntent.FLAG_UPDATE_CURRENT or if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+        // "Od trenéra" is the third tab (index 2) of NotificationsSettingsScreen; messages are
+        // listed newest-first there, so opening the tab is enough without a specific message id.
+        val pendingIntent = PendingIntent.getActivity(this, notificationId, deepLinkIntent(this, "notifications?tab=2"), flags)
+
         val builder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_coach) // Přidej ic_coach.xml nebo ic_coach.png do drawable/
             .setContentTitle(title)
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
         with(NotificationManagerCompat.from(this)) {
-            notify(System.currentTimeMillis().toInt(), builder.build())
+            notify(notificationId, builder.build())
         }
     }
 }

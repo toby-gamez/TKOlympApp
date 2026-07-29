@@ -83,7 +83,7 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
     val competitionSvc = CompetitionService(gql, cache)
     val offlineSyncManager = OfflineSyncManager(eventSvc, announcementSvc, peopleSvc, offlineDataStorage, networkMonitor, userSvc, notificationSvc, clubSvc, paymentSvc, competitionSvc)
     val campScheduleSvc = CampScheduleService(offlineDataStorage)
-    val campScheduleReminderSvc = CampScheduleReminderService(offlineDataStorage, notificationScheduler, campScheduleSvc)
+    val campScheduleReminderSvc = CampScheduleReminderService(offlineDataStorage, notificationScheduler, campScheduleSvc, notificationStorage)
 
     val container = AppContainer(
         tokenStorage = storage,
