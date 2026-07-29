@@ -40,10 +40,9 @@ val StringsVi = Strings(
         calendar = "Lịch",
         board = "Bảng tin",
         events = "Sự kiện",
-        other = "Khác",
+        profile = "Hồ sơ",
     ),
     otherScreen = OtherScreenStrings(
-        membersAndClub = "Thành viên & Câu lạc bộ",
         appSection = "Ứng dụng",
         people = "Mọi người",
         trainersAndSpaces = "Huấn luyện viên & Sân tập",

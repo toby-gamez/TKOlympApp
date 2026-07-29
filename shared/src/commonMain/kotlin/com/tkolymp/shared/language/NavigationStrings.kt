@@ -5,5 +5,5 @@ data class NavigationStrings(
     val calendar: String,
     val board: String,
     val events: String,
-    val other: String,
+    val profile: String,
 )

@@ -40,7 +40,7 @@ val StringsSk = Strings(
         calendar = "Kalendár",
         board = "Nástenka",
         events = "Akcie",
-        other = "Ostatné",
+        profile = "Profil",
     ),
         freeLessons = FreeLessonsStrings(
             title = "Voľné lekcie",
@@ -73,7 +73,6 @@ val StringsSk = Strings(
             bestChoiceFallback = "Toto je najlepšia voľba",
         ),
     otherScreen = OtherScreenStrings(
-        membersAndClub = "Členovia a klub",
         appSection = "Aplikácia",
         people = "Ľudia",
         trainersAndSpaces = "Tréneri a tréningové priestory",

@@ -40,10 +40,9 @@ val StringsEn = Strings(
         calendar = "Calendar",
         board = "Board",
         events = "Events",
-        other = "Other",
+        profile = "Profile",
     ),
     otherScreen = OtherScreenStrings(
-        membersAndClub = "Members & Club",
         appSection = "App",
         people = "People",
         trainersAndSpaces = "Trainers & Training Spaces",

@@ -1,7 +1,6 @@
 package com.tkolymp.shared.language
 
 data class OtherScreenStrings(
-    val membersAndClub: String,
     val appSection: String,
     val people: String,
     val trainersAndSpaces: String,

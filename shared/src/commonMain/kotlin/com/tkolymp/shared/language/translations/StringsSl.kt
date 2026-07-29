@@ -40,10 +40,9 @@ val StringsSl = Strings(
         calendar = "Koledar",
         board = "Tabla",
         events = "Dogodki",
-        other = "Ostalo",
+        profile = "Profil",
     ),
     otherScreen = OtherScreenStrings(
-        membersAndClub = "Člani in klub",
         appSection = "Aplikacija",
         people = "Ljudje",
         trainersAndSpaces = "Trenerji in vadišča",

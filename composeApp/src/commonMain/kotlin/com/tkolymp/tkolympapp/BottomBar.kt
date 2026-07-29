@@ -9,7 +9,7 @@ import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
@@ -102,8 +102,8 @@ fun AppBottomBar(
         NavigationBarItem(
             selected = current == "other",
             onClick = { onSelect("other") },
-            icon = { AnimatedNavIcon(selected = current == "other", icon = Icons.Default.MoreHoriz) },
-            label = { Text(AppStrings.current.navigation.other) }
+            icon = { AnimatedNavIcon(selected = current == "other", icon = Icons.Default.AccountCircle) },
+            label = { Text(AppStrings.current.navigation.profile) }
         )
     }
 }

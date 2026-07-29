@@ -25,7 +25,6 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MilitaryTech
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.QrCode2
@@ -71,7 +70,6 @@ import kotlinx.datetime.LocalDate
 import kotlin.coroutines.cancellation.CancellationException
 
 private enum class MainItem { PEOPLE, TRAINERS, GROUPS, LEADERBOARD, COMPETITIONS }
-private enum class SettingsItem { ABOUT, SETTINGS }
 
 // Helper: do not surface internal/cancellation/compose runtime messages to the UI
 private fun shouldShowErrorMessage(msg: String?): Boolean {
@@ -110,7 +108,6 @@ fun OtherScreen(
     onLeaderboardClick: () -> Unit = {},
     onStatsClick: () -> Unit = {},
     onPaymentsClick: () -> Unit = {},
-    onAboutClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
     onPersonalEventsClick: () -> Unit = {},
     onBarcodeClick: () -> Unit = {},
@@ -154,7 +151,19 @@ fun OtherScreen(
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text(AppStrings.current.navigation.other) }) }
+        topBar = {
+            TopAppBar(
+                title = { Text(AppStrings.current.navigation.profile) },
+                actions = {
+                    IconButton(onClick = onSettingsClick) {
+                        Icon(
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = AppStrings.current.otherScreen.settings
+                        )
+                    }
+                }
+            )
+        }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -328,12 +337,7 @@ fun OtherScreen(
                         if (tutorialActive && tutorialStep == 16) TutorialHighlight.rect = b
                     }
             ) {
-            Text(
-                text = AppStrings.current.otherScreen.membersAndClub,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp)
-            )
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Render main items except Payments and Stats normally
             val mainItems = listOf(
@@ -405,81 +409,6 @@ fun OtherScreen(
                 } // StaggeredItem
             }
             } // people section Column
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            // Druhá sekce - Aplikace
-            Text(
-                text = AppStrings.current.otherScreen.appSection,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp)
-            )
-
-            val settingsItems = listOf(
-                Pair(SettingsItem.SETTINGS, Icons.Filled.Settings),
-                Pair(SettingsItem.ABOUT, Icons.Filled.Info)
-            )
-
-            settingsItems.forEachIndexed { i, (item, icon) ->
-                val label = when (item) {
-                    SettingsItem.SETTINGS -> AppStrings.current.otherScreen.settings
-                    SettingsItem.ABOUT -> AppStrings.current.otherScreen.aboutApp
-                }
-                StaggeredItem(index = i + 4, visible = itemsVisible, baseDelayMs = 35) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp)
-                        .clickable {
-                            when (item) {
-                                SettingsItem.SETTINGS -> onSettingsClick()
-                                // LANGUAGES removed
-                                SettingsItem.ABOUT -> onAboutClick()
-                            }
-                        },
-                    shape = RoundedCornerShape(16.dp),
-
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp)
-                    ) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surface)
-                        ) {
-                            Icon(
-                                imageVector = icon,
-                                contentDescription = label,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(
-                            text = label,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Icon(
-                            imageVector = Icons.Default.ChevronRight,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                } // StaggeredItem
-            }
-
 
                 if (showDebug) {
                     Text("personId: ${state.personId ?: "(null)"}", style = MaterialTheme.typography.bodySmall)

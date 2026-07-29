@@ -41,10 +41,9 @@ val StringsBrainrot = Strings(
         calendar = "Rizzendar",
         board = "S-Board",
         events = "Skibidi Days",
-        other = "Other Stuff",
+        profile = "Rizz King",
     ),
     otherScreen = OtherScreenStrings(
-        membersAndClub = "Gang & Club",
         appSection = "The App no cap",
         people = "Fam",
         trainersAndSpaces = "Gymbros & Gyms",

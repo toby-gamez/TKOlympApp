@@ -22,6 +22,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Psychology
@@ -71,7 +72,8 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(
     onBack: () -> Unit = {},
     onOpenLanguages: () -> Unit = {},
-    onOpenNotifications: () -> Unit = {}
+    onOpenNotifications: () -> Unit = {},
+    onOpenAbout: () -> Unit = {}
 ) {
     val viewModel = viewModel<SettingsViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -369,6 +371,41 @@ fun SettingsScreen(
                                     }
                                 }
                             ) { Text(s.offlineDownloadButton) }
+                        }
+                    }
+                }
+            }
+
+            // About
+            StaggeredItem(index = 6, visible = itemsVisible, baseDelayMs = 50) {
+                Column {
+                    SettingsSectionHeader(text = AppStrings.current.otherScreen.appSection)
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                            .clickable { onOpenAbout() }
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp)
+                        ) {
+                            SettingsIconBox(Icons.Filled.Info)
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text(
+                                text = AppStrings.current.otherScreen.aboutApp,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Icon(
+                                imageVector = Icons.Default.ChevronRight,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
                 }

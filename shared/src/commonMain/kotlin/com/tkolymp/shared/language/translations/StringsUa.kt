@@ -40,10 +40,9 @@ val StringsUa = Strings(
         calendar = "Календар",
         board = "Дошка",
         events = "Заходи",
-        other = "Інше",
+        profile = "Профіль",
     ),
     otherScreen = OtherScreenStrings(
-        membersAndClub = "Члени та клуб",
         appSection = "Додаток",
         people = "Люди",
         trainersAndSpaces = "Тренери та зали",

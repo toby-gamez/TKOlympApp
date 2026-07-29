@@ -417,7 +417,6 @@ fun AppNavHost(
                 onLeaderboardClick = { navController.navigate("leaderboard") },
                 onPaymentsClick = { navController.navigate("payments") },
                 onStatsClick = { navController.navigate("stats") },
-                onAboutClick = { navController.navigate("about") },
                 onSettingsClick = { navController.navigate("settings") },
                 onPersonalEventsClick = { navController.navigate("personal_events") },
                 onBarcodeClick = { navController.navigate("barcode") },
@@ -494,7 +493,8 @@ fun AppNavHost(
             SettingsScreen(
                 onBack = { navController.navigateUp() },
                 onOpenLanguages = { navController.navigate("languages") },
-                onOpenNotifications = { navController.navigate("notifications") }
+                onOpenNotifications = { navController.navigate("notifications") },
+                onOpenAbout = { navController.navigate("about") }
             )
         }
 
