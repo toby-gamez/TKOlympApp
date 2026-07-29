@@ -4,4 +4,11 @@
     <color name="on_primary">#EE1733</color>
     <color name="secondary">#C40F2A</color>
     <color name="splash_background">#EE1733</color>
+
+    <!-- Static mock colors for widget picker previews (android:previewLayout), mirrored from ui/theme/Color.kt LightColorScheme -->
+    <color name="widget_preview_surface">#FFFFFFFF</color>
+    <color name="widget_preview_surface_variant">#FFF0F1F5</color>
+    <color name="widget_preview_on_surface">#FF1C1C1C</color>
+    <color name="widget_preview_on_surface_variant">#FF1C1C1C</color>
+    <color name="widget_preview_primary">#FFEE1733</color>
 </resources>

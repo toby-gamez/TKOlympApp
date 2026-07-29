@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Static mock colors for widget picker previews (android:previewLayout), mirrored from ui/theme/Color.kt DarkColorScheme -->
+    <color name="widget_preview_surface">#FF1A1A1A</color>
+    <color name="widget_preview_surface_variant">#FF2C2C2C</color>
+    <color name="widget_preview_on_surface">#FFEDEDED</color>
+    <color name="widget_preview_on_surface_variant">#FFC7C2C2</color>
+    <color name="widget_preview_primary">#FFFFB3BA</color>
+</resources>

@@ -9,4 +9,5 @@
     android:updatePeriodMillis="0"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
+    android:previewLayout="@layout/widget_preview_my_events"
     android:description="@string/widget_my_events_description" />

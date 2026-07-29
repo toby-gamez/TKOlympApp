@@ -5,4 +5,31 @@
     <string name="widget_next_competition_description">Next competition countdown</string>
     <string name="widget_my_nearest_event_description">Your next upcoming event</string>
     <string name="widget_toolbox_description">Quick navigation shortcuts</string>
+
+    <!-- Static mock copy for widget picker previews (android:previewLayout) — not localized, mirrors StringsEn.kt -->
+    <string name="widget_preview_header_birthdays">Birthdays</string>
+    <string name="widget_preview_header_my_events">My Trainings</string>
+    <string name="widget_preview_header_nearest_event">My Nearest Event</string>
+    <string name="widget_preview_header_next_competition">Nearest Competition</string>
+    <string name="widget_preview_name_1">Anna Novakova</string>
+    <string name="widget_preview_name_2">Jakub Svoboda</string>
+    <string name="widget_preview_badge_today">Today</string>
+    <string name="widget_preview_badge_in_days">in 3 days</string>
+    <string name="widget_preview_event_1_title">Standard Training</string>
+    <string name="widget_preview_event_1_location">Studio A</string>
+    <string name="widget_preview_event_2_title">Latin Training</string>
+    <string name="widget_preview_event_2_location">Studio B</string>
+    <string name="widget_preview_time_1">17:00</string>
+    <string name="widget_preview_time_2">18:30</string>
+    <string name="widget_preview_nearest_event_title">Latin Training</string>
+    <string name="widget_preview_nearest_event_days">2</string>
+    <string name="widget_preview_nearest_event_meta">17:00 · Studio A</string>
+    <string name="widget_preview_competition_title">Prague Open</string>
+    <string name="widget_preview_competition_days">12</string>
+    <string name="widget_preview_competition_meta">Prague · Standard</string>
+    <string name="widget_preview_days_away">days away</string>
+    <string name="widget_preview_nav_calendar">Calendar</string>
+    <string name="widget_preview_nav_board">Board</string>
+    <string name="widget_preview_nav_events">Events</string>
+    <string name="widget_preview_nav_competitions">Competitions</string>
 </resources>
