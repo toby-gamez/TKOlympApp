@@ -6,34 +6,20 @@ import com.tkolymp.shared.cache.CacheService
 import com.tkolymp.shared.network.IGraphQlClient
 import com.tkolymp.shared.sync.OfflineSyncManager
 import kotlinx.coroutines.CancellationException
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
 import kotlinx.serialization.json.*
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 
-private const val FIELD_BLOCK = """
-    competitionId
-    competitionDate
-    checkInEnd
-    competitionType
-    isFinal
-    hasResult
-    eventName
-    eventLocation
-    eventId
-    federation
-    federatedPersonId
-    personName
-    personId
-    competitorName
-    competitorId
-    competitorType
-    dances
-    participants
-    ranking
-    rankingTo
-    pointGain
+// The old `competitionBriefList`/`competitionReportList` queries were removed server-side
+// (the backing SQL functions are `@omit`); this data is now served through the generic
+// `activityTimelineList` query filtered by `pKinds`, see
+// https://github.com/zarybnicky/Sirimbo/blob/master/schema/functions/public.activity_timeline(timestamptz,%20timestamptz,%20bigint[],%20bigint,%20activity_timeline_kind[],%20event_type[]).sql
+private const val CATEGORY_FIELD_BLOCK = """
     category {
         id
         name
@@ -54,21 +40,54 @@ class CompetitionService(
     private val offlineSyncManager: OfflineSyncManager?
         get() = try { ServiceLocator.offlineSyncManager } catch (_: Exception) { null }
 
-    private val briefQuery = """
-        query CompetitionBrief(${'$'}first: Int, ${'$'}pSince: Date, ${'$'}pUntil: Date, ${'$'}pPersonIds: [BigInt]) {
-            competitionBriefList(first: ${'$'}first, offset: 0, pCohortId: null, pPersonIds: ${'$'}pPersonIds, pSince: ${'$'}pSince, pUntil: ${'$'}pUntil) {
-                $FIELD_BLOCK
+    private val timelineQuery = """
+        query CompetitionTimeline(${'$'}first: Int, ${'$'}pSince: Datetime, ${'$'}pUntil: Datetime, ${'$'}pPersonIds: [BigInt], ${'$'}pKinds: [ActivityTimelineKind]) {
+            activityTimelineList(first: ${'$'}first, offset: 0, pSince: ${'$'}pSince, pUntil: ${'$'}pUntil, pPersonIds: ${'$'}pPersonIds, pCohortId: null, pKinds: ${'$'}pKinds) {
+                kind
+                personId
+                personName
+                ... on ActivityCompetitionBrief {
+                    federation
+                    federatedPersonId
+                    competitorId
+                    competitorName
+                    competitorType
+                    competitionId
+                    competitionDate
+                    competitionType
+                    checkInEnd
+                    competitionEventId
+                    competitionEventName
+                    competitionEventLocation
+                    dances
+                    participants
+                    $CATEGORY_FIELD_BLOCK
+                }
+                ... on ActivityCompetitionResult {
+                    federation
+                    federatedPersonId
+                    competitorId
+                    competitorName
+                    competitorType
+                    competitionId
+                    competitionDate
+                    competitionType
+                    competitionEventId
+                    competitionEventName
+                    competitionEventLocation
+                    dances
+                    participants
+                    ranking
+                    rankingTo
+                    pointGain
+                    isFinal
+                    $CATEGORY_FIELD_BLOCK
+                }
             }
         }
     """.trimIndent()
 
-    private val reportQuery = """
-        query CompetitionReport(${'$'}first: Int, ${'$'}pSince: Date, ${'$'}pUntil: Date, ${'$'}pPersonIds: [BigInt]) {
-            competitionReportList(first: ${'$'}first, offset: 0, pCohortId: null, pPersonIds: ${'$'}pPersonIds, pSince: ${'$'}pSince, pUntil: ${'$'}pUntil) {
-                $FIELD_BLOCK
-            }
-        }
-    """.trimIndent()
+    private fun toDatetime(date: String): String = "${date}T00:00:00Z"
 
     override suspend fun getUpcomingCompetitions(
         pSince: String?,
@@ -80,23 +99,26 @@ class CompetitionService(
         val cacheKey = "competitions_upcoming_${pSince}_${pUntil}_${first}_$personKey"
         cache.get<List<Competition>>(cacheKey)?.let { return it }
 
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val since = pSince ?: today.toString()
+        val until = pUntil ?: today.plus(1, DateTimeUnit.YEAR).toString()
         val vars = buildJsonObject {
             put("first", JsonPrimitive(first))
-            if (pSince != null) put("pSince", JsonPrimitive(pSince))
-            if (pUntil != null) put("pUntil", JsonPrimitive(pUntil))
-            if (pPersonIds != null) put("pPersonIds", kotlinx.serialization.json.JsonArray(pPersonIds.map { JsonPrimitive(it) }))
+            put("pSince", JsonPrimitive(toDatetime(since)))
+            put("pUntil", JsonPrimitive(toDatetime(until)))
+            put("pKinds", JsonArray(listOf(JsonPrimitive("COMPETITION_BRIEF"))))
+            if (pPersonIds != null) put("pPersonIds", JsonArray(pPersonIds.map { JsonPrimitive(it) }))
         }
         val list = try {
-            val resp = client.post(briefQuery, vars)
-            Logger.d("CompetitionService", "briefList raw response: $resp")
-            parseList(resp.jsonObject["data"]?.jsonObject?.get("competitionBriefList"))
+            val resp = client.post(timelineQuery, vars)
+            Logger.d("CompetitionService", "activityTimelineList (brief) raw response: $resp")
+            parseList(resp.jsonObject["data"]?.jsonObject?.get("activityTimelineList"))
                 .sortedBy { it.competitionDate }
         } catch (e: CancellationException) { throw e } catch (_: Exception) {
             offlineSyncManager?.loadCompetitions()?.let { offline ->
-                val sinceFilter = pSince; val untilFilter = pUntil
                 offline.filter { c ->
-                    (sinceFilter == null || c.competitionDate >= sinceFilter) &&
-                    (untilFilter == null || c.competitionDate <= untilFilter)
+                    (c.competitionDate >= since) &&
+                    (c.competitionDate <= until)
                 }.sortedBy { it.competitionDate }.take(first)
             } ?: emptyList()
         }
@@ -114,15 +136,19 @@ class CompetitionService(
         val cacheKey = "competitions_past_${pSince}_${pUntil}_${first}_$personKey"
         cache.get<List<Competition>>(cacheKey)?.let { return it }
 
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val since = pSince ?: today.minus(1, DateTimeUnit.YEAR).toString()
+        val until = pUntil ?: today.toString()
         val vars = buildJsonObject {
             put("first", JsonPrimitive(first))
-            if (pSince != null) put("pSince", JsonPrimitive(pSince))
-            if (pUntil != null) put("pUntil", JsonPrimitive(pUntil))
-            if (pPersonIds != null) put("pPersonIds", kotlinx.serialization.json.JsonArray(pPersonIds.map { JsonPrimitive(it) }))
+            put("pSince", JsonPrimitive(toDatetime(since)))
+            put("pUntil", JsonPrimitive(toDatetime(until)))
+            put("pKinds", JsonArray(listOf(JsonPrimitive("COMPETITION_RESULT"))))
+            if (pPersonIds != null) put("pPersonIds", JsonArray(pPersonIds.map { JsonPrimitive(it) }))
         }
-        val resp = client.post(reportQuery, vars)
-        Logger.d("CompetitionService", "reportList raw response: $resp")
-        val list = parseList(resp.jsonObject["data"]?.jsonObject?.get("competitionReportList"))
+        val resp = client.post(timelineQuery, vars)
+        Logger.d("CompetitionService", "activityTimelineList (result) raw response: $resp")
+        val list = parseList(resp.jsonObject["data"]?.jsonObject?.get("activityTimelineList"))
             .sortedByDescending { it.competitionDate }
         try { cache.put(cacheKey, list, ttl = 10.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         return list
@@ -144,6 +170,7 @@ class CompetitionService(
             try {
                 val obj = elem.jsonObject
                 val date = obj["competitionDate"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+                val kind = obj["kind"]?.jsonPrimitive?.contentOrNull
                 Competition(
                     competitionId = obj["competitionId"]?.jsonPrimitive?.longOrNull
                         ?: obj["competitionId"]?.jsonPrimitive?.contentOrNull?.toLongOrNull(),
@@ -151,11 +178,11 @@ class CompetitionService(
                     checkInEnd = obj["checkInEnd"]?.jsonPrimitive?.contentOrNull,
                     competitionType = obj["competitionType"]?.jsonPrimitive?.contentOrNull,
                     isFinal = obj["isFinal"]?.jsonPrimitive?.booleanOrNull ?: false,
-                    hasResult = obj["hasResult"]?.jsonPrimitive?.booleanOrNull ?: false,
-                    eventName = obj["eventName"]?.jsonPrimitive?.contentOrNull,
-                    eventLocation = obj["eventLocation"]?.jsonPrimitive?.contentOrNull,
-                    eventId = obj["eventId"]?.jsonPrimitive?.longOrNull
-                        ?: obj["eventId"]?.jsonPrimitive?.contentOrNull?.toLongOrNull(),
+                    hasResult = kind == "COMPETITION_RESULT",
+                    eventName = obj["competitionEventName"]?.jsonPrimitive?.contentOrNull,
+                    eventLocation = obj["competitionEventLocation"]?.jsonPrimitive?.contentOrNull,
+                    eventId = obj["competitionEventId"]?.jsonPrimitive?.longOrNull
+                        ?: obj["competitionEventId"]?.jsonPrimitive?.contentOrNull?.toLongOrNull(),
                     federation = obj["federation"]?.jsonPrimitive?.contentOrNull,
                     federatedPersonId = obj["federatedPersonId"]?.jsonPrimitive?.contentOrNull,
                     personName = obj["personName"]?.jsonPrimitive?.contentOrNull,
