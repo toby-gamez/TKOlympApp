@@ -81,7 +81,7 @@ class FakeNetworkMonitor(private val connected: Boolean = true) : NetworkMonitor
 }
 
 class FakeNotificationScheduler : INotificationScheduler {
-    override suspend fun scheduleNotificationAt(notificationId: String, title: String?, text: String?, isoDateTime: String, minutesBefore: Int): Long? = null
+    override suspend fun scheduleNotificationAt(notificationId: String, title: String?, text: String?, isoDateTime: String, minutesBefore: Int, eventId: Long?, tab: Int): Long? = null
     override suspend fun cancelNotification(notificationId: String) {}
     override suspend fun cancelAllNotifications() {}
     override suspend fun requestPermissions(): Boolean = true

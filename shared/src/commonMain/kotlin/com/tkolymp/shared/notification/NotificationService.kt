@@ -12,6 +12,9 @@ import kotlinx.datetime.atTime
 import kotlinx.datetime.minus
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.todayIn
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 
 class NotificationService(
     private val storage: INotificationStorage,
@@ -204,10 +207,29 @@ class NotificationService(
         storage.saveScheduledNotifications(scheduled)
     }
 
-    suspend fun getReminders(): List<EventReminder> = storage.getEventReminders()
+    suspend fun getReminders(): List<EventReminder> = pruneFiredReminders()
 
     suspend fun getReminderForEvent(eventId: Long): EventReminder? =
-        storage.getEventReminders().find { it.eventId == eventId && it.campDayIndex == null }
+        pruneFiredReminders().find { it.eventId == eventId && it.campDayIndex == null }
+
+    /**
+     * Drops reminders whose notification has already fired (eventStartIso - minutesBefore
+     * is in the past) so the reminders list doesn't accumulate stale entries forever.
+     */
+    private suspend fun pruneFiredReminders(): List<EventReminder> {
+        val all = storage.getEventReminders()
+        val now = Clock.System.now()
+        val active = all.filter { reminder ->
+            val triggerAt = try {
+                Instant.parse(reminder.eventStartIso) - reminder.minutesBefore.minutes
+            } catch (_: Exception) { null }
+            triggerAt == null || triggerAt > now
+        }
+        if (active.size != all.size) {
+            storage.saveEventReminders(active)
+        }
+        return active
+    }
 
     suspend fun addOrUpdateReminder(reminder: EventReminder): EventReminder {
         val existing = storage.getEventReminders().find { it.eventId == reminder.eventId && it.campDayIndex == null }
