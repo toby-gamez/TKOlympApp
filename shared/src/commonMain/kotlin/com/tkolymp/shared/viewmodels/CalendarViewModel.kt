@@ -119,6 +119,7 @@ class CalendarViewModel(
                 val bucket = loadOfflineBucket(onlyMine, weekStart, startIso, endIso)
                 if (bucket != null) {
                     val parsed = try { mergePersonalEventsIntoMap(bucket, startIso, endIso) } catch (_: Exception) { bucket }
+                        .let { expandMultiDayEvents(it, visibleDates) }
                     val (lessons, other) = splitEventMaps(parsed)
                     lastWeekStart = weekStart
                     lastOnlyMine = onlyMine
@@ -170,6 +171,7 @@ class CalendarViewModel(
                     val bucket = loadOfflineBucket(onlyMine, weekStart, startIso, endIso)
                     if (bucket != null) {
                         val parsed = try { mergePersonalEventsIntoMap(bucket, startIso, endIso) } catch (_: Exception) { bucket }
+                            .let { expandMultiDayEvents(it, visibleDates) }
                         val (lessons, other) = splitEventMaps(parsed)
                         lastWeekStart = weekStart
                         lastOnlyMine = onlyMine
@@ -207,6 +209,7 @@ class CalendarViewModel(
 
             // merge personal events into server map (or offline bucket from exception fallback)
             val mergedMap = try { mergePersonalEventsIntoMap(map, startIso, endIso) } catch (_: Exception) { map }
+                .let { expandMultiDayEvents(it, visibleDates) }
             val (lessons, other) = splitEventMaps(mergedMap)
 
             lastWeekStart = weekStart
@@ -244,6 +247,32 @@ class CalendarViewModel(
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoading))
         }
+    }
+
+    // fetchEventsGroupedByDay buckets each instance only under its start day ("since"), so a
+    // multi-day event (e.g. a camp) otherwise vanishes from the week grid the day after it starts
+    // even though it's still running. Add it to every visible day it spans as well.
+    private fun expandMultiDayEvents(
+        map: Map<String, List<EventInstance>>,
+        visibleDates: List<String>
+    ): Map<String, List<EventInstance>> {
+        val visibleDateSet = visibleDates.toSet()
+        val result = map.mapValues { (_, v) -> v.toMutableList() }.toMutableMap()
+        for (inst in map.values.flatten()) {
+            val sinceDate = try { inst.since?.substringBefore('T')?.let { kotlinx.datetime.LocalDate.parse(it) } } catch (_: Exception) { null } ?: continue
+            val untilDate = try { inst.until?.substringBefore('T')?.let { kotlinx.datetime.LocalDate.parse(it) } } catch (_: Exception) { null } ?: continue
+            if (untilDate <= sinceDate) continue
+            var d = sinceDate.plus(1, DateTimeUnit.DAY)
+            while (d <= untilDate) {
+                val key = d.toString()
+                if (key in visibleDateSet) {
+                    val list = result.getOrPut(key) { mutableListOf() }
+                    if (list.none { it.id == inst.id }) list += inst
+                }
+                d = d.plus(1, DateTimeUnit.DAY)
+            }
+        }
+        return result
     }
 
     private fun splitEventMaps(events: Map<String, List<EventInstance>>): Pair<

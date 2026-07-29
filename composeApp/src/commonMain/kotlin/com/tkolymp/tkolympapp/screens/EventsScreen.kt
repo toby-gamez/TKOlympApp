@@ -217,11 +217,16 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}, onO
                 LaunchedEffect(tab, state.eventsByDay.isNotEmpty()) { if (state.eventsByDay.isNotEmpty()) sectionsVisible = true }
 
                 if (tab == 0) {
-                    // Naplánováno: today..future (ascending)
-                    val planned = filteredGrouped.filter { (dateStr, _) ->
-                        val d = try { LocalDate.parse(dateStr) } catch (_: Exception) { null }
-                        d != null && d >= today
-                    }.entries.sortedBy { it.key }.associate { it.key to it.value }
+                    // Naplánováno: still running or in the future (ascending).
+                    // Multi-day camps are keyed by their start date, so a running camp
+                    // must be kept here by its end date (until), not the bucket's start date.
+                    val planned = filteredGrouped.mapValues { (_, list) ->
+                        list.filter { inst ->
+                            val end = eventEndDate(inst)
+                            end == null || end >= today
+                        }
+                    }.filterValues { it.isNotEmpty() }
+                        .entries.sortedBy { it.key }.associate { it.key to it.value }
 
                     LazyColumn(
                         modifier = Modifier
@@ -277,12 +282,15 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}, onO
                     }
 
                 } else {
-                    // Proběhlé: yesterday -> past (descending)
-                    val yesterday = today.minus(1, DateTimeUnit.DAY)
-                    val past = filteredGrouped.filter { (dateStr, _) ->
-                        val d = try { LocalDate.parse(dateStr) } catch (_: Exception) { null }
-                        d != null && d <= yesterday
-                    }.toList().sortedByDescending { (dateStr, _) ->
+                    // Proběhlé: fully finished events only — a still-running multi-day camp
+                    // stays out of here until its end date (until) has passed.
+                    val past = filteredGrouped.mapValues { (_, list) ->
+                        list.filter { inst ->
+                            val end = eventEndDate(inst)
+                            end != null && end < today
+                        }
+                    }.filterValues { it.isNotEmpty() }
+                        .toList().sortedByDescending { (dateStr, _) ->
                         try { LocalDate.parse(dateStr) } catch (_: Exception) { LocalDate(1, 1, 1) }
                     }
 
@@ -352,4 +360,12 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}, onO
         }
     }
 }
+}
+
+// A multi-day camp is bucketed by its start date, so planned/past membership must be
+// decided by its end date (until), otherwise it flips to "past" the day after it starts
+// even while still running.
+private fun eventEndDate(inst: com.tkolymp.shared.event.EventInstance): LocalDate? {
+    val s = inst.until ?: inst.since ?: return null
+    return try { LocalDate.parse(s.substringBefore('T')) } catch (_: Exception) { null }
 }

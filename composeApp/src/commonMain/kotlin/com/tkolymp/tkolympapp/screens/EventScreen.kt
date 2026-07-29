@@ -44,6 +44,7 @@ import com.tkolymp.tkolympapp.components.CoupleAvatar
 import com.tkolymp.tkolympapp.components.InitialsAvatar
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
@@ -131,6 +132,7 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val uriHandler = LocalUriHandler.current
     var showReminderDialog by remember { mutableStateOf(false) }
     var showRegistrationDropdown by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(initialTab) }
@@ -273,12 +275,12 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
             // Typ a základní info
             val displayType = translateEventType(state.eventType)
             Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(vertical = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp)) {
+                Card(modifier = Modifier.weight(1f).fillMaxHeight(), shape = RoundedCornerShape(16.dp)) {
                     Row(
-                        modifier = Modifier.padding(12.dp),
+                        modifier = Modifier.fillMaxHeight().padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
@@ -294,9 +296,28 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                         )
                     }
                 }
-                Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp)) {
+                Card(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .let { m ->
+                            if (!state.locationName.isNullOrBlank()) {
+                                m.clickable {
+                                    val encoded = state.locationName!!.map { c ->
+                                        when {
+                                            c.isLetterOrDigit() || c in "-_.~" -> c.toString()
+                                            c == ' ' -> "+"
+                                            else -> "%${c.code.toString(16).uppercase()}"
+                                        }
+                                    }.joinToString("")
+                                    try { uriHandler.openUri("https://www.google.com/maps/search/?api=1&query=$encoded") } catch (_: Exception) { }
+                                }
+                            } else m
+                        },
+                    shape = RoundedCornerShape(16.dp)
+                ) {
                     Row(
-                        modifier = Modifier.padding(12.dp),
+                        modifier = Modifier.fillMaxHeight().padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
