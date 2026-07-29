@@ -376,7 +376,10 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                             linkColor = MaterialTheme.colorScheme.primary,
                             textSizeSp = bodySizeSp,
                             selectable = true,
-                            onImageClick = { url -> fullScreenImageUrl.value = url }
+                            onImageClick = { url -> fullScreenImageUrl.value = url },
+                            onBankAccountCopy = { account ->
+                                scope.launch { snackbarHostState.showSnackbar("${AppStrings.current.misc.bankAccountCopied}: $account") }
+                            }
                         )
                         if (state.eventDescription.isNotBlank()) Spacer(modifier = Modifier.height(8.dp))
                     }
@@ -388,7 +391,10 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                             linkColor = MaterialTheme.colorScheme.primary,
                             textSizeSp = bodySizeSp,
                             selectable = true,
-                            onImageClick = { url -> fullScreenImageUrl.value = url }
+                            onImageClick = { url -> fullScreenImageUrl.value = url },
+                            onBankAccountCopy = { account ->
+                                scope.launch { snackbarHostState.showSnackbar("${AppStrings.current.misc.bankAccountCopied}: $account") }
+                            }
                         )
                     }
                 }

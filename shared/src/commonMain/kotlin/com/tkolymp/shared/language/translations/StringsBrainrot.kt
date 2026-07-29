@@ -349,6 +349,7 @@ val StringsBrainrot = Strings(
         dueLabel = "Due:",
         paymentDueIn = "Bag secured in %d days no cap",
         paymentOverdue = "Rizz debt is overdue fr fr",
+        bankAccountCopied = "Account number yoinked to clipboard, no cap",
     ),
     calendarView = CalendarViewStrings(
         next = "next slide",

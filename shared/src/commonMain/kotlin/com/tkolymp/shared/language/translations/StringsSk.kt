@@ -378,6 +378,7 @@ val StringsSk = Strings(
         dueLabel = "Splatné:",
         paymentDueIn = "Platba splatná za %d dní",
         paymentOverdue = "Platba po splatnosti",
+        bankAccountCopied = "Číslo účtu skopírované",
     ),
     calendarView = CalendarViewStrings(
         next = "Ďalej",

@@ -336,6 +336,7 @@ val StringsVi = Strings(
         dueLabel = "Due:",
         paymentDueIn = "Thanh toán sau %d ngày",
         paymentOverdue = "Thanh toán quá hạn",
+        bankAccountCopied = "Đã sao chép số tài khoản",
     ),
     calendarView = CalendarViewStrings(
         next = "Tiếp theo",

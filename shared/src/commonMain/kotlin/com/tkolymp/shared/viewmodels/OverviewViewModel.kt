@@ -73,6 +73,7 @@ data class OverviewState(
     val campsMapByDay: Map<String, List<EventInstance>> = emptyMap(),
     // birthdays derived state
     val upcomingBirthdays: List<BirthdayEntry> = emptyList(),
+    val birthdaysByDay: Map<String, List<BirthdayEntry>> = emptyMap(),
     val myPersonId: String? = null,
     val myCoupleIds: List<String> = emptyList(),
     val isOffline: Boolean = false,
@@ -484,6 +485,14 @@ class OverviewViewModel(
                     .mapValues { (_, insts) -> insts.sortedBy { it.since } }
             }
 
+            val birthdaysByDay = try {
+                val relevantDates = (listOfNotNull(selectedKey) + campsMapByDay.keys).distinct()
+                if (relevantDates.isEmpty()) emptyMap() else {
+                    val people = withContext(Dispatchers.Default) { peopleService.fetchPeople() }
+                    groupBirthdaysByDate(people, relevantDates)
+                }
+            } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyMap() }
+
             val thisWeekEvents = withContext(Dispatchers.Default) {
                 events.filter { inst ->
                     val ds = (inst.since ?: inst.until ?: "").substringBefore('T')
@@ -505,6 +514,7 @@ class OverviewViewModel(
                 tomorrowString = tomorrowString,
                 campsMapByDay = campsMapByDay,
                 upcomingBirthdays = upcomingBirthdays,
+                birthdaysByDay = birthdaysByDay,
                 myPersonId = pid,
                 myCoupleIds = cids,
                 weeklyGoal = weeklyGoal,

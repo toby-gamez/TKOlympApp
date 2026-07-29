@@ -41,6 +41,7 @@ import com.tkolymp.shared.calendar.parseCalendarJson
 import com.tkolymp.shared.competitions.Competition
 import androidx.compose.runtime.Immutable
 import com.tkolymp.shared.competitions.ICompetitionService
+import com.tkolymp.shared.people.PeopleService
 
 @Immutable
 data class CalendarState(
@@ -55,6 +56,7 @@ data class CalendarState(
     val isOffline: Boolean = false,
     val hasCancelledMineToShow: Boolean = false,
     val competitionsByDay: Map<String, List<Competition>> = emptyMap(),
+    val birthdaysByDay: Map<String, List<BirthdayEntry>> = emptyMap(),
     override val isLoading: Boolean = false,
     override val error: AppError? = null
 ) : ViewModelState
@@ -64,7 +66,8 @@ class CalendarViewModel(
     private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService,
     private val cache: CacheService = ServiceLocator.cacheService,
     private val offlineDataStorage: OfflineDataStorage = ServiceLocator.offlineDataStorage,
-    private val competitionService: ICompetitionService = ServiceLocator.competitionService
+    private val competitionService: ICompetitionService = ServiceLocator.competitionService,
+    private val peopleService: PeopleService = ServiceLocator.peopleService
 ) : ViewModel() {
     private val _state = MutableStateFlow(CalendarState())
     val state: StateFlow<CalendarState> = _state.asStateFlow()
@@ -231,6 +234,10 @@ class CalendarViewModel(
                 ).groupBy { it.competitionDate }
             } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyMap() }
 
+            val birthdaysByDay = try {
+                withContext(Dispatchers.Default) { computeBirthdaysByDay(visibleDates) }
+            } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyMap() }
+
             _state.value = _state.value.copy(
                 eventsByDay = mergedMap,
                 lessonsByTrainerByDay = lessons,
@@ -242,6 +249,7 @@ class CalendarViewModel(
                 myCoupleIds = cids,
                 hasCancelledMineToShow = hasCancelledMineToShow,
                 competitionsByDay = competitionsByDay,
+                birthdaysByDay = birthdaysByDay,
                 isLoading = false
             )
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
@@ -469,6 +477,12 @@ class CalendarViewModel(
             result[date] = newList
         }
         return result
+    }
+
+    private suspend fun computeBirthdaysByDay(visibleDates: List<String>): Map<String, List<BirthdayEntry>> {
+        val people = try { peopleService.fetchPeople() } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
+        if (people.isEmpty()) return emptyMap()
+        return groupBirthdaysByDate(people, visibleDates)
     }
 
     private fun isLesson(inst: EventInstance): Boolean =

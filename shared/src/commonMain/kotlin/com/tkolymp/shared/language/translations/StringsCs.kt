@@ -368,6 +368,7 @@ val StringsCs = Strings(
         dueLabel = "Splatné:",
         paymentDueIn = "Platba splatná za %d dní",
         paymentOverdue = "Platba po splatnosti",
+        bankAccountCopied = "Číslo účtu zkopírováno",
         integrityError = "Chyba integrity aplikace",
         integrityDescription = "Tato kopie aplikace nebyla vydána oficiálním vývojářem. Stáhněte si originální verzi z Google Play.",
         closeApp = "Zavřít aplikaci",

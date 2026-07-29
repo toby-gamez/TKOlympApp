@@ -20,6 +20,7 @@ data class MiscStrings(
     val dueLabel: String,
     val paymentDueIn: String,
     val paymentOverdue: String,
+    val bankAccountCopied: String = "Bank account number copied",
     val integrityError: String = "Application integrity error",
     val integrityDescription: String = "This copy was not released by the official developer. Download the original version from Google Play.",
     val closeApp: String = "Close app",

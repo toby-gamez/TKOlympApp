@@ -37,6 +37,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -88,6 +89,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import com.tkolymp.tkolympapp.TutorialHighlight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -332,12 +334,13 @@ fun CalendarScreen(
                     LaunchedEffect(calState.visibleDates) { if (calState.visibleDates.isNotEmpty()) datesVisible = true }
 
                     val competitionsByDay = calState.competitionsByDay
+                    val birthdaysByDay = calState.birthdaysByDay
                     val visibleDateSet = calState.visibleDates.toSet()
                     val filteredByDate = remember(filteredEventsByDay) {
                         filteredEventsByDay.associateBy { it.first }
                     }
-                    val allDatesToShow = remember(filteredEventsByDay, competitionsByDay, calState.visibleDates) {
-                        (filteredEventsByDay.map { it.first } + competitionsByDay.keys.filter { it in visibleDateSet })
+                    val allDatesToShow = remember(filteredEventsByDay, competitionsByDay, birthdaysByDay, calState.visibleDates) {
+                        (filteredEventsByDay.map { it.first } + competitionsByDay.keys.filter { it in visibleDateSet } + birthdaysByDay.keys.filter { it in visibleDateSet })
                             .distinct().sorted()
                     }
 
@@ -357,6 +360,7 @@ fun CalendarScreen(
                         val filteredLessons = triple?.second ?: emptyMap()
                         val filteredOther = triple?.third ?: emptyList()
                         val competitions = competitionsByDay[date] ?: emptyList()
+                        val birthdays = birthdaysByDay[date] ?: emptyList()
 
                         StaggeredItem(index = idx, visible = datesVisible, baseDelayMs = 50) {
                         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
@@ -371,7 +375,27 @@ fun CalendarScreen(
                                     }
                                 }
                             }
-                            Text(header, style = MaterialTheme.typography.titleMedium)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(header, style = MaterialTheme.typography.titleMedium)
+                                if (birthdays.isNotEmpty()) {
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Icon(
+                                        Icons.Filled.Cake,
+                                        contentDescription = AppStrings.current.profile.birthdays,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = birthdays.joinToString(", ") { it.name },
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f, fill = false)
+                                    )
+                                }
+                            }
                             Spacer(modifier = Modifier.height(4.dp))
 
                             filteredLessons.forEach { (trainer, instances) ->
@@ -517,7 +541,8 @@ fun CalendarScreen(
                         selectedTrainers = emptySet()
                         selectedLocations = emptySet()
                     },
-                    competitionDates = calState.competitionsByDay.keys
+                    competitionDates = calState.competitionsByDay.keys,
+                    birthdayDates = calState.birthdaysByDay.keys
                 )
             }
         }
@@ -601,7 +626,8 @@ private fun CalendarBottomSheetContent(
     onTrainerToggle: (String) -> Unit = {},
     onLocationToggle: (String) -> Unit = {},
     onResetFilters: (() -> Unit)? = null,
-    competitionDates: Set<String> = emptySet()
+    competitionDates: Set<String> = emptySet(),
+    birthdayDates: Set<String> = emptySet()
 ) {
     var displayMonth by remember(currentWeekStart) {
         mutableStateOf(LocalDate(currentWeekStart.year, currentWeekStart.month, 1))
@@ -769,7 +795,8 @@ private fun CalendarBottomSheetContent(
                             val monday = day.plus(-day.dayOfWeek.ordinal, DateTimeUnit.DAY)
                             onWeekSelected(monday)
                         },
-                        competitionDates = competitionDates
+                        competitionDates = competitionDates,
+                        birthdayDates = birthdayDates
                     )
                 }
 
@@ -791,7 +818,8 @@ private fun MonthCalendarGrid(
     today: LocalDate,
     selectedWeekStart: LocalDate,
     onDayClick: (LocalDate) -> Unit,
-    competitionDates: Set<String> = emptySet()
+    competitionDates: Set<String> = emptySet(),
+    birthdayDates: Set<String> = emptySet()
 ) {
     val selectedWeekEnd = remember(selectedWeekStart) { selectedWeekStart.plus(6, DateTimeUnit.DAY) }
 
@@ -872,6 +900,7 @@ private fun MonthCalendarGrid(
                     val isRangeEdge = date == selectedWeekStart || date == selectedWeekEnd
                     val showCircle = isToday || isRangeEdge
                     val hasCompetition = date.toString() in competitionDates
+                    val hasBirthday = date.toString() in birthdayDates
 
                     Box(
                         modifier = Modifier
@@ -897,14 +926,30 @@ private fun MonthCalendarGrid(
                                 else -> onSurfaceColor
                             }
                         )
-                        if (hasCompetition) {
-                            Box(
+                        if (hasCompetition || hasBirthday) {
+                            Row(
                                 modifier = Modifier
                                     .align(Alignment.BottomCenter)
-                                    .padding(bottom = 3.dp)
-                                    .size(4.dp)
-                                    .background(competitionDotColor, CircleShape)
-                            )
+                                    .padding(bottom = 2.dp),
+                                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                if (hasBirthday) {
+                                    Icon(
+                                        Icons.Filled.Cake,
+                                        contentDescription = AppStrings.current.profile.birthdays,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(8.dp)
+                                    )
+                                }
+                                if (hasCompetition) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(4.dp)
+                                            .background(competitionDotColor, CircleShape)
+                                    )
+                                }
+                            }
                         }
                     }
                 }

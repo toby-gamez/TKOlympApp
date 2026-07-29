@@ -66,6 +66,7 @@ import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.tutorial.TutorialManager
 import com.tkolymp.shared.utils.formatFullCalendarDate
 import com.tkolymp.shared.utils.formatHtmlContent
+import com.tkolymp.shared.viewmodels.BirthdayEntry
 import com.tkolymp.shared.viewmodels.OverviewViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.TutorialHighlight
@@ -254,7 +255,7 @@ fun OverviewScreen(
                     val trainerList = remember(state.trainingLessonsByTrainer) { state.trainingLessonsByTrainer.entries.toList() }
                     Column(modifier = Modifier.padding(vertical = 6.dp)) {
                         val header = dateHeader(date, state.todayString, state.tomorrowString)
-                        Text(header, style = MaterialTheme.typography.titleMedium)
+                        DateHeaderWithBirthdays(header, state.birthdaysByDay[date] ?: emptyList())
                         Spacer(modifier = Modifier.height(4.dp))
 
                         val handleEventClick = remember(onOpenEvent) { { id: Long, instId: Long? -> onOpenEvent(id, instId) } }
@@ -402,7 +403,7 @@ fun OverviewScreen(
                         StaggeredItem(index = i, visible = cardsVisible) {
                             Column(modifier = Modifier.padding(vertical = 6.dp)) {
                                 val header = dateHeader(date, state.todayString, state.tomorrowString)
-                                Text(header, style = MaterialTheme.typography.titleMedium)
+                                DateHeaderWithBirthdays(header, state.birthdaysByDay[date] ?: emptyList())
                                 Spacer(modifier = Modifier.height(4.dp))
                                 list.forEach { item ->
                                     RenderSingleEventCard(item = item, onEventClick = handleCampEventClick, onOpenRozpis = onOpenRozpis)
@@ -687,6 +688,31 @@ private fun isLessonRaw(inst: EventInstance): Boolean {
     return ev.type?.toEventType() == EventType.LESSON == true &&
         ev.eventTrainersList.isNotEmpty() &&
         !ev.eventTrainersList.firstOrNull().isNullOrBlank()
+}
+
+@Composable
+private fun DateHeaderWithBirthdays(header: String, birthdays: List<BirthdayEntry>) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(header, style = MaterialTheme.typography.titleMedium)
+        if (birthdays.isNotEmpty()) {
+            Spacer(modifier = Modifier.width(8.dp))
+            Icon(
+                imageVector = Icons.Filled.Cake,
+                contentDescription = AppStrings.current.profile.birthdays,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = birthdays.joinToString(", ") { it.name },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false)
+            )
+        }
+    }
 }
 
 private fun dateHeader(date: String, todayString: String, tomorrowString: String): String {

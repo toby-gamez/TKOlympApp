@@ -352,6 +352,19 @@ fun formatBirthDateString(raw: String?): String? {
     return formatShortDate(ld)
 }
 
+/** Month/day (ignoring year) of a birthDate string, for matching against a calendar date. */
+fun birthdayMonthDay(raw: String?): Pair<Int, Int>? {
+    if (raw.isNullOrBlank()) return null
+    val s = raw.trim()
+    val datePrefix = Regex("\\d{4}-\\d{2}-\\d{2}").find(s)?.value
+    val ld = if (datePrefix != null) {
+        try { LocalDate.parse(datePrefix) } catch (_: Exception) { null }
+    } else {
+        parseToLocal(s)?.date
+    } ?: return null
+    return ld.month.number to ld.day
+}
+
 fun formatTimeAgo(epochMs: Long, nowMs: Long = Clock.System.now().toEpochMilliseconds()): String {
     val mins = ((nowMs - epochMs) / 60000).coerceAtLeast(0)
     return if (mins < 60) {

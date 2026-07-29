@@ -27,7 +27,8 @@ actual fun HtmlText(
     linkColor: Color,
     textSizeSp: Float,
     selectable: Boolean,
-    onImageClick: ((String) -> Unit)?
+    onImageClick: ((String) -> Unit)?,
+    onBankAccountCopy: ((String) -> Unit)?
 ) {
     var contentHeightPx by remember { mutableStateOf(0) }
     val density = LocalDensity.current
@@ -76,22 +77,38 @@ actual fun HtmlText(
                                 ) { /* no-op */ }
                             } catch (_: Throwable) { }
                         }
+                        // wire up tappable bank-account spans injected by autoLinkHtmlBody
+                        try {
+                            view.evaluateJavascript(
+                                "(function(){var els=document.getElementsByClassName('tko-bank-account');for(var i=0;i<els.length;i++){(function(){var acc=els[i].getAttribute('data-account');els[i].onclick=function(){window.Android.onBankAccountClick(acc);};})();}})()"
+                            ) { /* no-op */ }
+                        } catch (_: Throwable) { }
                     }
                 }
 
-                // JS bridge for image clicks
-                if (onImageClick != null) {
-                    addJavascriptInterface(object {
-                        @android.webkit.JavascriptInterface
-                        fun onImageClick(url: String) {
-                            try {
-                                android.os.Handler(android.os.Looper.getMainLooper()).post {
-                                    onImageClick(url)
-                                }
-                            } catch (_: Throwable) { }
-                        }
-                    }, "Android")
-                }
+                // JS bridge for image clicks and bank-account copy
+                addJavascriptInterface(object {
+                    @android.webkit.JavascriptInterface
+                    fun onImageClick(url: String) {
+                        if (onImageClick == null) return
+                        try {
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                onImageClick(url)
+                            }
+                        } catch (_: Throwable) { }
+                    }
+
+                    @android.webkit.JavascriptInterface
+                    fun onBankAccountClick(account: String) {
+                        try {
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                val clipboard = ctx.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
+                                clipboard?.setPrimaryClip(android.content.ClipData.newPlainText("bank account", account))
+                                onBankAccountCopy?.invoke(account)
+                            }
+                        } catch (_: Throwable) { }
+                    }
+                }, "Android")
             }
         },
         update = { wv ->
@@ -101,6 +118,7 @@ actual fun HtmlText(
             val htmlNoInline = html.replace(Regex("<([a-zA-Z0-9]+)([^>]*?) style=\\\".*?\\\"([^>]*?)>", RegexOption.IGNORE_CASE)) {
                 "<" + it.groupValues[1] + it.groupValues[2] + it.groupValues[3] + ">"
             }
+            val htmlAutoLinked = autoLinkHtmlBody(htmlNoInline)
                         val selectionColor = if (selectable) {
                                 // Use a semi-transparent version of linkColor or fallback
                                 val argb = linkColor.takeIf { it != Color.Unspecified }?.toArgb() ?: 0xFF0088CC.toInt()
@@ -108,19 +126,25 @@ actual fun HtmlText(
                                 val alpha = "40" // ~25% opacity
                                 "::selection { background: $rgb$alpha; }"
                         } else ""
-                        val injectImageClickScript = if (onImageClick != null) {
-                            // also attach click handlers on load in case some images are added later
-                            "<script>document.addEventListener('DOMContentLoaded', function(){var imgs=document.getElementsByTagName('img');for(var i=0;i<imgs.length;i++){(function(){var s=imgs[i].src;imgs[i].onclick=function(){window.Android.onImageClick(s);};})();}});</script>"
-                        } else ""
+                        val injectClickScript = buildString {
+                            append("<script>document.addEventListener('DOMContentLoaded', function(){")
+                            if (onImageClick != null) {
+                                append("var imgs=document.getElementsByTagName('img');for(var i=0;i<imgs.length;i++){(function(){var s=imgs[i].src;imgs[i].onclick=function(){window.Android.onImageClick(s);};})();}")
+                            }
+                            append("var accs=document.getElementsByClassName('tko-bank-account');for(var j=0;j<accs.length;j++){(function(){var acc=accs[j].getAttribute('data-account');accs[j].onclick=function(){window.Android.onBankAccountClick(acc);};})();}")
+                            append("});</script>")
+                        }
 
                         val styledHtml = """
                                 <!DOCTYPE html>
                                 <html>
                                 <head>
                                 <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+                                <meta name=\"format-detection\" content=\"telephone=no, date=no, address=no, email=no\">
                                 <style>
                                     body { margin:0; padding:0; font-size:${textSizeSp}px; color:${textHex}; background:transparent; word-wrap:break-word; }
                                     a { color:${linkHex}; }
+                                    .tko-bank-account { text-decoration: underline dotted; cursor: pointer; }
                                     img, picture, video {
                                         width: 100% !important;
                                         max-width: 100% !important;
@@ -132,8 +156,8 @@ actual fun HtmlText(
                                     $selectionColor
                                 </style>
                                 </head>
-                                <body>$htmlNoInline</body>
-                                $injectImageClickScript
+                                <body>$htmlAutoLinked</body>
+                                $injectClickScript
                                 </html>
                         """.trimIndent()
             wv.loadDataWithBaseURL(null, styledHtml, "text/html", "UTF-8", null)

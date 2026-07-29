@@ -348,6 +348,7 @@ val StringsSl = Strings(
         dueLabel = "Zapadlo:",
         paymentDueIn = "Plačilo zapade čez %d dni",
         paymentOverdue = "Plačilo je zapadlo",
+        bankAccountCopied = "Številka računa skopirana",
     ),
     calendarView = CalendarViewStrings(
         next = "Naprej",

@@ -27,6 +27,7 @@ import platform.WebKit.WKScriptMessage
 import platform.WebKit.WKScriptMessageHandlerProtocol
 import platform.darwin.NSObject
 import platform.UIKit.UIApplication
+import platform.UIKit.UIPasteboard
 import platform.Foundation.NSString
 import platform.Foundation.NSUTF8StringEncoding
 import platform.Foundation.dataUsingEncoding
@@ -41,7 +42,8 @@ actual fun HtmlText(
     linkColor: Color,
     textSizeSp: Float,
     selectable: Boolean,
-    onImageClick: ((String) -> Unit)?
+    onImageClick: ((String) -> Unit)?,
+    onBankAccountCopy: ((String) -> Unit)?
 ) {
     var contentHeightDp by remember { mutableStateOf(200) }
 
@@ -56,13 +58,18 @@ actual fun HtmlText(
     val htmlNoInline = html.replace(Regex("<([a-zA-Z0-9]+)([^>]*?) style=\\\".*?\\\"([^>]*?)>", RegexOption.IGNORE_CASE)) {
         "<" + it.groupValues[1] + it.groupValues[2] + it.groupValues[3] + ">"
     }
+    val htmlAutoLinked = autoLinkHtmlBody(htmlNoInline)
     val styledHtml = """<!DOCTYPE html><html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
 <style>
 body { margin:0; padding:0; font-size:${textSizeSp}px; color:${textHex}; background:transparent; word-wrap:break-word; }
 a { color:${linkHex}; }
+.tko-bank-account { text-decoration: underline dotted; cursor: pointer; }
 img, picture, video { width:100% !important; max-width:100% !important; height:auto !important; display:block; margin:0 auto; border-radius:10px; }
-</style></head><body>$htmlNoInline</body></html>"""
+</style></head><body>$htmlAutoLinked</body>
+<script>document.addEventListener('DOMContentLoaded', function(){var accs=document.getElementsByClassName('tko-bank-account');for(var i=0;i<accs.length;i++){(function(){var acc=accs[i].getAttribute('data-account');accs[i].onclick=function(){window.webkit.messageHandlers.bankAccountClick.postMessage(acc);};})();}});</script>
+</html>"""
 
     UIKitView(
         factory = {
@@ -76,6 +83,14 @@ img, picture, video { width:100% !important; max-width:100% !important; height:a
                 }
                 config.userContentController.addScriptMessageHandler(imageClickHandler, "imageClick")
             }
+            val bankAccountClickHandler = object : NSObject(), WKScriptMessageHandlerProtocol {
+                override fun userContentController(userContentController: WKUserContentController, didReceiveScriptMessage: WKScriptMessage) {
+                    val account = didReceiveScriptMessage.body as? String ?: return
+                    UIPasteboard.generalPasteboard.string = account
+                    onBankAccountCopy?.invoke(account)
+                }
+            }
+            config.userContentController.addScriptMessageHandler(bankAccountClickHandler, "bankAccountClick")
             WKWebView(frame = cValue<CGRect>(), configuration = config).apply {
                 scrollView.scrollEnabled = selectable
                 scrollView.bounces = false

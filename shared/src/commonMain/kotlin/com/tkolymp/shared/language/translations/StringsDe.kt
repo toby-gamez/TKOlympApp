@@ -348,6 +348,7 @@ val StringsDe = Strings(
         dueLabel = "Fällig:",
         paymentDueIn = "Zahlung fällig in %d Tagen",
         paymentOverdue = "Zahlung überfällig",
+        bankAccountCopied = "Kontonummer kopiert",
     ),
     calendarView = CalendarViewStrings(
         next = "Weiter",

@@ -348,6 +348,7 @@ val StringsUa = Strings(
         dueLabel = "Due:",
         paymentDueIn = "Платіж через %d днів",
         paymentOverdue = "Платіж прострочений",
+        bankAccountCopied = "Номер рахунку скопійовано",
     ),
     calendarView = CalendarViewStrings(
         next = "Вперед",

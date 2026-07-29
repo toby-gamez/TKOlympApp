@@ -359,6 +359,7 @@ val StringsEn = Strings(
         dueLabel = "Due:",
         paymentDueIn = "Payment due in %d days",
         paymentOverdue = "Overdue payment",
+        bankAccountCopied = "Bank account number copied",
     ),
     calendarView = CalendarViewStrings(
         next = "Next",
