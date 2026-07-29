@@ -120,6 +120,13 @@ fun AppContent(
         LaunchedEffect(Unit) {
             try {
                 platformInit()
+                // ServiceLocator.init() runs on a background coroutine started from
+                // Application.onCreate(); on a cold start this UI effect can reach here
+                // before that finishes, so wait for it rather than racing (which would
+                // otherwise throw and get caught below as "show onboarding").
+                while (!ServiceLocator.isInitialized) {
+                    kotlinx.coroutines.delay(20)
+                }
                 // Restore saved language, or fall back to device language on first launch
                 try {
                     val code = ServiceLocator.languageStorage.getLanguageCode()
@@ -137,9 +144,9 @@ fun AppContent(
                     val role = try { ServiceLocator.onboardingStorage.getUserRole() } catch (_: Exception) { null }
                     ServiceLocator.notificationService.initializeIfNeeded(role)
                 } catch (_: Exception) {}
-                val onboardingVm = OnboardingViewModel()
-                val seen = try { onboardingVm.hasSeenOnboarding() } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
-                val prefTimeline = try { onboardingVm.getPreferTimeline() } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
+                val onboardingVm = try { OnboardingViewModel() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                val seen = try { onboardingVm?.hasSeenOnboarding() ?: false } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
+                val prefTimeline = try { onboardingVm?.getPreferTimeline() ?: false } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
                 AppearanceSettings.setPreferTimeline(prefTimeline)
                 val themeRaw = try { ServiceLocator.calendarPreferenceStorage.getThemeMode() } catch (_: Exception) { "system" }
                 AppearanceSettings.setThemeMode(when (themeRaw) { "light" -> ThemeMode.LIGHT; "dark" -> ThemeMode.DARK; else -> ThemeMode.SYSTEM })
@@ -154,8 +161,11 @@ fun AppContent(
                     }
                 } catch (_: Exception) {}
             } catch (e: CancellationException) { throw e } catch (_: Exception) {
+                // Unexpected failure resolving startup state: fall back to the login
+                // screen rather than onboarding, since we can't tell whether this is a
+                // returning (possibly still-logged-in) user or a genuinely new install.
                 loggedIn = false
-                showOnboarding = true
+                showOnboarding = false
             }
         }
 
@@ -238,7 +248,9 @@ fun AppContent(
                                 loggedIn == null || showOnboarding == null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                     CircularProgressIndicator()
                                 }
-                                showOnboarding == true -> OnboardingScreen(
+                                // An already-authenticated user must never see onboarding,
+                                // even if the local "seen onboarding" flag is unset/stale.
+                                showOnboarding == true && loggedIn == false -> OnboardingScreen(
                                     onFinish = {
                                         showOnboarding = false
                                         loggedIn = false

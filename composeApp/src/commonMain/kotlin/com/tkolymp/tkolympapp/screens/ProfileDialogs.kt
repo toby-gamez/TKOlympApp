@@ -54,6 +54,7 @@ import kotlin.time.Instant
 
 @Composable
 fun ChangePasswordDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
+    var oldPass by remember { mutableStateOf("") }
     var newPass by remember { mutableStateOf("") }
     var confirm by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(false) }
@@ -67,6 +68,7 @@ fun ChangePasswordDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
         text = {
             Column(modifier = Modifier.heightIn(max = 220.dp).verticalScroll(rememberScrollState())) {
                 Text(strings.passwordTooShort)
+                TextField(value = oldPass, onValueChange = { oldPass = it }, label = { Text(strings.oldPassword) })
                 TextField(value = newPass, onValueChange = { newPass = it }, label = { Text(strings.newPassword) })
                 TextField(value = confirm, onValueChange = { confirm = it }, label = { Text(strings.confirmPassword) })
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
@@ -77,6 +79,7 @@ fun ChangePasswordDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
             Button(onClick = {
                 // validation
                 error = null
+                if (oldPass.isBlank()) { error = strings.oldPasswordRequired; return@Button }
                 if (newPass.length < 8) { error = strings.passwordMinLength; return@Button }
                 if (newPass != confirm) { error = strings.passwordsMismatch; return@Button }
 
@@ -84,7 +87,7 @@ fun ChangePasswordDialog(onDismiss: () -> Unit, onSuccess: () -> Unit) {
                     loading = true
                     try {
                         try {
-                            val result = ServiceLocator.userService.changePassword(newPass)
+                            val result = ServiceLocator.userService.changePassword(oldPass, newPass)
                             if (result) {
                                 onSuccess()
                             } else {

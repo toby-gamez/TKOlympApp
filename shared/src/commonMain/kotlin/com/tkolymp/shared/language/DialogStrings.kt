@@ -4,6 +4,8 @@ data class DialogStrings(
     val passwordMinLength: String,
     val passwordsMismatch: String,
     val changePasswordFailed: String,
+    val oldPasswordRequired: String,
+    val oldPasswordIncorrect: String,
     val invalidEmail: String,
     val saveFailed: String,
     val dataSaved: String,

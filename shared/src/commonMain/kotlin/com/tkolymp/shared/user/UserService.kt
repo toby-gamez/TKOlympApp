@@ -176,7 +176,14 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
 
     suspend fun clear() { storage.clear() }
 
-    suspend fun changePassword(newPass: String): Boolean {
+    suspend fun changePassword(oldPass: String, newPass: String): Boolean {
+        // The backend's changePassword mutation has no old-password field, so verify the
+        // current password client-side by re-authenticating with it before applying the change.
+        val login = getCachedCurrentUser()?.uLogin
+        if (login.isNullOrBlank()) { lastApiError = com.tkolymp.shared.language.AppStrings.current.cannotDetermineUserId; return false }
+        val verified = try { ServiceLocator.authService.login(login, oldPass) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return false }
+        if (!verified) { lastApiError = com.tkolymp.shared.language.AppStrings.current.oldPasswordIncorrect; return false }
+
         // Insert the password directly into the mutation (backend expects a simple string).
         val esc = newPass.replace("\\", "\\\\").replace("\"", "\\\"")
         val query = "mutation { changePassword(input: {newPass: \"$esc\"}) { clientMutationId } }"

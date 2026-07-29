@@ -68,6 +68,8 @@ data class Strings(
     val passwordMinLength: String get() = dialogs.passwordMinLength
     val passwordsMismatch: String get() = dialogs.passwordsMismatch
     val changePasswordFailed: String get() = dialogs.changePasswordFailed
+    val oldPasswordRequired: String get() = dialogs.oldPasswordRequired
+    val oldPasswordIncorrect: String get() = dialogs.oldPasswordIncorrect
     val invalidEmail: String get() = dialogs.invalidEmail
     val saveFailed: String get() = dialogs.saveFailed
     val cannotDetermineUserId: String get() = dialogs.cannotDetermineUserId
@@ -77,6 +79,7 @@ data class Strings(
     // Auth (flat access)
     val emailOrUsername: String get() = auth.emailOrUsername
     val password: String get() = auth.password
+    val oldPassword: String get() = auth.oldPassword
     val newPassword: String get() = auth.newPassword
     val confirmPassword: String get() = auth.confirmPassword
     val login: String get() = auth.login
