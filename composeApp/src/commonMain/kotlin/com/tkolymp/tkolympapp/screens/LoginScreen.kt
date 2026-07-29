@@ -13,8 +13,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -54,6 +57,8 @@ import androidx.compose.ui.unit.sp
 import com.tkolymp.shared.viewmodels.LoginViewModel
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.tkolympapp.platform.AppLogo
+import com.tkolymp.tkolympapp.platform.rememberGetSavedCredentialCallback
+import com.tkolymp.tkolympapp.platform.rememberSaveCredentialsCallback
 import com.tkolymp.tkolympapp.ui.brandLightPrimary
 import kotlinx.coroutines.launch
 
@@ -62,8 +67,22 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
     val viewModel = viewModel<LoginViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
+    val saveCredentials = rememberSaveCredentialsCallback()
+    val getSavedCredential = rememberGetSavedCredentialCallback()
     var contentVisible by remember { mutableStateOf(false) }
+    var credentialFromPicker by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { contentVisible = true }
+    LaunchedEffect(Unit) {
+        val saved = getSavedCredential()
+        if (saved != null) {
+            val (username, password) = saved
+            viewModel.updateUsername(username)
+            viewModel.updatePassword(password)
+            credentialFromPicker = true
+            val ok = viewModel.login()
+            if (ok) onSuccess()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -75,6 +94,8 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .imePadding()
                 .padding(horizontal = 32.dp, vertical = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -126,7 +147,7 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             OutlinedTextField(
                 value = state.username,
-                onValueChange = { viewModel.updateUsername(it) },
+                onValueChange = { credentialFromPicker = false; viewModel.updateUsername(it) },
                 label = { Text(AppStrings.current.auth.emailOrUsername) },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -140,7 +161,7 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
 
             OutlinedTextField(
                 value = state.password,
-                onValueChange = { viewModel.updatePassword(it) },
+                onValueChange = { credentialFromPicker = false; viewModel.updatePassword(it) },
                 label = { Text(AppStrings.current.auth.password) },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -162,9 +183,15 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
             Button(
                 onClick = {
                     if (state.isLoading) return@Button
+                    val username = state.username
+                    val password = state.password
+                    val skipSave = credentialFromPicker
                     scope.launch {
                         val ok = viewModel.login()
-                        if (ok) onSuccess()
+                        if (ok) {
+                            if (!skipSave) saveCredentials(username, password)
+                            onSuccess()
+                        }
                     }
                 },
                 modifier = Modifier
