@@ -81,7 +81,7 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
     suspend fun fetchAndStorePersonDetails(personId: String): JsonObject? {
         // Try sending id as numeric BigInt when possible (server expects BigInt)
         val idLong = personId.toLongOrNull()
-        val baseSelection = "person(id: \$id) { id birthDate lastName firstName email phone prefixTitle suffixTitle wdsfId cstsId gender isTrainer nationality nationalIdNumber address { city conscriptionNumber district orientationNumber postalCode region street } activeCouplesList { id man { firstName lastName } woman { firstName lastName } } cohortMembershipsList { cohort { id colorRgb name isVisible } since until } cstsProgressList { points finals competitorName category { id name series discipline ageGroup genderGroup class competitorType baseDanceProgramId } } }"
+        val baseSelection = "person(id: \$id) { id birthDate lastName firstName email phone prefixTitle suffixTitle wdsfId cstsId gender isTrainer nationality nationalIdNumber instagramUsername tiktokUsername facebookUrl websiteUrl note address { city conscriptionNumber district orientationNumber postalCode region street } activeCouplesList { id man { firstName lastName } woman { firstName lastName } } cohortMembershipsList { cohort { id colorRgb name isVisible } since until } cstsProgressList { points finals competitorName category { id name series discipline ageGroup genderGroup class competitorType baseDanceProgramId } } }"
 
         var query: String
         var variables: JsonObject
@@ -164,7 +164,7 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
                 category = cat
             )
         } ?: emptyList()
-        PersonDetails(id = id, firstName = p["firstName"]?.jsonPrimitive?.contentOrNull, lastName = p["lastName"]?.jsonPrimitive?.contentOrNull, prefixTitle = p["prefixTitle"]?.jsonPrimitive?.contentOrNull, suffixTitle = p["suffixTitle"]?.jsonPrimitive?.contentOrNull, birthDate = p["birthDate"]?.jsonPrimitive?.contentOrNull, cstsId = p["cstsId"]?.jsonPrimitive?.contentOrNull, email = p["email"]?.jsonPrimitive?.contentOrNull, gender = p["gender"]?.jsonPrimitive?.contentOrNull, isTrainer = p["isTrainer"]?.jsonPrimitive?.contentOrNull?.let { it == "true" }, phone = p["phone"]?.jsonPrimitive?.contentOrNull, wdsfId = p["wdsfId"]?.jsonPrimitive?.contentOrNull, activeCouplesList = couplesArr, cohortMembershipsList = memberships, rawResponse = AppJson.parseToJsonElement(jsonStr), address = address, nationality = p["nationality"]?.jsonPrimitive?.contentOrNull, nationalIdNumber = p["nationalIdNumber"]?.jsonPrimitive?.contentOrNull, cstsProgressList = cstsProgress)
+        PersonDetails(id = id, firstName = p["firstName"]?.jsonPrimitive?.contentOrNull, lastName = p["lastName"]?.jsonPrimitive?.contentOrNull, prefixTitle = p["prefixTitle"]?.jsonPrimitive?.contentOrNull, suffixTitle = p["suffixTitle"]?.jsonPrimitive?.contentOrNull, birthDate = p["birthDate"]?.jsonPrimitive?.contentOrNull, cstsId = p["cstsId"]?.jsonPrimitive?.contentOrNull, email = p["email"]?.jsonPrimitive?.contentOrNull, gender = p["gender"]?.jsonPrimitive?.contentOrNull, isTrainer = p["isTrainer"]?.jsonPrimitive?.contentOrNull?.let { it == "true" }, phone = p["phone"]?.jsonPrimitive?.contentOrNull, wdsfId = p["wdsfId"]?.jsonPrimitive?.contentOrNull, activeCouplesList = couplesArr, cohortMembershipsList = memberships, rawResponse = AppJson.parseToJsonElement(jsonStr), address = address, nationality = p["nationality"]?.jsonPrimitive?.contentOrNull, nationalIdNumber = p["nationalIdNumber"]?.jsonPrimitive?.contentOrNull, cstsProgressList = cstsProgress, instagramUsername = p["instagramUsername"]?.jsonPrimitive?.contentOrNull, tiktokUsername = p["tiktokUsername"]?.jsonPrimitive?.contentOrNull, facebookUrl = p["facebookUrl"]?.jsonPrimitive?.contentOrNull, websiteUrl = p["websiteUrl"]?.jsonPrimitive?.contentOrNull, note = p["note"]?.jsonPrimitive?.contentOrNull)
     } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
 
     private fun parseStoredCurrentUser(jsonStr: String): CurrentUser? = try {
@@ -206,17 +206,29 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
                 else put(name, JsonPrimitive(value))
             }
 
-            addStringField("cstsId", request.cstsId)
+            // cstsId/wdsfId are Int in PersonPatch — sending them as quoted strings makes the
+            // server reject the whole mutation with "Int cannot represent non-integer value"
+            fun addIntField(name: String, value: String?) {
+                val n = value?.trim()?.toLongOrNull()
+                if (n != null) put(name, JsonPrimitive(n)) else put(name, JsonNull)
+            }
+
+            addIntField("cstsId", request.cstsId)
             addStringField("email", request.email)
             addStringField("firstName", request.firstName)
             addStringField("lastName", request.lastName)
             addStringField("nationalIdNumber", request.nationalIdNumber)
             addStringField("nationality", request.nationality)
             addStringField("phone", request.phone)
-            addStringField("wdsfId", request.wdsfId)
+            addIntField("wdsfId", request.wdsfId)
             addStringField("prefixTitle", request.prefixTitle)
             addStringField("suffixTitle", request.suffixTitle)
             addStringField("gender", request.gender)
+            addStringField("instagramUsername", request.instagramUsername)
+            addStringField("tiktokUsername", request.tiktokUsername)
+            addStringField("facebookUrl", request.facebookUrl)
+            addStringField("websiteUrl", request.websiteUrl)
+            addStringField("note", request.note)
 
             if (request.birthDateSet) {
                 if (request.birthDate.isNullOrBlank()) put("birthDate", JsonNull)
@@ -283,7 +295,12 @@ data class PersonUpdateRequest(
     val gender: String? = null,
     val birthDateSet: Boolean = false,
     val birthDate: String? = null,
-    val address: AddressUpdate? = null
+    val address: AddressUpdate? = null,
+    val instagramUsername: String? = null,
+    val tiktokUsername: String? = null,
+    val facebookUrl: String? = null,
+    val websiteUrl: String? = null,
+    val note: String? = null
 )
 
 data class AddressUpdate(

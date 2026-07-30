@@ -13,7 +13,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 @Composable
-actual fun rememberShareStatsCallback(): suspend (ImageBitmap) -> Unit {
+actual fun rememberShareImageCallback(fileBaseName: String, shareTitle: String): suspend (ImageBitmap) -> Unit {
     val context = LocalContext.current
     return { imageBitmap ->
         val uri = withContext(Dispatchers.IO) {
@@ -45,7 +45,7 @@ actual fun rememberShareStatsCallback(): suspend (ImageBitmap) -> Unit {
 
             val shareDir = File(context.cacheDir, "share")
             shareDir.mkdirs()
-            val file = File(shareDir, "stats_share.png")
+            val file = File(shareDir, "$fileBaseName.png")
             file.outputStream().use { out ->
                 val ok = softBitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
                 Log.d("ShareStats", "compress ok=$ok fileSize=${file.length()} bytes")
@@ -70,7 +70,7 @@ actual fun rememberShareStatsCallback(): suspend (ImageBitmap) -> Unit {
                 putExtra(Intent.EXTRA_STREAM, uri)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-            val chooser = Intent.createChooser(intent, "Sdílet statistiky").apply {
+            val chooser = Intent.createChooser(intent, shareTitle).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             context.startActivity(chooser)

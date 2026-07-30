@@ -66,6 +66,8 @@ import com.tkolymp.shared.viewmodels.ProfileViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.CoupleAvatar
 import com.tkolymp.tkolympapp.components.InitialsAvatar
+import com.tkolymp.tkolympapp.components.PersonNoteCard
+import com.tkolymp.tkolympapp.components.SocialLinksRow
 import com.tkolymp.tkolympapp.components.parseColorOrDefault
 import com.tkolymp.tkolympapp.util.StaggeredItem
 import kotlinx.coroutines.launch
@@ -155,6 +157,9 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                         ElevatedSuggestionChip(onClick = {}, label = { Text(AppStrings.current.profile.trainer) })
                     }
                 }
+                if (person != null) {
+                    SocialLinksRow(person = person)
+                }
                 Spacer(modifier = Modifier.height(10.dp))
 
                 // Birth date + Gender
@@ -220,8 +225,15 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                     }
                 }
 
+                // Note (markdown)
+                if (!person?.note.isNullOrBlank()) {
+                    StaggeredItem(index = 3, visible = sectionsVisible, baseDelayMs = 50) {
+                        PersonNoteCard(note = person?.note)
+                    }
+                }
+
                 // Address
-                StaggeredItem(index = 3, visible = sectionsVisible, baseDelayMs = 50) {
+                StaggeredItem(index = 4, visible = sectionsVisible, baseDelayMs = 50) {
                     Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text(AppStrings.current.address.address, style = MaterialTheme.typography.labelLarge)
@@ -264,7 +276,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                 }
 
                 // Active couples
-                StaggeredItem(index = 4, visible = sectionsVisible, baseDelayMs = 50) {
+                StaggeredItem(index = 5, visible = sectionsVisible, baseDelayMs = 50) {
                     Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text(AppStrings.current.profile.activeCouple, style = MaterialTheme.typography.labelLarge)
@@ -281,7 +293,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                 }
 
                 // Training groups
-                StaggeredItem(index = 5, visible = sectionsVisible, baseDelayMs = 50) {
+                StaggeredItem(index = 6, visible = sectionsVisible, baseDelayMs = 50) {
                     Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text(AppStrings.current.otherScreen.trainingGroups, style = MaterialTheme.typography.labelLarge)
@@ -312,7 +324,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
 
                 // ČSTS Progress
                 val cstsProgressList = person?.cstsProgressList ?: emptyList()
-                StaggeredItem(index = 6, visible = sectionsVisible, baseDelayMs = 50) {
+                StaggeredItem(index = 7, visible = sectionsVisible, baseDelayMs = 50) {
                     Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text(AppStrings.current.competition.cstsProgress, style = MaterialTheme.typography.labelLarge)
@@ -426,7 +438,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                 val remainingContact = derived.contactList.filter { (k, _) -> k !in iconShownKeys }
                 val combined = remainingPersonal + remainingContact
                 if (combined.isNotEmpty()) {
-                    StaggeredItem(index = 7, visible = sectionsVisible, baseDelayMs = 50) {
+                    StaggeredItem(index = 8, visible = sectionsVisible, baseDelayMs = 50) {
                         Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                             Column(modifier = Modifier.padding(12.dp)) {
                                 Text(AppStrings.current.profile.personalData, style = MaterialTheme.typography.labelLarge)
@@ -443,7 +455,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                 }
 
                 if (derived.externalList.isNotEmpty()) {
-                    StaggeredItem(index = 8, visible = sectionsVisible, baseDelayMs = 50) {
+                    StaggeredItem(index = 9, visible = sectionsVisible, baseDelayMs = 50) {
                         Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                             Column(modifier = Modifier.padding(12.dp)) {
                                 Text(AppStrings.current.profile.externalIdSection, style = MaterialTheme.typography.labelLarge)
@@ -461,7 +473,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
 
                 val filteredOtherList = derived.otherList.filter { (k, _) -> k !in setOf("isTrainer", "username") }
                 if (filteredOtherList.isNotEmpty()) {
-                    StaggeredItem(index = 9, visible = sectionsVisible, baseDelayMs = 50) {
+                    StaggeredItem(index = 10, visible = sectionsVisible, baseDelayMs = 50) {
                         Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
                             Column(modifier = Modifier.padding(12.dp)) {
                                 Text(AppStrings.current.profile.otherDetails, style = MaterialTheme.typography.labelLarge)
@@ -523,6 +535,11 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                             initialMobile = p?.phone ?: "",
                             initialBirthDate = p?.birthDate ?: "",
                             initialGender = p?.gender ?: "",
+                            initialInstagram = p?.instagramUsername ?: "",
+                            initialTiktok = p?.tiktokUsername ?: "",
+                            initialFacebook = p?.facebookUrl ?: "",
+                            initialWebsite = p?.websiteUrl ?: "",
+                            initialNote = p?.note ?: "",
                             onDismiss = { showEditPersonal = false },
                             onSave = { _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String ->
                                 showEditPersonal = false

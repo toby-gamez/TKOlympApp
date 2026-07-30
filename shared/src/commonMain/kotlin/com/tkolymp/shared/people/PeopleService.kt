@@ -62,7 +62,12 @@ data class PersonDetails(
     val address: AddressDetails? = null,
     val nationality: String? = null,
     val nationalIdNumber: String? = null,
-    val cstsProgressList: List<com.tkolymp.shared.competitions.CstsProgress> = emptyList()
+    val cstsProgressList: List<com.tkolymp.shared.competitions.CstsProgress> = emptyList(),
+    val instagramUsername: String? = null,
+    val tiktokUsername: String? = null,
+    val facebookUrl: String? = null,
+    val websiteUrl: String? = null,
+    val note: String? = null
 )
 
 data class ScoreboardEntry(
@@ -226,6 +231,11 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                                 lastName
                                 phone
                                 wdsfId
+                                instagramUsername
+                                tiktokUsername
+                                facebookUrl
+                                websiteUrl
+                                note
                                 activeCouplesList {
                                     man { firstName lastName }
                                     woman { firstName lastName }
@@ -287,6 +297,11 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                 val isTrainer = personObj?.get("isTrainer")?.jsonPrimitive?.contentOrNull?.let { it == "true" }
                 val phone = personObj?.get("phone")?.jsonPrimitive?.contentOrNull
                 val wdsf = personObj?.get("wdsfId")?.jsonPrimitive?.contentOrNull
+                val instagramUsername = personObj?.get("instagramUsername")?.jsonPrimitive?.contentOrNull
+                val tiktokUsername = personObj?.get("tiktokUsername")?.jsonPrimitive?.contentOrNull
+                val facebookUrl = personObj?.get("facebookUrl")?.jsonPrimitive?.contentOrNull
+                val websiteUrl = personObj?.get("websiteUrl")?.jsonPrimitive?.contentOrNull
+                val note = personObj?.get("note")?.jsonPrimitive?.contentOrNull
 
             val couplesArr = (personObj?.get("activeCouplesList") as? kotlinx.serialization.json.JsonArray)?._safeMap { cEl ->
                         val cObj = cEl as? JsonObject ?: return@_safeMap null
@@ -333,7 +348,15 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                     category = cat
                 )
             } ?: emptyList()
-            val pd = PersonDetails(id, first, last, prefix, suffix, birth, csts, email, gender, isTrainer, phone, wdsf, couplesArr, memberships, el, cstsProgressList = cstsProgress)
+            val pd = PersonDetails(
+                id, first, last, prefix, suffix, birth, csts, email, gender, isTrainer, phone, wdsf, couplesArr, memberships, el,
+                cstsProgressList = cstsProgress,
+                instagramUsername = instagramUsername,
+                tiktokUsername = tiktokUsername,
+                facebookUrl = facebookUrl,
+                websiteUrl = websiteUrl,
+                note = note
+            )
             try { cache.put(cacheKey, pd, ttl = 15.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
             return pd
         }

@@ -55,7 +55,7 @@ import com.tkolymp.shared.viewmodels.TrainerStat
 import com.tkolymp.shared.viewmodels.TypeStat
 import com.tkolymp.shared.viewmodels.WeekStats
 import com.tkolymp.tkolympapp.platform.AppLogo
-import com.tkolymp.tkolympapp.platform.rememberShareStatsCallback
+import com.tkolymp.tkolympapp.platform.rememberShareImageCallback
 import kotlinx.coroutines.launch
 
 // ─── Share sections ───────────────────────────────────────────────────────────
@@ -93,7 +93,7 @@ internal fun ShareStatsDialog(
 ) {
     val graphicsLayer = rememberGraphicsLayer()
     val scope = rememberCoroutineScope()
-    val shareCallback = rememberShareStatsCallback()
+    val shareCallback = rememberShareImageCallback(fileBaseName = "stats_share", shareTitle = "Sdílet statistiky")
     var isSharing by remember { mutableStateOf(false) }
     var selectedSections by remember {
         mutableStateOf(setOf(ShareSection.OVERVIEW, ShareSection.WEEKLY_ACTIVITY))

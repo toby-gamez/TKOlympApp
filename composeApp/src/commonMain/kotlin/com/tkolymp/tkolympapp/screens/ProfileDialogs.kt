@@ -7,8 +7,13 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.FormatBold
+import androidx.compose.material.icons.filled.FormatItalic
+import androidx.compose.material.icons.filled.FormatListBulleted
+import androidx.compose.material.icons.filled.FormatUnderlined
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -35,6 +40,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
@@ -134,6 +141,11 @@ fun ChangePersonalDataDialog(
     initialMobile: String,
     initialBirthDate: String,
     initialGender: String,
+    initialInstagram: String = "",
+    initialTiktok: String = "",
+    initialFacebook: String = "",
+    initialWebsite: String = "",
+    initialNote: String = "",
     onDismiss: () -> Unit,
     onSave: (first: String, last: String, email: String, prefix: String, suffix: String, csts: String, wdsf: String, nid: String, nationality: String, street: String, city: String, postal: String, region: String, district: String, conscription: String, orientation: String, phone: String, mobile: String, birthDate: String, gender: String) -> Unit
 ) {
@@ -156,6 +168,24 @@ fun ChangePersonalDataDialog(
     var orientation by remember(initialOrientation) { mutableStateOf(initialOrientation) }
     var phone by remember(initialPhone) { mutableStateOf(initialPhone) }
     var mobile by remember(initialMobile) { mutableStateOf(initialMobile) }
+    var instagram by remember(initialInstagram) { mutableStateOf(initialInstagram) }
+    var tiktok by remember(initialTiktok) { mutableStateOf(initialTiktok) }
+    var facebook by remember(initialFacebook) { mutableStateOf(initialFacebook) }
+    var website by remember(initialWebsite) { mutableStateOf(initialWebsite) }
+    var note by remember(initialNote) { mutableStateOf(TextFieldValue(initialNote)) }
+    fun wrapNoteSelection(tagOpen: String, tagClose: String) {
+        val sel = note.selection
+        val text = note.text
+        if (sel.collapsed) {
+            val newText = text.substring(0, sel.start) + tagOpen + tagClose + text.substring(sel.start)
+            note = TextFieldValue(newText, TextRange(sel.start + tagOpen.length))
+        } else {
+            val selected = text.substring(sel.min, sel.max)
+            val newText = text.substring(0, sel.min) + tagOpen + selected + tagClose + text.substring(sel.max)
+            val newStart = sel.min + tagOpen.length
+            note = TextFieldValue(newText, TextRange(newStart, newStart + selected.length))
+        }
+    }
     // Birth date handling: keep ISO value for API and user-friendly display
     fun parseToLocalDate(s: String?): LocalDate? {
         if (s.isNullOrBlank()) return null
@@ -311,6 +341,58 @@ fun ChangePersonalDataDialog(
                 TextField(value = district, onValueChange = { district = it }, label = { Text(strings.district) }, singleLine = true)
                 TextField(value = conscription, onValueChange = { conscription = it }, label = { Text(strings.conscriptionNumber) }, singleLine = true)
                 TextField(value = orientation, onValueChange = { orientation = it }, label = { Text(strings.orientationNumber) }, singleLine = true)
+                androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
+                Text(strings.profile.socialLinks, style = MaterialTheme.typography.labelSmall)
+                TextField(
+                    value = instagram,
+                    onValueChange = { instagram = it },
+                    label = { Text(strings.profile.instagram) },
+                    supportingText = { Text(strings.profile.socialUsernameHelper) },
+                    singleLine = true
+                )
+                TextField(
+                    value = tiktok,
+                    onValueChange = { tiktok = it },
+                    label = { Text(strings.profile.tiktok) },
+                    supportingText = { Text(strings.profile.socialUsernameHelper) },
+                    singleLine = true
+                )
+                TextField(
+                    value = facebook,
+                    onValueChange = { facebook = it },
+                    label = { Text(strings.profile.facebook) },
+                    supportingText = { Text(strings.profile.facebookNameHint) },
+                    singleLine = true
+                )
+                TextField(
+                    value = website,
+                    onValueChange = { website = it },
+                    label = { Text(strings.profile.website) },
+                    supportingText = { Text(strings.profile.urlHint) },
+                    singleLine = true
+                )
+                androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
+                Text(strings.profile.note, style = MaterialTheme.typography.labelSmall)
+                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    IconButton(onClick = { wrapNoteSelection("<b>", "</b>") }) {
+                        Icon(Icons.Default.FormatBold, contentDescription = strings.profile.formatBold)
+                    }
+                    IconButton(onClick = { wrapNoteSelection("<i>", "</i>") }) {
+                        Icon(Icons.Default.FormatItalic, contentDescription = strings.profile.formatItalic)
+                    }
+                    IconButton(onClick = { wrapNoteSelection("<u>", "</u>") }) {
+                        Icon(Icons.Default.FormatUnderlined, contentDescription = strings.profile.formatUnderline)
+                    }
+                    IconButton(onClick = { wrapNoteSelection("<ul><li>", "</li></ul>") }) {
+                        Icon(Icons.Default.FormatListBulleted, contentDescription = strings.profile.formatBulletList)
+                    }
+                }
+                TextField(
+                    value = note,
+                    onValueChange = { note = it },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
+                    minLines = 4
+                )
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                 if (saving) androidx.compose.material3.CircularProgressIndicator()
             }
@@ -341,6 +423,11 @@ fun ChangePersonalDataDialog(
                                 gender = genderIso,
                                 birthDateSet = true,
                                 birthDate = birthIso,
+                                instagramUsername = instagram.trim().removePrefix("@"),
+                                tiktokUsername = tiktok.trim().removePrefix("@"),
+                                facebookUrl = facebook.trim(),
+                                websiteUrl = website.trim(),
+                                note = note.text,
                                 address = com.tkolymp.shared.user.AddressUpdate(
                                     street = street,
                                     city = city,

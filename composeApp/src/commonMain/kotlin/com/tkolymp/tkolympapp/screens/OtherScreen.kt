@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.MilitaryTech
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -69,7 +70,7 @@ import com.tkolymp.shared.viewmodels.OtherViewModel
 import kotlinx.datetime.LocalDate
 import kotlin.coroutines.cancellation.CancellationException
 
-private enum class MainItem { PEOPLE, TRAINERS, GROUPS, LEADERBOARD, COMPETITIONS }
+private enum class MainItem { ACHIEVEMENTS, PEOPLE, TRAINERS, GROUPS, LEADERBOARD, COMPETITIONS }
 
 // Helper: do not surface internal/cancellation/compose runtime messages to the UI
 private fun shouldShowErrorMessage(msg: String?): Boolean {
@@ -112,6 +113,7 @@ fun OtherScreen(
     onPersonalEventsClick: () -> Unit = {},
     onBarcodeClick: () -> Unit = {},
     onCompetitionsClick: () -> Unit = {},
+    onAchievementsClick: () -> Unit = {},
     bottomPadding: Dp = 0.dp
 ) {
     val viewModel = viewModel<OtherViewModel>()
@@ -341,6 +343,7 @@ fun OtherScreen(
 
             // Render main items except Payments and Stats normally
             val mainItems = listOf(
+                Pair(MainItem.ACHIEVEMENTS, Icons.Filled.WorkspacePremium),
                 Pair(MainItem.PEOPLE, Icons.Filled.People),
                 Pair(MainItem.TRAINERS, Icons.Filled.FitnessCenter),
                 Pair(MainItem.GROUPS, Icons.Filled.Groups),
@@ -350,6 +353,7 @@ fun OtherScreen(
 
             mainItems.forEachIndexed { i, (item, icon) ->
                 val label = when (item) {
+                    MainItem.ACHIEVEMENTS -> AppStrings.current.achievements.profilePreviewTitle
                     MainItem.PEOPLE -> AppStrings.current.otherScreen.people
                     MainItem.TRAINERS -> AppStrings.current.otherScreen.trainersAndSpaces
                     MainItem.GROUPS -> AppStrings.current.otherScreen.trainingGroups
@@ -363,6 +367,7 @@ fun OtherScreen(
                         .padding(horizontal = 16.dp, vertical = 4.dp)
                         .clickable {
                             when (item) {
+                                MainItem.ACHIEVEMENTS -> onAchievementsClick()
                                 MainItem.PEOPLE -> onPeopleClick()
                                 MainItem.TRAINERS -> onTrainersClick()
                                 MainItem.GROUPS -> onGroupsClick()

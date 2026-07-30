@@ -34,16 +34,16 @@ import platform.UIKit.UIRectFill
 import platform.darwin.UInt8
 
 @Composable
-actual fun rememberShareStatsCallback(): suspend (ImageBitmap) -> Unit {
+actual fun rememberShareImageCallback(fileBaseName: String, shareTitle: String): suspend (ImageBitmap) -> Unit {
     return { imageBitmap ->
         withContext(Dispatchers.Main) {
-            shareImageBitmapOnMainThread(imageBitmap)
+            shareImageBitmapOnMainThread(imageBitmap, fileBaseName)
         }
     }
 }
 
 @OptIn(ExperimentalForeignApi::class)
-private fun shareImageBitmapOnMainThread(bitmap: ImageBitmap) {
+private fun shareImageBitmapOnMainThread(bitmap: ImageBitmap, fileBaseName: String) {
     val width = bitmap.width
     val height = bitmap.height
     if (width == 0 || height == 0) return
@@ -90,7 +90,7 @@ private fun shareImageBitmapOnMainThread(bitmap: ImageBitmap) {
             val tmpDir = NSSearchPathForDirectoriesInDomains(
                 NSDocumentDirectory, NSUserDomainMask, true
             ).firstOrNull() as? String ?: return
-            val filePath = "$tmpDir/stats_share.png"
+            val filePath = "$tmpDir/$fileBaseName.png"
             pngData.writeToFile(filePath, atomically = true)
             val fileUrl = NSURL.fileURLWithPath(filePath)
 

@@ -58,7 +58,8 @@ class ProfileViewModel(
                             val hasCohorts = parsed?.get("cohortMembershipsList") != null
                             val hasEmail = parsed?.get("email") != null || parsed?.get("uEmail") != null
                             val hasCstsProgress = parsed?.containsKey("cstsProgressList") == true
-                            !(hasActiveCouples && hasCohorts && hasEmail && hasCstsProgress)
+                            val hasNote = parsed?.containsKey("note") == true
+                            !(hasActiveCouples && hasCohorts && hasEmail && hasCstsProgress && hasNote)
                         }
                     } catch (_: Exception) { true }
                     if (needsRefetch) {

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.event.AttendanceRepository
 import com.tkolymp.shared.event.EventInstance
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.people.ScoreboardEntry
@@ -174,7 +175,8 @@ class StatsViewModel(
     private val peopleService: com.tkolymp.shared.people.PeopleService = ServiceLocator.peopleService,
     private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService,
     private val cacheService: com.tkolymp.shared.cache.CacheService = ServiceLocator.cacheService,
-    private val calendarPreferenceStorage: com.tkolymp.shared.storage.ICalendarPreferenceStorage = ServiceLocator.calendarPreferenceStorage
+    private val calendarPreferenceStorage: com.tkolymp.shared.storage.ICalendarPreferenceStorage = ServiceLocator.calendarPreferenceStorage,
+    private val attendanceRepository: AttendanceRepository = AttendanceRepository()
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(StatsState())
@@ -218,7 +220,7 @@ class StatsViewModel(
             val langCode = AppStrings.currentLanguage.code
             val myPersonId = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
             val attendanceMap: Map<Long, String> = if (myPersonId != null) {
-                try { fetchAttendanceStatuses(myPersonId) } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyMap() }
+                try { attendanceRepository.fetchAttendanceStatuses(myPersonId) } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyMap() }
             } else emptyMap()
 
             data class Aggregated(
@@ -666,38 +668,4 @@ class StatsViewModel(
             }
     }
 
-    /**
-     * Fetches attendance statuses for the given person from the GraphQL API.
-     * Returns a map of instanceId (Long) → status string (ATTENDED, NOT_EXCUSED, UNKNOWN, CANCELLED).
-     */
-    private suspend fun fetchAttendanceStatuses(personId: String): Map<Long, String> {
-        val client = ServiceLocator.graphQlClient
-        val idLong = personId.toLongOrNull()
-        val query = if (idLong != null)
-            "query MyQuery(\$id: BigInt!) { person(id: \$id) { eventAttendancesList { status instanceId } } }"
-        else
-            "query MyQuery(\$id: String!) { person(id: \$id) { eventAttendancesList { status instanceId } } }"
-        val variables = kotlinx.serialization.json.buildJsonObject {
-            if (idLong != null) put("id", kotlinx.serialization.json.JsonPrimitive(idLong))
-            else put("id", kotlinx.serialization.json.JsonPrimitive(personId))
-        }
-        val resp = try {
-            withContext(Dispatchers.Default) { client.post(query, variables) }
-        } catch (e: CancellationException) { throw e } catch (_: Exception) { return emptyMap() }
-        val list = try {
-            resp.jsonObject["data"]?.jsonObject?.get("person")?.jsonObject
-                ?.get("eventAttendancesList")?.jsonArray ?: return emptyMap()
-        } catch (_: Exception) { return emptyMap() }
-        val result = mutableMapOf<Long, String>()
-        list.forEach { el ->
-            try {
-                val obj = el.jsonObject
-                val instId = obj["instanceId"]?.jsonPrimitive?.content?.toLongOrNull() ?: return@forEach
-                val status = obj["status"]?.jsonPrimitive?.contentOrNull ?: return@forEach
-                result[instId] = status
-            } catch (_: Exception) {}
-        }
-        Logger.d("StatsViewModel", "fetchAttendanceStatuses: loaded ${result.size} entries for person $personId")
-        return result
-    }
 }

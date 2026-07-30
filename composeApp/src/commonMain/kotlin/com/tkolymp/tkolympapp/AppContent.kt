@@ -54,6 +54,7 @@ import com.tkolymp.shared.language.getDeviceLanguageCode
 import com.tkolymp.shared.viewmodels.OnboardingViewModel
 import com.tkolymp.tkolympapp.platform.getAppVersion
 import com.tkolymp.tkolympapp.screens.AboutScreen
+import com.tkolymp.tkolympapp.screens.AchievementsScreen
 import com.tkolymp.tkolympapp.screens.BarcodeScreen
 import com.tkolymp.tkolympapp.screens.BirthdayNotificationsScreen
 import com.tkolymp.tkolympapp.screens.BoardScreen
@@ -421,6 +422,7 @@ fun AppNavHost(
                 onPersonalEventsClick = { navController.navigate("personal_events") },
                 onBarcodeClick = { navController.navigate("barcode") },
                 onCompetitionsClick = { navController.navigate("competitions") },
+                onAchievementsClick = { navController.navigate("achievements") },
                 bottomPadding = bottomPadding
             )
         }
@@ -609,6 +611,16 @@ fun AppNavHost(
             popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) }
         ) {
             BirthdayNotificationsScreen(onBack = { navController.navigateUp() })
+        }
+
+        composable(
+            route = "achievements",
+            enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
+            exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
+            popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) },
+            popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) }
+        ) {
+            AchievementsScreen(onBack = { navController.navigateUp() })
         }
 
         composable(

@@ -42,6 +42,7 @@ data class Strings(
     val competition: CompetitionStrings = CompetitionStrings(),
     val widget: WidgetStrings = WidgetStrings(),
     val campSchedule: CampScheduleStrings = CampScheduleStrings(),
+    val achievements: AchievementStrings = AchievementStrings(),
 ) {
     // Backwards-compatible flat accessors for code that still expects
     // `AppStrings.current.someKey` instead of grouped access like

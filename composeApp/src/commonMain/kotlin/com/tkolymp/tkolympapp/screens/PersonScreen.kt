@@ -63,6 +63,8 @@ import com.tkolymp.shared.viewmodels.PersonViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.CoupleAvatar
 import com.tkolymp.tkolympapp.components.InitialsAvatar
+import com.tkolymp.tkolympapp.components.PersonNoteCard
+import com.tkolymp.tkolympapp.components.SocialLinksRow
 import com.tkolymp.tkolympapp.components.parseColorOrDefault
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
@@ -118,6 +120,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                     )
                 }
             }
+            SocialLinksRow(person = p)
             Spacer(modifier = Modifier.height(10.dp))
 
             // Basic Info - like EventScreen (Row with two Cards, then Card for email)
@@ -196,6 +199,12 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                     }
                 }
                 } // StaggeredItem email
+            }
+
+            if (!p.note.isNullOrBlank()) {
+                StaggeredItem(index = 1, visible = cardsVisible, baseDelayMs = 50) {
+                    PersonNoteCard(note = p.note)
+                }
             }
 
             // Tréninkové skupiny (stacked)
