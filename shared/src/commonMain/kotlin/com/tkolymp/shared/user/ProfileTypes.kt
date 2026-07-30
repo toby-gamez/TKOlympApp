@@ -107,15 +107,18 @@ fun deriveProfileState(person: PersonDetails?, currentUser: CurrentUser?, couple
     personFields.forEach { (k: String, v: String) -> if (k !in excluded && v.isNotBlank()) mergedFields[k] = v }
     currentUserFields.forEach { (k: String, v: String) -> if (k !in excluded && !mergedFields.containsKey(k) && v.isNotBlank()) mergedFields[k] = v }
 
-    val personalKeys = setOf("birthDate", "gender", "nationality", "maritalStatus", "placeOfBirth")
+    val personalKeys = setOf("birthDate", "gender", "nationality", "maritalStatus", "placeOfBirth", "nationalIdNumber")
     val contactKeys = setOf("email", "mobilePhone", "phone", "workPhone")
-    val externalKeys = setOf("personalId", "idNumber", "passportNumber", "externalId", "ico", "dic", "nationalIdNumber", "wdsfId", "cstsId")
+    val externalKeys = setOf("personalId", "idNumber", "passportNumber", "externalId", "ico", "dic")
+    // wdsfId/cstsId are rendered via dedicated cards, not the generic label lists.
+    val dedicatedCardKeys = setOf("wdsfId", "cstsId")
     val personalList = mutableListOf<Pair<String, String>>()
     val contactList = mutableListOf<Pair<String, String>>()
     val externalList = mutableListOf<Pair<String, String>>()
     val otherList = mutableListOf<Pair<String, String>>()
     mergedFields.forEach { (k: String, v: String) ->
         when {
+            k in dedicatedCardKeys -> {}
             k in personalKeys -> personalList.add(k to v)
             k in contactKeys -> contactList.add(k to v)
             k in externalKeys -> externalList.add(k to v)

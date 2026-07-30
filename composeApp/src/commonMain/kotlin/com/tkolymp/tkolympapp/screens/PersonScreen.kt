@@ -1,6 +1,7 @@
 package com.tkolymp.tkolympapp.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Email
@@ -48,6 +51,7 @@ import com.tkolymp.tkolympapp.util.StaggeredItem
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -201,6 +205,70 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                 } // StaggeredItem email
             }
 
+            val cstsId = p.cstsId?.takeIf { it.isNotBlank() }
+            val wdsfId = p.wdsfId?.takeIf { it.isNotBlank() }
+            if (cstsId != null || wdsfId != null) {
+                StaggeredItem(index = 1, visible = cardsVisible, baseDelayMs = 50) {
+                val uriHandler = LocalUriHandler.current
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (cstsId != null) {
+                        Card(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { uriHandler.openUri("https://www.csts.cz/dancesport/evidence/lide/$cstsId/osobni_udaje") },
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.Badge,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text("ČSTS IDT", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(cstsId, style = MaterialTheme.typography.bodyMedium)
+                                }
+                                Icon(
+                                    Icons.AutoMirrored.Filled.OpenInNew,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
+                        }
+                    }
+                    if (wdsfId != null) {
+                        Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp)) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.Badge,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Column {
+                                    Text("WDSF MIN", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(wdsfId, style = MaterialTheme.typography.bodyMedium)
+                                }
+                            }
+                        }
+                    }
+                }
+                } // StaggeredItem csts/wdsf ids
+            }
+
             if (!p.note.isNullOrBlank()) {
                 StaggeredItem(index = 1, visible = cardsVisible, baseDelayMs = 50) {
                     PersonNoteCard(note = p.note)
@@ -260,8 +328,9 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                 } // StaggeredItem groups
             }
 
-            // Active couples card
-            if (p.activeCouplesList.isNotEmpty()) {
+            // Active couples card (hidden when the ČSTS Progress card already shows the couple)
+            val cstsProgressList = p.cstsProgressList
+            if (p.activeCouplesList.isNotEmpty() && cstsProgressList.isEmpty()) {
                 StaggeredItem(index = 3, visible = cardsVisible, baseDelayMs = 50) {
                 Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                     Column(modifier = Modifier.padding(12.dp)) {
@@ -277,9 +346,11 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         val man = c.man
                                         val woman = c.woman
-                                        val manName = listOfNotNull(man?.firstName, man?.lastName).joinToString(" ").trim()
-                                        val womanName = listOfNotNull(woman?.firstName, woman?.lastName).joinToString(" ").trim()
-                                        Text(listOfNotNull(manName.takeIf { it.isNotBlank() }, womanName.takeIf { it.isNotBlank() }).joinToString(" - "), style = MaterialTheme.typography.bodyMedium)
+                                        val manName = listOfNotNull(man?.firstName, man?.lastName).joinToString(" ").trim().takeIf { it.isNotBlank() }
+                                        val womanName = listOfNotNull(woman?.firstName, woman?.lastName).joinToString(" ").trim().takeIf { it.isNotBlank() }
+                                        CoupleAvatar(womanName = womanName, manName = manName, size = 24.dp)
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(listOfNotNull(manName, womanName).joinToString(" - "), style = MaterialTheme.typography.bodyMedium)
                                     }
                                     // hide internal couple id in UI
                                 }
@@ -290,7 +361,6 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                 } // StaggeredItem couples
             }
             // ČSTS Progress
-            val cstsProgressList = p.cstsProgressList
             if (cstsProgressList.isNotEmpty()) {
                 StaggeredItem(index = 4, visible = cardsVisible, baseDelayMs = 50) {
                     Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
