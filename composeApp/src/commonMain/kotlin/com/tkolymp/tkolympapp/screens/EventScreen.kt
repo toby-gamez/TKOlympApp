@@ -485,12 +485,6 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     ))
                 } else {
-                    // Use 1 column when couples are the majority (their names are wider)
-                    val coupleCount = state.registrations.count { regEl ->
-                        regEl.asJsonObjectOrNull()?.get("couple")?.asJsonObjectOrNull() != null
-                    }
-                    val columns = if (coupleCount * 2 > state.registrations.size) 1 else 2
-
                     data class ParticipantItem(
                         val name: String,
                         val isMe: Boolean,
@@ -498,111 +492,130 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                         val womanName: String? = null,
                         val manName: String? = null,
                     )
-                    val participantList = buildList<ParticipantItem> {
-                        state.registrations.forEach { regEl ->
-                            val reg = regEl.asJsonObjectOrNull() ?: return@forEach
-                            val person = reg["person"].asJsonObjectOrNull()
-                            val couple = reg["couple"].asJsonObjectOrNull()
-                            val note = reg.str("note")
-                            val lessonDemands = reg["eventLessonDemandsByRegistrationIdList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
+                    val coupleItems = mutableListOf<ParticipantItem>()
+                    val singleItems = mutableListOf<ParticipantItem>()
 
-                            val womanName: String?
-                            val manName: String?
-                            val nameText: String
-                            if (couple != null) {
-                                womanName = couple["woman"].asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() }
-                                manName = couple["man"].asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() }
-                                nameText = when {
-                                    womanName != null && manName != null -> "$womanName - $manName"
-                                    womanName != null -> womanName
-                                    manName != null -> manName
-                                    else -> return@forEach
-                                }
-                            } else {
-                                womanName = null
-                                manName = null
-                                nameText = person?.str("name")?.takeIf { it.isNotBlank() } ?: return@forEach
+                    state.registrations.forEach { regEl ->
+                        val reg = regEl.asJsonObjectOrNull() ?: return@forEach
+                        val person = reg["person"].asJsonObjectOrNull()
+                        val couple = reg["couple"].asJsonObjectOrNull()
+                        val note = reg.str("note")
+                        val lessonDemands = reg["eventLessonDemandsByRegistrationIdList"].asJsonArrayOrNull() ?: JsonArray(emptyList())
+
+                        val womanName: String?
+                        val manName: String?
+                        val nameText: String
+                        if (couple != null) {
+                            womanName = couple["woman"].asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() }
+                            manName = couple["man"].asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() }
+                            nameText = when {
+                                womanName != null && manName != null -> "$womanName - $manName"
+                                womanName != null -> womanName
+                                manName != null -> manName
+                                else -> return@forEach
                             }
-
-                            val personId = person?.str("id")
-                            val coupleId = couple?.str("id")
-                            val isMe = (personId != null && personId == state.myPersonId) ||
-                                       (coupleId != null && state.myCoupleIds.contains(coupleId))
-
-                            val subItems = buildList<String> {
-                                lessonDemands.forEach { demandEl ->
-                                    val demand = demandEl.asJsonObjectOrNull() ?: return@forEach
-                                    val trainerId = demand.int("trainerId")
-                                    val lessonCount = demand.int("lessonCount")
-                                    val trainerName = state.trainers.firstOrNull { trainerEl ->
-                                        val trainer = trainerEl.asJsonObjectOrNull() ?: return@firstOrNull false
-                                        trainer.int("id") == trainerId
-                                    }?.asJsonObjectOrNull()?.let { t ->
-                                        t["person"]?.asJsonObjectOrNull()?.str("name") ?: t.str("name")
-                                    } ?: "${AppStrings.current.events.trainerFallbackPrefix}$trainerId"
-                                    add(if (lessonCount != null && lessonCount > 0) "$trainerName: $lessonCount ${AppStrings.current.events.lessonCountSuffix}" else trainerName)
-                                }
-                                if (!note.isNullOrBlank()) add("${AppStrings.current.registration.notePrefix}$note")
-                            }
-
-                            add(ParticipantItem(nameText, isMe, subItems, womanName, manName))
+                        } else {
+                            womanName = null
+                            manName = null
+                            nameText = person?.str("name")?.takeIf { it.isNotBlank() } ?: return@forEach
                         }
 
-                        state.externalRegistrations.forEach { extRegEl ->
-                            val extReg = extRegEl.asJsonObjectOrNull() ?: return@forEach
-                            val firstName = extReg.str("firstName") ?: ""
-                            val lastName = extReg.str("lastName") ?: ""
-                            val email = extReg.str("email")
-                            val note = extReg.str("note")
-                            val subItems = buildList<String> {
-                                if (!email.isNullOrBlank()) add("${AppStrings.current.registration.emailPrefix}$email")
-                                if (!note.isNullOrBlank()) add("${AppStrings.current.registration.notePrefix}$note")
+                        val personId = person?.str("id")
+                        val coupleId = couple?.str("id")
+                        val isMe = (personId != null && personId == state.myPersonId) ||
+                                   (coupleId != null && state.myCoupleIds.contains(coupleId))
+
+                        val subItems = buildList<String> {
+                            lessonDemands.forEach { demandEl ->
+                                val demand = demandEl.asJsonObjectOrNull() ?: return@forEach
+                                val trainerId = demand.int("trainerId")
+                                val lessonCount = demand.int("lessonCount")
+                                val trainerName = state.trainers.firstOrNull { trainerEl ->
+                                    val trainer = trainerEl.asJsonObjectOrNull() ?: return@firstOrNull false
+                                    trainer.int("id") == trainerId
+                                }?.asJsonObjectOrNull()?.let { t ->
+                                    t["person"]?.asJsonObjectOrNull()?.str("name") ?: t.str("name")
+                                } ?: "${AppStrings.current.events.trainerFallbackPrefix}$trainerId"
+                                add(if (lessonCount != null && lessonCount > 0) "$trainerName: $lessonCount ${AppStrings.current.events.lessonCountSuffix}" else trainerName)
                             }
-                            add(ParticipantItem("$firstName $lastName${AppStrings.current.registration.externalSuffix}", false, subItems))
+                            if (!note.isNullOrBlank()) add("${AppStrings.current.registration.notePrefix}$note")
+                        }
+
+                        val item = ParticipantItem(nameText, isMe, subItems, womanName, manName)
+                        if (couple != null) coupleItems.add(item) else singleItems.add(item)
+                    }
+
+                    state.externalRegistrations.forEach { extRegEl ->
+                        val extReg = extRegEl.asJsonObjectOrNull() ?: return@forEach
+                        val firstName = extReg.str("firstName") ?: ""
+                        val lastName = extReg.str("lastName") ?: ""
+                        val email = extReg.str("email")
+                        val note = extReg.str("note")
+                        val subItems = buildList<String> {
+                            if (!email.isNullOrBlank()) add("${AppStrings.current.registration.emailPrefix}$email")
+                            if (!note.isNullOrBlank()) add("${AppStrings.current.registration.notePrefix}$note")
+                        }
+                        singleItems.add(ParticipantItem("$firstName $lastName${AppStrings.current.registration.externalSuffix}", false, subItems))
+                    }
+
+                    @Composable
+                    fun ParticipantRow(item: ParticipantItem, modifier: Modifier = Modifier) {
+                        Column(modifier = modifier.padding(vertical = 5.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                if (item.womanName != null || item.manName != null) {
+                                    CoupleAvatar(
+                                        womanName = item.womanName,
+                                        manName = item.manName,
+                                        size = 24.dp,
+                                        fontSize = 9.sp,
+                                    )
+                                } else {
+                                    InitialsAvatar(
+                                        name = item.name,
+                                        size = 24.dp,
+                                        fontSize = 9.sp,
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    item.name,
+                                    style = if (item.isMe)
+                                        MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                                    else
+                                        MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                            item.subItems.forEach { sub ->
+                                Text(
+                                    sub,
+                                    modifier = Modifier.padding(start = 32.dp, top = 1.dp),
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                )
+                            }
                         }
                     }
 
-                    participantList.chunked(columns).forEach { pair ->
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            pair.forEach { item ->
-                                Column(modifier = Modifier.weight(1f).padding(vertical = 5.dp)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        if (item.womanName != null || item.manName != null) {
-                                            CoupleAvatar(
-                                                womanName = item.womanName,
-                                                manName = item.manName,
-                                                size = 24.dp,
-                                                fontSize = 9.sp,
-                                            )
-                                        } else {
-                                            InitialsAvatar(
-                                                name = item.name,
-                                                size = 24.dp,
-                                                fontSize = 9.sp,
-                                            )
-                                        }
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            item.name,
-                                            style = if (item.isMe)
-                                                MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
-                                            else
-                                                MaterialTheme.typography.bodyMedium
-                                        )
-                                    }
-                                    item.subItems.forEach { sub ->
-                                        Text(
-                                            sub,
-                                            modifier = Modifier.padding(start = 32.dp, top = 1.dp),
-                                            style = MaterialTheme.typography.bodySmall.copy(
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        )
-                                    }
-                                }
+                    // Couples always come first, one per row (full width)
+                    coupleItems.forEach { item ->
+                        ParticipantRow(item, modifier = Modifier.fillMaxWidth())
+                    }
+
+                    // Singles in two independent columns, so a long note in one
+                    // column never affects the row height of the other column
+                    if (singleItems.isNotEmpty()) {
+                        val leftColumn = singleItems.filterIndexed { index, _ -> index % 2 == 0 }
+                        val rightColumn = singleItems.filterIndexed { index, _ -> index % 2 == 1 }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                leftColumn.forEach { item -> ParticipantRow(item, modifier = Modifier.fillMaxWidth()) }
                             }
-                            if (columns > 1) repeat(columns - pair.size) {
-                                Spacer(modifier = Modifier.weight(1f))
+                            Column(modifier = Modifier.weight(1f)) {
+                                rightColumn.forEach { item -> ParticipantRow(item, modifier = Modifier.fillMaxWidth()) }
                             }
                         }
                     }
