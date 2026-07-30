@@ -23,7 +23,6 @@ import com.tkolymp.shared.language.NotificationStrings
 import com.tkolymp.shared.language.OnboardingStrings
 import com.tkolymp.shared.language.FreeLessonsStrings
 import com.tkolymp.shared.language.TutorialStrings
-import com.tkolymp.shared.language.WeekPersonaStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
@@ -525,11 +524,6 @@ val StringsEn = Strings(
         attendanceUnknown = "Unknown",
         weekStreak = "week streak",
         bestStreak = "Best",
-        weeklyGoalTitle = "Weekly goal",
-        setWeeklyGoal = "Set a weekly goal",
-        sessionsPerWeek = "sessions/week",
-        goalReached = "Goal reached!",
-        thisWeek = "This week",
     ),
     settings = SettingsStrings(
         title = "Settings",
@@ -573,22 +567,6 @@ val StringsEn = Strings(
         savedLocallyNote = "Solo trainings are stored locally; synchronization with a partner is planned.",
         saveTraining = "Save",
     ),
-    weekPersona = WeekPersonaStrings(
-        hustle = "Hustle Week",
-        easy = "Easy Week",
-        sprint = "Sprint Week",
-        mix = "Mix Week",
-        social = "Social Week",
-        camp = "Camp Week",
-        allRounder = "All-Rounder",
-        mon = "Mon",
-        tue = "Tue",
-        wed = "Wed",
-        thu = "Thu",
-        fri = "Fri",
-        sat = "Sat",
-        sun = "Sun",
-    ),
     tutorial = TutorialStrings(
         tutorialRowLabel = "App Tutorial",
         tutorialRowSubtitle = "A guided tour of the app",
@@ -604,8 +582,6 @@ val StringsEn = Strings(
         overviewCompetitionsDesc = "Your next registered competition at a glance — name, location, and date. Tap to open the full competition list.",
         overviewBirthdaysTitle = "Birthdays",
         overviewBirthdaysDesc = "Upcoming birthdays of club members — so you never miss a chance to celebrate.",
-        overviewStatsTitle = "Weekly Stats",
-        overviewStatsDesc = "Dancers see their session count and training minutes for the week, progress toward a weekly goal, and a fun weekly persona card based on their schedule.",
         calendarMineTitle = "Mine Tab",
         calendarMineDesc = "Shows only trainings from your own training groups and individual lessons — your quickest view of the week ahead.",
         calendarAllTitle = "All Tab",

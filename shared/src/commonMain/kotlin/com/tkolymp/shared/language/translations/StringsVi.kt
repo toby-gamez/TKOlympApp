@@ -23,7 +23,6 @@ import com.tkolymp.shared.language.NotificationStrings
 import com.tkolymp.shared.language.OnboardingStrings
 import com.tkolymp.shared.language.FreeLessonsStrings
 import com.tkolymp.shared.language.TutorialStrings
-import com.tkolymp.shared.language.WeekPersonaStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
@@ -514,11 +513,6 @@ val StringsVi = Strings(
         attendanceUnknown = "Chưa biết",
         weekStreak = "chuỗi tuần",
         bestStreak = "Tốt nhất",
-        weeklyGoalTitle = "Mục tiêu tuần",
-        setWeeklyGoal = "Đặt mục tiêu tuần",
-        sessionsPerWeek = "buổi/tuần",
-        goalReached = "Đạt mục tiêu!",
-        thisWeek = "Tuần này",
     ),
     settings = SettingsStrings(
         title = "Cài đặt",
@@ -562,22 +556,6 @@ val StringsVi = Strings(
         savedLocallyNote = "Các buổi tập cá nhân được lưu cục bộ; đồng bộ với đối tác đang được lên kế hoạch.",
         saveTraining = "Lưu buổi tập",
     ),
-    weekPersona = WeekPersonaStrings(
-        hustle = "Hustle Week",
-        easy = "Easy Week",
-        sprint = "Sprint Week",
-        mix = "Mix Week",
-        social = "Social Week",
-        camp = "Camp Week",
-        allRounder = "All-Rounder",
-        mon = "Mon",
-        tue = "Tue",
-        wed = "Wed",
-        thu = "Thu",
-        fri = "Fri",
-        sat = "Sat",
-        sun = "Sun",
-    ),
     tutorial = TutorialStrings(
         tutorialRowLabel = "Hướng dẫn ứng dụng",
         tutorialRowSubtitle = "Tham quan ứng dụng có hướng dẫn",
@@ -593,8 +571,6 @@ val StringsVi = Strings(
         overviewCompetitionsDesc = "Cuộc thi đã đăng ký tiếp theo của bạn trong nháy mắt — tên, địa điểm và ngày. Nhấn để mở danh sách cuộc thi đầy đủ.",
         overviewBirthdaysTitle = "Sinh nhật",
         overviewBirthdaysDesc = "Sinh nhật sắp tới của các thành viên câu lạc bộ — để bạn không bỏ lỡ cơ hội chúc mừng.",
-        overviewStatsTitle = "Thống kê tuần",
-        overviewStatsDesc = "Vũ công xem số buổi tập và số phút tập trong tuần, tiến độ mục tiêu tuần và thẻ nhân vật tuần thú vị dựa trên lịch tập.",
         calendarMineTitle = "Tab Của tôi",
         calendarMineDesc = "Chỉ hiển thị các buổi tập từ nhóm tập và các buổi cá nhân của bạn — cách nhanh nhất để xem lịch tuần tới.",
         calendarAllTitle = "Tab Tất cả",

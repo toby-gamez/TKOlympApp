@@ -237,17 +237,8 @@ fun StatsScreen(
                         }
                     }
 
-                    StaggeredItem(index = 2, visible = sectionsVisible, baseDelayMs = 60) {
-                        WeeklyGoalSection(
-                            weeklyGoal = state.weeklyGoal,
-                            currentWeekCount = state.currentWeekCount,
-                            strings = strings,
-                            onSetGoal = { goal -> viewModel.setWeeklyGoal(goal) }
-                        )
-                    }
-
                     if (weeklyData.isNotEmpty()) {
-                        StaggeredItem(index = 3, visible = sectionsVisible, baseDelayMs = 60) {
+                        StaggeredItem(index = 2, visible = sectionsVisible, baseDelayMs = 60) {
                             StatsCard(title = strings.weeklyActivity) {
                                 val barData = weeklyData.map { Pair(it.weekLabel, it.count) }
                                 val highlightIndex = weeklyData.indexOfFirst { it.isCurrent }
@@ -285,7 +276,7 @@ fun StatsScreen(
                     }
 
                     if (monthlyData.isNotEmpty()) {
-                        StaggeredItem(index = 4, visible = sectionsVisible, baseDelayMs = 60) {
+                        StaggeredItem(index = 3, visible = sectionsVisible, baseDelayMs = 60) {
                             StatsCard(title = strings.monthlyBreakdown) {
                                 MonthlyTable(
                                     data = monthlyData,
@@ -305,7 +296,7 @@ fun StatsScreen(
                     }
 
                     if (typeData.isNotEmpty()) {
-                        StaggeredItem(index = 5, visible = sectionsVisible, baseDelayMs = 60) {
+                        StaggeredItem(index = 4, visible = sectionsVisible, baseDelayMs = 60) {
                             StatsCard(title = strings.typeBreakdown) {
                                 TypeBreakdownSection(data = typeData)
                             }
@@ -313,7 +304,7 @@ fun StatsScreen(
                     }
 
                     if (trainerData.isNotEmpty()) {
-                        StaggeredItem(index = 6, visible = sectionsVisible, baseDelayMs = 60) {
+                        StaggeredItem(index = 5, visible = sectionsVisible, baseDelayMs = 60) {
                             StatsCard(title = strings.trainerBreakdown) {
                                 TrainerBreakdownSection(
                                     data = trainerData,
@@ -326,7 +317,7 @@ fun StatsScreen(
                     }
 
                     scoreEntry?.let { score ->
-                        StaggeredItem(index = 7, visible = sectionsVisible, baseDelayMs = 60) {
+                        StaggeredItem(index = 6, visible = sectionsVisible, baseDelayMs = 60) {
                             ScoreCard(score = score, strings = strings, onOpenLeaderboard = onOpenLeaderboard)
                         }
                     }

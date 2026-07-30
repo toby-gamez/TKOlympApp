@@ -1,7 +1,6 @@
 package com.tkolymp.shared.viewmodels
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.event.AttendanceRepository
@@ -18,7 +17,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
@@ -144,8 +142,6 @@ data class StatsState(
     val avgSessionsPerWeek: Double = 0.0,
     val currentStreak: Int = 0,
     val longestStreak: Int = 0,
-    val weeklyGoal: Int = 0,
-    val currentWeekCount: Int = 0,
     /** Last 16 weeks, oldest first, newest last. */
     val weeklyData: List<WeekStats> = emptyList(),
     val monthlyData: List<MonthStats> = emptyList(),
@@ -175,7 +171,6 @@ class StatsViewModel(
     private val peopleService: com.tkolymp.shared.people.PeopleService = ServiceLocator.peopleService,
     private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService,
     private val cacheService: com.tkolymp.shared.cache.CacheService = ServiceLocator.cacheService,
-    private val calendarPreferenceStorage: com.tkolymp.shared.storage.ICalendarPreferenceStorage = ServiceLocator.calendarPreferenceStorage,
     private val attendanceRepository: AttendanceRepository = AttendanceRepository()
 ) : ViewModel() {
 
@@ -233,8 +228,7 @@ class StatsViewModel(
                 val attendanceMonths: List<AttendanceMonth>,
                 val cancelledCount: Int,
                 val currentStreak: Int,
-                val longestStreak: Int,
-                val currentWeekCount: Int
+                val longestStreak: Int
             )
 
             val aggregated = withContext(Dispatchers.Default) {
@@ -271,15 +265,13 @@ class StatsViewModel(
 
                 val currentStreak = computeStreak(weeklyData)
                 val longestStreak = computeLongestStreak(weeklyData)
-                val currentWeekCount = weeklyData.find { it.isCurrent }?.count ?: 0
 
-                Aggregated(totalSessions, totalMinutes, weeklyData, monthlyData, typeData, trainerData, attendanceMonths, cancelledCount, currentStreak, longestStreak, currentWeekCount)
+                Aggregated(totalSessions, totalMinutes, weeklyData, monthlyData, typeData, trainerData, attendanceMonths, cancelledCount, currentStreak, longestStreak)
             }
 
             // avgPerWeek: total sessions / elapsed weeks (min 1), using fractional weeks for accuracy
             val elapsedWeeks = maxOf(1.0, (today.toEpochDays() - seasonStart.toEpochDays()).toDouble() / 7.0)
             val avgPerWeek = aggregated.totalSessions.toDouble() / elapsedWeeks
-            val weeklyGoal = calendarPreferenceStorage.getWeeklyGoal()
 
             // ── Scoreboard ────────────────────────────────────────────────────
             val scoreEntry: ScoreboardEntry? = if (myPersonId != null) {
@@ -296,8 +288,6 @@ class StatsViewModel(
                 avgSessionsPerWeek = avgPerWeek,
                 currentStreak = aggregated.currentStreak,
                 longestStreak = aggregated.longestStreak,
-                weeklyGoal = weeklyGoal,
-                currentWeekCount = aggregated.currentWeekCount,
                 weeklyData = aggregated.weeklyData,
                 monthlyData = aggregated.monthlyData,
                 typeData = aggregated.typeData,
@@ -613,13 +603,6 @@ class StatsViewModel(
         return try {
             com.tkolymp.shared.utils.translateEventType(type) ?: type
         } catch (_: Exception) { type }
-    }
-
-    fun setWeeklyGoal(goal: Int) {
-        viewModelScope.launch {
-            calendarPreferenceStorage.setWeeklyGoal(goal)
-            _state.update { it.copy(weeklyGoal = goal) }
-        }
     }
 
     /** Clears a comparison slot (0=A … 4=E). */

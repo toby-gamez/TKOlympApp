@@ -43,7 +43,6 @@ import com.tkolymp.shared.event.EventType
 import com.tkolymp.shared.event.toEventType
 import com.tkolymp.shared.calendar.parseCalendarJson
 import com.tkolymp.shared.payments.PaymentService
-import com.tkolymp.shared.models.UserRole
 import com.tkolymp.shared.competitions.Competition
 import androidx.compose.runtime.Immutable
 import com.tkolymp.shared.competitions.ICompetitionService
@@ -77,11 +76,7 @@ data class OverviewState(
     val myPersonId: String? = null,
     val myCoupleIds: List<String> = emptyList(),
     val isOffline: Boolean = false,
-    val weeklyGoal: Int = 0,
-    val currentWeekCount: Int = 0,
-    val currentWeekMinutes: Long = 0L,
     val paymentDaysUntilDue: Int? = null,
-    val isDancer: Boolean = true,
     val nearestCompetition: Competition? = null,
     override val isLoading: Boolean = false,
     override val error: AppError? = null
@@ -93,9 +88,7 @@ class OverviewViewModel(
     private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService,
     private val peopleService: com.tkolymp.shared.people.PeopleService = ServiceLocator.peopleService,
     private val cache: CacheService = ServiceLocator.cacheService,
-    private val calendarPreferenceStorage: com.tkolymp.shared.storage.ICalendarPreferenceStorage = ServiceLocator.calendarPreferenceStorage,
     private val paymentService: PaymentService = ServiceLocator.paymentService,
-    private val onboardingStorage: com.tkolymp.shared.storage.OnboardingStorage? = ServiceLocator.onboardingStorage,
     private val competitionService: ICompetitionService = ServiceLocator.competitionService
 ) : ViewModel() {
     private val _state = MutableStateFlow(OverviewState())
@@ -428,12 +421,6 @@ class OverviewViewModel(
                 nearestCompetition = competitionDef.await()
             }
 
-            val isDancer = try { onboardingStorage?.getUserRole() != UserRole.PARENT } catch (_: Exception) { true }
-
-            val weeklyGoal = try { calendarPreferenceStorage.getWeeklyGoal() } catch (_: Exception) { 0 }
-            val mondayStr = weekMonday.toString()
-            val sundayStr = weekMonday.plus(6, DateTimeUnit.DAY).toString()
-
             val campsMapByDay = withContext(Dispatchers.Default) {
                 events.filter { it.event?.type?.toEventType() == EventType.CAMP == true }
                     .sortedBy { it.since ?: it.updatedAt ?: "" }
@@ -493,17 +480,6 @@ class OverviewViewModel(
                 }
             } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyMap() }
 
-            val thisWeekEvents = withContext(Dispatchers.Default) {
-                events.filter { inst ->
-                    val ds = (inst.since ?: inst.until ?: "").substringBefore('T')
-                    ds in mondayStr..sundayStr && !inst.isCancelled
-                }
-            }
-            val currentWeekCount = thisWeekEvents.size
-            val currentWeekMinutes = withContext(Dispatchers.Default) {
-                thisWeekEvents.sumOf { inst -> overviewDurationMin(inst.since, inst.until) }
-            }
-
             _state.value = _state.value.copy(
                 upcomingEvents = events,
                 recentAnnouncements = announcements,
@@ -517,11 +493,7 @@ class OverviewViewModel(
                 birthdaysByDay = birthdaysByDay,
                 myPersonId = pid,
                 myCoupleIds = cids,
-                weeklyGoal = weeklyGoal,
-                currentWeekCount = currentWeekCount,
-                currentWeekMinutes = currentWeekMinutes,
                 paymentDaysUntilDue = paymentDaysUntilDue,
-                isDancer = isDancer,
                 nearestCompetition = nearestCompetition,
                 isLoading = false
             )
@@ -534,14 +506,5 @@ class OverviewViewModel(
         inst.event?.type?.toEventType() == EventType.LESSON == true &&
             !inst.event.eventTrainersList.isNullOrEmpty() &&
             !inst.event.eventTrainersList.firstOrNull().isNullOrBlank()
-
-    private fun overviewDurationMin(since: String?, until: String?): Long {
-        if (since.isNullOrBlank() || until.isNullOrBlank()) return 0L
-        return try {
-            val s = kotlin.time.Instant.parse(since).epochSeconds
-            val u = kotlin.time.Instant.parse(until).epochSeconds
-            maxOf(0L, (u - s) / 60L)
-        } catch (_: Exception) { 0L }
-    }
 
 }

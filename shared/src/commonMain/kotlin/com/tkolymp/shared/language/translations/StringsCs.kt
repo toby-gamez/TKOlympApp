@@ -23,7 +23,6 @@ import com.tkolymp.shared.language.NotificationStrings
 import com.tkolymp.shared.language.OnboardingStrings
 import com.tkolymp.shared.language.FreeLessonsStrings
 import com.tkolymp.shared.language.TutorialStrings
-import com.tkolymp.shared.language.WeekPersonaStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
@@ -558,11 +557,6 @@ val StringsCs = Strings(
         seasonPrefix = "Sezóna",
         weekStreak = "týdenní série",
         bestStreak = "Nejlepší",
-        weeklyGoalTitle = "Týdenní cíl",
-        setWeeklyGoal = "Nastavit týdenní cíl",
-        sessionsPerWeek = "tréninků/týden",
-        goalReached = "Cíl splněn!",
-        thisWeek = "Tento týden",
     ),
     settings = SettingsStrings(
         title = "Nastavení",
@@ -606,22 +600,6 @@ val StringsCs = Strings(
            savedLocallyNote = "Samotréninky jsou ukládány lokálně, synchronizace s partnerem je v plánu.",
            saveTraining = "Uložit trénink",
     ),
-    weekPersona = WeekPersonaStrings(
-        hustle = "Týden dřiny",
-        easy = "Klidný týden",
-        sprint = "Týden sprintu",
-        mix = "Mix týden",
-        social = "Společenský týden",
-        camp = "Táborový týden",
-        allRounder = "Všestranný",
-        mon = "Po",
-        tue = "Út",
-        wed = "St",
-        thu = "Čt",
-        fri = "Pá",
-        sat = "So",
-        sun = "Ne",
-    ),
     tutorial = TutorialStrings(
         tutorialRowLabel = "Průvodce aplikací",
         tutorialRowSubtitle = "Komentovaná prohlídka aplikace",
@@ -637,8 +615,6 @@ val StringsCs = Strings(
         overviewCompetitionsDesc = "Tvoje nejbližší přihlášená soutěž na první pohled — název, místo a datum. Klepni pro celý seznam soutěží.",
         overviewBirthdaysTitle = "Narozeniny",
         overviewBirthdaysDesc = "Blížící se narozeniny členů klubu — abys nikdy nezapomněl/a pogratulovat.",
-        overviewStatsTitle = "Týdenní statistiky",
-        overviewStatsDesc = "Tanečníci vidí počet lekcí a minuty tréninku za týden, pokrok v týdenním cíli a vtipnou personu dle rozvrhu.",
         calendarMineTitle = "Záložka Moje",
         calendarMineDesc = "Zobrazí jen tréninky z tvých vlastních tréninkových skupin a individuálních lekcí — nejrychlejší přehled nadcházejícího týdne.",
         calendarAllTitle = "Záložka Vše",

@@ -23,7 +23,6 @@ import com.tkolymp.shared.language.NotificationStrings
 import com.tkolymp.shared.language.OnboardingStrings
 import com.tkolymp.shared.language.FreeLessonsStrings
 import com.tkolymp.shared.language.TutorialStrings
-import com.tkolymp.shared.language.WeekPersonaStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
@@ -514,11 +513,6 @@ val StringsUa = Strings(
         attendanceUnknown = "Невідомо",
         weekStreak = "тижнева серія",
         bestStreak = "Найкраща",
-        weeklyGoalTitle = "Тижнева мета",
-        setWeeklyGoal = "Встановити тижневу мету",
-        sessionsPerWeek = "тренувань/тиждень",
-        goalReached = "Мета досягнута!",
-        thisWeek = "Цей тиждень",
     ),
     settings = SettingsStrings(
         title = "Налаштування",
@@ -562,22 +556,6 @@ val StringsUa = Strings(
         savedLocallyNote = "Тренування наодинці зберігаються локально; синхронізація з партнером планується.",
         saveTraining = "Зберегти тренування",
     ),
-    weekPersona = WeekPersonaStrings(
-        hustle = "Hustle Week",
-        easy = "Easy Week",
-        sprint = "Sprint Week",
-        mix = "Mix Week",
-        social = "Social Week",
-        camp = "Camp Week",
-        allRounder = "All-Rounder",
-        mon = "Mon",
-        tue = "Tue",
-        wed = "Wed",
-        thu = "Thu",
-        fri = "Fri",
-        sat = "Sat",
-        sun = "Sun",
-    ),
     tutorial = TutorialStrings(
         tutorialRowLabel = "Гід по додатку",
         tutorialRowSubtitle = "Екскурсія по додатку",
@@ -593,8 +571,6 @@ val StringsUa = Strings(
         overviewCompetitionsDesc = "Ваше наступне зареєстроване змагання з першого погляду — назва, місце та дата. Натисніть для повного списку змагань.",
         overviewBirthdaysTitle = "Дні народження",
         overviewBirthdaysDesc = "Найближчі дні народження членів клубу — щоб не пропустити нагоду привітати.",
-        overviewStatsTitle = "Тижнева статистика",
-        overviewStatsDesc = "Танцюристи бачать кількість занять та хвилини тренувань за тиждень, прогрес до тижневої мети та веселу персональну картку.",
         calendarMineTitle = "Вкладка Мої",
         calendarMineDesc = "Показує лише тренування з ваших власних тренувальних груп та індивідуальних занять — найшвидший перегляд тижня.",
         calendarAllTitle = "Вкладка Всі",

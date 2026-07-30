@@ -139,11 +139,11 @@ fun CalendarScreen(
     var filterBounds by remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
 
     LaunchedEffect(tutorialStep, tutorialActive) {
-        if (!tutorialActive || tutorialStep !in 7..9) return@LaunchedEffect
+        if (!tutorialActive || tutorialStep !in 6..8) return@LaunchedEffect
         when (tutorialStep) {
-            7 -> { selectedTab = 0; delay(100); contentBounds?.let { TutorialHighlight.rect = it } }
-            8 -> { selectedTab = 1; delay(100); contentBounds?.let { TutorialHighlight.rect = it } }
-            9 -> { selectedTab = 0; delay(100); filterBounds?.let { TutorialHighlight.rect = it } }
+            6 -> { selectedTab = 0; delay(100); contentBounds?.let { TutorialHighlight.rect = it } }
+            7 -> { selectedTab = 1; delay(100); contentBounds?.let { TutorialHighlight.rect = it } }
+            8 -> { selectedTab = 0; delay(100); filterBounds?.let { TutorialHighlight.rect = it } }
         }
     }
     val calendarViewModel = viewModel<com.tkolymp.shared.viewmodels.CalendarViewModel>()
@@ -234,7 +234,7 @@ fun CalendarScreen(
                             .onGloballyPositioned { coords ->
                                 val b = coords.boundsInRoot()
                                 filterBounds = b
-                                if (tutorialActive && tutorialStep == 9) TutorialHighlight.rect = b
+                                if (tutorialActive && tutorialStep == 8) TutorialHighlight.rect = b
                             }
                     ) {
                         BadgedBox(
@@ -325,7 +325,7 @@ fun CalendarScreen(
                         .onGloballyPositioned { coords ->
                             val b = coords.boundsInRoot()
                             contentBounds = b
-                            if (tutorialActive && tutorialStep in 7..8) TutorialHighlight.rect = b
+                            if (tutorialActive && tutorialStep in 6..7) TutorialHighlight.rect = b
                         }
                 ) {
                     key(contentKey) {

@@ -33,12 +33,4 @@ actual class CalendarPreferenceStorage actual constructor(platformContext: Any) 
         defaults.setObject(ids.joinToString(","), "calendar_event_ids")
         defaults.synchronize()
     }
-
-    actual override suspend fun getWeeklyGoal(): Int =
-        defaults.integerForKey("weekly_goal").toInt()
-
-    actual override suspend fun setWeeklyGoal(value: Int) {
-        defaults.setInteger(value.toLong(), "weekly_goal")
-        defaults.synchronize()
-    }
 }

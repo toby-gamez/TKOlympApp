@@ -76,16 +76,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.minus
-import kotlinx.datetime.plus
-import com.tkolymp.shared.calendar.WeekPersona
-import com.tkolymp.shared.calendar.WeekVibesData
-import com.tkolymp.shared.calendar.computeWeekVibes
-import com.tkolymp.shared.event.EventInstance
-import com.tkolymp.shared.event.EventType
-import com.tkolymp.shared.event.firstTrainerOrEmpty
-import com.tkolymp.shared.event.toEventType
-import com.tkolymp.tkolympapp.components.WeekPersonaBadge
 import com.tkolymp.shared.competitions.Competition
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -121,7 +111,6 @@ fun OverviewScreen(
         val tutorialActive by TutorialManager.isActive.collectAsStateWithLifecycle()
         val tutorialStep by TutorialManager.currentStep.collectAsStateWithLifecycle()
 
-        val bvrStats = remember { BringIntoViewRequester() }
         val bvrUpcoming = remember { BringIntoViewRequester() }
         val bvrBoard = remember { BringIntoViewRequester() }
         val bvrCamps = remember { BringIntoViewRequester() }
@@ -129,7 +118,6 @@ fun OverviewScreen(
         val bvrBirthdays = remember { BringIntoViewRequester() }
 
         // Always-fresh bounds per section — updated unconditionally by onGloballyPositioned
-        var boundsStats by remember { mutableStateOf<Rect?>(null) }
         var boundsUpcoming by remember { mutableStateOf<Rect?>(null) }
         var boundsBoard by remember { mutableStateOf<Rect?>(null) }
         var boundsCamps by remember { mutableStateOf<Rect?>(null) }
@@ -137,10 +125,10 @@ fun OverviewScreen(
         var boundsBirthdays by remember { mutableStateOf<Rect?>(null) }
 
         LaunchedEffect(tutorialStep, tutorialActive) {
-            if (!tutorialActive || tutorialStep !in 1..6) return@LaunchedEffect
+            if (!tutorialActive || tutorialStep !in 1..5) return@LaunchedEffect
             val bvr = when (tutorialStep) {
                 1 -> bvrUpcoming; 2 -> bvrBoard; 3 -> bvrCamps
-                4 -> bvrCompetitions; 5 -> bvrBirthdays; else -> bvrStats
+                4 -> bvrCompetitions; else -> bvrBirthdays
             }
 
             bvr.bringIntoView()
@@ -149,7 +137,7 @@ fun OverviewScreen(
 
             val bounds = when (tutorialStep) {
                 1 -> boundsUpcoming; 2 -> boundsBoard; 3 -> boundsCamps
-                4 -> boundsCompetitions; 5 -> boundsBirthdays; else -> boundsStats
+                4 -> boundsCompetitions; else -> boundsBirthdays
             }
             if (bounds != null) TutorialHighlight.rect = bounds
         }
@@ -168,61 +156,6 @@ fun OverviewScreen(
             ) {
 
             val announcements = state.recentAnnouncements
-
-            Column(
-                modifier = Modifier
-                    .bringIntoViewRequester(bvrStats)
-                    .onGloballyPositioned { coords ->
-                        val b = coords.boundsInRoot()
-                        boundsStats = b
-                        if (tutorialActive && tutorialStep == 6) TutorialHighlight.rect = b
-                    }
-            ) {
-                if (state.isDancer && state.upcomingEvents.isNotEmpty()) {
-                    val weekVibes = remember(state.upcomingEvents, state.todayString) {
-                        computeOverviewWeekVibes(state.upcomingEvents, state.todayString)
-                    }
-                    if (weekVibes != null) {
-                        val ps = AppStrings.current.weekPersona
-                        val personaLabel = when (weekVibes.persona) {
-                            WeekPersona.HUSTLE -> ps.hustle
-                            WeekPersona.EASY -> ps.easy
-                            WeekPersona.SPRINT -> ps.sprint
-                            WeekPersona.MIX -> ps.mix
-                            WeekPersona.SOCIAL -> ps.social
-                            WeekPersona.CAMP -> ps.camp
-                            WeekPersona.ALL_ROUNDER -> ps.allRounder
-                        }
-                        WeekPersonaBadge(
-                            vibes = weekVibes,
-                            personaLabel = personaLabel,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
-                        )
-                    }
-                }
-
-                if (state.isDancer && !state.isLoading) {
-                    MiniStatsRow(
-                        sessionCount = state.currentWeekCount,
-                        minutes = state.currentWeekMinutes,
-                        thisWeekLabel = AppStrings.current.stats.thisWeek,
-                        sessionsUnit = AppStrings.current.stats.sessionsUnit,
-                        hoursUnit = AppStrings.current.stats.hoursUnit,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp)
-                    )
-                }
-
-                if (state.isDancer && state.weeklyGoal > 0) {
-                    WeeklyGoalIndicator(
-                        goal = state.weeklyGoal,
-                        count = state.currentWeekCount,
-                        thisWeekLabel = AppStrings.current.stats.thisWeek,
-                        sessionsPerWeek = AppStrings.current.stats.sessionsPerWeek,
-                        goalReached = AppStrings.current.stats.goalReached,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-                    )
-                }
-            }
 
             // Trainings section
             Spacer(modifier = Modifier.height(8.dp))
@@ -555,73 +488,6 @@ fun OverviewScreen(
 }
 
 @Composable
-private fun MiniStatsRow(
-    sessionCount: Int,
-    minutes: Long,
-    thisWeekLabel: String,
-    sessionsUnit: String,
-    hoursUnit: String,
-    modifier: Modifier = Modifier
-) {
-    val hours = minutes / 60
-    val label = buildString {
-        append("$thisWeekLabel: $sessionCount $sessionsUnit")
-        if (hours > 0) append(" · $hours $hoursUnit")
-    }
-    Text(
-        text = label,
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = modifier
-    )
-}
-
-@Composable
-private fun WeeklyGoalIndicator(
-    modifier: Modifier = Modifier,
-    goal: Int,
-    count: Int,
-    thisWeekLabel: String,
-    sessionsPerWeek: String,
-    goalReached: String
-) {
-    val progress = (count.toFloat() / goal.toFloat()).coerceIn(0f, 1f)
-    val goalMet = count >= goal
-    val green = androidx.compose.ui.graphics.Color(0xFF4CAF50)
-    val progressColor = if (goalMet) green else MaterialTheme.colorScheme.primary
-
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "$thisWeekLabel · $count / $goal $sessionsPerWeek",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                if (goalMet) {
-                    Text(goalReached, style = MaterialTheme.typography.labelSmall, color = green, fontWeight = FontWeight.Bold)
-                }
-            }
-            Spacer(modifier = Modifier.height(6.dp))
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
-                color = progressColor,
-                trackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.15f)
-            )
-        }
-    }
-}
-
-@Composable
 private fun PaymentDueBanner(
     daysUntilDue: Int,
     dueInTemplate: String,
@@ -659,35 +525,6 @@ private fun PaymentDueBanner(
             Text(label, style = MaterialTheme.typography.bodySmall, color = contentColor)
         }
     }
-}
-
-private fun computeOverviewWeekVibes(
-    events: List<EventInstance>,
-    todayString: String
-): WeekVibesData? {
-    val today = try { LocalDate.parse(todayString) } catch (_: Exception) { return null }
-    val monday = today.minus(today.dayOfWeek.ordinal, DateTimeUnit.DAY)
-    val visibleDates = (0..6).map { monday.plus(it, DateTimeUnit.DAY).toString() }
-    val weekEvents = events.filter { inst ->
-        val ds = (inst.since ?: inst.until ?: "").substringBefore('T')
-        ds in visibleDates
-    }
-    val grouped = weekEvents.groupBy { (it.since ?: it.until ?: "").substringBefore('T') }
-    val lessons = mutableMapOf<String, Map<String, List<EventInstance>>>()
-    val other = mutableMapOf<String, List<EventInstance>>()
-    for ((date, list) in grouped) {
-        val less = list.filter { isLessonRaw(it) }
-        lessons[date] = less.groupBy { it.event.firstTrainerOrEmpty() }
-        other[date] = (list - less.toSet()).sortedBy { it.since }
-    }
-    return computeWeekVibes(lessons, other, visibleDates)
-}
-
-private fun isLessonRaw(inst: EventInstance): Boolean {
-    val ev = inst.event ?: return false
-    return ev.type?.toEventType() == EventType.LESSON == true &&
-        ev.eventTrainersList.isNotEmpty() &&
-        !ev.eventTrainersList.firstOrNull().isNullOrBlank()
 }
 
 @Composable

@@ -37,7 +37,6 @@ data class Strings(
     val stats: StatsStrings,
     val settings: SettingsStrings,
     val personalEvents: PersonalEventStrings = PersonalEventStrings(),
-    val weekPersona: WeekPersonaStrings = WeekPersonaStrings(),
     val tutorial: TutorialStrings = TutorialStrings(),
     val competition: CompetitionStrings = CompetitionStrings(),
     val widget: WidgetStrings = WidgetStrings(),

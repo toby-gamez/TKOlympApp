@@ -57,9 +57,7 @@ private fun makeOverviewVm(
     userService = UserService(FakeGraphQlClient(), FakeUserStorage()),
     peopleService = PeopleService(FakeGraphQlClient(), CacheService()),
     cache = CacheService(),
-    calendarPreferenceStorage = com.tkolymp.tkolympapp.fakes.FakeCalendarPreferenceStorage(),
     paymentService = com.tkolymp.shared.payments.PaymentService(FakeGraphQlClient(), CacheService()),
-    onboardingStorage = null,
     competitionService = FakeCompetitionService()
 )
 

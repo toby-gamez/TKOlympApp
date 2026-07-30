@@ -226,17 +226,16 @@ fun TutorialOverlay(
                             3  -> strings.overviewCampsTitle          to strings.overviewCampsDesc
                             4  -> strings.overviewCompetitionsTitle   to strings.overviewCompetitionsDesc
                             5  -> strings.overviewBirthdaysTitle      to strings.overviewBirthdaysDesc
-                            6  -> strings.overviewStatsTitle          to strings.overviewStatsDesc
-                            7  -> strings.calendarMineTitle           to strings.calendarMineDesc
-                            8  -> strings.calendarAllTitle            to strings.calendarAllDesc
-                            9  -> strings.calendarFilterTitle         to strings.calendarFilterDesc
-                            10 -> strings.boardListTitle              to strings.boardListDesc
-                            11 -> strings.boardStickyTitle            to strings.boardStickyDesc
-                            12 -> strings.eventsPlannedTitle          to strings.eventsPlannedDesc
-                            13 -> strings.eventsPastTitle             to strings.eventsPastDesc
-                            14 -> strings.otherAccountTitle           to strings.otherAccountDesc
-                            15 -> strings.otherQrTitle                to strings.otherQrDesc
-                            16 -> strings.otherPeopleTitle            to strings.otherPeopleDesc
+                            6  -> strings.calendarMineTitle           to strings.calendarMineDesc
+                            7  -> strings.calendarAllTitle            to strings.calendarAllDesc
+                            8  -> strings.calendarFilterTitle         to strings.calendarFilterDesc
+                            9  -> strings.boardListTitle              to strings.boardListDesc
+                            10 -> strings.boardStickyTitle            to strings.boardStickyDesc
+                            11 -> strings.eventsPlannedTitle          to strings.eventsPlannedDesc
+                            12 -> strings.eventsPastTitle             to strings.eventsPastDesc
+                            13 -> strings.otherAccountTitle           to strings.otherAccountDesc
+                            14 -> strings.otherQrTitle                to strings.otherQrDesc
+                            15 -> strings.otherPeopleTitle            to strings.otherPeopleDesc
                             else -> strings.otherTitle                to strings.otherDesc
                         }
                         Column {

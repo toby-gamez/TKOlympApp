@@ -19,8 +19,6 @@ data class TutorialStrings(
     val overviewCompetitionsDesc: String = "Your next registered competition at a glance — name, location, and date. Tap to open the full competition list.",
     val overviewBirthdaysTitle: String = "Birthdays",
     val overviewBirthdaysDesc: String = "Upcoming birthdays of club members — so you never miss a chance to celebrate.",
-    val overviewStatsTitle: String = "Weekly Stats",
-    val overviewStatsDesc: String = "Dancers see their session count and training minutes for the week, progress toward a weekly goal, and a fun weekly persona card based on their schedule.",
 
     // Calendar sections
     val calendarMineTitle: String = "Mine Tab",

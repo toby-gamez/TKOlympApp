@@ -23,7 +23,6 @@ import com.tkolymp.shared.language.NotificationStrings
 import com.tkolymp.shared.language.OnboardingStrings
 import com.tkolymp.shared.language.FreeLessonsStrings
 import com.tkolymp.shared.language.TutorialStrings
-import com.tkolymp.shared.language.WeekPersonaStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
@@ -514,11 +513,6 @@ val StringsSl = Strings(
         attendanceUnknown = "Neznano",
         weekStreak = "tedenska serija",
         bestStreak = "Najboljša",
-        weeklyGoalTitle = "Tedenski cilj",
-        setWeeklyGoal = "Nastavi tedenski cilj",
-        sessionsPerWeek = "treningov/teden",
-        goalReached = "Cilj dosežen!",
-        thisWeek = "Ta teden",
     ),
     settings = SettingsStrings(
         title = "Nastavitve",
@@ -562,22 +556,6 @@ val StringsSl = Strings(
         savedLocallyNote = "Samostojni treningi se shranjujejo lokalno; sinhronizacija s partnerjem je v načrtu.",
         saveTraining = "Shrani trening",
     ),
-    weekPersona = WeekPersonaStrings(
-        hustle = "Hustle Week",
-        easy = "Easy Week",
-        sprint = "Sprint Week",
-        mix = "Mix Week",
-        social = "Social Week",
-        camp = "Camp Week",
-        allRounder = "All-Rounder",
-        mon = "Mon",
-        tue = "Tue",
-        wed = "Wed",
-        thu = "Thu",
-        fri = "Fri",
-        sat = "Sat",
-        sun = "Sun",
-    ),
     tutorial = TutorialStrings(
         tutorialRowLabel = "Vadnik za aplikacijo",
         tutorialRowSubtitle = "Komentiran ogled aplikacije",
@@ -593,8 +571,6 @@ val StringsSl = Strings(
         overviewCompetitionsDesc = "Tvoje naslednje prijavljeno tekmovanje na prvi pogled — ime, kraj in datum. Dotakni se za celoten seznam tekmovanj.",
         overviewBirthdaysTitle = "Rojstni dnevi",
         overviewBirthdaysDesc = "Bližajoči se rojstni dnevi članov kluba – da ne zamudite priložnosti za čestitke.",
-        overviewStatsTitle = "Tedenske statistike",
-        overviewStatsDesc = "Plesalci vidijo število vadb in minut treninga za teden, napredek k tedenskemu cilju in zabavno tedensko kartico persone.",
         calendarMineTitle = "Zavihek Moje",
         calendarMineDesc = "Prikaže samo treninge iz tvojih lastnih skupin in individualnih lekcij – najhitrejši pregled prihajajočega tedna.",
         calendarAllTitle = "Zavihek Vse",

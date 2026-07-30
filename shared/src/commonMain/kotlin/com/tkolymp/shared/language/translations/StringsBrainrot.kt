@@ -23,7 +23,6 @@ import com.tkolymp.shared.language.NotificationStrings
 import com.tkolymp.shared.language.OnboardingStrings
 import com.tkolymp.shared.language.FreeLessonsStrings
 import com.tkolymp.shared.language.TutorialStrings
-import com.tkolymp.shared.language.WeekPersonaStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
@@ -515,11 +514,6 @@ val StringsBrainrot = Strings(
         attendanceUnknown = "Idk fam",
         weekStreak = "W RIZZ streak",
         bestStreak = "GOAT",
-        weeklyGoalTitle = "Weekly grind goal",
-        setWeeklyGoal = "Set ur weekly grind",
-        sessionsPerWeek = "sessions/week no cap",
-        goalReached = "COOKED IT FR FR!",
-        thisWeek = "This week bestie",
     ),
     settings = SettingsStrings(
         title = "Settings no cap",
@@ -563,22 +557,6 @@ val StringsBrainrot = Strings(
         savedLocallyNote = "Solo rizzies are stored locally; partner-syncie incoming.",
         saveTraining = "Lock In",
     ),
-    weekPersona = WeekPersonaStrings(
-        hustle = "Grindset Sigma Week",
-        easy = "Chill Rizz Week",
-        sprint = "Speedrun Any% Week",
-        mix = "Crossover Episode Week",
-        social = "Main Character Week",
-        camp = "Glow Up Camp Week",
-        allRounder = "Perfectly Balanced (No nerfs pls)",
-        mon = "Mog",
-        tue = "Tues",
-        wed = "Weds",
-        thu = "Thr",
-        fri = "Fri",
-        sat = "Sats",
-        sun = "Sun (skibidi)",
-    ),
     tutorial = TutorialStrings(
         tutorialRowLabel = "App Tutorial (no cap)",
         tutorialRowSubtitle = "Sigma walkthrough of the app fr fr",
@@ -594,8 +572,6 @@ val StringsBrainrot = Strings(
         overviewCompetitionsDesc = "Your next comp at a glance — name, location, date. You're literally built different. Tap to see the full slay list.",
         overviewBirthdaysTitle = "Birthday SZN",
         overviewBirthdaysDesc = "Who's having a glow-up moment soon? Don't be an NPC — go send some Ws and show up.",
-        overviewStatsTitle = "Weekly Stats",
-        overviewStatsDesc = "Dancers get weekly session count, training minutes, goal drip, and a persona card that goes absolutely hard based on their schedule.",
         calendarMineTitle = "Mine Tab (your era)",
         calendarMineDesc = "Only YOUR groups and individual lessons showing up. No cap, this is your main character calendar view — no NPC sessions cluttering it.",
         calendarAllTitle = "All Tab (sigma mode unlocked)",

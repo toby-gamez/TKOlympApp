@@ -23,7 +23,6 @@ import com.tkolymp.shared.language.NotificationStrings
 import com.tkolymp.shared.language.OnboardingStrings
 import com.tkolymp.shared.language.FreeLessonsStrings
 import com.tkolymp.shared.language.TutorialStrings
-import com.tkolymp.shared.language.WeekPersonaStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
@@ -513,11 +512,6 @@ val StringsDe = Strings(
         attendanceUnknown = "Unbekannt",
         weekStreak = "Wochens Serie",
         bestStreak = "Beste",
-        weeklyGoalTitle = "Wochenziel",
-        setWeeklyGoal = "Wochenziel setzen",
-        sessionsPerWeek = "Einheiten/Woche",
-        goalReached = "Ziel erreicht!",
-        thisWeek = "Diese Woche",
     ),
     settings = SettingsStrings(
         title = "Einstellungen",
@@ -561,22 +555,6 @@ val StringsDe = Strings(
         savedLocallyNote = "Einzeltrainings werden lokal gespeichert; eine Synchronisation mit dem Partner ist geplant.",
         saveTraining = "Training speichern",
     ),
-    weekPersona = WeekPersonaStrings(
-        hustle = "Hustle Week",
-        easy = "Easy Week",
-        sprint = "Sprint Week",
-        mix = "Mix Week",
-        social = "Social Week",
-        camp = "Camp Week",
-        allRounder = "All-Rounder",
-        mon = "Mon",
-        tue = "Tue",
-        wed = "Wed",
-        thu = "Thu",
-        fri = "Fri",
-        sat = "Sat",
-        sun = "Sun",
-    ),
     tutorial = TutorialStrings(
         tutorialRowLabel = "App-Tutorial",
         tutorialRowSubtitle = "Geführte Tour durch die App",
@@ -592,8 +570,6 @@ val StringsDe = Strings(
         overviewCompetitionsDesc = "Dein nächster angemeldeter Wettkampf auf einen Blick — Name, Ort und Datum. Tippe für die vollständige Wettkampfliste.",
         overviewBirthdaysTitle = "Geburtstage",
         overviewBirthdaysDesc = "Bevorstehende Geburtstage von Vereinsmitgliedern – damit du keinen verpasst.",
-        overviewStatsTitle = "Wochenstats",
-        overviewStatsDesc = "Tänzer sehen ihre Einheitenanzahl und Trainingsminuten der Woche, den Fortschritt zum Wochenziel und eine wöchentliche Persona-Karte.",
         calendarMineTitle = "Tab Meine",
         calendarMineDesc = "Zeigt nur Trainings aus deinen eigenen Trainingsgruppen und individuellen Lektionen – dein schnellster Überblick über die Woche.",
         calendarAllTitle = "Tab Alle",
