@@ -23,6 +23,7 @@ import com.tkolymp.shared.personalevents.PersonalEventService
 import com.tkolymp.shared.competitions.CompetitionService
 import com.tkolymp.shared.campschedule.CampScheduleService
 import com.tkolymp.shared.campschedule.CampScheduleReminderService
+import com.tkolymp.shared.feedback.FeedbackService
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -38,6 +39,9 @@ private val certificatePinner = CertificatePinner.Builder()
     .add("api.rozpisovnik.cz", "sha256/Q5SDlsyebwSuLU2EROPHxw0YP4+HhbPYfRZBMLFAqNo=")  // leaf
     .add("api.rozpisovnik.cz", "sha256/s/tdAOmUzd8syaTuqfgGvFcn6DzA5Cmb+Vby1ST+U3Y=")  // Let's Encrypt YE2 intermediate
     .build()
+
+// Feedback ("Report a bug" / "Suggest a feature") posts to Tobiso.Web, a separate backend from the club GraphQL API.
+private const val FEEDBACK_BASE_URL = "https://www.tobiso.com/api"
 
 suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String = "1") {
     val storage = TokenStorage(context)
@@ -84,6 +88,7 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
     val offlineSyncManager = OfflineSyncManager(eventSvc, announcementSvc, peopleSvc, offlineDataStorage, networkMonitor, userSvc, notificationSvc, clubSvc, paymentSvc, competitionSvc)
     val campScheduleSvc = CampScheduleService(offlineDataStorage)
     val campScheduleReminderSvc = CampScheduleReminderService(offlineDataStorage, notificationScheduler, campScheduleSvc, notificationStorage)
+    val feedbackSvc = FeedbackService(client, FEEDBACK_BASE_URL, platformLabel = "TKOlympApp Android")
 
     val container = AppContainer(
         tokenStorage = storage,
@@ -112,6 +117,7 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
         competitionService = competitionSvc,
         campScheduleService = campScheduleSvc,
         campScheduleReminderService = campScheduleReminderSvc,
+        feedbackService = feedbackSvc,
     )
 
     ServiceLocator.init(container)

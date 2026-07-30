@@ -26,6 +26,7 @@ import com.tkolymp.shared.network.NetworkMonitor
 import com.tkolymp.shared.sync.OfflineSyncManager
 import com.tkolymp.shared.personalevents.PersonalEventService
 import com.tkolymp.shared.competitions.ICompetitionService
+import com.tkolymp.shared.feedback.IFeedbackService
 
 /**
  * Holds all application-level service instances with explicit constructor injection.
@@ -59,4 +60,5 @@ class AppContainer(
     val competitionService: ICompetitionService,
     val campScheduleService: CampScheduleService,
     val campScheduleReminderService: CampScheduleReminderService,
+    val feedbackService: IFeedbackService,
 )

@@ -7,6 +7,7 @@ import com.tkolymp.shared.campschedule.CampScheduleReminderService
 import com.tkolymp.shared.campschedule.CampScheduleService
 import com.tkolymp.shared.club.ClubService
 import com.tkolymp.shared.competitions.CompetitionService
+import com.tkolymp.shared.feedback.FeedbackService
 import com.tkolymp.shared.html.HtmlFormatter
 import com.tkolymp.shared.json.AppJson
 import com.tkolymp.shared.network.GraphQlClientImpl
@@ -38,6 +39,9 @@ private val certPinner: CertificatePinner = CertificatePinner.Builder()
     .add("api.rozpisovnik.cz", "sha256/Q5SDlsyebwSuLU2EROPHxw0YP4+HhbPYfRZBMLFAqNo=")
     .add("api.rozpisovnik.cz", "sha256/s/tdAOmUzd8syaTuqfgGvFcn6DzA5Cmb+Vby1ST+U3Y=")
     .build()
+
+// Feedback ("Report a bug" / "Suggest a feature") posts to Tobiso.Web, a separate backend from the club GraphQL API.
+private const val FEEDBACK_BASE_URL = "https://www.tobiso.com/api"
 
 suspend fun initNetworking(baseUrl: String, tenantId: String = "1") {
     val storage = TokenStorage("")
@@ -80,6 +84,7 @@ suspend fun initNetworking(baseUrl: String, tenantId: String = "1") {
     )
     val campScheduleSvc = CampScheduleService(offlineDataStorage)
     val campScheduleReminderSvc = CampScheduleReminderService(offlineDataStorage, notificationScheduler, campScheduleSvc, notificationStorage)
+    val feedbackSvc = FeedbackService(client, FEEDBACK_BASE_URL, platformLabel = "TKOlympApp iOS")
 
     val container = AppContainer(
         tokenStorage = storage,
@@ -108,6 +113,7 @@ suspend fun initNetworking(baseUrl: String, tenantId: String = "1") {
         competitionService = competitionSvc,
         campScheduleService = campScheduleSvc,
         campScheduleReminderService = campScheduleReminderSvc,
+        feedbackService = feedbackSvc,
     )
 
     ServiceLocator.init(container)

@@ -21,9 +21,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.School
@@ -61,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.appearance.ThemeMode
+import com.tkolymp.shared.feedback.FeedbackType
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.tutorial.TutorialManager
 import com.tkolymp.shared.viewmodels.SettingsViewModel
@@ -86,6 +89,7 @@ fun SettingsScreen(
     val progressTotal = remember { mutableStateOf(0) }
 
     var itemsVisible by remember { mutableStateOf(false) }
+    var feedbackDialogType by remember { mutableStateOf<FeedbackType?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.load()
@@ -376,8 +380,71 @@ fun SettingsScreen(
                 }
             }
 
-            // About
+            // Feedback
             StaggeredItem(index = 6, visible = itemsVisible, baseDelayMs = 50) {
+                Column {
+                    SettingsSectionHeader(text = AppStrings.current.feedback.sectionTitle)
+                    Card(
+                        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 4.dp, bottomEnd = 4.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 2.dp)
+                            .clickable { feedbackDialogType = FeedbackType.BUG_REPORT }
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp)
+                        ) {
+                            SettingsIconBox(Icons.Filled.BugReport)
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text(
+                                text = AppStrings.current.feedback.reportBugLabel,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Icon(
+                                imageVector = Icons.Default.ChevronRight,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Card(
+                        shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 16.dp, bottomEnd = 16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 2.dp)
+                            .clickable { feedbackDialogType = FeedbackType.FEATURE_SUGGESTION }
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp)
+                        ) {
+                            SettingsIconBox(Icons.Filled.Lightbulb)
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text(
+                                text = AppStrings.current.feedback.suggestFeatureLabel,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Icon(
+                                imageVector = Icons.Default.ChevronRight,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+
+            // About
+            StaggeredItem(index = 7, visible = itemsVisible, baseDelayMs = 50) {
                 Column {
                     SettingsSectionHeader(text = AppStrings.current.otherScreen.appSection)
                     Card(
@@ -428,6 +495,10 @@ fun SettingsScreen(
                     }
                 }
             )
+        }
+
+        feedbackDialogType?.let { type ->
+            FeedbackDialog(type = type, onDismiss = { feedbackDialogType = null })
         }
     }
 }
