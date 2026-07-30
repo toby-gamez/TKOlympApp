@@ -3,20 +3,16 @@ package com.tkolymp.tkolympapp.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -44,6 +40,7 @@ import com.tkolymp.shared.viewmodels.BadgeUiState
 import com.tkolymp.shared.viewmodels.DiplomaUiState
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.DiplomaDialog
+import com.tkolymp.tkolympapp.components.DiplomaThumbnail
 import com.tkolymp.tkolympapp.components.badgeGridSections
 import kotlinx.coroutines.launch
 
@@ -81,7 +78,8 @@ fun AchievementsScreen(onBack: () -> Unit = {}) {
                 columns = GridCells.Fixed(3),
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     Text(
@@ -117,9 +115,8 @@ fun AchievementsScreen(onBack: () -> Unit = {}) {
                     items(
                         items = state.diplomas,
                         key = { it.camp.eventId },
-                        span = { GridItemSpan(maxLineSpan) }
                     ) { diploma ->
-                        DiplomaListRow(diploma = diploma, onClick = { selectedDiploma = diploma })
+                        DiplomaThumbnail(diploma = diploma, onClick = { selectedDiploma = diploma })
                     }
                 }
             }
@@ -131,29 +128,6 @@ fun AchievementsScreen(onBack: () -> Unit = {}) {
     }
     selectedDiploma?.let { diploma ->
         DiplomaDialog(diploma = diploma, onDismiss = { selectedDiploma = null })
-    }
-}
-
-@Composable
-private fun DiplomaListRow(diploma: DiplomaUiState, onClick: () -> Unit) {
-    val langCode = AppStrings.currentLanguage.code
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(diploma.camp.name ?: "", style = MaterialTheme.typography.bodyLarge)
-            Text(
-                text = formatMonthDay(diploma.camp.startDate, langCode, true),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        IconButton(onClick = onClick) {
-            Icon(Icons.Default.ChevronRight, contentDescription = null)
-        }
     }
 }
 

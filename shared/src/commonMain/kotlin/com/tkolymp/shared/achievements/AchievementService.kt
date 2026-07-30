@@ -26,11 +26,10 @@ import kotlinx.datetime.todayIn
 /**
  * Fetches and derives the raw signals [AchievementEngine] evaluates badges against.
  *
- * Camp history and attendance are cheap single queries (camps are infrequent, and
- * attendance is one query for the whole person), so they cover the user's full
- * lifetime. Regular lesson streak/volume would require an unbounded historical scan
- * to do the same, so it's bounded to the last few seasons — the same trade-off
- * [com.tkolymp.shared.viewmodels.StatsViewModel.loadComparison] already makes.
+ * Camp history covers the user's full lifetime (camps are infrequent, so a single wide
+ * date-range query is cheap). Regular lesson streak/volume is bounded to
+ * [LESSON_HISTORY_SEASONS] seasons rather than truly unbounded, but wide enough to cover
+ * long-standing members.
  */
 class AchievementService(
     private val eventService: IEventService = ServiceLocator.eventService,
@@ -39,6 +38,10 @@ class AchievementService(
     private val attendanceRepository: AttendanceRepository = AttendanceRepository(),
     private val storage: AchievementStorage = AchievementStorage(),
 ) {
+    companion object {
+        private const val LESSON_HISTORY_SEASONS = 15
+    }
+
     suspend fun loadContext(): AchievementContext {
         val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
         val personId = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
@@ -98,7 +101,7 @@ class AchievementService(
 
         val recentSeasonInstances = try {
             coroutineScope {
-                SeasonSelection.recent(4, today).map { season ->
+                SeasonSelection.recent(LESSON_HISTORY_SEASONS, today).map { season ->
                     async(Dispatchers.Default) {
                         try {
                             eventService.fetchEventsGroupedByDay(
@@ -114,8 +117,11 @@ class AchievementService(
             }
         } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
 
+        // Mirrors StatsViewModel's totalSessions: count every scheduled, non-cancelled lesson
+        // regardless of attendance-marking, since trainers rarely mark individual lessons ATTENDED
+        // (attendance is really only tracked for camps) — requiring it left this permanently at 0.
         val attendedLessonDates = recentSeasonInstances
-            .filter { !it.isCancelled && attendance[it.id] == "ATTENDED" }
+            .filter { !it.isCancelled }
             .mapNotNull { it.since?.take(10) }
             .mapNotNull { runCatching { LocalDate.parse(it) }.getOrNull() }
         Logger.d(
@@ -152,34 +158,71 @@ data class AchievementUpdateResult(
     val newlyEarnedIds: Set<String>,
 )
 
+private data class CampDay(val instance: EventInstance, val start: LocalDate, val end: LocalDate)
+
+/**
+ * Groups flat per-day camp instances into multi-day "occurrences" (one soustředění = several
+ * consecutive days). [EventInstance.event] is synthesized per-day by the API client with
+ * `event.id == instance.id` (there's no real parent/series id in `eventInstancesForRangeList`),
+ * so grouping by `event.id` would put every single day in its own group. Instead, consecutive
+ * (gap <= 1 day) same-name instances are clustered together, each contributing its own
+ * since..until span so a single instance that already spans several days (or several single-day
+ * instances back to back) both produce the correct overall start/end date.
+ */
 private fun buildCampOccurrences(
     instances: List<EventInstance>,
     attendance: Map<Long, String>,
     today: LocalDate,
-): List<CampOccurrence> = instances
-    .filter { !it.isCancelled }
-    .groupBy { it.event?.id }
-    .mapNotNull { (eventId, dayInstances) ->
-        if (eventId == null) return@mapNotNull null
-        val start = dayInstances.mapNotNull { it.since?.take(10) }
-            .mapNotNull { runCatching { LocalDate.parse(it) }.getOrNull() }
-            .minOrNull() ?: return@mapNotNull null
-        val end = dayInstances.mapNotNull { it.until?.take(10) }
-            .mapNotNull { runCatching { LocalDate.parse(it) }.getOrNull() }
-            .maxOrNull() ?: start
+): List<CampOccurrence> {
+    val days = instances
+        .filter { !it.isCancelled }
+        .mapNotNull { inst ->
+            val start = inst.since?.take(10)
+                ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+                ?: return@mapNotNull null
+            val end = inst.until?.take(10)
+                ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+                ?: start
+            CampDay(inst, start, end)
+        }
+
+    val clusters = days
+        .groupBy { it.instance.event?.name }
+        .values
+        .flatMap { sameName ->
+            val sorted = sameName.sortedBy { it.start }
+            val result = mutableListOf<MutableList<CampDay>>()
+            for (day in sorted) {
+                val current = result.lastOrNull()
+                if (current != null && day.start.toEpochDays() - current.last().end.toEpochDays() <= 1) {
+                    current += day
+                } else {
+                    result += mutableListOf(day)
+                }
+            }
+            result
+        }
+
+    return clusters.mapNotNull { cluster ->
+        val eventId = cluster.first().instance.event?.id ?: return@mapNotNull null
+        val start = cluster.minOf { it.start }
+        val end = cluster.maxOf { it.end }
         if (end >= today) return@mapNotNull null
-        val statuses = dayInstances.map { attendance[it.id] }
-        if (statuses.none { it == "ATTENDED" }) return@mapNotNull null
+        // `instances` is already fetched with onlyMine=true, so being registered/scheduled for a
+        // past camp is treated as completion — eventAttendancesList is empty for many clubs (never
+        // populated by the backend), so requiring an explicit ATTENDED status here left this at 0
+        // for everyone, same root cause as the lessons badge.
+        val statuses = cluster.map { attendance[it.instance.id] }
         CampOccurrence(
             eventId = eventId,
-            name = dayInstances.firstOrNull()?.event?.name,
+            name = cluster.first().instance.event?.name,
             startDate = start,
             endDate = end,
             seasonStartYear = if (start.month.number >= 9) start.year else start.year - 1,
             attendedAllDays = statuses.all { it == "ATTENDED" },
         )
-    }
-    .sortedBy { it.startDate }
+    }.sortedBy { it.startDate }
+}
 
 private fun longestWeeklyStreak(dates: List<LocalDate>): Int {
     if (dates.isEmpty()) return 0

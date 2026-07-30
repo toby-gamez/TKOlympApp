@@ -2,18 +2,25 @@ package com.tkolymp.tkolympapp.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -27,11 +34,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -138,8 +148,9 @@ private fun DiplomaCardContent(diploma: DiplomaUiState, modifier: Modifier = Mod
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
             .background(bg)
-            .border(2.dp, accent, RoundedCornerShape(4.dp))
+            .border(2.dp, accent, RoundedCornerShape(24.dp))
             .padding(32.dp)
     ) {
         Column(
@@ -174,9 +185,66 @@ private fun DiplomaCardContent(diploma: DiplomaUiState, modifier: Modifier = Mod
             )
             Spacer(Modifier.height(12.dp))
             Text(
-                text = "${formatMonthDay(diploma.camp.startDate, langCode, true)} – ${formatMonthDay(diploma.camp.endDate, langCode, true)}",
+                text = diploma.camp.let { camp ->
+                    if (camp.startDate == camp.endDate) {
+                        formatMonthDay(camp.startDate, langCode, true)
+                    } else {
+                        "${formatMonthDay(camp.startDate, langCode, true)} – ${formatMonthDay(camp.endDate, langCode, true)}"
+                    }
+                },
                 fontSize = 14.sp,
                 color = onBg.copy(alpha = 0.65f)
+            )
+        }
+    }
+}
+
+/** Square Instagram-style grid preview of a diploma; tap to open the full [DiplomaDialog]. */
+@Composable
+fun DiplomaThumbnail(diploma: DiplomaUiState, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
+    val langCode = AppStrings.currentLanguage.code
+
+    Card(
+        onClick = onClick,
+        modifier = modifier
+            .aspectRatio(1f)
+            .semantics { contentDescription = diploma.camp.name ?: "" },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp)
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer)
+            ) {
+                Text("🏕️", fontSize = 18.sp)
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = diploma.camp.name ?: "",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = formatMonthDay(diploma.camp.startDate, langCode, true),
+                fontSize = 10.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
+                textAlign = TextAlign.Center,
+                maxLines = 1,
             )
         }
     }
@@ -207,5 +275,25 @@ private fun DiplomaCardPreviewLight() {
 private fun DiplomaCardPreviewDark() {
     AppTheme(darkTheme = true) {
         DiplomaCardContent(previewDiploma())
+    }
+}
+
+@Preview(name = "DiplomaThumbnail — Light")
+@Composable
+private fun DiplomaThumbnailPreviewLight() {
+    AppTheme(darkTheme = false) {
+        Row {
+            DiplomaThumbnail(previewDiploma(), modifier = Modifier.width(110.dp))
+        }
+    }
+}
+
+@Preview(name = "DiplomaThumbnail — Dark")
+@Composable
+private fun DiplomaThumbnailPreviewDark() {
+    AppTheme(darkTheme = true) {
+        Row {
+            DiplomaThumbnail(previewDiploma(), modifier = Modifier.width(110.dp))
+        }
     }
 }
