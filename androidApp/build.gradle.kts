@@ -7,6 +7,7 @@ val localProps = Properties().apply {
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.googleServices)
+    alias(libs.plugins.firebaseCrashlytics)
 }
 
 android {
@@ -30,6 +31,20 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    val releaseKeystorePath = localProps.getProperty("release.keystore.path")
+    signingConfigs {
+        create("release") {
+            if (releaseKeystorePath != null) {
+                storeFile = rootProject.file(releaseKeystorePath)
+                storePassword = localProps.getProperty("release.keystore.password")
+                    ?: error("release.keystore.password missing in local.properties")
+                keyAlias = localProps.getProperty("release.key.alias")
+                    ?: error("release.key.alias missing in local.properties")
+                keyPassword = localProps.getProperty("release.key.password")
+                    ?: error("release.key.password missing in local.properties")
+            }
+        }
+    }
     buildTypes {
         getByName("release") {
             isMinifyEnabled = true
@@ -38,6 +53,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            if (releaseKeystorePath != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     compileOptions {

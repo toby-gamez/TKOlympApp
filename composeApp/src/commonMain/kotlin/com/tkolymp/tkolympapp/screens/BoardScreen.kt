@@ -52,7 +52,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import kotlinx.coroutines.delay
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import com.tkolymp.shared.tutorial.TutorialManager
@@ -90,7 +89,10 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
     LaunchedEffect(tutorialStep, tutorialActive) {
         if (!tutorialActive || tutorialStep !in 9..10) return@LaunchedEffect
         localSelectedTab = if (tutorialStep == 10) 1 else 0
-        delay(100)
+    }
+
+    LaunchedEffect(tutorialStep, tutorialActive, contentBounds) {
+        if (!tutorialActive || tutorialStep !in 9..10) return@LaunchedEffect
         contentBounds?.let { TutorialHighlight.rect = it }
     }
 

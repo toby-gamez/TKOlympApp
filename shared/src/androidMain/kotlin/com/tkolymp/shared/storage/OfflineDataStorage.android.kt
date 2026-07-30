@@ -2,26 +2,43 @@ package com.tkolymp.shared.storage
 
 import android.content.Context
 import android.util.Log
-import kotlinx.coroutines.Dispatchers
+import eu.anifantakis.lib.ksafe.KSafe
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
-import java.io.File
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.Json
 import java.security.MessageDigest
-import java.util.concurrent.ConcurrentHashMap
 
-class OfflineDataStorageAndroid(private val context: Context) : OfflineDataStorage {
+class OfflineDataStorageAndroid(context: Context) : OfflineDataStorage {
     companion object {
         private const val TAG = "OfflineDataStorage"
-        private val mutexes = ConcurrentHashMap<String, Mutex>()
-        private val dirMutex = Mutex()
-
-        private fun mutexFor(path: String): Mutex = mutexes.computeIfAbsent(path) { Mutex() }
+        private const val INDEX_KEY = "__offline_index__"
+        private val legacyHashFileName = Regex("^[0-9a-f]{64}$")
     }
 
-    private fun fileForKey(key: String): File {
-        val hash = sha256Hex(key)
-        return File(context.filesDir, hash)
+    private val ksafe = KSafe(context, fileName = "offlinestore")
+    private val indexMutex = Mutex()
+
+    init {
+        purgeLegacyPlaintextFiles(context)
+    }
+
+    // The previous implementation stored blobs as plaintext files named by sha256(key), plus a
+    // plaintext offline_index.tsv. Both leaked cached member/payment data on disk. This removes
+    // that residue so it doesn't sit there unencrypted forever after the switch to ksafe below.
+    private fun purgeLegacyPlaintextFiles(context: Context) {
+        try {
+            context.filesDir.listFiles()?.forEach { f ->
+                if (f.isFile && (legacyHashFileName.matches(f.name) ||
+                        f.name == "offline_index.tsv" || f.name == "offline_index.tsv.tmp")
+                ) {
+                    f.delete()
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "purgeLegacyPlaintextFiles failed", e)
+        }
     }
 
     private fun sha256Hex(s: String): String {
@@ -30,137 +47,76 @@ class OfflineDataStorageAndroid(private val context: Context) : OfflineDataStora
         return bytes.joinToString("") { "%02x".format(it) }
     }
 
-    private fun indexFile(): File = File(context.filesDir, "offline_index.tsv")
-
-    private fun readIndex(): MutableMap<String, String> {
-        val idx = mutableMapOf<String, String>()
-        val f = indexFile()
-        if (!f.exists()) return idx
-        try {
-            f.readLines().forEach { line ->
-                val parts = line.split('\t', limit = 2)
-                if (parts.size == 2) idx[parts[0]] = parts[1]
-            }
+    private suspend fun readIndex(): MutableMap<String, String> {
+        val raw = ksafe.get(INDEX_KEY, "")
+        if (raw.isEmpty()) return mutableMapOf()
+        return try {
+            Json.decodeFromString(MapSerializer(String.serializer(), String.serializer()), raw).toMutableMap()
         } catch (e: Exception) {
             Log.w(TAG, "readIndex failed", e)
+            mutableMapOf()
         }
-        return idx
     }
 
-    private fun writeIndex(map: Map<String, String>) {
-        val f = indexFile()
+    private suspend fun writeIndex(map: Map<String, String>) {
         try {
-            val tmp = File(f.parentFile, f.name + ".tmp")
-            tmp.writeText(map.entries.joinToString("\n") { "${it.key}\t${it.value}" })
-            if (!tmp.renameTo(f)) {
-                tmp.copyTo(f, overwrite = true)
-                tmp.delete()
-            }
+            ksafe.put(INDEX_KEY, Json.encodeToString(MapSerializer(String.serializer(), String.serializer()), map))
         } catch (e: Exception) {
             Log.w(TAG, "writeIndex failed", e)
         }
     }
 
     override suspend fun save(key: String, json: String) {
-        withContext(Dispatchers.IO) {
-            val f = fileForKey(key)
-            val m = mutexFor(f.absolutePath)
-
-            // Ensure directory-level ordering while writing
-            dirMutex.withLock {
-                m.withLock {
-                    try {
-                        f.parentFile?.mkdirs()
-                        val tmp = File(f.parentFile, f.name + ".tmp")
-                        tmp.writeText(json)
-
-                        val renamed = try {
-                            tmp.renameTo(f)
-                        } catch (e: Exception) {
-                            Log.w(TAG, "renameTo failed", e)
-                            false
-                        }
-
-                        if (!renamed) {
-                            try {
-                                tmp.copyTo(f, overwrite = true)
-                                tmp.delete()
-                            } catch (e: Exception) {
-                                Log.e(TAG, "failed to write file for key=$key", e)
-                                throw e
-                            }
-                        }
-                        // update index mapping (hash -> original key)
-                        try {
-                            val idx = readIndex()
-                            idx[f.name] = key
-                            writeIndex(idx)
-                        } catch (e: Exception) {
-                            Log.w(TAG, "failed to update index for key=$key", e)
-                        }
-                    } catch (e: Exception) {
-                        Log.e(TAG, "save failed for key=$key", e)
-                        throw e
-                    }
-                }
-            }
+        val hash = sha256Hex(key)
+        try {
+            ksafe.put(hash, json)
+        } catch (e: Exception) {
+            Log.e(TAG, "save failed for key=$key", e)
+            throw e
+        }
+        indexMutex.withLock {
+            val idx = readIndex()
+            idx[hash] = key
+            writeIndex(idx)
         }
     }
 
     override suspend fun load(key: String): String? {
-        return withContext(Dispatchers.IO) {
-            val f = fileForKey(key)
-            val m = mutexFor(f.absolutePath)
-
-            m.withLock {
-                if (!f.exists()) return@withContext null
-                try {
-                    f.readText()
-                } catch (e: Exception) {
-                    Log.w(TAG, "load failed for key=$key", e)
-                    null
-                }
-            }
+        val hash = sha256Hex(key)
+        return try {
+            ksafe.get(hash, "").takeIf { it.isNotEmpty() }
+        } catch (e: Exception) {
+            Log.w(TAG, "load failed for key=$key", e)
+            null
         }
     }
 
     override suspend fun deleteByPrefix(prefix: String) {
-        withContext(Dispatchers.IO) {
-            dirMutex.withLock {
-                try {
-                    val idx = readIndex()
-                    val toRemove = idx.filterValues { it.startsWith(prefix) }.keys.toList()
-                    toRemove.forEach { hash ->
-                        val f = File(context.filesDir, hash)
-                        val m = mutexFor(f.absolutePath)
-                        try {
-                            m.withLock {
-                                if (f.exists()) {
-                                    if (!f.delete()) Log.w(TAG, "failed to delete ${f.absolutePath}")
-                                }
-                                idx.remove(hash)
-                            }
-                        } catch (e: Exception) {
-                            Log.w(TAG, "deleteByPrefix lock failed for $hash", e)
-                        }
+        indexMutex.withLock {
+            try {
+                val idx = readIndex()
+                val toRemove = idx.filterValues { it.startsWith(prefix) }.keys.toList()
+                toRemove.forEach { hash ->
+                    try {
+                        ksafe.delete(hash)
+                    } catch (e: Exception) {
+                        Log.w(TAG, "deleteByPrefix failed for hash=$hash", e)
                     }
-                    writeIndex(idx)
-                } catch (e: Exception) {
-                    Log.w(TAG, "deleteByPrefix failed", e)
+                    idx.remove(hash)
                 }
+                writeIndex(idx)
+            } catch (e: Exception) {
+                Log.w(TAG, "deleteByPrefix failed", e)
             }
         }
     }
 
     override suspend fun allKeys(): Set<String> {
-        return withContext(Dispatchers.IO) {
-            try {
-                val idx = readIndex()
-                idx.values.toSet()
-            } catch (e: Exception) {
-                Log.w(TAG, "allKeys failed", e)
-                emptySet()
-            }
+        return try {
+            readIndex().values.toSet()
+        } catch (e: Exception) {
+            Log.w(TAG, "allKeys failed", e)
+            emptySet()
         }
     }
 }

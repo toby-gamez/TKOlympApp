@@ -26,6 +26,7 @@ import com.tkolymp.shared.language.TutorialStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
+import com.tkolymp.shared.language.PrivacyConsentStrings
 import com.tkolymp.shared.language.ProfileStrings
 import com.tkolymp.shared.language.RegistrationStrings
 import com.tkolymp.shared.language.SettingsStrings
@@ -707,5 +708,12 @@ val StringsUa = Strings(
         lessons100Desc = "Ви відвідали 100 занять.",
         lessons250Title = "250 занять",
         lessons250Desc = "Ви відвідали 250 занять.",
+    ),
+    privacyConsent = PrivacyConsentStrings(
+        title = "Ваша конфіденційність",
+        body = "Перш ніж продовжити, будь ласка, ознайомтеся з нашою Політикою конфіденційності. Вона пояснює, які дані про членів клубу ми збираємо (наприклад, ім'я, контактні дані та статус платежів) і як ми їх використовуємо.",
+        readPolicyLinkLabel = "Переглянути Політику конфіденційності",
+        checkboxLabel = "Я прочитав(ла) та приймаю Політику конфіденційності",
+        continueButton = "Продовжити",
     ),
 )

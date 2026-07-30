@@ -26,6 +26,7 @@ import com.tkolymp.shared.language.TutorialStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
+import com.tkolymp.shared.language.PrivacyConsentStrings
 import com.tkolymp.shared.language.ProfileStrings
 import com.tkolymp.shared.language.RegistrationStrings
 import com.tkolymp.shared.language.SettingsStrings
@@ -708,5 +709,12 @@ val StringsBrainrot = Strings(
         lessons100Desc = "100 sessions deep, mega grindset.",
         lessons250Title = "250 Sessions Cooked",
         lessons250Desc = "250 sessions, you ARE the grindset fr fr.",
+    ),
+    privacyConsent = PrivacyConsentStrings(
+        title = "Privacy check, no cap",
+        body = "Before you keep vibing, peep our Privacy Policy real quick. It's the tea on what club-member data we collect (name, contact info, payment status, the usual) and what we do with it.",
+        readPolicyLinkLabel = "Read the Privacy Policy fr",
+        checkboxLabel = "I read it and I'm cool with the Privacy Policy, no cap",
+        continueButton = "Let's go fr",
     ),
 )

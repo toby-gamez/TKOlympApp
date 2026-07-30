@@ -7,4 +7,6 @@ expect class OnboardingStorage(platformContext: Any) {
     suspend fun getUserRole(): com.tkolymp.shared.models.UserRole?
     suspend fun hasSeenTutorial(): Boolean
     suspend fun setTutorialSeen()
+    suspend fun hasAcceptedPrivacyConsent(): Boolean
+    suspend fun setPrivacyConsentAccepted()
 }

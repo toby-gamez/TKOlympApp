@@ -35,4 +35,12 @@ actual class OnboardingStorage actual constructor(platformContext: Any) {
         defaults.setBool(true, "tutorial_seen")
         defaults.synchronize()
     }
+
+    actual suspend fun hasAcceptedPrivacyConsent(): Boolean =
+        defaults.boolForKey("privacy_consent_accepted")
+
+    actual suspend fun setPrivacyConsentAccepted() {
+        defaults.setBool(true, "privacy_consent_accepted")
+        defaults.synchronize()
+    }
 }

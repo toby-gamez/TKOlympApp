@@ -36,4 +36,11 @@ class OnboardingViewModel(
 
     suspend fun getUserRole(): UserRole? =
         onboardingStorage.getUserRole()
+
+    suspend fun hasAcceptedPrivacyConsent(): Boolean =
+        onboardingStorage.hasAcceptedPrivacyConsent()
+
+    suspend fun acceptPrivacyConsent() {
+        onboardingStorage.setPrivacyConsentAccepted()
+    }
 }

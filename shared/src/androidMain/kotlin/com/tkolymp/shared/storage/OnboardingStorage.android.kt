@@ -33,4 +33,11 @@ actual class OnboardingStorage actual constructor(platformContext: Any) {
     actual suspend fun setTutorialSeen() {
         prefs.edit().putBoolean("tutorial_seen", true).apply()
     }
+
+    actual suspend fun hasAcceptedPrivacyConsent(): Boolean =
+        prefs.getBoolean("privacy_consent_accepted", false)
+
+    actual suspend fun setPrivacyConsentAccepted() {
+        prefs.edit().putBoolean("privacy_consent_accepted", true).apply()
+    }
 }

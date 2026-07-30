@@ -45,6 +45,7 @@ kotlin {
             implementation(bomFirebase)
             implementation(libs.firebase.messaging)
             implementation(libs.firebase.analytics)
+            implementation(libs.firebase.crashlytics)
             implementation(libs.compose.uiToolingPreview)
             implementation(bomCompose)
             implementation(libs.kotlinx.serialization.json)

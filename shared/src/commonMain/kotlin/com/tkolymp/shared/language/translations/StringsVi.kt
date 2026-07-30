@@ -26,6 +26,7 @@ import com.tkolymp.shared.language.TutorialStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
+import com.tkolymp.shared.language.PrivacyConsentStrings
 import com.tkolymp.shared.language.ProfileStrings
 import com.tkolymp.shared.language.RegistrationStrings
 import com.tkolymp.shared.language.SettingsStrings
@@ -707,5 +708,12 @@ val StringsVi = Strings(
         lessons100Desc = "Bạn đã tham gia 100 buổi tập.",
         lessons250Title = "250 buổi tập",
         lessons250Desc = "Bạn đã tham gia 250 buổi tập.",
+    ),
+    privacyConsent = PrivacyConsentStrings(
+        title = "Quyền riêng tư của bạn",
+        body = "Trước khi tiếp tục, vui lòng đọc Chính sách quyền riêng tư của chúng tôi. Chính sách giải thích những dữ liệu chúng tôi thu thập về thành viên câu lạc bộ (như tên, thông tin liên hệ và tình trạng thanh toán) và cách chúng được sử dụng.",
+        readPolicyLinkLabel = "Đọc Chính sách quyền riêng tư",
+        checkboxLabel = "Tôi đã đọc và đồng ý với Chính sách quyền riêng tư",
+        continueButton = "Tiếp tục",
     ),
 )

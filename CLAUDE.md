@@ -41,6 +41,15 @@ tenant.id=<club-tenant-id>
 ```
 These are injected as `BuildConfig.API_BASE_URL` and `BuildConfig.TENANT_ID` at compile time.
 
+To produce a signed `:androidApp:assembleRelease`/`bundleRelease` artifact, also add:
+```
+release.keystore.path=/absolute/path/to/upload-keystore.jks
+release.keystore.password=<keystore password>
+release.key.alias=<key alias>
+release.key.password=<key password>
+```
+Without these, release builds still compile (minified/shrunk) but are unsigned. Never commit the `.jks` file itself (`*.jks`/`*.keystore` are git-ignored).
+
 ## Architecture
 
 Four Gradle modules. `androidApp` is the installable Android application shell (applicationId, version, signing, `BuildConfig` fields); `appRes` holds shared Android resources (icons, strings XML, manifest bits) consumed by `androidApp`; `composeApp` and `shared` are KMM library modules also built for iOS and consumed by `iosApp`'s Xcode project.

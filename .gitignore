@@ -54,3 +54,5 @@ REPO_REVIEW.md
 **/build/
 docs/compose-guidelines.md
 androidApp/release/*
+*.jks
+*.keystore

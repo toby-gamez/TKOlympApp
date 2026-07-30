@@ -26,6 +26,7 @@ import com.tkolymp.shared.language.TutorialStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
+import com.tkolymp.shared.language.PrivacyConsentStrings
 import com.tkolymp.shared.language.ProfileStrings
 import com.tkolymp.shared.language.RegistrationStrings
 import com.tkolymp.shared.language.SettingsStrings
@@ -751,5 +752,12 @@ val StringsCs = Strings(
         lessons100Desc = "Absolvoval/a jsi 100 lekcí.",
         lessons250Title = "250 lekcí",
         lessons250Desc = "Absolvoval/a jsi 250 lekcí.",
+    ),
+    privacyConsent = PrivacyConsentStrings(
+        title = "Vaše soukromí",
+        body = "Než budeš pokračovat, přečti si prosím naše Zásady ochrany osobních údajů. Vysvětlují, jaké údaje o členech klubu shromažďujeme (např. jméno, kontaktní údaje a stav plateb) a jak je používáme.",
+        readPolicyLinkLabel = "Přečíst Zásady ochrany osobních údajů",
+        checkboxLabel = "Přečetl/a jsem si a souhlasím se Zásadami ochrany osobních údajů",
+        continueButton = "Pokračovat",
     ),
 )

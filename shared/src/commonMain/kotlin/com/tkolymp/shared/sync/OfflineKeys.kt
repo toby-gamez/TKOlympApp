@@ -38,8 +38,10 @@ object OfflineKeys {
      * Bump this whenever the shape of any offline blob changes in a breaking way.
      * OfflineSyncManager.migrateIfNeeded() wipes all "offline_*" keys and re-saves the new
      * version so stale blobs are never deserialized with the wrong structure.
+     *
+     * v2: OfflineDataStorageAndroid switched from plaintext files to ksafe-encrypted storage.
      */
-    const val SCHEMA_VERSION = 1
+    const val SCHEMA_VERSION = 2
     const val META_SCHEMA_VERSION = "offline_meta_schema_version"
 
     const val DISMISSED_CANCELLED = "dismissed_cancelled_replacements"

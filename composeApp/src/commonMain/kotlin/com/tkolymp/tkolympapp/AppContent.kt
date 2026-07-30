@@ -78,6 +78,7 @@ import com.tkolymp.tkolympapp.screens.PeopleScreen
 import com.tkolymp.tkolympapp.screens.PersonScreen
 import com.tkolymp.tkolympapp.screens.PersonalEventEditScreen
 import com.tkolymp.tkolympapp.screens.PersonalEventsScreen
+import com.tkolymp.tkolympapp.screens.PrivacyConsentScreen
 import com.tkolymp.tkolympapp.screens.ProfileScreen
 import com.tkolymp.tkolympapp.screens.RoleSelectionScreen
 import com.tkolymp.tkolympapp.screens.SettingsScreen
@@ -113,6 +114,7 @@ fun AppContent(
 
         var loggedIn by remember { mutableStateOf<Boolean?>(null) }
         var showOnboarding by remember { mutableStateOf<Boolean?>(null) }
+        var consentGiven by remember { mutableStateOf<Boolean?>(null) }
         var showRoleSelection by remember { mutableStateOf(false) }
         var tutorialSeen by remember { mutableStateOf(false) }
         val preferTimeline by AppearanceSettings.preferTimeline.collectAsStateWithLifecycle()
@@ -152,6 +154,7 @@ fun AppContent(
                 val themeRaw = try { ServiceLocator.calendarPreferenceStorage.getThemeMode() } catch (_: Exception) { "system" }
                 AppearanceSettings.setThemeMode(when (themeRaw) { "light" -> ThemeMode.LIGHT; "dark" -> ThemeMode.DARK; else -> ThemeMode.SYSTEM })
                 tutorialSeen = try { ServiceLocator.onboardingStorage.hasSeenTutorial() } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
+                consentGiven = try { onboardingVm?.hasAcceptedPrivacyConsent() ?: false } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
                 showOnboarding = !seen
                 loggedIn = has
                 try {
@@ -167,6 +170,7 @@ fun AppContent(
                 // returning (possibly still-logged-in) user or a genuinely new install.
                 loggedIn = false
                 showOnboarding = false
+                consentGiven = false
             }
         }
 
@@ -175,6 +179,7 @@ fun AppContent(
                 onDispose { com.tkolymp.shared.tutorial.TutorialManager.skip() }
             }
             val scope = rememberCoroutineScope()
+            val uriHandler = LocalUriHandler.current
             val navController = rememberNavController()
             val currentBackStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = currentBackStackEntry?.destination?.route
@@ -192,6 +197,19 @@ fun AppContent(
                             popUpTo(navController.graph.findStartDestination().id) { saveState = false }
                             launchSingleTop = true
                             restoreState = false
+                        }
+                    }
+                } else {
+                    // The tutorial's forced navigation always pops with saveState=false and
+                    // can leave the back stack sitting on a non-start destination (e.g. "other"),
+                    // which desyncs the bottom bar's saveState=true/restoreState=true bottom-nav
+                    // pattern for the start destination the first time it's used afterwards.
+                    // Force a clean return to "overview" so that pattern starts from a known state.
+                    val route = navController.currentBackStackEntry?.destination?.route
+                    if (route != null && route != "overview") {
+                        navController.navigate("overview") {
+                            popUpTo(navController.graph.findStartDestination().id) { inclusive = true; saveState = false }
+                            launchSingleTop = true
                         }
                     }
                 }
@@ -218,18 +236,10 @@ fun AppContent(
                         ) {
                             AppBottomBar(current = currentRoute ?: "overview", boardHasUnread = boardHasUnread, onSelect = {
                                 val startId = navController.graph.findStartDestination().id
-                                if (it == "overview") {
-                                    navController.navigate(it) {
-                                        popUpTo(startId) { saveState = true }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                } else {
-                                    navController.navigate(it) {
-                                        popUpTo(startId) { saveState = true }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
+                                navController.navigate(it) {
+                                    popUpTo(startId) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
                             })
                         }
@@ -246,7 +256,7 @@ fun AppContent(
                         ) {
                             when {
                                 integrityFailed -> IntegrityBlockedScreen()
-                                loggedIn == null || showOnboarding == null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                loggedIn == null || showOnboarding == null || consentGiven == null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                     CircularProgressIndicator()
                                 }
                                 // An already-authenticated user must never see onboarding,
@@ -255,6 +265,25 @@ fun AppContent(
                                     onFinish = {
                                         showOnboarding = false
                                         loggedIn = false
+                                    }
+                                )
+                                // Shown after onboarding (so a new install sees what the app is
+                                // about before a privacy wall) but still before login, so it also
+                                // catches already-logged-in users who never consented.
+                                consentGiven == false -> PrivacyConsentScreen(
+                                    onReadPolicyClick = {
+                                        val langCode = when (AppStrings.currentLanguage) {
+                                            AppLanguage.UA -> "uk"
+                                            AppLanguage.BRAINROT -> "en"
+                                            else -> AppStrings.currentLanguage.code
+                                        }
+                                        uriHandler.openUri("https://toby-gamez.github.io/tkolymp-docs.github.io/privacy/?lang=$langCode")
+                                    },
+                                    onAccept = {
+                                        scope.launch {
+                                            try { ServiceLocator.onboardingStorage.setPrivacyConsentAccepted() } catch (_: Exception) {}
+                                            consentGiven = true
+                                        }
                                     }
                                 )
                                 loggedIn == false -> LoginScreen(onSuccess = {

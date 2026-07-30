@@ -26,6 +26,7 @@ import com.tkolymp.shared.language.TutorialStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
+import com.tkolymp.shared.language.PrivacyConsentStrings
 import com.tkolymp.shared.language.ProfileStrings
 import com.tkolymp.shared.language.RegistrationStrings
 import com.tkolymp.shared.language.SettingsStrings
@@ -718,5 +719,12 @@ val StringsEn = Strings(
         lessons100Desc = "You attended 100 lessons.",
         lessons250Title = "250 lessons",
         lessons250Desc = "You attended 250 lessons.",
+    ),
+    privacyConsent = PrivacyConsentStrings(
+        title = "Your privacy",
+        body = "Before you continue, please read our Privacy Policy. It explains what data we collect about club members (such as name, contact details and payment status) and how it is used.",
+        readPolicyLinkLabel = "Read the Privacy Policy",
+        checkboxLabel = "I have read and accept the Privacy Policy",
+        continueButton = "Continue",
     ),
 )

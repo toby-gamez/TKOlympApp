@@ -58,7 +58,9 @@ class AnnouncementServiceImpl(
                         null
                     }
                 }
-                try { cache.put(cacheKey, result, ttl = 2.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+                if (result.isNotEmpty()) {
+                    try { cache.put(cacheKey, result, ttl = 2.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+                }
                 return DataResult.Success(result)
             }
             DataResult.Success(emptyList())
