@@ -113,6 +113,7 @@ class CompetitionService(
             val resp = client.post(timelineQuery, vars)
             Logger.d("CompetitionService", "activityTimelineList (brief) raw response: $resp")
             parseList(resp.jsonObject["data"]?.jsonObject?.get("activityTimelineList"))
+                .distinctBy { dedupeKey(it) }
                 .sortedBy { it.competitionDate }
         } catch (e: CancellationException) { throw e } catch (_: Exception) {
             offlineSyncManager?.loadCompetitions()?.let { offline ->
@@ -149,6 +150,7 @@ class CompetitionService(
         val resp = client.post(timelineQuery, vars)
         Logger.d("CompetitionService", "activityTimelineList (result) raw response: $resp")
         val list = parseList(resp.jsonObject["data"]?.jsonObject?.get("activityTimelineList"))
+            .distinctBy { dedupeKey(it) }
             .sortedByDescending { it.competitionDate }
         try { cache.put(cacheKey, list, ttl = 10.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         return list
@@ -163,6 +165,19 @@ class CompetitionService(
             null
         }
     }
+
+    // `activityTimelineList` emits one row per person, so a couple/team result comes back
+    // once per partner with identical competitionId/category/points/ranking. A dancer can
+    // only compete in one category per competition entry, so this key collapses those
+    // partner-duplicate rows back into a single entry.
+    private fun dedupeKey(c: Competition): List<Any?> = listOf(
+        c.competitionId,
+        c.competitorName ?: c.personName,
+        c.category?.id,
+        c.pointGain,
+        c.ranking,
+        c.competitionDate
+    )
 
     private fun parseList(element: JsonElement?): List<Competition> {
         val arr = element as? JsonArray ?: return emptyList()
