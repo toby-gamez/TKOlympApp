@@ -7,6 +7,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.Serializable
 import com.tkolymp.shared.Logger
 
@@ -54,6 +55,8 @@ class FeedbackService(
                 Logger.e("FeedbackService", "submit failed: HTTP ${response.status.value} body=$body")
                 Result.failure(Exception("HTTP ${response.status.value}"))
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Logger.e("FeedbackService", "submit failed", e)
             Result.failure(e)

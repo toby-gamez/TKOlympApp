@@ -81,7 +81,7 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
     suspend fun fetchAndStorePersonDetails(personId: String): JsonObject? {
         // Try sending id as numeric BigInt when possible (server expects BigInt)
         val idLong = personId.toLongOrNull()
-        val baseSelection = "person(id: \$id) { id birthDate lastName firstName email phone prefixTitle suffixTitle wdsfId cstsId gender isTrainer nationality nationalIdNumber instagramUsername tiktokUsername facebookUrl websiteUrl note address { city conscriptionNumber district orientationNumber postalCode region street } activeCouplesList { id man { firstName lastName } woman { firstName lastName } } cohortMembershipsList { cohort { id colorRgb name isVisible } since until } cstsProgressList { points finals competitorName category { id name series discipline ageGroup genderGroup class competitorType baseDanceProgramId } } }"
+        val baseSelection = "person(id: \$id) { id birthDate lastName firstName email phone prefixTitle suffixTitle wdsfId cstsId gender isTrainer nationality nationalIdNumber instagramUsername tiktokUsername facebookUrl websiteUrl note address { city conscriptionNumber district orientationNumber postalCode region street } activeCouplesList { id man { firstName lastName } woman { firstName lastName } } allCouplesList { id manId womanId since until status } cohortMembershipsList { cohort { id colorRgb name isVisible } since until } cstsProgressList { points finals competitorName category { id name series discipline ageGroup genderGroup class competitorType baseDanceProgramId } } }"
 
         var query: String
         var variables: JsonObject
@@ -132,6 +132,17 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
             val womanObj = cObj["woman"] as? JsonObject
             ActiveCouple(cid, CoupleMember(manObj?.get("firstName")?.jsonPrimitive?.contentOrNull, manObj?.get("lastName")?.jsonPrimitive?.contentOrNull), CoupleMember(womanObj?.get("firstName")?.jsonPrimitive?.contentOrNull, womanObj?.get("lastName")?.jsonPrimitive?.contentOrNull))
         } ?: emptyList()
+        val allCouplesArr = (p["allCouplesList"] as? JsonArray)?.mapNotNull { cEl ->
+            val cObj = cEl as? JsonObject ?: return@mapNotNull null
+            com.tkolymp.shared.people.CouplePeriod(
+                id = cObj["id"]?.jsonPrimitive?.contentOrNull,
+                manId = cObj["manId"]?.jsonPrimitive?.contentOrNull,
+                womanId = cObj["womanId"]?.jsonPrimitive?.contentOrNull,
+                since = cObj["since"]?.jsonPrimitive?.contentOrNull,
+                until = cObj["until"]?.jsonPrimitive?.contentOrNull,
+                status = cObj["status"]?.jsonPrimitive?.contentOrNull
+            )
+        } ?: emptyList()
         val memberships = (p["cohortMembershipsList"] as? JsonArray)?.mapNotNull { mEl ->
             val mObj = mEl as? JsonObject ?: return@mapNotNull null
             val cohortObj = mObj["cohort"] as? JsonObject
@@ -164,7 +175,7 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
                 category = cat
             )
         } ?: emptyList()
-        PersonDetails(id = id, firstName = p["firstName"]?.jsonPrimitive?.contentOrNull, lastName = p["lastName"]?.jsonPrimitive?.contentOrNull, prefixTitle = p["prefixTitle"]?.jsonPrimitive?.contentOrNull, suffixTitle = p["suffixTitle"]?.jsonPrimitive?.contentOrNull, birthDate = p["birthDate"]?.jsonPrimitive?.contentOrNull, cstsId = p["cstsId"]?.jsonPrimitive?.contentOrNull, email = p["email"]?.jsonPrimitive?.contentOrNull, gender = p["gender"]?.jsonPrimitive?.contentOrNull, isTrainer = p["isTrainer"]?.jsonPrimitive?.contentOrNull?.let { it == "true" }, phone = p["phone"]?.jsonPrimitive?.contentOrNull, wdsfId = p["wdsfId"]?.jsonPrimitive?.contentOrNull, activeCouplesList = couplesArr, cohortMembershipsList = memberships, rawResponse = AppJson.parseToJsonElement(jsonStr), address = address, nationality = p["nationality"]?.jsonPrimitive?.contentOrNull, nationalIdNumber = p["nationalIdNumber"]?.jsonPrimitive?.contentOrNull, cstsProgressList = cstsProgress, instagramUsername = p["instagramUsername"]?.jsonPrimitive?.contentOrNull, tiktokUsername = p["tiktokUsername"]?.jsonPrimitive?.contentOrNull, facebookUrl = p["facebookUrl"]?.jsonPrimitive?.contentOrNull, websiteUrl = p["websiteUrl"]?.jsonPrimitive?.contentOrNull, note = p["note"]?.jsonPrimitive?.contentOrNull)
+        PersonDetails(id = id, firstName = p["firstName"]?.jsonPrimitive?.contentOrNull, lastName = p["lastName"]?.jsonPrimitive?.contentOrNull, prefixTitle = p["prefixTitle"]?.jsonPrimitive?.contentOrNull, suffixTitle = p["suffixTitle"]?.jsonPrimitive?.contentOrNull, birthDate = p["birthDate"]?.jsonPrimitive?.contentOrNull, cstsId = p["cstsId"]?.jsonPrimitive?.contentOrNull, email = p["email"]?.jsonPrimitive?.contentOrNull, gender = p["gender"]?.jsonPrimitive?.contentOrNull, isTrainer = p["isTrainer"]?.jsonPrimitive?.contentOrNull?.let { it == "true" }, phone = p["phone"]?.jsonPrimitive?.contentOrNull, wdsfId = p["wdsfId"]?.jsonPrimitive?.contentOrNull, activeCouplesList = couplesArr, cohortMembershipsList = memberships, rawResponse = AppJson.parseToJsonElement(jsonStr), address = address, nationality = p["nationality"]?.jsonPrimitive?.contentOrNull, nationalIdNumber = p["nationalIdNumber"]?.jsonPrimitive?.contentOrNull, cstsProgressList = cstsProgress, instagramUsername = p["instagramUsername"]?.jsonPrimitive?.contentOrNull, tiktokUsername = p["tiktokUsername"]?.jsonPrimitive?.contentOrNull, facebookUrl = p["facebookUrl"]?.jsonPrimitive?.contentOrNull, websiteUrl = p["websiteUrl"]?.jsonPrimitive?.contentOrNull, note = p["note"]?.jsonPrimitive?.contentOrNull, allCouplesList = allCouplesArr)
     } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
 
     private fun parseStoredCurrentUser(jsonStr: String): CurrentUser? = try {
@@ -179,9 +190,15 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
     suspend fun changePassword(oldPass: String, newPass: String): Boolean {
         // The backend's changePassword mutation has no old-password field, so verify the
         // current password client-side by re-authenticating with it before applying the change.
+        // login() persists whatever JWT it receives as a side effect, which would otherwise
+        // silently replace the active session token just to check the old password — so save
+        // and restore the original token around the verification call.
         val login = getCachedCurrentUser()?.uLogin
         if (login.isNullOrBlank()) { lastApiError = com.tkolymp.shared.language.AppStrings.current.cannotDetermineUserId; return false }
-        val verified = try { ServiceLocator.authService.login(login, oldPass) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return false }
+        val originalToken = try { ServiceLocator.tokenStorage.getToken() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+        val verified = try { ServiceLocator.authService.login(login, oldPass) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return false } finally {
+            try { originalToken?.let { ServiceLocator.tokenStorage.saveToken(it) } } catch (_: Exception) {}
+        }
         if (!verified) { lastApiError = com.tkolymp.shared.language.AppStrings.current.oldPasswordIncorrect; return false }
 
         // Insert the password directly into the mutation (backend expects a simple string).

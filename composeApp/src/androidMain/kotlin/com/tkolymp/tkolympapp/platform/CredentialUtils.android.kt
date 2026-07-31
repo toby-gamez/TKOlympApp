@@ -13,6 +13,7 @@ import androidx.credentials.exceptions.CreateCredentialException
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.NoCredentialException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withTimeoutOrNull
 
 private const val TAG = "CredentialUtils"
@@ -35,6 +36,8 @@ actual fun rememberSaveCredentialsCallback(): suspend (username: String, passwor
                 Log.d(TAG, "User dismissed the save-password prompt: ${e.message}")
             } catch (e: CreateCredentialException) {
                 Log.w(TAG, "createCredential failed: type=${e.type} class=${e::class.simpleName} message=${e.message} errorMessage=${e.errorMessage}")
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Log.e(TAG, "Unexpected error while offering credential save: ${e::class.qualifiedName}: ${e.message}", e)
             }
@@ -77,6 +80,8 @@ actual fun rememberGetSavedCredentialCallback(): suspend () -> Pair<String, Stri
         } catch (e: GetCredentialException) {
             Log.w(TAG, "getCredential failed: type=${e.type} class=${e::class.simpleName} message=${e.message}")
             null
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "Unexpected error while fetching saved credential: ${e::class.qualifiedName}: ${e.message}", e)
             null

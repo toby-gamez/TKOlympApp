@@ -165,9 +165,12 @@ fun AppContent(
                     }
                 } catch (_: Exception) {}
             } catch (e: CancellationException) { throw e } catch (_: Exception) {
-                // Unexpected failure resolving startup state: fall back to the login
-                // screen rather than onboarding, since we can't tell whether this is a
-                // returning (possibly still-logged-in) user or a genuinely new install.
+                // Unexpected failure resolving startup state: skip onboarding (an
+                // already-authenticated user must never see it) and default consent to
+                // not-given, since we can't tell whether this is a returning (possibly
+                // still-logged-in, possibly still-consented) user or a genuinely new
+                // install. That routes through the privacy-consent gate and then to the
+                // login screen rather than silently skipping either check.
                 loggedIn = false
                 showOnboarding = false
                 consentGiven = false
