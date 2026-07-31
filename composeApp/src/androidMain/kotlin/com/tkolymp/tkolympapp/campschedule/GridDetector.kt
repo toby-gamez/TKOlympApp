@@ -44,7 +44,15 @@ object GridDetector {
     // text) reaches at most ~60% in practice — measured against real sample photos,
     // where genuine dividers sit at 1.00 and coincidental strokes cap around 0.56-0.61.
     private const val ROW_INTERNAL_THRESHOLD_FRACTION = 0.85
-    private const val ROW_INTERNAL_WINDOW_PX = 3
+    // A divider genuinely printed in the table can still land a few px away from the
+    // globally-computed boundary x within any one row — a handheld photo is never
+    // perfectly rectilinear, so perspective/lens distortion shifts a column's true edge
+    // slightly from row to row. Scaling the search window with the table's own column
+    // width (rather than a fixed pixel count) keeps that tolerance proportional across
+    // photo resolutions, while staying well short of a column's width so it can never
+    // drift into a neighboring column and manufacture a false divider.
+    private const val ROW_INTERNAL_WINDOW_COLUMN_FRACTION = 0.06
+    private const val ROW_INTERNAL_WINDOW_FLOOR_PX = 3
     // Row/column boundary pairs closer together than this are almost certainly noise
     // (e.g. a table border line detected a second time a few px off) and are merged
     // into the previous segment rather than kept as their own tiny sliver.
@@ -102,11 +110,14 @@ object GridDetector {
         if (rowBoundaries.size < 2 || colBoundaries.size < 2) return emptyList()
 
         val internalCols = colBoundaries.drop(2).dropLast(1)
+        val avgColumnWidth = (colBoundaries.last() - colBoundaries.first()) / (colBoundaries.size - 1)
+        val dividerWindow = (avgColumnWidth * ROW_INTERNAL_WINDOW_COLUMN_FRACTION).toInt()
+            .coerceAtLeast(ROW_INTERNAL_WINDOW_FLOOR_PX)
 
         return (0 until rowBoundaries.size - 1).map { row ->
             val rowTop = rowBoundaries[row]
             val rowBottom = rowBoundaries[row + 1]
-            if (!hasInternalColumnDividers(binary, internalCols, rowTop, rowBottom)) {
+            if (!hasInternalColumnDividers(binary, internalCols, rowTop, rowBottom, dividerWindow)) {
                 listOf(
                     Rect(colBoundaries[0], rowTop, colBoundaries[1], rowBottom),
                     tightenMergedCellRect(binary, rowTop, rowBottom, colBoundaries[1], colBoundaries.last())
@@ -235,7 +246,13 @@ object GridDetector {
     }
 
     /** True if some x-window near an internal column boundary is "on" for a real majority of this row's height. */
-    private fun hasInternalColumnDividers(binary: Mat, internalCols: List<Int>, rowTop: Int, rowBottom: Int): Boolean {
+    private fun hasInternalColumnDividers(
+        binary: Mat,
+        internalCols: List<Int>,
+        rowTop: Int,
+        rowBottom: Int,
+        window: Int
+    ): Boolean {
         if (internalCols.isEmpty()) return true
         val rowHeight = rowBottom - rowTop
         if (rowHeight <= 0) return false
@@ -243,8 +260,8 @@ object GridDetector {
         val colProfile = colSums(rowSlice)
         val threshold = rowHeight * ROW_INTERNAL_THRESHOLD_FRACTION
         return internalCols.any { colX ->
-            val left = (colX - ROW_INTERNAL_WINDOW_PX).coerceAtLeast(0)
-            val right = (colX + ROW_INTERNAL_WINDOW_PX).coerceAtMost(colProfile.size - 1)
+            val left = (colX - window).coerceAtLeast(0)
+            val right = (colX + window).coerceAtMost(colProfile.size - 1)
             (left..right).any { colProfile[it] >= threshold }
         }
     }
