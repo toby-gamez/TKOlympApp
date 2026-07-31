@@ -33,6 +33,16 @@ data class Person(
 data class CoupleMember(val firstName: String?, val lastName: String?)
 data class ActiveCouple(val id: String?, val man: CoupleMember?, val woman: CoupleMember?)
 
+/** A single man/woman pairing period from the club's own relationship records (not the CSTS federation feed) — has real `since`/`until` dates, unlike [ActiveCouple]. */
+data class CouplePeriod(
+    val id: String?,
+    val manId: String?,
+    val womanId: String?,
+    val since: String?,
+    val until: String?,
+    val status: String?,
+)
+
 data class AddressDetails(
     val street: String? = null,
     val city: String? = null,
@@ -67,7 +77,8 @@ data class PersonDetails(
     val tiktokUsername: String? = null,
     val facebookUrl: String? = null,
     val websiteUrl: String? = null,
-    val note: String? = null
+    val note: String? = null,
+    val allCouplesList: List<CouplePeriod> = emptyList()
 )
 
 data class ScoreboardEntry(
@@ -241,6 +252,14 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                                     woman { firstName lastName }
                                     id
                                 }
+                                allCouplesList {
+                                    id
+                                    manId
+                                    womanId
+                                    since
+                                    until
+                                    status
+                                }
                                 cohortMembershipsList {
                                     cohort { colorRgb name isVisible id }
                                     since
@@ -313,6 +332,18 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                         ActiveCouple(cid, man, woman)
             } ?: emptyList()
 
+            val allCouples = (personObj?.get("allCouplesList") as? kotlinx.serialization.json.JsonArray)?._safeMap { cEl ->
+                        val cObj = cEl as? JsonObject ?: return@_safeMap null
+                        CouplePeriod(
+                            id = cObj.get("id")?.jsonPrimitive?.contentOrNull,
+                            manId = cObj.get("manId")?.jsonPrimitive?.contentOrNull,
+                            womanId = cObj.get("womanId")?.jsonPrimitive?.contentOrNull,
+                            since = cObj.get("since")?.jsonPrimitive?.contentOrNull,
+                            until = cObj.get("until")?.jsonPrimitive?.contentOrNull,
+                            status = cObj.get("status")?.jsonPrimitive?.contentOrNull,
+                        )
+            } ?: emptyList()
+
             val memberships = (personObj?.get("cohortMembershipsList") as? kotlinx.serialization.json.JsonArray)?._safeMap { mEl ->
                 val mObj = mEl as? JsonObject ?: return@_safeMap null
                 val cohortObj = mObj.get("cohort") as? JsonObject
@@ -355,7 +386,8 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                 tiktokUsername = tiktokUsername,
                 facebookUrl = facebookUrl,
                 websiteUrl = websiteUrl,
-                note = note
+                note = note,
+                allCouplesList = allCouples
             )
             try { cache.put(cacheKey, pd, ttl = 15.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
             return pd

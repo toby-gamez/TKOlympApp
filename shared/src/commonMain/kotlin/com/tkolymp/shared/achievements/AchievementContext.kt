@@ -24,4 +24,18 @@ data class AchievementContext(
     val today: LocalDate,
     val longestStreakWeeks: Int,
     val totalLessonsAttended: Int,
+    // Competitions
+    val competitionsCompleted: Int = 0,
+    val competitionFinalsReached: Int = 0,
+    val bestRanking: Int? = null,
+    val distinctDanceStyles: Int = 0,
+    val longestPartnershipSeasons: Int = 0,
+    // Repertoire (trainer / event-type variety)
+    val distinctTrainers: Int = 0,
+    val distinctEventTypes: Int = 0,
+    // Rhythm (time-of-day / consistency quirks)
+    val earlyBirdCount: Int = 0,
+    val nightOwlCount: Int = 0,
+    val weekendLessonsCount: Int = 0,
+    val returnedAfterBreak: Boolean = false,
 )

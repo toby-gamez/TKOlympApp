@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -17,11 +18,13 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,13 +49,14 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AchievementsScreen(onBack: () -> Unit = {}) {
+fun AchievementsScreen(personId: String? = null, onBack: () -> Unit = {}) {
     val viewModel = viewModel<AchievementsViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val strings = AppStrings.current.achievements
+    val showDiplomas = personId == null
 
-    LaunchedEffect(Unit) { viewModel.load() }
+    LaunchedEffect(personId) { viewModel.load(personId) }
 
     var selectedBadge by remember { mutableStateOf<BadgeUiState?>(null) }
     var selectedDiploma by remember { mutableStateOf<DiplomaUiState?>(null) }
@@ -71,7 +75,7 @@ fun AchievementsScreen(onBack: () -> Unit = {}) {
     ) { padding ->
         SwipeToReload(
             isRefreshing = state.isLoading,
-            onRefresh = { scope.launch { viewModel.load() } },
+            onRefresh = { scope.launch { viewModel.load(personId) } },
             modifier = Modifier.padding(padding)
         ) {
             LazyVerticalGrid(
@@ -82,11 +86,23 @@ fun AchievementsScreen(onBack: () -> Unit = {}) {
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 item(span = { GridItemSpan(maxLineSpan) }) {
-                    Text(
-                        text = "${state.earnedCount}/${state.badges.size}",
-                        style = MaterialTheme.typography.headlineMedium,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
+                    Column {
+                        Text(
+                            text = "${state.earnedCount}/${state.badges.size}",
+                            style = MaterialTheme.typography.headlineMedium,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        LinearProgressIndicator(
+                            progress = {
+                                if (state.badges.isEmpty()) 0f
+                                else state.earnedCount.toFloat() / state.badges.size
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.primary,
+                            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                            strokeCap = StrokeCap.Round,
+                        )
+                    }
                 }
 
                 badgeGridSections(
@@ -95,28 +111,30 @@ fun AchievementsScreen(onBack: () -> Unit = {}) {
                     onBadgeClick = { selectedBadge = it }
                 )
 
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    Text(
-                        text = strings.sectionDiplomas,
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
-                    )
-                }
-
-                if (state.diplomas.isEmpty()) {
+                if (showDiplomas) {
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         Text(
-                            text = strings.noDiplomasYet,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(vertical = 8.dp)
+                            text = strings.sectionDiplomas,
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
                         )
                     }
-                } else {
-                    items(
-                        items = state.diplomas,
-                        key = { it.camp.eventId },
-                    ) { diploma ->
-                        DiplomaThumbnail(diploma = diploma, onClick = { selectedDiploma = diploma })
+
+                    if (state.diplomas.isEmpty()) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            Text(
+                                text = strings.noDiplomasYet,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                        }
+                    } else {
+                        items(
+                            items = state.diplomas,
+                            key = { it.camp.eventId },
+                        ) { diploma ->
+                            DiplomaThumbnail(diploma = diploma, onClick = { selectedDiploma = diploma })
+                        }
                     }
                 }
             }

@@ -59,6 +59,46 @@ object AchievementEngine {
         addLessons(BadgeIds.LESSONS_100, 100)
         addLessons(BadgeIds.LESSONS_250, 250)
 
+        fun addCompetitions(id: String, count: Int) {
+            if (context.competitionsCompleted >= count) earned += EarnedBadge(id, context.today)
+        }
+        addCompetitions(BadgeIds.COMPETITION_FIRST, 1)
+        addCompetitions(BadgeIds.COMPETITION_10, 10)
+        addCompetitions(BadgeIds.COMPETITION_25, 25)
+
+        if (context.competitionFinalsReached >= 1) {
+            earned += EarnedBadge(BadgeIds.COMPETITION_FINAL_FIRST, context.today)
+        }
+        context.bestRanking?.let { ranking ->
+            if (ranking <= 3) earned += EarnedBadge(BadgeIds.COMPETITION_PODIUM, context.today)
+            if (ranking == 1) earned += EarnedBadge(BadgeIds.COMPETITION_CHAMPION, context.today)
+        }
+        if (context.distinctDanceStyles >= 2) {
+            earned += EarnedBadge(BadgeIds.COMPETITION_VERSATILE, context.today)
+        }
+
+        fun addPartnership(id: String, seasons: Int) {
+            if (context.longestPartnershipSeasons >= seasons) earned += EarnedBadge(id, context.today)
+        }
+        addPartnership(BadgeIds.PARTNERSHIP_3, 3)
+        addPartnership(BadgeIds.PARTNERSHIP_5, 5)
+
+        fun addTrainers(id: String, count: Int) {
+            if (context.distinctTrainers >= count) earned += EarnedBadge(id, context.today)
+        }
+        addTrainers(BadgeIds.TRAINERS_3, 3)
+        addTrainers(BadgeIds.TRAINERS_5, 5)
+        addTrainers(BadgeIds.TRAINERS_10, 10)
+
+        if (context.distinctEventTypes >= 3) {
+            earned += EarnedBadge(BadgeIds.TYPES_EXPLORER, context.today)
+        }
+
+        if (context.earlyBirdCount >= 10) earned += EarnedBadge(BadgeIds.EARLY_BIRD, context.today)
+        if (context.nightOwlCount >= 10) earned += EarnedBadge(BadgeIds.NIGHT_OWL, context.today)
+        if (context.weekendLessonsCount >= 20) earned += EarnedBadge(BadgeIds.WEEKEND_WARRIOR, context.today)
+        if (context.returnedAfterBreak) earned += EarnedBadge(BadgeIds.COMEBACK, context.today)
+
         return earned
     }
 
@@ -76,6 +116,19 @@ object AchievementEngine {
         BadgeIds.LESSONS_50 -> context.totalLessonsAttended to 50
         BadgeIds.LESSONS_100 -> context.totalLessonsAttended to 100
         BadgeIds.LESSONS_250 -> context.totalLessonsAttended to 250
+        BadgeIds.COMPETITION_FIRST -> context.competitionsCompleted to 1
+        BadgeIds.COMPETITION_10 -> context.competitionsCompleted to 10
+        BadgeIds.COMPETITION_25 -> context.competitionsCompleted to 25
+        BadgeIds.COMPETITION_VERSATILE -> context.distinctDanceStyles to 2
+        BadgeIds.PARTNERSHIP_3 -> context.longestPartnershipSeasons to 3
+        BadgeIds.PARTNERSHIP_5 -> context.longestPartnershipSeasons to 5
+        BadgeIds.TRAINERS_3 -> context.distinctTrainers to 3
+        BadgeIds.TRAINERS_5 -> context.distinctTrainers to 5
+        BadgeIds.TRAINERS_10 -> context.distinctTrainers to 10
+        BadgeIds.TYPES_EXPLORER -> context.distinctEventTypes to 3
+        BadgeIds.EARLY_BIRD -> context.earlyBirdCount to 10
+        BadgeIds.NIGHT_OWL -> context.nightOwlCount to 10
+        BadgeIds.WEEKEND_WARRIOR -> context.weekendLessonsCount to 20
         else -> null
     }
 }

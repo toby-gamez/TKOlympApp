@@ -665,8 +665,23 @@ fun AppNavHost(
                 PersonScreen(
                     personId = pid,
                     onBack = { navController.navigateUp() },
-                    onOpenCouple = { }
+                    onOpenCouple = { },
+                    onOpenAchievements = { id -> navController.navigate("person/$id/achievements") }
                 )
+            }
+        }
+
+        composable(
+            route = "person/{personId}/achievements",
+            arguments = listOf(navArgument("personId") { type = NavType.StringType }),
+            enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
+            exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
+            popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) },
+            popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) }
+        ) { backStackEntry ->
+            val personId = backStackEntry.arguments?.read { getString("personId") }
+            personId?.let { pid ->
+                AchievementsScreen(personId = pid, onBack = { navController.navigateUp() })
             }
         }
 

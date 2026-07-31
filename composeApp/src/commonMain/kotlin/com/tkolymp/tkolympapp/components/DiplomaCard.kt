@@ -213,39 +213,44 @@ fun DiplomaThumbnail(diploma: DiplomaUiState, modifier: Modifier = Modifier, onC
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp)
-        ) {
-            Box(
-                contentAlignment = Alignment.Center,
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
                 modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer)
+                    .fillMaxSize()
+                    .padding(12.dp)
             ) {
-                Text("🏕️", fontSize = 18.sp)
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                ) {
+                    Text("🏕️", fontSize = 18.sp)
+                }
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = diploma.camp.name ?: "",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = formatMonthDay(diploma.camp.startDate, langCode, true),
+                    fontSize = 10.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                )
             }
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = diploma.camp.name ?: "",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = formatMonthDay(diploma.camp.startDate, langCode, true),
-                fontSize = 10.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-            )
+            if (diploma.isNew) {
+                NewIndicatorPill(modifier = Modifier.align(Alignment.TopEnd).padding(6.dp))
+            }
         }
     }
 }

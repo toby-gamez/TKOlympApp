@@ -6,6 +6,9 @@ data class AchievementStrings(
     val sectionCamps: String = "Camps",
     val sectionMembership: String = "Membership",
     val sectionAttendance: String = "Attendance",
+    val sectionCompetitions: String = "Competitions",
+    val sectionRepertoire: String = "Repertoire",
+    val sectionRhythm: String = "Rhythm",
     val sectionDiplomas: String = "Camp diplomas",
     val profilePreviewTitle: String = "Achievements",
     val profilePreviewEmpty: String = "No badges yet",
@@ -16,6 +19,8 @@ data class AchievementStrings(
     val diplomaCertifies: String = "This certifies that",
     val diplomaCampCompleted: String = "successfully completed the camp",
     val newBadgeUnlocked: String = "New badge unlocked!",
+    val newPillLabel: String = "NEW",
+    val viewAchievementsAction: String = "View achievements",
 
     // Camp badges
     val campFirstTitle: String = "First camp completed",
@@ -62,4 +67,44 @@ data class AchievementStrings(
     val lessons100Desc: String = "You attended 100 lessons.",
     val lessons250Title: String = "250 lessons",
     val lessons250Desc: String = "You attended 250 lessons.",
+
+    // Competition badges
+    val competitionFirstTitle: String = "First competition",
+    val competitionFirstDesc: String = "You danced your first competition.",
+    val competition10Title: String = "10 competitions",
+    val competition10Desc: String = "You danced 10 competitions.",
+    val competition25Title: String = "25 competitions",
+    val competition25Desc: String = "You danced 25 competitions.",
+    val competitionFinalFirstTitle: String = "Finalist",
+    val competitionFinalFirstDesc: String = "You reached your first competition final.",
+    val competitionPodiumTitle: String = "Podium finish",
+    val competitionPodiumDesc: String = "You finished in the top 3 at a competition.",
+    val competitionChampionTitle: String = "Champion",
+    val competitionChampionDesc: String = "You won first place at a competition.",
+    val competitionVersatileTitle: String = "Multi-style dancer",
+    val competitionVersatileDesc: String = "You competed in at least 2 different disciplines (e.g. Standard and Latin).",
+    val partnership3Title: String = "Dream team",
+    val partnership3Desc: String = "You've competed with the same partner for 3 seasons.",
+    val partnership5Title: String = "Perfect match",
+    val partnership5Desc: String = "You've competed with the same partner for 5 seasons.",
+
+    // Repertoire badges
+    val trainers3Title: String = "3 trainers",
+    val trainers3Desc: String = "You've trained with 3 different trainers.",
+    val trainers5Title: String = "5 trainers",
+    val trainers5Desc: String = "You've trained with 5 different trainers.",
+    val trainers10Title: String = "10 trainers",
+    val trainers10Desc: String = "You've trained with 10 different trainers.",
+    val typesExplorerTitle: String = "Well-rounded",
+    val typesExplorerDesc: String = "You've taken part in at least 3 different kinds of events.",
+
+    // Rhythm badges
+    val earlyBirdTitle: String = "Early bird",
+    val earlyBirdDesc: String = "You attended 10 lessons starting before 8:00.",
+    val nightOwlTitle: String = "Night owl",
+    val nightOwlDesc: String = "You attended 10 lessons starting at 20:00 or later.",
+    val weekendWarriorTitle: String = "Weekend warrior",
+    val weekendWarriorDesc: String = "You attended 20 lessons on a weekend.",
+    val comebackTitle: String = "The comeback",
+    val comebackDesc: String = "You took a break of 3 months or more and came back to training.",
 )
