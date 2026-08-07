@@ -48,7 +48,7 @@ class LanguageViewModel(
                 AppStrings.setLanguage(language)
                 _state.value = _state.value.copy(selectedLanguage = language)
             } catch (e: CancellationException) { throw e } catch (e: Exception) {
-                _state.value = _state.value.copy(error = AppError.generic(e.message))
+                _state.value = _state.value.copy(error = AppError.generic(e.message, e))
             }
         }
     }

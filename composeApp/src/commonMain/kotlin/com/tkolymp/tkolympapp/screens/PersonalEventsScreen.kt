@@ -46,6 +46,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.personalevents.PersonalEvent
 import com.tkolymp.shared.viewmodels.PersonalEventsViewModel
+import com.tkolymp.tkolympapp.components.ErrorBanner
+import com.tkolymp.tkolympapp.components.ErrorState
 import kotlinx.coroutines.launch
 import kotlin.time.Instant
 import kotlinx.datetime.TimeZone

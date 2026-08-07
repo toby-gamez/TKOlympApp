@@ -121,7 +121,7 @@ class AchievementsViewModel(
         } catch (ex: Exception) {
             _state.value = _state.value.copy(
                 isLoading = false,
-                error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingEvents)
+                error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingEvents, ex)
             )
         }
     }

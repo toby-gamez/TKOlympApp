@@ -44,6 +44,8 @@ import com.tkolymp.shared.viewmodels.DiplomaUiState
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.DiplomaDialog
 import com.tkolymp.tkolympapp.components.DiplomaThumbnail
+import com.tkolymp.tkolympapp.components.ErrorBanner
+import com.tkolymp.tkolympapp.components.ErrorState
 import com.tkolymp.tkolympapp.components.badgeGridSections
 import kotlinx.coroutines.launch
 
@@ -78,62 +80,71 @@ fun AchievementsScreen(personId: String? = null, onBack: () -> Unit = {}) {
             onRefresh = { scope.launch { viewModel.load(personId) } },
             modifier = Modifier.padding(padding)
         ) {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    Column {
-                        Text(
-                            text = "${state.earnedCount}/${state.badges.size}",
-                            style = MaterialTheme.typography.headlineMedium,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                        LinearProgressIndicator(
-                            progress = {
-                                if (state.badges.isEmpty()) 0f
-                                else state.earnedCount.toFloat() / state.badges.size
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            color = MaterialTheme.colorScheme.primary,
-                            trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                            strokeCap = StrokeCap.Round,
-                        )
+            if (state.error != null && state.badges.isEmpty() && state.diplomas.isEmpty()) {
+                ErrorState(error = state.error!!, onRetry = { scope.launch { viewModel.load(personId) } })
+            } else {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    if (state.error != null) {
+                        ErrorBanner(error = state.error!!, onRetry = { scope.launch { viewModel.load(personId) } })
                     }
-                }
-
-                badgeGridSections(
-                    badges = state.badges,
-                    strings = strings,
-                    onBadgeClick = { selectedBadge = it }
-                )
-
-                if (showDiplomas) {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        Text(
-                            text = strings.sectionDiplomas,
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
-                        )
-                    }
-
-                    if (state.diplomas.isEmpty()) {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(3),
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
                         item(span = { GridItemSpan(maxLineSpan) }) {
-                            Text(
-                                text = strings.noDiplomasYet,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(vertical = 8.dp)
-                            )
+                            Column {
+                                Text(
+                                    text = "${state.earnedCount}/${state.badges.size}",
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                                LinearProgressIndicator(
+                                    progress = {
+                                        if (state.badges.isEmpty()) 0f
+                                        else state.earnedCount.toFloat() / state.badges.size
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    strokeCap = StrokeCap.Round,
+                                )
+                            }
                         }
-                    } else {
-                        items(
-                            items = state.diplomas,
-                            key = { it.camp.eventId },
-                        ) { diploma ->
-                            DiplomaThumbnail(diploma = diploma, onClick = { selectedDiploma = diploma })
+
+                        badgeGridSections(
+                            badges = state.badges,
+                            strings = strings,
+                            onBadgeClick = { selectedBadge = it }
+                        )
+
+                        if (showDiplomas) {
+                            item(span = { GridItemSpan(maxLineSpan) }) {
+                                Text(
+                                    text = strings.sectionDiplomas,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
+                                )
+                            }
+
+                            if (state.diplomas.isEmpty()) {
+                                item(span = { GridItemSpan(maxLineSpan) }) {
+                                    Text(
+                                        text = strings.noDiplomasYet,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(vertical = 8.dp)
+                                    )
+                                }
+                            } else {
+                                items(
+                                    items = state.diplomas,
+                                    key = { it.camp.eventId },
+                                ) { diploma ->
+                                    DiplomaThumbnail(diploma = diploma, onClick = { selectedDiploma = diploma })
+                                }
+                            }
                         }
                     }
                 }
