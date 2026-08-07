@@ -10,6 +10,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -110,7 +111,7 @@ object ErrorReporter {
             null
         } ?: return null
         return try {
-            AppJson.parseToJsonElement(json).jsonObject["uEmail"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() }
+            AppJson.parseToJsonElement(json).jsonObject["uEmail"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
         } catch (_: Throwable) {
             null
         }
