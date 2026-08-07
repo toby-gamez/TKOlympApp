@@ -2,6 +2,7 @@ package com.tkolymp.shared.viewmodels
 
 import androidx.lifecycle.ViewModel
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.personalevents.PersonalEvent
 import com.tkolymp.shared.personalevents.PersonalEventService
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +30,7 @@ class PersonalEventsViewModel(
             _state.value = _state.value.copy(events = list, isLoading = false)
         } catch (e: kotlinx.coroutines.CancellationException) { throw e
         } catch (e: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(e.message ?: ""))
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(e.message ?: AppStrings.current.errorMessages.errorLoading, e))
         }
     }
 
@@ -40,7 +41,7 @@ class PersonalEventsViewModel(
             loadAll()
         } catch (e: kotlinx.coroutines.CancellationException) { throw e
         } catch (e: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(e.message ?: ""))
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(e.message ?: AppStrings.current.errorMessages.errorLoading, e))
         }
     }
 }

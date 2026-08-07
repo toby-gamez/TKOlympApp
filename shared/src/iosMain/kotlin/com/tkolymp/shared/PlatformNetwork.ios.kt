@@ -7,7 +7,6 @@ import com.tkolymp.shared.campschedule.CampScheduleReminderService
 import com.tkolymp.shared.campschedule.CampScheduleService
 import com.tkolymp.shared.club.ClubService
 import com.tkolymp.shared.competitions.CompetitionService
-import com.tkolymp.shared.device.DeviceInfo
 import com.tkolymp.shared.errorreporting.CrashReportStorage
 import com.tkolymp.shared.errorreporting.ErrorReporter
 import com.tkolymp.shared.feedback.FeedbackService
