@@ -24,6 +24,9 @@ import com.tkolymp.shared.competitions.CompetitionService
 import com.tkolymp.shared.campschedule.CampScheduleService
 import com.tkolymp.shared.campschedule.CampScheduleReminderService
 import com.tkolymp.shared.feedback.FeedbackService
+import com.tkolymp.shared.device.DeviceInfo
+import com.tkolymp.shared.errorreporting.CrashReportStorage
+import com.tkolymp.shared.errorreporting.ErrorReporter
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -44,6 +47,9 @@ private val certificatePinner = CertificatePinner.Builder()
 private const val FEEDBACK_BASE_URL = "https://www.tobiso.com/api"
 
 suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String = "1") {
+    DeviceInfo.init(context)
+    installGlobalCrashReporting(context)
+
     val storage = TokenStorage(context)
 
     val client = HttpClient(OkHttp) {
@@ -122,5 +128,27 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
 
     ServiceLocator.init(container)
 
+    ErrorReporter.flushPendingCrashReport(CrashReportStorage(context))
+
     auth.initialize()
+}
+
+/**
+ * Reports uncaught exceptions (including ones during app init, before [ServiceLocator] exists)
+ * to the bug-report backend on the *next* launch, since the process may die before any network
+ * call made from the crashing thread would complete. Chains to whatever handler was previously
+ * installed so normal crash behavior (e.g. system crash dialog, other crash tooling) is preserved.
+ */
+private fun installGlobalCrashReporting(context: Context) {
+    val crashStorage = CrashReportStorage(context.applicationContext)
+    val previousHandler = Thread.getDefaultUncaughtExceptionHandler()
+    Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+        try {
+            val report = ErrorReporter.buildCrashReport("Uncaught exception on thread '${thread.name}'", throwable)
+            crashStorage.savePendingCrash(report)
+        } catch (_: Throwable) {
+            // Never let crash reporting itself prevent the default crash handling below.
+        }
+        previousHandler?.uncaughtException(thread, throwable)
+    }
 }

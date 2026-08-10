@@ -77,7 +77,7 @@ class ProfileViewModel(
         } catch (e: CancellationException) {
             throw e
         } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: com.tkolymp.shared.language.AppStrings.current.errorMessages.errorLoadingProfile))
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: com.tkolymp.shared.language.AppStrings.current.errorMessages.errorLoadingProfile, ex))
         }
     }
 

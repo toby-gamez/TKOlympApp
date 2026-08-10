@@ -46,6 +46,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.personalevents.PersonalEvent
 import com.tkolymp.shared.viewmodels.PersonalEventsViewModel
+import com.tkolymp.tkolympapp.components.ErrorBanner
+import com.tkolymp.tkolympapp.components.ErrorState
 import kotlinx.coroutines.launch
 import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
@@ -99,7 +101,19 @@ fun PersonalEventsScreen(
             navigationIcon = { IconButton(onClick = onBack) { Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) } }
         )
     }) { innerPadding ->
+        if (state.error != null && state.events.isEmpty()) {
+            ErrorState(
+                error = state.error!!,
+                modifier = Modifier.padding(innerPadding),
+                onRetry = { scope.launch { vm.loadAll() } }
+            )
+        } else {
         LazyColumn(modifier = Modifier.padding(innerPadding).padding(bottom = bottomPadding)) {
+            if (state.error != null) {
+                item {
+                    ErrorBanner(error = state.error!!, onRetry = { scope.launch { vm.loadAll() } })
+                }
+            }
             items(state.events, key = { ev -> ev.id }) { ev: PersonalEvent ->
                 Card(modifier = Modifier
                     .fillMaxWidth()
@@ -130,6 +144,7 @@ fun PersonalEventsScreen(
                         .padding(12.dp)
                 )
             }
+        }
         }
 
         if (showConfirm) {

@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.sp
 import com.tkolymp.shared.language.AppLanguage
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.LanguageViewModel
+import com.tkolymp.tkolympapp.components.ErrorBanner
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,6 +82,10 @@ fun LanguageScreen(onBack: () -> Unit = {}) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
+
+            state.error?.let { error ->
+                ErrorBanner(error = error)
+            }
 
             AppLanguage.entries.forEach { language ->
                 val isSelected = state.selectedLanguage == language

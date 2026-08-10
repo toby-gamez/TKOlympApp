@@ -69,6 +69,7 @@ import com.tkolymp.shared.utils.parseToLocal
 import com.tkolymp.shared.utils.turningAgeOnNextBirthday
 import com.tkolymp.shared.viewmodels.PeopleViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
+import com.tkolymp.tkolympapp.components.ErrorState
 import com.tkolymp.tkolympapp.components.InitialsAvatar
 import com.tkolymp.tkolympapp.components.parseColorOrDefault
 import com.tkolymp.tkolympapp.util.StaggeredItem
@@ -138,6 +139,8 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
+            } else if (state.error != null && state.people.isEmpty()) {
+                ErrorState(error = state.error!!, onRetry = { scope.launch { viewModel.loadPeople() } })
             } else {
                 val people = state.people
 

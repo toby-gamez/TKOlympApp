@@ -7,6 +7,8 @@ import com.tkolymp.shared.campschedule.CampScheduleReminderService
 import com.tkolymp.shared.campschedule.CampScheduleService
 import com.tkolymp.shared.club.ClubService
 import com.tkolymp.shared.competitions.CompetitionService
+import com.tkolymp.shared.errorreporting.CrashReportStorage
+import com.tkolymp.shared.errorreporting.ErrorReporter
 import com.tkolymp.shared.feedback.FeedbackService
 import com.tkolymp.shared.html.HtmlFormatter
 import com.tkolymp.shared.json.AppJson
@@ -33,6 +35,8 @@ import io.ktor.client.engine.darwin.Darwin
 import io.ktor.client.engine.darwin.certificates.CertificatePinner
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
+import platform.Foundation.NSException
+import platform.Foundation.NSSetUncaughtExceptionHandler
 
 // Certificate pins for api.rozpisovnik.cz (same as Android OkHttp pins)
 private val certPinner: CertificatePinner = CertificatePinner.Builder()
@@ -44,6 +48,8 @@ private val certPinner: CertificatePinner = CertificatePinner.Builder()
 private const val FEEDBACK_BASE_URL = "https://www.tobiso.com/api"
 
 suspend fun initNetworking(baseUrl: String, tenantId: String = "1") {
+    installGlobalCrashReporting()
+
     val storage = TokenStorage("")
 
     val client = HttpClient(Darwin) {
@@ -117,5 +123,27 @@ suspend fun initNetworking(baseUrl: String, tenantId: String = "1") {
     )
 
     ServiceLocator.init(container)
+
+    ErrorReporter.flushPendingCrashReport(CrashReportStorage(""))
+
     auth.initialize()
+}
+
+/**
+ * Catches uncaught NSExceptions (Objective-C/platform-framework crashes). Kotlin exceptions
+ * that escape to the top of the call stack do not go through this hook — Kotlin/Native has no
+ * stable public API to intercept those — so this covers a subset of possible crashes, on a
+ * best-effort basis, persisted for the next launch since the process is terminated right after.
+ */
+private fun installGlobalCrashReporting() {
+    val crashStorage = CrashReportStorage("")
+    NSSetUncaughtExceptionHandler { exception: NSException? ->
+        try {
+            val throwable = RuntimeException(exception?.reason ?: exception?.name ?: "Uncaught NSException")
+            val report = ErrorReporter.buildCrashReport("Uncaught NSException", throwable)
+            crashStorage.savePendingCrash(report)
+        } catch (_: Throwable) {
+            // Never let crash reporting itself throw from inside the crash handler.
+        }
+    }
 }

@@ -49,6 +49,8 @@ import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.personalevents.PersonalEvent
 import com.tkolymp.shared.personalevents.TrainingType
+import com.tkolymp.shared.viewmodels.AppError
+import com.tkolymp.tkolympapp.components.ErrorBanner
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DayOfWeek
 import kotlin.time.Instant
@@ -84,6 +86,7 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, o
     var showEndTimePicker by remember { mutableStateOf(false) }
     var showRecurrenceStartDatePicker by remember { mutableStateOf(false) }
     var showRecurrenceEndDatePicker by remember { mutableStateOf(false) }
+    var saveError by remember { mutableStateOf<AppError?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(eventId) {
@@ -361,10 +364,19 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, o
                 // save asynchronously to avoid blocking composition
                 coroutineScope.launch {
                     kotlin.runCatching { service.save(ev) }
-                    onSaved()
+                        .onSuccess {
+                            saveError = null
+                            onSaved()
+                        }
+                        .onFailure { ex ->
+                            saveError = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorUpdating, ex)
+                        }
                 }
             }, modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
                 Text(AppStrings.current.personalEvents.saveTraining)
+            }
+            saveError?.let { err ->
+                ErrorBanner(error = err, onRetry = null)
             }
         }
     }
