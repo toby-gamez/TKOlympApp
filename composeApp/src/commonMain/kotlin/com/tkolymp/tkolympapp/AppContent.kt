@@ -237,12 +237,30 @@ fun AppContent(
                             enter = slideInVertically(initialOffsetY = { it }, animationSpec = tween(300)),
                             exit = slideOutVertically(targetOffsetY = { it }, animationSpec = tween(300))
                         ) {
-                            AppBottomBar(current = currentRoute ?: "overview", boardHasUnread = boardHasUnread, onSelect = {
+                            AppBottomBar(current = currentRoute ?: "overview", boardHasUnread = boardHasUnread, onSelect = { route ->
                                 val startId = navController.graph.findStartDestination().id
-                                navController.navigate(it) {
-                                    popUpTo(startId) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
+                                // "overview" is both a bottom-bar tab and the graph's start
+                                // destination, so popUpTo(startId){saveState=true} never actually
+                                // pops it (it's the boundary, not something above it) and it never
+                                // gets its own entry in the saveState/restoreState map. Routing it
+                                // through navigate()+restoreState like the other tabs is unreliable:
+                                // the first tap can be a no-op, and later taps can restore whichever
+                                // other tab's state was saved most recently instead of overview's.
+                                // Popping directly to the start destination sidesteps that entirely.
+                                if (route == "overview") {
+                                    if (!navController.popBackStack(startId, inclusive = false)) {
+                                        navController.navigate(route) {
+                                            popUpTo(startId) { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                    }
+                                } else {
+                                    navController.navigate(route) {
+                                        popUpTo(startId) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
                                 }
                             })
                         }
