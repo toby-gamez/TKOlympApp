@@ -29,15 +29,12 @@ import com.tkolymp.shared.utils.AppConstants
 @Immutable
 data class EventsState(
     val eventsByDay: Map<String, List<EventInstance>> = emptyMap(),
-    val myPersonId: String? = null,
-    val myCoupleIds: List<String> = emptyList(),
     override val isLoading: Boolean = false,
     override val error: AppError? = null
 ) : ViewModelState
 
 class EventsViewModel(
-    private val eventService: com.tkolymp.shared.event.IEventService = ServiceLocator.eventService,
-    private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService
+    private val eventService: com.tkolymp.shared.event.IEventService = ServiceLocator.eventService
 ) : ViewModel() {
     private val _state = MutableStateFlow(EventsState())
     val state: StateFlow<EventsState> = _state.asStateFlow()
@@ -46,9 +43,6 @@ class EventsViewModel(
         Logger.d("EventsViewModel", "loadCampsNextYear: forceRefresh=$forceRefresh")
         _state.value = _state.value.copy(isLoading = true, error = null)
         try {
-            val pid = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
-            val cids = try { userService.getCachedCoupleIds() } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
-            _state.value = _state.value.copy(myPersonId = pid, myCoupleIds = cids)
             // Invalidate events cache only when explicitly requested to avoid unnecessary network calls
             if (forceRefresh) {
                 try {

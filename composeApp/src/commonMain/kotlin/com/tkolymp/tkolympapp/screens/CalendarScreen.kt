@@ -410,7 +410,7 @@ fun CalendarScreen(
                             }
 
                             filteredOther.forEach { item ->
-                                RenderSingleEventCard(item = item, onEventClick = { id, instId -> onOpenEvent(id, instId) }, onOpenRozpis = onOpenRozpis, myPersonId = calState.myPersonId, myCoupleIds = calState.myCoupleIds)
+                                RenderSingleEventCard(item = item, onEventClick = { id, instId -> onOpenEvent(id, instId) }, onOpenRozpis = onOpenRozpis)
                             }
 
                             if (competitions.isNotEmpty()) {
