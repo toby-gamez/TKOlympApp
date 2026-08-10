@@ -213,6 +213,7 @@ val StringsBrainrot = Strings(
         deleteRegistrationConfirmText = "u actually wanna yeet this registration fr?",
         noRegistrationOwned = "no registration found bestie",
         registrationSuccess = "registered no cap fr fr",
+        signedUp = "locked in",
     ),
     announcements = AnnouncementStrings(
         announcements = "Announcements",
@@ -748,6 +749,7 @@ val StringsBrainrot = Strings(
         weekendWarriorDesc = "You showed up to 20 weekend sessions, zero days off.",
         comebackTitle = "The Redemption Arc",
         comebackDesc = "You took a 3+ month break and came back anyway. Certified comeback.",
+        offlineMessage = "bro you're offline rn 💀 these achievements are cached, not fresh fr fr",
     ),
     privacyConsent = PrivacyConsentStrings(
         title = "Privacy check, no cap",

@@ -44,6 +44,7 @@ import com.tkolymp.shared.viewmodels.DiplomaUiState
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.DiplomaDialog
 import com.tkolymp.tkolympapp.components.DiplomaThumbnail
+import com.tkolymp.tkolympapp.components.OfflineBanner
 import com.tkolymp.tkolympapp.components.ErrorBanner
 import com.tkolymp.tkolympapp.components.ErrorState
 import com.tkolymp.tkolympapp.components.badgeGridSections
@@ -84,6 +85,7 @@ fun AchievementsScreen(personId: String? = null, onBack: () -> Unit = {}) {
                 ErrorState(error = state.error!!, onRetry = { scope.launch { viewModel.load(personId) } })
             } else {
                 Column(modifier = Modifier.fillMaxSize()) {
+                    OfflineBanner(isOffline = state.isOffline, message = strings.offlineMessage)
                     if (state.error != null) {
                         ErrorBanner(error = state.error!!, onRetry = { scope.launch { viewModel.load(personId) } })
                     }

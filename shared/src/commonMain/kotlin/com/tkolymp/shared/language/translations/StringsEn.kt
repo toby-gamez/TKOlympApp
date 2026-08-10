@@ -220,6 +220,7 @@ val StringsEn = Strings(
         deleteRegistrationConfirmText = "Are you sure you want to delete the selected registration?",
         noRegistrationOwned = "No own registration found",
         registrationSuccess = "Registration successful",
+        signedUp = "Signed up",
         notePrefix = "Note: ",
         emailPrefix = "Email: ",
         externalSuffix = " (external)",
@@ -758,6 +759,7 @@ val StringsEn = Strings(
         weekendWarriorDesc = "You attended 20 lessons on a weekend.",
         comebackTitle = "The comeback",
         comebackDesc = "You took a break of 3 months or more and came back to training.",
+        offlineMessage = "You're offline — showing previously saved achievements.",
     ),
     privacyConsent = PrivacyConsentStrings(
         title = "Your privacy",

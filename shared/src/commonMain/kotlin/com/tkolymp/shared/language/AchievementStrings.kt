@@ -21,6 +21,7 @@ data class AchievementStrings(
     val newBadgeUnlocked: String = "New badge unlocked!",
     val newPillLabel: String = "NEW",
     val viewAchievementsAction: String = "View achievements",
+    val offlineMessage: String = "You're offline — showing previously saved achievements.",
 
     // Camp badges
     val campFirstTitle: String = "First camp completed",

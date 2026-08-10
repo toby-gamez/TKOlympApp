@@ -212,6 +212,7 @@ val StringsUa = Strings(
         deleteRegistrationConfirmText = "Ви впевнені, що хочете видалити вибрану реєстрацію?",
         noRegistrationOwned = "Власну реєстрацію не знайдено",
         registrationSuccess = "Реєстрація пройшла успішно",
+        signedUp = "Зареєстровано",
     ),
     announcements = AnnouncementStrings(
         announcements = "Оголошення",
@@ -747,6 +748,7 @@ val StringsUa = Strings(
         weekendWarriorDesc = "Ви відвідали 20 занять у вихідні.",
         comebackTitle = "Повернення",
         comebackDesc = "Після перерви у 3 місяці чи більше ви повернулися до тренувань.",
+        offlineMessage = "Ви офлайн — показано попередньо збережені досягнення.",
     ),
     privacyConsent = PrivacyConsentStrings(
         title = "Ваша конфіденційність",

@@ -200,6 +200,7 @@ val StringsVi = Strings(
         deleteRegistrationConfirmText = "Bạn có thực sự muốn xóa đăng ký đã chọn không?",
         noRegistrationOwned = "Không tìm thấy đăng ký của bạn",
         registrationSuccess = "Đăng ký thành công",
+        signedUp = "Đã đăng ký",
     ),
     announcements = AnnouncementStrings(
         announcements = "Thông báo",
@@ -747,6 +748,7 @@ val StringsVi = Strings(
         weekendWarriorDesc = "Bạn đã tham gia 20 buổi tập vào cuối tuần.",
         comebackTitle = "Sự trở lại",
         comebackDesc = "Sau khi nghỉ 3 tháng trở lên, bạn đã quay lại tập luyện.",
+        offlineMessage = "Bạn đang ngoại tuyến — hiển thị thành tích đã lưu trước đó.",
     ),
     privacyConsent = PrivacyConsentStrings(
         title = "Quyền riêng tư của bạn",

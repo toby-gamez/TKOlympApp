@@ -38,6 +38,7 @@ data class DiplomaUiState(
 data class AchievementsState(
     val badges: List<BadgeUiState> = emptyList(),
     val diplomas: List<DiplomaUiState> = emptyList(),
+    val isOffline: Boolean = false,
     override val isLoading: Boolean = false,
     override val error: AppError? = null,
 ) : ViewModelState {
@@ -64,6 +65,7 @@ class AchievementsViewModel(
         _state.value = _state.value.copy(isLoading = true, error = null)
         try {
             val myPersonId = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+            val isOffline = try { !ServiceLocator.networkMonitor.isConnected() } catch (_: Exception) { false }
 
             if (personId != null && personId != myPersonId) {
                 val context = achievementService.loadContextForPerson(personId)
@@ -83,7 +85,7 @@ class AchievementsViewModel(
                         )
                     }
 
-                _state.value = _state.value.copy(badges = badges, diplomas = emptyList(), isLoading = false)
+                _state.value = _state.value.copy(badges = badges, diplomas = emptyList(), isOffline = isOffline, isLoading = false)
                 return
             }
 
@@ -115,7 +117,7 @@ class AchievementsViewModel(
                     )
                 }
 
-            _state.value = _state.value.copy(badges = badges, diplomas = diplomas, isLoading = false)
+            _state.value = _state.value.copy(badges = badges, diplomas = diplomas, isOffline = isOffline, isLoading = false)
         } catch (e: CancellationException) {
             throw e
         } catch (ex: Exception) {

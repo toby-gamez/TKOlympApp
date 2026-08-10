@@ -242,6 +242,7 @@ val StringsSk = Strings(
         deleteRegistrationConfirmText = "Naozaj chcete zmazať vybranú registráciu?",
         noRegistrationOwned = "Nenašla sa žiadna vlastná registrácia",
         registrationSuccess = "Registrácia prebehla úspešne",
+        signedUp = "Prihlásený",
     ),
     announcements = AnnouncementStrings(
         announcements = "Oznámenia",
@@ -747,6 +748,7 @@ val StringsSk = Strings(
         weekendWarriorDesc = "Zúčastnil/a si sa 20 lekcií cez víkend.",
         comebackTitle = "Návrat",
         comebackDesc = "Po pauze 3 mesiace a viac si sa vrátil/a k trénovaniu.",
+        offlineMessage = "Ste offline – zobrazujú sa predtým uložené úspechy.",
     ),
     privacyConsent = PrivacyConsentStrings(
         title = "Vaše súkromie",

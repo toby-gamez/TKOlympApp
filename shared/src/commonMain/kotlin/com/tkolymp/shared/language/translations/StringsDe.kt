@@ -212,6 +212,7 @@ val StringsDe = Strings(
         deleteRegistrationConfirmText = "Möchten Sie die ausgewählte Anmeldung wirklich löschen?",
         noRegistrationOwned = "Keine eigene Anmeldung gefunden",
         registrationSuccess = "Anmeldung erfolgreich",
+        signedUp = "Angemeldet",
     ),
     announcements = AnnouncementStrings(
         announcements = "Ankündigungen",
@@ -746,6 +747,7 @@ val StringsDe = Strings(
         weekendWarriorDesc = "Du hast 20 Stunden am Wochenende besucht.",
         comebackTitle = "Das Comeback",
         comebackDesc = "Du hast nach einer Pause von 3 Monaten oder mehr wieder mit dem Training begonnen.",
+        offlineMessage = "Du bist offline – frühere gespeicherte Erfolge werden angezeigt.",
     ),
     privacyConsent = PrivacyConsentStrings(
         title = "Ihre Privatsphäre",
