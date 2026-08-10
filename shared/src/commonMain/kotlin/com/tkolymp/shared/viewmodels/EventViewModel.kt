@@ -164,8 +164,8 @@ class EventViewModel(
             val type = eventObj.str("type") ?: ""
             val isLocked = eventObj.bool("isLocked") ?: false
             val isRegistrationOpen = if (isLocked) false else (eventObj.bool("isRegistrationOpen") ?: true)
-            val registerButtonVisible = !isPast && !userRegistered && isRegistrationOpen
-            val registrationActionsRowVisible = !isPast && userRegistered && isRegistrationOpen
+            val registerButtonVisible = !isPast && !userRegistered && isRegistrationOpen && !isOfflineUsed
+            val registrationActionsRowVisible = !isPast && userRegistered && isRegistrationOpen && !isOfflineUsed
             val editRegistrationButtonVisible = type.toEventType() != EventType.LESSON && type.toEventType() != EventType.GROUP
 
             val trainers = eventObj.get("eventTrainersList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
