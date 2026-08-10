@@ -1,7 +1,7 @@
 package com.tkolymp.shared.auth
 
 import com.tkolymp.shared.Logger
-import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.network.GraphQlException
 import com.tkolymp.shared.network.IGraphQlClient
 import com.tkolymp.shared.storage.ITokenStorage
 import com.tkolymp.shared.json.AppJson
@@ -58,14 +58,27 @@ class AuthService(private val storage: ITokenStorage, private val client: IGraph
         }
     }
 
-    override suspend fun refreshJwt(): Boolean {
+    /** Distinguishes a definitive server-side rejection from a transport failure of unknown cause. */
+    private sealed interface RefreshOutcome {
+        data object Success : RefreshOutcome
+        data object Rejected : RefreshOutcome
+        data object Unreachable : RefreshOutcome
+    }
+
+    private suspend fun attemptRefresh(): RefreshOutcome {
         val query = "query Refresh { refreshJwt }"
 
         val resp = try {
             client.post(query, null)
+        } catch (ex: GraphQlException) {
+            // The server was reached and explicitly returned a GraphQL error (e.g. invalid/expired refresh token).
+            Logger.d("AuthService", "refreshJwt rejected: ${ex.message}")
+            return RefreshOutcome.Rejected
         } catch (ex: Exception) {
-            Logger.d("AuthService", "refreshJwt failed: ${ex.message}")
-            return false
+            // Transport-level failure (timeout, DNS, TLS/cert-pin hiccup, 5xx, ...) — we never got a verdict
+            // from the server, so we cannot conclude the token is actually invalid.
+            Logger.d("AuthService", "refreshJwt unreachable: ${ex.message}")
+            return RefreshOutcome.Unreachable
         }
 
         val token = resp.jsonObject["data"]
@@ -74,13 +87,14 @@ class AuthService(private val storage: ITokenStorage, private val client: IGraph
 
         if (!token.isNullOrBlank()) {
             storage.saveToken(token)
-            return true
+            return RefreshOutcome.Success
         }
 
-        val errors = resp.jsonObject["errors"]?.toString() ?: resp.toString()
-        Logger.d("AuthService", "refreshJwt failed: $errors")
-        return false
+        Logger.d("AuthService", "refreshJwt returned no token: $resp")
+        return RefreshOutcome.Rejected
     }
+
+    override suspend fun refreshJwt(): Boolean = attemptRefresh() == RefreshOutcome.Success
 
     @OptIn(kotlin.io.encoding.ExperimentalEncodingApi::class)
     private fun isTokenExpired(token: String): Boolean {
@@ -97,21 +111,20 @@ class AuthService(private val storage: ITokenStorage, private val client: IGraph
     override suspend fun hasToken(): Boolean {
         val t = storage.getToken() ?: return false
         if (isTokenExpired(t)) {
-            // Try to refresh; if it fails (e.g. offline) keep the session alive so the
-            // app can still work from cache. The server will reject API calls if the token
-            // is truly invalid, but we must not force a login just because there is no
-            // internet connection.
-            val refreshed = refreshJwt()
-            if (!refreshed) {
-                val online = try { ServiceLocator.networkMonitor.isConnected() } catch (_: Exception) { true }
-                if (online) {
-                    // We are online but refresh failed repeatedly -> token likely invalid.
-                    // Clear stored token so caller can force login flow.
+            // Only clear the stored token when the server actually had a chance to weigh in and
+            // explicitly rejected the refresh. A device-level "online" check (NetworkMonitor) can't
+            // tell us the API itself was reachable, so a transient timeout/DNS/cert hiccup here must
+            // not be treated the same as a real rejection — otherwise a flaky request (easily hit by
+            // the widget's periodic background refresh) silently logs the user out.
+            when (attemptRefresh()) {
+                RefreshOutcome.Success -> {}
+                RefreshOutcome.Rejected -> {
                     try { storage.clear() } catch (_: Exception) {}
-                    Logger.d("AuthService", "Token expired and refresh failed while online — clearing token")
+                    Logger.d("AuthService", "Refresh token rejected by server — clearing token")
                     return false
-                } else {
-                    Logger.d("AuthService", "Token expired but refresh failed — keeping session for offline use")
+                }
+                RefreshOutcome.Unreachable -> {
+                    Logger.d("AuthService", "Token expired but server unreachable — keeping session")
                 }
             }
         }
