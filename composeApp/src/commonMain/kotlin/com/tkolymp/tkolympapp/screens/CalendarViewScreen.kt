@@ -74,6 +74,7 @@ import androidx.compose.ui.unit.IntOffset
 import com.tkolymp.tkolympapp.LocalBottomBarPadding
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.shared.utils.formatTimes
+import com.tkolymp.shared.utils.formatHtmlContent
 import com.tkolymp.shared.utils.formatTimesWithDate
 import com.tkolymp.shared.utils.formatTimesWithDateAlways
 import com.tkolymp.shared.utils.durationMinutes
@@ -892,7 +893,7 @@ internal fun TimelineEventCard(
                     )
                     
                     // Show short subtitle (e.g. personal training type) if present as first line of description
-                    val subtitle = event.description?.substringBefore('\n')?.takeIf { it.isNotBlank() }
+                    val subtitle = formatHtmlContent(event.description).substringBefore('\n').takeIf { it.isNotBlank() }
                     if (subtitle != null) {
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(

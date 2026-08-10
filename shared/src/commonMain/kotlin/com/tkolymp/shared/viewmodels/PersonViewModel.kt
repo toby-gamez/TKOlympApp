@@ -64,6 +64,55 @@ class PersonViewModel(
                             com.tkolymp.shared.people.CohortMembership(com.tkolymp.shared.people.Cohort(cId, cName, cColor, cVis), mObj["since"]?.jsonPrimitive?.contentOrNull, mObj["until"]?.jsonPrimitive?.contentOrNull)
                         } ?: emptyList()
 
+                        fun blankToNull(s: String?) = s?.takeIf { it.isNotBlank() }
+
+                        val activeCouples = (obj["activeCouplesList"] as? kotlinx.serialization.json.JsonArray)?.mapNotNull { cEl ->
+                            val cObj = cEl as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null
+                            val manObj = cObj["man"] as? kotlinx.serialization.json.JsonObject
+                            val womanObj = cObj["woman"] as? kotlinx.serialization.json.JsonObject
+                            com.tkolymp.shared.people.ActiveCouple(
+                                id = blankToNull(cObj["id"]?.jsonPrimitive?.contentOrNull),
+                                man = com.tkolymp.shared.people.CoupleMember(manObj?.get("firstName")?.jsonPrimitive?.contentOrNull, manObj?.get("lastName")?.jsonPrimitive?.contentOrNull),
+                                woman = com.tkolymp.shared.people.CoupleMember(womanObj?.get("firstName")?.jsonPrimitive?.contentOrNull, womanObj?.get("lastName")?.jsonPrimitive?.contentOrNull)
+                            )
+                        } ?: emptyList()
+
+                        val allCouples = (obj["allCouplesList"] as? kotlinx.serialization.json.JsonArray)?.mapNotNull { cEl ->
+                            val cObj = cEl as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null
+                            com.tkolymp.shared.people.CouplePeriod(
+                                id = blankToNull(cObj["id"]?.jsonPrimitive?.contentOrNull),
+                                manId = blankToNull(cObj["manId"]?.jsonPrimitive?.contentOrNull),
+                                womanId = blankToNull(cObj["womanId"]?.jsonPrimitive?.contentOrNull),
+                                since = blankToNull(cObj["since"]?.jsonPrimitive?.contentOrNull),
+                                until = blankToNull(cObj["until"]?.jsonPrimitive?.contentOrNull),
+                                status = blankToNull(cObj["status"]?.jsonPrimitive?.contentOrNull)
+                            )
+                        } ?: emptyList()
+
+                        val cstsProgress = (obj["cstsProgressList"] as? kotlinx.serialization.json.JsonArray)?.mapNotNull { pEl ->
+                            val pObj = pEl as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null
+                            val catObj = pObj["category"] as? kotlinx.serialization.json.JsonObject
+                            val cat = catObj?.let { cat ->
+                                com.tkolymp.shared.competitions.CompetitionCategory(
+                                    id = cat["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull(),
+                                    name = blankToNull(cat["name"]?.jsonPrimitive?.contentOrNull),
+                                    series = blankToNull(cat["series"]?.jsonPrimitive?.contentOrNull),
+                                    discipline = blankToNull(cat["discipline"]?.jsonPrimitive?.contentOrNull),
+                                    ageGroup = blankToNull(cat["ageGroup"]?.jsonPrimitive?.contentOrNull),
+                                    genderGroup = blankToNull(cat["genderGroup"]?.jsonPrimitive?.contentOrNull),
+                                    competitorClass = blankToNull(cat["class"]?.jsonPrimitive?.contentOrNull),
+                                    competitorType = blankToNull(cat["competitorType"]?.jsonPrimitive?.contentOrNull),
+                                    baseDanceProgramId = cat["baseDanceProgramId"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                                )
+                            }
+                            com.tkolymp.shared.competitions.CstsProgress(
+                                points = blankToNull(pObj["points"]?.jsonPrimitive?.contentOrNull),
+                                finals = pObj["finals"]?.jsonPrimitive?.contentOrNull?.toIntOrNull()?.takeIf { it >= 0 },
+                                competitorName = blankToNull(pObj["competitorName"]?.jsonPrimitive?.contentOrNull),
+                                category = cat
+                            )
+                        } ?: emptyList()
+
                         com.tkolymp.shared.people.PersonDetails(
                             id = id,
                             firstName = first,
@@ -71,15 +120,22 @@ class PersonViewModel(
                             prefixTitle = prefix,
                             suffixTitle = suffix,
                             birthDate = birth,
-                            cstsId = null,
-                            email = null,
-                            gender = null,
+                            cstsId = blankToNull(obj["cstsId"]?.jsonPrimitive?.contentOrNull),
+                            email = blankToNull(obj["email"]?.jsonPrimitive?.contentOrNull),
+                            gender = blankToNull(obj["gender"]?.jsonPrimitive?.contentOrNull),
                             isTrainer = isTrainer,
-                            phone = null,
-                            wdsfId = null,
-                            activeCouplesList = emptyList(),
+                            phone = blankToNull(obj["phone"]?.jsonPrimitive?.contentOrNull),
+                            wdsfId = blankToNull(obj["wdsfId"]?.jsonPrimitive?.contentOrNull),
+                            activeCouplesList = activeCouples,
                             cohortMembershipsList = memberships,
-                            rawResponse = null
+                            rawResponse = null,
+                            cstsProgressList = cstsProgress,
+                            instagramUsername = blankToNull(obj["instagramUsername"]?.jsonPrimitive?.contentOrNull),
+                            tiktokUsername = blankToNull(obj["tiktokUsername"]?.jsonPrimitive?.contentOrNull),
+                            facebookUrl = blankToNull(obj["facebookUrl"]?.jsonPrimitive?.contentOrNull),
+                            websiteUrl = blankToNull(obj["websiteUrl"]?.jsonPrimitive?.contentOrNull),
+                            note = blankToNull(obj["note"]?.jsonPrimitive?.contentOrNull),
+                            allCouplesList = allCouples
                         )
                     }.firstOrNull()
 

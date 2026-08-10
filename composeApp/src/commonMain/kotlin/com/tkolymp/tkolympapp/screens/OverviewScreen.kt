@@ -207,7 +207,7 @@ fun OverviewScreen(
                         val trainerCount = state.trainingLessonsByTrainer.size
                         state.trainingOtherEvents.forEachIndexed { i, item ->
                             StaggeredItem(index = trainerCount + i, visible = cardsVisible) {
-                                RenderSingleEventCard(item = item, onEventClick = handleEventClick, onOpenRozpis = onOpenRozpis)
+                                RenderSingleEventCard(item = item, onEventClick = handleEventClick, onOpenRozpis = onOpenRozpis, myPersonId = state.myPersonId, myCoupleIds = state.myCoupleIds)
                             }
                         }
                     }
@@ -339,7 +339,7 @@ fun OverviewScreen(
                                 DateHeaderWithBirthdays(header, state.birthdaysByDay[date] ?: emptyList())
                                 Spacer(modifier = Modifier.height(4.dp))
                                 list.forEach { item ->
-                                    RenderSingleEventCard(item = item, onEventClick = handleCampEventClick, onOpenRozpis = onOpenRozpis)
+                                    RenderSingleEventCard(item = item, onEventClick = handleCampEventClick, onOpenRozpis = onOpenRozpis, myPersonId = state.myPersonId, myCoupleIds = state.myCoupleIds)
                                 }
                             }
                         }

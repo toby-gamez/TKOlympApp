@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Card
@@ -57,7 +58,14 @@ internal fun parseColorOrDefault(hex: String?): Color {
 }
 
 @Composable
-internal fun RenderEventContent(item: EventInstance, tip: String? = null, showType: Boolean = true, showDayOfWeek: Boolean = false, cohortNames: List<String> = emptyList(), modifier: Modifier = Modifier) {
+internal fun RenderEventContent(item: EventInstance, tip: String? = null, showType: Boolean = true, showDayOfWeek: Boolean = false, cohortNames: List<String> = emptyList(), myPersonId: String? = null, myCoupleIds: List<String> = emptyList(), modifier: Modifier = Modifier) {
+    val isRegistered = remember(item.event?.eventRegistrationsList, myPersonId, myCoupleIds) {
+        item.event?.eventRegistrationsList?.any { reg ->
+            val personIdStr = reg.person?.id?.toString()
+            val coupleIdStr = reg.couple?.id?.toString()
+            (myPersonId != null && personIdStr == myPersonId) || (coupleIdStr != null && myCoupleIds.contains(coupleIdStr))
+        } == true
+    }
     val name = run {
         val ev = item.event
         if (ev == null) return@run AppStrings.current.dialogs.noName
@@ -97,6 +105,24 @@ internal fun RenderEventContent(item: EventInstance, tip: String? = null, showTy
                         androidx.compose.material3.Text(displayType, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
                     }
                 }
+            }
+        }
+
+        if (isRegistered) {
+            Spacer(modifier = Modifier.height(2.dp))
+            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.Check,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                androidx.compose.material3.Text(
+                    text = AppStrings.current.registration.signedUp,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
 
@@ -189,6 +215,8 @@ internal fun RenderSingleEventCard(
     onEventClick: (Long, Long?) -> Unit,
     showType: Boolean = true,
     onOpenRozpis: ((Long, Long?) -> Unit)? = null,
+    myPersonId: String? = null,
+    myCoupleIds: List<String> = emptyList(),
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -239,7 +267,7 @@ internal fun RenderSingleEventCard(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            RenderEventContent(item = item, tip = null, showType = showType, showDayOfWeek = false, cohortNames = cohortNames, modifier = Modifier.weight(1f))
+            RenderEventContent(item = item, tip = null, showType = showType, showDayOfWeek = false, cohortNames = cohortNames, myPersonId = myPersonId, myCoupleIds = myCoupleIds, modifier = Modifier.weight(1f))
         }
 
         if (onOpenRozpis != null) {

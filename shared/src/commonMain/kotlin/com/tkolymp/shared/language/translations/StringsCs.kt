@@ -229,6 +229,7 @@ val StringsCs = Strings(
         deleteRegistrationConfirmText = "Opravdu chcete smazat vybranou přihlášku?",
         noRegistrationOwned = "Žádná vlastní přihláška nenalezena",
         registrationSuccess = "Přihlášení proběhlo úspěšně",
+        signedUp = "Přihlášen",
         notePrefix = "Poznámka: ",
         emailPrefix = "Email: ",
         externalSuffix = " (externí)",
@@ -791,6 +792,7 @@ val StringsCs = Strings(
         weekendWarriorDesc = "Zúčastnil/a ses 20 lekcí o víkendu.",
         comebackTitle = "Návrat",
         comebackDesc = "Po pauze 3 měsíce a déle ses vrátil/a k trénování.",
+        offlineMessage = "Jste offline – zobrazují se dříve uložené úspěchy.",
     ),
     privacyConsent = PrivacyConsentStrings(
         title = "Vaše soukromí",

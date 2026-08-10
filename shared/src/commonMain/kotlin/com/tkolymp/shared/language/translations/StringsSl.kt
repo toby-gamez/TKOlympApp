@@ -212,6 +212,7 @@ val StringsSl = Strings(
         deleteRegistrationConfirmText = "Ali res želite izbrisati izbrano registracijo?",
         noRegistrationOwned = "Lastna registracija ni bila najdena",
         registrationSuccess = "Registracija je bila uspešna",
+        signedUp = "Prijavljen",
     ),
     announcements = AnnouncementStrings(
         announcements = "Obvestila",
@@ -747,6 +748,7 @@ val StringsSl = Strings(
         weekendWarriorDesc = "Udeležil/a si se 20 ur vadbe med vikendom.",
         comebackTitle = "Vrnitev",
         comebackDesc = "Po odmoru 3 mesece ali več si se vrnil/a k treningu.",
+        offlineMessage = "Brez povezave – prikazani so predhodno shranjeni dosežki.",
     ),
     privacyConsent = PrivacyConsentStrings(
         title = "Vaša zasebnost",

@@ -267,14 +267,14 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}, onO
                                             trainerName = trainer,
                                             instances = instances.sortedBy { it.since },
                                             isAllTab = false,
-                                            myPersonId = null,
-                                            myCoupleIds = emptyList(),
+                                            myPersonId = state.myPersonId,
+                                            myCoupleIds = state.myCoupleIds,
                                             onEventClick = { id, _ -> onOpenEvent(id) }
                                         )
                                     }
 
                                     other.sortedBy { it.since }.forEach { item ->
-                                        RenderSingleEventCard(item = item, onEventClick = { id, _ -> onOpenEvent(id) }, showType = false, onOpenRozpis = { id, _ -> onOpenRozpis(id) })
+                                        RenderSingleEventCard(item = item, onEventClick = { id, _ -> onOpenEvent(id) }, showType = false, onOpenRozpis = { id, _ -> onOpenRozpis(id) }, myPersonId = state.myPersonId, myCoupleIds = state.myCoupleIds)
                                     }
                                 }
                             }
@@ -333,14 +333,14 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}, onO
                                             trainerName = trainer,
                                             instances = instances.sortedBy { it.since },
                                             isAllTab = false,
-                                            myPersonId = null,
-                                            myCoupleIds = emptyList(),
+                                            myPersonId = state.myPersonId,
+                                            myCoupleIds = state.myCoupleIds,
                                             onEventClick = { id, _ -> onOpenEvent(id) }
                                         )
                                     }
 
                                     other.sortedByDescending { it.since }.forEach { item ->
-                                        RenderSingleEventCard(item = item, onEventClick = { id, _ -> onOpenEvent(id) }, showType = false, onOpenRozpis = { id, _ -> onOpenRozpis(id) })
+                                        RenderSingleEventCard(item = item, onEventClick = { id, _ -> onOpenEvent(id) }, showType = false, onOpenRozpis = { id, _ -> onOpenRozpis(id) }, myPersonId = state.myPersonId, myCoupleIds = state.myCoupleIds)
                                     }
                                 }
                             }

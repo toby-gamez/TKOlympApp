@@ -26,6 +26,7 @@ data class RegistrationStrings(
     val deleteRegistrationConfirmText: String,
     val noRegistrationOwned: String,
     val registrationSuccess: String,
+    val signedUp: String = "Signed up",
     val notePrefix: String = "Note: ",
     val emailPrefix: String = "Email: ",
     val externalSuffix: String = " (external)",

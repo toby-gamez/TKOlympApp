@@ -344,7 +344,7 @@ fun CalendarScreen(
                             .distinct().sorted()
                     }
 
-                    if (filteredEventsByDay.isEmpty() && !calState.isLoading) {
+                    if (allDatesToShow.isEmpty() && !calState.isLoading) {
                         EmptyState(
                             title = AppStrings.current.calendarView.emptyCalendar,
                             icon = Icons.Default.CalendarMonth,
@@ -410,7 +410,7 @@ fun CalendarScreen(
                             }
 
                             filteredOther.forEach { item ->
-                                RenderSingleEventCard(item = item, onEventClick = { id, instId -> onOpenEvent(id, instId) }, onOpenRozpis = onOpenRozpis)
+                                RenderSingleEventCard(item = item, onEventClick = { id, instId -> onOpenEvent(id, instId) }, onOpenRozpis = onOpenRozpis, myPersonId = calState.myPersonId, myCoupleIds = calState.myCoupleIds)
                             }
 
                             if (competitions.isNotEmpty()) {

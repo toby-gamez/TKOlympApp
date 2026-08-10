@@ -16,6 +16,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.minus
 import kotlinx.datetime.number
 import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
@@ -299,6 +300,11 @@ class CalendarViewModel(
         return lessons to other
     }
 
+    // OfflineSyncManager always aligns saved week keys to the Monday of the target week, but
+    // `weekStart` here is a rolling "today + N*7 days" value that only lands on Monday when
+    // "today" happens to be one. Try the exact key first, then fall back to scanning saved keys
+    // for the Monday of this week (or, as a last resort, any cached week for this bucket) so
+    // offline data actually gets picked up instead of silently missing every non-Monday day.
     private suspend fun loadOfflineBucket(
         onlyMine: Boolean,
         weekStart: kotlinx.datetime.LocalDate,
@@ -307,7 +313,31 @@ class CalendarViewModel(
     ): Map<String, List<EventInstance>>? {
         val bucketName = if (onlyMine) "MINE" else "ALL"
         val weekKey = OfflineKeys.CAL_PREFIX + "${bucketName}_$weekStart"
-        val raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(weekKey) } catch (_: Exception) { null } ?: return null
+        var raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(weekKey) } catch (_: Exception) { null }
+        if (raw == null) {
+            try {
+                val mondayOfWeek = weekStart.minus(weekStart.dayOfWeek.ordinal, DateTimeUnit.DAY)
+                val keys = try { ServiceLocator.offlineSyncManager.listOfflineKeys() } catch (_: Exception) { emptySet() }
+                val candidates = keys.filter { it.startsWith(OfflineKeys.CAL_PREFIX + "${bucketName}_") }
+                val exact = candidates.firstOrNull { it.endsWith(weekStart.toString()) }
+                val mondayKey = if (exact == null) candidates.firstOrNull { it.endsWith(mondayOfWeek.toString()) } else null
+                // For MINE bucket skip the anyKey fallback (wrong-week mine data would show 0 events
+                // after date filtering and clear the view). Fall through to ALL bucket fallback instead.
+                val anyKey = if (bucketName == "MINE") exact ?: mondayKey
+                             else exact ?: mondayKey ?: candidates.firstOrNull()
+                if (anyKey != null) raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(anyKey) } catch (_: Exception) { null }
+
+                // If MINE bucket not found, fall back to ALL bucket with client-side filter upstream.
+                if (raw == null && onlyMine) {
+                    val allCandidates = keys.filter { it.startsWith(OfflineKeys.CAL_PREFIX + "ALL_") }
+                    val allExact = allCandidates.firstOrNull { it.endsWith(weekStart.toString()) }
+                    val allMondayKey = if (allExact == null) allCandidates.firstOrNull { it.endsWith(mondayOfWeek.toString()) } else null
+                    val allAnyKey = allExact ?: allMondayKey ?: allCandidates.firstOrNull()
+                    if (allAnyKey != null) raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(allAnyKey) } catch (_: Exception) { null }
+                }
+            } catch (_: Exception) {}
+        }
+        if (raw == null) return null
         var parsed = parseCalendarJson(raw)
         parsed = try { enrichParsedWithEventDetails(parsed) } catch (_: Exception) { parsed }
         return parsed

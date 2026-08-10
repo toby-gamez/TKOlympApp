@@ -275,6 +275,7 @@ class OfflineSyncManager(
             val prefix = details?.prefixTitle ?: p.prefixTitle
             val suffix = details?.suffixTitle ?: p.suffixTitle
             val isTrainer = details?.isTrainer ?: false
+            val cohortMemberships = if (details != null) details.cohortMembershipsList else p.cohortMembershipsList
 
             add(buildJsonObject {
                 put("id", JsonPrimitive(p.id))
@@ -284,8 +285,69 @@ class OfflineSyncManager(
                 put("suffixTitle", JsonPrimitive(suffix ?: ""))
                 put("birthDate", JsonPrimitive(birth ?: ""))
                 put("isTrainer", JsonPrimitive(isTrainer.toString()))
+                // Fields only available from the per-person detail fetch (fetchPerson), not the
+                // lightweight `people` list query. Achievements/diplomas are intentionally excluded
+                // here — those are handled separately by AchievementService/AchievementStorage.
+                put("cstsId", JsonPrimitive(details?.cstsId ?: ""))
+                put("email", JsonPrimitive(details?.email ?: ""))
+                put("gender", JsonPrimitive(details?.gender ?: ""))
+                put("phone", JsonPrimitive(details?.phone ?: ""))
+                put("wdsfId", JsonPrimitive(details?.wdsfId ?: ""))
+                put("instagramUsername", JsonPrimitive(details?.instagramUsername ?: ""))
+                put("tiktokUsername", JsonPrimitive(details?.tiktokUsername ?: ""))
+                put("facebookUrl", JsonPrimitive(details?.facebookUrl ?: ""))
+                put("websiteUrl", JsonPrimitive(details?.websiteUrl ?: ""))
+                put("note", JsonPrimitive(details?.note ?: ""))
+                put("activeCouplesList", buildJsonArray {
+                    details?.activeCouplesList?.forEach { couple ->
+                        add(buildJsonObject {
+                            put("id", JsonPrimitive(couple.id ?: ""))
+                            put("man", buildJsonObject {
+                                put("firstName", JsonPrimitive(couple.man?.firstName ?: ""))
+                                put("lastName", JsonPrimitive(couple.man?.lastName ?: ""))
+                            })
+                            put("woman", buildJsonObject {
+                                put("firstName", JsonPrimitive(couple.woman?.firstName ?: ""))
+                                put("lastName", JsonPrimitive(couple.woman?.lastName ?: ""))
+                            })
+                        })
+                    }
+                })
+                put("allCouplesList", buildJsonArray {
+                    details?.allCouplesList?.forEach { cp ->
+                        add(buildJsonObject {
+                            put("id", JsonPrimitive(cp.id ?: ""))
+                            put("manId", JsonPrimitive(cp.manId ?: ""))
+                            put("womanId", JsonPrimitive(cp.womanId ?: ""))
+                            put("since", JsonPrimitive(cp.since ?: ""))
+                            put("until", JsonPrimitive(cp.until ?: ""))
+                            put("status", JsonPrimitive(cp.status ?: ""))
+                        })
+                    }
+                })
+                put("cstsProgressList", buildJsonArray {
+                    details?.cstsProgressList?.forEach { progress ->
+                        add(buildJsonObject {
+                            put("points", JsonPrimitive(progress.points ?: ""))
+                            put("finals", JsonPrimitive(progress.finals ?: -1))
+                            put("competitorName", JsonPrimitive(progress.competitorName ?: ""))
+                            val cat = progress.category
+                            put("category", if (cat == null) kotlinx.serialization.json.JsonNull else buildJsonObject {
+                                put("id", JsonPrimitive(cat.id ?: -1L))
+                                put("name", JsonPrimitive(cat.name ?: ""))
+                                put("series", JsonPrimitive(cat.series ?: ""))
+                                put("discipline", JsonPrimitive(cat.discipline ?: ""))
+                                put("ageGroup", JsonPrimitive(cat.ageGroup ?: ""))
+                                put("genderGroup", JsonPrimitive(cat.genderGroup ?: ""))
+                                put("class", JsonPrimitive(cat.competitorClass ?: ""))
+                                put("competitorType", JsonPrimitive(cat.competitorType ?: ""))
+                                put("baseDanceProgramId", JsonPrimitive(cat.baseDanceProgramId ?: -1L))
+                            })
+                        })
+                    }
+                })
                 put("cohortMembershipsList", buildJsonArray {
-                    p.cohortMembershipsList.forEach { cm ->
+                    cohortMemberships.forEach { cm ->
                         add(buildJsonObject {
                             val c = cm.cohort
                             put("cohort", buildJsonObject {
@@ -313,8 +375,9 @@ class OfflineSyncManager(
             try {
                 offlineDataStorage.save(OfflineKeys.ANN_NONSTICKY, AppJson.encodeToString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), non))
             } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save nonsticky announcements failed: ${ex.message}") }
-            // Save bodies for top 10 non-sticky
-            non.take(10).forEach { ann ->
+            // Save bodies for every announcement (sticky + non-sticky) so the detail screen can
+            // load any of them offline, not just the handful most recently synced.
+            (sticky + non).forEach { ann ->
                 try {
                     ann.id.toLongOrNull()?.let { id ->
                         offlineDataStorage.save(OfflineKeys.announcementBody(id), AppJson.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), buildJsonObject { put("id", JsonPrimitive(ann.id)); put("title", JsonPrimitive(ann.title ?: "")); put("body", JsonPrimitive(ann.body ?: "")); put("updatedAt", JsonPrimitive(ann.updatedAt ?: "")) }))
@@ -450,6 +513,14 @@ class OfflineSyncManager(
             val non = withRetry { announcementService.getAnnouncements(false) }.let { r -> if (r is DataResult.Success) r.data else emptyList() }
             if (sticky.isNotEmpty()) offlineDataStorage.save(OfflineKeys.ANN_STICKY, AppJson.encodeToString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), sticky))
             if (non.isNotEmpty()) offlineDataStorage.save(OfflineKeys.ANN_NONSTICKY, AppJson.encodeToString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), non))
+            // Save individual bodies too so the detail screen loads offline for any announcement.
+            (sticky + non).forEach { ann ->
+                try {
+                    ann.id.toLongOrNull()?.let { id ->
+                        offlineDataStorage.save(OfflineKeys.announcementBody(id), AppJson.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), buildJsonObject { put("id", JsonPrimitive(ann.id)); put("title", JsonPrimitive(ann.title ?: "")); put("body", JsonPrimitive(ann.body ?: "")); put("updatedAt", JsonPrimitive(ann.updatedAt ?: "")) }))
+                    }
+                } catch (_: Exception) {}
+            }
         } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll announcements failed: ${ex.message}") }
 
         // People

@@ -44,6 +44,7 @@ import com.tkolymp.shared.viewmodels.DiplomaUiState
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.DiplomaDialog
 import com.tkolymp.tkolympapp.components.DiplomaThumbnail
+import com.tkolymp.tkolympapp.components.OfflineBanner
 import com.tkolymp.tkolympapp.components.badgeGridSections
 import kotlinx.coroutines.launch
 
@@ -78,9 +79,11 @@ fun AchievementsScreen(personId: String? = null, onBack: () -> Unit = {}) {
             onRefresh = { scope.launch { viewModel.load(personId) } },
             modifier = Modifier.padding(padding)
         ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+            OfflineBanner(isOffline = state.isOffline, message = strings.offlineMessage)
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -137,6 +140,7 @@ fun AchievementsScreen(personId: String? = null, onBack: () -> Unit = {}) {
                         }
                     }
                 }
+            }
             }
         }
     }
