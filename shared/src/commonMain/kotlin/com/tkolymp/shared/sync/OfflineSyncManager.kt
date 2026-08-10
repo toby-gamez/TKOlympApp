@@ -81,6 +81,7 @@ class OfflineSyncManager(
             syncAnnouncements()
             syncPeople()
             try { syncCompetitions() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "syncCompetitions failed: ${ex.message}") }
+            try { syncPastCompetitions() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "syncPastCompetitions failed: ${ex.message}") }
             // Ensure basic club data is saved for offline UIs that read `offline_club`.
             try { syncClub() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "syncClub failed: ${ex.message}") }
             try { syncAttendance() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "syncAttendance failed: ${ex.message}") }
@@ -631,6 +632,7 @@ class OfflineSyncManager(
         // Competitions
         onProgress("competitions", 0, 1)
         try { syncCompetitions() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll competitions failed: ${ex.message}") }
+        try { syncPastCompetitions() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll pastCompetitions failed: ${ex.message}") }
 
         // Attendance
         onProgress("attendance", 0, 1)
@@ -658,6 +660,27 @@ class OfflineSyncManager(
 
     suspend fun loadCompetitions(): List<Competition> = try {
         val json = offlineDataStorage.load(OfflineKeys.COMPETITIONS) ?: return emptyList()
+        AppJson.decodeFromString(kotlinx.serialization.builtins.ListSerializer(Competition.serializer()), json)
+    } catch (_: Exception) { emptyList() }
+
+    private suspend fun syncPastCompetitions() {
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val list = competitionService.getPastCompetitions(
+            pSince = today.minus(90, DateTimeUnit.DAY).toString(),
+            pUntil = today.toString()
+        )
+        if (list.isNotEmpty()) {
+            val json = AppJson.encodeToString(
+                kotlinx.serialization.builtins.ListSerializer(Competition.serializer()),
+                list
+            )
+            offlineDataStorage.save(OfflineKeys.COMPETITIONS_PAST, json)
+            Logger.d("OfflineSyncManager", "syncPastCompetitions: saved ${list.size} entries")
+        }
+    }
+
+    suspend fun loadPastCompetitions(): List<Competition> = try {
+        val json = offlineDataStorage.load(OfflineKeys.COMPETITIONS_PAST) ?: return emptyList()
         AppJson.decodeFromString(kotlinx.serialization.builtins.ListSerializer(Competition.serializer()), json)
     } catch (_: Exception) { emptyList() }
 

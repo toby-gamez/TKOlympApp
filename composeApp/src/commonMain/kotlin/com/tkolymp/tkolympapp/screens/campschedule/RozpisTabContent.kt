@@ -57,6 +57,8 @@ import com.tkolymp.shared.campschedule.myMatchedColumn
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.utils.getLocalizedDayName
 import com.tkolymp.shared.viewmodels.CampScheduleViewModel
+import com.tkolymp.tkolympapp.components.ErrorBanner
+import com.tkolymp.tkolympapp.components.ErrorState
 import com.tkolymp.tkolympapp.components.QuantityInput
 import com.tkolymp.tkolympapp.platform.CampSchedulePhotoThumbnail
 import com.tkolymp.tkolympapp.platform.CampScheduleUploadButton
@@ -108,6 +110,13 @@ fun RozpisTabContent(
     LaunchedEffect(eventId) { viewModel.load(eventId, instances, eventName) }
 
     Column(modifier = modifier.fillMaxSize().padding(12.dp)) {
+        if (state.error != null && state.campDates.isEmpty()) {
+            ErrorState(
+                error = state.error!!,
+                modifier = Modifier.weight(1f),
+                onRetry = { scope.launch { viewModel.load(eventId, instances, eventName) } }
+            )
+        } else {
         if (state.campDates.isNotEmpty()) {
             Row(
                 modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
@@ -121,6 +130,14 @@ fun RozpisTabContent(
                     )
                 }
             }
+            Spacer(Modifier.height(12.dp))
+        }
+
+        if (state.error != null) {
+            ErrorBanner(
+                error = state.error!!,
+                onRetry = { state.selectedDate?.let { d -> scope.launch { viewModel.selectDate(d) } } }
+            )
             Spacer(Modifier.height(12.dp))
         }
 
@@ -309,6 +326,7 @@ fun RozpisTabContent(
                     onScheduleBuilt = { builtDay, bytes -> scope.launch { viewModel.saveDay(builtDay, bytes) } }
                 )
             }
+        }
         }
     }
 

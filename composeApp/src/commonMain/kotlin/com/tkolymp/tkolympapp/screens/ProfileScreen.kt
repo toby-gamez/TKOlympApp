@@ -69,6 +69,8 @@ import com.tkolymp.shared.user.fmtProfileDate
 import com.tkolymp.shared.viewmodels.ProfileViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.CoupleAvatar
+import com.tkolymp.tkolympapp.components.ErrorBanner
+import com.tkolymp.tkolympapp.components.ErrorState
 import com.tkolymp.tkolympapp.components.InitialsAvatar
 import com.tkolymp.tkolympapp.components.PersonNoteCard
 import com.tkolymp.tkolympapp.components.SocialLinksRow
@@ -133,11 +135,17 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
             onRefresh = { scope.launch { profileViewModel.load() } },
             modifier = Modifier.fillMaxSize().padding(padding)
         ) {
+            if (profileState.error != null && profileState.person == null) {
+                ErrorState(error = profileState.error!!, onRetry = { scope.launch { profileViewModel.load() } })
+            } else {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()).padding(8.dp),
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.Start
             ) {
+                profileState.error?.let { error ->
+                    ErrorBanner(error = error, onRetry = { scope.launch { profileViewModel.load() } })
+                }
                 val person = profileState.person
                 val displayName = derived.titleText ?: profileState.currentUser?.uLogin
 
@@ -635,6 +643,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                 Button(onClick = { showLogoutConfirm = true }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
                     Text(AppStrings.current.commonActions.logout)
                 }
+            }
             }
         }
     }

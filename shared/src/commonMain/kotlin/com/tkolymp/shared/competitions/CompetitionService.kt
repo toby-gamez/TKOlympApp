@@ -147,11 +147,20 @@ class CompetitionService(
             put("pKinds", JsonArray(listOf(JsonPrimitive("COMPETITION_RESULT"))))
             if (pPersonIds != null) put("pPersonIds", JsonArray(pPersonIds.map { JsonPrimitive(it) }))
         }
-        val resp = client.post(timelineQuery, vars)
-        Logger.d("CompetitionService", "activityTimelineList (result) raw response: $resp")
-        val list = parseList(resp.jsonObject["data"]?.jsonObject?.get("activityTimelineList"))
-            .distinctBy { dedupeKey(it) }
-            .sortedByDescending { it.competitionDate }
+        val list = try {
+            val resp = client.post(timelineQuery, vars)
+            Logger.d("CompetitionService", "activityTimelineList (result) raw response: $resp")
+            parseList(resp.jsonObject["data"]?.jsonObject?.get("activityTimelineList"))
+                .distinctBy { dedupeKey(it) }
+                .sortedByDescending { it.competitionDate }
+        } catch (e: CancellationException) { throw e } catch (_: Exception) {
+            offlineSyncManager?.loadPastCompetitions()?.let { offline ->
+                offline.filter { c ->
+                    (c.competitionDate >= since) &&
+                    (c.competitionDate <= until)
+                }.sortedByDescending { it.competitionDate }.take(first)
+            } ?: emptyList()
+        }
         try { cache.put(cacheKey, list, ttl = 10.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         return list
     }

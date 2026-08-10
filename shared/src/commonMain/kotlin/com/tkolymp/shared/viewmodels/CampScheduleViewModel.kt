@@ -85,7 +85,7 @@ class CampScheduleViewModel(
         } catch (e: CancellationException) {
             throw e
         } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message))
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message, ex))
         }
     }
 
@@ -110,7 +110,7 @@ class CampScheduleViewModel(
         } catch (e: CancellationException) {
             throw e
         } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message))
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message, ex))
         }
     }
 

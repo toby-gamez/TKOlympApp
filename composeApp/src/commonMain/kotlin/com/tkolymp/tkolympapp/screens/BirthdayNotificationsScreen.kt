@@ -56,6 +56,7 @@ import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.people.Person
 import com.tkolymp.shared.viewmodels.BirthdayNotificationViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
+import com.tkolymp.tkolympapp.components.ErrorState
 import com.tkolymp.tkolympapp.util.normalizeForSearch
 import kotlinx.coroutines.launch
 
@@ -106,6 +107,8 @@ fun BirthdayNotificationsScreen(onBack: () -> Unit = {}) {
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) { CircularProgressIndicator() }
+            } else if (state.error != null && state.nonTrainerPeople.isEmpty() && state.availableGroups.isEmpty()) {
+                ErrorState(error = state.error!!, onRetry = { viewModel.load() })
             } else {
                 LazyColumn(
                     modifier = Modifier

@@ -530,9 +530,9 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                             womanName = couple["woman"].asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() }
                             manName = couple["man"].asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() }
                             nameText = when {
-                                womanName != null && manName != null -> "$womanName - $manName"
-                                womanName != null -> womanName
+                                womanName != null && manName != null -> "$manName - $womanName"
                                 manName != null -> manName
+                                womanName != null -> womanName
                                 else -> return@forEach
                             }
                         } else {

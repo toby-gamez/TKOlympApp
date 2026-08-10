@@ -38,6 +38,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -132,7 +134,16 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
 
     var selectedTab by rememberSaveable { mutableIntStateOf(initialTab) }
 
+    // Most actions on this screen (toggling a rule, deleting a reminder, saving settings) are
+    // transient edits to an otherwise-still-usable list — a snackbar surfaces a save failure
+    // without hiding the content the user was just looking at.
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(vmState.error) {
+        vmState.error?.let { snackbarHostState.showSnackbar(it.message) }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = { TopAppBar(title = { Text(AppStrings.current.otherScreen.notificationSettings) }, navigationIcon = {
             IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back) }
         }, actions = {

@@ -1,7 +1,6 @@
 package com.tkolymp.shared.viewmodels
 
 import androidx.lifecycle.ViewModel
-import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.CancellationException
@@ -62,7 +61,7 @@ class NotificationsSettingsViewModel(
                 isLoading = false
             )
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingSettings))
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingSettings, ex))
         }
     }
 
@@ -121,43 +120,54 @@ class NotificationsSettingsViewModel(
 
             _state.value = _state.value.copy(availableGroups = groups, myCohortIds = myIds, coachMessages = msgs, isLoading = false)
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingData))
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingData, ex))
         }
     }
 
     suspend fun setGlobalEnabled(enabled: Boolean) {
-        _state.value = _state.value.copy(globalEnabled = enabled)
-        saveCurrentSettings()
+        val previous = _state.value
+        _state.value = _state.value.copy(globalEnabled = enabled, error = null)
+        saveCurrentSettings(previous)
     }
 
     suspend fun addOrUpdateRule(rule: NotificationRule) {
-        val existingIdx = _state.value.rules.indexOfFirst { it.id == rule.id }
+        val previous = _state.value
+        val existingIdx = previous.rules.indexOfFirst { it.id == rule.id }
         val newRules = if (existingIdx >= 0) {
-            _state.value.rules.toMutableList().also { it[existingIdx] = rule }
+            previous.rules.toMutableList().also { it[existingIdx] = rule }
         } else {
-            _state.value.rules + rule
+            previous.rules + rule
         }
-        _state.value = _state.value.copy(rules = newRules)
-        saveCurrentSettings()
+        _state.value = _state.value.copy(rules = newRules, error = null)
+        saveCurrentSettings(previous)
     }
 
     suspend fun deleteRule(id: String) {
-        _state.value = _state.value.copy(rules = _state.value.rules.filter { it.id != id })
-        saveCurrentSettings()
+        val previous = _state.value
+        _state.value = _state.value.copy(rules = previous.rules.filter { it.id != id }, error = null)
+        saveCurrentSettings(previous)
     }
 
     suspend fun toggleRule(id: String, enabled: Boolean) {
-        val newRules = _state.value.rules.map { if (it.id == id) it.copy(enabled = enabled) else it }
-        _state.value = _state.value.copy(rules = newRules)
-        saveCurrentSettings()
+        val previous = _state.value
+        val newRules = previous.rules.map { if (it.id == id) it.copy(enabled = enabled) else it }
+        _state.value = _state.value.copy(rules = newRules, error = null)
+        saveCurrentSettings(previous)
     }
 
     suspend fun importSettings(settings: NotificationSettings) {
-        _state.value = _state.value.copy(rules = settings.rules, globalEnabled = settings.globalEnabled)
-        saveCurrentSettings()
+        val previous = _state.value
+        _state.value = _state.value.copy(rules = settings.rules, globalEnabled = settings.globalEnabled, error = null)
+        saveCurrentSettings(previous)
     }
 
-    private suspend fun saveCurrentSettings() {
+    /**
+     * Persists [_state]'s current rules/globalEnabled. Every caller above mutates state
+     * optimistically before calling this, so on failure we roll back to [previousStateOnFailure]
+     * (captured by the caller before its mutation) instead of leaving a change on screen that
+     * was never actually saved, and surface the failure via [NotificationsSettingsState.error].
+     */
+    private suspend fun saveCurrentSettings(previousStateOnFailure: NotificationsSettingsState) {
         try {
             val settings = NotificationSettings(
                 globalEnabled = _state.value.globalEnabled,
@@ -167,7 +177,9 @@ class NotificationsSettingsViewModel(
             _state.value = _state.value.copy(settings = settings)
             try { personalEventService.rescheduleAllPersonalEvents() } catch (_: Exception) {}
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            Logger.d("NotificationsSettingsVM", "Failed to save settings: ${ex.message}")
+            _state.value = previousStateOnFailure.copy(
+                error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorUpdating, ex)
+            )
         }
     }
 
@@ -188,7 +200,9 @@ class NotificationsSettingsViewModel(
                 notificationService.deleteReminder(id)
             }
             _state.value = _state.value.copy(reminders = _state.value.reminders.filter { it.id != id })
-        } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+        } catch (e: CancellationException) { throw e } catch (ex: Exception) {
+            _state.value = _state.value.copy(error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorUpdating, ex))
+        }
     }
 
     suspend fun updateReminderMinutes(reminder: EventReminder, minutesBefore: Int) {
@@ -203,7 +217,9 @@ class NotificationsSettingsViewModel(
                 val newList = _state.value.reminders.map { if (it.id == reminder.id) updated else it }
                 _state.value = _state.value.copy(reminders = newList)
             }
-        } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+        } catch (e: CancellationException) { throw e } catch (ex: Exception) {
+            _state.value = _state.value.copy(error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorUpdating, ex))
+        }
     }
 
     suspend fun toggleCategory(category: String) {
@@ -225,7 +241,7 @@ class NotificationsSettingsViewModel(
             _state.value = _state.value.copy(enabledCategories = new, settings = newSettings,
                 rules = newSettings.rules, globalEnabled = newSettings.globalEnabled)
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorUpdating))
+            _state.value = _state.value.copy(error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorUpdating, ex))
         }
     }
 }
