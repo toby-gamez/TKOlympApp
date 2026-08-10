@@ -31,6 +31,7 @@ object OfflineKeys {
     fun attendance(personId: String) = "$ATTENDANCE_PREFIX$personId"
 
     const val COMPETITIONS = "offline_competitions"
+    const val COMPETITIONS_PAST = "offline_competitions_past"
 
     const val META_LAST_SYNC = "offline_meta_last_sync"
 
