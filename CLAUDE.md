@@ -59,13 +59,14 @@ All logic shared between Android and iOS lives here. Never import Android/UI fra
 
 - **`ServiceLocator`** — read-only singleton facade; call `ServiceLocator.init(container)` exactly once (done inside each platform's `initNetworking()`). Access services via `ServiceLocator.eventService`, etc.
 - **`AppContainer`** — holds all service instances; constructed by `initNetworking()`, once per platform: `shared/src/androidMain/.../PlatformNetwork.kt` (Android, OkHttp engine + certificate pinning) and `shared/src/iosMain/.../PlatformNetwork.ios.kt` (iOS, Darwin engine).
-- **Services** — one interface + one impl per domain (`IAuthService`/`AuthService`, `IEventService`/`EventService`, etc.), e.g. `event/`, `people/`, `club/`, `announcements/`, `payments/`, `registration/`, `competitions/`, `personalevents/`, `notification/`. All GraphQL calls go through `GraphQlClientImpl` (Ktor); the Android engine is OkHttp with certificate pinning to `api.rozpisovnik.cz`, iOS uses Darwin.
+- **Services** — one interface + one impl per domain (`IAuthService`/`AuthService`, `IEventService`/`EventService`, etc.), under `event/`, `people/`, `club/`, `announcements/`, `payments/`, `registration/`, `competitions/`, `personalevents/`, `notification/`, `achievements/`, `campschedule/`, `feedback/`, `systemcalendar/`, `user/`, plus cross-cutting singletons in `appearance/`, `device/`, `tutorial/`. All GraphQL calls go through `GraphQlClientImpl` (Ktor); the Android engine is OkHttp with certificate pinning to `api.rozpisovnik.cz`, iOS uses Darwin.
 - **ViewModels** — one per screen (`CalendarViewModel`, `EventsViewModel`, …), each implementing `ViewModelState` (has `isLoading: Boolean` and `error: String?`). Shared between Android and iOS.
 - **`CacheService`** — in-memory LRU (max 200 entries, default 5-minute TTL). Services call `cache.get(key)` / `cache.put(key, value, ttl)` and invalidate by key or prefix on mutations.
 - **Storage** — `TokenStorage`, `UserStorage`, `OnboardingStorage`, `LanguageStorage`, `CalendarPreferenceStorage`, `OfflineDataStorage`, `NotificationStorage`. Android implementations use the `ksafe` library.
 - **Localization** — `AppStrings.current.*` provides all UI strings; `AppStrings.setLanguage(AppLanguage.XX)` switches at runtime and emits to `languageFlow` (triggers a `Crossfade` in `AppContent.kt`). Add new strings to `Strings.kt` and all translation objects in `shared/src/commonMain/kotlin/com/tkolymp/shared/language/translations/` (CS, DE, SK, SL, UA, VI, EN, BRAINROT).
 - **Calendar collision algorithm** — `CollisionDetectionAlgorithm` in `calendar/` assigns column positions to overlapping events (similar to Google Calendar).
-- **Offline sync** — `OfflineSyncManager` calls `downloadAll()` on startup and after login when network is available.
+- **Offline sync** — `sync/OfflineSyncManager` calls `downloadAll()` on startup and after login when network is available.
+- **Error reporting** — `errorreporting/ErrorReporter` auto-submits handled and fatal errors as bug reports through `IFeedbackService` (deduped per session, fire-and-forget); it is independent of the Firebase Crashlytics/Analytics wiring in `composeApp`/`androidApp`, which handles native crash telemetry separately.
 
 ### `composeApp` — Compose Multiplatform UI
 Targets both `android` and `iosArm64`/`iosSimulatorArm64`. Screens are kept thin; all logic lives in `shared`. Platform-only code goes in `androidMain`/`iosMain`.
@@ -74,7 +75,9 @@ Targets both `android` and `iosArm64`/`iosSimulatorArm64`. Screens are kept thin
 - **Theme** — `ui/theme/Color.kt` + `ui/theme/Theme.kt`. Always use `MaterialTheme` tokens; do not hard-code colors or numeric sizes.
 - **Screens** — `composeApp/src/commonMain/kotlin/com/tkolymp/tkolympapp/screens/`
 - **Reusable components** — `composeApp/src/commonMain/kotlin/com/tkolymp/tkolympapp/components/`
-- **Platform implementations** — declared as `expect` in `commonMain/.../platform/`, with `androidMain`/`iosMain` `actual`s (e.g., `HtmlText`, `AppLogo`, `ShareUtils`, `FullscreenImageViewer`, `NotificationFileButtons`). Firebase Cloud Messaging and barcode scanning remain Android-only.
+- **Platform implementations** — declared as `expect` in `commonMain/.../platform/`, with `androidMain`/`iosMain` `actual`s (e.g., `HtmlText`, `AppLogo`, `ShareUtils`, `FullscreenImageViewer`, `NotificationFileButtons`). Firebase Cloud Messaging, barcode scanning, and home-screen widgets remain Android-only.
+- **Home-screen widgets (Android-only)** — `androidMain/.../widget/` (`MyEventsWidget`, `MyNearestEventWidget`, `BirthdaysWidget`, `NextCompetitionWidget`, `ToolboxWidget`) are Glance app widgets; `WidgetUpdateWorker` (WorkManager, 30-min periodic) refreshes them via `WidgetDataProvider`.
+- **Camp schedule OCR (Android-only)** — `androidMain/.../campschedule/` (`GridDetector`, `CellOcr`) uses OpenCV to find the schedule grid in a photo and ML Kit text recognition to read cells; parsed results feed the shared `campschedule/CampScheduleService`.
 
 ## Key Conventions
 
