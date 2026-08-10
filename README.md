@@ -1,6 +1,6 @@
-# TKOlympApp
+# TKOlymp
 
-Mobilní aplikace pro TK Olymp — tenisový klub. Postavena na **Kotlin Multiplatform** s **Compose Multiplatform** UI, cílí na Android a iOS z jediné sdílené codebase.
+Mobilní aplikace pro TK Olymp — taneční klub. Postavena na **Kotlin Multiplatform** s **Compose Multiplatform** UI, cílí na Android a iOS z jediné sdílené codebase.
 
 ---
 
