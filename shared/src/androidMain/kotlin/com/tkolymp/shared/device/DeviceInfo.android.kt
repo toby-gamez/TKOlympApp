@@ -10,12 +10,12 @@ actual object DeviceInfo {
 
     actual val deviceModel: String = "${Build.MANUFACTURER} ${Build.MODEL}"
 
-    actual var appVersion: String = "unknown"
-        private set
+    private var _appVersion: String = "unknown"
+    actual val appVersion: String get() = _appVersion
 
     /** Populated once from the app's own PackageInfo; call as early as possible (e.g. Application.onCreate / initNetworking). */
     fun init(context: Context) {
-        appVersion = try {
+        _appVersion = try {
             val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
             val versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 packageInfo.longVersionCode
