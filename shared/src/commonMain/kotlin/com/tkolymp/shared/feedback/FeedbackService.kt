@@ -21,8 +21,10 @@ interface IFeedbackService {
 private data class CreateFeedbackRequest(
     val name: String,
     val email: String,
+    val title: String,
     val message: String,
     val platform: String,
+    val type: String,
 )
 
 /** Talks to the Tobiso.Web feedback endpoint (`POST {feedbackBaseUrl}/Feedback`) — a separate backend from the club GraphQL API. */
@@ -34,9 +36,9 @@ class FeedbackService(
 
     override suspend fun submit(type: FeedbackType, name: String, email: String, message: String): Result<Unit> {
         return try {
-            val prefix = when (type) {
-                FeedbackType.BUG_REPORT -> "[Bug] "
-                FeedbackType.FEATURE_SUGGESTION -> "[Feature request] "
+            val typeWire = when (type) {
+                FeedbackType.BUG_REPORT -> "Bug"
+                FeedbackType.FEATURE_SUGGESTION -> "FeatureRequest"
             }
             val response = httpClient.post("$feedbackBaseUrl/Feedback") {
                 contentType(ContentType.Application.Json)
@@ -44,8 +46,10 @@ class FeedbackService(
                     CreateFeedbackRequest(
                         name = name,
                         email = email,
-                        message = prefix + message,
+                        title = "",   // backend generates title from message when empty
+                        message = message,
                         platform = platformLabel,
+                        type = typeWire,
                     )
                 )
             }
