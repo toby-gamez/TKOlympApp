@@ -86,6 +86,7 @@ val StringsSk = Strings(
         termsOfUse = "Podmienky používania",
         myAccount = "Môj účet",
         settings = "Nastavenia",
+        changelog = "Čo je nové",
     ),
     filters = FilterStrings(
         filterType = "typ",
@@ -321,6 +322,7 @@ val StringsSk = Strings(
         tabWorkload = "Vyťaženosť",
         heatmapNoData = "Žiadni tréneri",
         heatmapPeriod = "Posledné 4 týždne",
+        me = "ja",
     ),
     timeline = TimelineStrings(
         timeline = "Os",
@@ -405,6 +407,7 @@ val StringsSk = Strings(
         weekDayAbbreviations = listOf("Po", "Ut", "St", "Št", "Pi", "So", "Ne"),
         resetToToday = "Späť na dnes",
         emptyCalendar = "Tento týždeň žiadne udalosti",
+        noEventsThisDay = "Tento deň žiadne udalosti",
     ),
     onboarding = OnboardingStrings(
         welcomeSubtitle = "Tréningový rozvrh, prihlasovanie na súťaže, nástenka a všetko o vašom tancovaní – prehľadne na jednom mieste.",

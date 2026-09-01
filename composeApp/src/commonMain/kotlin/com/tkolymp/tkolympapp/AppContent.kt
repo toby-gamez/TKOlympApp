@@ -46,6 +46,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.savedstate.read
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.errorreporting.ErrorReporter
 import com.tkolymp.shared.appearance.AppearanceSettings
 import com.tkolymp.shared.appearance.ThemeMode
 import com.tkolymp.shared.language.AppLanguage
@@ -54,6 +55,7 @@ import com.tkolymp.shared.language.getDeviceLanguageCode
 import com.tkolymp.shared.viewmodels.OnboardingViewModel
 import com.tkolymp.tkolympapp.platform.getAppVersion
 import com.tkolymp.tkolympapp.screens.AboutScreen
+import com.tkolymp.tkolympapp.screens.ChangelogScreen
 import com.tkolymp.tkolympapp.screens.AchievementsScreen
 import com.tkolymp.tkolympapp.screens.BarcodeScreen
 import com.tkolymp.tkolympapp.screens.BirthdayNotificationsScreen
@@ -155,6 +157,7 @@ fun AppContent(
                 AppearanceSettings.setThemeMode(when (themeRaw) { "light" -> ThemeMode.LIGHT; "dark" -> ThemeMode.DARK; else -> ThemeMode.SYSTEM })
                 tutorialSeen = try { ServiceLocator.onboardingStorage.hasSeenTutorial() } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
                 consentGiven = try { onboardingVm?.hasAcceptedPrivacyConsent() ?: false } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
+                ErrorReporter.setDeviceInfoConsented(consentGiven == true)
                 showOnboarding = !seen
                 loggedIn = has
                 try {
@@ -303,6 +306,7 @@ fun AppContent(
                                     onAccept = {
                                         scope.launch {
                                             try { ServiceLocator.onboardingStorage.setPrivacyConsentAccepted() } catch (_: Exception) {}
+                                            ErrorReporter.setDeviceInfoConsented(true)
                                             consentGiven = true
                                         }
                                     }
@@ -546,7 +550,8 @@ fun AppNavHost(
                 onBack = { navController.navigateUp() },
                 onOpenLanguages = { navController.navigate("languages") },
                 onOpenNotifications = { navController.navigate("notifications") },
-                onOpenAbout = { navController.navigate("about") }
+                onOpenAbout = { navController.navigate("about") },
+                onOpenChangelog = { navController.navigate("changelog") }
             )
         }
 
@@ -583,6 +588,16 @@ fun AppNavHost(
                 onPrivacyClick = { uriHandler.openUri("https://toby-gamez.github.io/tkolymp-docs.github.io/privacy/?lang=$langCode") },
                 onTermsClick = { uriHandler.openUri("https://toby-gamez.github.io/tkolymp-docs.github.io/terms/?lang=$langCode") }
             )
+        }
+
+        composable(
+            route = "changelog",
+            enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
+            exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
+            popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) },
+            popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) }
+        ) {
+            ChangelogScreen(onBack = { navController.navigateUp() })
         }
 
         composable(

@@ -213,8 +213,6 @@ internal fun RenderSingleEventCard(
                 val hex = tc.cohort?.colorRgb
                 if (hex.isNullOrBlank()) null else try { parseColorOrDefault(hex) } catch (_: Exception) { null }
             }
-            val cohortNames = cohorts.mapNotNull { tc -> tc.cohort?.name?.takeIf { it.isNotBlank() } }
-
             Column(
                 modifier = Modifier
                     .width(6.dp)
@@ -239,7 +237,7 @@ internal fun RenderSingleEventCard(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            RenderEventContent(item = item, tip = null, showType = showType, showDayOfWeek = false, cohortNames = cohortNames, modifier = Modifier.weight(1f))
+            RenderEventContent(item = item, tip = null, showType = showType, showDayOfWeek = false, modifier = Modifier.weight(1f))
         }
 
         if (onOpenRozpis != null) {

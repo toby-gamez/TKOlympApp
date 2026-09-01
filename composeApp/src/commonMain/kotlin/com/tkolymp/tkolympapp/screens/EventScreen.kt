@@ -518,6 +518,8 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
 
                     state.registrations.forEach { regEl ->
                         val reg = regEl.asJsonObjectOrNull() ?: return@forEach
+                        // Skip child registrations (individual dancer entries linked to a couple registration)
+                        if (reg.str("parentRegistrationId") != null) return@forEach
                         val person = reg["person"].asJsonObjectOrNull()
                         val couple = reg["couple"].asJsonObjectOrNull()
                         val note = reg.str("note")

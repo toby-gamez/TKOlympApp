@@ -10,6 +10,7 @@ import com.tkolymp.shared.campschedule.CampScheduleService
 import com.tkolymp.shared.club.ClubService
 import com.tkolymp.shared.competitions.ICompetitionService
 import com.tkolymp.shared.event.IEventService
+import com.tkolymp.shared.changelog.IChangelogService
 import com.tkolymp.shared.feedback.IFeedbackService
 import com.tkolymp.shared.network.IGraphQlClient
 import com.tkolymp.shared.network.NetworkMonitor
@@ -83,4 +84,5 @@ object ServiceLocator {
     val campScheduleService: CampScheduleService get() = container.campScheduleService
     val campScheduleReminderService: CampScheduleReminderService get() = container.campScheduleReminderService
     val feedbackService: IFeedbackService get() = container.feedbackService
+    val changelogService: IChangelogService get() = container.changelogService
 }

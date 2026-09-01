@@ -56,6 +56,7 @@ val StringsDe = Strings(
         termsOfUse = "Nutzungsbedingungen",
         myAccount = "Mein Konto",
         settings = "Einstellungen",
+        changelog = "Was ist neu",
     ),
     filters = FilterStrings(
         filterType = "Art",
@@ -291,6 +292,7 @@ val StringsDe = Strings(
         tabWorkload = "Auslastung",
         heatmapNoData = "Keine Trainer",
         heatmapPeriod = "Letzte 4 Wochen",
+        me = "ich",
     ),
     timeline = TimelineStrings(
         timeline = "Zeitachse",
@@ -375,6 +377,7 @@ val StringsDe = Strings(
         weekDayAbbreviations = listOf("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"),
         resetToToday = "Zurück zu heute",
         emptyCalendar = "Keine Ereignisse diese Woche",
+        noEventsThisDay = "Keine Ereignisse an diesem Tag",
     ),
     onboarding = OnboardingStrings(
         welcomeSubtitle = "Trainingsplan, Wettkampfanmeldungen, Pinnwand und alles über dein Tanzen – übersichtlich an einem Ort.",

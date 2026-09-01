@@ -14,4 +14,5 @@ data class OtherScreenStrings(
     val termsOfUse: String,
     val myAccount: String,
     val settings: String,
+    val changelog: String,
 )

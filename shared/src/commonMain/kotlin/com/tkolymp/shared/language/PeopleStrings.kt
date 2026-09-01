@@ -13,4 +13,5 @@ data class PeopleStrings(
     val tabWorkload: String,
     val heatmapNoData: String,
     val heatmapPeriod: String,
+    val me: String,
 )

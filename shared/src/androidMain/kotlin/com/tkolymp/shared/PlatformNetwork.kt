@@ -23,6 +23,7 @@ import com.tkolymp.shared.personalevents.PersonalEventService
 import com.tkolymp.shared.competitions.CompetitionService
 import com.tkolymp.shared.campschedule.CampScheduleService
 import com.tkolymp.shared.campschedule.CampScheduleReminderService
+import com.tkolymp.shared.changelog.ChangelogService
 import com.tkolymp.shared.feedback.FeedbackService
 import com.tkolymp.shared.device.DeviceInfo
 import com.tkolymp.shared.errorreporting.CrashReportStorage
@@ -95,6 +96,7 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
     val campScheduleSvc = CampScheduleService(offlineDataStorage)
     val campScheduleReminderSvc = CampScheduleReminderService(offlineDataStorage, notificationScheduler, campScheduleSvc, notificationStorage)
     val feedbackSvc = FeedbackService(client, FEEDBACK_BASE_URL, platformLabel = "TKOlympApp Android")
+    val changelogSvc = ChangelogService(client)
 
     val container = AppContainer(
         tokenStorage = storage,
@@ -124,6 +126,7 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
         campScheduleService = campScheduleSvc,
         campScheduleReminderService = campScheduleReminderSvc,
         feedbackService = feedbackSvc,
+        changelogService = changelogSvc,
     )
 
     ServiceLocator.init(container)

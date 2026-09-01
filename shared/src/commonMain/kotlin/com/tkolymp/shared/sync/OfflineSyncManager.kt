@@ -381,7 +381,7 @@ class OfflineSyncManager(
             (sticky + non).forEach { ann ->
                 try {
                     ann.id.toLongOrNull()?.let { id ->
-                        offlineDataStorage.save(OfflineKeys.announcementBody(id), AppJson.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), buildJsonObject { put("id", JsonPrimitive(ann.id)); put("title", JsonPrimitive(ann.title ?: "")); put("body", JsonPrimitive(ann.body ?: "")); put("updatedAt", JsonPrimitive(ann.updatedAt ?: "")) }))
+                        offlineDataStorage.save(OfflineKeys.announcementBody(id), AppJson.encodeToString(com.tkolymp.shared.announcements.Announcement.serializer(), ann))
                     }
                 } catch (_: Exception) {}
             }
@@ -518,7 +518,7 @@ class OfflineSyncManager(
             (sticky + non).forEach { ann ->
                 try {
                     ann.id.toLongOrNull()?.let { id ->
-                        offlineDataStorage.save(OfflineKeys.announcementBody(id), AppJson.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), buildJsonObject { put("id", JsonPrimitive(ann.id)); put("title", JsonPrimitive(ann.title ?: "")); put("body", JsonPrimitive(ann.body ?: "")); put("updatedAt", JsonPrimitive(ann.updatedAt ?: "")) }))
+                        offlineDataStorage.save(OfflineKeys.announcementBody(id), AppJson.encodeToString(com.tkolymp.shared.announcements.Announcement.serializer(), ann))
                     }
                 } catch (_: Exception) {}
             }

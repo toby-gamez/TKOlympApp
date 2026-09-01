@@ -514,6 +514,8 @@ class FreeLessonsViewModel(
                             val registrations = regArr?.mapNotNull { item ->
                                 val o = item as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null
                                 val rid = o["id"]?.jsonPrimitive?.longOrNull ?: o["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                                val parentRegIdPrim = o["parentRegistrationId"]?.jsonPrimitive
+                                val parentRegistrationId = parentRegIdPrim?.longOrNull ?: parentRegIdPrim?.contentOrNull?.toLongOrNull()
                                 val personObj = o["person"] as? kotlinx.serialization.json.JsonObject
                                 val person = personObj?.let { p ->
                                     val pid = p["id"]?.jsonPrimitive?.longOrNull ?: p["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
@@ -528,7 +530,7 @@ class FreeLessonsViewModel(
                                     val woman = womanObj?.let { w -> com.tkolymp.shared.event.SimpleName(w["firstName"]?.jsonPrimitive?.contentOrNull, w["lastName"]?.jsonPrimitive?.contentOrNull) }
                                     com.tkolymp.shared.event.Couple(cid, man, woman)
                                 }
-                                com.tkolymp.shared.event.Registration(rid, person, couple)
+                                com.tkolymp.shared.event.Registration(rid, person, couple, parentRegistrationId)
                             } ?: emptyList()
 
                             val locationObj = obj["location"] as? kotlinx.serialization.json.JsonObject

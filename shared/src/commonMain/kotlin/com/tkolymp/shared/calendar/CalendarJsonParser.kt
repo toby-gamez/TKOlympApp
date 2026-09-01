@@ -61,6 +61,8 @@ fun parseCalendarJson(raw: String): Map<String, List<EventInstance>> = try {
                 val o = regEl.jsonObject
                 val rid = o["id"]?.jsonPrimitive?.longOrNull
                     ?: o["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                val parentRegIdPrim = o["parentRegistrationId"]?.jsonPrimitive
+                val parentRegistrationId = parentRegIdPrim?.longOrNull ?: parentRegIdPrim?.contentOrNull?.toLongOrNull()
                 val person = o["person"]?.jsonObject?.let { p ->
                     Person(
                         p["id"]?.jsonPrimitive?.longOrNull ?: p["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull(),
@@ -76,7 +78,7 @@ fun parseCalendarJson(raw: String): Map<String, List<EventInstance>> = try {
                         c["woman"]?.jsonObject?.let { w -> SimpleName(w["firstName"]?.jsonPrimitive?.contentOrNull, w["lastName"]?.jsonPrimitive?.contentOrNull) }
                     )
                 }
-                Registration(rid, person, couple)
+                Registration(rid, person, couple, parentRegistrationId)
             } ?: emptyList()
 
             val location = obj["location"]?.jsonObject?.let { l ->
@@ -86,7 +88,7 @@ fun parseCalendarJson(raw: String): Map<String, List<EventInstance>> = try {
                 )
             }
 
-            val isRegistrationOpen = obj["isRegistrationOpen"]?.jsonPrimitive?.booleanOrNull ?: false
+            val isRegistrationOpen = obj["isRegistrationOpen"]?.jsonPrimitive?.booleanOrNull ?: true
             val event = Event(eventId, eventName, null, eventType, locationText,
                 isRegistrationOpen, false, false, trainers, targetCohorts, registrations, location)
             list += EventInstance(id, isCancelled, since, until, updatedAt, event)

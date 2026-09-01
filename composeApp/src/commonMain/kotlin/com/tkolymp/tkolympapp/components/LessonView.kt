@@ -100,7 +100,7 @@ internal fun LessonView(
 
                 instances.forEach { inst ->
                     val time = formatTimes(inst.since, inst.until)
-                    val regs = inst.event?.eventRegistrationsList ?: emptyList()
+                    val regs = inst.event?.eventRegistrationsList?.filter { it.parentRegistrationId == null } ?: emptyList()
                     val parts: List<Pair<String, Boolean>> = regs.mapNotNull { r ->
                         val display = r.person?.name ?: run {
                             val man = r.couple?.man

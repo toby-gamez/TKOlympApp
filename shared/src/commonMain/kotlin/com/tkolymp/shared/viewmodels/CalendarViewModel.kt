@@ -96,12 +96,14 @@ class CalendarViewModel(
         val onlyMineChanged = onlyMine != lastOnlyMine
         // only invalidate cache when explicitly forced or when the week changed
         val shouldInvalidate = forceRefresh || weekChanged
-        // Show loading indicator only for initial loads, week changes, and explicit refreshes.
-        // Tab filter switches and resume-triggered reloads run silently (current data stays visible).
-        val showLoadingIndicator = forceRefresh || isFirstLoad || weekChanged
 
         // Determine online status before touching state so we don't incorrectly clear isOffline.
         val isCurrentlyOnline = try { ServiceLocator.networkMonitor.isConnected() } catch (_: Exception) { true }
+
+        // Tab switches clear stale data immediately (online) so the wrong tab's events don't
+        // linger while the new tab's data loads. Pull-to-refresh keeps current data visible.
+        val showLoadingIndicator = forceRefresh || isFirstLoad || weekChanged || (onlyMineChanged && isCurrentlyOnline)
+        val clearEvents = (weekChanged || onlyMineChanged) && isCurrentlyOnline
 
         // preload cached user ids (used later in state)
         val pid = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("CalendarViewModel", "getCachedPersonId failed: ${e.message}"); null }
@@ -110,6 +112,10 @@ class CalendarViewModel(
         _state.value = _state.value.copy(
             isLoading = showLoadingIndicator,
             error = null,
+            eventsByDay = if (clearEvents) emptyMap() else _state.value.eventsByDay,
+            lessonsByTrainerByDay = if (clearEvents) emptyMap() else _state.value.lessonsByTrainerByDay,
+            otherEventsByDay = if (clearEvents) emptyMap() else _state.value.otherEventsByDay,
+            visibleDates = if (clearEvents) emptyList() else _state.value.visibleDates,
             // Only reset isOffline when we're about to do a fresh online load; preserve it otherwise
             // to avoid the screen-level offline cache flickering away and back.
             isOffline = if (showLoadingIndicator && isCurrentlyOnline) false else _state.value.isOffline
@@ -174,9 +180,12 @@ class CalendarViewModel(
                 try {
                     val bucket = loadOfflineBucket(onlyMine, weekStart, startIso, endIso)
                     if (bucket != null) {
-                        val parsed = try { mergePersonalEventsIntoMap(bucket, startIso, endIso) } catch (_: Exception) { bucket }
-                            .let { expandMultiDayEvents(it, visibleDates) }
-                        val (lessons, other) = splitEventMaps(parsed)
+                        val (parsed, lessons, other) = withContext(Dispatchers.Default) {
+                            val p = try { mergePersonalEventsIntoMap(bucket, startIso, endIso) } catch (_: Exception) { bucket }
+                                .let { expandMultiDayEvents(it, visibleDates) }
+                            val (l, o) = splitEventMaps(p)
+                            Triple(p, l, o)
+                        }
                         lastWeekStart = weekStart
                         lastOnlyMine = onlyMine
                         _state.value = _state.value.copy(
@@ -199,8 +208,11 @@ class CalendarViewModel(
                 // But still re-merge personal events so newly saved ones appear.
                 if (map.isEmpty() && _state.value.eventsByDay.isNotEmpty() && !onlyMineChanged && !forceRefresh) {
                     val currentMap = _state.value.eventsByDay
-                    val remerged = try { mergePersonalEventsIntoMap(currentMap, startIso, endIso) } catch (_: Exception) { currentMap }
-                    val (lessons, other) = splitEventMaps(remerged)
+                    val (remerged, lessons, other) = withContext(Dispatchers.Default) {
+                        val r = try { mergePersonalEventsIntoMap(currentMap, startIso, endIso) } catch (_: Exception) { currentMap }
+                        val (l, o) = splitEventMaps(r)
+                        Triple(r, l, o)
+                    }
                     _state.value = _state.value.copy(
                         eventsByDay = remerged,
                         lessonsByTrainerByDay = lessons,
@@ -212,27 +224,34 @@ class CalendarViewModel(
             }
 
             // merge personal events into server map (or offline bucket from exception fallback)
-            val mergedMap = try { mergePersonalEventsIntoMap(map, startIso, endIso) } catch (_: Exception) { map }
-                .let { expandMultiDayEvents(it, visibleDates) }
-            val (lessons, other) = splitEventMaps(mergedMap)
+            val (mergedMap, lessons, other) = withContext(Dispatchers.Default) {
+                val m = try { mergePersonalEventsIntoMap(map, startIso, endIso) } catch (_: Exception) { map }
+                    .let { expandMultiDayEvents(it, visibleDates) }
+                val (l, o) = splitEventMaps(m)
+                Triple(m, l, o)
+            }
 
             lastWeekStart = weekStart
             lastOnlyMine = onlyMine
 
             val hasCancelledMineToShow = if (onlyMine) {
                 val dismissedIds = loadDismissedIds()
-                mergedMap.values.flatten().any { it.isCancelled && it.id.toString() !in dismissedIds }
+                withContext(Dispatchers.Default) {
+                    mergedMap.values.flatten().any { it.isCancelled && it.id.toString() !in dismissedIds }
+                }
             } else {
                 _state.value.hasCancelledMineToShow
             }
 
             val competitionPersonIds = if (onlyMine) pid?.toLongOrNull()?.let { listOf(it) } else null
             val competitionsByDay = try {
-                competitionService.getUpcomingCompetitions(
-                    pSince = weekStart.toString(),
-                    pUntil = endDay.plus(1, DateTimeUnit.DAY).toString(),
-                    pPersonIds = competitionPersonIds
-                ).groupBy { it.competitionDate }
+                withContext(Dispatchers.Default) {
+                    competitionService.getUpcomingCompetitions(
+                        pSince = weekStart.toString(),
+                        pUntil = endDay.plus(1, DateTimeUnit.DAY).toString(),
+                        pPersonIds = competitionPersonIds
+                    ).groupBy { it.competitionDate }
+                }
             } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyMap() }
 
             val birthdaysByDay = try {
@@ -290,7 +309,9 @@ class CalendarViewModel(
     > {
         val lessons = events.mapValues { (_, list) ->
             list.filter { isLesson(it) }
-                .groupBy { it.event.firstTrainerOrEmpty() }
+                .groupBy { inst ->
+                    inst.event.firstTrainerOrEmpty().ifBlank { inst.event?.name ?: "" }
+                }
                 .mapValues { (_, instances) -> instances.sortedBy { it.since } }
         }
         val other = events.mapValues { (_, list) ->
@@ -516,9 +537,7 @@ class CalendarViewModel(
     }
 
     private fun isLesson(inst: EventInstance): Boolean =
-        inst.event?.type?.toEventType() == EventType.LESSON == true &&
-            inst.event.eventTrainersList.isNotEmpty() &&
-            !inst.event.eventTrainersList.firstOrNull().isNullOrBlank()
+        inst.event?.type?.toEventType() == EventType.LESSON
 
     fun clearError() {
         _state.value = _state.value.copy(error = null)

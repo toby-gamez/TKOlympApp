@@ -1,6 +1,7 @@
 package com.tkolymp.shared.people
 
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.language.AppStrings
 import kotlinx.coroutines.CancellationException
 import com.tkolymp.shared.cache.CacheService
 import kotlin.time.Duration
@@ -122,7 +123,7 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
     suspend fun fetchPersonDisplayName(personId: String, markMe: Boolean = false): String? {
         val p = fetchPersonName(personId) ?: return null
         val name = listOfNotNull(p.firstName, p.lastName).joinToString(" ")
-        return if (name.isBlank()) null else if (markMe) "$name (já)" else name
+        return if (name.isBlank()) null else if (markMe) "$name (${AppStrings.current.people.me})" else name
     }
 
     suspend fun fetchCoupleDisplayName(coupleId: String): String? {

@@ -12,4 +12,5 @@ data class CalendarViewStrings(
     val resetToToday: String = "Reset to today",
     val clearFilters: String = "Clear filters",
     val emptyCalendar: String = "No events this week",
+    val noEventsThisDay: String = "No events this day",
 )

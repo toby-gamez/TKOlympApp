@@ -56,6 +56,7 @@ val StringsUa = Strings(
         termsOfUse = "Умови використання",
         myAccount = "Мій акаунт",
         settings = "Налаштування",
+        changelog = "Що нового",
     ),
     filters = FilterStrings(
         filterType = "тип",
@@ -291,6 +292,7 @@ val StringsUa = Strings(
         tabWorkload = "Завантаженість",
         heatmapNoData = "Немає тренерів",
         heatmapPeriod = "Останні 4 тижні",
+        me = "я",
     ),
     timeline = TimelineStrings(
         timeline = "Вісь",
@@ -375,6 +377,7 @@ val StringsUa = Strings(
         weekDayAbbreviations = listOf("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"),
         resetToToday = "На сьогодні",
         emptyCalendar = "Цього тижня немає подій",
+        noEventsThisDay = "Цього дня немає подій",
     ),
     onboarding = OnboardingStrings(
         welcomeSubtitle = "Розклад тренувань, реєстрація на змагання, дошка оголошень та все про ваш танець – зручно в одному місці.",

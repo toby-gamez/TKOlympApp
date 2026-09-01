@@ -421,6 +421,25 @@ fun CalendarScreen(
                                         CompetitionEventCard(competitions = eventComps)
                                     }
                             }
+
+                            if (filteredLessons.isEmpty() && filteredOther.isEmpty() && competitions.isEmpty()) {
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Box(
+                                        contentAlignment = Alignment.Center,
+                                        modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp)
+                                    ) {
+                                        Text(
+                                            text = AppStrings.current.calendarView.noEventsThisDay,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                        )
+                                    }
+                                }
+                            }
                         }
                         } // StaggeredItem
                     }

@@ -264,7 +264,7 @@ fun formatHtmlContent(html: String?): String {
 
 fun participantsForEvent(event: Event?): List<String> {
     if (event == null) return emptyList()
-    val regs = event.eventRegistrationsList
+    val regs = event.eventRegistrationsList.filter { it.parentRegistrationId == null }
     if (regs.isEmpty()) return emptyList()
     return regs.mapNotNull { r ->
         r.person?.name ?: run {

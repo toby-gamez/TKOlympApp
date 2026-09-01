@@ -394,6 +394,8 @@ class CalendarViewViewModel(
                             val registrations = regArr?.mapNotNull { item ->
                                 val o = item as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null
                                 val rid = o["id"]?.jsonPrimitive?.longOrNull ?: o["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
+                                val parentRegIdPrim = o["parentRegistrationId"]?.jsonPrimitive
+                                val parentRegistrationId = parentRegIdPrim?.longOrNull ?: parentRegIdPrim?.contentOrNull?.toLongOrNull()
                                 val personObj = o["person"] as? kotlinx.serialization.json.JsonObject
                                 val person = personObj?.let { p ->
                                     val pid = p["id"]?.jsonPrimitive?.longOrNull ?: p["id"]?.jsonPrimitive?.contentOrNull?.toLongOrNull()
@@ -408,7 +410,7 @@ class CalendarViewViewModel(
                                     val woman = womanObj?.let { w -> com.tkolymp.shared.event.SimpleName(w["firstName"]?.jsonPrimitive?.contentOrNull, w["lastName"]?.jsonPrimitive?.contentOrNull) }
                                     com.tkolymp.shared.event.Couple(cid, man, woman)
                                 }
-                                com.tkolymp.shared.event.Registration(rid, person, couple)
+                                com.tkolymp.shared.event.Registration(rid, person, couple, parentRegistrationId)
                             } ?: emptyList()
 
                             val locationObj = obj["location"] as? kotlinx.serialization.json.JsonObject
@@ -430,12 +432,10 @@ class CalendarViewViewModel(
         return result
     }
 
-    // CollisionDetectionAlgorithm computes startMinute/durationMinutes from the event's own
-    // startTime/endTime clock times, assuming both fall on the same day. A multi-day event (e.g.
-    // a camp) grouped only under its start day therefore renders as a bogus short block on day 1
-    // and is completely absent from every following day. Split each multi-day event into one
-    // clipped occurrence per visible day it spans (00:00–23:59 on the days in between, real
-    // start/end time on the first/last day) so every day gets a correctly laid out block.
+    // CollisionDetectionAlgorithm computes startMinute/durationMinutes from clock times on a
+    // single day. Multi-day events (e.g. camps) are shown only on their start day so they don't
+    // clutter every subsequent column. The end time is clamped to 23:59 on the start day so the
+    // block fills the rest of the day and signals "this continues" without repeating.
     private fun expandMultiDayForLayout(events: List<TimelineEvent>, rangeStart: LocalDate, rangeEnd: LocalDate): List<TimelineEvent> {
         val result = mutableListOf<TimelineEvent>()
         for (event in events) {
@@ -445,15 +445,10 @@ class CalendarViewViewModel(
                 result += event
                 continue
             }
-            var d = startDate
-            while (d <= endDate) {
-                if (d >= rangeStart && d <= rangeEnd) {
-                    val dayStart = if (d == startDate) event.startTime else LocalDateTime(d.year, d.month.number, d.day, 0, 0, 0)
-                    val dayEnd = if (d == endDate) event.endTime else LocalDateTime(d.year, d.month.number, d.day, 23, 59, 0)
-                    val clippedId = if (d == startDate) event.id else fnv1a64("${event.id}_$d")
-                    result += event.copy(id = clippedId, startTime = dayStart, endTime = dayEnd)
-                }
-                d = d.plus(1, DateTimeUnit.DAY)
+            // Only render on the start day if it falls within the visible range
+            if (startDate >= rangeStart && startDate <= rangeEnd) {
+                val dayEnd = LocalDateTime(startDate.year, startDate.month.number, startDate.day, 23, 59, 0)
+                result += event.copy(endTime = dayEnd)
             }
         }
         return result

@@ -5,8 +5,9 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.AccountCircle
@@ -65,7 +66,7 @@ fun AppBottomBar(
         NavigationBarItem(
             selected = calendarSelected,
             onClick = { onSelect("calendar") },
-            icon = { AnimatedNavIcon(selected = calendarSelected, icon = Icons.Default.CalendarToday) },
+            icon = { AnimatedNavIcon(selected = calendarSelected, icon = Icons.Default.CalendarMonth) },
             label = { Text(AppStrings.current.navigation.calendar) }
         )
         NavigationBarItem(

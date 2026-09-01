@@ -19,14 +19,16 @@ class AttendanceRepository(
 ) {
     /**
      * Fetches attendance statuses for the given person from the GraphQL API.
-     * Returns a map of instanceId (Long) → status string (ATTENDED, NOT_EXCUSED, UNKNOWN, CANCELLED).
+     * Returns a map of instanceId (Long) → status string (ATTENDED, NOT_EXCUSED, UNKNOWN).
+     *
+     * Uses eventInstanceRegistrationsList.status (AttendanceType) — eventAttendancesList was removed from the API.
      */
     suspend fun fetchAttendanceStatuses(personId: String): Map<Long, String> {
         val idLong = personId.toLongOrNull()
         val query = if (idLong != null)
-            "query MyQuery(\$id: BigInt!) { person(id: \$id) { eventAttendancesList { status instanceId } } }"
+            "query MyQuery(\$id: BigInt!) { person(id: \$id) { eventInstanceRegistrationsList { instanceId status } } }"
         else
-            "query MyQuery(\$id: String!) { person(id: \$id) { eventAttendancesList { status instanceId } } }"
+            "query MyQuery(\$id: String!) { person(id: \$id) { eventInstanceRegistrationsList { instanceId status } } }"
         val variables = buildJsonObject {
             if (idLong != null) put("id", JsonPrimitive(idLong))
             else put("id", JsonPrimitive(personId))
@@ -36,7 +38,7 @@ class AttendanceRepository(
         } catch (e: CancellationException) { throw e } catch (_: Exception) { return emptyMap() }
         val list = try {
             resp.jsonObject["data"]?.jsonObject?.get("person")?.jsonObject
-                ?.get("eventAttendancesList")?.jsonArray ?: return emptyMap()
+                ?.get("eventInstanceRegistrationsList")?.jsonArray ?: return emptyMap()
         } catch (_: Exception) { return emptyMap() }
         val result = mutableMapOf<Long, String>()
         list.forEach { el ->

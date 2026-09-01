@@ -93,19 +93,19 @@ private val DAY_NAMES_FULL: Map<String, List<String>> = mapOf(
 
 /** Returns localized month name (genitive form) for the 1-based month number. */
 fun getLocalizedMonthName(monthNumber: Int, languageCode: String): String {
-    val months = MONTH_NAMES[languageCode.lowercase()] ?: MONTH_NAMES["en"]!!
+    val months = MONTH_NAMES[languageCode.lowercase()] ?: MONTH_NAMES["en"] ?: error("LocaleDateFormatter: missing 'en' locale data in MONTH_NAMES")
     return months.getOrElse(monthNumber - 1) { monthNumber.toString() }
 }
 
 /** Returns the nominative/localized month name for displaying "Month Year". */
 fun getLocalizedMonthNameNominative(monthNumber: Int, languageCode: String): String {
-    val months = MONTH_NAMES_NOMINATIVE[languageCode.lowercase()] ?: MONTH_NAMES_NOMINATIVE["en"]!!
+    val months = MONTH_NAMES_NOMINATIVE[languageCode.lowercase()] ?: MONTH_NAMES_NOMINATIVE["en"] ?: error("LocaleDateFormatter: missing 'en' locale data in MONTH_NAMES_NOMINATIVE")
     return months.getOrElse(monthNumber - 1) { monthNumber.toString() }
 }
 
 /** Returns localized full day-of-week name (Monday = index 0). */
 fun getLocalizedDayName(dayOfWeek: DayOfWeek, languageCode: String): String {
-    val days = DAY_NAMES_FULL[languageCode.lowercase()] ?: DAY_NAMES_FULL["en"]!!
+    val days = DAY_NAMES_FULL[languageCode.lowercase()] ?: DAY_NAMES_FULL["en"] ?: error("LocaleDateFormatter: missing 'en' locale data in DAY_NAMES_FULL")
     // DayOfWeek.ordinal: MONDAY=0 … SUNDAY=6 in kotlinx.datetime
     return days.getOrElse(dayOfWeek.ordinal) { dayOfWeek.name }
 }
@@ -124,7 +124,7 @@ private val DAY_NAMES_EVERY: Map<String, List<String>> = mapOf(
 
 /** Returns "every Tuesday"-style phrase for the given day in the current language. */
 fun getLocalizedEveryWeekday(dayOfWeek: DayOfWeek, languageCode: String): String {
-    val days = DAY_NAMES_EVERY[languageCode.lowercase()] ?: DAY_NAMES_EVERY["en"]!!
+    val days = DAY_NAMES_EVERY[languageCode.lowercase()] ?: DAY_NAMES_EVERY["en"] ?: error("LocaleDateFormatter: missing 'en' locale data in DAY_NAMES_EVERY")
     return days.getOrElse(dayOfWeek.ordinal) { "every ${getLocalizedDayName(dayOfWeek, languageCode)}" }
 }
 

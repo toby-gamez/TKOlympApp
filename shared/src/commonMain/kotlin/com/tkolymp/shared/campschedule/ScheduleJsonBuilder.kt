@@ -27,7 +27,7 @@ private fun dedupeColumns(columns: List<String>): List<String> {
     val seenCount = mutableMapOf<String, Int>()
     return columns.mapIndexed { index, raw ->
         val base = raw.trim().ifEmpty { "Sloupec ${index + 1}" }
-        val count = seenCount.getOrDefault(base, 0)
+        val count = seenCount[base] ?: 0
         seenCount[base] = count + 1
         if (count == 0) base else "$base ($count)"
     }

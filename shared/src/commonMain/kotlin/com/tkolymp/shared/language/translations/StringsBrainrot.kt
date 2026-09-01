@@ -57,6 +57,7 @@ val StringsBrainrot = Strings(
         termsOfUse = "Terms fr fr",
         myAccount = "My Slay Account",
         settings = "Settings fr",
+        changelog = "New Drip Dropped",
     ),
     filters = FilterStrings(
         filterType = "type",
@@ -292,6 +293,7 @@ val StringsBrainrot = Strings(
         tabWorkload = "Grind check",
         heatmapNoData = "No gymbros rn",
         heatmapPeriod = "Last 4 weeks fr",
+        me = "me fr",
     ),
     timeline = TimelineStrings(
         timeline = "Axis fr",
@@ -376,6 +378,7 @@ val StringsBrainrot = Strings(
         weekDayAbbreviations = listOf("Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"),
         resetToToday = "back to today fr",
         emptyCalendar = "no events this week ngl",
+        noEventsThisDay = "no events today bestie fr",
     ),
     onboarding = OnboardingStrings(
         welcomeSubtitle = "Training sched, comp sign-ups, the board and all ur dance vibes – everything in one place fr no cap.",

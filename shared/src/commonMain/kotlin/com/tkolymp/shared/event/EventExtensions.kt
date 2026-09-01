@@ -16,6 +16,9 @@ fun parseRegistrationFromJson(o: JsonObject): Registration? {
     val ridPrim = o["id"]?.jsonPrimitive
     val rid = ridPrim?.longOrNull ?: ridPrim?.contentOrNull?.toLongOrNull()
 
+    val parentRegIdPrim = o["parentRegistrationId"]?.jsonPrimitive
+    val parentRegistrationId = parentRegIdPrim?.longOrNull ?: parentRegIdPrim?.contentOrNull?.toLongOrNull()
+
     val personObj = o["person"] as? JsonObject
     val person = personObj?.let { p ->
         val pidPrim = p["id"]?.jsonPrimitive
@@ -32,7 +35,7 @@ fun parseRegistrationFromJson(o: JsonObject): Registration? {
         Couple(cid, man, woman)
     }
 
-    return Registration(rid, person, couple)
+    return Registration(rid, person, couple, parentRegistrationId)
 }
 
 /** Parses all registration objects in a [JsonArray] using [parseRegistrationFromJson]. */

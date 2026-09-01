@@ -3,21 +3,24 @@ package com.tkolymp.shared.errorreporting
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.device.DeviceInfo
 import com.tkolymp.shared.feedback.FeedbackType
-import com.tkolymp.shared.json.AppJson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlin.concurrent.Volatile
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * Sends every error the app encounters — handled or fatal — to the club's existing
- * feedback/bug-report backend ([com.tkolymp.shared.feedback.IFeedbackService]),
- * automatically and without any user interaction, in both debug and release builds.
+ * Sends error and crash reports to the club's feedback backend
+ * ([com.tkolymp.shared.feedback.IFeedbackService]), automatically and without any
+ * user interaction, in both debug and release builds.
+ *
+ * Privacy rules:
+ *  - User PII (email, name, or any identifying data) is NEVER included in reports.
+ *  - Device info (OS version, device model, app version) is included ONLY when the
+ *    user has accepted the privacy policy; call [setDeviceInfoConsented] at startup
+ *    and whenever consent changes.
  *
  * Deliberately fire-and-forget: reporting failures are swallowed so they never
  * cascade into a second, user-visible error.
@@ -29,7 +32,16 @@ object ErrorReporter {
     private var reportCount = 0
 
     private const val MAX_REPORTS_PER_SESSION = 40
-    private const val AUTO_REPORT_EMAIL = "autoreport@tkolymp.app"
+    private const val REPORT_EMAIL = "autoreport@tkolymp.app"
+
+    /** Set to true when the user has accepted the privacy policy and consented to diagnostic data. */
+    @Volatile var deviceInfoConsented: Boolean = false
+        private set
+
+    /** Call once the user's consent state is known (app startup and on first accept). */
+    fun setDeviceInfoConsented(consented: Boolean) {
+        deviceInfoConsented = consented
+    }
 
     /** Reports a handled (non-fatal) error. Safe to call from anywhere, any thread. */
     fun report(context: String, message: String, throwable: Throwable? = null) {
@@ -81,9 +93,11 @@ object ErrorReporter {
         appendLine("Context: $context")
         appendLine("Message: $message")
         appendLine("Time: ${kotlin.time.Clock.System.now()}")
-        appendLine("App version: ${DeviceInfo.appVersion}")
-        appendLine("OS: ${DeviceInfo.osVersion}")
-        appendLine("Device: ${DeviceInfo.deviceModel}")
+        if (deviceInfoConsented) {
+            appendLine("App version: ${DeviceInfo.appVersion}")
+            appendLine("OS: ${DeviceInfo.osVersion}")
+            appendLine("Device: ${DeviceInfo.deviceModel}")
+        }
         appendLine()
         appendLine("Stack trace:")
         appendLine(throwable?.stackTraceToString()?.take(6000) ?: "(no exception attached)")
@@ -92,28 +106,14 @@ object ErrorReporter {
     private suspend fun send(body: String) {
         if (!ServiceLocator.isInitialized) return
         try {
-            val email = currentUserEmail() ?: AUTO_REPORT_EMAIL
             ServiceLocator.feedbackService.submit(
                 type = FeedbackType.BUG_REPORT,
                 name = "Auto report (${DeviceInfo.platformName})",
-                email = email,
+                email = REPORT_EMAIL,
                 message = body,
             )
         } catch (_: Throwable) {
             // Never let reporting itself fail user-visibly.
-        }
-    }
-
-    private suspend fun currentUserEmail(): String? {
-        val json = try {
-            ServiceLocator.userStorage.getCurrentUserJson()
-        } catch (_: Throwable) {
-            null
-        } ?: return null
-        return try {
-            AppJson.parseToJsonElement(json).jsonObject["uEmail"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
-        } catch (_: Throwable) {
-            null
         }
     }
 }

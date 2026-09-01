@@ -56,6 +56,7 @@ val StringsSl = Strings(
         termsOfUse = "Pogoji uporabe",
         myAccount = "Moj račun",
         settings = "Nastavitve",
+        changelog = "Kaj je novega",
     ),
     filters = FilterStrings(
         filterType = "vrsta",
@@ -291,6 +292,7 @@ val StringsSl = Strings(
         tabWorkload = "Obremenjenost",
         heatmapNoData = "Ni trenerjev",
         heatmapPeriod = "Zadnja 4 tedna",
+        me = "jaz",
     ),
     timeline = TimelineStrings(
         timeline = "Os",
@@ -375,6 +377,7 @@ val StringsSl = Strings(
         weekDayAbbreviations = listOf("Po", "To", "Sr", "Čt", "Pe", "So", "Ne"),
         resetToToday = "Nazaj na danes",
         emptyCalendar = "Ta teden ni dogodkov",
+        noEventsThisDay = "Ta dan ni dogodkov",
     ),
     onboarding = OnboardingStrings(
         welcomeSubtitle = "Urnik treningov, prijave na tekmovanja, oglasna deska in vse o vašem plesu – pregledno na enem mestu.",

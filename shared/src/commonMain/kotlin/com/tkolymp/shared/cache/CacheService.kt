@@ -19,7 +19,7 @@ data class CacheEntry<T>(
 
 class CacheService {
     private val cache = mutableMapOf<String, CacheEntry<*>>()
-    private val lruOrder = ArrayList<String>()
+    private val lruOrder = ArrayDeque<String>()
     private val MAX_ENTRIES = 200
     private val mutex = Mutex()
 
@@ -55,7 +55,7 @@ class CacheService {
             lruOrder.add(key)
             // evict if necessary
             while (lruOrder.size > MAX_ENTRIES) {
-                val oldest = lruOrder.removeAt(0)
+                val oldest = lruOrder.removeFirst()
                 cache.remove(oldest)
             }
         }

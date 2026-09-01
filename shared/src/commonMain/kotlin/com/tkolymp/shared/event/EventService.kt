@@ -80,7 +80,7 @@ data class SimpleName(val firstName: String? = null, val lastName: String? = nul
 data class Couple(val id: BigInt? = null, val man: SimpleName? = null, val woman: SimpleName? = null)
 
 @Serializable
-data class Registration(val id: BigInt? = null, val person: Person? = null, val couple: Couple? = null)
+data class Registration(val id: BigInt? = null, val person: Person? = null, val couple: Couple? = null, val parentRegistrationId: BigInt? = null)
 
 @Serializable
 data class Location(val id: BigInt? = null, val name: String? = null)
@@ -163,6 +163,7 @@ class EventService(
                         condition: { registrationStatus: ACTIVE }
                     ) {
                         id
+                        parentRegistrationId
                         note
                         personId
                         person {
@@ -238,6 +239,7 @@ class EventService(
                         targetCohortsList { cohortId cohort { id name colorRgb } }
                         eventInstanceRegistrationsByInstanceIdList {
                             id
+                            parentRegistrationId
                             person { id name firstName lastName }
                             couple { id man { firstName lastName } woman { firstName lastName } }
                         }

@@ -448,7 +448,7 @@ private fun derivePartnershipSeasons(couples: List<CouplePeriod>, personId: Stri
 
 private fun longestWeeklyStreak(dates: List<LocalDate>): Int {
     if (dates.isEmpty()) return 0
-    val weeks = dates.map { it.toEpochDays() / 7 }.toSortedSet().toList()
+    val weeks = dates.map { it.toEpochDays() / 7 }.distinct().sorted()
     var longest = 1
     var current = 1
     for (i in 1 until weeks.size) {

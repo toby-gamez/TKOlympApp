@@ -18,6 +18,9 @@ fun filterOwnedRegistrations(registrations: JsonArray?, myPersonId: String?, myC
     return buildJsonArray {
         registrations.forEach { el ->
             val obj = el as? JsonObject ?: return@forEach
+            // Skip child registrations (individual dancer entries of a couple registration)
+            val parentRegId = obj["parentRegistrationId"]?.jsonPrimitive?.contentOrNull
+            if (!parentRegId.isNullOrBlank()) return@forEach
             val personId = obj["person"]?.let { (it as? JsonObject)?.get("id")?.jsonPrimitive?.contentOrNull } ?: obj["personId"]?.jsonPrimitive?.contentOrNull
             if (!personId.isNullOrBlank() && !myPersonId.isNullOrBlank() && personId == myPersonId) {
                 add(obj)
