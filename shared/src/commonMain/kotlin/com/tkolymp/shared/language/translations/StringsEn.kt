@@ -26,6 +26,7 @@ import com.tkolymp.shared.language.TutorialStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
+import com.tkolymp.shared.language.FeedbackStrings
 import com.tkolymp.shared.language.PrivacyConsentStrings
 import com.tkolymp.shared.language.ProfileStrings
 import com.tkolymp.shared.language.RegistrationStrings
@@ -770,5 +771,20 @@ val StringsEn = Strings(
         readPolicyLinkLabel = "Read the Privacy Policy",
         checkboxLabel = "I have read and accept the Privacy Policy",
         continueButton = "Continue",
+    ),
+    feedback = FeedbackStrings(
+        sectionTitle = "Feedback",
+        reportBugLabel = "Report a bug",
+        suggestFeatureLabel = "Suggest a feature",
+        nameLabel = "Name",
+        emailLabel = "Email",
+        messageLabel = "Message",
+        bugMessageHint = "Describe what went wrong…",
+        featureMessageHint = "Describe your idea…",
+        submit = "Send",
+        sending = "Sending…",
+        successMessage = "Thanks! Your feedback was sent.",
+        errorMessage = "Couldn't send feedback. Please try again.",
+        validationError = "Please fill in all fields.",
     ),
 )

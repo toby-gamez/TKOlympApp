@@ -26,6 +26,7 @@ import com.tkolymp.shared.language.TutorialStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
+import com.tkolymp.shared.language.FeedbackStrings
 import com.tkolymp.shared.language.PrivacyConsentStrings
 import com.tkolymp.shared.language.ProfileStrings
 import com.tkolymp.shared.language.RegistrationStrings
@@ -760,5 +761,20 @@ val StringsBrainrot = Strings(
         readPolicyLinkLabel = "Read the Privacy Policy fr",
         checkboxLabel = "I read it and I'm cool with the Privacy Policy, no cap",
         continueButton = "Let's go fr",
+    ),
+    feedback = FeedbackStrings(
+        sectionTitle = "Spill the tea",
+        reportBugLabel = "Touch grass, found a bug",
+        suggestFeatureLabel = "Big brain idea incoming",
+        nameLabel = "Your name fr",
+        emailLabel = "Email (no cap)",
+        messageLabel = "The tea ☕",
+        bugMessageHint = "Bro what broke fr fr…",
+        featureMessageHint = "This would hit different if…",
+        submit = "Send it",
+        sending = "Sending fr…",
+        successMessage = "W move! Your feedback hit different ✅",
+        errorMessage = "L moment, feedback didn't send. Try again bestie.",
+        validationError = "Fill everything out no cap.",
     ),
 )

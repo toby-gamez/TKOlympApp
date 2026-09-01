@@ -26,6 +26,7 @@ import com.tkolymp.shared.language.TutorialStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
+import com.tkolymp.shared.language.FeedbackStrings
 import com.tkolymp.shared.language.PrivacyConsentStrings
 import com.tkolymp.shared.language.ProfileStrings
 import com.tkolymp.shared.language.RegistrationStrings
@@ -759,5 +760,20 @@ val StringsVi = Strings(
         readPolicyLinkLabel = "Đọc Chính sách quyền riêng tư",
         checkboxLabel = "Tôi đã đọc và đồng ý với Chính sách quyền riêng tư",
         continueButton = "Tiếp tục",
+    ),
+    feedback = FeedbackStrings(
+        sectionTitle = "Phản hồi",
+        reportBugLabel = "Báo cáo lỗi",
+        suggestFeatureLabel = "Đề xuất tính năng",
+        nameLabel = "Tên",
+        emailLabel = "Email",
+        messageLabel = "Tin nhắn",
+        bugMessageHint = "Mô tả những gì đã xảy ra…",
+        featureMessageHint = "Mô tả ý tưởng của bạn…",
+        submit = "Gửi",
+        sending = "Đang gửi…",
+        successMessage = "Cảm ơn! Phản hồi của bạn đã được gửi.",
+        errorMessage = "Không thể gửi phản hồi. Vui lòng thử lại.",
+        validationError = "Vui lòng điền vào tất cả các trường.",
     ),
 )

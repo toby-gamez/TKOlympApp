@@ -26,6 +26,7 @@ import com.tkolymp.shared.language.TutorialStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
+import com.tkolymp.shared.language.FeedbackStrings
 import com.tkolymp.shared.language.PrivacyConsentStrings
 import com.tkolymp.shared.language.ProfileStrings
 import com.tkolymp.shared.language.RegistrationStrings
@@ -759,5 +760,20 @@ val StringsUa = Strings(
         readPolicyLinkLabel = "Переглянути Політику конфіденційності",
         checkboxLabel = "Я прочитав(ла) та приймаю Політику конфіденційності",
         continueButton = "Продовжити",
+    ),
+    feedback = FeedbackStrings(
+        sectionTitle = "Зворотній зв'язок",
+        reportBugLabel = "Повідомити про помилку",
+        suggestFeatureLabel = "Запропонувати функцію",
+        nameLabel = "Ім'я",
+        emailLabel = "E-mail",
+        messageLabel = "Повідомлення",
+        bugMessageHint = "Опишіть, що пішло не так…",
+        featureMessageHint = "Опишіть свою ідею…",
+        submit = "Надіслати",
+        sending = "Надсилаю…",
+        successMessage = "Дякуємо! Ваш відгук надіслано.",
+        errorMessage = "Не вдалося надіслати відгук. Будь ласка, спробуйте ще раз.",
+        validationError = "Будь ласка, заповніть усі поля.",
     ),
 )

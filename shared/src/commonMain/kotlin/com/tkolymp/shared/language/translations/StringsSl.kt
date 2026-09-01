@@ -26,6 +26,7 @@ import com.tkolymp.shared.language.TutorialStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
+import com.tkolymp.shared.language.FeedbackStrings
 import com.tkolymp.shared.language.PrivacyConsentStrings
 import com.tkolymp.shared.language.ProfileStrings
 import com.tkolymp.shared.language.RegistrationStrings
@@ -759,5 +760,20 @@ val StringsSl = Strings(
         readPolicyLinkLabel = "Preberi pravilnik o zasebnosti",
         checkboxLabel = "Prebral/a sem in se strinjam s pravilnikom o zasebnosti",
         continueButton = "Naprej",
+    ),
+    feedback = FeedbackStrings(
+        sectionTitle = "Povratne informacije",
+        reportBugLabel = "Prijavi napako",
+        suggestFeatureLabel = "Predlagaj funkcijo",
+        nameLabel = "Ime",
+        emailLabel = "E-pošta",
+        messageLabel = "Sporočilo",
+        bugMessageHint = "Opiši, kaj je šlo narobe…",
+        featureMessageHint = "Opiši svojo idejo…",
+        submit = "Pošlji",
+        sending = "Pošiljam…",
+        successMessage = "Hvala! Tvoje povratne informacije so bile poslane.",
+        errorMessage = "Povratnih informacij ni bilo mogoče poslati. Poskusi znova.",
+        validationError = "Prosimo, izpolni vsa polja.",
     ),
 )

@@ -26,6 +26,7 @@ import com.tkolymp.shared.language.OnboardingStrings
 import com.tkolymp.shared.language.OtherScreenStrings
 import com.tkolymp.shared.language.OverviewStrings
 import com.tkolymp.shared.language.PeopleStrings
+import com.tkolymp.shared.language.FeedbackStrings
 import com.tkolymp.shared.language.PrivacyConsentStrings
 import com.tkolymp.shared.language.ProfileStrings
 import com.tkolymp.shared.language.RegistrationStrings
@@ -759,5 +760,20 @@ val StringsSk = Strings(
         readPolicyLinkLabel = "Prečítať Zásady ochrany osobných údajov",
         checkboxLabel = "Prečítal/a som si a súhlasím so Zásadami ochrany osobných údajov",
         continueButton = "Pokračovať",
+    ),
+    feedback = FeedbackStrings(
+        sectionTitle = "Spätná väzba",
+        reportBugLabel = "Nahlásiť chybu",
+        suggestFeatureLabel = "Navrhnúť funkciu",
+        nameLabel = "Meno",
+        emailLabel = "E-mail",
+        messageLabel = "Správa",
+        bugMessageHint = "Popíš, čo sa pokazilo…",
+        featureMessageHint = "Popíš svoj nápad…",
+        submit = "Odoslať",
+        sending = "Odosiela sa…",
+        successMessage = "Ďakujeme! Tvoja spätná väzba bola odoslaná.",
+        errorMessage = "Spätnú väzbu sa nepodarilo odoslať. Skús to znova.",
+        validationError = "Vyplň prosím všetky polia.",
     ),
 )
