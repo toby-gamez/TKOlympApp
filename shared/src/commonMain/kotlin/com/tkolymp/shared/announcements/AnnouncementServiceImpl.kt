@@ -13,7 +13,7 @@ class AnnouncementServiceImpl(
     private val cache: CacheService
 ) : IAnnouncementService {
     private val query = """
-        query MyQuery(${'$'}sticky: Boolean) { announcements(sticky: ${'$'}sticky) { nodes { body createdAt id isSticky isVisible title author { id uJmeno uPrijmeni } updatedAt } } }
+        query MyQuery(${'$'}sticky: Boolean) { announcements(condition: { isSticky: ${'$'}sticky }) { nodes { body createdAt id isSticky status title author { id uJmeno uPrijmeni } updatedAt } } }
     """.trimIndent()
 
     override suspend fun getAnnouncements(sticky: Boolean): DataResult<List<Announcement>> {
@@ -35,7 +35,7 @@ class AnnouncementServiceImpl(
                         val createdAt = obj["createdAt"]?.jsonPrimitive?.contentOrNull
                         val updatedAt = obj["updatedAt"]?.jsonPrimitive?.contentOrNull
                         val isSticky = obj["isSticky"]?.jsonPrimitive?.booleanOrNull ?: false
-                        val isVisible = obj["isVisible"]?.jsonPrimitive?.booleanOrNull ?: false
+                        val isVisible = obj["status"]?.jsonPrimitive?.contentOrNull == "PUBLISHED"
                         val authorObj = obj["author"]?.jsonObject
                         val author = authorObj?.let {
                             Author(
@@ -70,7 +70,7 @@ class AnnouncementServiceImpl(
     }
 
     private val singleQuery = """
-        query MyQuery(${'$'}id: BigInt!) { announcement(id: ${'$'}id) { id title body createdAt updatedAt isVisible author { uJmeno uPrijmeni } } }
+        query MyQuery(${'$'}id: BigInt!) { announcement(id: ${'$'}id) { id title body createdAt updatedAt status author { uJmeno uPrijmeni } } }
     """.trimIndent()
 
     override suspend fun getAnnouncementById(id: Long, forceRefresh: Boolean): DataResult<Announcement> {
@@ -89,7 +89,7 @@ class AnnouncementServiceImpl(
                 val createdAt = obj["createdAt"]?.jsonPrimitive?.contentOrNull
                 val updatedAt = obj["updatedAt"]?.jsonPrimitive?.contentOrNull
                 val isSticky = false
-                val isVisible = obj["isVisible"]?.jsonPrimitive?.booleanOrNull ?: false
+                val isVisible = obj["status"]?.jsonPrimitive?.contentOrNull == "PUBLISHED"
                 val authorObj = obj["author"]?.jsonObject
                 val author = authorObj?.let {
                     Author(

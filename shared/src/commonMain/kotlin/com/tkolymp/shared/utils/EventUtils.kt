@@ -249,18 +249,54 @@ fun formatHtmlContent(html: String?): String {
     
     text = text
         .replace(Regex("<[^>]+>"), "")
-        .replace("&nbsp;", " ")
-        .replace("&amp;", "&")
-        .replace("&lt;", "<")
-        .replace("&gt;", ">")
-        .replace("&quot;", "\"")
-        .replace("&#39;", "'")
-        .replace("&apos;", "'")
+        .replace(Regex("&#x([0-9a-fA-F]+);")) { it.groupValues[1].toInt(16).toChar().toString() }
+        .replace(Regex("&#([0-9]+);")) { it.groupValues[1].toInt().toChar().toString() }
+
+    for ((entity, char) in HTML_NAMED_ENTITIES) {
+        text = text.replace(entity, char)
+    }
+
+    text = text
         .replace(Regex("\n{3,}"), "\n\n")
         .trim()
-    
+
     return text
 }
+
+private val HTML_NAMED_ENTITIES: List<Pair<String, String>> = listOf(
+    // Order matters: longer/more specific entities before shorter prefixes where relevant.
+    "&nbsp;" to " ",
+    "&amp;" to "&",
+    "&lt;" to "<",
+    "&gt;" to ">",
+    "&quot;" to "\"",
+    "&apos;" to "'",
+    "&#39;" to "'",
+    // Latin accented lowercase
+    "&aacute;" to "á", "&eacute;" to "é", "&iacute;" to "í", "&oacute;" to "ó", "&uacute;" to "ú",
+    "&yacute;" to "ý", "&agrave;" to "à", "&egrave;" to "è", "&igrave;" to "ì", "&ograve;" to "ò",
+    "&ugrave;" to "ù", "&acirc;" to "â", "&ecirc;" to "ê", "&icirc;" to "î", "&ocirc;" to "ô",
+    "&ucirc;" to "û", "&auml;" to "ä", "&euml;" to "ë", "&iuml;" to "ï", "&ouml;" to "ö",
+    "&uuml;" to "ü", "&atilde;" to "ã", "&ntilde;" to "ñ", "&otilde;" to "õ", "&aring;" to "å",
+    "&ccedil;" to "ç", "&oslash;" to "ø", "&szlig;" to "ß",
+    // Latin accented uppercase
+    "&Aacute;" to "Á", "&Eacute;" to "É", "&Iacute;" to "Í", "&Oacute;" to "Ó", "&Uacute;" to "Ú",
+    "&Yacute;" to "Ý", "&Agrave;" to "À", "&Egrave;" to "È", "&Igrave;" to "Ì", "&Ograve;" to "Ò",
+    "&Ugrave;" to "Ù", "&Acirc;" to "Â", "&Ecirc;" to "Ê", "&Icirc;" to "Î", "&Ocirc;" to "Ô",
+    "&Ucirc;" to "Û", "&Auml;" to "Ä", "&Euml;" to "Ë", "&Iuml;" to "Ï", "&Ouml;" to "Ö",
+    "&Uuml;" to "Ü", "&Atilde;" to "Ã", "&Ntilde;" to "Ñ", "&Otilde;" to "Õ", "&Aring;" to "Å",
+    "&Ccedil;" to "Ç", "&Oslash;" to "Ø",
+    // Czech/Slovak specific (caron/hacek, ring, etc.)
+    "&ccaron;" to "č", "&Ccaron;" to "Č", "&dcaron;" to "ď", "&Dcaron;" to "Ď",
+    "&ecaron;" to "ě", "&Ecaron;" to "Ě", "&ncaron;" to "ň", "&Ncaron;" to "Ň",
+    "&rcaron;" to "ř", "&Rcaron;" to "Ř", "&scaron;" to "š", "&Scaron;" to "Š",
+    "&tcaron;" to "ť", "&Tcaron;" to "Ť", "&zcaron;" to "ž", "&Zcaron;" to "Ž",
+    "&uring;" to "ů", "&Uring;" to "Ů",
+    // Other common entities
+    "&hellip;" to "…", "&ndash;" to "–", "&mdash;" to "—", "&lsquo;" to "‘", "&rsquo;" to "’",
+    "&ldquo;" to "“", "&rdquo;" to "”", "&bull;" to "•", "&copy;" to "©", "&reg;" to "®",
+    "&trade;" to "™", "&euro;" to "€", "&deg;" to "°", "&middot;" to "·",
+)
 
 fun participantsForEvent(event: Event?): List<String> {
     if (event == null) return emptyList()
