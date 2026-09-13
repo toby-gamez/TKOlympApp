@@ -13,7 +13,7 @@ class AnnouncementServiceImpl(
     private val cache: CacheService
 ) : IAnnouncementService {
     private val query = """
-        query MyQuery(${'$'}sticky: Boolean) { myAnnouncements(sticky: ${'$'}sticky) { nodes { body createdAt id isSticky isVisible title author { id uJmeno uPrijmeni } updatedAt } } }
+        query MyQuery(${'$'}sticky: Boolean) { announcements(sticky: ${'$'}sticky) { nodes { body createdAt id isSticky isVisible title author { id uJmeno uPrijmeni } updatedAt } } }
     """.trimIndent()
 
     override suspend fun getAnnouncements(sticky: Boolean): DataResult<List<Announcement>> {
@@ -23,8 +23,8 @@ class AnnouncementServiceImpl(
             val variables = buildJsonObject { put("sticky", JsonPrimitive(sticky)) }
             val resp = client.post(query, variables)
             val data = resp.jsonObject["data"] ?: return DataResult.Success(emptyList())
-            val myAnnouncements = (data.jsonObject["myAnnouncements"] ?: return DataResult.Success(emptyList()))
-            val nodes = myAnnouncements.jsonObject["nodes"] ?: return DataResult.Success(emptyList())
+            val announcements = (data.jsonObject["announcements"] ?: return DataResult.Success(emptyList()))
+            val nodes = announcements.jsonObject["nodes"] ?: return DataResult.Success(emptyList())
             if (nodes is JsonArray) {
                 val result = nodes.mapNotNull { elem ->
                     try {
