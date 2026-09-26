@@ -121,6 +121,9 @@ fun AppContent(
         var tutorialSeen by remember { mutableStateOf(false) }
         val preferTimeline by AppearanceSettings.preferTimeline.collectAsStateWithLifecycle()
         var weekOffset by remember { mutableIntStateOf(0) }
+        // Deep link is one-shot: the Crossfade below rebuilds its content (and nav controller)
+        // on every language change, which must not re-send the user to the deep-linked screen.
+        var pendingInitialRoute by remember { mutableStateOf(initialRoute) }
 
         LaunchedEffect(Unit) {
             try {
@@ -222,8 +225,10 @@ fun AppContent(
             }
 
             LaunchedEffect(loggedIn) {
-                if (loggedIn == true && initialRoute != null) {
-                    navController.navigate(initialRoute) {
+                val route = pendingInitialRoute
+                if (loggedIn == true && route != null) {
+                    pendingInitialRoute = null
+                    navController.navigate(route) {
                         popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                         launchSingleTop = true
                     }
