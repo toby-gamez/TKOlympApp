@@ -77,6 +77,9 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import com.tkolymp.shared.competitions.Competition
+import com.tkolymp.tkolympapp.components.ErrorBanner
+import androidx.compose.material.icons.outlined.EventBusy
+import androidx.compose.material.icons.outlined.EmojiEvents
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -177,7 +180,7 @@ fun OverviewScreen(
 
             Column(modifier = Modifier.padding(horizontal = 12.dp)) {
                 if (state.trainingSelectedDate == null && !state.isLoading) {
-                    EmptyState(title = AppStrings.current.timeline.nothingPlanned)
+                    EmptyState(title = AppStrings.current.timeline.nothingPlanned, icon = Icons.Outlined.EventBusy)
                 } else if (state.trainingSelectedDate == null) {
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
@@ -258,7 +261,7 @@ fun OverviewScreen(
                             horizontalArrangement = Arrangement.Center
                         ) { CircularProgressIndicator() }
                     } else {
-                        EmptyState(title = AppStrings.current.timeline.nothingPlanned)
+                        EmptyState(title = AppStrings.current.timeline.nothingPlanned, icon = Icons.Outlined.EventBusy)
                     }
                 } else {
                     announcements.forEachIndexed { i, a ->
@@ -327,7 +330,7 @@ fun OverviewScreen(
                             horizontalArrangement = Arrangement.Center
                         ) { CircularProgressIndicator() }
                     } else {
-                        EmptyState(title = AppStrings.current.timeline.nothingPlanned)
+                        EmptyState(title = AppStrings.current.timeline.nothingPlanned, icon = Icons.Outlined.EventBusy)
                     }
                 } else {
                     val campsMapList = remember(state.campsMapByDay) { state.campsMapByDay.entries.toList() }
@@ -372,7 +375,7 @@ fun OverviewScreen(
                 Column(modifier = Modifier.padding(horizontal = 12.dp)) {
                     val comp = state.nearestCompetition
                     if (comp == null) {
-                        EmptyState(title = AppStrings.current.competition.noUpcomingMine)
+                        EmptyState(title = AppStrings.current.competition.noUpcomingMine, icon = Icons.Outlined.EmojiEvents)
                     } else {
                         StaggeredItem(index = 0, visible = cardsVisible) {
                             NearestCompetitionCard(competition = comp, onOpenCompetitions = onOpenCompetitions)
@@ -404,7 +407,7 @@ fun OverviewScreen(
             }
             Column(modifier = Modifier.padding(horizontal = 12.dp)) {
                 if (state.upcomingBirthdays.isEmpty()) {
-                    EmptyState(title = AppStrings.current.timeline.nothingPlanned)
+                    EmptyState(title = AppStrings.current.timeline.nothingPlanned, icon = Icons.Outlined.EventBusy)
                 } else {
                     state.upcomingBirthdays.forEachIndexed { i, entry ->
                         StaggeredItem(index = i, visible = cardsVisible) {
@@ -480,7 +483,7 @@ fun OverviewScreen(
             if (state.isLoading) {
                 Text(AppStrings.current.commonActions.loading, modifier = Modifier.padding(12.dp))
             }
-            state.error?.let { Text(text = it.message, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(12.dp)) }
+            state.error?.let { ErrorBanner(error = it) }
         }
     }
 }

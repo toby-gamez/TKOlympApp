@@ -46,6 +46,7 @@ import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.parseColorOrDefault
 import com.tkolymp.tkolympapp.platform.HtmlText
 import kotlinx.coroutines.launch
+import com.tkolymp.tkolympapp.components.ErrorBanner
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,7 +87,7 @@ fun GroupsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
             // Loading state is represented by the SwipeToReload indicator,
             // so we no longer show an additional inline progress row here.
 
-            state.error?.let { err -> Text(err.message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(16.dp)) }
+            state.error?.let { err -> ErrorBanner(error = err) }
 
             state.cohorts.forEachIndexed { i, cohort ->
                 StaggeredItem(index = i, visible = cardsVisible, baseDelayMs = 50) {

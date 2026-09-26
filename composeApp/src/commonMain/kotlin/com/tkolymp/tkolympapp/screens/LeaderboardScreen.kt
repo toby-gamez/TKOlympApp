@@ -57,6 +57,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import androidx.compose.ui.Alignment as ComposeAlignment
+import com.tkolymp.tkolympapp.components.ErrorState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -117,7 +118,7 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
 
                 when {
                     state.isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-                    state.error != null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(state.error?.message ?: AppStrings.current.commonActions.error) }
+                    state.error != null -> ErrorState(message = state.error?.message)
                     else -> {
                         val myEntry = remember(state.rankings, currentPersonId.value) {
                             currentPersonId.value?.let { pid -> state.rankings.find { it.personId == pid } }

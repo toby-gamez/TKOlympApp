@@ -49,6 +49,8 @@ import com.tkolymp.tkolympapp.components.ErrorBanner
 import com.tkolymp.tkolympapp.components.ErrorState
 import com.tkolymp.tkolympapp.components.badgeGridSections
 import kotlinx.coroutines.launch
+import com.tkolymp.tkolympapp.components.EmptyState
+import androidx.compose.material.icons.outlined.WorkspacePremium
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -133,11 +135,7 @@ fun AchievementsScreen(personId: String? = null, onBack: () -> Unit = {}) {
 
                             if (state.diplomas.isEmpty()) {
                                 item(span = { GridItemSpan(maxLineSpan) }) {
-                                    Text(
-                                        text = strings.noDiplomasYet,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(vertical = 8.dp)
-                                    )
+                                    EmptyState(title = strings.noDiplomasYet, icon = Icons.Outlined.WorkspacePremium)
                                 }
                             } else {
                                 items(

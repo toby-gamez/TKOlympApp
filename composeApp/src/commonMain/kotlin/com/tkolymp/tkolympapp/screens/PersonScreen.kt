@@ -72,6 +72,9 @@ import com.tkolymp.tkolympapp.components.SocialLinksRow
 import com.tkolymp.tkolympapp.components.parseColorOrDefault
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
+import com.tkolymp.tkolympapp.components.EmptyState
+import com.tkolymp.tkolympapp.components.ErrorBanner
+import androidx.compose.material.icons.outlined.PersonOff
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -96,11 +99,13 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
         SwipeToReload(isRefreshing = state.isLoading, onRefresh = { scope.launch { viewModel.loadPerson(personId) } }, modifier = Modifier.padding(padding)) {
             Column(modifier = Modifier.padding(8.dp).verticalScroll(rememberScrollState())) {
 
-            state.error?.let { Text("${AppStrings.current.registration.errorPrefix} ${it.message}", color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(8.dp)) }
+            state.error?.let { ErrorBanner(error = it, onRetry = { scope.launch { viewModel.loadPerson(personId) } }) }
 
             val p = state.person as? PersonDetails
             if (p == null) {
-                Text(AppStrings.current.profile.personNotFound, modifier = Modifier.padding(8.dp))
+                if (state.error == null && !state.isLoading) {
+                    EmptyState(title = AppStrings.current.profile.personNotFound, icon = Icons.Outlined.PersonOff)
+                }
                 return@Column
             }
 

@@ -110,6 +110,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 import kotlinx.serialization.json.JsonArray
 import com.tkolymp.tkolympapp.platform.FullscreenImageViewer
+import com.tkolymp.tkolympapp.components.ErrorState
 
 private fun boldTimes(text: String) = buildAnnotatedString {
     if (text.any { it == '.' || it.isLetter() }) {
@@ -229,14 +230,10 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
         ) {
             if (ev == null) {
                 if (state.error != null) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(state.error?.message ?: "", modifier = Modifier.padding(16.dp))
-                            TextButton(onClick = { scope.launch { viewModel.loadEvent(eventId, instanceId = instanceId, forceRefresh = true) } }) {
-                                Text(AppStrings.current.commonActions.retry)
-                            }
-                        }
-                    }
+                    ErrorState(
+                        message = state.error?.message,
+                        onRetry = { scope.launch { viewModel.loadEvent(eventId, instanceId = instanceId, forceRefresh = true) } }
+                    )
                 }
                 // else: initial state before loading starts — SwipeToReload shows spinner
                 } else {

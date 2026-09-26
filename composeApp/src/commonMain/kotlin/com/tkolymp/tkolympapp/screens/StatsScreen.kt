@@ -50,6 +50,8 @@ import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.BarChart
 import com.tkolymp.tkolympapp.util.StaggeredItem
 import kotlinx.coroutines.launch
+import com.tkolymp.tkolympapp.components.EmptyState
+import androidx.compose.material.icons.outlined.BarChart
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -206,15 +208,7 @@ fun StatsScreen(
                     )
 
                     if (totalSessions == 0 && !isLoading) {
-                        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
-                            Text(
-                                text = strings.noData,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(24.dp),
-                                textAlign = TextAlign.Center
-                            )
-                        }
+                        EmptyState(title = strings.noData, icon = Icons.Outlined.BarChart)
                         return@Column
                     }
 

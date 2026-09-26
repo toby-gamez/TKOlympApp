@@ -81,6 +81,8 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
 import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
+import com.tkolymp.tkolympapp.components.EmptyState
+import androidx.compose.material.icons.outlined.PersonSearch
 
 private enum class SortMode { ALPHABETICAL, BIRTHDAY }
 @OptIn(ExperimentalMaterial3Api::class)
@@ -255,7 +257,7 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
             // manual refresh removed; initial load happens in LaunchedEffect
 
             if (displayed.isEmpty()) {
-                Text(AppStrings.current.people.noPeopleToShow, modifier = Modifier.padding(16.dp))
+                EmptyState(title = AppStrings.current.people.noPeopleToShow, icon = Icons.Outlined.PersonSearch, fullPage = true)
             } else {
                 LazyColumn {
                     itemsIndexed(displayed, key = { _, p -> p.id }) { index, p ->

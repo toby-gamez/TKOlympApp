@@ -57,6 +57,9 @@ import androidx.compose.runtime.setValue
 import com.tkolymp.tkolympapp.components.InitialsAvatar
 import com.tkolymp.tkolympapp.platform.FullscreenImageViewer
 import com.tkolymp.tkolympapp.util.StaggeredItem
+import com.tkolymp.tkolympapp.components.EmptyState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.outlined.Campaign
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,14 +98,15 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
             modifier = Modifier.padding(padding)
         ) {
             if (a == null) {
-                Column(modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(AppStrings.current.announcements.noAnnouncementToShow, modifier = Modifier.padding(16.dp))
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    item {
+                        EmptyState(
+                            title = AppStrings.current.announcements.noAnnouncementToShow,
+                            icon = Icons.Outlined.Campaign,
+                            fullPage = true,
+                            modifier = Modifier.fillParentMaxSize()
+                        )
+                    }
                 }
             } else {
                 StaggeredItem(index = 0, visible = contentVisible, durationMs = 250) {

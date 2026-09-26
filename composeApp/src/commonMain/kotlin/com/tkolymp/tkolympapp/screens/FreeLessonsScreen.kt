@@ -53,6 +53,9 @@ import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.tkolympapp.components.RenderEventContent
 import com.tkolymp.tkolympapp.util.StaggeredItem
 import kotlinx.coroutines.launch
+import com.tkolymp.tkolympapp.components.EmptyState
+import com.tkolymp.tkolympapp.components.ErrorState
+import androidx.compose.material.icons.outlined.EventBusy
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -101,20 +104,11 @@ fun FreeLessonsScreen(
                 }
             }
             state.error != null -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(state.error?.message ?: "", style = MaterialTheme.typography.bodyMedium)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Button(onClick = { scope.launch { viewModel.load() } }) {
-                            Text(AppStrings.current.commonActions.retry)
-                        }
-                    }
-                }
+                ErrorState(
+                    message = state.error?.message,
+                    modifier = Modifier.padding(padding),
+                    onRetry = { scope.launch { viewModel.load() } }
+                )
             }
             else -> {
                 Column(
@@ -291,11 +285,7 @@ private fun CancelledLessonBlock(
             if (expanded) {
                 Spacer(modifier = Modifier.height(8.dp))
                 if (replacements.isEmpty()) {
-                    Text(
-                        AppStrings.current.freeLessons.noReplacements,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    EmptyState(title = AppStrings.current.freeLessons.noReplacements, icon = Icons.Outlined.EventBusy)
                 } else {
                     replacements.forEach { result ->
                         FreeLessonCard(result = result, onOpenEvent = onOpenEvent, compact = true)

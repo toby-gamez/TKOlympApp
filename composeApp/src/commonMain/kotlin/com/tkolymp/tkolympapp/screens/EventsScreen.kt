@@ -71,6 +71,8 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
+import androidx.compose.material.icons.outlined.EventBusy
+import androidx.compose.material.icons.outlined.History
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -234,7 +236,7 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}, onO
                             .padding(horizontal = 12.dp)
                     ) {
                         if (planned.isEmpty()) {
-                            item { EmptyState(title = AppStrings.current.events.noEventsPlanned) }
+                            item { EmptyState(title = AppStrings.current.events.noEventsPlanned, icon = Icons.Outlined.EventBusy, fullPage = true, modifier = Modifier.fillParentMaxSize()) }
                         }
 
                         items(planned.entries.toList()) { (date, list) ->
@@ -300,7 +302,7 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}, onO
                             .padding(horizontal = 12.dp)
                     ) {
                         if (past.isEmpty()) {
-                            item { EmptyState(title = AppStrings.current.events.noPastEvents) }
+                            item { EmptyState(title = AppStrings.current.events.noPastEvents, icon = Icons.Outlined.History, fullPage = true, modifier = Modifier.fillParentMaxSize()) }
                         }
 
                         items(past) { (date, list) ->

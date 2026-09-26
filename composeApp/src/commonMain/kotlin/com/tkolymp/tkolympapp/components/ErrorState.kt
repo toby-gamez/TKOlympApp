@@ -1,24 +1,19 @@
 package com.tkolymp.tkolympapp.components
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ErrorOutline
-import androidx.compose.material3.Icon
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.tooling.preview.Preview
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.AppError
+import com.tkolymp.tkolympapp.ui.theme.AppTheme
 
 /**
  * Consistent, reusable rendering of a [ViewModelState.error]. Every AppError is already
@@ -28,6 +23,7 @@ import com.tkolymp.shared.viewmodels.AppError
  * Use [ErrorState] for a full-page failure (e.g. initial load failed, nothing else to show),
  * and [ErrorBanner] for an inline notice on top of content that's still otherwise usable
  * (e.g. a stale cached list after a background refresh failed).
+ * Both share the layout of [EmptyState] (icon above centered text).
  */
 @Composable
 fun ErrorState(
@@ -35,33 +31,33 @@ fun ErrorState(
     modifier: Modifier = Modifier,
     onRetry: (() -> Unit)? = null,
 ) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.padding(32.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Filled.ErrorOutline,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.error
-            )
-            Text(
-                text = error.message,
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            if (onRetry != null) {
-                TextButton(onClick = onRetry) {
+    ErrorState(message = error.message, modifier = modifier, onRetry = onRetry)
+}
+
+@Composable
+fun ErrorState(
+    message: String?,
+    modifier: Modifier = Modifier,
+    icon: ImageVector = Icons.Outlined.ErrorOutline,
+    fullPage: Boolean = true,
+    onRetry: (() -> Unit)? = null,
+) {
+    StatusMessage(
+        title = message?.takeIf { it.isNotBlank() } ?: AppStrings.current.commonActions.error,
+        icon = icon,
+        subtitle = null,
+        fullPage = fullPage,
+        iconContainerColor = MaterialTheme.colorScheme.errorContainer,
+        iconColor = MaterialTheme.colorScheme.onErrorContainer,
+        modifier = modifier,
+        action = onRetry?.let { retry ->
+            {
+                TextButton(onClick = retry) {
                     Text(AppStrings.current.commonActions.retry)
                 }
             }
         }
-    }
+    )
 }
 
 @Composable
@@ -70,23 +66,36 @@ fun ErrorBanner(
     modifier: Modifier = Modifier,
     onRetry: (() -> Unit)? = null,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            text = error.message,
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.error
-        )
-        if (onRetry != null) {
-            TextButton(onClick = onRetry) {
-                Text(AppStrings.current.commonActions.retry)
-            }
+    ErrorBanner(message = error.message, modifier = modifier, onRetry = onRetry)
+}
+
+@Composable
+fun ErrorBanner(
+    message: String?,
+    modifier: Modifier = Modifier,
+    onRetry: (() -> Unit)? = null,
+) {
+    ErrorState(message = message, modifier = modifier, fullPage = false, onRetry = onRetry)
+}
+
+@Preview(name = "ErrorState — Light")
+@Composable
+private fun ErrorStatePreviewLight() {
+    AppTheme(darkTheme = false) {
+        Column(Modifier.background(MaterialTheme.colorScheme.background)) {
+            ErrorBanner(message = "Nepodařilo se načíst data", onRetry = {})
+            ErrorState(message = "Nepodařilo se načíst data", onRetry = {})
+        }
+    }
+}
+
+@Preview(name = "ErrorState — Dark")
+@Composable
+private fun ErrorStatePreviewDark() {
+    AppTheme(darkTheme = true) {
+        Column(Modifier.background(MaterialTheme.colorScheme.background)) {
+            ErrorBanner(message = "Nepodařilo se načíst data", onRetry = {})
+            ErrorState(message = "Nepodařilo se načíst data", onRetry = {})
         }
     }
 }
