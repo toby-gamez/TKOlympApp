@@ -129,7 +129,7 @@ private fun boldTimes(text: String) = buildAnnotatedString {
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? = null, onOpenRegistration: ((String, String?) -> Unit)? = null, onOpenPerson: ((String) -> Unit)? = null, onOpenReminders: (() -> Unit)? = null, initialTab: Int = 0) {
+fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? = null, onOpenRegistration: ((String, String?) -> Unit)? = null, onOpenPerson: ((String) -> Unit)? = null, onOpenReminders: (() -> Unit)? = null, initialTab: Int = 0, onEdit: ((Long) -> Unit)? = null) {
     val viewModel = viewModel<EventViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -200,6 +200,18 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                                 enabled = !state.isAddedToCalendar
                             ) {
                                 Icon(Icons.Default.CalendarMonth, contentDescription = AppStrings.current.events.addToCalendar)
+                            }
+                            if (!state.isOffline) {
+                                com.tkolymp.tkolympapp.components.EventManageActions(
+                                    eventId = eventId,
+                                    eventJson = ev,
+                                    // Acts on the event itself (eventId), not on a selected child instance.
+                                    isCancelled = (ev?.get("isCancelled") as? kotlinx.serialization.json.JsonPrimitive)?.content == "true",
+                                    onEdit = onEdit,
+                                    onDeleted = { onBack?.invoke() },
+                                    onMessage = { msg -> scope.launch { snackbarHostState.showSnackbar(msg) } },
+                                    onChanged = { scope.launch { viewModel.loadEvent(eventId, instanceId = instanceId, forceRefresh = true) } }
+                                )
                             }
                         }
                     )

@@ -76,7 +76,7 @@ import androidx.compose.material.icons.outlined.History
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}, onOpenRozpis: (Long) -> Unit = {}) {
+fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}, onOpenRozpis: (Long) -> Unit = {}, onCreateEvent: (() -> Unit)? = null) {
     var selectedTab by rememberSaveable { mutableStateOf(0) }
     val tabs = listOf(AppStrings.current.eventCalendarTabs.planned, AppStrings.current.eventCalendarTabs.past)
 
@@ -124,6 +124,10 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}, onO
             TopAppBar(
                 title = { Text(AppStrings.current.navigation.events) },
                 actions = {
+                    com.tkolymp.tkolympapp.components.ManageCreateAction(
+                        label = AppStrings.current.management.newEvent,
+                        onClick = onCreateEvent
+                    )
                     IconButton(onClick = { showSearch = !showSearch }) {
                         Icon(imageVector = if (showSearch) Icons.Filled.Close else Icons.Filled.Search, contentDescription = AppStrings.current.commonActions.search)
                     }

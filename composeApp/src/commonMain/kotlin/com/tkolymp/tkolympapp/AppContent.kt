@@ -55,6 +55,8 @@ import com.tkolymp.shared.language.getDeviceLanguageCode
 import com.tkolymp.shared.viewmodels.OnboardingViewModel
 import com.tkolymp.tkolympapp.platform.getAppVersion
 import com.tkolymp.tkolympapp.screens.AboutScreen
+import com.tkolymp.tkolympapp.screens.AnnouncementEditScreen
+import com.tkolymp.tkolympapp.screens.EventEditScreen
 import com.tkolymp.tkolympapp.screens.ChangelogScreen
 import com.tkolymp.tkolympapp.screens.AchievementsScreen
 import com.tkolymp.tkolympapp.screens.BarcodeScreen
@@ -426,6 +428,7 @@ fun AppNavHost(
                     onOpenRozpis = { id, instId -> navController.navigate("event/$id?" + (if (instId != null) "instanceId=$instId&" else "") + "tab=1") },
                     onNavigateTimeline = { isTimelineView = true },
                     onFindFreeLessons = { navController.navigate("free-lessons") },
+                    onCreateEvent = { navController.navigate("event_edit") },
                     bottomPadding = bottomPadding
                 )
             }
@@ -449,7 +452,11 @@ fun AppNavHost(
             enterTransition = { fadeIn(animationSpec = tween(300)) },
             exitTransition = { fadeOut(animationSpec = tween(300)) }
         ) {
-            BoardScreen(bottomPadding = bottomPadding, onOpenNotice = { id -> navController.navigate("notice/$id") })
+            BoardScreen(
+                bottomPadding = bottomPadding,
+                onOpenNotice = { id -> navController.navigate("notice/$id") },
+                onCreateNotice = { sticky -> navController.navigate("notice_edit?sticky=$sticky") }
+            )
         }
 
         composable(
@@ -460,7 +467,8 @@ fun AppNavHost(
             EventsScreen(
                 bottomPadding = bottomPadding,
                 onOpenEvent = { id -> navController.navigate("event/$id") },
-                onOpenRozpis = { id -> navController.navigate("event/$id?tab=1") }
+                onOpenRozpis = { id -> navController.navigate("event/$id?tab=1") },
+                onCreateEvent = { navController.navigate("event_edit") }
             )
         }
 
@@ -751,7 +759,8 @@ fun AppNavHost(
                     },
                     onOpenPerson = { personId -> navController.navigate("person/$personId") },
                     onOpenReminders = { navController.navigate("notifications?tab=1") },
-                    initialTab = initialTab
+                    initialTab = initialTab,
+                    onEdit = { id -> navController.navigate("event_edit?eventId=$id") }
                 )
             }
         }
@@ -785,9 +794,53 @@ fun AppNavHost(
             noticeId?.let { nid ->
                 NoticeScreen(
                     announcementId = nid,
-                    onBack = { navController.navigateUp() }
+                    onBack = { navController.navigateUp() },
+                    onEdit = { id -> navController.navigate("notice_edit?noticeId=$id") }
                 )
             }
+        }
+
+        composable(
+            route = "notice_edit?noticeId={noticeId}&sticky={sticky}",
+            arguments = listOf(
+                navArgument("noticeId") { type = NavType.LongType; defaultValue = -1L },
+                navArgument("sticky") { type = NavType.BoolType; defaultValue = false }
+            ),
+            enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
+            exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
+            popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
+            popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) }
+        ) { backStackEntry ->
+            val noticeId = backStackEntry.arguments?.read { getLong("noticeId") }?.takeIf { it != -1L }
+            val sticky = backStackEntry.arguments?.read { getBoolean("sticky") } ?: false
+            AnnouncementEditScreen(
+                announcementId = noticeId,
+                initialSticky = sticky,
+                onSaved = { navController.navigateUp() },
+                onBack = { navController.navigateUp() },
+                bottomPadding = bottomPadding
+            )
+        }
+
+        composable(
+            route = "event_edit?eventId={eventId}",
+            arguments = listOf(navArgument("eventId") { type = NavType.LongType; defaultValue = -1L }),
+            enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
+            exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) },
+            popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) },
+            popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) }
+        ) { backStackEntry ->
+            val eventId = backStackEntry.arguments?.read { getLong("eventId") }?.takeIf { it != -1L }
+            EventEditScreen(
+                instanceId = eventId,
+                onSaved = { savedId ->
+                    navController.popBackStack()
+                    // A newly created event opens its detail; an edited one returns to it.
+                    if (eventId == null) navController.navigate("event/$savedId")
+                },
+                onBack = { navController.navigateUp() },
+                bottomPadding = bottomPadding
+            )
         }
 
         composable(

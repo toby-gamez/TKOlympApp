@@ -58,12 +58,13 @@ import com.tkolymp.tkolympapp.components.InitialsAvatar
 import com.tkolymp.tkolympapp.platform.FullscreenImageViewer
 import com.tkolymp.tkolympapp.util.StaggeredItem
 import com.tkolymp.tkolympapp.components.EmptyState
+import com.tkolymp.tkolympapp.components.AnnouncementManageActions
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.outlined.Campaign
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
+fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null, onEdit: ((Long) -> Unit)? = null) {
     val viewModel = viewModel<NoticeViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -86,6 +87,16 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null) {
                         IconButton(onClick = it) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
                         }
+                    }
+                },
+                actions = {
+                    if (a != null && !state.isOffline) {
+                        AnnouncementManageActions(
+                            announcementId = announcementId,
+                            authorId = a.author?.id,
+                            onEdit = onEdit,
+                            onDeleted = { onBack?.invoke() }
+                        )
                     }
                 }
             )

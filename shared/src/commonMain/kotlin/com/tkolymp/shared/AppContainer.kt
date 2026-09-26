@@ -28,6 +28,7 @@ import com.tkolymp.shared.personalevents.PersonalEventService
 import com.tkolymp.shared.competitions.ICompetitionService
 import com.tkolymp.shared.changelog.IChangelogService
 import com.tkolymp.shared.feedback.IFeedbackService
+import com.tkolymp.shared.management.IManagementService
 
 /**
  * Holds all application-level service instances with explicit constructor injection.
@@ -63,4 +64,5 @@ class AppContainer(
     val campScheduleReminderService: CampScheduleReminderService,
     val feedbackService: IFeedbackService,
     val changelogService: IChangelogService,
+    val managementService: IManagementService,
 )

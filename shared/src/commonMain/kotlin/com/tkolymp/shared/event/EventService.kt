@@ -124,6 +124,7 @@ class EventService(
                     isVisible
                     isPublic
                     enableNotes
+                    managerPersonIds
                     locationText
                     location {
                         id
