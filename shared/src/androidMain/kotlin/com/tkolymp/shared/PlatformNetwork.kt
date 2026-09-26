@@ -129,6 +129,7 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
         campScheduleReminderService = campScheduleReminderSvc,
         feedbackService = feedbackSvc,
         changelogService = changelogSvc,
+        managementService = com.tkolymp.shared.management.ManagementService(gql, cache),
     )
 
     ServiceLocator.init(container)

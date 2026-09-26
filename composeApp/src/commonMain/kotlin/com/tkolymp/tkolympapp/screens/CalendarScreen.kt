@@ -128,6 +128,7 @@ fun CalendarScreen(
     onBack: (() -> Unit)? = null,
     onCreatePersonalEvent: (() -> Unit)? = null,
     onFindFreeLessons: (() -> Unit)? = null,
+    onCreateEvent: (() -> Unit)? = null,
     bottomPadding: Dp = 0.dp
 ) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
@@ -230,6 +231,10 @@ fun CalendarScreen(
                     }
                 },
                 actions = {
+                    com.tkolymp.tkolympapp.components.ManageCreateAction(
+                        label = AppStrings.current.management.newEvent,
+                        onClick = onCreateEvent
+                    )
                     Box(
                         modifier = Modifier
                             .padding(end = 4.dp)

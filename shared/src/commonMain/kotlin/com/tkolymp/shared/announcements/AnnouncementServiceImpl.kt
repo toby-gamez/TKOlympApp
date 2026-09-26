@@ -70,7 +70,7 @@ class AnnouncementServiceImpl(
     }
 
     private val singleQuery = """
-        query MyQuery(${'$'}id: BigInt!) { announcement(id: ${'$'}id) { id title body createdAt updatedAt status author { uJmeno uPrijmeni } } }
+        query MyQuery(${'$'}id: BigInt!) { announcement(id: ${'$'}id) { id title body createdAt updatedAt isSticky status author { id uJmeno uPrijmeni } } }
     """.trimIndent()
 
     override suspend fun getAnnouncementById(id: Long, forceRefresh: Boolean): DataResult<Announcement> {
@@ -88,12 +88,12 @@ class AnnouncementServiceImpl(
                 val body = obj["body"]?.jsonPrimitive?.contentOrNull
                 val createdAt = obj["createdAt"]?.jsonPrimitive?.contentOrNull
                 val updatedAt = obj["updatedAt"]?.jsonPrimitive?.contentOrNull
-                val isSticky = false
+                val isSticky = obj["isSticky"]?.jsonPrimitive?.booleanOrNull ?: false
                 val isVisible = obj["status"]?.jsonPrimitive?.contentOrNull == "PUBLISHED"
                 val authorObj = obj["author"]?.jsonObject
                 val author = authorObj?.let {
                     Author(
-                        id = null,
+                        id = it["id"]?.jsonPrimitive?.contentOrNull,
                         uJmeno = it["uJmeno"]?.jsonPrimitive?.contentOrNull,
                         uPrijmeni = it["uPrijmeni"]?.jsonPrimitive?.contentOrNull
                     )

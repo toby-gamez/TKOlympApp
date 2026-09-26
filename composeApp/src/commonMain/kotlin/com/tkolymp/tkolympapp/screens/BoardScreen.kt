@@ -1,6 +1,7 @@
 package com.tkolymp.tkolympapp.screens
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.EmptyState
+import com.tkolymp.tkolympapp.components.ManageCreateAction
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -71,7 +72,7 @@ import androidx.compose.material.icons.outlined.Campaign
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
+fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}, onCreateNotice: ((sticky: Boolean) -> Unit)? = null) {
     val viewModel = viewModel<BoardViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val tabs = listOf(AppStrings.current.boardTabs.news, AppStrings.current.boardTabs.permanentBoard)
@@ -118,6 +119,10 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
             TopAppBar(
                 title = { Text(AppStrings.current.navigation.board) },
                 actions = {
+                    ManageCreateAction(
+                        label = AppStrings.current.management.newAnnouncement,
+                        onClick = onCreateNotice?.let { create -> { create(localSelectedTab == 1) } }
+                    )
                     IconButton(onClick = { showSearch = !showSearch }) {
                         Icon(imageVector = if (showSearch) Icons.Filled.Close else Icons.Filled.Search, contentDescription = AppStrings.current.commonActions.search)
                     }

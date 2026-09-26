@@ -158,6 +158,9 @@ fun OtherScreen(
             TopAppBar(
                 title = { Text(AppStrings.current.navigation.profile) },
                 actions = {
+                    com.tkolymp.tkolympapp.components.ManagementModeBadge(
+                        modifier = Modifier.align(Alignment.CenterVertically)
+                    )
                     IconButton(onClick = onSettingsClick) {
                         Icon(
                             imageVector = Icons.Filled.Settings,
