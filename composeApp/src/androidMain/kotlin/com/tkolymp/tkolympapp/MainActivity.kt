@@ -154,6 +154,13 @@ class MainActivity : ComponentActivity() {
 
         // Note: UI composition and FCM setup are performed in lifecycleScope.launch above.
     }
+
+    override fun onStop() {
+        super.onStop()
+        // Login/logout and freshly synced data only reach the widgets on their next refresh,
+        // which can be up to 30 minutes away. Refresh now, as the user heads to the home screen.
+        WidgetUpdateWorker.scheduleOneshot(this)
+    }
 }
 
 @Preview
