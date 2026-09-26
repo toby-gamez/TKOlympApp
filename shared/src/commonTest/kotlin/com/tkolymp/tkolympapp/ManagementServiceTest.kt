@@ -230,27 +230,35 @@ class ManagementServiceTest {
     // ── body formatting ────────────────────────────────────────────────────────
 
     @Test
-    fun richText_plainTextRoundTrip() {
-        val text = "Ahoj <všichni> & ostatní\ndruhý řádek\n\nNový odstavec"
-        val html = RichTextBody.plainTextToHtml(text)
-        assertEquals("<p>Ahoj &lt;všichni&gt; &amp; ostatní<br>druhý řádek</p><p>Nový odstavec</p>", html)
-        val editable = RichTextBody.forEditing(html)
-        assertFalse(editable.isRawHtml)
-        assertEquals(text, editable.text)
+    fun richText_legacyPlainTextKeepsLineBreaks() {
+        assertEquals(
+            "<p>Ahoj &amp; ostatní<br>druhý řádek</p><p>Nový odstavec</p>",
+            RichTextBody.toEditorHtml("Ahoj & ostatní\ndruhý řádek\n\nNový odstavec"),
+        )
+        assertEquals("<p><b>x</b></p>", RichTextBody.toEditorHtml("<p><b>x</b></p>"))
+        assertEquals("", RichTextBody.toEditorHtml(null))
     }
 
     @Test
-    fun richText_formattedHtmlIsEditedRaw() {
-        val html = "<p><strong>Důležité</strong> <a href=\"x\">odkaz</a></p>"
-        val editable = RichTextBody.forEditing(html)
-        assertTrue(editable.isRawHtml)
-        assertEquals(html, editable.text)
-        assertEquals(html, RichTextBody.forSaving(editable.text, editable.isRawHtml))
+    fun richText_editorCompatibility() {
+        assertTrue(RichTextBody.isEditorCompatible("<h2>T</h2><p><b>a</b> <a href=\"https://x.cz\">l</a></p><ul><li>1</li></ul>"))
+        assertFalse(RichTextBody.isEditorCompatible("<p><img src=\"a.png\"></p>"))
+        assertFalse(RichTextBody.isEditorCompatible("<table><tr><td>1</td></tr></table>"))
     }
 
     @Test
-    fun richText_blankBody() {
-        assertEquals("", RichTextBody.plainTextToHtml("   \n "))
-        assertEquals(RichTextBody.Editable("", false), RichTextBody.forEditing(null))
+    fun richText_emptyEditorIsStoredAsEmpty() {
+        assertEquals("", RichTextBody.normalizeForStorage("<p></p>", "  "))
+        assertEquals("<p>a</p>", RichTextBody.normalizeForStorage(" <p>a</p> ", "a"))
+    }
+
+    @Test
+    fun richText_normalizeUrl() {
+        assertEquals("https://tkolymp.cz", RichTextBody.normalizeUrl(" tkolymp.cz "))
+        assertEquals("http://a.cz/x", RichTextBody.normalizeUrl("http://a.cz/x"))
+        assertEquals("mailto:info@tkolymp.cz", RichTextBody.normalizeUrl("info@tkolymp.cz"))
+        assertEquals(null, RichTextBody.normalizeUrl("javascript:alert(1)"))
+        assertEquals(null, RichTextBody.normalizeUrl("not a url"))
+        assertEquals(null, RichTextBody.normalizeUrl(""))
     }
 }

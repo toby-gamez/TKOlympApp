@@ -40,6 +40,8 @@ import com.tkolymp.shared.management.ManagedAnnouncementStatus
 import com.tkolymp.shared.viewmodels.AnnouncementEditViewModel
 import com.tkolymp.tkolympapp.components.ErrorBanner
 import com.tkolymp.tkolympapp.components.OptionChips
+import com.tkolymp.tkolympapp.components.RichHtmlEditor
+import com.tkolymp.tkolympapp.components.rememberRichHtmlEditorState
 import com.tkolymp.tkolympapp.components.SwitchRow
 
 /** Trainer / admin form for creating ([announcementId] null) or editing an announcement. */
@@ -57,7 +59,13 @@ fun AnnouncementEditScreen(
     val strings = AppStrings.current.management
     val currentOnSaved by rememberUpdatedState(onSaved)
 
+    val bodyEditor = rememberRichHtmlEditorState()
+
     LaunchedEffect(announcementId) { viewModel.load(announcementId, sticky = initialSticky) }
+    // Seed the editor once the stored body has been loaded.
+    LaunchedEffect(state.isLoaded) {
+        if (state.isLoaded) bodyEditor.loadOnce(state.draft.body)
+    }
     LaunchedEffect(state.savedAnnouncementId) { state.savedAnnouncementId?.let { currentOnSaved(it) } }
 
     Scaffold(
@@ -73,7 +81,7 @@ fun AnnouncementEditScreen(
                     if (state.isSaving) {
                         CircularProgressIndicator(modifier = Modifier.padding(12.dp).size(24.dp), strokeWidth = 2.dp)
                     } else {
-                        IconButton(onClick = viewModel::save, enabled = !state.isLoading) {
+                        IconButton(onClick = { viewModel.save(bodyEditor.currentHtml()) }, enabled = !state.isLoading) {
                             Icon(Icons.Filled.Check, contentDescription = AppStrings.current.commonActions.save)
                         }
                     }
@@ -109,16 +117,7 @@ fun AnnouncementEditScreen(
                         isError = state.validationError != null,
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    OutlinedTextField(
-                        value = state.bodyText,
-                        onValueChange = viewModel::setBody,
-                        label = { Text(strings.body) },
-                        minLines = 8,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    if (state.bodyIsRawHtml) {
-                        Text(strings.rawHtmlHint, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
+                    RichHtmlEditor(state = bodyEditor, label = strings.body, minLines = 8)
                 }
             }
 

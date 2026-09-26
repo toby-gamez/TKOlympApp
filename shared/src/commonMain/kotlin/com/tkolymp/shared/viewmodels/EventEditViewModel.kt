@@ -8,7 +8,6 @@ import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.management.EventDraft
 import com.tkolymp.shared.management.IManagementService
 import com.tkolymp.shared.management.ManagementOptions
-import com.tkolymp.shared.management.RichTextBody
 import com.tkolymp.shared.management.UserPermissions
 import com.tkolymp.shared.utils.parseToLocal
 import kotlinx.coroutines.CancellationException
@@ -31,14 +30,15 @@ import kotlin.time.Instant
 @Immutable
 data class EventEditState(
     val instanceId: Long? = null,
+    /** [EventDraft.description] holds the stored HTML used to seed the rich-text editor. */
     val draft: EventDraft = EventDraft(),
-    val descriptionText: String = "",
-    val descriptionIsRawHtml: Boolean = false,
     val capacityText: String = "",
     val options: ManagementOptions = ManagementOptions(),
     val permissions: UserPermissions = UserPermissions.NONE,
     val isSaving: Boolean = false,
     val validationError: String? = null,
+    /** True once the form data (and the stored HTML for the editor) has been loaded. */
+    val isLoaded: Boolean = false,
     /** Set once a save succeeded; the screen navigates away. */
     val savedInstanceId: Long? = null,
     override val isLoading: Boolean = false,
@@ -76,13 +76,11 @@ class EventEditViewModel(
                 } else {
                     newDraft(permissions, options)
                 }
-                val description = RichTextBody.forEditing(draft.description)
                 _state.value = _state.value.copy(
                     draft = draft,
-                    descriptionText = description.text,
-                    descriptionIsRawHtml = description.isRawHtml,
                     capacityText = draft.capacity?.toString().orEmpty(),
                     options = options,
+                    isLoaded = true,
                     permissions = permissions,
                     isLoading = false,
                 )
@@ -97,10 +95,6 @@ class EventEditViewModel(
 
     fun updateDraft(transform: (EventDraft) -> EventDraft) {
         _state.value = _state.value.copy(draft = transform(_state.value.draft), validationError = null)
-    }
-
-    fun setDescription(text: String) {
-        _state.value = _state.value.copy(descriptionText = text)
     }
 
     fun setCapacityText(text: String) {
@@ -141,9 +135,10 @@ class EventEditViewModel(
         _state.value = _state.value.copy(error = null)
     }
 
-    fun save() {
+    /** [descriptionHtml] is the current content of the rich-text description editor. */
+    fun save(descriptionHtml: String) {
         val s = _state.value
-        if (s.isSaving || s.isLoading) return
+        if (s.isSaving || s.isLoading || !s.isLoaded) return
         val strings = AppStrings.current.management
         val capacity = s.capacityText.takeIf { it.isNotBlank() }?.toIntOrNull()
         val validation = when {
@@ -158,7 +153,7 @@ class EventEditViewModel(
         }
         val draft = s.draft.copy(
             capacity = capacity,
-            description = RichTextBody.forSaving(s.descriptionText, s.descriptionIsRawHtml),
+            description = descriptionHtml,
         )
         _state.value = s.copy(isSaving = true, validationError = null, error = null)
         viewModelScope.launch {

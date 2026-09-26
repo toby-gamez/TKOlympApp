@@ -8,7 +8,6 @@ import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.management.AnnouncementDraft
 import com.tkolymp.shared.management.IManagementService
 import com.tkolymp.shared.management.ManagementOptions
-import com.tkolymp.shared.management.RichTextBody
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,12 +17,13 @@ import kotlinx.coroutines.launch
 @Immutable
 data class AnnouncementEditState(
     val announcementId: Long? = null,
+    /** [AnnouncementDraft.body] holds the stored HTML used to seed the rich-text editor. */
     val draft: AnnouncementDraft = AnnouncementDraft(),
-    val bodyText: String = "",
-    val bodyIsRawHtml: Boolean = false,
     val options: ManagementOptions = ManagementOptions(),
     val isSaving: Boolean = false,
     val validationError: String? = null,
+    /** True once the form data (and the stored HTML for the editor) has been loaded. */
+    val isLoaded: Boolean = false,
     /** Set once a save succeeded; the screen navigates away. */
     val savedAnnouncementId: Long? = null,
     override val isLoading: Boolean = false,
@@ -56,12 +56,10 @@ class AnnouncementEditViewModel(
                 } else {
                     AnnouncementDraft(isSticky = sticky)
                 }
-                val body = RichTextBody.forEditing(draft.body)
                 _state.value = _state.value.copy(
                     draft = draft,
-                    bodyText = body.text,
-                    bodyIsRawHtml = body.isRawHtml,
                     options = options,
+                    isLoaded = true,
                     isLoading = false,
                 )
             } catch (e: CancellationException) { throw e } catch (ex: Exception) {
@@ -77,10 +75,6 @@ class AnnouncementEditViewModel(
         _state.value = _state.value.copy(draft = transform(_state.value.draft), validationError = null)
     }
 
-    fun setBody(text: String) {
-        _state.value = _state.value.copy(bodyText = text)
-    }
-
     fun toggleCohort(cohortId: String) = updateDraft { d ->
         d.copy(cohortIds = if (cohortId in d.cohortIds) d.cohortIds - cohortId else d.cohortIds + cohortId)
     }
@@ -89,14 +83,15 @@ class AnnouncementEditViewModel(
         _state.value = _state.value.copy(error = null)
     }
 
-    fun save() {
+    /** [bodyHtml] is the current content of the rich-text body editor. */
+    fun save(bodyHtml: String) {
         val s = _state.value
-        if (s.isSaving || s.isLoading) return
+        if (s.isSaving || s.isLoading || !s.isLoaded) return
         if (s.draft.title.isBlank()) {
             _state.value = s.copy(validationError = AppStrings.current.management.titleRequired)
             return
         }
-        val draft = s.draft.copy(body = RichTextBody.forSaving(s.bodyText, s.bodyIsRawHtml))
+        val draft = s.draft.copy(body = bodyHtml)
         _state.value = s.copy(isSaving = true, validationError = null, error = null)
         viewModelScope.launch {
             try {

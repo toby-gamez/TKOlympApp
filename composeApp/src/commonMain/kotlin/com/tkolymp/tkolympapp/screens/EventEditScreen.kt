@@ -50,6 +50,8 @@ import com.tkolymp.shared.viewmodels.EventEditViewModel
 import com.tkolymp.tkolympapp.components.DateTimeFields
 import com.tkolymp.tkolympapp.components.ErrorBanner
 import com.tkolymp.tkolympapp.components.OptionChips
+import com.tkolymp.tkolympapp.components.RichHtmlEditor
+import com.tkolymp.tkolympapp.components.rememberRichHtmlEditorState
 import com.tkolymp.tkolympapp.components.SwitchRow
 
 internal fun ManagedEventType.label(): String {
@@ -77,7 +79,13 @@ fun EventEditScreen(
     val strings = AppStrings.current.management
     val currentOnSaved by rememberUpdatedState(onSaved)
 
+    val descriptionEditor = rememberRichHtmlEditorState()
+
     LaunchedEffect(instanceId) { viewModel.load(instanceId) }
+    // Seed the editor once the stored description has been loaded.
+    LaunchedEffect(state.isLoaded) {
+        if (state.isLoaded) descriptionEditor.loadOnce(state.draft.description)
+    }
     LaunchedEffect(state.savedInstanceId) { state.savedInstanceId?.let { currentOnSaved(it) } }
 
     Scaffold(
@@ -93,7 +101,7 @@ fun EventEditScreen(
                     if (state.isSaving) {
                         CircularProgressIndicator(modifier = Modifier.padding(12.dp).size(24.dp), strokeWidth = 2.dp)
                     } else {
-                        IconButton(onClick = viewModel::save, enabled = !state.isLoading) {
+                        IconButton(onClick = { viewModel.save(descriptionEditor.currentHtml()) }, enabled = !state.isLoading) {
                             Icon(Icons.Filled.Check, contentDescription = AppStrings.current.commonActions.save)
                         }
                     }
@@ -242,16 +250,7 @@ fun EventEditScreen(
                         label = { Text(strings.summary) },
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    OutlinedTextField(
-                        value = state.descriptionText,
-                        onValueChange = viewModel::setDescription,
-                        label = { Text(strings.description) },
-                        minLines = 4,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    if (state.descriptionIsRawHtml) {
-                        Text(strings.rawHtmlHint, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
+                    RichHtmlEditor(state = descriptionEditor, label = strings.description, minLines = 5)
                 }
             }
         }

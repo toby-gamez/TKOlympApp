@@ -1,33 +1,39 @@
 package com.tkolymp.shared.management
 
 /**
- * Converts between the HTML stored by the backend (announcement bodies, event descriptions)
- * and the plain text edited in the app. Only "simple" HTML (paragraphs and line breaks) is
- * round-tripped as plain text; anything richer is edited as raw HTML so no formatting made
- * in the web administration is silently lost.
+ * Helpers around the HTML stored by the backend (announcement bodies, event descriptions)
+ * and edited in the app's rich-text editor.
+ *
+ * The editor understands inline formatting, headings, lists, links and alignment. HTML
+ * using anything else (images, tables, embeds, …) is opened in HTML source mode instead,
+ * so formatting made in the web administration is never silently dropped.
  */
 object RichTextBody {
     private val tagRegex = Regex("<\\s*(/?)\\s*([a-zA-Z0-9]+)([^>]*)>")
-    private val simpleTags = setOf("p", "br")
 
-    data class Editable(val text: String, val isRawHtml: Boolean)
+    /** Tags the rich-text editor can load and save back without losing content. */
+    private val editorTags = setOf(
+        "p", "br", "div", "span",
+        "b", "strong", "i", "em", "u", "s", "strike", "del", "mark", "code", "sub", "sup", "small",
+        "a", "ul", "ol", "li",
+        "h1", "h2", "h3", "h4", "h5", "h6",
+    )
 
-    fun isSimpleHtml(html: String): Boolean =
-        tagRegex.findAll(html).all { m ->
-            val tag = m.groupValues[2].lowercase()
-            val attrs = m.groupValues[3].trim().removeSuffix("/").trim()
-            tag in simpleTags && attrs.isEmpty()
-        }
+    fun hasTags(text: String): Boolean = tagRegex.containsMatchIn(text)
 
-    fun forEditing(html: String?): Editable {
-        val source = html.orEmpty()
-        if (source.isBlank()) return Editable("", isRawHtml = false)
-        return if (isSimpleHtml(source)) Editable(htmlToPlainText(source), isRawHtml = false)
-        else Editable(source, isRawHtml = true)
+    fun isEditorCompatible(html: String): Boolean =
+        tagRegex.findAll(html).all { it.groupValues[2].lowercase() in editorTags }
+
+    /** HTML to load into the editor; legacy plain text keeps its line breaks. */
+    fun toEditorHtml(stored: String?): String {
+        val source = stored.orEmpty()
+        if (source.isBlank()) return ""
+        return if (hasTags(source)) source else plainTextToHtml(source)
     }
 
-    fun forSaving(text: String, isRawHtml: Boolean): String =
-        if (isRawHtml) text.trim() else plainTextToHtml(text)
+    /** Normalizes editor output: an editor with no visible text is stored as "". */
+    fun normalizeForStorage(html: String, visibleText: String): String =
+        if (visibleText.isBlank() && !html.contains("<img", ignoreCase = true)) "" else html.trim()
 
     fun plainTextToHtml(text: String): String {
         val normalized = text.replace("\r\n", "\n").trim()
@@ -40,12 +46,19 @@ object RichTextBody {
             }
     }
 
-    fun htmlToPlainText(html: String): String {
-        var s = html.replace("\r\n", "\n")
-        s = s.replace(Regex("\\s*<\\s*/\\s*p\\s*>\\s*<\\s*p\\s*>\\s*", RegexOption.IGNORE_CASE), "\n\n")
-        s = s.replace(Regex("<\\s*br\\s*/?\\s*>\\n?", RegexOption.IGNORE_CASE), "\n")
-        s = s.replace(Regex("<\\s*/?\\s*p\\s*>", RegexOption.IGNORE_CASE), "")
-        return unescape(s).trim()
+    /** Accepts `example.com` as well as full URLs; returns null for anything unusable. */
+    fun normalizeUrl(input: String): String? {
+        val url = input.trim()
+        if (url.isEmpty() || url.any { it.isWhitespace() }) return null
+        val lower = url.lowercase()
+        return when {
+            lower.startsWith("http://") || lower.startsWith("https://") ||
+                lower.startsWith("mailto:") || lower.startsWith("tel:") -> url
+            lower.contains(":") -> null // javascript:, data:, … are not allowed
+            url.contains("@") && !url.contains("/") -> "mailto:$url"
+            url.contains(".") -> "https://$url"
+            else -> null
+        }
     }
 
     private fun escape(s: String): String = s
@@ -53,12 +66,4 @@ object RichTextBody {
         .replace("<", "&lt;")
         .replace(">", "&gt;")
         .replace("\"", "&quot;")
-
-    private fun unescape(s: String): String = s
-        .replace("&nbsp;", " ")
-        .replace("&lt;", "<")
-        .replace("&gt;", ">")
-        .replace("&quot;", "\"")
-        .replace("&#39;", "'")
-        .replace("&amp;", "&")
 }
