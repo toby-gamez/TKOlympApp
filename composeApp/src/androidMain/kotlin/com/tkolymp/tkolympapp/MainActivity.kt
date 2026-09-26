@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -48,7 +49,15 @@ class MainActivity : ComponentActivity() {
             appVersionCode = PackageInfoCompat.getLongVersionCode(pkgInfo)
         } catch (_: Exception) {}
 
-        val deepLinkRoute = intent.getStringExtra("DEEP_LINK_ROUTE")
+        // A widget/notification tap that cold-starts the app becomes the task's base intent,
+        // so Android replays it (extras included) when the app is reopened from Recents or
+        // the activity is recreated. Only honour the deep link on a genuinely fresh launch,
+        // and strip it so it can't be applied again.
+        val launchedFromHistory = (intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0
+        val deepLinkRoute = if (savedInstanceState == null && !launchedFromHistory) {
+            intent.getStringExtra("DEEP_LINK_ROUTE")
+        } else null
+        intent.removeExtra("DEEP_LINK_ROUTE")
 
         // Load language asynchronously before first composition.
         lifecycleScope.launch {
@@ -144,6 +153,13 @@ class MainActivity : ComponentActivity() {
         }
 
         // Note: UI composition and FCM setup are performed in lifecycleScope.launch above.
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // Login/logout and freshly synced data only reach the widgets on their next refresh,
+        // which can be up to 30 minutes away. Refresh now, as the user heads to the home screen.
+        WidgetUpdateWorker.scheduleOneshot(this)
     }
 }
 

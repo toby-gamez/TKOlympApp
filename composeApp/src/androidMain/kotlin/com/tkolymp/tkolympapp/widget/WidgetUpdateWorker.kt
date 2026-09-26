@@ -6,6 +6,7 @@ import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
@@ -33,6 +34,7 @@ class WidgetUpdateWorker(
 
     companion object {
         private const val WORK_NAME = "tkolymp_widget_refresh"
+        private const val ONESHOT_WORK_NAME = "tkolymp_widget_refresh_oneshot"
 
         fun schedule(context: Context) {
             val request = PeriodicWorkRequestBuilder<WidgetUpdateWorker>(30, TimeUnit.MINUTES)
@@ -58,7 +60,12 @@ class WidgetUpdateWorker(
                         .build()
                 )
                 .build()
-            WorkManager.getInstance(context).enqueue(request)
+            // Unique so repeated triggers (app backgrounded, widget added) collapse into one run.
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                ONESHOT_WORK_NAME,
+                ExistingWorkPolicy.REPLACE,
+                request
+            )
         }
     }
 }

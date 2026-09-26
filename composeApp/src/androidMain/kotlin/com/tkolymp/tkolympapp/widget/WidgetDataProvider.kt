@@ -8,16 +8,24 @@ import com.tkolymp.shared.event.EventInstance
 import com.tkolymp.shared.event.EventType
 import com.tkolymp.shared.event.firstTrainerOrEmpty
 import com.tkolymp.shared.event.toEventType
+import com.tkolymp.shared.json.AppJson
 import com.tkolymp.shared.language.AppLanguage
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.people.Person
+import com.tkolymp.shared.utils.daysUntilNextBirthday
+import com.tkolymp.shared.utils.turningAgeOnNextBirthday
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonPrimitive
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -39,8 +47,16 @@ data class NearestDayResult(
 
 object WidgetDataProvider {
 
+    private const val INIT_TIMEOUT_MS = 10_000L
+
     suspend fun ensureInitialized(context: Context) {
-        // TKOlympApplication.onCreate() initializes networking before any widget code runs.
+        // TKOlympApplication.onCreate() starts initNetworking() on a background coroutine, so
+        // when the system cold-starts the process just to update a widget, this code can run
+        // before ServiceLocator is ready. Without waiting, every ServiceLocator access throws,
+        // which the callers below swallow as "not logged in" / "nothing upcoming".
+        withTimeoutOrNull(INIT_TIMEOUT_MS) {
+            while (!ServiceLocator.isInitialized) delay(20)
+        }
         // Apply saved language so widget strings match the app language preference.
         try {
             val code = ServiceLocator.languageStorage.getLanguageCode()
@@ -129,23 +145,33 @@ object WidgetDataProvider {
     suspend fun fetchUpcomingBirthdays(context: Context, limit: Int = 3): List<BirthdayEntry> {
         return try {
             ensureInitialized(context)
-            val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-            val todayEpoch = today.toEpochDays()
-            val people = ServiceLocator.peopleService.fetchPeople()
+            // fetchPeople() returns an empty list on any network failure; fall back to the
+            // copy OfflineSyncManager saved so a flaky background refresh doesn't blank the widget.
+            val people = ServiceLocator.peopleService.fetchPeople().ifEmpty { loadOfflinePeople() }
+            // Use the same helpers as the app. Building LocalDate(thisYear, month, day) by hand
+            // threw for anyone born on 29 February in a non-leap year, and that exception
+            // emptied the whole list ("no upcoming birthdays").
             people
                 .mapNotNull { person ->
-                    val bd = person.birthDate ?: return@mapNotNull null
-                    val parsed = runCatching { LocalDate.parse(bd) }.getOrNull() ?: return@mapNotNull null
-                    val thisYearBd = LocalDate(today.year, parsed.month, parsed.day)
-                    val nextBd = if (thisYearBd.toEpochDays() >= todayEpoch) thisYearBd
-                                 else LocalDate(today.year + 1, parsed.month, parsed.day)
-                    val daysUntil = (nextBd.toEpochDays() - todayEpoch).toInt()
+                    val daysUntil = daysUntilNextBirthday(person.birthDate)
                     if (daysUntil > 30) return@mapNotNull null
-                    val age = nextBd.year - parsed.year
+                    val age = turningAgeOnNextBirthday(person.birthDate) ?: return@mapNotNull null
                     BirthdayEntry(person, daysUntil, age)
                 }
                 .sortedBy { it.daysUntil }
                 .take(limit)
+        } catch (_: Exception) { emptyList() }
+    }
+
+    private suspend fun loadOfflinePeople(): List<Person> {
+        val raw = try { ServiceLocator.offlineSyncManager.loadPeople() } catch (_: Exception) { null } ?: return emptyList()
+        return try {
+            AppJson.parseToJsonElement(raw).jsonArray.mapNotNull { el ->
+                val jo = el as? JsonObject ?: return@mapNotNull null
+                fun str(key: String) = jo[key]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
+                val id = str("id") ?: return@mapNotNull null
+                Person(id, str("firstName"), str("lastName"), str("prefixTitle"), str("suffixTitle"), str("birthDate"), emptyList())
+            }
         } catch (_: Exception) { emptyList() }
     }
 
