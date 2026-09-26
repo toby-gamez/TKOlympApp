@@ -36,12 +36,14 @@ import com.tkolymp.shared.json.AppJson
 import io.ktor.serialization.kotlinx.json.*
 import okhttp3.CertificatePinner
 
-// Certificate pins for api.rozpisovnik.cz
-// Primary : leaf certificate public key (SHA-256/Base64)
-// Backup  : Let's Encrypt YE2 intermediate public key — use as fallback when the leaf is rotated
+// Certificate pins for api.rozpisovnik.cz.
+// Pin Let's Encrypt root keys rather than the leaf or an intermediate: the leaf key changes on every
+// renewal and Let's Encrypt rotates randomly between intermediates (YE1, YE2, ...), both of which broke
+// pinning before. A connection passes if any certificate in the validated chain matches one pin.
 private val certificatePinner = CertificatePinner.Builder()
-    .add("api.rozpisovnik.cz", "sha256/Q5SDlsyebwSuLU2EROPHxw0YP4+HhbPYfRZBMLFAqNo=")  // leaf
-    .add("api.rozpisovnik.cz", "sha256/s/tdAOmUzd8syaTuqfgGvFcn6DzA5Cmb+Vby1ST+U3Y=")  // Let's Encrypt YE2 intermediate
+    .add("api.rozpisovnik.cz", "sha256/sCkq5UWXjg+7mKu9lMhhYF5bGLsy7VI/UNW3tccdR7w=")  // ISRG Root YE (ECDSA, Gen Y)
+    .add("api.rozpisovnik.cz", "sha256/diGVwiVYbubAI3RW4hB9xU8e/CH2GnkuvVFZE8zmgzI=")  // ISRG Root X2 (ECDSA, cross-signs Root YE)
+    .add("api.rozpisovnik.cz", "sha256/C5+lpZ7tcVwmwQIMcRtPbsQtWLABXhQzejna0wHFr8M=")  // ISRG Root X1 (RSA fallback)
     .build()
 
 // Feedback ("Report a bug" / "Suggest a feature") posts to Tobiso.Web, a separate backend from the club GraphQL API.
