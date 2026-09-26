@@ -68,6 +68,8 @@ import com.tkolymp.shared.viewmodels.TypeStat
 import com.tkolymp.tkolympapp.components.BarChart
 import com.tkolymp.tkolympapp.util.StaggeredItem
 import kotlinx.coroutines.launch
+import com.tkolymp.tkolympapp.components.EmptyState
+import androidx.compose.material.icons.outlined.BarChart
 
 // ─── Season selector ──────────────────────────────────────────────────────────
 
@@ -1012,15 +1014,7 @@ internal fun AttendanceTabContent(
         )
 
         if (attendanceMonths.isEmpty() && !isLoading) {
-            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
-                Text(
-                    text = strings.noAttendanceData,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(24.dp),
-                    textAlign = TextAlign.Center
-                )
-            }
+            EmptyState(title = strings.noAttendanceData, icon = Icons.Outlined.BarChart)
             Spacer(Modifier.height(16.dp))
             return@Column
         }

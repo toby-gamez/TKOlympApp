@@ -114,6 +114,8 @@ import com.tkolymp.tkolympapp.components.LessonView
 import com.tkolymp.tkolympapp.components.RenderSingleEventCard
 import com.tkolymp.tkolympapp.util.StaggeredItem
 import com.tkolymp.tkolympapp.util.tabContentTransitionSpec
+import androidx.compose.material.icons.outlined.EventBusy
+import androidx.compose.material.icons.outlined.CalendarMonth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -347,7 +349,7 @@ fun CalendarScreen(
                     if (allDatesToShow.isEmpty() && !calState.isLoading) {
                         EmptyState(
                             title = AppStrings.current.calendarView.emptyCalendar,
-                            icon = Icons.Default.CalendarMonth,
+                            icon = Icons.Outlined.CalendarMonth,
                             fullPage = true
                         )
                     } else Column(
@@ -423,22 +425,10 @@ fun CalendarScreen(
                             }
 
                             if (filteredLessons.isEmpty() && filteredOther.isEmpty() && competitions.isEmpty()) {
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f),
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Box(
-                                        contentAlignment = Alignment.Center,
-                                        modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp)
-                                    ) {
-                                        Text(
-                                            text = AppStrings.current.calendarView.noEventsThisDay,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                                        )
-                                    }
-                                }
+                                EmptyState(
+                                    title = AppStrings.current.calendarView.noEventsThisDay,
+                                    icon = Icons.Outlined.EventBusy
+                                )
                             }
                         }
                         } // StaggeredItem

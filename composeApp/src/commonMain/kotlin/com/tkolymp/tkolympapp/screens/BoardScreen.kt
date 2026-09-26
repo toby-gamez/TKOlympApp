@@ -67,6 +67,7 @@ import com.tkolymp.shared.utils.formatHtmlContent
 import com.tkolymp.shared.viewmodels.BoardViewModel
 import com.tkolymp.tkolympapp.util.normalizeForSearch
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.outlined.Campaign
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -204,7 +205,7 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}) {
                         titleOk || bodyOk
                     }
                     if (filtered.isEmpty() && !state.isLoading) {
-                        EmptyState(title = AppStrings.current.announcements.noAnnouncementsToShow)
+                        EmptyState(title = AppStrings.current.announcements.noAnnouncementsToShow, icon = Icons.Outlined.Campaign, fullPage = true)
                     } else {
                         LazyColumn(modifier = Modifier.fillMaxWidth()) {
                             items(filtered) { a ->

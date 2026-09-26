@@ -69,6 +69,7 @@ import com.tkolymp.shared.utils.parseToLocal
 import com.tkolymp.shared.viewmodels.OtherViewModel
 import kotlinx.datetime.LocalDate
 import kotlin.coroutines.cancellation.CancellationException
+import com.tkolymp.tkolympapp.components.ErrorBanner
 
 private enum class MainItem { ACHIEVEMENTS, PEOPLE, TRAINERS, GROUPS, LEADERBOARD, COMPETITIONS }
 
@@ -244,7 +245,7 @@ fun OtherScreen(
                 }
             }
 
-            if (state.error != null) Text(state.error?.message ?: "", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(12.dp))
+            state.error?.let { ErrorBanner(error = it) }
 
             // Trio buttons: Payments | Stats | My trainings (three equal cards)
             Row(

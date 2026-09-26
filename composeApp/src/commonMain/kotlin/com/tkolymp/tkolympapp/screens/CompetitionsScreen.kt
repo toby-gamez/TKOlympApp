@@ -71,6 +71,8 @@ import com.tkolymp.tkolympapp.util.tabContentTransitionSpec
 import com.tkolymp.shared.viewmodels.CompetitionViewModel
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
+import com.tkolymp.tkolympapp.components.EmptyState
+import androidx.compose.material.icons.outlined.EmojiEvents
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -208,10 +210,11 @@ private fun CompetitionsListContent(
     LazyColumn(state = lazyState, modifier = Modifier.fillMaxWidth()) {
         if (grouped.isEmpty() && !isLoading) {
             item {
-                Text(
-                    text = emptyText,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                EmptyState(
+                    title = emptyText,
+                    icon = Icons.Outlined.EmojiEvents,
+                    fullPage = true,
+                    modifier = Modifier.fillParentMaxSize()
                 )
             }
         } else {

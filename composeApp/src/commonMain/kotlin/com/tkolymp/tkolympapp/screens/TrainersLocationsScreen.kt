@@ -58,6 +58,10 @@ import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.InitialsAvatar
 import com.tkolymp.tkolympapp.util.StaggeredItem
 import kotlinx.coroutines.launch
+import com.tkolymp.tkolympapp.components.EmptyState
+import com.tkolymp.tkolympapp.components.ErrorState
+import androidx.compose.material.icons.outlined.LocationOff
+import androidx.compose.material.icons.outlined.PersonOff
 
 private const val NAME_WEIGHT = 2.5f
 
@@ -122,13 +126,9 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                         )
                         else -> {
                             if (state.error != null) {
-                                Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                                    Text(state.error?.message ?: "")
-                                }
+                                ErrorState(message = state.error?.message)
                             } else if (club == null || (club.locations.isEmpty() && club.trainers.isEmpty())) {
-                                Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                                    Text(AppStrings.current.commonActions.noData)
-                                }
+                                EmptyState(title = AppStrings.current.commonActions.noData, fullPage = true)
                             } else {
                                 LazyColumn(modifier = Modifier) {
                                     item(key = "header_locations") {
@@ -169,7 +169,7 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                                             }
                                         }
                                     } else {
-                                        item(key = "no_locations") { Text(AppStrings.current.people.noTrainingSpaces, modifier = Modifier.padding(16.dp)) }
+                                        item(key = "no_locations") { EmptyState(title = AppStrings.current.people.noTrainingSpaces, icon = Icons.Outlined.LocationOff) }
                                     }
 
                                     item(key = "header_trainers") {
@@ -224,7 +224,7 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                                             }
                                         }
                                     } else {
-                                        item(key = "no_trainers") { Text(AppStrings.current.people.noTrainers, modifier = Modifier.padding(16.dp)) }
+                                        item(key = "no_trainers") { EmptyState(title = AppStrings.current.people.noTrainers, icon = Icons.Outlined.PersonOff) }
                                     }
                                 }
                             }

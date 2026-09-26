@@ -84,6 +84,10 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Instant
+import com.tkolymp.tkolympapp.components.EmptyState
+import androidx.compose.material.icons.outlined.NotificationsNone
+import androidx.compose.material.icons.outlined.NotificationsOff
+import androidx.compose.material.icons.outlined.Rule
 
 /** (date "27. 7.", time "17:15") in the device's local time zone, or ("", "") if unparseable. */
 private fun formatReminderDateTime(iso: String): Pair<String, String> = try {
@@ -239,9 +243,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
                                     }
                                     if (vmState.coachMessages.isEmpty()) {
                                         item {
-                                            Column(modifier = Modifier.fillMaxWidth().padding(top = 12.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-                                                Text(AppStrings.current.notifications.noNotificationsFromCoach, style = MaterialTheme.typography.bodyMedium)
-                                            }
+                                            EmptyState(title = AppStrings.current.notifications.noNotificationsFromCoach, icon = Icons.Outlined.NotificationsNone)
                                         }
                                     } else {
                                         items(vmState.coachMessages, key = { it.id }) { msg ->
@@ -267,9 +269,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
                                 var editingReminder by remember { mutableStateOf<EventReminder?>(null) }
                                 var deletingReminder by remember { mutableStateOf<EventReminder?>(null) }
                                 if (vmState.reminders.isEmpty()) {
-                                    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Text(AppStrings.current.notifications.noReminders, style = MaterialTheme.typography.titleMedium)
-                                    }
+                                    EmptyState(title = AppStrings.current.notifications.noReminders, icon = Icons.Outlined.NotificationsOff, fullPage = true)
                                 } else {
                                     // Group every reminder sharing an event id under one card —
                                     // one bold header for the (big) event, one compact
@@ -429,10 +429,12 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
                                     }
                                 }
                                 if (vmState.rules.isEmpty()) {
-                                    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Text(AppStrings.current.notifications.noRules, style = MaterialTheme.typography.titleMedium)
-                                        Text(AppStrings.current.notifications.noRulesDescription, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
-                                    }
+                                    EmptyState(
+                                        title = AppStrings.current.notifications.noRules,
+                                        subtitle = AppStrings.current.notifications.noRulesDescription,
+                                        icon = Icons.Outlined.Rule,
+                                        fullPage = true
+                                    )
                                 }
                             }
                         }
