@@ -36,7 +36,7 @@ There is no `shared:jvmTest` task — `shared` targets `android` + `iosArm64`/`i
 
 `local.properties` (git-ignored) must contain:
 ```
-api.base.url=https://api.rozpisovnik.cz/graphql
+api.base.url=https://tkolymp.cz/graphql
 tenant.id=<club-tenant-id>
 ```
 These are injected as `BuildConfig.API_BASE_URL` and `BuildConfig.TENANT_ID` at compile time.
@@ -59,7 +59,7 @@ All logic shared between Android and iOS lives here. Never import Android/UI fra
 
 - **`ServiceLocator`** — read-only singleton facade; call `ServiceLocator.init(container)` exactly once (done inside each platform's `initNetworking()`). Access services via `ServiceLocator.eventService`, etc.
 - **`AppContainer`** — holds all service instances; constructed by `initNetworking()`, once per platform: `shared/src/androidMain/.../PlatformNetwork.kt` (Android, OkHttp engine + certificate pinning) and `shared/src/iosMain/.../PlatformNetwork.ios.kt` (iOS, Darwin engine).
-- **Services** — one interface + one impl per domain (`IAuthService`/`AuthService`, `IEventService`/`EventService`, etc.), under `event/`, `people/`, `club/`, `announcements/`, `payments/`, `registration/`, `competitions/`, `personalevents/`, `notification/`, `achievements/`, `campschedule/`, `feedback/`, `systemcalendar/`, `user/`, plus cross-cutting singletons in `appearance/`, `device/`, `tutorial/`. All GraphQL calls go through `GraphQlClientImpl` (Ktor); the Android engine is OkHttp with certificate pinning to `api.rozpisovnik.cz`, iOS uses Darwin.
+- **Services** — one interface + one impl per domain (`IAuthService`/`AuthService`, `IEventService`/`EventService`, etc.), under `event/`, `people/`, `club/`, `announcements/`, `payments/`, `registration/`, `competitions/`, `personalevents/`, `notification/`, `achievements/`, `campschedule/`, `feedback/`, `systemcalendar/`, `user/`, plus cross-cutting singletons in `appearance/`, `device/`, `tutorial/`. All GraphQL calls go through `GraphQlClientImpl` (Ktor); the Android engine is OkHttp with certificate pinning to `tkolymp.cz`, iOS uses Darwin.
 - **ViewModels** — one per screen (`CalendarViewModel`, `EventsViewModel`, …), each implementing `ViewModelState` (has `isLoading: Boolean` and `error: String?`). Shared between Android and iOS.
 - **`CacheService`** — in-memory LRU (max 200 entries, default 5-minute TTL). Services call `cache.get(key)` / `cache.put(key, value, ttl)` and invalidate by key or prefix on mutations.
 - **Storage** — `TokenStorage`, `UserStorage`, `OnboardingStorage`, `LanguageStorage`, `CalendarPreferenceStorage`, `OfflineDataStorage`, `NotificationStorage`. Android implementations use the `ksafe` library.

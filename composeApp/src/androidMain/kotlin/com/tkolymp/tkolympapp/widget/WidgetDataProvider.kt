@@ -182,18 +182,11 @@ object WidgetDataProvider {
         } catch (_: Exception) { null }
     }
 
-    // Mirrors CalendarViewModel.isLesson — event has a non-blank trainer name
+    // Mirrors CalendarViewModel.isLesson / OverviewViewModel.isLesson — event type is LESSON
+    // (not GROUP/other), with a trainer to group by.
     private fun isLesson(inst: EventInstance): Boolean =
-        inst.event?.eventTrainersList.orEmpty().isNotEmpty() &&
+        inst.event?.type?.toEventType() == EventType.LESSON &&
         !inst.event?.eventTrainersList?.firstOrNull().isNullOrBlank()
-
-    // Mirrors OverviewViewModel.isLesson — requires EventType.LESSON + non-blank trainer
-    private fun isLessonOverview(inst: EventInstance): Boolean {
-        val ev = inst.event ?: return false
-        return ev.type?.toEventType() == EventType.LESSON &&
-            ev.eventTrainersList.orEmpty().isNotEmpty() &&
-            !ev.eventTrainersList.firstOrNull().isNullOrBlank()
-    }
 
     suspend fun fetchNearestTrainingDay(context: Context): NearestDayResult? {
         return try {
@@ -246,7 +239,7 @@ object WidgetDataProvider {
             } ?: return null
 
             val selectedDayList = byDay[selectedKey] ?: emptyList()
-            val lessons = selectedDayList.filter { isLessonOverview(it) }
+            val lessons = selectedDayList.filter { isLesson(it) }
             val others = (selectedDayList - lessons.toSet()).sortedBy { it.since }
 
             val lessonGroups = lessons

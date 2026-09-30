@@ -46,7 +46,7 @@ class ManagementServiceTest {
     @Test
     fun permissions_fromUserFlags() {
         val p = ManagementGraphQl.parsePermissions(
-            obj("""{"id":"7","isAdmin":false,"isTrainer":true,"userProxiesList":[{"person":{"id":"42"}}]}"""),
+            obj("""{"id":"7","userProxiesList":[{"person":{"id":"42","isAdmin":false,"isTrainer":true}}]}"""),
             null,
         )
         assertEquals(UserPermissions(userId = "7", personIds = setOf("42"), isTrainer = true, isAdmin = false), p)
@@ -56,7 +56,7 @@ class ManagementServiceTest {
     @Test
     fun permissions_fallBackToActiveStaffLists() {
         val p = ManagementGraphQl.parsePermissions(
-            obj("""{"id":"7","isAdmin":null,"isTrainer":null,"userProxiesList":[{"person":{"id":"42"}}]}"""),
+            obj("""{"id":"7","userProxiesList":[{"person":{"id":"42","isAdmin":null,"isTrainer":null}}]}"""),
             obj(
                 """{"tenantTrainersList":[{"personId":"42","status":"EXPIRED"}],
                    "tenantAdministratorsList":[{"personId":"42","status":"ACTIVE"}]}"""
@@ -69,7 +69,7 @@ class ManagementServiceTest {
     @Test
     fun permissions_regularMemberCannotManage() {
         val p = ManagementGraphQl.parsePermissions(
-            obj("""{"id":"7","isAdmin":false,"isTrainer":false,"userProxiesList":[{"person":{"id":"42"}}]}"""),
+            obj("""{"id":"7","userProxiesList":[{"person":{"id":"42","isAdmin":false,"isTrainer":false}}]}"""),
             obj("""{"tenantTrainersList":[{"personId":"1","status":"ACTIVE"}],"tenantAdministratorsList":[]}"""),
         )
         assertFalse(p.canManage)
@@ -96,7 +96,7 @@ class ManagementServiceTest {
     fun getPermissions_isCachedAndDegradesToNoneOnFailure() = runTest {
         val client = RoutingGraphQlClient(
             mapOf(
-                "ManagementCurrentUser" to """{"data":{"getCurrentUser":{"id":"7","isAdmin":true,"isTrainer":false,"userProxiesList":[]}}}""",
+                "ManagementCurrentUser" to """{"data":{"getCurrentUser":{"id":"7","userProxiesList":[{"person":{"id":"42","isAdmin":true,"isTrainer":false}}]}}}""",
                 "ManagementStaff" to "ERROR:permission denied",
             )
         )

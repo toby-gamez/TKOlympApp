@@ -41,15 +41,13 @@ import kotlinx.cinterop.staticCFunction
 import platform.Foundation.NSException
 import platform.Foundation.NSSetUncaughtExceptionHandler
 
-// Certificate pins for api.rozpisovnik.cz.
-// Pin Let's Encrypt root keys rather than the leaf or an intermediate: the leaf key changes on every
-// renewal and Let's Encrypt rotates randomly between intermediates (YE1, YE2, ...), both of which broke
-// pinning before. A connection passes if any certificate in the validated chain matches one pin.
+// Certificate pins for tkolymp.cz (served via Google Trust Services: leaf -> WE1 -> GTS Root R4).
+// Pin the root key rather than the leaf or intermediate: the leaf key changes on every renewal and
+// Google rotates between intermediates (WE1, WE2, WR1, ...). A connection passes if any certificate
+// in the validated chain matches one pin.
 // Keep in sync with the Android OkHttp pins.
 private val certPinner: CertificatePinner = CertificatePinner.Builder()
-    .add("api.rozpisovnik.cz", "sha256/sCkq5UWXjg+7mKu9lMhhYF5bGLsy7VI/UNW3tccdR7w=")  // ISRG Root YE (ECDSA, Gen Y)
-    .add("api.rozpisovnik.cz", "sha256/diGVwiVYbubAI3RW4hB9xU8e/CH2GnkuvVFZE8zmgzI=")  // ISRG Root X2 (ECDSA, cross-signs Root YE)
-    .add("api.rozpisovnik.cz", "sha256/C5+lpZ7tcVwmwQIMcRtPbsQtWLABXhQzejna0wHFr8M=")  // ISRG Root X1 (RSA fallback)
+    .add("tkolymp.cz", "sha256/mEflZT5enoR1FuXLgYYGqnVEoZvmf9c2bVBpiOjYQ0c=")  // GTS Root R4 (ECDSA)
     .build()
 
 // Feedback ("Report a bug" / "Suggest a feature") posts to Tobiso.Web, a separate backend from the club GraphQL API.

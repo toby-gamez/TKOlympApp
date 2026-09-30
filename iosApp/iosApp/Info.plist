@@ -7,7 +7,7 @@
 
 	<!-- API configuration — update TENANT_ID for each club deployment -->
 	<key>API_BASE_URL</key>
-	<string>https://api.rozpisovnik.cz/graphql</string>
+	<string>https://tkolymp.cz/graphql</string>
 	<key>TENANT_ID</key>
 	<string>1</string>
 

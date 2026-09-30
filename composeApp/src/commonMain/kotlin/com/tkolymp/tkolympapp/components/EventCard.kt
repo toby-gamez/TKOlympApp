@@ -208,8 +208,9 @@ internal fun RenderSingleEventCard(
             .padding(12.dp),
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
         ) {
+            val isLesson = item.event?.type?.equals("lesson", ignoreCase = true) == true
             val cohorts = item.event?.eventTargetCohortsList ?: emptyList()
-            val cohortColors = cohorts.mapNotNull { tc ->
+            val cohortColors = if (isLesson) emptyList() else cohorts.mapNotNull { tc ->
                 val hex = tc.cohort?.colorRgb
                 if (hex.isNullOrBlank()) null else try { parseColorOrDefault(hex) } catch (_: Exception) { null }
             }
@@ -219,7 +220,12 @@ internal fun RenderSingleEventCard(
                     .height(72.dp)
                     .clip(RoundedCornerShape(6.dp))
             ) {
-                if (cohortColors.isNotEmpty()) {
+                if (isLesson) {
+                    Box(modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                    )
+                } else if (cohortColors.isNotEmpty()) {
                     cohortColors.forEach { color ->
                         Box(modifier = Modifier
                             .fillMaxWidth()

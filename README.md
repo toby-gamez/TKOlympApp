@@ -29,7 +29,7 @@ Projekt je rozdělen do čtyř Gradle modulů:
 Sdílená business logika (Android + iOS) — platformově nezávislá, nikdy neimportuje Android/UI třídy. Obsahuje:
 - **Services** — jedno rozhraní + jedna implementace na doménu, např. `AuthService`, `UserService`, `EventService`, `PeopleService`, `ClubService`, `AnnouncementService`, `NotificationService`, `PaymentsService`, `RegistrationService`, `CompetitionsService`, `PersonalEventsService`, `AchievementsService`, `CampScheduleService`, `FeedbackService`, `SystemCalendarService`
 - **ViewModels** — jeden ViewModel na každou obrazovku (sdílený mezi Android a iOS), implementuje `ViewModelState`
-- **Network** — `GraphQlClientImpl` (Ktor); Android engine je OkHttp s certificate pinningem na `api.rozpisovnik.cz`, iOS používá Darwin
+- **Network** — `GraphQlClientImpl` (Ktor); Android engine je OkHttp s certificate pinningem na `tkolymp.cz`, iOS používá Darwin
 - **`CacheService`** — in-memory LRU cache (max 200 položek, výchozí TTL 5 minut)
 - **Storage** — `TokenStorage`, `UserStorage`, `OnboardingStorage`, `LanguageStorage`, `CalendarPreferenceStorage`, `OfflineDataStorage`, `NotificationStorage` (na Androidu přes knihovnu `ksafe`)
 - **Offline sync** — `OfflineSyncManager` stahuje data při startu a po přihlášení
@@ -105,7 +105,7 @@ adb install androidApp/build/outputs/apk/debug/androidApp-debug.apk
 
 `local.properties` (git-ignored) musí obsahovat:
 ```
-api.base.url=https://api.rozpisovnik.cz/graphql
+api.base.url=https://tkolymp.cz/graphql
 tenant.id=<club-tenant-id>
 ```
 

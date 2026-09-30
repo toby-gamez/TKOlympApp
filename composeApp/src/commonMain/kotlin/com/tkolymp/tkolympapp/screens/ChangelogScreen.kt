@@ -33,14 +33,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.mohamedrejeb.richeditor.model.RichTextState
+import com.mohamedrejeb.richeditor.ui.material3.RichText
 import com.tkolymp.shared.changelog.ChangelogViewModel
 import com.tkolymp.shared.language.AppStrings
-import com.tkolymp.tkolympapp.platform.HtmlText
 import com.tkolymp.tkolympapp.util.StaggeredItem
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -117,6 +118,7 @@ private fun ReleaseCard(release: com.tkolymp.shared.changelog.ChangelogRelease) 
     val textColor = MaterialTheme.colorScheme.onSurface
     val linkColor = MaterialTheme.colorScheme.primary
     val mutedColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val codeBackground = MaterialTheme.colorScheme.surfaceVariant
 
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -166,12 +168,18 @@ private fun ReleaseCard(release: com.tkolymp.shared.changelog.ChangelogRelease) 
             }
             if (release.body.isNotBlank()) {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp))
-                HtmlText(
-                    html = markdownToHtml(release.body),
+                val richTextState = remember(release.tagName, release.body, linkColor, codeBackground) {
+                    RichTextState().apply {
+                        config.linkColor = linkColor
+                        config.codeSpanBackgroundColor = codeBackground
+                        setMarkdown(stripDuplicateTitle(release.body))
+                    }
+                }
+                RichText(
+                    state = richTextState,
                     modifier = Modifier.fillMaxWidth(),
-                    textColor = textColor,
-                    linkColor = linkColor,
-                    textSizeSp = 14f,
+                    color = textColor,
+                    fontSize = 14.sp,
                 )
             }
         }
@@ -188,94 +196,10 @@ private fun formatReleaseDate(iso: String): String {
     }
 }
 
-internal fun markdownToHtml(md: String): String {
-    // Drop the first h1 line — it duplicates the release title shown in the card header
-    val stripped = md.lines().dropWhile { it.trimEnd().startsWith("# ") && !it.trimEnd().startsWith("## ") }.joinToString("\n").trimStart()
-    val lines = stripped.lines()
-    val out = StringBuilder()
-    var inUl = false
-    var inOl = false
-    var olCounter = 0
-
-    fun closeLists() {
-        if (inUl) { out.append("</ul>"); inUl = false }
-        if (inOl) { out.append("</ol>"); inOl = false; olCounter = 0 }
-    }
-
-    fun inlineFormat(s: String): String {
-        var r = s
-        // bold+italic ***text*** / ___text___
-        r = r.replace(Regex("\\*\\*\\*(.+?)\\*\\*\\*")) { "<b><i>${it.groupValues[1]}</i></b>" }
-        r = r.replace(Regex("___(.+?)___")) { "<b><i>${it.groupValues[1]}</i></b>" }
-        // bold **text** / __text__
-        r = r.replace(Regex("\\*\\*(.+?)\\*\\*")) { "<b>${it.groupValues[1]}</b>" }
-        r = r.replace(Regex("__(.+?)__")) { "<b>${it.groupValues[1]}</b>" }
-        // italic *text* / _text_
-        r = r.replace(Regex("(?<![*_])\\*(?![*\\s])(.+?)(?<![\\s*])\\*(?![*])")) { "<i>${it.groupValues[1]}</i>" }
-        r = r.replace(Regex("(?<!_)_(?!_)(.+?)(?<!_)_(?!_)")) { "<i>${it.groupValues[1]}</i>" }
-        // strikethrough ~~text~~
-        r = r.replace(Regex("~~(.+?)~~")) { "<s>${it.groupValues[1]}</s>" }
-        // inline code `code`
-        r = r.replace(Regex("`([^`]+)`")) { "<code>${it.groupValues[1]}</code>" }
-        // links [text](url)
-        r = r.replace(Regex("\\[([^]]+)]\\(([^)]+)\\)")) { "<a href=\"${it.groupValues[2]}\">${it.groupValues[1]}</a>" }
-        // auto-link bare URLs not already in an <a> tag
-        r = r.replace(Regex("(?<!href=\")(https?://[^\\s<>\"]+)")) { "<a href=\"${it.groupValues[1]}\">${it.groupValues[1]}</a>" }
-        return r
-    }
-
-    for (line in lines) {
-        val trimmed = line.trimEnd()
-        when {
-            // Setext-style headings (=== or ---) are not handled; only ATX (##)
-            trimmed.startsWith("### ") -> {
-                closeLists()
-                out.append("<h3 style=\"margin:0;font-size:15px\">${inlineFormat(trimmed.removePrefix("### ").trim())}</h3>")
-            }
-            trimmed.startsWith("## ") -> {
-                closeLists()
-                out.append("<h2 style=\"margin:0;font-size:16px\">${inlineFormat(trimmed.removePrefix("## ").trim())}</h2>")
-            }
-            trimmed.startsWith("# ") -> {
-                closeLists()
-                out.append("<h1 style=\"margin:0;font-size:17px\">${inlineFormat(trimmed.removePrefix("# ").trim())}</h1>")
-            }
-            // horizontal rule --- / ***
-            trimmed.matches(Regex("[-*]{3,}")) -> {
-                closeLists()
-                out.append("<hr>")
-            }
-            // unordered list item
-            trimmed.matches(Regex("^[-*+] .+")) -> {
-                if (inOl) { out.append("</ol>"); inOl = false; olCounter = 0 }
-                if (!inUl) { out.append("<ul style=\"margin:0;padding-left:18px\">"); inUl = true }
-                out.append("<li style=\"margin:0\">${inlineFormat(trimmed.substring(2))}</li>")
-            }
-            // ordered list item
-            trimmed.matches(Regex("^\\d+\\. .+")) -> {
-                if (inUl) { out.append("</ul>"); inUl = false }
-                if (!inOl) { out.append("<ol style=\"margin:0;padding-left:18px\">"); inOl = true; olCounter = 0 }
-                olCounter++
-                val content = trimmed.replace(Regex("^\\d+\\. "), "")
-                out.append("<li style=\"margin:0\">${inlineFormat(content)}</li>")
-            }
-            // blockquote
-            trimmed.startsWith("> ") -> {
-                closeLists()
-                out.append("<blockquote style=\"margin:0 0 0 10px;padding-left:8px;border-left:3px solid #aaa\">${inlineFormat(trimmed.removePrefix("> "))}</blockquote>")
-            }
-            // blank line → paragraph break
-            trimmed.isEmpty() -> {
-                closeLists()
-                out.append("")
-            }
-            // normal paragraph line
-            else -> {
-                closeLists()
-                out.append("<p style=\"margin:0\">${inlineFormat(trimmed)}</p>")
-            }
-        }
-    }
-    closeLists()
-    return out.toString()
+/** Drops a leading h1 line — it duplicates the release title shown in the card header. */
+private fun stripDuplicateTitle(md: String): String {
+    return md.lines()
+        .dropWhile { it.trimEnd().startsWith("# ") && !it.trimEnd().startsWith("## ") }
+        .joinToString("\n")
+        .trimStart()
 }

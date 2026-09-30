@@ -22,6 +22,12 @@ android {
         versionName = "2.0.1"
         buildConfigField("String", "API_BASE_URL", "\"${localProps["api.base.url"] ?: ""}\"")
         buildConfigField("String", "TENANT_ID", "\"${localProps["tenant.id"] ?: ""}\"")
+        ndk {
+            // Real devices are ARM; x86/x86_64 only matter for emulators. OpenCV + ML Kit
+            // ship large native libs per ABI, so trimming these keeps the single release
+            // APK a fraction of the size a universal 4-ABI build would be.
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+        }
     }
     buildFeatures {
         buildConfig = true

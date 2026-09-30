@@ -165,7 +165,7 @@ class ManagementService(
 /** GraphQL documents plus pure request builders / response parsers (unit-tested). */
 internal object ManagementGraphQl {
     const val CURRENT_USER_QUERY =
-        "query ManagementCurrentUser { getCurrentUser { id isAdmin isTrainer userProxiesList { person { id } } } }"
+        "query ManagementCurrentUser { getCurrentUser { id userProxiesList { person { id isAdmin isTrainer } } } }"
 
     const val STAFF_QUERY =
         "query ManagementStaff { getCurrentTenant { tenantTrainersList { personId status } tenantAdministratorsList { personId status } } }"
@@ -237,18 +237,18 @@ internal object ManagementGraphQl {
     """
 
     fun parsePermissions(user: JsonObject, tenant: JsonObject?): UserPermissions {
-        val personIds = (user["userProxiesList"] as? JsonArray)
-            ?.mapNotNull { (it as? JsonObject)?.obj("person")?.str("id") }
-            ?.toSet()
+        val persons = (user["userProxiesList"] as? JsonArray)
+            ?.mapNotNull { (it as? JsonObject)?.obj("person") }
             .orEmpty()
+        val personIds = persons.mapNotNull { it.str("id") }.toSet()
         fun activeStaff(key: String): Set<String> = (tenant?.get(key) as? JsonArray)
             ?.mapNotNull { it as? JsonObject }
             ?.filter { it.str("status").let { s -> s == null || s == "ACTIVE" } }
             ?.mapNotNull { it.str("personId") }
             ?.toSet()
             .orEmpty()
-        val isAdmin = user.bool("isAdmin") == true || activeStaff("tenantAdministratorsList").any { it in personIds }
-        val isTrainer = user.bool("isTrainer") == true || activeStaff("tenantTrainersList").any { it in personIds }
+        val isAdmin = persons.any { it.bool("isAdmin") == true } || activeStaff("tenantAdministratorsList").any { it in personIds }
+        val isTrainer = persons.any { it.bool("isTrainer") == true } || activeStaff("tenantTrainersList").any { it in personIds }
         return UserPermissions(
             userId = user.str("id"),
             personIds = personIds,

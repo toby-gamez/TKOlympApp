@@ -222,9 +222,9 @@ class EventService(
                     $${"first"}: Int,
                     $${"offset"}: Int,
                     $${"onlyType"}: EventType,
-                    $${"onlyMine"}: Boolean
+                    $${"scope"}: EventInstanceRangeScope
                 ) {
-                    eventInstancesForRangeList(startRange: $${"startRange"}, endRange: $${"endRange"}, first: $${"first"}, offset: $${"offset"}, onlyType: $${"onlyType"}, onlyMine: $${"onlyMine"}) {
+                    eventInstancesForRangeList(startRange: $${"startRange"}, endRange: $${"endRange"}, first: $${"first"}, offset: $${"offset"}, onlyType: $${"onlyType"}, scope: $${"scope"}) {
                         id
                         isCancelled
                         since
@@ -277,7 +277,7 @@ class EventService(
             put("endRange", JsonPrimitive(endRangeIso))
             put("first", JsonPrimitive(first))
             put("offset", JsonPrimitive(offset))
-            put("onlyMine", JsonPrimitive(onlyMine))
+            put("scope", JsonPrimitive(if (onlyMine) "MINE" else "ALL"))
             if (onlyType != null) put("onlyType", JsonPrimitive(onlyType))
         }
 

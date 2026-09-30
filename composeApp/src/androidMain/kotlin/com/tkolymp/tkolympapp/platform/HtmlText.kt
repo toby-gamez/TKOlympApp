@@ -33,6 +33,7 @@ actual fun HtmlText(
     var contentHeightPx by remember { mutableStateOf(0) }
     val density = LocalDensity.current
     val sizedModifier = modifier
+    var lastLoadedHtml by remember { mutableStateOf<String?>(null) }
 
     AndroidView(
         modifier = sizedModifier,
@@ -160,7 +161,10 @@ actual fun HtmlText(
                                 $injectClickScript
                                 </html>
                         """.trimIndent()
-            wv.loadDataWithBaseURL(null, styledHtml, "text/html", "UTF-8", null)
+            if (styledHtml != lastLoadedHtml) {
+                lastLoadedHtml = styledHtml
+                wv.loadDataWithBaseURL(null, styledHtml, "text/html", "UTF-8", null)
+            }
         }
     )
 }

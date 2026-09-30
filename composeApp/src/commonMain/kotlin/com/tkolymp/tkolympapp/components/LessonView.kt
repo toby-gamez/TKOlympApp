@@ -61,14 +61,6 @@ internal fun LessonView(
             .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(modifier = Modifier
-                .width(6.dp)
-                .fillMaxHeight()
-                .background(MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(6.dp))
-            )
-
-            Spacer(modifier = Modifier.width(12.dp))
-
             Column(modifier = Modifier.weight(1f)) {
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     androidx.compose.material3.Text(trainerName, style = MaterialTheme.typography.titleMedium)
