@@ -9,8 +9,8 @@ actual object Logger {
         if (isDebug) Log.d(tag, msg)
     }
 
-    actual fun w(tag: String, msg: String) {
-        if (isDebug) Log.w(tag, msg)
+    actual fun w(tag: String, msg: String, throwable: Throwable?) {
+        if (isDebug) Log.w(tag, msg, throwable)
     }
 
     actual fun e(tag: String, msg: String, throwable: Throwable?) {

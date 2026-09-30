@@ -9,8 +9,12 @@ actual object Logger {
         NSLog("[$tag] D $msg")
     }
 
-    actual fun w(tag: String, msg: String) {
-        NSLog("[$tag] W $msg")
+    actual fun w(tag: String, msg: String, throwable: Throwable?) {
+        if (throwable != null) {
+            NSLog("[$tag] W $msg — ${throwable.message}")
+        } else {
+            NSLog("[$tag] W $msg")
+        }
     }
 
     actual fun e(tag: String, msg: String, throwable: Throwable?) {

@@ -128,6 +128,7 @@ class OverviewViewModel(
             val cids = try { userService.getCachedCoupleIds() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("OverviewViewModel", "getCachedCoupleIds failed: ${e.message}"); emptyList<String>() }
 
             var events: List<EventInstance> = emptyList()
+            var camps: List<EventInstance> = emptyList()
             var announcements: List<Announcement> = emptyList()
             var upcomingBirthdays: List<BirthdayEntry> = emptyList()
             var paymentDaysUntilDue: Int? = null
@@ -262,19 +263,20 @@ class OverviewViewModel(
                         if (fetched.isNotEmpty()) {
                             fetched.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }.take(3)
                         } else {
-                            val online = try { ServiceLocator.networkMonitor.isConnected() } catch (_: Exception) { true }
-                            if (!online) {
-                                try {
-                                    val raw = try { ServiceLocator.offlineSyncManager.loadAnnouncements(false) } catch (_: Exception) { null }
-                                    if (!raw.isNullOrBlank()) {
-                                        val parsed = try { AppJson.decodeFromString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), raw) } catch (_: Exception) { null }
-                                        if (!parsed.isNullOrEmpty()) {
-                                            _state.value = _state.value.copy(isOffline = true)
-                                            parsed.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }.take(3)
-                                        } else emptyList()
+                            // A live fetch returning empty doesn't mean there are no announcements —
+                            // it can be a transient server/auth hiccup under concurrent request load
+                            // (see BoardViewModel). Fall back to the last downloaded offline snapshot
+                            // rather than trusting the empty result outright.
+                            try {
+                                val raw = try { ServiceLocator.offlineSyncManager.loadAnnouncements(false) } catch (_: Exception) { null }
+                                if (!raw.isNullOrBlank()) {
+                                    val parsed = try { AppJson.decodeFromString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), raw) } catch (_: Exception) { null }
+                                    if (!parsed.isNullOrEmpty()) {
+                                        _state.value = _state.value.copy(isOffline = true)
+                                        parsed.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }.take(3)
                                     } else emptyList()
-                                } catch (_: Exception) { emptyList<Announcement>() }
-                            } else emptyList()
+                                } else emptyList()
+                            } catch (_: Exception) { emptyList<Announcement>() }
                         }
                     } catch (e: CancellationException) { throw e } catch (e: Exception) {
                         Logger.d("OverviewViewModel", "getAnnouncements failed: ${e.message}")
@@ -406,15 +408,33 @@ class OverviewViewModel(
                     } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                 }
 
+                // Like camps, this previews the same browsable list the "more" button opens
+                // (CompetitionsScreen/CompetitionViewModel, unfiltered) rather than only
+                // entries the current person personally competes in.
                 val competitionDef = async {
                     try {
-                        val pidLong = pid?.toLongOrNull()
-                        val personFilter = if (pidLong != null) listOf(pidLong) else null
-                        competitionService.getNearestUpcoming(pPersonIds = personFilter)
+                        competitionService.getNearestUpcoming(pPersonIds = null)
                     } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                 }
 
+                // Camps are browsable regardless of whether the user is already registered
+                // (the "browse others" button opens the same full list), so fetch with
+                // onlyMine=false like EventsViewModel.loadCampsNextYear does, rather than
+                // deriving from the "mine"-scoped events list above.
+                val campsDef = async {
+                    try {
+                        val map = withContext(Dispatchers.Default) {
+                            eventService.fetchEventsGroupedByDay(startIso, com.tkolymp.shared.utils.DateRangeConstants.FAR_FUTURE, onlyMine = false, first = AppConstants.FETCH_LIMIT_PERIOD, onlyType = "CAMP", cacheNamespace = "camps_")
+                        }
+                        map.values.flatten().filter { it.event?.isVisible != false }
+                    } catch (e: CancellationException) { throw e } catch (e: Exception) {
+                        Logger.d("OverviewViewModel", "fetchCamps failed: ${e.message}")
+                        emptyList()
+                    }
+                }
+
                 events = eventsDef.await()
+                camps = campsDef.await()
                 announcements = announcementsDef.await()
                 upcomingBirthdays = birthdaysDef.await()
                 paymentDaysUntilDue = paymentsDef.await()
@@ -422,7 +442,7 @@ class OverviewViewModel(
             }
 
             val campsMapByDay = withContext(Dispatchers.Default) {
-                events.filter { it.event?.type?.toEventType() == EventType.CAMP == true }
+                camps.filter { (it.since ?: it.until ?: it.updatedAt ?: "") >= todayString }
                     .sortedBy { it.since ?: it.updatedAt ?: "" }
                     .take(2)
                     .groupBy { inst ->

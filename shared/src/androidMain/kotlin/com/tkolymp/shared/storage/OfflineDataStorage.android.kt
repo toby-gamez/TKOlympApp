@@ -1,7 +1,7 @@
 package com.tkolymp.shared.storage
 
 import android.content.Context
-import android.util.Log
+import com.tkolymp.shared.Logger
 import eu.anifantakis.lib.ksafe.KSafe
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -50,7 +50,7 @@ class OfflineDataStorageAndroid(context: Context) : OfflineDataStorage {
                 }
             }
         } catch (e: Exception) {
-            Log.w(TAG, "purgeLegacyPlaintextFiles failed", e)
+            Logger.w(TAG, "purgeLegacyPlaintextFiles failed", e)
         }
     }
 
@@ -66,7 +66,7 @@ class OfflineDataStorageAndroid(context: Context) : OfflineDataStorage {
         return try {
             Json.decodeFromString(MapSerializer(String.serializer(), String.serializer()), raw).toMutableMap()
         } catch (e: Exception) {
-            Log.w(TAG, "readIndex failed", e)
+            Logger.w(TAG, "readIndex failed", e)
             mutableMapOf()
         }
     }
@@ -75,7 +75,7 @@ class OfflineDataStorageAndroid(context: Context) : OfflineDataStorage {
         try {
             ksafe.put(INDEX_KEY, Json.encodeToString(MapSerializer(String.serializer(), String.serializer()), map))
         } catch (e: Exception) {
-            Log.w(TAG, "writeIndex failed", e)
+            Logger.w(TAG, "writeIndex failed", e)
         }
     }
 
@@ -87,7 +87,7 @@ class OfflineDataStorageAndroid(context: Context) : OfflineDataStorage {
                 try {
                     ksafe.put(hash, json)
                 } catch (e: Exception) {
-                    Log.e(TAG, "save failed for key=$key", e)
+                    Logger.e(TAG, "save failed for key=$key", e)
                     throw e
                 }
                 val idx = readIndex()
@@ -107,7 +107,7 @@ class OfflineDataStorageAndroid(context: Context) : OfflineDataStorage {
                 if (!readIndex().containsKey(hash)) return@withLock null
                 ksafe.get(hash, "")
             } catch (e: Exception) {
-                Log.w(TAG, "load failed for key=$key", e)
+                Logger.w(TAG, "load failed for key=$key", e)
                 null
             }
         }
@@ -125,17 +125,17 @@ class OfflineDataStorageAndroid(context: Context) : OfflineDataStorage {
                             try {
                                 ksafe.delete(hash)
                             } catch (e: Exception) {
-                                Log.w(TAG, "deleteByPrefix failed for hash=$hash", e)
+                                Logger.w(TAG, "deleteByPrefix failed for hash=$hash", e)
                             }
                             idx.remove(hash)
                         }
                     } catch (e: Exception) {
-                        Log.w(TAG, "deleteByPrefix lock failed for $hash", e)
+                        Logger.w(TAG, "deleteByPrefix lock failed for $hash", e)
                     }
                 }
                 writeIndex(idx)
             } catch (e: Exception) {
-                Log.w(TAG, "deleteByPrefix failed", e)
+                Logger.w(TAG, "deleteByPrefix failed", e)
             }
         }
     }
@@ -144,7 +144,7 @@ class OfflineDataStorageAndroid(context: Context) : OfflineDataStorage {
         return try {
             readIndex().values.toSet()
         } catch (e: Exception) {
-            Log.w(TAG, "allKeys failed", e)
+            Logger.w(TAG, "allKeys failed", e)
             emptySet()
         }
     }

@@ -22,9 +22,9 @@ class AnnouncementServiceImpl(
             cache.get<List<Announcement>>(cacheKey)?.let { return DataResult.Success(it) }
             val variables = buildJsonObject { put("sticky", JsonPrimitive(sticky)) }
             val resp = client.post(query, variables)
-            val data = resp.jsonObject["data"] ?: return DataResult.Success(emptyList())
-            val announcements = (data.jsonObject["announcements"] ?: return DataResult.Success(emptyList()))
-            val nodes = announcements.jsonObject["nodes"] ?: return DataResult.Success(emptyList())
+            val data = resp.jsonObject["data"] ?: return DataResult.Error(AppError.network("Malformed response: missing data"))
+            val announcements = (data.jsonObject["announcements"] ?: return DataResult.Error(AppError.network("Malformed response: missing announcements")))
+            val nodes = announcements.jsonObject["nodes"] ?: return DataResult.Error(AppError.network("Malformed response: missing nodes"))
             if (nodes is JsonArray) {
                 val result = nodes.mapNotNull { elem ->
                     try {

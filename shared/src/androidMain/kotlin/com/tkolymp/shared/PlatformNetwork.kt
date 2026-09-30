@@ -148,8 +148,10 @@ private fun installGlobalCrashReporting(context: Context) {
     val previousHandler = Thread.getDefaultUncaughtExceptionHandler()
     Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
         try {
-            val report = ErrorReporter.buildCrashReport("Uncaught exception on thread '${thread.name}'", throwable)
-            crashStorage.savePendingCrash(report)
+            if (!Logger.isDebug) {
+                val report = ErrorReporter.buildCrashReport("Uncaught exception on thread '${thread.name}'", throwable)
+                crashStorage.savePendingCrash(report)
+            }
         } catch (_: Throwable) {
             // Never let crash reporting itself prevent the default crash handling below.
         }

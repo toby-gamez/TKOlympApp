@@ -643,6 +643,11 @@ val StringsDe = Strings(
         inXDays = "In %d Tagen",
         daysAway = "Tage noch",
         dayAway = "Tag noch",
+        toolboxConfigTitle = "Toolbox konfigurieren",
+        toolboxConfigShown = "Im Widget angezeigt",
+        toolboxConfigAddMore = "Weitere hinzufügen",
+        toolboxConfigShowLabels = "Beschriftungen anzeigen",
+        toolboxConfigMaxItems = "Bis zu 5 Einträge",
     ),
     campSchedule = com.tkolymp.shared.language.CampScheduleStrings(
         aboutEventTab = "Über die Veranstaltung",

@@ -13,6 +13,7 @@ import com.tkolymp.shared.utils.DateRangeConstants
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
@@ -210,18 +211,25 @@ class OfflineSyncManager(
                     }
                 } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save weekKey failed: ${ex.message}") }
 
-                // Persist full event details for each event id in this week's data
+                // Persist full event details for each event id in this week's data, fetched concurrently
+                // in small batches (sequential one-by-one fetches were taking minutes for busy weeks).
                 val allEventIds = grouped.values.flatten().mapNotNull { it.event?.id }.distinct()
-                for (evId in allEventIds) {
-                    try {
-                        val full = eventService.fetchEventById(evId, forceRefresh = false)
-                        if (full != null) {
-                            offlineDataStorage.save(OfflineKeys.eventDetail(evId), AppJson.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), full))
-                            Logger.d("OfflineSyncManager", "saved event detail offline_event_${evId}")
-                        }
-                    } catch (ex: Exception) {
-                        Logger.d("OfflineSyncManager", "fetch/save event ${evId} failed: ${ex.message}")
-                        // ignore individual event failures
+                for (chunk in allEventIds.chunked(20)) {
+                    coroutineScope {
+                        chunk.map { evId ->
+                            async {
+                                try {
+                                    val full = eventService.fetchEventById(evId, forceRefresh = false)
+                                    if (full != null) {
+                                        offlineDataStorage.save(OfflineKeys.eventDetail(evId), AppJson.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), full))
+                                        Logger.d("OfflineSyncManager", "saved event detail offline_event_${evId}")
+                                    }
+                                } catch (ex: Exception) {
+                                    Logger.d("OfflineSyncManager", "fetch/save event ${evId} failed: ${ex.message}")
+                                    // ignore individual event failures
+                                }
+                            }
+                        }.awaitAll()
                     }
                 }
             }
@@ -621,12 +629,21 @@ class OfflineSyncManager(
         } catch (ex: Exception) {
             Logger.d("OfflineSyncManager", "fetch all camps failed: ${ex.message}")
         }
-        for (evId in evList) {
-            onProgress("events", ++evDone, totalEv)
-            try {
-                val full = withRetry { eventService.fetchEventById(evId, forceRefresh = false) }
-                if (full != null) offlineDataStorage.save(OfflineKeys.eventDetail(evId), AppJson.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), full))
-            } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll event ${evId} failed: ${ex.message}") }
+        // Fetched concurrently in small batches — sequential one-by-one fetches of up to
+        // FETCH_LIMIT_FULL events could take minutes of continuous background network traffic.
+        for (chunk in evList.chunked(20)) {
+            coroutineScope {
+                chunk.map { evId ->
+                    async {
+                        try {
+                            val full = withRetry { eventService.fetchEventById(evId, forceRefresh = false) }
+                            if (full != null) offlineDataStorage.save(OfflineKeys.eventDetail(evId), AppJson.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), full))
+                        } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll event ${evId} failed: ${ex.message}") }
+                    }
+                }.awaitAll()
+            }
+            evDone += chunk.size
+            onProgress("events", evDone, totalEv)
         }
 
         // Competitions

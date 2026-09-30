@@ -688,6 +688,11 @@ val StringsCs = Strings(
         inXDays = "Za %d dní",
         daysAway = "dní zbývá",
         dayAway = "den zbývá",
+        toolboxConfigTitle = "Nastavit Nástroje",
+        toolboxConfigShown = "Zobrazeno na widgetu",
+        toolboxConfigAddMore = "Přidat další",
+        toolboxConfigShowLabels = "Zobrazit popisky",
+        toolboxConfigMaxItems = "Maximálně 5 položek",
     ),
     campSchedule = com.tkolymp.shared.language.CampScheduleStrings(
         aboutEventTab = "O události",

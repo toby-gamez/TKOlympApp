@@ -644,6 +644,11 @@ val StringsSl = Strings(
         inXDays = "Čez %d dni",
         daysAway = "dni",
         dayAway = "dan",
+        toolboxConfigTitle = "Nastavi orodjarno",
+        toolboxConfigShown = "Prikazano na pripomočku",
+        toolboxConfigAddMore = "Dodaj več",
+        toolboxConfigShowLabels = "Prikaži oznake",
+        toolboxConfigMaxItems = "Do 5 elementov",
     ),
     campSchedule = com.tkolymp.shared.language.CampScheduleStrings(
         aboutEventTab = "O dogodku",

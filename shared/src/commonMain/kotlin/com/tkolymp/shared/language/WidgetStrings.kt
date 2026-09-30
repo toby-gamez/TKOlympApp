@@ -13,6 +13,11 @@ data class WidgetStrings(
     val inXDays: String = "In %d days",
     val daysAway: String = "days away",
     val dayAway: String = "day away",
+    val toolboxConfigTitle: String = "Configure Toolbox",
+    val toolboxConfigShown: String = "Shown on widget",
+    val toolboxConfigAddMore: String = "Add more",
+    val toolboxConfigShowLabels: String = "Show labels",
+    val toolboxConfigMaxItems: String = "Up to 5 items",
 ) {
     fun formatBirthdayLabel(daysUntil: Int, age: Int): String {
         val prefix = when (daysUntil) {

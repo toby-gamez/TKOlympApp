@@ -1,6 +1,6 @@
 package com.tkolymp.tkolympapp.platform
 
-import android.util.Log
+import com.tkolymp.shared.Logger
 import kotlinx.coroutines.CancellationException
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -44,7 +44,7 @@ actual fun NotificationExportImportButton(
                     }
                     onMessage(AppStrings.current.importExport.exportSuccessful)
                 } catch (e: CancellationException) { throw e } catch (t: Exception) {
-                    Log.e("NotificationsSettings", "Export failed", t)
+                    Logger.e("NotificationsSettings", "Export failed", t)
                     onMessage(AppStrings.current.importExport.exportFailed)
                 }
             }
@@ -63,7 +63,7 @@ actual fun NotificationExportImportButton(
                         onImportJson(jsonStr)
                     }
                 } catch (e: CancellationException) { throw e } catch (t: Exception) {
-                    Log.e("NotificationsSettings", "Import failed", t)
+                    Logger.e("NotificationsSettings", "Import failed", t)
                     onMessage("${AppStrings.current.importExport.importFailed}: ${t.message}")
                 }
             }

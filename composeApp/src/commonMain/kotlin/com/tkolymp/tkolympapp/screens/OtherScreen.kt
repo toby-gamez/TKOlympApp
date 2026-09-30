@@ -21,11 +21,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.MilitaryTech
+import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Settings
@@ -71,7 +73,7 @@ import kotlinx.datetime.LocalDate
 import kotlin.coroutines.cancellation.CancellationException
 import com.tkolymp.tkolympapp.components.ErrorBanner
 
-private enum class MainItem { ACHIEVEMENTS, PEOPLE, TRAINERS, GROUPS, LEADERBOARD, COMPETITIONS }
+private enum class MainItem { PEOPLE, TRAINERS, GROUPS, LEADERBOARD, COMPETITIONS }
 
 // Helper: do not surface internal/cancellation/compose runtime messages to the UI
 private fun shouldShowErrorMessage(msg: String?): Boolean {
@@ -250,7 +252,7 @@ fun OtherScreen(
 
             state.error?.let { ErrorBanner(error = it) }
 
-            // Trio buttons: Payments | Stats | My trainings (three equal cards)
+            // Quad buttons: Payments | Stats | My trainings | Achievements (four equal icon-only cards)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -269,14 +271,12 @@ fun OtherScreen(
                             horizontalArrangement = Arrangement.Center,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 12.dp)
                                 .height(56.dp)
                         ) {
-                            Text(
-                                text = AppStrings.current.otherScreen.payments,
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier.align(Alignment.CenterVertically)
+                            Icon(
+                                imageVector = Icons.Filled.Payments,
+                                contentDescription = AppStrings.current.otherScreen.payments,
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -294,14 +294,12 @@ fun OtherScreen(
                             horizontalArrangement = Arrangement.Center,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 12.dp)
                                 .height(56.dp)
                         ) {
-                            Text(
-                                text = AppStrings.current.stats.statsTitle,
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier.align(Alignment.CenterVertically)
+                            Icon(
+                                imageVector = Icons.Filled.BarChart,
+                                contentDescription = AppStrings.current.stats.statsTitle,
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -312,6 +310,29 @@ fun OtherScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onPersonalEventsClick() },
+                        shape = RoundedCornerShape(8.dp),
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.FitnessCenter,
+                                contentDescription = AppStrings.current.personalEvents.myTrainings,
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
+
+                Box(modifier = Modifier.weight(1f).pressScaleEffect()) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onAchievementsClick() },
                         shape = RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp, topEnd = 16.dp, bottomEnd = 16.dp),
                     ) {
                         Row(
@@ -319,14 +340,12 @@ fun OtherScreen(
                             horizontalArrangement = Arrangement.Center,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 12.dp)
                                 .height(56.dp)
                         ) {
-                            Text(
-                                text = AppStrings.current.personalEvents.myTrainings,
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier.align(Alignment.CenterVertically)
+                            Icon(
+                                imageVector = Icons.Filled.WorkspacePremium,
+                                contentDescription = AppStrings.current.achievements.profilePreviewTitle,
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -347,7 +366,6 @@ fun OtherScreen(
 
             // Render main items except Payments and Stats normally
             val mainItems = listOf(
-                Pair(MainItem.ACHIEVEMENTS, Icons.Filled.WorkspacePremium),
                 Pair(MainItem.PEOPLE, Icons.Filled.People),
                 Pair(MainItem.TRAINERS, Icons.Filled.FitnessCenter),
                 Pair(MainItem.GROUPS, Icons.Filled.Groups),
@@ -357,7 +375,6 @@ fun OtherScreen(
 
             mainItems.forEachIndexed { i, (item, icon) ->
                 val label = when (item) {
-                    MainItem.ACHIEVEMENTS -> AppStrings.current.achievements.profilePreviewTitle
                     MainItem.PEOPLE -> AppStrings.current.otherScreen.people
                     MainItem.TRAINERS -> AppStrings.current.otherScreen.trainersAndSpaces
                     MainItem.GROUPS -> AppStrings.current.otherScreen.trainingGroups
@@ -371,7 +388,6 @@ fun OtherScreen(
                         .padding(horizontal = 16.dp, vertical = 4.dp)
                         .clickable {
                             when (item) {
-                                MainItem.ACHIEVEMENTS -> onAchievementsClick()
                                 MainItem.PEOPLE -> onPeopleClick()
                                 MainItem.TRAINERS -> onTrainersClick()
                                 MainItem.GROUPS -> onGroupsClick()

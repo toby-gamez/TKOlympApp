@@ -644,6 +644,11 @@ val StringsUa = Strings(
         inXDays = "Через %d дні",
         daysAway = "днів",
         dayAway = "день",
+        toolboxConfigTitle = "Налаштувати панель інструментів",
+        toolboxConfigShown = "Показано на віджеті",
+        toolboxConfigAddMore = "Додати ще",
+        toolboxConfigShowLabels = "Показувати підписи",
+        toolboxConfigMaxItems = "До 5 елементів",
     ),
     campSchedule = com.tkolymp.shared.language.CampScheduleStrings(
         aboutEventTab = "Про подію",

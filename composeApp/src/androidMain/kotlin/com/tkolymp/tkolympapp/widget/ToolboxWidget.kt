@@ -4,6 +4,7 @@ import android.appwidget.AppWidgetManager
 import android.content.Context
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.datastore.preferences.core.Preferences
 import androidx.glance.ColorFilter
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
@@ -17,6 +18,7 @@ import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
+import androidx.glance.currentState
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
@@ -29,23 +31,16 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
-import com.tkolymp.shared.language.AppStrings
-import com.tkolymp.tkolympapp.res.R
-
-private data class ToolboxItem(val iconRes: Int, val label: String, val route: String)
 
 class ToolboxWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         WidgetDataProvider.ensureInitialized(context)
-        val nav = AppStrings.current.navigation
-        val toolboxItems = listOf(
-            ToolboxItem(R.drawable.ic_widget_calendar, nav.calendar, "calendar"),
-            ToolboxItem(R.drawable.ic_widget_board, nav.board, "board"),
-            ToolboxItem(R.drawable.ic_widget_events, nav.events, "events"),
-            ToolboxItem(R.drawable.ic_widget_competitions, AppStrings.current.competition.competitions, "competitions"),
-        )
         provideContent {
             GlanceTheme(colors = WidgetColorProviders) {
+                val prefs = currentState<Preferences>()
+                val selection = ToolboxWidgetConfig.parseSelection(prefs[ToolboxWidgetConfig.selectedItemsKey])
+                val showTitles = prefs[ToolboxWidgetConfig.showTitlesKey] ?: true
+                val toolboxItems = ToolboxWidgetConfig.resolveItems(selection)
                 Row(
                     modifier = GlanceModifier
                         .fillMaxSize()
@@ -53,7 +48,7 @@ class ToolboxWidget : GlanceAppWidget() {
                         .cornerRadius(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Use defaultWeight() in RowScope to distribute 4 items equally
+                    // Use defaultWeight() in RowScope to distribute items equally
                     toolboxItems.forEach { item ->
                         Column(
                             modifier = GlanceModifier
@@ -69,17 +64,19 @@ class ToolboxWidget : GlanceAppWidget() {
                                 modifier = GlanceModifier.size(28.dp),
                                 colorFilter = ColorFilter.tint(GlanceTheme.colors.onSurface)
                             )
-                            Spacer(GlanceModifier.height(4.dp))
-                            Text(
-                                text = item.label,
-                                style = TextStyle(
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    textAlign = TextAlign.Center,
-                                    color = GlanceTheme.colors.onSurfaceVariant
-                                ),
-                                maxLines = 1
-                            )
+                            if (showTitles) {
+                                Spacer(GlanceModifier.height(4.dp))
+                                Text(
+                                    text = item.label,
+                                    style = TextStyle(
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        textAlign = TextAlign.Center,
+                                        color = GlanceTheme.colors.onSurfaceVariant
+                                    ),
+                                    maxLines = 1
+                                )
+                            }
                         }
                     }
                 }

@@ -1,5 +1,6 @@
 package com.tkolymp.shared.errorreporting
 
+import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.device.DeviceInfo
 import com.tkolymp.shared.feedback.FeedbackType
@@ -14,7 +15,8 @@ import kotlinx.coroutines.sync.withLock
 /**
  * Sends error and crash reports to the club's feedback backend
  * ([com.tkolymp.shared.feedback.IFeedbackService]), automatically and without any
- * user interaction, in both debug and release builds.
+ * user interaction. Active in release builds only ([Logger.isDebug] gates every entry
+ * point below) so debug/dev builds never spam the backend with local errors.
  *
  * Privacy rules:
  *  - User PII (email, name, or any identifying data) is NEVER included in reports.
@@ -43,8 +45,9 @@ object ErrorReporter {
         deviceInfoConsented = consented
     }
 
-    /** Reports a handled (non-fatal) error. Safe to call from anywhere, any thread. */
+    /** Reports a handled (non-fatal) error. Safe to call from anywhere, any thread. No-op in debug builds. */
     fun report(context: String, message: String, throwable: Throwable? = null) {
+        if (Logger.isDebug) return
         val signature = buildString {
             append(context)
             append('|')
@@ -72,10 +75,11 @@ object ErrorReporter {
             throwable = throwable,
         )
 
-    /** Call once at startup, after [ServiceLocator] is initialized, to flush a crash captured on the previous run. */
+    /** Call once at startup, after [ServiceLocator] is initialized, to flush a crash captured on the previous run. No-op in debug builds. */
     fun flushPendingCrashReport(storage: CrashReportStorage) {
         val pending = storage.getPendingCrash() ?: return
         storage.clearPendingCrash()
+        if (Logger.isDebug) return
         scope.launch { send(pending) }
     }
 

@@ -342,7 +342,7 @@ fun OverviewScreen(
                                 DateHeaderWithBirthdays(header, state.birthdaysByDay[date] ?: emptyList())
                                 Spacer(modifier = Modifier.height(4.dp))
                                 list.forEach { item ->
-                                    RenderSingleEventCard(item = item, onEventClick = handleCampEventClick, onOpenRozpis = onOpenRozpis)
+                                    RenderSingleEventCard(item = item, onEventClick = handleCampEventClick, showType = false, onOpenRozpis = onOpenRozpis)
                                 }
                             }
                         }
@@ -375,7 +375,7 @@ fun OverviewScreen(
                 Column(modifier = Modifier.padding(horizontal = 12.dp)) {
                     val comp = state.nearestCompetition
                     if (comp == null) {
-                        EmptyState(title = AppStrings.current.competition.noUpcomingMine, icon = Icons.Outlined.EmojiEvents)
+                        EmptyState(title = AppStrings.current.competition.noUpcoming, icon = Icons.Outlined.EmojiEvents)
                     } else {
                         StaggeredItem(index = 0, visible = cardsVisible) {
                             NearestCompetitionCard(competition = comp, onOpenCompetitions = onOpenCompetitions)

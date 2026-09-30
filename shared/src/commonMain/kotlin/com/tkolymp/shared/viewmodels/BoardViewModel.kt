@@ -116,17 +116,26 @@ class BoardViewModel : ViewModel() {
             when (dataResult) {
                 is DataResult.Success -> {
                     val fetched = dataResult.data.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }
-                    list = fetched
-                    if (sticky) {
-                        _state.value = _state.value.copy(permanentAnnouncements = fetched, isOffline = false, isLoading = false)
+                    val existing = list ?: (if (sticky) previousPermanent else previousCurrent)
+                    if (fetched.isEmpty() && existing.isNotEmpty() && !forceRefresh) {
+                        // A silent background load returned nothing while we already have data on
+                        // screen (e.g. a transient server/auth hiccup under concurrent request load).
+                        // Don't let it clobber what's showing; an explicit pull-to-refresh still trusts it.
+                        Logger.d("BoardViewModel", "ignoring suspicious empty online result for sticky=$sticky, keeping ${existing.size} cached items")
+                        _state.value = _state.value.copy(isOffline = true, isLoading = false)
                     } else {
-                        val lastSeen = try { badgeStorage.getLastSeenTimestamp() } catch (_: Exception) { null }
-                        val latestTs = fetched.mapNotNull { it.updatedAt ?: it.createdAt }.maxOrNull()
-                        val unread = latestTs != null && (lastSeen == null || latestTs > lastSeen)
-                        _state.value = _state.value.copy(currentAnnouncements = fetched, isOffline = false, isLoading = false, hasUnread = unread)
-                        AnnouncementBadge.set(unread)
+                        list = fetched
+                        if (sticky) {
+                            _state.value = _state.value.copy(permanentAnnouncements = fetched, isOffline = false, isLoading = false)
+                        } else {
+                            val lastSeen = try { badgeStorage.getLastSeenTimestamp() } catch (_: Exception) { null }
+                            val latestTs = fetched.mapNotNull { it.updatedAt ?: it.createdAt }.maxOrNull()
+                            val unread = latestTs != null && (lastSeen == null || latestTs > lastSeen)
+                            _state.value = _state.value.copy(currentAnnouncements = fetched, isOffline = false, isLoading = false, hasUnread = unread)
+                            AnnouncementBadge.set(unread)
+                        }
+                        Logger.d("BoardViewModel", "fetched online announcements for sticky=$sticky count=${fetched.size}")
                     }
-                    Logger.d("BoardViewModel", "fetched online announcements for sticky=$sticky count=${fetched.size}")
                 }
                 is DataResult.Error -> {
                     val errorMsg = dataResult.error.message

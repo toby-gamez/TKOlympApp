@@ -645,6 +645,11 @@ val StringsBrainrot = Strings(
         inXDays = "In %d days no cap",
         daysAway = "days (bussin)",
         dayAway = "day (W)",
+        toolboxConfigTitle = "Drip out the Toolbox",
+        toolboxConfigShown = "On the widget rn",
+        toolboxConfigAddMore = "Add more W's",
+        toolboxConfigShowLabels = "Show the labels fr",
+        toolboxConfigMaxItems = "5 items max, no cap",
     ),
     campSchedule = com.tkolymp.shared.language.CampScheduleStrings(
         aboutEventTab = "About the event fr",

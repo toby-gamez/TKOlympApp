@@ -150,9 +150,11 @@ suspend fun initNetworking(baseUrl: String, tenantId: String = "1") {
 private fun installGlobalCrashReporting() {
     NSSetUncaughtExceptionHandler(staticCFunction { exception: NSException? ->
         try {
-            val throwable = RuntimeException(exception?.reason ?: exception?.name ?: "Uncaught NSException")
-            val report = ErrorReporter.buildCrashReport("Uncaught NSException", throwable)
-            globalCrashStorage.savePendingCrash(report)
+            if (!Logger.isDebug) {
+                val throwable = RuntimeException(exception?.reason ?: exception?.name ?: "Uncaught NSException")
+                val report = ErrorReporter.buildCrashReport("Uncaught NSException", throwable)
+                globalCrashStorage.savePendingCrash(report)
+            }
         } catch (_: Throwable) {
             // Never let crash reporting itself throw from inside the crash handler.
         }

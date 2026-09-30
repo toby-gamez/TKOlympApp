@@ -10,4 +10,6 @@
     android:resizeMode="horizontal"
     android:widgetCategory="home_screen"
     android:previewLayout="@layout/widget_preview_toolbox"
-    android:description="@string/widget_toolbox_description" />
+    android:description="@string/widget_toolbox_description"
+    android:configure="com.tkolymp.tkolympapp.widget.ToolboxWidgetConfigureActivity"
+    android:widgetFeatures="reconfigurable|configuration_optional" />

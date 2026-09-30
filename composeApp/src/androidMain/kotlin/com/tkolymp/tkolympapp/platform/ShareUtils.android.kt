@@ -2,7 +2,7 @@ package com.tkolymp.tkolympapp.platform
 
 import android.content.Intent
 import android.graphics.Bitmap
-import android.util.Log
+import com.tkolymp.shared.Logger
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -18,10 +18,10 @@ actual fun rememberShareImageCallback(fileBaseName: String, shareTitle: String):
     return { imageBitmap ->
         val uri = withContext(Dispatchers.IO) {
             val captured = imageBitmap.asAndroidBitmap()
-            Log.d("ShareStats", "bitmap ${captured.width}x${captured.height} config=${captured.config} isRecycled=${captured.isRecycled}")
+            Logger.d("ShareStats", "bitmap ${captured.width}x${captured.height} config=${captured.config} isRecycled=${captured.isRecycled}")
 
             if (captured.width == 0 || captured.height == 0) {
-                Log.e("ShareStats", "Bitmap is 0x0 — layer was not captured; aborting share")
+                Logger.e("ShareStats", "Bitmap is 0x0 — layer was not captured; aborting share")
                 return@withContext null
             }
 
@@ -40,7 +40,7 @@ actual fun rememberShareImageCallback(fileBaseName: String, shareTitle: String):
             val cx = src.width / 2
             val cy = src.height / 2
             val centerPixel = src.getPixel(cx, cy)
-            Log.d("ShareStats", "center pixel at ($cx,$cy) = #${Integer.toHexString(centerPixel)}")
+            Logger.d("ShareStats", "center pixel at ($cx,$cy) = #${Integer.toHexString(centerPixel)}")
             canvas.drawBitmap(src, 0f, 0f, null)
 
             val shareDir = File(context.cacheDir, "share")
@@ -48,12 +48,12 @@ actual fun rememberShareImageCallback(fileBaseName: String, shareTitle: String):
             val file = File(shareDir, "$fileBaseName.png")
             file.outputStream().use { out ->
                 val ok = softBitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
-                Log.d("ShareStats", "compress ok=$ok fileSize=${file.length()} bytes")
+                Logger.d("ShareStats", "compress ok=$ok fileSize=${file.length()} bytes")
             }
             softBitmap.recycle()
 
             if (file.length() == 0L) {
-                Log.e("ShareStats", "Compressed file is empty — aborting share")
+                Logger.e("ShareStats", "Compressed file is empty — aborting share")
                 return@withContext null
             }
 

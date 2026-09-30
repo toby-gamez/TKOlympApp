@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -112,7 +111,7 @@ class MainActivity : ComponentActivity() {
                             Logger.d("FCM", "Preparing token upload failed: ${e.message}")
                         }
                 } else {
-                    Log.w("FCM", "Fetching FCM registration token failed", task.exception)
+                    Logger.e("FCM", "Fetching FCM registration token failed", task.exception)
                 }
             }
 
@@ -122,7 +121,7 @@ class MainActivity : ComponentActivity() {
                     if (task.isSuccessful) {
                         Logger.d("FCM", "Subscribed to topic 'all'")
                     } else {
-                        Log.w("FCM", "Topic subscription failed", task.exception)
+                        Logger.e("FCM", "Topic subscription failed", task.exception)
                     }
                 }
         }

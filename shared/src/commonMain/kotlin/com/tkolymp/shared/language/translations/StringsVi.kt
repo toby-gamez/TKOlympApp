@@ -644,6 +644,11 @@ val StringsVi = Strings(
         inXDays = "Còn %d ngày",
         daysAway = "ngày nữa",
         dayAway = "ngày nữa",
+        toolboxConfigTitle = "Cấu hình hộp công cụ",
+        toolboxConfigShown = "Hiển thị trên tiện ích",
+        toolboxConfigAddMore = "Thêm mục",
+        toolboxConfigShowLabels = "Hiện nhãn",
+        toolboxConfigMaxItems = "Tối đa 5 mục",
     ),
     campSchedule = com.tkolymp.shared.language.CampScheduleStrings(
         aboutEventTab = "Về sự kiện",

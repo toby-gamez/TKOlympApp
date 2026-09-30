@@ -4,16 +4,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -97,9 +96,11 @@ fun GroupsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                         .padding(horizontal = 12.dp, vertical = 6.dp),
                     shape = RoundedCornerShape(16.dp)
                 ) {
+                    var contentHeight by remember { mutableStateOf(0.dp) }
+                    val density = androidx.compose.ui.platform.LocalDensity.current
+
                     Row(modifier = Modifier
                         .fillMaxWidth()
-                        .height(IntrinsicSize.Min)
                         .padding(12.dp), verticalAlignment = Alignment.Top) {
 
                         val color = try { parseColorOrDefault(cohort.colorRgb) } catch (_: Exception) { MaterialTheme.colorScheme.primary }
@@ -107,13 +108,17 @@ fun GroupsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                         Box(
                             modifier = Modifier
                                 .width(6.dp)
-                                .fillMaxHeight()
+                                .height(contentHeight)
                                 .background(color, RoundedCornerShape(6.dp))
                         )
 
                         Spacer(modifier = Modifier.width(12.dp))
 
-                        Column(modifier = Modifier.weight(1f)) {
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .onSizeChanged { contentHeight = with(density) { it.height.toDp() } }
+                        ) {
                             Text(text = cohort.name ?: AppStrings.current.dialogs.noName, style = MaterialTheme.typography.titleMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
 
                             if (!cohort.location.isNullOrBlank()) {
@@ -127,12 +132,12 @@ fun GroupsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                                     html = cleaned,
                                     textColor = MaterialTheme.colorScheme.onSurface,
                                     linkColor = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(top = 6.dp)
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 6.dp)
                                 )
                             }
                         }
-
-                        // color stripe moved to left for responsive height
                     }
                 }
                 } // StaggeredItem
