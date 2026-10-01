@@ -56,3 +56,4 @@ docs/compose-guidelines.md
 androidApp/release/*
 *.jks
 *.keystore
+androidApp/src/main/assets/adi-registration.properties
