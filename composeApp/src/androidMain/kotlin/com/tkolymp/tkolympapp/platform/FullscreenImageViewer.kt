@@ -16,7 +16,11 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.runtime.produceState
+import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.tkolymp.shared.ServiceLocator
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,8 +41,30 @@ actual fun FullscreenImageViewer(imageUrl: String, onDismiss: () -> Unit) {
                 offsetY += panChange.y
             }
 
+            val context = LocalContext.current
+            // Uploaded files on our own host (/f/...) need the user's login, like in HtmlText.
+            val needsAuth = remember(imageUrl) {
+                val uri = android.net.Uri.parse(imageUrl)
+                uri.scheme == "https" && uri.host == "tkolymp.cz" && uri.path?.startsWith("/f/") == true
+            }
+            // null = still loading; "" = no token available
+            val tokenState by produceState<String?>(initialValue = if (needsAuth) null else "", imageUrl) {
+                value = if (needsAuth) try { ServiceLocator.tokenStorage.getToken() ?: "" } catch (_: Exception) { "" } else ""
+            }
+            val token = tokenState?.takeIf { it.isNotEmpty() }
+            val model: Any = remember(imageUrl, tokenState) {
+                val t = token
+                if (needsAuth && t != null) {
+                    ImageRequest.Builder(context)
+                        .data(imageUrl)
+                        .addHeader("Authorization", "Bearer $t")
+                        .addHeader("Cookie", "rozpisovnik=$t")
+                        .build()
+                } else imageUrl
+            }
             AsyncImage(
-                model = imageUrl,
+                // wait for the token lookup so the first request isn't fired unauthenticated
+                model = if (tokenState == null) null else model,
                 contentDescription = null,
                 contentScale = ContentScale.Fit,
                 modifier = Modifier

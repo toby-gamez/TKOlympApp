@@ -61,6 +61,27 @@ actual fun HtmlText(
                         return true
                     }
 
+                    // Uploaded files (/f/...) may require the user's login; the WebView has no session,
+                    // so fetch those from our own host with the Bearer token attached.
+                    override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): android.webkit.WebResourceResponse? {
+                        val url = request.url
+                        if (request.method != "GET" || url.scheme != "https" || url.host != "tkolymp.cz" ||
+                            url.path?.startsWith("/f/") != true) return null
+                        return try {
+                            val token = kotlinx.coroutines.runBlocking { com.tkolymp.shared.ServiceLocator.tokenStorage.getToken() }
+                                ?: return null
+                            val conn = java.net.URL(url.toString()).openConnection() as java.net.HttpURLConnection
+                            conn.connectTimeout = 15_000
+                            conn.readTimeout = 30_000
+                            conn.setRequestProperty("Authorization", "Bearer $token")
+                            // the site serves /f/* using its session cookie (value is the same JWT)
+                            conn.setRequestProperty("Cookie", "rozpisovnik=$token")
+                            if (conn.responseCode !in 200..299) { conn.disconnect(); return null }
+                            val mime = conn.contentType?.substringBefore(';')?.trim() ?: "application/octet-stream"
+                            android.webkit.WebResourceResponse(mime, null, conn.inputStream)
+                        } catch (_: Throwable) { null }
+                    }
+
                     override fun onPageFinished(view: WebView, url: String) {
                         // measure full document height and update Compose state
                         view.evaluateJavascript("document.body.scrollHeight") { result ->
