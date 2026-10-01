@@ -29,19 +29,19 @@ class AnnouncementServiceImpl(
                 val result = nodes.mapNotNull { elem ->
                     try {
                         val obj = elem.jsonObject
-                        val id = obj["id"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
-                        val title = obj["title"]?.jsonPrimitive?.contentOrNull
-                        val body = obj["body"]?.jsonPrimitive?.contentOrNull
-                        val createdAt = obj["createdAt"]?.jsonPrimitive?.contentOrNull
-                        val updatedAt = obj["updatedAt"]?.jsonPrimitive?.contentOrNull
+                        val id = (obj["id"] as? JsonPrimitive)?.contentOrNull ?: return@mapNotNull null
+                        val title = (obj["title"] as? JsonPrimitive)?.contentOrNull
+                        val body = (obj["body"] as? JsonPrimitive)?.contentOrNull
+                        val createdAt = (obj["createdAt"] as? JsonPrimitive)?.contentOrNull
+                        val updatedAt = (obj["updatedAt"] as? JsonPrimitive)?.contentOrNull
                         val isSticky = obj["isSticky"]?.jsonPrimitive?.booleanOrNull ?: false
                         val isVisible = obj["status"]?.jsonPrimitive?.contentOrNull == "PUBLISHED"
-                        val authorObj = obj["author"]?.jsonObject
+                        val authorObj = obj["author"] as? JsonObject
                         val author = authorObj?.let {
                             Author(
-                                id = it["id"]?.jsonPrimitive?.contentOrNull,
-                                uJmeno = it["uJmeno"]?.jsonPrimitive?.contentOrNull,
-                                uPrijmeni = it["uPrijmeni"]?.jsonPrimitive?.contentOrNull
+                                id = (it["id"] as? JsonPrimitive)?.contentOrNull,
+                                uJmeno = (it["uJmeno"] as? JsonPrimitive)?.contentOrNull,
+                                uPrijmeni = (it["uPrijmeni"] as? JsonPrimitive)?.contentOrNull
                             )
                         }
                         Announcement(
@@ -83,19 +83,19 @@ class AnnouncementServiceImpl(
             val ann = (data.jsonObject["announcement"] ?: return DataResult.Error(AppError.notFound("Announcement not found")))
             val obj = ann.jsonObject
             try {
-                val idStr = obj["id"]?.jsonPrimitive?.contentOrNull ?: return DataResult.Error(AppError.notFound("Announcement has no id"))
-                val title = obj["title"]?.jsonPrimitive?.contentOrNull
-                val body = obj["body"]?.jsonPrimitive?.contentOrNull
-                val createdAt = obj["createdAt"]?.jsonPrimitive?.contentOrNull
-                val updatedAt = obj["updatedAt"]?.jsonPrimitive?.contentOrNull
+                val idStr = (obj["id"] as? JsonPrimitive)?.contentOrNull ?: return DataResult.Error(AppError.notFound("Announcement has no id"))
+                val title = (obj["title"] as? JsonPrimitive)?.contentOrNull
+                val body = (obj["body"] as? JsonPrimitive)?.contentOrNull
+                val createdAt = (obj["createdAt"] as? JsonPrimitive)?.contentOrNull
+                val updatedAt = (obj["updatedAt"] as? JsonPrimitive)?.contentOrNull
                 val isSticky = obj["isSticky"]?.jsonPrimitive?.booleanOrNull ?: false
                 val isVisible = obj["status"]?.jsonPrimitive?.contentOrNull == "PUBLISHED"
-                val authorObj = obj["author"]?.jsonObject
+                val authorObj = obj["author"] as? JsonObject
                 val author = authorObj?.let {
                     Author(
-                        id = it["id"]?.jsonPrimitive?.contentOrNull,
-                        uJmeno = it["uJmeno"]?.jsonPrimitive?.contentOrNull,
-                        uPrijmeni = it["uPrijmeni"]?.jsonPrimitive?.contentOrNull
+                        id = (it["id"] as? JsonPrimitive)?.contentOrNull,
+                        uJmeno = (it["uJmeno"] as? JsonPrimitive)?.contentOrNull,
+                        uPrijmeni = (it["uPrijmeni"] as? JsonPrimitive)?.contentOrNull
                     )
                 }
                 val announcement = Announcement(
