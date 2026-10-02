@@ -71,7 +71,7 @@ All logic shared between Android and iOS lives here. Never import Android/UI fra
 ### `composeApp` — Compose Multiplatform UI
 Targets both `android` and `iosArm64`/`iosSimulatorArm64`. Screens are kept thin; all logic lives in `shared`. Platform-only code goes in `androidMain`/`iosMain`.
 
-- **Navigation** — `AppContent`/`AppNavHost` live in `composeApp/src/commonMain/kotlin/com/tkolymp/tkolympapp/AppContent.kt` (shared by both platforms) and use Jetpack Navigation Compose with string-based routes (`"event/{eventId}"`, `"person/{personId}"`, etc.). Each platform has only a thin entry point: `androidMain/.../App.kt` (integrity check, then delegates to `AppContent`) and `iosMain/.../App.ios.kt` + `MainViewController.kt`. The bottom bar is visible only on five routes: `overview`, `calendar`, `board`, `events`, `other` (calendar vs. timeline is a view-mode toggle within the `calendar` route, not a separate tab).
+- **Navigation** — `AppContent`/`AppNavHost` live in `composeApp/src/commonMain/kotlin/com/tkolymp/tkolympapp/AppContent.kt` (shared by both platforms) and use Jetpack Navigation Compose with string-based routes (`"event/{eventId}"`, `"person/{personId}"`, etc.). Each platform has only a thin entry point: `androidMain/.../App.kt` (delegates to `AppContent`) and `iosMain/.../App.ios.kt` + `MainViewController.kt`. The bottom bar is visible only on five routes: `overview`, `calendar`, `board`, `events`, `other` (calendar vs. timeline is a view-mode toggle within the `calendar` route, not a separate tab).
 - **Theme** — `ui/theme/Color.kt` + `ui/theme/Theme.kt`. Always use `MaterialTheme` tokens; do not hard-code colors or numeric sizes.
 - **Screens** — `composeApp/src/commonMain/kotlin/com/tkolymp/tkolympapp/screens/`
 - **Reusable components** — `composeApp/src/commonMain/kotlin/com/tkolymp/tkolympapp/components/`
@@ -89,4 +89,3 @@ Targets both `android` and `iosArm64`/`iosSimulatorArm64`. Screens are kept thin
 - Stateless composables preferred: accept state and event lambdas, lift state to ViewModels.
 - Touch targets ≥ 48 dp; provide `contentDescription` for non-text interactive elements.
 - New/changed composables should have a `@Preview` covering light and dark theme (see `docs/COMPOSABLES_PR_CHECKLIST.md`).
-- Integrity check (`IntegrityServiceAndroid`) is skipped in debug builds; release builds validate APK signing.
