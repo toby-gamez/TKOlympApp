@@ -26,6 +26,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import com.tkolymp.tkolympapp.screens.PersonSelectionScreen
 import com.tkolymp.tkolympapp.screens.RegistrationRoute
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -120,6 +121,7 @@ fun AppContent(
         var showOnboarding by remember { mutableStateOf<Boolean?>(null) }
         var consentGiven by remember { mutableStateOf<Boolean?>(null) }
         var showRoleSelection by remember { mutableStateOf(false) }
+        var personsToChoose by remember { mutableStateOf<List<com.tkolymp.shared.user.LinkedPerson>?>(null) }
         var tutorialSeen by remember { mutableStateOf(false) }
         val preferTimeline by AppearanceSettings.preferTimeline.collectAsStateWithLifecycle()
         var weekOffset by remember { mutableIntStateOf(0) }
@@ -185,7 +187,21 @@ fun AppContent(
             }
         }
 
-        Crossfade(targetState = currentLanguage, animationSpec = tween(600), label = "languageTransition") { _ ->
+        // Switching the active person rebuilds the UI the same way a language change does, so no
+        // screen keeps showing the previous person's data.
+        val personRevision by com.tkolymp.shared.user.UserService.activePersonRevision.collectAsStateWithLifecycle()
+        LaunchedEffect(personRevision) {
+            if (personRevision == 0) return@LaunchedEffect
+            try {
+                if (ServiceLocator.networkMonitor.isConnected()) {
+                    kotlinx.coroutines.CoroutineScope(Dispatchers.Default).launch {
+                        try { ServiceLocator.offlineSyncManager.downloadAll() } catch (_: Exception) {}
+                    }
+                }
+            } catch (_: Exception) {}
+        }
+
+        Crossfade(targetState = currentLanguage to personRevision, animationSpec = tween(600), label = "languageTransition") { _ ->
             androidx.compose.runtime.DisposableEffect(Unit) {
                 onDispose { com.tkolymp.shared.tutorial.TutorialManager.skip() }
             }
@@ -319,8 +335,13 @@ fun AppContent(
                                     }
                                 )
                                 loggedIn == false -> LoginScreen(onSuccess = {
-                                    loggedIn = true
-                                    showRoleSelection = true
+                                    scope.launch {
+                                        // Login stores every linked person; ask which one to use when there are several.
+                                        val linked = try { ServiceLocator.userService.getLinkedPersons() } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
+                                        personsToChoose = linked.takeIf { it.size > 1 }
+                                        loggedIn = true
+                                        showRoleSelection = true
+                                    }
                                     try {
                                         if (ServiceLocator.networkMonitor.isConnected()) {
                                             kotlinx.coroutines.CoroutineScope(Dispatchers.Default).launch {
@@ -329,6 +350,15 @@ fun AppContent(
                                         }
                                     } catch (_: Exception) {}
                                 })
+                                personsToChoose != null -> PersonSelectionScreen(
+                                    persons = personsToChoose.orEmpty(),
+                                    onSelect = { person ->
+                                        scope.launch {
+                                            try { ServiceLocator.userService.switchPerson(person.id) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+                                            personsToChoose = null
+                                        }
+                                    }
+                                )
                                 showRoleSelection -> RoleSelectionScreen(onFinish = {
                                     showRoleSelection = false
                                     if (!tutorialSeen) {
@@ -487,7 +517,7 @@ fun AppNavHost(
                 onStatsClick = { navController.navigate("stats") },
                 onSettingsClick = { navController.navigate("settings") },
                 onPersonalEventsClick = { navController.navigate("personal_events") },
-                onBarcodeClick = { navController.navigate("barcode") },
+                onBarcodeClick = { pid -> navController.navigate(if (pid == null) "barcode" else "barcode?personId=$pid") },
                 onCompetitionsClick = { navController.navigate("competitions") },
                 onAchievementsClick = { navController.navigate("achievements") },
                 bottomPadding = bottomPadding
@@ -495,13 +525,14 @@ fun AppNavHost(
         }
 
         composable(
-            route = "barcode",
+            route = "barcode?personId={personId}",
+            arguments = listOf(navArgument("personId") { type = NavType.StringType; nullable = true; defaultValue = null }),
             enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
             exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
             popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) },
             popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) }
         ) {
-            BarcodeScreen(onBack = { navController.navigateUp() })
+            BarcodeScreen(onBack = { navController.navigateUp() }, personId = it.arguments?.getString("personId"))
         }
 
         composable(

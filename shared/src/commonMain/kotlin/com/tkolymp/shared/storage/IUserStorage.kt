@@ -11,5 +11,7 @@ interface IUserStorage {
     suspend fun getCurrentUserJson(): String?
     suspend fun savePersonDetailsJson(json: String)
     suspend fun getPersonDetailsJson(): String?
+    suspend fun saveLinkedPersonsJson(json: String)
+    suspend fun getLinkedPersonsJson(): String?
     suspend fun clear()
 }

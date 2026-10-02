@@ -57,6 +57,8 @@ val StringsVi = Strings(
         privacyPolicy = "Chính sách bảo mật",
         termsOfUse = "Điều khoản sử dụng",
         myAccount = "Tài khoản của tôi",
+        switchPerson = "Chuyển tài khoản",
+        switchPersonHint = "Chọn tài khoản bạn đang dùng ứng dụng cho",
         settings = "Cài đặt",
         changelog = "Có gì mới",
     ),

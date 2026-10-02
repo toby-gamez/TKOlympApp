@@ -30,9 +30,11 @@ import androidx.compose.material.icons.filled.MilitaryTech
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.QrCode2
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -102,6 +104,76 @@ private fun formatDateString(raw: String): String? {
     return formatShortDate(ld)
 }
 
+@Composable
+internal fun ProfileCard(
+    name: String?,
+    dob: String?,
+    showQr: Boolean,
+    onClick: () -> Unit,
+    onQrClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    cardModifier: Modifier = Modifier,
+    qrModifier: Modifier = Modifier,
+    showDebug: Boolean = false,
+    isLoading: Boolean = false,
+    selected: Boolean = false,
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .then(cardModifier)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(20.dp),
+        border = if (selected) androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            InitialsAvatar(
+                name = name ?: AppStrings.current.otherScreen.myAccount,
+                size = 56.dp,
+                fontSize = 20.sp
+            )
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = name ?: AppStrings.current.otherScreen.myAccount,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                if (dob != null && !showDebug) {
+                    Text(
+                        formatDateString(dob) ?: dob,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                }
+            }
+
+            if (showQr) {
+                IconButton(onClick = onQrClick, modifier = qrModifier) {
+                    Icon(
+                        imageVector = Icons.Filled.QrCode2,
+                        contentDescription = "Barcode",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            if (isLoading) {
+                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun OtherScreen(
@@ -114,7 +186,7 @@ fun OtherScreen(
     onPaymentsClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
     onPersonalEventsClick: () -> Unit = {},
-    onBarcodeClick: () -> Unit = {},
+    onBarcodeClick: (personId: String?) -> Unit = {},
     onCompetitionsClick: () -> Unit = {},
     onAchievementsClick: () -> Unit = {},
     bottomPadding: Dp = 0.dp
@@ -122,6 +194,7 @@ fun OtherScreen(
     val viewModel = viewModel<OtherViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     var showDebug by remember { mutableStateOf(false) }
+    var showPersonSwitcher by remember { mutableStateOf(false) }
 
     var itemsVisible by remember { mutableStateOf(false) }
 
@@ -155,6 +228,47 @@ fun OtherScreen(
         itemsVisible = true
     }
 
+    if (showPersonSwitcher) {
+        ModalBottomSheet(onDismissRequest = { showPersonSwitcher = false }) {
+            Column(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(bottom = 24.dp)
+            ) {
+                Text(
+                    AppStrings.current.otherScreen.switchPerson,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                )
+                Text(
+                    AppStrings.current.otherScreen.switchPersonHint,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 4.dp, bottom = 8.dp)
+                )
+                state.linkedPersons.forEach { person ->
+                    val isActive = person.id == state.personId
+                    ProfileCard(
+                        name = person.name,
+                        dob = person.birthDate,
+                        showQr = person.cstsId != null,
+                        selected = isActive,
+                        onClick = {
+                            showPersonSwitcher = false
+                            if (!isActive) viewModel.switchPerson(person.id)
+                        },
+                        onQrClick = {
+                            showPersonSwitcher = false
+                            onBarcodeClick(person.id)
+                        },
+                        cardModifier = Modifier.padding(horizontal = 16.dp, vertical = 5.dp)
+                    )
+                }
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -163,6 +277,14 @@ fun OtherScreen(
                     com.tkolymp.tkolympapp.components.ManagementModeBadge(
                         modifier = Modifier.align(Alignment.CenterVertically)
                     )
+                    if (state.linkedPersons.size > 1) {
+                        IconButton(onClick = { showPersonSwitcher = true }) {
+                            Icon(
+                                imageVector = Icons.Filled.SwapHoriz,
+                                contentDescription = AppStrings.current.otherScreen.switchPerson
+                            )
+                        }
+                    }
                     IconButton(onClick = onSettingsClick) {
                         Icon(
                             imageVector = Icons.Filled.Settings,
@@ -183,72 +305,27 @@ fun OtherScreen(
             horizontalAlignment = Alignment.Start
         ) {
             // Profile card
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
+            ProfileCard(
+                name = state.name,
+                dob = state.personDob,
+                showDebug = showDebug,
+                showQr = state.cstsId != null,
+                isLoading = state.isLoading,
+                onClick = onProfileClick,
+                onQrClick = { onBarcodeClick(null) },
+                cardModifier = Modifier
                     .padding(top = 12.dp, bottom = 5.dp, start = 16.dp, end = 16.dp)
                     .onGloballyPositioned { coords ->
                         val b = coords.boundsInRoot()
                         accountBounds = b
                         if (tutorialActive && tutorialStep == 13) TutorialHighlight.rect = b
-                    }
-                    .clickable { onProfileClick() },
-                shape = RoundedCornerShape(20.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    InitialsAvatar(
-                        name = state.name ?: AppStrings.current.otherScreen.myAccount,
-                        size = 56.dp,
-                        fontSize = 20.sp
-                    )
-
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = state.name ?: AppStrings.current.otherScreen.myAccount,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        if (state.personDob != null && !showDebug) {
-                            val formatted = state.personDob?.let { formatDateString(it) }
-                            Text(
-                                formatted ?: (state.personDob ?: ""),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
-                                modifier = Modifier.padding(top = 2.dp)
-                            )
-                        }
-                    }
-
-                    if (state.cstsId != null) {
-                        IconButton(
-                            onClick = onBarcodeClick,
-                            modifier = Modifier.onGloballyPositioned { coords ->
-                                val b = coords.boundsInRoot()
-                                qrBounds = b
-                                if (tutorialActive && tutorialStep == 14) TutorialHighlight.rect = b
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.QrCode2,
-                                contentDescription = "Barcode",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-
-                    if (state.isLoading) {
-                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                    }
+                    },
+                qrModifier = Modifier.onGloballyPositioned { coords ->
+                    val b = coords.boundsInRoot()
+                    qrBounds = b
+                    if (tutorialActive && tutorialStep == 14) TutorialHighlight.rect = b
                 }
-            }
+            )
 
             state.error?.let { ErrorBanner(error = it) }
 

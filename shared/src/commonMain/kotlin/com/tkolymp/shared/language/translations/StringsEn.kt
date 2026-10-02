@@ -57,6 +57,8 @@ val StringsEn = Strings(
         privacyPolicy = "Privacy Policy",
         termsOfUse = "Terms of Use",
         myAccount = "My Account",
+        switchPerson = "Switch account",
+        switchPersonHint = "Choose which account you are using the app for",
         settings = "Settings",
         changelog = "What's New",
     ),

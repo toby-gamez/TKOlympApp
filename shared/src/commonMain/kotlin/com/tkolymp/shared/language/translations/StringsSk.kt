@@ -87,6 +87,8 @@ val StringsSk = Strings(
         privacyPolicy = "Zásady ochrany osobných údajov",
         termsOfUse = "Podmienky používania",
         myAccount = "Môj účet",
+        switchPerson = "Prepnúť účet",
+        switchPersonHint = "Vyberte účet, za ktorý aplikáciu používate",
         settings = "Nastavenia",
         changelog = "Čo je nové",
     ),

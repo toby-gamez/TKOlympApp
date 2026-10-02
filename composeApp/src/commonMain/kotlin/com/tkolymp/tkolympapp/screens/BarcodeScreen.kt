@@ -77,15 +77,25 @@ private fun encodeEan8(input: String): Pair<String, String>? {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BarcodeScreen(onBack: () -> Unit = {}) {
+fun BarcodeScreen(onBack: () -> Unit = {}, personId: String? = null) {
     MaxScreenBrightness()
 
     var cstsId by remember { mutableStateOf<String?>(null) }
     var personDetails by remember { mutableStateOf<PersonDetails?>(null) }
     var showInfo by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        cstsId = try { ServiceLocator.userService.getCachedCstsId() } catch (_: Exception) { null }
-        personDetails = try { ServiceLocator.userService.getCachedPersonDetails() } catch (_: Exception) { null }
+    LaunchedEffect(personId) {
+        // A non-active linked person is shown from the stored linked-person summary.
+        val other = if (!personId.isNullOrBlank() && personId != ServiceLocator.userService.getCachedPersonId())
+            try { ServiceLocator.userService.getLinkedPersons().firstOrNull { it.id == personId } } catch (_: Exception) { null }
+        else null
+        if (other != null) {
+            cstsId = other.cstsId
+            val parts = other.name.split(" ", limit = 2)
+            personDetails = PersonDetails(id = other.id, firstName = parts.getOrNull(0), lastName = parts.getOrNull(1), birthDate = other.birthDate, cstsId = other.cstsId, email = null, gender = null, isTrainer = null, phone = null, wdsfId = null, activeCouplesList = emptyList(), cohortMembershipsList = emptyList())
+        } else {
+            cstsId = try { ServiceLocator.userService.getCachedCstsId() } catch (_: Exception) { null }
+            personDetails = try { ServiceLocator.userService.getCachedPersonDetails() } catch (_: Exception) { null }
+        }
     }
 
     if (showInfo) {

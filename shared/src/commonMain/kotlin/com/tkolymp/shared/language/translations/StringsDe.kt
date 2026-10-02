@@ -57,6 +57,8 @@ val StringsDe = Strings(
         privacyPolicy = "Datenschutzrichtlinie",
         termsOfUse = "Nutzungsbedingungen",
         myAccount = "Mein Konto",
+        switchPerson = "Konto wechseln",
+        switchPersonHint = "Wähle das Konto, für das du die App nutzt",
         settings = "Einstellungen",
         changelog = "Was ist neu",
     ),

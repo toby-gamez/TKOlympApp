@@ -51,8 +51,11 @@ actual class UserStorage actual constructor(platformContext: Any) : IUserStorage
     actual override suspend fun savePersonDetailsJson(json: String) = keychainSave("person_details_json", json)
     actual override suspend fun getPersonDetailsJson(): String? = keychainGet("person_details_json")
 
+    actual override suspend fun saveLinkedPersonsJson(json: String) = keychainSave("linked_persons_json", json)
+    actual override suspend fun getLinkedPersonsJson(): String? = keychainGet("linked_persons_json")
+
     actual override suspend fun clear() {
-        listOf("person_id", "csts_id", "couple_ids", "current_user_json", "person_details_json")
+        listOf("person_id", "csts_id", "couple_ids", "current_user_json", "person_details_json", "linked_persons_json")
             .forEach { keychainDelete(it) }
     }
 

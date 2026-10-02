@@ -57,6 +57,8 @@ val StringsCs = Strings(
         privacyPolicy = "Zásady ochrany osobních údajů",
         termsOfUse = "Podmínky používání",
         myAccount = "Můj účet",
+        switchPerson = "Přepnout účet",
+        switchPersonHint = "Vyberte účet, za který aplikaci používáte",
         settings = "Nastavení",
         changelog = "Co je nového",
     ),

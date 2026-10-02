@@ -12,8 +12,15 @@ import com.tkolymp.shared.storage.IUserStorage
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.json.*
 import com.tkolymp.shared.json.AppJson
+
+@Serializable
+data class LinkedPerson(val id: String, val name: String, val birthDate: String? = null, val cstsId: String? = null)
 
 data class CurrentUser(
     val id: String?,
@@ -37,15 +44,66 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
         }
     }
 
+    /**
+     * Fetches every person linked to the logged-in account (a parent can have several children)
+     * and stores them. The active person is kept if it is still linked, otherwise the first one.
+     */
     suspend fun fetchAndStorePersonId(): String? {
-        val query = "query MyQuery { getCurrentUser { userProxiesList { person { id } } } }"
+        val query = "query MyQuery { getCurrentUser { userProxiesList { status person { id firstName lastName birthDate cstsId } } } }"
         val resp = try { client.post(query, null) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return null }
-        val personId = try {
-            resp.jsonObject["data"]?.jsonObject?.get("getCurrentUser")?.jsonObject?.get("userProxiesList")?.jsonArray?.firstOrNull()?.jsonObject?.get("person")?.jsonObject?.get("id")?.jsonPrimitive?.contentOrNull
-        } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+        val linked = try {
+            resp.jsonObject["data"]?.jsonObject?.get("getCurrentUser")?.jsonObject?.get("userProxiesList")?.jsonArray
+                ?.mapNotNull { proxy ->
+                    // EXPIRED / PENDING links must not be offered as switchable persons
+                    val status = proxy.jsonObject["status"]?.jsonPrimitive?.contentOrNull
+                    if (status != null && status != "ACTIVE") return@mapNotNull null
+                    val person = proxy.jsonObject["person"] as? JsonObject ?: return@mapNotNull null
+                    val id = person["id"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+                    val name = listOfNotNull(person["firstName"]?.jsonPrimitive?.contentOrNull, person["lastName"]?.jsonPrimitive?.contentOrNull)
+                        .filter { it.isNotBlank() }.joinToString(" ")
+                    LinkedPerson(id, name.ifBlank { "#$id" }, person["birthDate"]?.jsonPrimitive?.contentOrNull, person["cstsId"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() })
+                }?.distinctBy { it.id } ?: emptyList()
+        } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
 
-        if (personId != null) storage.savePersonId(personId)
-        return personId
+        if (linked.isEmpty()) return null
+        storage.saveLinkedPersonsJson(AppJson.encodeToString(ListSerializer(LinkedPerson.serializer()), linked))
+        val current = storage.getPersonId()
+        val active = if (current != null && linked.any { it.id == current }) current else linked.first().id
+        if (active != current) storage.savePersonId(active)
+        return active
+    }
+
+    suspend fun getLinkedPersons(): List<LinkedPerson> {
+        val json = storage.getLinkedPersonsJson() ?: return emptyList()
+        return try { AppJson.decodeFromString(ListSerializer(LinkedPerson.serializer()), json) } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
+    }
+
+    /** Bumped after every successful [switchPerson]; the UI rebuilds its screens when it changes. */
+    val activePersonRevision: StateFlow<Int> get() = Companion.activePersonRevision
+
+    companion object {
+        // Static so the UI can observe it before ServiceLocator.init() has finished on a cold start.
+        private val _activePersonRevision = MutableStateFlow(0)
+        val activePersonRevision: StateFlow<Int> = _activePersonRevision
+    }
+
+    /** Makes [personId] the active person. Returns false if it isn't linked to this account. */
+    suspend fun switchPerson(personId: String): Boolean {
+        if (getLinkedPersons().none { it.id == personId }) return false
+        if (storage.getPersonId() == personId) return true
+        mutex.withLock {
+            storage.savePersonId(personId)
+            // Drop everything derived from the previous person before anything can read it.
+            storage.saveCoupleIds(emptyList())
+            storage.savePersonDetailsJson("")
+            storage.saveCstsId("")
+            try { ServiceLocator.cacheService.clear() } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+            fetchAndStorePersonDetails(personId)
+            fetchAndStoreActiveCouples()
+            com.tkolymp.shared.viewmodels.OtherViewModel.clearCache()
+        }
+        _activePersonRevision.value += 1
+        return true
     }
 
     suspend fun fetchAndStoreCurrentUser(versionId: String): JsonObject? {
@@ -58,15 +116,18 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
     }
 
     suspend fun fetchAndStoreActiveCouples(): List<String> {
-        val query = "query kveri { users { nodes { userProxiesList { person { activeCouplesList { id man { firstName lastName } woman { firstName lastName } } cohortMembershipsList { cohort { id colorRgb name } } } } } } }"
+        val query = "query kveri { users { nodes { userProxiesList { person { id activeCouplesList { id man { firstName lastName } woman { firstName lastName } } cohortMembershipsList { cohort { id colorRgb name } } } } } } }"
         val resp = try { client.post(query, null) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return emptyList() }
         val ids = mutableListOf<String>()
+        val activeId = storage.getPersonId()
         try {
             val users = resp.jsonObject["data"]?.jsonObject?.get("users")?.jsonObject?.get("nodes")?.jsonArray
             users?.forEach { node ->
                 val proxies = node.jsonObject["userProxiesList"]?.jsonArray
                 proxies?.forEach { proxy ->
-                    val active = proxy.jsonObject["person"]?.jsonObject?.get("activeCouplesList")?.jsonArray
+                    val person = proxy.jsonObject["person"]?.jsonObject
+                    if (activeId != null && person?.get("id")?.jsonPrimitive?.contentOrNull != activeId) return@forEach
+                    val active = person?.get("activeCouplesList")?.jsonArray
                     active?.forEach { c ->
                         c.jsonObject["id"]?.jsonPrimitive?.contentOrNull?.let { ids.add(it) }
                     }
@@ -107,7 +168,7 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
     }
 
     suspend fun getCachedPersonId(): String? = storage.getPersonId()
-    suspend fun getCachedCstsId(): String? = storage.getCstsId()
+    suspend fun getCachedCstsId(): String? = storage.getCstsId()?.takeIf { it.isNotBlank() }
     suspend fun getCachedCoupleIds(): List<String> = storage.getCoupleIds()
     suspend fun getCachedCurrentUserJson(): String? = storage.getCurrentUserJson()
     suspend fun getCachedPersonDetailsJson(): String? = storage.getPersonDetailsJson()

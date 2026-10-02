@@ -13,6 +13,8 @@ data class OtherScreenStrings(
     val privacyPolicy: String,
     val termsOfUse: String,
     val myAccount: String,
+    val switchPerson: String,
+    val switchPersonHint: String,
     val settings: String,
     val changelog: String,
 )

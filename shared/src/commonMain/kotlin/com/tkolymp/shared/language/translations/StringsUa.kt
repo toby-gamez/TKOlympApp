@@ -57,6 +57,8 @@ val StringsUa = Strings(
         privacyPolicy = "Політика конфіденційності",
         termsOfUse = "Умови використання",
         myAccount = "Мій акаунт",
+        switchPerson = "Змінити акаунт",
+        switchPersonHint = "Виберіть акаунт, для якого ви користуєтесь застосунком",
         settings = "Налаштування",
         changelog = "Що нового",
     ),

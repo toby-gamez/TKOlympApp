@@ -58,6 +58,8 @@ val StringsBrainrot = Strings(
         privacyPolicy = "Privacy or Whatever",
         termsOfUse = "Terms fr fr",
         myAccount = "My Slay Account",
+        switchPerson = "Switch Account",
+        switchPersonHint = "Pick which account you are playing as",
         settings = "Settings fr",
         changelog = "New Drip Dropped",
     ),

@@ -57,6 +57,8 @@ val StringsSl = Strings(
         privacyPolicy = "Politika zasebnosti",
         termsOfUse = "Pogoji uporabe",
         myAccount = "Moj račun",
+        switchPerson = "Zamenjaj račun",
+        switchPersonHint = "Izberite račun, za katerega uporabljate aplikacijo",
         settings = "Nastavitve",
         changelog = "Kaj je novega",
     ),

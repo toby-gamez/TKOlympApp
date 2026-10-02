@@ -22,6 +22,7 @@ data class OtherState(
     val name: String? = null,
     val subtitle: String? = null,
     val personId: String? = null,
+    val linkedPersons: List<com.tkolymp.shared.user.LinkedPerson> = emptyList(),
     val cstsId: String? = null,
     val coupleIds: List<String> = emptyList(),
     val rawJson: String? = null,
@@ -59,12 +60,26 @@ class OtherViewModel(
         fetchFromStorage()
     }
 
+    fun switchPerson(personId: String) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isLoading = true, error = null)
+            try {
+                userService.switchPerson(personId)
+            } catch (e: CancellationException) { throw e } catch (ex: Exception) {
+                _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoading))
+                return@launch
+            }
+            fetchFromStorage()
+        }
+    }
+
     private fun fetchFromStorage() {
         loadStarted = true
         viewModelScope.launch {
             try {
                 val raw = try { userService.getCachedCurrentUserJson() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                 val pid = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                val linked = try { userService.getLinkedPersons() } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
                 val cstsId = try { userService.getCachedCstsId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                 val cids = try { userService.getCachedCoupleIds() } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList<String>() }
                 var personDetails = try { userService.getCachedPersonDetailsJson() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
@@ -122,6 +137,7 @@ class OtherViewModel(
                     name = name,
                     subtitle = subtitle,
                     personId = pid,
+                    linkedPersons = linked,
                     cstsId = cstsId,
                     coupleIds = cids,
                     rawJson = raw,

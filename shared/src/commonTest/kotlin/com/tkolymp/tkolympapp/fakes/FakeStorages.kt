@@ -24,6 +24,7 @@ class FakeUserStorage : IUserStorage {
     private var coupleIds: List<String> = emptyList()
     private var currentUserJson: String? = null
     private var personDetailsJson: String? = null
+    private var linkedPersonsJson: String? = null
 
     override suspend fun savePersonId(personId: String) { this.personId = personId }
     override suspend fun getPersonId(): String? = personId
@@ -35,7 +36,10 @@ class FakeUserStorage : IUserStorage {
     override suspend fun getCurrentUserJson(): String? = currentUserJson
     override suspend fun savePersonDetailsJson(json: String) { this.personDetailsJson = json }
     override suspend fun getPersonDetailsJson(): String? = personDetailsJson
+    override suspend fun saveLinkedPersonsJson(json: String) { linkedPersonsJson = json }
+    override suspend fun getLinkedPersonsJson(): String? = linkedPersonsJson
     override suspend fun clear() {
+        linkedPersonsJson = null
         personId = null; cstsId = null; coupleIds = emptyList()
         currentUserJson = null; personDetailsJson = null
     }
