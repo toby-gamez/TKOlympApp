@@ -33,38 +33,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         Logger.d("FCM", "New token received")
-        // Send token to server (best-effort). Avoid duplicate uploads.
-        try {
-            val prefs = getSharedPreferences("tkolymp_fcm", Context.MODE_PRIVATE)
-            val last = prefs.getString("last_uploaded_fcm_token", null)
-            if (token == last) {
-                Logger.d("FCM", "Token unchanged, skipping upload")
-                return
-            }
-            svcScope.launch {
-                try {
-                    val mutation = """mutation RegisterFcm(${'$'}input: RegisterFcmInput!) { registerFcm(input: ${'$'}input) { success } }"""
-                    val variables = buildJsonObject {
-                        put("input", buildJsonObject {
-                            put("token", JsonPrimitive(token))
-                            put("platform", JsonPrimitive("ANDROID"))
-                        })
-                    }
-                    val resp = ServiceLocator.graphQlClient.post(mutation, variables)
-                    val errors = resp.jsonObject["errors"]
-                    if (errors != null) {
-                        Logger.d("FCM", "GraphQL errors registering token: $errors")
-                    } else {
-                        prefs.edit().putString("last_uploaded_fcm_token", token).apply()
-                        Logger.d("FCM", "FCM token uploaded")
-                    }
-                } catch (t: Throwable) {
-                    Logger.d("FCM", "Failed uploading FCM token: ${t.message}")
-                }
-            }
-        } catch (e: Throwable) {
-            Logger.d("FCM", "Failed preparing token upload: ${e.message}")
-        }
+        // Notifications are delivered via the 'all' topic; the token is not registered with the GraphQL backend.
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {

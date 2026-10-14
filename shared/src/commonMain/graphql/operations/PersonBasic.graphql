@@ -35,11 +35,13 @@ query PersonBasic($id: BigInt!) {
             since
             until
         }
-        cstsProgressList {
-            points
-            finals
-            competitorName
-            category { id name series discipline ageGroup genderGroup class competitorType baseDanceProgramId }
-        }
+        cstsProgressList: federationCategoryProgresses(first: 100) {
+      nodes {
+        points
+        finals: domesticFinals
+        competitor { name }
+        category { id name series discipline ageGroup genderGroup class competitorType baseDanceProgramId }
+      }
+    }
     }
 }

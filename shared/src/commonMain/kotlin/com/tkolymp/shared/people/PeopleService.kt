@@ -18,6 +18,18 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
 
+/** The server exposes progress as a connection (`{ nodes: [...] }`); older payloads/offline caches hold a bare array. */
+fun JsonElement?.progressNodes(): kotlinx.serialization.json.JsonArray? = when (this) {
+    is kotlinx.serialization.json.JsonArray -> this
+    is JsonObject -> this["nodes"] as? kotlinx.serialization.json.JsonArray
+    else -> null
+}
+
+/** Competitor name from either the legacy flat `competitorName` or the connection's `competitor { name }`. */
+fun JsonObject.progressCompetitorName(): String? =
+    this["competitorName"]?.jsonPrimitive?.contentOrNull
+        ?: (this["competitor"] as? JsonObject)?.get("name")?.jsonPrimitive?.contentOrNull
+
 data class PersonName(val firstName: String?, val lastName: String?)
 
 data class Cohort(val id: String?, val name: String?, val colorRgb: String?, val isVisible: Boolean?)
@@ -277,7 +289,7 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                 CohortMembership(Cohort(cId, cName, cColor, cVis), since, until)
             } ?: emptyList()
 
-            val cstsProgress = (personObj?.get("cstsProgressList") as? kotlinx.serialization.json.JsonArray)?._safeMap { pEl ->
+            val cstsProgress = personObj?.get("cstsProgressList").progressNodes()?._safeMap { pEl ->
                 val pObj = pEl as? kotlinx.serialization.json.JsonObject ?: return@_safeMap null
                 val catObj = pObj["category"] as? kotlinx.serialization.json.JsonObject
                 val cat = catObj?.let { cat ->
@@ -296,7 +308,7 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                 com.tkolymp.shared.competitions.CstsProgress(
                     points = pObj["points"]?.jsonPrimitive?.contentOrNull,
                     finals = pObj["finals"]?.jsonPrimitive?.intOrNull,
-                    competitorName = pObj["competitorName"]?.jsonPrimitive?.contentOrNull,
+                    competitorName = pObj.progressCompetitorName(),
                     category = cat
                 )
             } ?: emptyList()

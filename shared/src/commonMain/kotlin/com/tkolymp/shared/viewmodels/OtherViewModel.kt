@@ -80,7 +80,7 @@ class OtherViewModel(
                 val raw = try { userService.getCachedCurrentUserJson() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                 val pid = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                 val linked = try { userService.getLinkedPersons() } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
-                val cstsId = try { userService.getCachedCstsId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                var cstsId = try { userService.getCachedCstsId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                 val cids = try { userService.getCachedCoupleIds() } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList<String>() }
                 var personDetails = try { userService.getCachedPersonDetailsJson() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
 
@@ -89,7 +89,11 @@ class OtherViewModel(
                     _state.value = _state.value.copy(isLoading = true, error = null)
                     try { userService.fetchAndStorePersonDetails(pid) } catch (e: CancellationException) { throw e } catch (_: Exception) { }
                     personDetails = try { userService.getCachedPersonDetailsJson() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                    // the id was read before the fetch above, so pick up what the fetch just stored
+                    cstsId = try { userService.getCachedCstsId() } catch (e: CancellationException) { throw e } catch (_: Exception) { cstsId }
                 }
+                // Fall back to the id delivered with the linked-person list so the QR button doesn't depend on the details fetch.
+                if (cstsId.isNullOrBlank()) cstsId = linked.firstOrNull { it.id == pid }?.cstsId?.takeIf { it.isNotBlank() }
 
                 var name: String? = null
                 var subtitle: String? = null

@@ -2,6 +2,8 @@ package com.tkolymp.shared.viewmodels
 
 import androidx.lifecycle.ViewModel
 import com.tkolymp.shared.ServiceLocator
+import com.tkolymp.shared.people.progressNodes
+import com.tkolymp.shared.people.progressCompetitorName
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -89,7 +91,7 @@ class PersonViewModel(
                             )
                         } ?: emptyList()
 
-                        val cstsProgress = (obj["cstsProgressList"] as? kotlinx.serialization.json.JsonArray)?.mapNotNull { pEl ->
+                        val cstsProgress = obj["cstsProgressList"].progressNodes()?.mapNotNull { pEl ->
                             val pObj = pEl as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null
                             val catObj = pObj["category"] as? kotlinx.serialization.json.JsonObject
                             val cat = catObj?.let { cat ->
@@ -108,7 +110,7 @@ class PersonViewModel(
                             com.tkolymp.shared.competitions.CstsProgress(
                                 points = blankToNull(pObj["points"]?.jsonPrimitive?.contentOrNull),
                                 finals = pObj["finals"]?.jsonPrimitive?.contentOrNull?.toIntOrNull()?.takeIf { it >= 0 },
-                                competitorName = blankToNull(pObj["competitorName"]?.jsonPrimitive?.contentOrNull),
+                                competitorName = blankToNull(pObj.progressCompetitorName()),
                                 category = cat
                             )
                         } ?: emptyList()

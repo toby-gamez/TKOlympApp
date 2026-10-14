@@ -6,9 +6,13 @@ query PersonDetails($id: BigInt!) {
     activeCouplesList { id man { firstName lastName } woman { firstName lastName } }
     allCouplesList { id manId womanId since until status }
     cohortMembershipsList { cohort { id colorRgb name isVisible } since until }
-    cstsProgressList {
-      points finals competitorName
-      category { id name series discipline ageGroup genderGroup class competitorType baseDanceProgramId }
+    cstsProgressList: federationCategoryProgresses(first: 100) {
+      nodes {
+        points
+        finals: domesticFinals
+        competitor { name }
+        category { id name series discipline ageGroup genderGroup class competitorType baseDanceProgramId }
+      }
     }
   }
 }

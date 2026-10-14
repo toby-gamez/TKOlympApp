@@ -2,6 +2,8 @@ package com.tkolymp.shared.user
 
 import com.tkolymp.shared.graphql.GraphQlOperations
 import com.tkolymp.shared.Logger
+import com.tkolymp.shared.people.progressNodes
+import com.tkolymp.shared.people.progressCompetitorName
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.people.ActiveCouple
 import com.tkolymp.shared.people.AddressDetails
@@ -52,19 +54,23 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
     suspend fun fetchAndStorePersonId(): String? {
         val query = GraphQlOperations.CurrentUserProxies
         val resp = try { client.post(query, null) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return null }
-        val linked = try {
+        Logger.d("UserService", "fetchAndStorePersonId resp=${resp.toString().take(600)}")
+        val all = try {
             resp.jsonObject["data"]?.jsonObject?.get("getCurrentUser")?.jsonObject?.get("userProxiesList")?.jsonArray
                 ?.mapNotNull { proxy ->
-                    // EXPIRED / PENDING links must not be offered as switchable persons
                     val status = proxy.jsonObject["status"]?.jsonPrimitive?.contentOrNull
-                    if (status != null && status != "ACTIVE") return@mapNotNull null
                     val person = proxy.jsonObject["person"] as? JsonObject ?: return@mapNotNull null
                     val id = person["id"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
                     val name = listOfNotNull(person["firstName"]?.jsonPrimitive?.contentOrNull, person["lastName"]?.jsonPrimitive?.contentOrNull)
                         .filter { it.isNotBlank() }.joinToString(" ")
-                    LinkedPerson(id, name.ifBlank { "#$id" }, person["birthDate"]?.jsonPrimitive?.contentOrNull, person["cstsId"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() })
-                }?.distinctBy { it.id } ?: emptyList()
+                    status to LinkedPerson(id, name.ifBlank { "#$id" }, person["birthDate"]?.jsonPrimitive?.contentOrNull, person["cstsId"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() })
+                } ?: emptyList()
         } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
+        // EXPIRED / PENDING links must not be offered as switchable persons — but if the account has no
+        // ACTIVE link at all (e.g. a freshly created account), fall back to the non-expired ones so the
+        // user still gets a profile instead of none.
+        val linked = (all.filter { it.first == null || it.first == "ACTIVE" }.ifEmpty { all.filter { it.first != "EXPIRED" } })
+            .map { it.second }.distinctBy { it.id }
 
         if (linked.isEmpty()) return null
         storage.saveLinkedPersonsJson(AppJson.encodeToString(ListSerializer(LinkedPerson.serializer()), linked))
@@ -147,8 +153,9 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
         val query = GraphQlOperations.PersonDetails
         // A non-numeric id is sent as-is; the server rejects it (same outcome as the former String! fallback).
         val variables = buildJsonObject { put("id", if (idLong != null) JsonPrimitive(idLong) else JsonPrimitive(personId)) }
-        val resp = try { client.post(query, variables) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return null }
+        val resp = try { client.post(query, variables) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; Logger.d("UserService", "fetchAndStorePersonDetails FAILED id=$personId: ${ex.message}"); return null }
 
+        Logger.d("UserService", "fetchAndStorePersonDetails id=$personId resp=${resp.toString().take(600)}")
         val data = resp.jsonObject["data"]?.jsonObject?.get("person")?.jsonObject
         if (data != null) {
             storage.savePersonDetailsJson(data.toString())
@@ -203,7 +210,7 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
         val address = addrObj?.let { a ->
             AddressDetails(street = a["street"]?.jsonPrimitive?.contentOrNull, city = a["city"]?.jsonPrimitive?.contentOrNull, postalCode = a["postalCode"]?.jsonPrimitive?.contentOrNull, region = a["region"]?.jsonPrimitive?.contentOrNull, district = a["district"]?.jsonPrimitive?.contentOrNull, conscriptionNumber = a["conscriptionNumber"]?.jsonPrimitive?.contentOrNull, orientationNumber = a["orientationNumber"]?.jsonPrimitive?.contentOrNull)
         }
-        val cstsProgress = (p["cstsProgressList"] as? JsonArray)?.mapNotNull { pEl ->
+        val cstsProgress = p["cstsProgressList"].progressNodes()?.mapNotNull { pEl ->
             val pObj = pEl as? JsonObject ?: return@mapNotNull null
             val catObj = pObj["category"] as? JsonObject
             val cat = catObj?.let { cat ->
@@ -222,7 +229,7 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
             com.tkolymp.shared.competitions.CstsProgress(
                 points = pObj["points"]?.jsonPrimitive?.contentOrNull,
                 finals = pObj["finals"]?.jsonPrimitive?.intOrNull,
-                competitorName = pObj["competitorName"]?.jsonPrimitive?.contentOrNull,
+                competitorName = pObj.progressCompetitorName(),
                 category = cat
             )
         } ?: emptyList()

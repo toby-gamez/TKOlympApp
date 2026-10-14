@@ -74,47 +74,6 @@ class MainActivity : ComponentActivity() {
 
             WidgetUpdateWorker.schedule(this@MainActivity)
 
-            // Získání a zalogování FCM tokenu
-            @Suppress("DEPRECATION")
-            val fcmTokenTask = FirebaseMessaging.getInstance().token
-            fcmTokenTask.addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val token = task.result
-                    Logger.d("FCM", "Current token obtained")
-                        try {
-                            val prefs = this@MainActivity.getSharedPreferences("tkolymp_fcm", Context.MODE_PRIVATE)
-                            val last = prefs.getString("last_uploaded_fcm_token", null)
-                            if (token != null && token != last) {
-                                lifecycleScope.launch {
-                                    try {
-                                        val mutation = """mutation RegisterFcm(${'$'}input: RegisterFcmInput!) { registerFcm(input: ${'$'}input) { success } }"""
-                                        val variables = buildJsonObject {
-                                            put("input", buildJsonObject {
-                                                put("token", JsonPrimitive(token))
-                                                put("platform", JsonPrimitive("ANDROID"))
-                                            })
-                                        }
-                                        val resp = ServiceLocator.graphQlClient.post(mutation, variables)
-                                        val errors = resp.jsonObject["errors"]
-                                        if (errors != null) {
-                                            Logger.d("FCM", "GraphQL errors registering token: $errors")
-                                        } else {
-                                            prefs.edit().putString("last_uploaded_fcm_token", token).apply()
-                                            Logger.d("FCM", "FCM token uploaded from MainActivity")
-                                        }
-                                    } catch (t: Throwable) {
-                                        Logger.d("FCM", "Failed uploading FCM token: ${t.message}")
-                                    }
-                                }
-                            }
-                        } catch (e: Throwable) {
-                            Logger.d("FCM", "Preparing token upload failed: ${e.message}")
-                        }
-                } else {
-                    Logger.e("FCM", "Fetching FCM registration token failed", task.exception)
-                }
-            }
-
             // Přihlášení k topicu 'all' pro broadcast notifikace
             FirebaseMessaging.getInstance().subscribeToTopic("all")
                 .addOnCompleteListener { task ->
