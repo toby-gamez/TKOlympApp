@@ -1,0 +1,6 @@
+query PersonName($id: BigInt!) {
+  person(id: $id) {
+    lastName
+    firstName
+  }
+}

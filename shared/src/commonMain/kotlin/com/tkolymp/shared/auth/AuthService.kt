@@ -1,5 +1,6 @@
 package com.tkolymp.shared.auth
 
+import com.tkolymp.shared.graphql.GraphQlOperations
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.network.GraphQlException
 import com.tkolymp.shared.network.IGraphQlClient
@@ -20,11 +21,7 @@ class AuthService(private val storage: ITokenStorage, private val client: IGraph
     }
 
     override suspend fun login(username: String, password: String): Boolean {
-        val mutation = """
-            mutation Login(${'$'}login: String!, ${'$'}passwd: String!) {
-                login(input: {login: ${'$'}login, passwd: ${'$'}passwd}) { result { jwt } }
-            }
-        """.trimIndent()
+        val mutation = GraphQlOperations.Login
         val variables = buildJsonObject {
             put("login", username)
             put("passwd", password)
@@ -66,7 +63,7 @@ class AuthService(private val storage: ITokenStorage, private val client: IGraph
     }
 
     private suspend fun attemptRefresh(): RefreshOutcome {
-        val query = "query Refresh { refreshJwt }"
+        val query = GraphQlOperations.Refresh
 
         val resp = try {
             client.post(query, null)

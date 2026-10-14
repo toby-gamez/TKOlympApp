@@ -1,0 +1,12 @@
+query Scoreboard($cohortId: BigInt, $since: Date, $until: Date) {
+    scoreboardEntriesList(cohortId: $cohortId, since: $since, until: $until) {
+        ranking
+        personId
+        totalScore
+        lessonTotalScore
+        groupTotalScore
+        eventTotalScore
+        manualTotalScore
+        person { firstName lastName id }
+    }
+}

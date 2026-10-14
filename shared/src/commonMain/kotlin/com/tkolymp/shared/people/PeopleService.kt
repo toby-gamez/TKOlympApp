@@ -1,5 +1,6 @@
 package com.tkolymp.shared.people
 
+import com.tkolymp.shared.graphql.GraphQlOperations
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.language.AppStrings
 import kotlinx.coroutines.CancellationException
@@ -99,14 +100,7 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
     
 
     suspend fun fetchPersonName(personId: String): PersonName? {
-        val query = """
-            query MyQuery(${'$'}id: BigInt!) {
-              person(id: ${'$'}id) {
-                lastName
-                firstName
-              }
-            }
-        """.trimIndent()
+        val query = GraphQlOperations.PersonName
         val idVar = personId.toLongOrNull()?.let { JsonPrimitive(it) } ?: JsonPrimitive(personId)
         val variables = buildJsonObject { put("id", idVar) }
 
@@ -127,14 +121,7 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
     }
 
     suspend fun fetchCoupleDisplayName(coupleId: String): String? {
-        val query = """
-            query MyQuery(${'$'}id: BigInt!) {
-              couple(id: ${'$'}id) {
-                man { lastName firstName }
-                woman { firstName lastName }
-              }
-            }
-        """.trimIndent()
+        val query = GraphQlOperations.CoupleName
         val idVar = coupleId.toLongOrNull()?.let { JsonPrimitive(it) } ?: JsonPrimitive(coupleId)
         val variables = buildJsonObject { put("id", idVar) }
 
@@ -166,28 +153,7 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
             val cached: List<Person>? = cache.get(cacheKey)
             if (cached != null) return cached
         } catch (e: CancellationException) { throw e } catch (_: Exception) {}
-        val query = """
-            query MyQuery {
-                people {
-                    nodes {
-                        id
-                        firstName
-                        lastName
-                        prefixTitle
-                        suffixTitle
-                        birthDate
-                        cohortMembershipsList {
-                            cohort {
-                                name
-                                id
-                                colorRgb
-                                isVisible
-                            }
-                        }
-                    }
-                }
-            }
-        """.trimIndent()
+        val query = GraphQlOperations.People
 
         val el = try { client.post(query) } catch (_: Exception) { return emptyList() }
         val nodes = (el as? JsonObject)
@@ -228,53 +194,7 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                 if (cached != null) return cached
             } catch (e: CancellationException) { throw e } catch (_: Exception) {}
                 // use GraphQL variable for person id and pass it via `variables` to the client
-                val query = """
-                        query PersonBasic(${'$'}id: BigInt!) {
-                            person(id: ${'$'}id) {
-                                id
-                                birthDate
-                                cstsId
-                                email
-                                firstName
-                                prefixTitle
-                                suffixTitle
-                                gender
-                                isTrainer
-                                lastName
-                                phone
-                                wdsfId
-                                instagramUsername
-                                tiktokUsername
-                                facebookUrl
-                                websiteUrl
-                                note
-                                activeCouplesList {
-                                    man { firstName lastName }
-                                    woman { firstName lastName }
-                                    id
-                                }
-                                allCouplesList {
-                                    id
-                                    manId
-                                    womanId
-                                    since
-                                    until
-                                    status
-                                }
-                                cohortMembershipsList {
-                                    cohort { colorRgb name isVisible id }
-                                    since
-                                    until
-                                }
-                                cstsProgressList {
-                                    points
-                                    finals
-                                    competitorName
-                                    category { id name series discipline ageGroup genderGroup class competitorType baseDanceProgramId }
-                                }
-                            }
-                        }
-                """.trimIndent()
+                val query = GraphQlOperations.PersonBasic
 
                 val idVar = personId.toLongOrNull()?.let { JsonPrimitive(it) } ?: JsonPrimitive(personId)
                 val variables = buildJsonObject { put("id", idVar) }
@@ -401,20 +321,7 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                 val cached: List<ScoreboardEntry>? = cache.get(cacheKey)
                 if (cached != null) return cached
             } catch (e: CancellationException) { throw e } catch (_: Exception) {}
-            val query = """
-                    query Scoreboard(${'$'}cohortId: BigInt, ${'$'}since: Date, ${'$'}until: Date) {
-                        scoreboardEntriesList(cohortId: ${'$'}cohortId, since: ${'$'}since, until: ${'$'}until) {
-                            ranking
-                            personId
-                            totalScore
-                            lessonTotalScore
-                            groupTotalScore
-                            eventTotalScore
-                            manualTotalScore
-                            person { firstName lastName id }
-                        }
-                    }
-            """.trimIndent()
+            val query = GraphQlOperations.Scoreboard
 
             val idVar = cohortId?.toLongOrNull()?.let { JsonPrimitive(it) } ?: cohortId?.let { JsonPrimitive(it) }
             val variables = buildJsonObject {

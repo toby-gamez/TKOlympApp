@@ -1,5 +1,6 @@
 package com.tkolymp.shared.payments
 
+import com.tkolymp.shared.graphql.GraphQlOperations
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.cache.CacheService
 import kotlinx.coroutines.CancellationException
@@ -41,19 +42,7 @@ class PaymentService(
             if (cached != null) return cached
         } catch (e: CancellationException) { throw e } catch (_: Exception) {}
 
-        val query = """
-            query {
-              paymentDebtorsList {
-                id
-                isUnpaid
-                price { amount currency }
-                paymentId
-                personId
-                payment { id variableSymbol specificSymbol dueAt status }
-                person { id firstName lastName }
-              }
-            }
-        """.trimIndent()
+        val query = GraphQlOperations.PaymentDebtors
 
         val resp = try { client.post(query, null) } catch (e: CancellationException) { throw e }
         val root = (resp as? JsonObject)?.get("data")?.jsonObject ?: return emptyList()

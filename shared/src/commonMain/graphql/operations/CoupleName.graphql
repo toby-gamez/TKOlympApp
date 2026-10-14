@@ -1,0 +1,6 @@
+query CoupleName($id: BigInt!) {
+  couple(id: $id) {
+    man { lastName firstName }
+    woman { firstName lastName }
+  }
+}

@@ -1,5 +1,6 @@
 package com.tkolymp.shared.announcements
 
+import com.tkolymp.shared.graphql.GraphQlOperations
 import com.tkolymp.shared.network.IGraphQlClient
 import com.tkolymp.shared.viewmodels.AppError
 import com.tkolymp.shared.viewmodels.DataResult
@@ -79,9 +80,7 @@ class AnnouncementServiceImpl(
     private val client: IGraphQlClient,
     private val cache: CacheService
 ) : IAnnouncementService {
-    private val query = """
-        query MyQuery(${'$'}sticky: Boolean) { announcements(condition: { isSticky: ${'$'}sticky }) { nodes { body createdAt id isSticky status title authorName author { id uJmeno uPrijmeni } updatedAt attachments { nodes { inline file { id name contentType url objectKey isPublic } } } } } }
-    """.trimIndent()
+    private val query = GraphQlOperations.Announcements
 
     override suspend fun getAnnouncements(sticky: Boolean): DataResult<List<Announcement>> {
         return try {
@@ -136,9 +135,7 @@ class AnnouncementServiceImpl(
         }
     }
 
-    private val singleQuery = """
-        query MyQuery(${'$'}id: BigInt!) { announcement(id: ${'$'}id) { id title body createdAt updatedAt isSticky status authorName author { id uJmeno uPrijmeni } attachments { nodes { inline file { name contentType url } } } } }
-    """.trimIndent()
+    private val singleQuery = GraphQlOperations.AnnouncementById
 
     override suspend fun getAnnouncementById(id: Long, forceRefresh: Boolean): DataResult<Announcement> {
         return try {

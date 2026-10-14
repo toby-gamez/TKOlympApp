@@ -1,0 +1,64 @@
+query CompetitionTimeline($first: Int, $pSince: Datetime, $pUntil: Datetime, $pPersonIds: [BigInt], $pKinds: [ActivityTimelineKind]) {
+    activityTimelineList(first: $first, offset: 0, pSince: $pSince, pUntil: $pUntil, pPersonIds: $pPersonIds, pCohortId: null, pKinds: $pKinds) {
+        kind
+        personId
+        personName
+        ... on ActivityCompetitionBrief {
+            federation
+            federatedPersonId
+            competitorId
+            competitorName
+            competitorType
+            competitionId
+            competitionDate
+            competitionType
+            checkInEnd
+            competitionEventId
+            competitionEventName
+            competitionEventLocation
+            dances
+            participants
+            category {
+                id
+                name
+                series
+                discipline
+                ageGroup
+                genderGroup
+                class
+                competitorType
+                baseDanceProgramId
+            }
+        }
+        ... on ActivityCompetitionResult {
+            federation
+            federatedPersonId
+            competitorId
+            competitorName
+            competitorType
+            competitionId
+            competitionDate
+            competitionType
+            competitionEventId
+            competitionEventName
+            competitionEventLocation
+            dances
+            participants
+            ranking
+            rankingTo
+            pointGain
+            isFinal
+            category {
+                id
+                name
+                series
+                discipline
+                ageGroup
+                genderGroup
+                class
+                competitorType
+                baseDanceProgramId
+            }
+        }
+    }
+}

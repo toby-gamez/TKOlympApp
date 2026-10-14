@@ -1,0 +1,9 @@
+{
+  "name": "tkolymp-graphql-tools",
+  "private": true,
+  "description": "GraphQL schema/operation checks for TK Olymp (CI + local).",
+  "devDependencies": {
+    "@graphql-inspector/cli": "7.0.1",
+    "graphql": "16.14.2"
+  }
+}

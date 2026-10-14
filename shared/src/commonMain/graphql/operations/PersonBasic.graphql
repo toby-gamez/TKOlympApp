@@ -1,0 +1,45 @@
+query PersonBasic($id: BigInt!) {
+    person(id: $id) {
+        id
+        birthDate
+        cstsId
+        email
+        firstName
+        prefixTitle
+        suffixTitle
+        gender
+        isTrainer
+        lastName
+        phone
+        wdsfId
+        instagramUsername
+        tiktokUsername
+        facebookUrl
+        websiteUrl
+        note
+        activeCouplesList {
+            man { firstName lastName }
+            woman { firstName lastName }
+            id
+        }
+        allCouplesList {
+            id
+            manId
+            womanId
+            since
+            until
+            status
+        }
+        cohortMembershipsList {
+            cohort { colorRgb name isVisible id }
+            since
+            until
+        }
+        cstsProgressList {
+            points
+            finals
+            competitorName
+            category { id name series discipline ageGroup genderGroup class competitorType baseDanceProgramId }
+        }
+    }
+}

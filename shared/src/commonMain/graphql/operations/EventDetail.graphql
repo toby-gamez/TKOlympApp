@@ -1,0 +1,105 @@
+query EventDetail($id: BigInt!) {
+    eventInstance(id: $id) {
+        id
+        type
+        name
+        summary
+        description
+        since
+        until
+        isCancelled
+        capacity
+        remainingPersonSpots
+        isLocked
+        isVisible
+        isPublic
+        enableNotes
+        managerPersonIds
+        locationText
+        location {
+            id
+            name
+            __typename
+        }
+        eventTrainersList: eventInstanceTrainersByInstanceIdList {
+            id
+            personId
+            lessonsOffered
+            lessonsRemaining
+            person {
+                id
+                name
+                __typename
+            }
+            __typename
+        }
+        eventInstancesList: childEventInstancesList(orderBy: SINCE_ASC) {
+            id
+            since
+            until
+            isCancelled
+            __typename
+        }
+        eventTargetCohortsList: targetCohortsList {
+            cohortId
+            cohort {
+                id
+                name
+                colorRgb
+                __typename
+            }
+            __typename
+        }
+        eventRegistrationsList: eventInstanceRegistrationsByInstanceIdList(
+            condition: { registrationStatus: ACTIVE }
+        ) {
+            id
+            parentRegistrationId
+            note
+            personId
+            person {
+                id
+                name
+                firstName
+                lastName
+                __typename
+            }
+            coupleId
+            couple {
+                id
+                man {
+                    id
+                    name
+                    firstName
+                    lastName
+                    __typename
+                }
+                woman {
+                    id
+                    name
+                    firstName
+                    lastName
+                    __typename
+                }
+                __typename
+            }
+            eventLessonDemandsByRegistrationIdList {
+                id
+                lessonCount
+                trainerId
+                __typename
+            }
+            createdAt
+            __typename
+        }
+        eventExternalRegistrationsList: eventExternalRegistrationsByInstanceIdList {
+            id
+            note
+            email
+            firstName
+            lastName
+            __typename
+        }
+        __typename
+    }
+}

@@ -1,0 +1,7 @@
+query ManagementOptions {
+  getCurrentTenant {
+    tenantTrainersList { personId status person { id firstName lastName } }
+    tenantLocationsList { id name }
+    cohortsList(orderBy: [NAME_ASC]) { id name colorRgb isVisible isArchived }
+  }
+}

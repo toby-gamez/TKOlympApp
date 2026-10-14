@@ -1,0 +1,3 @@
+mutation ManagementSaveEvents($input: SaveEventsInput!) {
+  saveEvents(input: $input) { eventInstances { id } }
+}

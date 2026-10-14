@@ -1,0 +1,1 @@
+query Announcements($sticky: Boolean) { announcements(condition: { isSticky: $sticky }) { nodes { body createdAt id isSticky status title authorName author { id uJmeno uPrijmeni } updatedAt attachments { nodes { inline file { id name contentType url objectKey isPublic } } } } } }

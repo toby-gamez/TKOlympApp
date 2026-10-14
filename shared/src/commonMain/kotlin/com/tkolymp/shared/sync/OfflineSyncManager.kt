@@ -1,5 +1,6 @@
 package com.tkolymp.shared.sync
 
+import com.tkolymp.shared.graphql.GraphQlOperations
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.announcements.IAnnouncementService
 import com.tkolymp.shared.competitions.Competition
@@ -706,10 +707,7 @@ class OfflineSyncManager(
         if (personId.isNullOrBlank()) return
         val idLong = personId.toLongOrNull()
         val client = com.tkolymp.shared.ServiceLocator.graphQlClient
-        val query = if (idLong != null)
-            "query MyQuery(\$id: BigInt!) { person(id: \$id) { eventAttendancesList { status instanceId } } }"
-        else
-            "query MyQuery(\$id: String!) { person(id: \$id) { eventAttendancesList { status instanceId } } }"
+        val query = GraphQlOperations.PersonEventAttendances
         val variables = buildJsonObject {
             if (idLong != null) put("id", JsonPrimitive(idLong))
             else put("id", JsonPrimitive(personId))

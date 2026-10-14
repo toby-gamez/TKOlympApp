@@ -1,0 +1,11 @@
+query PaymentDebtors {
+  paymentDebtorsList {
+    id
+    isUnpaid
+    price { amount currency }
+    paymentId
+    personId
+    payment { id variableSymbol specificSymbol dueAt status }
+    person { id firstName lastName }
+  }
+}

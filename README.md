@@ -21,6 +21,31 @@ Mobilní aplikace pro TK Olymp — taneční klub. Postavena na **Kotlin Multipl
 
 ---
 
+## GraphQL dotazy a schéma
+
+API (`https://tkolymp.cz/graphql`) nemá verzování, proto jsou dotazy v samostatných souborech a hlídá je CI.
+
+- **Dotazy:** `shared/src/commonMain/graphql/operations/<Operace>.graphql` (jeden soubor = jedna operace, název souboru = název operace). Gradle task `:shared:generateGraphQlOperations` z nich při buildu vygeneruje konstanty `GraphQlOperations.<Operace>` — v Kotlinu se nikde nepíšou dotazy jako řetězce.
+- **Schéma:** `shared/src/commonMain/graphql/schema.graphql` (SDL z introspekce).
+- **Nástroje:** `tools/graphql` (Node 22+, `graphql-inspector` + `graphql-js`).
+
+```bash
+# Aktualizace uloženého schématu z živého endpointu (curl) – pak zkontroluj `git diff` a commitni
+tools/graphql/update-schema.sh
+
+# Validace všech dotazů proti uloženému schématu + výpis použitých deprecated polí
+tools/graphql/check.sh
+FAIL_ON_DEPRECATED=1 tools/graphql/check.sh      # použití deprecated pole = chyba
+
+# Porovnání živého schématu s uloženým (breaking / dangerous / safe, nové deprecated, dotazy vs. živé schéma)
+tools/graphql/schema-drift.sh
+```
+
+CI (`.github/workflows`): `graphql-validate.yml` běží při push/PR (validace + kompilace), `graphql-schema-drift.yml` denně v 05:17 UTC a selže při breaking změně schématu nebo když by dotazy aplikace nebyly platné proti živému schématu. Souhrn je v „Job summary“ běhu.
+`tools/graphql/known-invalid.txt` obsahuje dotazy, které živé schéma už odmítá — CI je přeskakuje a ohlásí varováním; po opravě řádek smaž.
+
+---
+
 ## Architektura
 
 Projekt je rozdělen do čtyř Gradle modulů:

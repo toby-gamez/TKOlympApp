@@ -1,0 +1,3 @@
+mutation ManagementUpsertAnnouncement($input: UpsertAnnouncementInput!) {
+  upsertAnnouncement(input: $input) { announcement { id } }
+}

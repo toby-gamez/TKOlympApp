@@ -1,5 +1,6 @@
 package com.tkolymp.shared.management
 
+import com.tkolymp.shared.graphql.GraphQlOperations
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.cache.CacheService
 import com.tkolymp.shared.network.IGraphQlClient
@@ -165,76 +166,28 @@ class ManagementService(
 /** GraphQL documents plus pure request builders / response parsers (unit-tested). */
 internal object ManagementGraphQl {
     const val CURRENT_USER_QUERY =
-        "query ManagementCurrentUser { getCurrentUser { id userProxiesList { person { id isAdmin isTrainer } } } }"
+        GraphQlOperations.ManagementCurrentUser
 
     const val STAFF_QUERY =
-        "query ManagementStaff { getCurrentTenant { tenantTrainersList { personId status } tenantAdministratorsList { personId status } } }"
+        GraphQlOperations.ManagementStaff
 
-    const val OPTIONS_QUERY = """
-        query ManagementOptions {
-          getCurrentTenant {
-            tenantTrainersList { personId status person { id firstName lastName } }
-            tenantLocationsList { id name }
-            cohortsList(orderBy: [NAME_ASC]) { id name colorRgb isVisible isArchived }
-          }
-        }
-    """
+    const val OPTIONS_QUERY = GraphQlOperations.ManagementOptions
 
-    const val EVENT_DRAFT_QUERY = """
-        query ManagementEventDraft(${'$'}id: BigInt!) {
-          eventInstance(id: ${'$'}id) {
-            id name type since until locationId locationText capacity
-            isVisible isPublic isLocked enableNotes isCancelled summary description
-            eventInstanceTrainersByInstanceIdList { personId }
-            targetCohortsList { cohortId }
-          }
-        }
-    """
+    const val EVENT_DRAFT_QUERY = GraphQlOperations.ManagementEventDraft
 
-    const val ANNOUNCEMENT_DRAFT_QUERY = """
-        query ManagementAnnouncementDraft(${'$'}id: BigInt!) {
-          announcement(id: ${'$'}id) {
-            id title body isSticky status authorId
-            announcementAudiences { nodes { cohortId } }
-          }
-        }
-    """
+    const val ANNOUNCEMENT_DRAFT_QUERY = GraphQlOperations.ManagementAnnouncementDraft
 
-    const val SAVE_EVENTS_MUTATION = """
-        mutation ManagementSaveEvents(${'$'}input: SaveEventsInput!) {
-          saveEvents(input: ${'$'}input) { eventInstances { id } }
-        }
-    """
+    const val SAVE_EVENTS_MUTATION = GraphQlOperations.ManagementSaveEvents
 
-    const val UPDATE_EVENT_INSTANCE_MUTATION = """
-        mutation ManagementUpdateEventInstance(${'$'}input: UpdateEventInstanceInput!) {
-          updateEventInstance(input: ${'$'}input) { eventInstance { id } }
-        }
-    """
+    const val UPDATE_EVENT_INSTANCE_MUTATION = GraphQlOperations.ManagementUpdateEventInstance
 
-    const val DELETE_EVENT_INSTANCE_MUTATION = """
-        mutation ManagementDeleteEventInstance(${'$'}input: DeleteEventInstanceInput!) {
-          deleteEventInstance(input: ${'$'}input) { eventInstance { id } }
-        }
-    """
+    const val DELETE_EVENT_INSTANCE_MUTATION = GraphQlOperations.ManagementDeleteEventInstance
 
-    const val UPSERT_ANNOUNCEMENT_MUTATION = """
-        mutation ManagementUpsertAnnouncement(${'$'}input: UpsertAnnouncementInput!) {
-          upsertAnnouncement(input: ${'$'}input) { announcement { id } }
-        }
-    """
+    const val UPSERT_ANNOUNCEMENT_MUTATION = GraphQlOperations.ManagementUpsertAnnouncement
 
-    const val UPDATE_ANNOUNCEMENT_MUTATION = """
-        mutation ManagementUpdateAnnouncement(${'$'}input: UpdateAnnouncementInput!) {
-          updateAnnouncement(input: ${'$'}input) { announcement { id } }
-        }
-    """
+    const val UPDATE_ANNOUNCEMENT_MUTATION = GraphQlOperations.ManagementUpdateAnnouncement
 
-    const val DELETE_ANNOUNCEMENT_MUTATION = """
-        mutation ManagementDeleteAnnouncement(${'$'}input: DeleteAnnouncementInput!) {
-          deleteAnnouncement(input: ${'$'}input) { announcement { id } }
-        }
-    """
+    const val DELETE_ANNOUNCEMENT_MUTATION = GraphQlOperations.ManagementDeleteAnnouncement
 
     fun parsePermissions(user: JsonObject, tenant: JsonObject?): UserPermissions {
         val persons = (user["userProxiesList"] as? JsonArray)

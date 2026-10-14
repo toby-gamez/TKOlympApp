@@ -1,0 +1,1 @@
+query ManagementStaff { getCurrentTenant { tenantTrainersList { personId status } tenantAdministratorsList { personId status } } }

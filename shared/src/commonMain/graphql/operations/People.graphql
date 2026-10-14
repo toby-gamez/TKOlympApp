@@ -1,0 +1,20 @@
+query People {
+    people {
+        nodes {
+            id
+            firstName
+            lastName
+            prefixTitle
+            suffixTitle
+            birthDate
+            cohortMembershipsList {
+                cohort {
+                    name
+                    id
+                    colorRgb
+                    isVisible
+                }
+            }
+        }
+    }
+}

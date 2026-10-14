@@ -1,0 +1,1 @@
+query ActiveCouples { users { nodes { userProxiesList { person { id activeCouplesList { id man { firstName lastName } woman { firstName lastName } } cohortMembershipsList { cohort { id colorRgb name } } } } } } }

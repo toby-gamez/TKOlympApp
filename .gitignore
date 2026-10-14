@@ -57,3 +57,6 @@ androidApp/release/*
 *.jks
 *.keystore
 androidApp/src/main/assets/adi-registration.properties
+
+# GraphQL tooling
+tools/graphql/node_modules/

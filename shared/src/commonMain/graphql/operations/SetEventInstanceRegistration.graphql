@@ -1,0 +1,5 @@
+mutation SetEventInstanceRegistration($input: SetEventInstanceRegistrationInput!) {
+    setEventInstanceRegistration(input: $input) {
+        eventInstanceRegistration { id registrationStatus }
+    }
+}

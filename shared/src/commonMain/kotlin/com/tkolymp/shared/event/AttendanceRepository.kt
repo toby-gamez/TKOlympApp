@@ -1,5 +1,6 @@
 package com.tkolymp.shared.event
 
+import com.tkolymp.shared.graphql.GraphQlOperations
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.network.IGraphQlClient
@@ -25,10 +26,7 @@ class AttendanceRepository(
      */
     suspend fun fetchAttendanceStatuses(personId: String): Map<Long, String> {
         val idLong = personId.toLongOrNull()
-        val query = if (idLong != null)
-            "query MyQuery(\$id: BigInt!) { person(id: \$id) { eventInstanceRegistrationsList { instanceId status } } }"
-        else
-            "query MyQuery(\$id: String!) { person(id: \$id) { eventInstanceRegistrationsList { instanceId status } } }"
+        val query = GraphQlOperations.PersonEventRegistrations
         val variables = buildJsonObject {
             if (idLong != null) put("id", JsonPrimitive(idLong))
             else put("id", JsonPrimitive(personId))

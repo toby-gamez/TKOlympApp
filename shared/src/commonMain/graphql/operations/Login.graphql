@@ -1,0 +1,3 @@
+mutation Login($login: String!, $passwd: String!) {
+    login(input: {login: $login, passwd: $passwd}) { result { jwt } }
+}

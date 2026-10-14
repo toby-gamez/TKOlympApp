@@ -1,0 +1,3 @@
+mutation ManagementDeleteAnnouncement($input: DeleteAnnouncementInput!) {
+  deleteAnnouncement(input: $input) { announcement { id } }
+}

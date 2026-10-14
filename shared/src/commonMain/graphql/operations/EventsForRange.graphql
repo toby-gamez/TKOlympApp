@@ -1,0 +1,31 @@
+query EventsForRange(
+    $startRange: Datetime!,
+    $endRange: Datetime!,
+    $first: Int,
+    $offset: Int,
+    $onlyType: EventType,
+    $scope: EventInstanceRangeScope
+) {
+    eventInstancesForRangeList(startRange: $startRange, endRange: $endRange, first: $first, offset: $offset, onlyType: $onlyType, scope: $scope) {
+        id
+        isCancelled
+        since
+        until
+        updatedAt
+        name
+        description
+        type
+        locationText
+        isVisible
+        isPublic
+        trainersList { person { name } }
+        targetCohortsList { cohortId cohort { id name colorRgb } }
+        eventInstanceRegistrationsByInstanceIdList {
+            id
+            parentRegistrationId
+            person { id name firstName lastName }
+            couple { id man { firstName lastName } woman { firstName lastName } }
+        }
+        location { id name }
+    }
+}

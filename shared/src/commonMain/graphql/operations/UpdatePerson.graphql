@@ -1,0 +1,3 @@
+mutation UpdatePerson($id: BigInt!, $patch: PersonPatch!) {
+  updatePerson(input: {id: $id, patch: $patch}) { clientMutationId }
+}

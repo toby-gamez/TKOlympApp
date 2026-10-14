@@ -1,0 +1,1 @@
+query AnnouncementById($id: BigInt!) { announcement(id: $id) { id title body createdAt updatedAt isSticky status authorName author { id uJmeno uPrijmeni } attachments { nodes { inline file { name contentType url } } } } }

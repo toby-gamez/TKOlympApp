@@ -1,0 +1,17 @@
+query ClubData {
+  tenant(id: "1") {
+    tenantLocationsList { name }
+    tenantTrainersList {
+      person { id firstName lastName prefixTitle suffixTitle }
+      guestPrice45Min { amount currency }
+      guestPayout45Min { amount currency }
+      isVisible
+    }
+    cohortsList(condition: { isVisible: true }, orderBy: [NAME_ASC]) {
+      colorRgb
+      name
+      description
+      location
+    }
+  }
+}

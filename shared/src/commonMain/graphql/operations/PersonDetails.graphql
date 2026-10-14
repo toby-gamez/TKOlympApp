@@ -1,0 +1,14 @@
+query PersonDetails($id: BigInt!) {
+  person(id: $id) {
+    id birthDate lastName firstName email phone prefixTitle suffixTitle wdsfId cstsId gender isTrainer
+    nationality nationalIdNumber instagramUsername tiktokUsername facebookUrl websiteUrl note
+    address { city conscriptionNumber district orientationNumber postalCode region street }
+    activeCouplesList { id man { firstName lastName } woman { firstName lastName } }
+    allCouplesList { id manId womanId since until status }
+    cohortMembershipsList { cohort { id colorRgb name isVisible } since until }
+    cstsProgressList {
+      points finals competitorName
+      category { id name series discipline ageGroup genderGroup class competitorType baseDanceProgramId }
+    }
+  }
+}

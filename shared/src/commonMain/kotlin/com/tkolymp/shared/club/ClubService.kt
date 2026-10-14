@@ -1,5 +1,6 @@
 package com.tkolymp.shared.club
 
+import com.tkolymp.shared.graphql.GraphQlOperations
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.Logger
 import kotlinx.coroutines.CancellationException
@@ -41,25 +42,7 @@ class ClubService(private val client: IGraphQlClient = ServiceLocator.graphQlCli
             val cached: ClubData? = cache.get(cacheKey)
             if (cached != null) return cached
         } catch (e: CancellationException) { throw e } catch (_: Exception) {}
-        val query = """
-            query Query {
-              tenant(id: "1") {
-                tenantLocationsList { name }
-                tenantTrainersList {
-                  person { id firstName lastName prefixTitle suffixTitle }
-                  guestPrice45Min { amount currency }
-                  guestPayout45Min { amount currency }
-                  isVisible
-                }
-                cohortsList(condition: { isVisible: true }, orderBy: [NAME_ASC]) {
-                  colorRgb
-                  name
-                  description
-                  location
-                }
-              }
-            }
-        """.trimIndent()
+        val query = GraphQlOperations.ClubData
 
         val el: JsonElement = try { client.post(query, null) } catch (ex: Exception) {
             Logger.d("ClubService", "fetchClubData failed: ${ex.message}")

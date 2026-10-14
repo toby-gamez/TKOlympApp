@@ -1,0 +1,1 @@
+query ManagementCurrentUser { getCurrentUser { id userProxiesList { person { id isAdmin isTrainer } } } }

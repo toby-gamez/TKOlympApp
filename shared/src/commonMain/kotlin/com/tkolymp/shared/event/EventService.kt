@@ -1,5 +1,6 @@
 package com.tkolymp.shared.event
 
+import com.tkolymp.shared.graphql.GraphQlOperations
 import com.tkolymp.shared.Logger
 import kotlinx.coroutines.CancellationException
 import com.tkolymp.shared.ServiceLocator
@@ -107,147 +108,9 @@ class EventService(
 ) : IEventService {
     
 
-    private val eventByIdQuery = """
-            query EventDetail(${'$'}id: BigInt!) {
-                eventInstance(id: ${'$'}id) {
-                    id
-                    type
-                    name
-                    summary
-                    description
-                    since
-                    until
-                    isCancelled
-                    capacity
-                    remainingPersonSpots
-                    isLocked
-                    isVisible
-                    isPublic
-                    enableNotes
-                    managerPersonIds
-                    locationText
-                    location {
-                        id
-                        name
-                        __typename
-                    }
-                    eventTrainersList: eventInstanceTrainersByInstanceIdList {
-                        id
-                        personId
-                        lessonsOffered
-                        lessonsRemaining
-                        person {
-                            id
-                            name
-                            __typename
-                        }
-                        __typename
-                    }
-                    eventInstancesList: childEventInstancesList(orderBy: SINCE_ASC) {
-                        id
-                        since
-                        until
-                        isCancelled
-                        __typename
-                    }
-                    eventTargetCohortsList: targetCohortsList {
-                        cohortId
-                        cohort {
-                            id
-                            name
-                            colorRgb
-                            __typename
-                        }
-                        __typename
-                    }
-                    eventRegistrationsList: eventInstanceRegistrationsByInstanceIdList(
-                        condition: { registrationStatus: ACTIVE }
-                    ) {
-                        id
-                        parentRegistrationId
-                        note
-                        personId
-                        person {
-                            id
-                            name
-                            firstName
-                            lastName
-                            __typename
-                        }
-                        coupleId
-                        couple {
-                            id
-                            man {
-                                id
-                                name
-                                firstName
-                                lastName
-                                __typename
-                            }
-                            woman {
-                                id
-                                name
-                                firstName
-                                lastName
-                                __typename
-                            }
-                            __typename
-                        }
-                        eventLessonDemandsByRegistrationIdList {
-                            id
-                            lessonCount
-                            trainerId
-                            __typename
-                        }
-                        createdAt
-                        __typename
-                    }
-                    eventExternalRegistrationsList: eventExternalRegistrationsByInstanceIdList {
-                        id
-                        note
-                        email
-                        firstName
-                        lastName
-                        __typename
-                    }
-                    __typename
-                }
-            }
-    """.trimIndent()
+    private val eventByIdQuery = GraphQlOperations.EventDetail
 
-        private val query = """
-                query MyQuery(
-                    $${"startRange"}: Datetime!,
-                    $${"endRange"}: Datetime!,
-                    $${"first"}: Int,
-                    $${"offset"}: Int,
-                    $${"onlyType"}: EventType,
-                    $${"scope"}: EventInstanceRangeScope
-                ) {
-                    eventInstancesForRangeList(startRange: $${"startRange"}, endRange: $${"endRange"}, first: $${"first"}, offset: $${"offset"}, onlyType: $${"onlyType"}, scope: $${"scope"}) {
-                        id
-                        isCancelled
-                        since
-                        until
-                        updatedAt
-                        name
-                        description
-                        type
-                        locationText
-                        isVisible
-                        isPublic
-                        trainersList { person { name } }
-                        targetCohortsList { cohortId cohort { id name colorRgb } }
-                        eventInstanceRegistrationsByInstanceIdList {
-                            id
-                            parentRegistrationId
-                            person { id name firstName lastName }
-                            couple { id man { firstName lastName } woman { firstName lastName } }
-                        }
-                        location { id name }
-                    }
-                }
-        """.trimIndent()
+        private val query = GraphQlOperations.EventsForRange
 
     override suspend fun fetchEventsGroupedByDay(
         startRangeIso: String,
@@ -424,13 +287,7 @@ class EventService(
         return obj
     }
 
-    private val setEventInstanceRegistrationMutation = """
-        mutation SetEventInstanceRegistration(${'$'}input: SetEventInstanceRegistrationInput!) {
-            setEventInstanceRegistration(input: ${'$'}input) {
-                eventInstanceRegistration { id registrationStatus }
-            }
-        }
-    """.trimIndent()
+    private val setEventInstanceRegistrationMutation = GraphQlOperations.SetEventInstanceRegistration
 
     override suspend fun setEventInstanceRegistration(
         instanceId: Long,
@@ -481,7 +338,7 @@ class EventService(
     }
 
     override suspend fun setLessonDemand(registrationId: String, trainerId: Long, lessonCount: Int): Boolean {
-        val mutation = """mutation SetLessonDemand(${'$'}input: SetLessonDemandInput!) { setLessonDemand(input: ${'$'}input) { eventLessonDemand { id } } }"""
+        val mutation = GraphQlOperations.SetLessonDemand
         val variables = buildJsonObject {
             put("input", buildJsonObject {
                 put("instanceRegistrationId", JsonPrimitive(registrationId))

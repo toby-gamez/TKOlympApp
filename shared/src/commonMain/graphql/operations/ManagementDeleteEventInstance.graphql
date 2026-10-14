@@ -1,0 +1,3 @@
+mutation ManagementDeleteEventInstance($input: DeleteEventInstanceInput!) {
+  deleteEventInstance(input: $input) { eventInstance { id } }
+}

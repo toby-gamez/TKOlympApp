@@ -1,5 +1,6 @@
 package com.tkolymp.shared.competitions
 
+import com.tkolymp.shared.graphql.GraphQlOperations
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.cache.CacheService
@@ -19,19 +20,6 @@ import kotlin.time.Duration.Companion.minutes
 // (the backing SQL functions are `@omit`); this data is now served through the generic
 // `activityTimelineList` query filtered by `pKinds`, see
 // https://github.com/zarybnicky/Sirimbo/blob/master/schema/functions/public.activity_timeline(timestamptz,%20timestamptz,%20bigint[],%20bigint,%20activity_timeline_kind[],%20event_type[]).sql
-private const val CATEGORY_FIELD_BLOCK = """
-    category {
-        id
-        name
-        series
-        discipline
-        ageGroup
-        genderGroup
-        class
-        competitorType
-        baseDanceProgramId
-    }
-"""
 
 class CompetitionService(
     private val client: IGraphQlClient = ServiceLocator.graphQlClient,
@@ -40,52 +28,7 @@ class CompetitionService(
     private val offlineSyncManager: OfflineSyncManager?
         get() = try { ServiceLocator.offlineSyncManager } catch (_: Exception) { null }
 
-    private val timelineQuery = """
-        query CompetitionTimeline(${'$'}first: Int, ${'$'}pSince: Datetime, ${'$'}pUntil: Datetime, ${'$'}pPersonIds: [BigInt], ${'$'}pKinds: [ActivityTimelineKind]) {
-            activityTimelineList(first: ${'$'}first, offset: 0, pSince: ${'$'}pSince, pUntil: ${'$'}pUntil, pPersonIds: ${'$'}pPersonIds, pCohortId: null, pKinds: ${'$'}pKinds) {
-                kind
-                personId
-                personName
-                ... on ActivityCompetitionBrief {
-                    federation
-                    federatedPersonId
-                    competitorId
-                    competitorName
-                    competitorType
-                    competitionId
-                    competitionDate
-                    competitionType
-                    checkInEnd
-                    competitionEventId
-                    competitionEventName
-                    competitionEventLocation
-                    dances
-                    participants
-                    $CATEGORY_FIELD_BLOCK
-                }
-                ... on ActivityCompetitionResult {
-                    federation
-                    federatedPersonId
-                    competitorId
-                    competitorName
-                    competitorType
-                    competitionId
-                    competitionDate
-                    competitionType
-                    competitionEventId
-                    competitionEventName
-                    competitionEventLocation
-                    dances
-                    participants
-                    ranking
-                    rankingTo
-                    pointGain
-                    isFinal
-                    $CATEGORY_FIELD_BLOCK
-                }
-            }
-        }
-    """.trimIndent()
+    private val timelineQuery = GraphQlOperations.CompetitionTimeline
 
     private fun toDatetime(date: String): String = "${date}T00:00:00Z"
 

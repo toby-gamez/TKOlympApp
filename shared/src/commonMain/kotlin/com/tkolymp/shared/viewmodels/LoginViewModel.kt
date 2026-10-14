@@ -58,7 +58,16 @@ class LoginViewModel(
                 return false
             }
 
-            val personId = try { userService.fetchAndStorePersonId() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("LoginViewModel", "fetchAndStorePersonId failed: ${e.message}"); null }
+            // Anything cached before the token existed (people, club, events) is the anonymous view of the data
+            // (trainers + visible cohorts only); drop it so the first authenticated load is not shadowed by it.
+            try { ServiceLocator.cacheService.clear() } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+
+            var personId: String? = null
+            for (attempt in 1..3) {
+                personId = try { userService.fetchAndStorePersonId() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("LoginViewModel", "fetchAndStorePersonId failed: ${e.message}"); null }
+                if (personId != null) break
+                if (attempt < 3) kotlinx.coroutines.delay(500L * attempt)
+            }
             if (personId == null) {
                 Logger.d("LoginViewModel", "Login OK but no personId available — proceeding without it")
             } else {

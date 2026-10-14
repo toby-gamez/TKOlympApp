@@ -1,0 +1,1 @@
+query CurrentUserProxies { getCurrentUser { userProxiesList { status person { id firstName lastName birthDate cstsId } } } }

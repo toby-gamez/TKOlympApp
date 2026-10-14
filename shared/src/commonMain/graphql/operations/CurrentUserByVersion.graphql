@@ -1,0 +1,1 @@
+query CurrentUserByVersion($versionId: String!) { getCurrentUser(versionId: $versionId) { uEmail uJmeno uLogin createdAt id lastActiveAt lastLogin tenantId uPrijmeni updatedAt } }

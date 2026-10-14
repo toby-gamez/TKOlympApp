@@ -18,8 +18,8 @@ android {
         applicationId = "com.tkolymp.tkolympapp"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 24
-        versionName = "2.1.2"
+        versionCode = 26
+        versionName = "2.1.4"
         buildConfigField("String", "API_BASE_URL", "\"${localProps["api.base.url"] ?: ""}\"")
         buildConfigField("String", "TENANT_ID", "\"${localProps["tenant.id"] ?: ""}\"")
         ndk {
@@ -52,6 +52,9 @@ android {
         }
     }
     buildTypes {
+        getByName("debug") {
+            applicationIdSuffix = ".debug"
+        }
         getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true

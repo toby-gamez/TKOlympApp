@@ -1,5 +1,6 @@
 package com.tkolymp.shared.user
 
+import com.tkolymp.shared.graphql.GraphQlOperations
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.people.ActiveCouple
@@ -49,7 +50,7 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
      * and stores them. The active person is kept if it is still linked, otherwise the first one.
      */
     suspend fun fetchAndStorePersonId(): String? {
-        val query = "query MyQuery { getCurrentUser { userProxiesList { status person { id firstName lastName birthDate cstsId } } } }"
+        val query = GraphQlOperations.CurrentUserProxies
         val resp = try { client.post(query, null) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return null }
         val linked = try {
             resp.jsonObject["data"]?.jsonObject?.get("getCurrentUser")?.jsonObject?.get("userProxiesList")?.jsonArray
@@ -107,7 +108,7 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
     }
 
     suspend fun fetchAndStoreCurrentUser(versionId: String): JsonObject? {
-        val query = "query MyQuery(\$versionId: String!) { getCurrentUser(versionId: \$versionId) { uEmail uJmeno uLogin createdAt id lastActiveAt lastLogin tenantId uPrijmeni updatedAt } }"
+        val query = GraphQlOperations.CurrentUserByVersion
         val variables = buildJsonObject { put("versionId", JsonPrimitive(versionId)) }
         val resp = try { client.post(query, variables) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return null }
         val data = resp.jsonObject["data"]?.jsonObject?.get("getCurrentUser")?.jsonObject
@@ -116,7 +117,7 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
     }
 
     suspend fun fetchAndStoreActiveCouples(): List<String> {
-        val query = "query kveri { users { nodes { userProxiesList { person { id activeCouplesList { id man { firstName lastName } woman { firstName lastName } } cohortMembershipsList { cohort { id colorRgb name } } } } } } }"
+        val query = GraphQlOperations.ActiveCouples
         val resp = try { client.post(query, null) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return emptyList() }
         val ids = mutableListOf<String>()
         val activeId = storage.getPersonId()
@@ -142,22 +143,11 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
     suspend fun fetchAndStorePersonDetails(personId: String): JsonObject? {
         // Try sending id as numeric BigInt when possible (server expects BigInt)
         val idLong = personId.toLongOrNull()
-        val baseSelection = "person(id: \$id) { id birthDate lastName firstName email phone prefixTitle suffixTitle wdsfId cstsId gender isTrainer nationality nationalIdNumber instagramUsername tiktokUsername facebookUrl websiteUrl note address { city conscriptionNumber district orientationNumber postalCode region street } activeCouplesList { id man { firstName lastName } woman { firstName lastName } } allCouplesList { id manId womanId since until status } cohortMembershipsList { cohort { id colorRgb name isVisible } since until } cstsProgressList { points finals competitorName category { id name series discipline ageGroup genderGroup class competitorType baseDanceProgramId } } }"
 
-        var query: String
-        var variables: JsonObject
-        var resp: JsonElement
-
-        if (idLong != null) {
-            query = "query MyQuery(\$id: BigInt!) { $baseSelection }"
-            variables = buildJsonObject { put("id", JsonPrimitive(idLong)) }
-            resp = try { client.post(query, variables) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return null }
-        } else {
-            // fallback to string variable if id is not numeric
-            query = "query MyQuery(\$id: String!) { $baseSelection }"
-            variables = buildJsonObject { put("id", JsonPrimitive(personId)) }
-            resp = try { client.post(query, variables) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return null }
-        }
+        val query = GraphQlOperations.PersonDetails
+        // A non-numeric id is sent as-is; the server rejects it (same outcome as the former String! fallback).
+        val variables = buildJsonObject { put("id", if (idLong != null) JsonPrimitive(idLong) else JsonPrimitive(personId)) }
+        val resp = try { client.post(query, variables) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return null }
 
         val data = resp.jsonObject["data"]?.jsonObject?.get("person")?.jsonObject
         if (data != null) {
@@ -262,10 +252,8 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
         }
         if (!verified) { lastApiError = com.tkolymp.shared.language.AppStrings.current.oldPasswordIncorrect; return false }
 
-        // Insert the password directly into the mutation (backend expects a simple string).
-        val esc = newPass.replace("\\", "\\\\").replace("\"", "\\\"")
-        val query = "mutation { changePassword(input: {newPass: \"$esc\"}) { clientMutationId } }"
-        val resp = try { client.post(query, null) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return false }
+        val variables = buildJsonObject { put("input", buildJsonObject { put("newPass", JsonPrimitive(newPass)) }) }
+        val resp = try { client.post(GraphQlOperations.ChangePassword, variables) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return false }
         val data = try { resp.jsonObject["data"]?.jsonObject?.get("changePassword") } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
         return data != null
     }
@@ -339,10 +327,7 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
             buildJsonObject { put("id", JsonPrimitive(personId)); put("patch", patch) }
         }
 
-        val query = if (idLong != null)
-            "mutation UpdatePerson(\$id: BigInt!, \$patch: PersonPatch!) { updatePerson(input: {id: \$id, patch: \$patch}) { clientMutationId } }"
-        else
-            "mutation UpdatePerson(\$id: String!, \$patch: PersonPatch!) { updatePerson(input: {id: \$id, patch: \$patch}) { clientMutationId } }"
+        val query = GraphQlOperations.UpdatePerson
 
         Logger.d("UserService", "UpdatePerson query: $query")
         Logger.d("UserService", "UpdatePerson variables: $variables")

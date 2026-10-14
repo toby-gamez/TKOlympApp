@@ -1,0 +1,6 @@
+query ManagementAnnouncementDraft($id: BigInt!) {
+  announcement(id: $id) {
+    id title body isSticky status authorId
+    announcementAudiences { nodes { cohortId } }
+  }
+}

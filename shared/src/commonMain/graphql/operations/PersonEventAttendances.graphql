@@ -1,0 +1,3 @@
+query PersonEventAttendances($id: BigInt!) {
+  person(id: $id) { eventAttendancesList { status instanceId } }
+}
