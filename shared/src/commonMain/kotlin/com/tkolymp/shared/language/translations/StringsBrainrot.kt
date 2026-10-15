@@ -771,6 +771,8 @@ val StringsBrainrot = Strings(
         readPolicyLinkLabel = "Read the Privacy Policy fr",
         checkboxLabel = "I read it and I'm cool with the Privacy Policy, no cap",
         continueButton = "Let's go fr",
+        errorReportingLabel = "Send anonymous crash reports, no cap",
+        errorReportingDescription = "Auto-sends error logs (no personal info) so the dev can fix bugs. You can turn it off, fr.",
     ),
     feedback = FeedbackStrings(
         sectionTitle = "Spill the tea",

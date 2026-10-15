@@ -6,4 +6,6 @@ data class PrivacyConsentStrings(
     val readPolicyLinkLabel: String = "Read the Privacy Policy",
     val checkboxLabel: String = "I have read and accept the Privacy Policy",
     val continueButton: String = "Continue",
+    val errorReportingLabel: String = "Send anonymous error reports",
+    val errorReportingDescription: String = "The app automatically sends technical error and crash reports (no personal data) so problems can be fixed. You can turn this off.",
 )

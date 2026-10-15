@@ -43,4 +43,12 @@ actual class OnboardingStorage actual constructor(platformContext: Any) {
         defaults.setBool(true, "privacy_consent_accepted")
         defaults.synchronize()
     }
+
+    actual suspend fun isErrorReportingEnabled(): Boolean =
+        if (defaults.objectForKey("error_reporting_enabled") == null) true else defaults.boolForKey("error_reporting_enabled")
+
+    actual suspend fun setErrorReportingEnabled(enabled: Boolean) {
+        defaults.setBool(enabled, "error_reporting_enabled")
+        defaults.synchronize()
+    }
 }

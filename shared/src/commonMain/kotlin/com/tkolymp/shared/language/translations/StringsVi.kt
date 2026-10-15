@@ -770,6 +770,8 @@ val StringsVi = Strings(
         readPolicyLinkLabel = "Đọc Chính sách quyền riêng tư",
         checkboxLabel = "Tôi đã đọc và đồng ý với Chính sách quyền riêng tư",
         continueButton = "Tiếp tục",
+        errorReportingLabel = "Gửi báo cáo lỗi ẩn danh",
+        errorReportingDescription = "Ứng dụng tự động gửi báo cáo lỗi và sự cố kỹ thuật (không có dữ liệu cá nhân) để có thể khắc phục. Bạn có thể tắt tính năng này.",
     ),
     feedback = FeedbackStrings(
         sectionTitle = "Phản hồi",

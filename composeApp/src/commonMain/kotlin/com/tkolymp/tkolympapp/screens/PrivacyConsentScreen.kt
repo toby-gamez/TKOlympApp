@@ -16,6 +16,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,10 +39,11 @@ import com.tkolymp.tkolympapp.ui.theme.AppTheme
 @Composable
 fun PrivacyConsentScreen(
     onReadPolicyClick: () -> Unit,
-    onAccept: () -> Unit,
+    onAccept: (errorReportingEnabled: Boolean) -> Unit,
 ) {
     val strings = AppStrings.current.privacyConsent
     var accepted by rememberSaveable { mutableStateOf(false) }
+    var errorReporting by rememberSaveable { mutableStateOf(true) }
 
     Column(
         modifier = Modifier
@@ -84,6 +86,30 @@ fun PrivacyConsentScreen(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
+                .clickable(onClickLabel = strings.errorReportingLabel) { errorReporting = !errorReporting }
+                .padding(horizontal = 8.dp, vertical = 4.dp)
+                .semantics { contentDescription = strings.errorReportingLabel }
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = strings.errorReportingLabel,
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = strings.errorReportingDescription,
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Switch(checked = errorReporting, onCheckedChange = { errorReporting = it })
+        }
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
                 .clickable(onClickLabel = strings.checkboxLabel) { accepted = !accepted }
                 .padding(horizontal = 8.dp, vertical = 4.dp)
                 .semantics { contentDescription = strings.checkboxLabel }
@@ -100,7 +126,7 @@ fun PrivacyConsentScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = onAccept,
+            onClick = { onAccept(errorReporting) },
             enabled = accepted,
             modifier = Modifier
                 .fillMaxWidth()

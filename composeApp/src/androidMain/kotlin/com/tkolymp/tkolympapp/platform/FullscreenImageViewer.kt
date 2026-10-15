@@ -62,7 +62,13 @@ actual fun FullscreenImageViewer(imageUrl: String, onDismiss: () -> Unit) {
                         .build()
                 } else imageUrl
             }
+            // Authenticated requests go through the certificate-pinned client; never follow redirects with the token.
+            val imageLoader = remember(needsAuth) {
+                if (needsAuth) coil.ImageLoader.Builder(context).okHttpClient(com.tkolymp.shared.pinnedOkHttpClient()).build()
+                else coil.Coil.imageLoader(context)
+            }
             AsyncImage(
+                imageLoader = imageLoader,
                 // wait for the token lookup so the first request isn't fired unauthenticated
                 model = if (tokenState == null) null else model,
                 contentDescription = null,

@@ -164,7 +164,9 @@ fun AppContent(
                 AppearanceSettings.setThemeMode(when (themeRaw) { "light" -> ThemeMode.LIGHT; "dark" -> ThemeMode.DARK; else -> ThemeMode.SYSTEM })
                 tutorialSeen = try { ServiceLocator.onboardingStorage.hasSeenTutorial() } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
                 consentGiven = try { onboardingVm?.hasAcceptedPrivacyConsent() ?: false } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
-                ErrorReporter.setDeviceInfoConsented(consentGiven == true)
+                val reportingEnabled = consentGiven == true && (try { ServiceLocator.onboardingStorage.isErrorReportingEnabled() } catch (_: Exception) { true })
+                ErrorReporter.setDeviceInfoConsented(reportingEnabled)
+                ErrorReporter.setEnabled(reportingEnabled)
                 showOnboarding = !seen
                 loggedIn = has
                 try {
@@ -326,10 +328,12 @@ fun AppContent(
                                         }
                                         uriHandler.openUri("https://toby-gamez.github.io/tkolymp-docs.github.io/privacy/?lang=$langCode")
                                     },
-                                    onAccept = {
+                                    onAccept = { errorReportingEnabled ->
                                         scope.launch {
+                                            try { ServiceLocator.onboardingStorage.setErrorReportingEnabled(errorReportingEnabled) } catch (_: Exception) {}
                                             try { ServiceLocator.onboardingStorage.setPrivacyConsentAccepted() } catch (_: Exception) {}
-                                            ErrorReporter.setDeviceInfoConsented(true)
+                                            ErrorReporter.setDeviceInfoConsented(errorReportingEnabled)
+                                            ErrorReporter.setEnabled(errorReportingEnabled)
                                             consentGiven = true
                                         }
                                     }

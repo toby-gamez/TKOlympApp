@@ -769,6 +769,8 @@ val StringsDe = Strings(
         readPolicyLinkLabel = "Datenschutzerklärung lesen",
         checkboxLabel = "Ich habe die Datenschutzerklärung gelesen und akzeptiere sie",
         continueButton = "Weiter",
+        errorReportingLabel = "Anonyme Fehlerberichte senden",
+        errorReportingDescription = "Die App sendet automatisch technische Fehler- und Absturzberichte (ohne persönliche Daten), damit sie behoben werden können. Du kannst das abschalten.",
     ),
     feedback = FeedbackStrings(
         sectionTitle = "Feedback",

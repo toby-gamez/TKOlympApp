@@ -770,6 +770,8 @@ val StringsUa = Strings(
         readPolicyLinkLabel = "Переглянути Політику конфіденційності",
         checkboxLabel = "Я прочитав(ла) та приймаю Політику конфіденційності",
         continueButton = "Продовжити",
+        errorReportingLabel = "Надсилати анонімні звіти про помилки",
+        errorReportingDescription = "Застосунок автоматично надсилає технічні звіти про помилки та збої (без особистих даних), щоб їх можна було виправити. Це можна вимкнути.",
     ),
     feedback = FeedbackStrings(
         sectionTitle = "Зворотній зв'язок",

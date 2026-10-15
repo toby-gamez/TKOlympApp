@@ -814,6 +814,8 @@ val StringsCs = Strings(
         readPolicyLinkLabel = "Přečíst Zásady ochrany osobních údajů",
         checkboxLabel = "Přečetl/a jsem si a souhlasím se Zásadami ochrany osobních údajů",
         continueButton = "Pokračovat",
+        errorReportingLabel = "Odesílat anonymní hlášení o chybách",
+        errorReportingDescription = "Aplikace automaticky odesílá technické záznamy o chybách a pádech (bez osobních údajů), aby je šlo opravit. Můžeš to vypnout.",
     ),
     feedback = FeedbackStrings(
         sectionTitle = "Zpětná vazba",

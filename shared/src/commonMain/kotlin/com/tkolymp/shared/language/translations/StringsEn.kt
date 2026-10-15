@@ -781,6 +781,8 @@ val StringsEn = Strings(
         readPolicyLinkLabel = "Read the Privacy Policy",
         checkboxLabel = "I have read and accept the Privacy Policy",
         continueButton = "Continue",
+        errorReportingLabel = "Send anonymous error reports",
+        errorReportingDescription = "The app automatically sends technical error and crash reports (no personal data) so problems can be fixed. You can turn this off.",
     ),
     feedback = FeedbackStrings(
         sectionTitle = "Feedback",

@@ -770,6 +770,8 @@ val StringsSl = Strings(
         readPolicyLinkLabel = "Preberi pravilnik o zasebnosti",
         checkboxLabel = "Prebral/a sem in se strinjam s pravilnikom o zasebnosti",
         continueButton = "Naprej",
+        errorReportingLabel = "Pošiljaj anonimna poročila o napakah",
+        errorReportingDescription = "Aplikacija samodejno pošilja tehnična poročila o napakah in zrušitvah (brez osebnih podatkov), da jih lahko odpravimo. To lahko izključiš.",
     ),
     feedback = FeedbackStrings(
         sectionTitle = "Povratne informacije",

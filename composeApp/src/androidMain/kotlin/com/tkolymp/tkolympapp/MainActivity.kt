@@ -32,6 +32,8 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 
 @SuppressLint("InvalidFragmentVersionForActivityResult")
+private val DEEP_LINK_ROUTE_PATTERN = Regex("^[a-z][A-Za-z0-9_-]{0,40}(/[A-Za-z0-9_-]{1,40}){0,3}(\\?[A-Za-z0-9_=&-]{1,80})?$")
+
 class MainActivity : ComponentActivity() {
     private val requestNotificationPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         // permission result handled; we don't strictly need to do anything here
@@ -54,7 +56,8 @@ class MainActivity : ComponentActivity() {
         // and strip it so it can't be applied again.
         val launchedFromHistory = (intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0
         val deepLinkRoute = if (savedInstanceState == null && !launchedFromHistory) {
-            intent.getStringExtra("DEEP_LINK_ROUTE")
+            // MainActivity is exported, so any app can send this extra: accept only plain in-app route shapes.
+            intent.getStringExtra("DEEP_LINK_ROUTE")?.takeIf { DEEP_LINK_ROUTE_PATTERN.matches(it) }
         } else null
         intent.removeExtra("DEEP_LINK_ROUTE")
 

@@ -48,6 +48,8 @@ import platform.Foundation.NSSetUncaughtExceptionHandler
 // Keep in sync with the Android OkHttp pins.
 private val certPinner: CertificatePinner = CertificatePinner.Builder()
     .add("tkolymp.cz", "sha256/mEflZT5enoR1FuXLgYYGqnVEoZvmf9c2bVBpiOjYQ0c=")  // GTS Root R4 (ECDSA)
+    .add("tkolymp.cz", "sha256/hxqRlPTu1bMS/0DITB1SSu0vd4u/8l8TjPgfaAp63Gc=")  // GTS Root R1 (RSA, backup)
+    .add("tkolymp.cz", "sha256/kIdp6NNEd8wsugYyyIYFsi1ylMCED3hZbSR8ZFsa/A4=")  // GTS WE1 intermediate (backup)
     .build()
 
 // Feedback ("Report a bug" / "Suggest a feature") posts to Tobiso.Web, a separate backend from the club GraphQL API.
@@ -135,6 +137,8 @@ suspend fun initNetworking(baseUrl: String, tenantId: String = "1") {
 
     ServiceLocator.init(container)
 
+    val onboarding = OnboardingStorage("")
+    ErrorReporter.setEnabled(onboarding.hasAcceptedPrivacyConsent() && onboarding.isErrorReportingEnabled())
     ErrorReporter.flushPendingCrashReport(CrashReportStorage(""))
 
     auth.initialize()
@@ -150,7 +154,7 @@ suspend fun initNetworking(baseUrl: String, tenantId: String = "1") {
 private fun installGlobalCrashReporting() {
     NSSetUncaughtExceptionHandler(staticCFunction { exception: NSException? ->
         try {
-            if (!Logger.isDebug) {
+            if (!Logger.isDebug && ErrorReporter.enabled) {
                 val throwable = RuntimeException(exception?.reason ?: exception?.name ?: "Uncaught NSException")
                 val report = ErrorReporter.buildCrashReport("Uncaught NSException", throwable)
                 globalCrashStorage.savePendingCrash(report)

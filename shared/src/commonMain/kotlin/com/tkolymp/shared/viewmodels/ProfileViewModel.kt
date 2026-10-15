@@ -90,6 +90,17 @@ class ProfileViewModel(
         try { tokenStorage.clear() } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         try { userService.clear() } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         try { ServiceLocator.cacheService.clear() } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+        // Everything below is personal data of the account that just logged out; a shared or handed-over
+        // device must not show it offline, in widgets or as reminders for the next user.
+        try { ServiceLocator.offlineDataStorage.deleteByPrefix("") } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+        try { ServiceLocator.notificationScheduler.cancelAllNotifications() } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+        try {
+            val notifications = ServiceLocator.notificationStorage
+            notifications.saveScheduledNotifications(emptyList())
+            notifications.saveReceivedNotifications(emptyList())
+            notifications.saveEventReminders(emptyList())
+            notifications.saveScheduledBirthdayNotificationIds(emptyList())
+        } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         OtherViewModel.clearCache()
     }
 }

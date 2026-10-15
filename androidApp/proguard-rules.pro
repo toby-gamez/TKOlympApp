@@ -3,7 +3,6 @@
 
 # Keep kotlinx.serialization generated serializers
 -keepclassmembers class **$$serializer { public static final *; }
--keep class kotlinx.serialization.** { *; }
 -dontwarn kotlinx.serialization.**
 
 # Keep Composable-annotated methods (used by Compose at runtime)
@@ -26,5 +25,4 @@
 # OkHttp3 rules (uses reflection internally)
 -dontwarn okhttp3.**
 -dontwarn okio.**
--keep class okhttp3.** { *; }
--keep interface okhttp3.** { *; }
+# (no blanket -keep: OkHttp ships consumer rules, and keeping it whole defeats shrinking/obfuscation)

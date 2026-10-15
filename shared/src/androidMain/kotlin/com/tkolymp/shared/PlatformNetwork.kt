@@ -40,8 +40,20 @@ import okhttp3.CertificatePinner
 // Pin the root key rather than the leaf or intermediate: the leaf key changes on every renewal and
 // Google rotates between intermediates (WE1, WE2, WR1, ...). A connection passes if any certificate
 // in the validated chain matches one pin.
-private val certificatePinner = CertificatePinner.Builder()
+// Backup pins keep the app working if Google serves the chain from another root/intermediate.
+val certificatePinner: CertificatePinner = CertificatePinner.Builder()
     .add("tkolymp.cz", "sha256/mEflZT5enoR1FuXLgYYGqnVEoZvmf9c2bVBpiOjYQ0c=")  // GTS Root R4 (ECDSA)
+    .add("tkolymp.cz", "sha256/hxqRlPTu1bMS/0DITB1SSu0vd4u/8l8TjPgfaAp63Gc=")  // GTS Root R1 (RSA, backup)
+    .add("tkolymp.cz", "sha256/kIdp6NNEd8wsugYyyIYFsi1ylMCED3hZbSR8ZFsa/A4=")  // GTS WE1 intermediate (backup)
+    .build()
+
+/** OkHttp client with the same pinning as the GraphQL client, for the few requests made outside Ktor (WebView, Coil). */
+fun pinnedOkHttpClient(): okhttp3.OkHttpClient = okhttp3.OkHttpClient.Builder()
+    .certificatePinner(certificatePinner)
+    .connectTimeout(15, TimeUnit.SECONDS)
+    .readTimeout(30, TimeUnit.SECONDS)
+    .followRedirects(false)
+    .followSslRedirects(false)
     .build()
 
 // Feedback ("Report a bug" / "Suggest a feature") posts to Tobiso.Web, a separate backend from the club GraphQL API.
@@ -132,6 +144,8 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
 
     ServiceLocator.init(container)
 
+    val onboarding = OnboardingStorage(context)
+    ErrorReporter.setEnabled(onboarding.hasAcceptedPrivacyConsent() && onboarding.isErrorReportingEnabled())
     ErrorReporter.flushPendingCrashReport(CrashReportStorage(context))
 
     auth.initialize()
@@ -148,7 +162,7 @@ private fun installGlobalCrashReporting(context: Context) {
     val previousHandler = Thread.getDefaultUncaughtExceptionHandler()
     Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
         try {
-            if (!Logger.isDebug) {
+            if (!Logger.isDebug && ErrorReporter.enabled) {
                 val report = ErrorReporter.buildCrashReport("Uncaught exception on thread '${thread.name}'", throwable)
                 crashStorage.savePendingCrash(report)
             }

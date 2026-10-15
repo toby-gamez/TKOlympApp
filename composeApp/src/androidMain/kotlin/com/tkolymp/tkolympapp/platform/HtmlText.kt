@@ -31,6 +31,7 @@ actual fun HtmlText(
     onBankAccountCopy: ((String) -> Unit)?
 ) {
     var contentHeightPx by remember { mutableStateOf(0) }
+    val pinnedClient = remember { com.tkolymp.shared.pinnedOkHttpClient() }
     val density = LocalDensity.current
     val sizedModifier = modifier
     var lastLoadedHtml by remember { mutableStateOf<String?>(null) }
@@ -54,7 +55,10 @@ actual fun HtmlText(
                 }
                 webViewClient = object : WebViewClient() {
                     override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
-                        // open links in external browser
+                        // Only a real tap may leave the page, and only for plain web/mail/phone links;
+                        // content must not be able to fire intent:/custom-scheme URLs via script redirects.
+                        val scheme = request.url.scheme?.lowercase()
+                        if (!request.hasGesture() || scheme !in setOf("http", "https", "mailto", "tel")) return true
                         val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, request.url)
                         intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
                         try { ctx.startActivity(intent) } catch (_: Throwable) {}
@@ -67,18 +71,22 @@ actual fun HtmlText(
                         val url = request.url
                         if (request.method != "GET" || url.scheme != "https" || url.host != "tkolymp.cz" ||
                             url.path?.startsWith("/f/") != true) return null
+                        // Content is sanitised (no scripts), so this only fires for <img> tags; still require a
+                        // pinned connection and never follow redirects so the token can't be sent elsewhere.
                         return try {
                             val token = kotlinx.coroutines.runBlocking { com.tkolymp.shared.ServiceLocator.tokenStorage.getToken() }
                                 ?: return null
-                            val conn = java.net.URL(url.toString()).openConnection() as java.net.HttpURLConnection
-                            conn.connectTimeout = 15_000
-                            conn.readTimeout = 30_000
-                            conn.setRequestProperty("Authorization", "Bearer $token")
-                            // the site serves /f/* using its session cookie (value is the same JWT)
-                            conn.setRequestProperty("Cookie", "rozpisovnik=$token")
-                            if (conn.responseCode !in 200..299) { conn.disconnect(); return null }
-                            val mime = conn.contentType?.substringBefore(';')?.trim() ?: "application/octet-stream"
-                            android.webkit.WebResourceResponse(mime, null, conn.inputStream)
+                            val req = okhttp3.Request.Builder()
+                                .url(url.toString())
+                                .header("Authorization", "Bearer $token")
+                                // the site serves /f/* using its session cookie (value is the same JWT)
+                                .header("Cookie", "rozpisovnik=$token")
+                                .build()
+                            val resp = pinnedClient.newCall(req).execute()
+                            val body = resp.body
+                            if (!resp.isSuccessful || body == null) { resp.close(); return null }
+                            val mime = resp.header("Content-Type")?.substringBefore(';')?.trim() ?: "application/octet-stream"
+                            android.webkit.WebResourceResponse(mime, null, body.byteStream())
                         } catch (_: Throwable) { null }
                     }
 
@@ -113,6 +121,7 @@ actual fun HtmlText(
                     @android.webkit.JavascriptInterface
                     fun onImageClick(url: String) {
                         if (onImageClick == null) return
+                        if (!url.startsWith("https://") && !url.startsWith("http://")) return
                         try {
                             android.os.Handler(android.os.Looper.getMainLooper()).post {
                                 onImageClick(url)
@@ -140,7 +149,7 @@ actual fun HtmlText(
             val htmlNoInline = html.replace(Regex("<([a-zA-Z0-9]+)([^>]*?) style=\\\".*?\\\"([^>]*?)>", RegexOption.IGNORE_CASE)) {
                 "<" + it.groupValues[1] + it.groupValues[2] + it.groupValues[3] + ">"
             }
-            val htmlAutoLinked = autoLinkHtmlBody(htmlNoInline)
+            val htmlAutoLinked = autoLinkHtmlBody(com.tkolymp.shared.html.HtmlSanitizer.sanitize(htmlNoInline))
                         val selectionColor = if (selectable) {
                                 // Use a semi-transparent version of linkColor or fallback
                                 val argb = linkColor.takeIf { it != Color.Unspecified }?.toArgb() ?: 0xFF0088CC.toInt()
@@ -148,19 +157,12 @@ actual fun HtmlText(
                                 val alpha = "40" // ~25% opacity
                                 "::selection { background: $rgb$alpha; }"
                         } else ""
-                        val injectClickScript = buildString {
-                            append("<script>document.addEventListener('DOMContentLoaded', function(){")
-                            if (onImageClick != null) {
-                                append("var imgs=document.getElementsByTagName('img');for(var i=0;i<imgs.length;i++){(function(){var s=imgs[i].src;imgs[i].onclick=function(){window.Android.onImageClick(s);};})();}")
-                            }
-                            append("var accs=document.getElementsByClassName('tko-bank-account');for(var j=0;j<accs.length;j++){(function(){var acc=accs[j].getAttribute('data-account');accs[j].onclick=function(){window.Android.onBankAccountClick(acc);};})();}")
-                            append("});</script>")
-                        }
 
                         val styledHtml = """
                                 <!DOCTYPE html>
                                 <html>
                                 <head>
+                                <meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; img-src https: data:; style-src 'unsafe-inline'; script-src 'none'; form-action 'none'; base-uri 'none'\">
                                 <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
                                 <meta name=\"format-detection\" content=\"telephone=no, date=no, address=no, email=no\">
                                 <style>
@@ -179,7 +181,6 @@ actual fun HtmlText(
                                 </style>
                                 </head>
                                 <body>$htmlAutoLinked</body>
-                                $injectClickScript
                                 </html>
                         """.trimIndent()
             if (styledHtml != lastLoadedHtml) {

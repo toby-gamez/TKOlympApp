@@ -58,7 +58,7 @@ actual fun HtmlText(
     val htmlNoInline = html.replace(Regex("<([a-zA-Z0-9]+)([^>]*?) style=\\\".*?\\\"([^>]*?)>", RegexOption.IGNORE_CASE)) {
         "<" + it.groupValues[1] + it.groupValues[2] + it.groupValues[3] + ">"
     }
-    val htmlAutoLinked = autoLinkHtmlBody(htmlNoInline)
+    val htmlAutoLinked = autoLinkHtmlBody(com.tkolymp.shared.html.HtmlSanitizer.sanitize(htmlNoInline))
     val styledHtml = """<!DOCTYPE html><html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
@@ -114,7 +114,9 @@ img, picture, video { width:100% !important; max-width:100% !important; height:a
                         if (decidePolicyForNavigationAction.navigationType ==
                             platform.WebKit.WKNavigationTypeLinkActivated && url != null
                         ) {
-                            UIApplication.sharedApplication.openURL(url)
+                            if (url.scheme?.lowercase() in setOf("http", "https", "mailto", "tel")) {
+                                UIApplication.sharedApplication.openURL(url)
+                            }
                             decisionHandler(WKNavigationActionPolicy.WKNavigationActionPolicyCancel)
                         } else {
                             decisionHandler(WKNavigationActionPolicy.WKNavigationActionPolicyAllow)

@@ -770,6 +770,8 @@ val StringsSk = Strings(
         readPolicyLinkLabel = "Prečítať Zásady ochrany osobných údajov",
         checkboxLabel = "Prečítal/a som si a súhlasím so Zásadami ochrany osobných údajov",
         continueButton = "Pokračovať",
+        errorReportingLabel = "Odosielať anonymné hlásenia o chybách",
+        errorReportingDescription = "Aplikácia automaticky odosiela technické záznamy o chybách a pádoch (bez osobných údajov), aby sa dali opraviť. Môžeš to vypnúť.",
     ),
     feedback = FeedbackStrings(
         sectionTitle = "Spätná väzba",

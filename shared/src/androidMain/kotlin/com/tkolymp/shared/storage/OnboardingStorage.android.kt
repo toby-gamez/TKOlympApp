@@ -40,4 +40,11 @@ actual class OnboardingStorage actual constructor(platformContext: Any) {
     actual suspend fun setPrivacyConsentAccepted() {
         prefs.edit().putBoolean("privacy_consent_accepted", true).apply()
     }
+
+    actual suspend fun isErrorReportingEnabled(): Boolean =
+        prefs.getBoolean("error_reporting_enabled", true)
+
+    actual suspend fun setErrorReportingEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean("error_reporting_enabled", enabled).apply()
+    }
 }

@@ -19,7 +19,9 @@ import kotlinx.coroutines.sync.withLock
  * point below) so debug/dev builds never spam the backend with local errors.
  *
  * Privacy rules:
- *  - User PII (email, name, or any identifying data) is NEVER included in reports.
+ *  - User PII (email, name, or any identifying data) is NEVER included in reports; messages and
+ *    stack traces are additionally run through [scrub].
+ *  - Reports are sent only while [enabled] (privacy policy accepted and the user did not opt out).
  *  - Device info (OS version, device model, app version) is included ONLY when the
  *    user has accepted the privacy policy; call [setDeviceInfoConsented] at startup
  *    and whenever consent changes.
@@ -40,6 +42,14 @@ object ErrorReporter {
     @Volatile var deviceInfoConsented: Boolean = false
         private set
 
+    /** False when the user opted out of error reports (or has not yet accepted the privacy policy). */
+    @Volatile var enabled: Boolean = false
+        private set
+
+    fun setEnabled(value: Boolean) {
+        enabled = value
+    }
+
     /** Call once the user's consent state is known (app startup and on first accept). */
     fun setDeviceInfoConsented(consented: Boolean) {
         deviceInfoConsented = consented
@@ -47,7 +57,7 @@ object ErrorReporter {
 
     /** Reports a handled (non-fatal) error. Safe to call from anywhere, any thread. No-op in debug builds. */
     fun report(context: String, message: String, throwable: Throwable? = null) {
-        if (Logger.isDebug) return
+        if (Logger.isDebug || !enabled) return
         val signature = buildString {
             append(context)
             append('|')
@@ -79,7 +89,7 @@ object ErrorReporter {
     fun flushPendingCrashReport(storage: CrashReportStorage) {
         val pending = storage.getPendingCrash() ?: return
         storage.clearPendingCrash()
-        if (Logger.isDebug) return
+        if (Logger.isDebug || !enabled) return
         scope.launch { send(pending) }
     }
 
@@ -92,10 +102,20 @@ object ErrorReporter {
         }
     }
 
+    private val scrubPatterns = listOf(
+        Regex("eyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]*") to "<jwt>",
+        Regex("(?i)bearer\\s+\\S+") to "Bearer <redacted>",
+        Regex("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}") to "<email>",
+        Regex("\\d{5,}") to "<num>",
+    )
+
+    /** Strips tokens, e-mail addresses and long numeric ids (person ids, phone numbers, accounts) from free text. */
+    internal fun scrub(text: String): String = scrubPatterns.fold(text) { acc, (re, rep) -> re.replace(acc, rep) }
+
     private fun buildReportBody(title: String, context: String, message: String, throwable: Throwable?): String = buildString {
         appendLine(title)
         appendLine("Context: $context")
-        appendLine("Message: $message")
+        appendLine("Message: ${scrub(message)}")
         appendLine("Time: ${kotlin.time.Clock.System.now()}")
         if (deviceInfoConsented) {
             appendLine("App version: ${DeviceInfo.appVersion}")
@@ -104,7 +124,7 @@ object ErrorReporter {
         }
         appendLine()
         appendLine("Stack trace:")
-        appendLine(throwable?.stackTraceToString()?.take(6000) ?: "(no exception attached)")
+        appendLine(throwable?.stackTraceToString()?.let(::scrub)?.take(6000) ?: "(no exception attached)")
     }
 
     private suspend fun send(body: String) {
