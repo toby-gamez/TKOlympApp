@@ -1,0 +1,14 @@
+query CompetitionClubPeople {
+    people(first: 100) {
+        nodes {
+            id
+            federationPeople(first: 5) {
+                nodes {
+                    competitorComponents(first: 1) {
+                        totalCount
+                    }
+                }
+            }
+        }
+    }
+}

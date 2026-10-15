@@ -633,6 +633,8 @@ val StringsBrainrot = Strings(
         finals = "Finals (bussin fr)",
         cstsProgress = "ČSTS rizz points",
         noCstsProgress = "No ČSTS clout bestie",
+        loadingCompetitions = "Loading comps…",
+        loadingSlowNote = "Sorry, slow architecture fr",
     ),
     widget = com.tkolymp.shared.language.WidgetStrings(
         myTrainings = "My Rizz Trainings",

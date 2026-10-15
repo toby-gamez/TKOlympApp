@@ -631,6 +631,8 @@ val StringsDe = Strings(
         finals = "Finals",
         cstsProgress = "ČSTS Ergebnisse",
         noCstsProgress = "Keine ČSTS-Ergebnisse",
+        loadingCompetitions = "Wettbewerbe werden geladen…",
+        loadingSlowNote = "Entschuldigung, langsame Architektur",
     ),
     widget = com.tkolymp.shared.language.WidgetStrings(
         myTrainings = "Meine Trainings",

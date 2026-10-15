@@ -632,6 +632,8 @@ val StringsSk = Strings(
         finals = "Finály",
         cstsProgress = "Výsledky ČSTS",
         noCstsProgress = "Žiadne výsledky ČSTS",
+        loadingCompetitions = "Načítavam súťaže…",
+        loadingSlowNote = "Ospravedlňujeme sa, pomalá architektúra",
     ),
     widget = com.tkolymp.shared.language.WidgetStrings(
         myTrainings = "Moje tréningy",

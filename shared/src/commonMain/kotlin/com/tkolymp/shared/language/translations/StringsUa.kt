@@ -632,6 +632,8 @@ val StringsUa = Strings(
         finals = "Фінали",
         cstsProgress = "Результати ČSTS",
         noCstsProgress = "Немає результатів ČSTS",
+        loadingCompetitions = "Завантаження змагань…",
+        loadingSlowNote = "Вибачте, повільна архітектура",
     ),
     widget = com.tkolymp.shared.language.WidgetStrings(
         myTrainings = "Мої тренування",

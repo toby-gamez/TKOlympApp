@@ -21,6 +21,9 @@ import kotlinx.datetime.number
 import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.datetime.todayIn
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
@@ -243,17 +246,6 @@ class CalendarViewModel(
                 _state.value.hasCancelledMineToShow
             }
 
-            val competitionPersonIds = if (onlyMine) pid?.toLongOrNull()?.let { listOf(it) } else null
-            val competitionsByDay = try {
-                withContext(Dispatchers.Default) {
-                    competitionService.getUpcomingCompetitions(
-                        pSince = weekStart.toString(),
-                        pUntil = endDay.plus(1, DateTimeUnit.DAY).toString(),
-                        pPersonIds = competitionPersonIds
-                    ).groupBy { it.competitionDate }
-                }
-            } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyMap() }
-
             val birthdaysByDay = try {
                 withContext(Dispatchers.Default) { computeBirthdaysByDay(visibleDates) }
             } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyMap() }
@@ -268,12 +260,36 @@ class CalendarViewModel(
                 myPersonId = pid,
                 myCoupleIds = cids,
                 hasCancelledMineToShow = hasCancelledMineToShow,
-                competitionsByDay = competitionsByDay,
                 birthdaysByDay = birthdaysByDay,
                 isLoading = false
             )
+            loadCompetitions(weekStart, endDay, onlyMine, pid)
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoading))
+        }
+    }
+
+    private var competitionJob: Job? = null
+
+    // Competitions need one request per person and can take many seconds, so they load
+    // independently of the events and the week renders without waiting for them.
+    private fun loadCompetitions(weekStart: kotlinx.datetime.LocalDate, endDay: kotlinx.datetime.LocalDate, onlyMine: Boolean, pid: String?) {
+        competitionJob?.cancel()
+        val personIds = if (onlyMine) pid?.toLongOrNull()?.let { listOf(it) } else null
+        competitionJob = viewModelScope.launch {
+            val byDay = try {
+                withContext(Dispatchers.Default) {
+                    competitionService.getUpcomingCompetitions(
+                        pSince = weekStart.toString(),
+                        pUntil = endDay.plus(1, DateTimeUnit.DAY).toString(),
+                        pPersonIds = personIds
+                    ).groupBy { it.competitionDate }
+                }
+            } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyMap() }
+            // Drop the result if the user has moved to another week / filter meanwhile.
+            if (lastWeekStart == weekStart && lastOnlyMine == onlyMine) {
+                _state.value = _state.value.copy(competitionsByDay = byDay)
+            }
         }
     }
 

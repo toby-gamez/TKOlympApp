@@ -632,6 +632,8 @@ val StringsVi = Strings(
         finals = "Chung kết",
         cstsProgress = "Kết quả ČSTS",
         noCstsProgress = "Không có dữ liệu ČSTS",
+        loadingCompetitions = "Đang tải các cuộc thi…",
+        loadingSlowNote = "Xin lỗi, kiến trúc chậm",
     ),
     widget = com.tkolymp.shared.language.WidgetStrings(
         myTrainings = "Buổi tập của tôi",

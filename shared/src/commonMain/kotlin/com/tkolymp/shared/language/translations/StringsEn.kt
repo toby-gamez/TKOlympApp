@@ -643,6 +643,8 @@ val StringsEn = Strings(
         finals = "Finals",
         cstsProgress = "ČSTS Progress",
         noCstsProgress = "No ČSTS progress data",
+        loadingCompetitions = "Loading competitions…",
+        loadingSlowNote = "Sorry, slow architecture",
     ),
     widget = com.tkolymp.shared.language.WidgetStrings(
         myTrainings = "My Trainings",

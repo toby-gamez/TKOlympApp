@@ -1,0 +1,64 @@
+query PersonCompetitions($personId: BigInt, $first: Int, $offset: Int) {
+    people(first: 1, condition: { id: $personId }) {
+        nodes {
+            id
+            name
+            federationPeople(first: 5) {
+                nodes {
+                    id
+                    federation
+                    externalId
+                    competitorComponents(first: 20) {
+                        nodes {
+                            competitor {
+                                id
+                                name
+                                competitorType
+                                peopleList(first: 3) {
+                                    name
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            federationCompetitions(first: $first, offset: $offset, orderBy: START_DATE_DESC) {
+                nodes {
+                    id
+                    federation
+                    startDate
+                    checkInEnd
+                    competitionType
+                    participantsTotal
+                    category {
+                        id
+                        name
+                        series
+                        discipline
+                        ageGroup
+                        genderGroup
+                        class
+                        competitorType
+                        baseDanceProgramId
+                    }
+                    event {
+                        id
+                        name
+                        location
+                    }
+                    entriesList(first: 100) {
+                        competitorId
+                        cancelled
+                    }
+                    resultsList(first: 100) {
+                        competitorId
+                        ranking
+                        rankingTo
+                        pointGain
+                        isFinal
+                    }
+                }
+            }
+        }
+    }
+}

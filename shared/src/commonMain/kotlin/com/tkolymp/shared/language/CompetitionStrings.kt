@@ -24,6 +24,8 @@ data class CompetitionStrings(
     val finals: String = "Finálí",
     val cstsProgress: String = "Výsledky ČSTS",
     val noCstsProgress: String = "Žádné výsledky ČSTS",
+    val loadingCompetitions: String = "Načítám soutěže…",
+    val loadingSlowNote: String = "Omlouváme se, pomalá architektura",
 ) {
     fun formatType(raw: String): String = raw
         .replace("DanceForAll", "TPV")

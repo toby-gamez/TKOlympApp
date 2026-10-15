@@ -14,7 +14,10 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -78,6 +81,7 @@ data class OverviewState(
     val isOffline: Boolean = false,
     val paymentDaysUntilDue: Int? = null,
     val nearestCompetition: Competition? = null,
+    val isCompetitionLoading: Boolean = false,
     override val isLoading: Boolean = false,
     override val error: AppError? = null
 ) : ViewModelState
@@ -132,7 +136,6 @@ class OverviewViewModel(
             var announcements: List<Announcement> = emptyList()
             var upcomingBirthdays: List<BirthdayEntry> = emptyList()
             var paymentDaysUntilDue: Int? = null
-            var nearestCompetition: Competition? = null
 
             coroutineScope {
                 val eventsDef = async {
@@ -408,15 +411,6 @@ class OverviewViewModel(
                     } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                 }
 
-                // Like camps, this previews the same browsable list the "more" button opens
-                // (CompetitionsScreen/CompetitionViewModel, unfiltered) rather than only
-                // entries the current person personally competes in.
-                val competitionDef = async {
-                    try {
-                        competitionService.getNearestUpcoming(pPersonIds = null)
-                    } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
-                }
-
                 // Camps are browsable regardless of whether the user is already registered
                 // (the "browse others" button opens the same full list), so fetch with
                 // onlyMine=false like EventsViewModel.loadCampsNextYear does, rather than
@@ -438,7 +432,6 @@ class OverviewViewModel(
                 announcements = announcementsDef.await()
                 upcomingBirthdays = birthdaysDef.await()
                 paymentDaysUntilDue = paymentsDef.await()
-                nearestCompetition = competitionDef.await()
             }
 
             val campsMapByDay = withContext(Dispatchers.Default) {
@@ -514,11 +507,28 @@ class OverviewViewModel(
                 myPersonId = pid,
                 myCoupleIds = cids,
                 paymentDaysUntilDue = paymentDaysUntilDue,
-                nearestCompetition = nearestCompetition,
                 isLoading = false
             )
+            loadNearestCompetition()
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingOverview))
+        }
+    }
+
+    private var competitionJob: Job? = null
+
+    // Like camps, this previews the same browsable list the "more" button opens
+    // (CompetitionsScreen/CompetitionViewModel, unfiltered). It can take many seconds
+    // (one request per person), so it runs independently and never blocks the rest of
+    // the overview; the card fills in when it arrives.
+    private fun loadNearestCompetition() {
+        competitionJob?.cancel()
+        _state.value = _state.value.copy(isCompetitionLoading = true)
+        competitionJob = viewModelScope.launch {
+            val competition = try {
+                competitionService.getNearestUpcoming(pPersonIds = null)
+            } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+            _state.value = _state.value.copy(nearestCompetition = competition, isCompetitionLoading = false)
         }
     }
 

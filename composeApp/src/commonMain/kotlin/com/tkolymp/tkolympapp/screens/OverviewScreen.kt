@@ -374,7 +374,21 @@ fun OverviewScreen(
                 }
                 Column(modifier = Modifier.padding(horizontal = 12.dp)) {
                     val comp = state.nearestCompetition
-                    if (comp == null) {
+                    if (comp == null && state.isCompetitionLoading) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            CircularProgressIndicator()
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(AppStrings.current.competition.loadingCompetitions, style = MaterialTheme.typography.bodyMedium)
+                            Text(
+                                AppStrings.current.competition.loadingSlowNote,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    } else if (comp == null) {
                         EmptyState(title = AppStrings.current.competition.noUpcoming, icon = Icons.Outlined.EmojiEvents)
                     } else {
                         StaggeredItem(index = 0, visible = cardsVisible) {

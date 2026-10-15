@@ -744,11 +744,14 @@ type FederationPerson {
   gender: Gender
   dob: Date
   nationality: String
-  ageGroup: String
   medicalCheckupExpiration: Date
   medicalCheckupType: String
   createdAt: Datetime!
   searchName: String
+  ageGroup: String
+
+  """Reads a single `AgeGroup` that is related to this `FederationPerson`."""
+  ageGroupDetails: AgeGroup
 
   """
   Reads a single `Federation` that is related to this `FederationPerson`.
@@ -962,248 +965,21 @@ enum Gender {
   UNKNOWN
 }
 
-"""A connection to a list of `FederationPersonLicense` values."""
-type FederationPersonLicensesConnection {
-  """A list of `FederationPersonLicense` objects."""
-  nodes: [FederationPersonLicense!]!
+type AgeGroup {
+  code: String!
+  name: String!
+  aliases: [String]!
+  allowedToDanceIn: [String]!
+  age: IntRange
+  personAge: IntRange
+  isPerson: Boolean!
+  isCouple: Boolean!
+  isTeam: Boolean!
+  isCompetition: Boolean!
+  divisions: [String]!
 
-  """
-  A list of edges which contains the `FederationPersonLicense` and cursor to aid in pagination.
-  """
-  edges: [FederationPersonLicensesEdge!]!
-
-  """Information to aid in pagination."""
-  pageInfo: PageInfo!
-
-  """
-  The count of *all* `FederationPersonLicense` you could get from the connection.
-  """
-  totalCount: Int!
-}
-
-type FederationPersonLicense {
-  personId: String!
-  federation: String!
-  kind: PersonLicenseKind!
-  discipline: PersonLicenseDiscipline!
-  grade: String
-  validUntil: Date
-  status: PersonLicenseStatus!
-  createdAt: Datetime!
-
-  """
-  Reads a single `Federation` that is related to this `FederationPersonLicense`.
-  """
-  federationByFederation: Federation
-
-  """
-  Reads a single `FederationPerson` that is related to this `FederationPersonLicense`.
-  """
-  person: FederationPerson
-}
-
-enum PersonLicenseKind {
-  ATHLETE
-  TRAINER
-  ADJUDICATOR
-  CHAIRPERSON
-  INVIGILATOR
-  SCRUTINEER
-  LEAD_SCRUTINEER
-  EXAMINER
-  DJ
-  HEAD_JUDGE
-  OFFICIAL
-}
-
-enum PersonLicenseDiscipline {
-  GENERAL
-  STANDARD
-  LATIN
-  BREAKING
-  HIPHOP
-  CARIBBEAN
-  STAGE
-  SMOOTH
-  DISCO
-  SOLO_SYNCRO_CHOREO
-  TEN_DANCE
-  SHOW_DANCE_STANDARD
-  SHOW_DANCE_LATIN
-  FORMATION_STANDARD
-  FORMATION_LATIN
-  PD_STANDARD
-  PD_LATIN
-  PD_TEN_DANCE
-  PD_SHOW_DANCE_STANDARD
-  PD_SHOW_DANCE_LATIN
-  UNKNOWN
-}
-
-enum PersonLicenseStatus {
-  ACTIVE
-  EXPIRED
-  REVOKED
-  RESTING
-  RETIRED
-  ASPIRING
-  SUSPENDED
-  UNKNOWN
-}
-
-"""A `FederationPersonLicense` edge in the connection."""
-type FederationPersonLicensesEdge {
-  """A cursor for use in pagination."""
-  cursor: Cursor
-
-  """The `FederationPersonLicense` at the end of the edge."""
-  node: FederationPersonLicense!
-}
-
-"""
-A condition to be used against `FederationPersonLicense` object types. All
-fields are tested for equality and combined with a logical ‘and.’
-"""
-input FederationPersonLicenseCondition {
-  """Checks for equality with the object’s `personId` field."""
-  personId: String
-
-  """Checks for equality with the object’s `federation` field."""
-  federation: String
-
-  """Checks for equality with the object’s `kind` field."""
-  kind: PersonLicenseKind
-
-  """Checks for equality with the object’s `discipline` field."""
-  discipline: PersonLicenseDiscipline
-
-  """Checks for equality with the object’s `grade` field."""
-  grade: String
-
-  """Checks for equality with the object’s `validUntil` field."""
-  validUntil: Date
-
-  """Checks for equality with the object’s `status` field."""
-  status: PersonLicenseStatus
-
-  """Checks for equality with the object’s `createdAt` field."""
-  createdAt: Datetime
-}
-
-"""Methods to use when ordering `FederationPersonLicense`."""
-enum FederationPersonLicensesOrderBy {
-  NATURAL
-  PRIMARY_KEY_ASC
-  PRIMARY_KEY_DESC
-  PERSON_ID_ASC
-  PERSON_ID_DESC
-  FEDERATION_ASC
-  FEDERATION_DESC
-  KIND_ASC
-  KIND_DESC
-  DISCIPLINE_ASC
-  DISCIPLINE_DESC
-  GRADE_ASC
-  GRADE_DESC
-  VALID_UNTIL_ASC
-  VALID_UNTIL_DESC
-  STATUS_ASC
-  STATUS_DESC
-  CREATED_AT_ASC
-  CREATED_AT_DESC
-}
-
-"""A connection to a list of `FederationCompetitorComponent` values."""
-type FederationCompetitorComponentsConnection {
-  """A list of `FederationCompetitorComponent` objects."""
-  nodes: [FederationCompetitorComponent!]!
-
-  """
-  A list of edges which contains the `FederationCompetitorComponent` and cursor to aid in pagination.
-  """
-  edges: [FederationCompetitorComponentsEdge!]!
-
-  """Information to aid in pagination."""
-  pageInfo: PageInfo!
-
-  """
-  The count of *all* `FederationCompetitorComponent` you could get from the connection.
-  """
-  totalCount: Int!
-}
-
-type FederationCompetitorComponent {
-  competitorId: String!
-  personId: String!
-  role: CompetitorRole!
-
-  """
-  Reads a single `FederationCompetitor` that is related to this `FederationCompetitorComponent`.
-  """
-  competitor: FederationCompetitor
-
-  """
-  Reads a single `FederationPerson` that is related to this `FederationCompetitorComponent`.
-  """
-  person: FederationPerson
-}
-
-enum CompetitorRole {
-  LEAD
-  FOLLOW
-  MEMBER
-  SUBSTITUTE
-}
-
-type FederationCompetitor {
-  id: String!
-  federation: String!
-  externalId: BigInt!
-  competitorType: CompetitorType!
-  ageGroup: String
-  name: String
-  createdAt: Datetime!
-
-  """
-  Reads a single `Federation` that is related to this `FederationCompetitor`.
-  """
-  federationByFederation: Federation
-
-  """
-  Reads and enables pagination through a set of `FederationCompetitorComponent`.
-  """
-  components(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Only read the last `n` values of the set."""
-    last: Int
-
-    """
-    Skip the first `n` values from our `after` cursor, an alternative to cursor
-    based pagination. May not be used with `last`.
-    """
-    offset: Int
-
-    """Read all values in the set before (above) this cursor."""
-    before: Cursor
-
-    """Read all values in the set after (below) this cursor."""
-    after: Cursor
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: FederationCompetitorComponentCondition
-
-    """The method to use when ordering `FederationCompetitorComponent`."""
-    orderBy: [FederationCompetitorComponentsOrderBy!] = [PRIMARY_KEY_ASC]
-  ): FederationCompetitorComponentsConnection!
-
-  """
-  Reads and enables pagination through a set of `FederationCompetitorCategoryProgress`.
-  """
-  categoryProgressesList(
+  """Reads and enables pagination through a set of `Category`."""
+  categories(
     """Only read the first `n` values of the set."""
     first: Int
 
@@ -1213,165 +989,16 @@ type FederationCompetitor {
     """
     A condition to be used in determining which values should be returned by the collection.
     """
-    condition: FederationCompetitorCategoryProgressCondition
+    condition: CategoryCondition
 
-    """
-    The method to use when ordering `FederationCompetitorCategoryProgress`.
-    """
-    orderBy: [FederationCompetitorCategoryProgressesOrderBy!]
-  ): [FederationCompetitorCategoryProgress!]!
+    """The method to use when ordering `Category`."""
+    orderBy: [CategoriesOrderBy!]
+  ): [Category!]!
 
   """
-  Reads and enables pagination through a set of `FederationCompetitorClubAffiliation`.
+  Reads and enables pagination through a set of `FederationCoupleAgeRule`.
   """
-  clubAffiliations(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Only read the last `n` values of the set."""
-    last: Int
-
-    """
-    Skip the first `n` values from our `after` cursor, an alternative to cursor
-    based pagination. May not be used with `last`.
-    """
-    offset: Int
-
-    """Read all values in the set before (above) this cursor."""
-    before: Cursor
-
-    """Read all values in the set after (below) this cursor."""
-    after: Cursor
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: FederationCompetitorClubAffiliationCondition
-
-    """The method to use when ordering `FederationCompetitorClubAffiliation`."""
-    orderBy: [FederationCompetitorClubAffiliationsOrderBy!] = [PRIMARY_KEY_ASC]
-  ): FederationCompetitorClubAffiliationsConnection!
-
-  """Reads and enables pagination through a set of `CompetitionEntry`."""
-  competitionEntries(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Only read the last `n` values of the set."""
-    last: Int
-
-    """
-    Skip the first `n` values from our `after` cursor, an alternative to cursor
-    based pagination. May not be used with `last`.
-    """
-    offset: Int
-
-    """Read all values in the set before (above) this cursor."""
-    before: Cursor
-
-    """Read all values in the set after (below) this cursor."""
-    after: Cursor
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: CompetitionEntryCondition
-
-    """The method to use when ordering `CompetitionEntry`."""
-    orderBy: [CompetitionEntriesOrderBy!] = [PRIMARY_KEY_ASC]
-  ): CompetitionEntriesConnection!
-
-  """
-  Reads and enables pagination through a set of `CompetitionRoundResult`.
-  """
-  roundResults(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Only read the last `n` values of the set."""
-    last: Int
-
-    """
-    Skip the first `n` values from our `after` cursor, an alternative to cursor
-    based pagination. May not be used with `last`.
-    """
-    offset: Int
-
-    """Read all values in the set before (above) this cursor."""
-    before: Cursor
-
-    """Read all values in the set after (below) this cursor."""
-    after: Cursor
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: CompetitionRoundResultCondition
-
-    """The method to use when ordering `CompetitionRoundResult`."""
-    orderBy: [CompetitionRoundResultsOrderBy!] = [PRIMARY_KEY_ASC]
-  ): CompetitionRoundResultsConnection!
-
-  """Reads and enables pagination through a set of `CompetitionResult`."""
-  competitionResults(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Only read the last `n` values of the set."""
-    last: Int
-
-    """
-    Skip the first `n` values from our `after` cursor, an alternative to cursor
-    based pagination. May not be used with `last`.
-    """
-    offset: Int
-
-    """Read all values in the set before (above) this cursor."""
-    before: Cursor
-
-    """Read all values in the set after (below) this cursor."""
-    after: Cursor
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: CompetitionResultCondition
-
-    """The method to use when ordering `CompetitionResult`."""
-    orderBy: [CompetitionResultsOrderBy!] = [PRIMARY_KEY_ASC]
-  ): CompetitionResultsConnection!
-
-  """Reads and enables pagination through a set of `RanklistEntry`."""
-  ranklistEntries(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Only read the last `n` values of the set."""
-    last: Int
-
-    """
-    Skip the first `n` values from our `after` cursor, an alternative to cursor
-    based pagination. May not be used with `last`.
-    """
-    offset: Int
-
-    """Read all values in the set before (above) this cursor."""
-    before: Cursor
-
-    """Read all values in the set after (below) this cursor."""
-    after: Cursor
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: RanklistEntryCondition
-
-    """The method to use when ordering `RanklistEntry`."""
-    orderBy: [RanklistEntriesOrderBy!] = [PRIMARY_KEY_ASC]
-  ): RanklistEntriesConnection!
-
-  """Reads and enables pagination through a set of `Person`."""
-  peopleList(
+  coupleRules(
     """Only read the first `n` values of the set."""
     first: Int
 
@@ -1381,91 +1008,46 @@ type FederationCompetitor {
     """
     A condition to be used in determining which values should be returned by the collection.
     """
-    condition: PersonCondition
+    condition: FederationCoupleAgeRuleCondition
 
-    """The method to use when ordering `Person`."""
-    orderBy: [PeopleOrderBy!]
-  ): [Person!]!
+    """The method to use when ordering `FederationCoupleAgeRule`."""
+    orderBy: [FederationCoupleAgeRulesOrderBy!]
+  ): [FederationCoupleAgeRule!]!
+}
 
-  """Reads and enables pagination through a set of `Couple`."""
-  couplesList(
-    """Only read the first `n` values of the set."""
-    first: Int
+"""A range of `Int`."""
+type IntRange {
+  """The starting bound of our range."""
+  start: IntRangeBound
 
-    """Skip the first `n` values."""
-    offset: Int
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: CoupleCondition
-
-    """The method to use when ordering `Couple`."""
-    orderBy: [CouplesOrderBy!]
-  ): [Couple!]!
+  """The ending bound of our range."""
+  end: IntRangeBound
 }
 
 """
-A condition to be used against `FederationCompetitorComponent` object types. All
-fields are tested for equality and combined with a logical ‘and.’
+The value at one end of a range. A range can either include this value, or not.
 """
-input FederationCompetitorComponentCondition {
-  """Checks for equality with the object’s `competitorId` field."""
-  competitorId: String
+type IntRangeBound {
+  """The value at one end of our range."""
+  value: Int!
 
-  """Checks for equality with the object’s `personId` field."""
-  personId: String
-
-  """Checks for equality with the object’s `role` field."""
-  role: CompetitorRole
+  """Whether or not the value of this bound is included in the range."""
+  inclusive: Boolean!
 }
-
-"""Methods to use when ordering `FederationCompetitorComponent`."""
-enum FederationCompetitorComponentsOrderBy {
-  NATURAL
-  PRIMARY_KEY_ASC
-  PRIMARY_KEY_DESC
-  COMPETITOR_ID_ASC
-  COMPETITOR_ID_DESC
-  PERSON_ID_ASC
-  PERSON_ID_DESC
-  ROLE_ASC
-  ROLE_DESC
-}
-
-type FederationCompetitorCategoryProgress {
-  competitorId: String!
-  categoryId: BigInt!
-  points: BigFloat!
-  domesticFinals: Int!
-  foreignFinals: Int!
-
-  """
-  Reads a single `Category` that is related to this `FederationCompetitorCategoryProgress`.
-  """
-  category: Category
-
-  """
-  Reads a single `FederationCompetitor` that is related to this `FederationCompetitorCategoryProgress`.
-  """
-  competitor: FederationCompetitor
-}
-
-"""
-A floating point number that requires more precision than IEEE 754 binary 64
-"""
-scalar BigFloat
 
 type Category {
   id: BigInt!
   name: String!
   series: String!
   discipline: String!
-  ageGroup: String!
   genderGroup: String!
   class: String!
   competitorType: CompetitorType!
   baseDanceProgramId: BigInt
+  ageGroup: String
+
+  """Reads a single `AgeGroup` that is related to this `Category`."""
+  ageGroupDetails: AgeGroup
 
   """Reads a single `DanceProgram` that is related to this `Category`."""
   baseDanceProgram: DanceProgram
@@ -1791,6 +1373,11 @@ type CompetitionRoundDance {
     """The method to use when ordering `JudgeScore`."""
     orderBy: [JudgeScoresOrderBy!] = [PRIMARY_KEY_ASC]
   ): JudgeScoresConnection!
+
+  """
+  Reads a single `Dance` that is related to this `CompetitionRoundDance`.
+  """
+  dance: Dance
 }
 
 type CompetitionRound {
@@ -2064,6 +1651,11 @@ type Competition {
 The exact time of day, does not include the date. May or may not have a timezone offset.
 """
 scalar Time
+
+"""
+A floating point number that requires more precision than IEEE 754 binary 64
+"""
+scalar BigFloat
 
 enum CompetitionType {
   CUP
@@ -2438,13 +2030,423 @@ type FederationCompetitorClubAffiliation {
   competitor: FederationCompetitor
 }
 
-"""A `FederationCompetitorClubAffiliation` edge in the connection."""
-type FederationCompetitorClubAffiliationsEdge {
+type FederationCompetitor {
+  id: String!
+  federation: String!
+  competitorType: CompetitorType!
+  name: String
+  createdAt: Datetime!
+  ageGroup: String
+  externalId: String!
+
+  """
+  Reads a single `AgeGroup` that is related to this `FederationCompetitor`.
+  """
+  ageGroupDetails: AgeGroup
+
+  """
+  Reads a single `Federation` that is related to this `FederationCompetitor`.
+  """
+  federationByFederation: Federation
+
+  """
+  Reads and enables pagination through a set of `FederationCompetitorComponent`.
+  """
+  components(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: FederationCompetitorComponentCondition
+
+    """The method to use when ordering `FederationCompetitorComponent`."""
+    orderBy: [FederationCompetitorComponentsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): FederationCompetitorComponentsConnection!
+
+  """
+  Reads and enables pagination through a set of `FederationCompetitorCategoryProgress`.
+  """
+  categoryProgressesList(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Skip the first `n` values."""
+    offset: Int
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: FederationCompetitorCategoryProgressCondition
+
+    """
+    The method to use when ordering `FederationCompetitorCategoryProgress`.
+    """
+    orderBy: [FederationCompetitorCategoryProgressesOrderBy!]
+  ): [FederationCompetitorCategoryProgress!]!
+
+  """
+  Reads and enables pagination through a set of `FederationCompetitorClubAffiliation`.
+  """
+  clubAffiliations(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: FederationCompetitorClubAffiliationCondition
+
+    """The method to use when ordering `FederationCompetitorClubAffiliation`."""
+    orderBy: [FederationCompetitorClubAffiliationsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): FederationCompetitorClubAffiliationsConnection!
+
+  """Reads and enables pagination through a set of `CompetitionEntry`."""
+  competitionEntries(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CompetitionEntryCondition
+
+    """The method to use when ordering `CompetitionEntry`."""
+    orderBy: [CompetitionEntriesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CompetitionEntriesConnection!
+
+  """
+  Reads and enables pagination through a set of `CompetitionRoundResult`.
+  """
+  roundResults(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CompetitionRoundResultCondition
+
+    """The method to use when ordering `CompetitionRoundResult`."""
+    orderBy: [CompetitionRoundResultsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CompetitionRoundResultsConnection!
+
+  """Reads and enables pagination through a set of `CompetitionResult`."""
+  competitionResults(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CompetitionResultCondition
+
+    """The method to use when ordering `CompetitionResult`."""
+    orderBy: [CompetitionResultsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CompetitionResultsConnection!
+
+  """Reads and enables pagination through a set of `RanklistEntry`."""
+  ranklistEntries(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: RanklistEntryCondition
+
+    """The method to use when ordering `RanklistEntry`."""
+    orderBy: [RanklistEntriesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): RanklistEntriesConnection!
+
+  """Reads and enables pagination through a set of `Person`."""
+  peopleList(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Skip the first `n` values."""
+    offset: Int
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: PersonCondition
+
+    """The method to use when ordering `Person`."""
+    orderBy: [PeopleOrderBy!]
+  ): [Person!]!
+
+  """Reads and enables pagination through a set of `Couple`."""
+  couplesList(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Skip the first `n` values."""
+    offset: Int
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CoupleCondition
+
+    """The method to use when ordering `Couple`."""
+    orderBy: [CouplesOrderBy!]
+  ): [Couple!]!
+
+  """Reads and enables pagination through a set of `Competition`."""
+  competitions(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CompetitionCondition
+
+    """The method to use when ordering `Competition`."""
+    orderBy: [CompetitionsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CompetitionsConnection!
+}
+
+"""A connection to a list of `FederationCompetitorComponent` values."""
+type FederationCompetitorComponentsConnection {
+  """A list of `FederationCompetitorComponent` objects."""
+  nodes: [FederationCompetitorComponent!]!
+
+  """
+  A list of edges which contains the `FederationCompetitorComponent` and cursor to aid in pagination.
+  """
+  edges: [FederationCompetitorComponentsEdge!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """
+  The count of *all* `FederationCompetitorComponent` you could get from the connection.
+  """
+  totalCount: Int!
+}
+
+type FederationCompetitorComponent {
+  competitorId: String!
+  personId: String!
+  role: CompetitorRole!
+
+  """
+  Reads a single `FederationCompetitor` that is related to this `FederationCompetitorComponent`.
+  """
+  competitor: FederationCompetitor
+
+  """
+  Reads a single `FederationPerson` that is related to this `FederationCompetitorComponent`.
+  """
+  person: FederationPerson
+}
+
+enum CompetitorRole {
+  LEAD
+  FOLLOW
+  MEMBER
+  SUBSTITUTE
+}
+
+"""A `FederationCompetitorComponent` edge in the connection."""
+type FederationCompetitorComponentsEdge {
   """A cursor for use in pagination."""
   cursor: Cursor
 
-  """The `FederationCompetitorClubAffiliation` at the end of the edge."""
-  node: FederationCompetitorClubAffiliation!
+  """The `FederationCompetitorComponent` at the end of the edge."""
+  node: FederationCompetitorComponent!
+}
+
+"""
+A condition to be used against `FederationCompetitorComponent` object types. All
+fields are tested for equality and combined with a logical ‘and.’
+"""
+input FederationCompetitorComponentCondition {
+  """Checks for equality with the object’s `competitorId` field."""
+  competitorId: String
+
+  """Checks for equality with the object’s `personId` field."""
+  personId: String
+
+  """Checks for equality with the object’s `role` field."""
+  role: CompetitorRole
+}
+
+"""Methods to use when ordering `FederationCompetitorComponent`."""
+enum FederationCompetitorComponentsOrderBy {
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+  COMPETITOR_ID_ASC
+  COMPETITOR_ID_DESC
+  PERSON_ID_ASC
+  PERSON_ID_DESC
+  ROLE_ASC
+  ROLE_DESC
+}
+
+type FederationCompetitorCategoryProgress {
+  competitorId: String!
+  categoryId: BigInt!
+  points: BigFloat!
+  domesticFinals: Int!
+  foreignFinals: Int!
+
+  """
+  Reads a single `Category` that is related to this `FederationCompetitorCategoryProgress`.
+  """
+  category: Category
+
+  """
+  Reads a single `FederationCompetitor` that is related to this `FederationCompetitorCategoryProgress`.
+  """
+  competitor: FederationCompetitor
+}
+
+"""
+A condition to be used against `FederationCompetitorCategoryProgress` object
+types. All fields are tested for equality and combined with a logical ‘and.’
+"""
+input FederationCompetitorCategoryProgressCondition {
+  """Checks for equality with the object’s `competitorId` field."""
+  competitorId: String
+
+  """Checks for equality with the object’s `categoryId` field."""
+  categoryId: BigInt
+
+  """Checks for equality with the object’s `points` field."""
+  points: BigFloat
+
+  """Checks for equality with the object’s `domesticFinals` field."""
+  domesticFinals: Int
+
+  """Checks for equality with the object’s `foreignFinals` field."""
+  foreignFinals: Int
+}
+
+"""Methods to use when ordering `FederationCompetitorCategoryProgress`."""
+enum FederationCompetitorCategoryProgressesOrderBy {
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+  COMPETITOR_ID_ASC
+  COMPETITOR_ID_DESC
+  CATEGORY_ID_ASC
+  CATEGORY_ID_DESC
+  POINTS_ASC
+  POINTS_DESC
+  DOMESTIC_FINALS_ASC
+  DOMESTIC_FINALS_DESC
+  FOREIGN_FINALS_ASC
+  FOREIGN_FINALS_DESC
 }
 
 """
@@ -2478,533 +2480,6 @@ enum FederationCompetitorClubAffiliationsOrderBy {
   VALID_FROM_DESC
   VALID_TO_ASC
   VALID_TO_DESC
-}
-
-"""A connection to a list of `FederationEvent` values."""
-type FederationEventsConnection {
-  """A list of `FederationEvent` objects."""
-  nodes: [FederationEvent!]!
-
-  """
-  A list of edges which contains the `FederationEvent` and cursor to aid in pagination.
-  """
-  edges: [FederationEventsEdge!]!
-
-  """Information to aid in pagination."""
-  pageInfo: PageInfo!
-
-  """
-  The count of *all* `FederationEvent` you could get from the connection.
-  """
-  totalCount: Int!
-}
-
-"""A `FederationEvent` edge in the connection."""
-type FederationEventsEdge {
-  """A cursor for use in pagination."""
-  cursor: Cursor
-
-  """The `FederationEvent` at the end of the edge."""
-  node: FederationEvent!
-}
-
-"""
-A condition to be used against `FederationEvent` object types. All fields are
-tested for equality and combined with a logical ‘and.’
-"""
-input FederationEventCondition {
-  """Checks for equality with the object’s `id` field."""
-  id: BigInt
-
-  """Checks for equality with the object’s `federation` field."""
-  federation: String
-
-  """Checks for equality with the object’s `externalId` field."""
-  externalId: String
-
-  """Checks for equality with the object’s `name` field."""
-  name: String
-
-  """Checks for equality with the object’s `startDate` field."""
-  startDate: Date
-
-  """Checks for equality with the object’s `endDate` field."""
-  endDate: Date
-
-  """Checks for equality with the object’s `location` field."""
-  location: String
-
-  """Checks for equality with the object’s `city` field."""
-  city: String
-
-  """Checks for equality with the object’s `country` field."""
-  country: String
-
-  """Checks for equality with the object’s `streetAddress` field."""
-  streetAddress: String
-
-  """Checks for equality with the object’s `postalCode` field."""
-  postalCode: String
-
-  """Checks for equality with the object’s `addressNote` field."""
-  addressNote: String
-
-  """Checks for equality with the object’s `geoReference` field."""
-  geoReference: String
-
-  """Checks for equality with the object’s `floorSize` field."""
-  floorSize: String
-
-  """Checks for equality with the object’s `contactName` field."""
-  contactName: String
-
-  """Checks for equality with the object’s `contactPhone` field."""
-  contactPhone: String
-
-  """Checks for equality with the object’s `contactEmail` field."""
-  contactEmail: String
-
-  """Checks for equality with the object’s `websiteUrl` field."""
-  websiteUrl: String
-
-  """Checks for equality with the object’s `organizingClubId` field."""
-  organizingClubId: BigInt
-
-  """Checks for equality with the object’s `range` field."""
-  range: DateRangeInput
-
-  """Checks for equality with the object’s `venueLat` field."""
-  venueLat: Float
-
-  """Checks for equality with the object’s `venueLng` field."""
-  venueLng: Float
-
-  """Checks for equality with the object’s `venueLocationSource` field."""
-  venueLocationSource: String
-
-  """Checks for equality with the object’s `venueLocationRef` field."""
-  venueLocationRef: String
-
-  """Checks for equality with the object’s `status` field."""
-  status: FederationEventStatus
-  search: String
-  officialPersonId: String
-  onDate: Date
-}
-
-"""A range of `Date`."""
-input DateRangeInput {
-  """The starting bound of our range."""
-  start: DateRangeBoundInput
-
-  """The ending bound of our range."""
-  end: DateRangeBoundInput
-}
-
-"""
-The value at one end of a range. A range can either include this value, or not.
-"""
-input DateRangeBoundInput {
-  """The value at one end of our range."""
-  value: Date!
-
-  """Whether or not the value of this bound is included in the range."""
-  inclusive: Boolean!
-}
-
-"""Methods to use when ordering `FederationEvent`."""
-enum FederationEventsOrderBy {
-  NATURAL
-  PRIMARY_KEY_ASC
-  PRIMARY_KEY_DESC
-  ID_ASC
-  ID_DESC
-  FEDERATION_ASC
-  FEDERATION_DESC
-  EXTERNAL_ID_ASC
-  EXTERNAL_ID_DESC
-  NAME_ASC
-  NAME_DESC
-  START_DATE_ASC
-  START_DATE_DESC
-  END_DATE_ASC
-  END_DATE_DESC
-  LOCATION_ASC
-  LOCATION_DESC
-  CITY_ASC
-  CITY_DESC
-  COUNTRY_ASC
-  COUNTRY_DESC
-  STREET_ADDRESS_ASC
-  STREET_ADDRESS_DESC
-  POSTAL_CODE_ASC
-  POSTAL_CODE_DESC
-  ADDRESS_NOTE_ASC
-  ADDRESS_NOTE_DESC
-  GEO_REFERENCE_ASC
-  GEO_REFERENCE_DESC
-  FLOOR_SIZE_ASC
-  FLOOR_SIZE_DESC
-  CONTACT_NAME_ASC
-  CONTACT_NAME_DESC
-  CONTACT_PHONE_ASC
-  CONTACT_PHONE_DESC
-  CONTACT_EMAIL_ASC
-  CONTACT_EMAIL_DESC
-  WEBSITE_URL_ASC
-  WEBSITE_URL_DESC
-  ORGANIZING_CLUB_ID_ASC
-  ORGANIZING_CLUB_ID_DESC
-  VENUE_LAT_ASC
-  VENUE_LAT_DESC
-  VENUE_LNG_ASC
-  VENUE_LNG_DESC
-  VENUE_LOCATION_SOURCE_ASC
-  VENUE_LOCATION_SOURCE_DESC
-  VENUE_LOCATION_REF_ASC
-  VENUE_LOCATION_REF_DESC
-  STATUS_ASC
-  STATUS_DESC
-}
-
-"""A connection to a list of `FederationEventOfficial` values."""
-type FederationEventOfficialsConnection {
-  """A list of `FederationEventOfficial` objects."""
-  nodes: [FederationEventOfficial!]!
-
-  """
-  A list of edges which contains the `FederationEventOfficial` and cursor to aid in pagination.
-  """
-  edges: [FederationEventOfficialsEdge!]!
-
-  """Information to aid in pagination."""
-  pageInfo: PageInfo!
-
-  """
-  The count of *all* `FederationEventOfficial` you could get from the connection.
-  """
-  totalCount: Int!
-}
-
-type FederationEventOfficial {
-  eventId: BigInt!
-  personId: String!
-  role: OfficialRole!
-  discipline: String!
-  grade: String
-
-  """
-  Reads a single `FederationEvent` that is related to this `FederationEventOfficial`.
-  """
-  event: FederationEvent
-
-  """
-  Reads a single `FederationPerson` that is related to this `FederationEventOfficial`.
-  """
-  person: FederationPerson
-}
-
-enum OfficialRole {
-  ADJUDICATOR
-  CHAIRPERSON
-  INVIGILATOR
-  SCRUTINEER
-  LEAD_SCRUTINEER
-}
-
-"""A `FederationEventOfficial` edge in the connection."""
-type FederationEventOfficialsEdge {
-  """A cursor for use in pagination."""
-  cursor: Cursor
-
-  """The `FederationEventOfficial` at the end of the edge."""
-  node: FederationEventOfficial!
-}
-
-"""
-A condition to be used against `FederationEventOfficial` object types. All
-fields are tested for equality and combined with a logical ‘and.’
-"""
-input FederationEventOfficialCondition {
-  """Checks for equality with the object’s `eventId` field."""
-  eventId: BigInt
-
-  """Checks for equality with the object’s `personId` field."""
-  personId: String
-
-  """Checks for equality with the object’s `role` field."""
-  role: OfficialRole
-
-  """Checks for equality with the object’s `discipline` field."""
-  discipline: String
-
-  """Checks for equality with the object’s `grade` field."""
-  grade: String
-}
-
-"""Methods to use when ordering `FederationEventOfficial`."""
-enum FederationEventOfficialsOrderBy {
-  NATURAL
-  PRIMARY_KEY_ASC
-  PRIMARY_KEY_DESC
-  EVENT_ID_ASC
-  EVENT_ID_DESC
-  PERSON_ID_ASC
-  PERSON_ID_DESC
-  ROLE_ASC
-  ROLE_DESC
-  DISCIPLINE_ASC
-  DISCIPLINE_DESC
-  GRADE_ASC
-  GRADE_DESC
-}
-
-"""A connection to a list of `Competition` values."""
-type CompetitionsConnection {
-  """A list of `Competition` objects."""
-  nodes: [Competition!]!
-
-  """
-  A list of edges which contains the `Competition` and cursor to aid in pagination.
-  """
-  edges: [CompetitionsEdge!]!
-
-  """Information to aid in pagination."""
-  pageInfo: PageInfo!
-
-  """The count of *all* `Competition` you could get from the connection."""
-  totalCount: Int!
-}
-
-"""A `Competition` edge in the connection."""
-type CompetitionsEdge {
-  """A cursor for use in pagination."""
-  cursor: Cursor
-
-  """The `Competition` at the end of the edge."""
-  node: Competition!
-}
-
-"""
-A condition to be used against `Competition` object types. All fields are tested
-for equality and combined with a logical ‘and.’
-"""
-input CompetitionCondition {
-  """Checks for equality with the object’s `id` field."""
-  id: BigInt
-
-  """Checks for equality with the object’s `federation` field."""
-  federation: String
-
-  """Checks for equality with the object’s `externalId` field."""
-  externalId: String
-
-  """Checks for equality with the object’s `eventId` field."""
-  eventId: BigInt
-
-  """Checks for equality with the object’s `categoryId` field."""
-  categoryId: BigInt
-
-  """Checks for equality with the object’s `startDate` field."""
-  startDate: Date
-
-  """Checks for equality with the object’s `endDate` field."""
-  endDate: Date
-
-  """Checks for equality with the object’s `checkInEnd` field."""
-  checkInEnd: Time
-
-  """Checks for equality with the object’s `registrationFee` field."""
-  registrationFee: BigFloat
-
-  """Checks for equality with the object’s `participantsTotal` field."""
-  participantsTotal: Int
-
-  """Checks for equality with the object’s `excusedTotal` field."""
-  excusedTotal: Int
-
-  """Checks for equality with the object’s `completedAt` field."""
-  completedAt: Datetime
-
-  """Checks for equality with the object’s `competitionType` field."""
-  competitionType: CompetitionType
-
-  """Checks for equality with the object’s `status` field."""
-  status: FederationEventStatus
-  competitorId: String
-  officialPersonId: String
-}
-
-"""Methods to use when ordering `Competition`."""
-enum CompetitionsOrderBy {
-  NATURAL
-  PRIMARY_KEY_ASC
-  PRIMARY_KEY_DESC
-  ID_ASC
-  ID_DESC
-  FEDERATION_ASC
-  FEDERATION_DESC
-  EXTERNAL_ID_ASC
-  EXTERNAL_ID_DESC
-  EVENT_ID_ASC
-  EVENT_ID_DESC
-  CATEGORY_ID_ASC
-  CATEGORY_ID_DESC
-  START_DATE_ASC
-  START_DATE_DESC
-  END_DATE_ASC
-  END_DATE_DESC
-  CHECK_IN_END_ASC
-  CHECK_IN_END_DESC
-  REGISTRATION_FEE_ASC
-  REGISTRATION_FEE_DESC
-  PARTICIPANTS_TOTAL_ASC
-  PARTICIPANTS_TOTAL_DESC
-  EXCUSED_TOTAL_ASC
-  EXCUSED_TOTAL_DESC
-  COMPLETED_AT_ASC
-  COMPLETED_AT_DESC
-  COMPETITION_TYPE_ASC
-  COMPETITION_TYPE_DESC
-  STATUS_ASC
-  STATUS_DESC
-}
-
-"""A connection to a list of `CompetitionOfficial` values."""
-type CompetitionOfficialsConnection {
-  """A list of `CompetitionOfficial` objects."""
-  nodes: [CompetitionOfficial!]!
-
-  """
-  A list of edges which contains the `CompetitionOfficial` and cursor to aid in pagination.
-  """
-  edges: [CompetitionOfficialsEdge!]!
-
-  """Information to aid in pagination."""
-  pageInfo: PageInfo!
-
-  """
-  The count of *all* `CompetitionOfficial` you could get from the connection.
-  """
-  totalCount: Int!
-}
-
-type CompetitionOfficial {
-  competitionId: BigInt!
-  personId: String!
-  role: OfficialRole!
-  externalId: String
-  judgeLabel: String
-
-  """
-  Reads a single `Competition` that is related to this `CompetitionOfficial`.
-  """
-  competition: Competition
-
-  """
-  Reads a single `FederationPerson` that is related to this `CompetitionOfficial`.
-  """
-  person: FederationPerson
-}
-
-"""A `CompetitionOfficial` edge in the connection."""
-type CompetitionOfficialsEdge {
-  """A cursor for use in pagination."""
-  cursor: Cursor
-
-  """The `CompetitionOfficial` at the end of the edge."""
-  node: CompetitionOfficial!
-}
-
-"""
-A condition to be used against `CompetitionOfficial` object types. All fields
-are tested for equality and combined with a logical ‘and.’
-"""
-input CompetitionOfficialCondition {
-  """Checks for equality with the object’s `competitionId` field."""
-  competitionId: BigInt
-
-  """Checks for equality with the object’s `personId` field."""
-  personId: String
-
-  """Checks for equality with the object’s `role` field."""
-  role: OfficialRole
-
-  """Checks for equality with the object’s `externalId` field."""
-  externalId: String
-
-  """Checks for equality with the object’s `judgeLabel` field."""
-  judgeLabel: String
-}
-
-"""Methods to use when ordering `CompetitionOfficial`."""
-enum CompetitionOfficialsOrderBy {
-  NATURAL
-  PRIMARY_KEY_ASC
-  PRIMARY_KEY_DESC
-  COMPETITION_ID_ASC
-  COMPETITION_ID_DESC
-  PERSON_ID_ASC
-  PERSON_ID_DESC
-  ROLE_ASC
-  ROLE_DESC
-  EXTERNAL_ID_ASC
-  EXTERNAL_ID_DESC
-  JUDGE_LABEL_ASC
-  JUDGE_LABEL_DESC
-}
-
-"""
-A condition to be used against `CompetitionRound` object types. All fields are
-tested for equality and combined with a logical ‘and.’
-"""
-input CompetitionRoundCondition {
-  """Checks for equality with the object’s `id` field."""
-  id: BigInt
-
-  """Checks for equality with the object’s `competitionId` field."""
-  competitionId: BigInt
-
-  """Checks for equality with the object’s `roundLabel` field."""
-  roundLabel: String
-
-  """Checks for equality with the object’s `roundKey` field."""
-  roundKey: String
-
-  """Checks for equality with the object’s `roundIndex` field."""
-  roundIndex: Int
-
-  """Checks for equality with the object’s `danceProgramId` field."""
-  danceProgramId: BigInt
-
-  """Checks for equality with the object’s `scoringMethod` field."""
-  scoringMethod: ScoringMethod
-
-  """Checks for equality with the object’s `createdAt` field."""
-  createdAt: Datetime
-}
-
-"""Methods to use when ordering `CompetitionRound`."""
-enum CompetitionRoundsOrderBy {
-  NATURAL
-  PRIMARY_KEY_ASC
-  PRIMARY_KEY_DESC
-  ID_ASC
-  ID_DESC
-  COMPETITION_ID_ASC
-  COMPETITION_ID_DESC
-  ROUND_LABEL_ASC
-  ROUND_LABEL_DESC
-  ROUND_KEY_ASC
-  ROUND_KEY_DESC
-  ROUND_INDEX_ASC
-  ROUND_INDEX_DESC
-  DANCE_PROGRAM_ID_ASC
-  DANCE_PROGRAM_ID_DESC
-  SCORING_METHOD_ASC
-  SCORING_METHOD_DESC
-  CREATED_AT_ASC
-  CREATED_AT_DESC
 }
 
 """A connection to a list of `CompetitionEntry` values."""
@@ -3069,6 +2544,7 @@ input CompetitionEntryCondition {
   """Checks for equality with the object’s `createdAt` field."""
   createdAt: Datetime
   hasResult: Boolean
+  participant: CompetitionParticipantCondition
 }
 
 """Methods to use when ordering `CompetitionEntry`."""
@@ -3084,6 +2560,100 @@ enum CompetitionEntriesOrderBy {
   CANCELLED_DESC
   CREATED_AT_ASC
   CREATED_AT_DESC
+}
+
+"""A connection to a list of `CompetitionRoundResult` values."""
+type CompetitionRoundResultsConnection {
+  """A list of `CompetitionRoundResult` objects."""
+  nodes: [CompetitionRoundResult!]!
+
+  """
+  A list of edges which contains the `CompetitionRoundResult` and cursor to aid in pagination.
+  """
+  edges: [CompetitionRoundResultsEdge!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """
+  The count of *all* `CompetitionRoundResult` you could get from the connection.
+  """
+  totalCount: Int!
+}
+
+type CompetitionRoundResult {
+  roundId: BigInt!
+  competitorId: String!
+  overallRanking: Int
+  overallRankingTo: Int
+  qualifiedNext: Boolean
+  overallScore: BigFloat
+  danceResults: [Float]
+
+  """
+  Reads a single `FederationCompetitor` that is related to this `CompetitionRoundResult`.
+  """
+  competitor: FederationCompetitor
+
+  """
+  Reads a single `CompetitionRound` that is related to this `CompetitionRoundResult`.
+  """
+  round: CompetitionRound
+}
+
+"""A `CompetitionRoundResult` edge in the connection."""
+type CompetitionRoundResultsEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `CompetitionRoundResult` at the end of the edge."""
+  node: CompetitionRoundResult!
+}
+
+"""
+A condition to be used against `CompetitionRoundResult` object types. All fields
+are tested for equality and combined with a logical ‘and.’
+"""
+input CompetitionRoundResultCondition {
+  """Checks for equality with the object’s `roundId` field."""
+  roundId: BigInt
+
+  """Checks for equality with the object’s `competitorId` field."""
+  competitorId: String
+
+  """Checks for equality with the object’s `overallRanking` field."""
+  overallRanking: Int
+
+  """Checks for equality with the object’s `overallRankingTo` field."""
+  overallRankingTo: Int
+
+  """Checks for equality with the object’s `qualifiedNext` field."""
+  qualifiedNext: Boolean
+
+  """Checks for equality with the object’s `overallScore` field."""
+  overallScore: BigFloat
+
+  """Checks for equality with the object’s `danceResults` field."""
+  danceResults: [Float]
+}
+
+"""Methods to use when ordering `CompetitionRoundResult`."""
+enum CompetitionRoundResultsOrderBy {
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+  ROUND_ID_ASC
+  ROUND_ID_DESC
+  COMPETITOR_ID_ASC
+  COMPETITOR_ID_DESC
+  OVERALL_RANKING_ASC
+  OVERALL_RANKING_DESC
+  OVERALL_RANKING_TO_ASC
+  OVERALL_RANKING_TO_DESC
+  QUALIFIED_NEXT_ASC
+  QUALIFIED_NEXT_DESC
+  OVERALL_SCORE_ASC
+  OVERALL_SCORE_DESC
 }
 
 """A connection to a list of `CompetitionResult` values."""
@@ -3175,6 +2745,7 @@ input CompetitionResultCondition {
 
   """Checks for equality with the object’s `lastDance` field."""
   lastDance: String
+  participant: CompetitionParticipantCondition
 }
 
 """Methods to use when ordering `CompetitionResult`."""
@@ -3206,443 +2777,78 @@ enum CompetitionResultsOrderBy {
   LAST_DANCE_DESC
 }
 
-"""
-A condition to be used against `CompetitionRoundDance` object types. All fields
-are tested for equality and combined with a logical ‘and.’
-"""
-input CompetitionRoundDanceCondition {
-  """Checks for equality with the object’s `roundId` field."""
-  roundId: BigInt
-
-  """Checks for equality with the object’s `danceProgramId` field."""
-  danceProgramId: BigInt
-
-  """Checks for equality with the object’s `danceCode` field."""
-  danceCode: String
-
-  """Checks for equality with the object’s `danceOrder` field."""
-  danceOrder: Int
-}
-
-"""Methods to use when ordering `CompetitionRoundDance`."""
-enum CompetitionRoundDancesOrderBy {
-  NATURAL
-  PRIMARY_KEY_ASC
-  PRIMARY_KEY_DESC
-  ROUND_ID_ASC
-  ROUND_ID_DESC
-  DANCE_PROGRAM_ID_ASC
-  DANCE_PROGRAM_ID_DESC
-  DANCE_CODE_ASC
-  DANCE_CODE_DESC
-  DANCE_ORDER_ASC
-  DANCE_ORDER_DESC
-}
-
-type CompetitionRoundResult {
-  roundId: BigInt!
-  competitorId: String!
-  overallRanking: Int
-  overallRankingTo: Int
-  qualifiedNext: Boolean
-  overallScore: BigFloat
-  danceResults: [Float]
+"""A connection to a list of `RanklistEntry` values."""
+type RanklistEntriesConnection {
+  """A list of `RanklistEntry` objects."""
+  nodes: [RanklistEntry!]!
 
   """
-  Reads a single `FederationCompetitor` that is related to this `CompetitionRoundResult`.
+  A list of edges which contains the `RanklistEntry` and cursor to aid in pagination.
+  """
+  edges: [RanklistEntriesEdge!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """The count of *all* `RanklistEntry` you could get from the connection."""
+  totalCount: Int!
+}
+
+type RanklistEntry {
+  snapshotId: BigInt!
+  competitorId: String!
+  ranking: Int!
+  rankingTo: Int
+  points: BigFloat
+
+  """
+  Reads a single `FederationCompetitor` that is related to this `RanklistEntry`.
   """
   competitor: FederationCompetitor
 
   """
-  Reads a single `CompetitionRound` that is related to this `CompetitionRoundResult`.
+  Reads a single `RanklistSnapshot` that is related to this `RanklistEntry`.
   """
-  round: CompetitionRound
+  snapshot: RanklistSnapshot
 }
 
-"""
-A condition to be used against `CompetitionRoundResult` object types. All fields
-are tested for equality and combined with a logical ‘and.’
-"""
-input CompetitionRoundResultCondition {
-  """Checks for equality with the object’s `roundId` field."""
-  roundId: BigInt
-
-  """Checks for equality with the object’s `competitorId` field."""
-  competitorId: String
-
-  """Checks for equality with the object’s `overallRanking` field."""
-  overallRanking: Int
-
-  """Checks for equality with the object’s `overallRankingTo` field."""
-  overallRankingTo: Int
-
-  """Checks for equality with the object’s `qualifiedNext` field."""
-  qualifiedNext: Boolean
-
-  """Checks for equality with the object’s `overallScore` field."""
-  overallScore: BigFloat
-
-  """Checks for equality with the object’s `danceResults` field."""
-  danceResults: [Float]
-}
-
-"""Methods to use when ordering `CompetitionRoundResult`."""
-enum CompetitionRoundResultsOrderBy {
-  NATURAL
-  PRIMARY_KEY_ASC
-  PRIMARY_KEY_DESC
-  ROUND_ID_ASC
-  ROUND_ID_DESC
-  COMPETITOR_ID_ASC
-  COMPETITOR_ID_DESC
-  OVERALL_RANKING_ASC
-  OVERALL_RANKING_DESC
-  OVERALL_RANKING_TO_ASC
-  OVERALL_RANKING_TO_DESC
-  QUALIFIED_NEXT_ASC
-  QUALIFIED_NEXT_DESC
-  OVERALL_SCORE_ASC
-  OVERALL_SCORE_DESC
-}
-
-type CompetitionRoundJudge {
-  roundId: BigInt!
-  personJudgeId: String!
-  judgeIndex: Int!
-  judgeLabel: String
-
-  """
-  Reads a single `FederationPerson` that is related to this `CompetitionRoundJudge`.
-  """
-  personJudge: FederationPerson
-
-  """
-  Reads a single `CompetitionRound` that is related to this `CompetitionRoundJudge`.
-  """
-  round: CompetitionRound
-}
-
-"""
-A condition to be used against `CompetitionRoundJudge` object types. All fields
-are tested for equality and combined with a logical ‘and.’
-"""
-input CompetitionRoundJudgeCondition {
-  """Checks for equality with the object’s `roundId` field."""
-  roundId: BigInt
-
-  """Checks for equality with the object’s `personJudgeId` field."""
-  personJudgeId: String
-
-  """Checks for equality with the object’s `judgeIndex` field."""
-  judgeIndex: Int
-
-  """Checks for equality with the object’s `judgeLabel` field."""
-  judgeLabel: String
-}
-
-"""Methods to use when ordering `CompetitionRoundJudge`."""
-enum CompetitionRoundJudgesOrderBy {
-  NATURAL
-  PRIMARY_KEY_ASC
-  PRIMARY_KEY_DESC
-  ROUND_ID_ASC
-  ROUND_ID_DESC
-  PERSON_JUDGE_ID_ASC
-  PERSON_JUDGE_ID_DESC
-  JUDGE_INDEX_ASC
-  JUDGE_INDEX_DESC
-  JUDGE_LABEL_ASC
-  JUDGE_LABEL_DESC
-}
-
-type JudgeScore {
-  roundId: BigInt!
-  danceOrder: Int!
-  danceCode: String!
-  judgePersonId: BigInt!
-  competitorId: BigInt!
-  component: ScoreComponent!
-  score: BigFloat!
-  rawScore: String
-
-  """
-  Reads a single `CompetitionRoundDance` that is related to this `JudgeScore`.
-  """
-  competitionRoundDanceByRoundIdAndDanceOrderAndDanceCode: CompetitionRoundDance
-
-  """
-  Reads a single `CompetitionRound` that is related to this `JudgeScore`.
-  """
-  round: CompetitionRound
-}
-
-enum ScoreComponent {
-  MARK
-  PLACES
-  AJS_TQ
-  AJS_MM
-  AJS_PS
-  AJS_CP
-  AJS_REDUCTION
-}
-
-"""
-A condition to be used against `JudgeScore` object types. All fields are tested
-for equality and combined with a logical ‘and.’
-"""
-input JudgeScoreCondition {
-  """Checks for equality with the object’s `roundId` field."""
-  roundId: BigInt
-
-  """Checks for equality with the object’s `danceOrder` field."""
-  danceOrder: Int
-
-  """Checks for equality with the object’s `danceCode` field."""
-  danceCode: String
-
-  """Checks for equality with the object’s `judgePersonId` field."""
-  judgePersonId: BigInt
-
-  """Checks for equality with the object’s `competitorId` field."""
-  competitorId: BigInt
-
-  """Checks for equality with the object’s `component` field."""
-  component: ScoreComponent
-
-  """Checks for equality with the object’s `score` field."""
-  score: BigFloat
-
-  """Checks for equality with the object’s `rawScore` field."""
-  rawScore: String
-}
-
-"""Methods to use when ordering `JudgeScore`."""
-enum JudgeScoresOrderBy {
-  NATURAL
-  PRIMARY_KEY_ASC
-  PRIMARY_KEY_DESC
-  ROUND_ID_ASC
-  ROUND_ID_DESC
-  DANCE_ORDER_ASC
-  DANCE_ORDER_DESC
-  DANCE_CODE_ASC
-  DANCE_CODE_DESC
-  JUDGE_PERSON_ID_ASC
-  JUDGE_PERSON_ID_DESC
-  COMPETITOR_ID_ASC
-  COMPETITOR_ID_DESC
-  COMPONENT_ASC
-  COMPONENT_DESC
-  SCORE_ASC
-  SCORE_DESC
-  RAW_SCORE_ASC
-  RAW_SCORE_DESC
-}
-
-"""A connection to a list of `JudgeScore` values."""
-type JudgeScoresConnection {
-  """A list of `JudgeScore` objects."""
-  nodes: [JudgeScore!]!
-
-  """
-  A list of edges which contains the `JudgeScore` and cursor to aid in pagination.
-  """
-  edges: [JudgeScoresEdge!]!
-
-  """Information to aid in pagination."""
-  pageInfo: PageInfo!
-
-  """The count of *all* `JudgeScore` you could get from the connection."""
-  totalCount: Int!
-}
-
-"""A `JudgeScore` edge in the connection."""
-type JudgeScoresEdge {
-  """A cursor for use in pagination."""
-  cursor: Cursor
-
-  """The `JudgeScore` at the end of the edge."""
-  node: JudgeScore!
-}
-
-"""A `CompetitionRoundDance` edge in the connection."""
-type CompetitionRoundDancesEdge {
-  """A cursor for use in pagination."""
-  cursor: Cursor
-
-  """The `CompetitionRoundDance` at the end of the edge."""
-  node: CompetitionRoundDance!
-}
-
-"""
-A condition to be used against `Category` object types. All fields are tested
-for equality and combined with a logical ‘and.’
-"""
-input CategoryCondition {
-  """Checks for equality with the object’s `id` field."""
-  id: BigInt
-
-  """Checks for equality with the object’s `name` field."""
-  name: String
-
-  """Checks for equality with the object’s `series` field."""
-  series: String
-
-  """Checks for equality with the object’s `discipline` field."""
-  discipline: String
-
-  """Checks for equality with the object’s `ageGroup` field."""
-  ageGroup: String
-
-  """Checks for equality with the object’s `genderGroup` field."""
-  genderGroup: String
-
-  """Checks for equality with the object’s `class` field."""
-  class: String
-
-  """Checks for equality with the object’s `competitorType` field."""
-  competitorType: CompetitorType
-
-  """Checks for equality with the object’s `baseDanceProgramId` field."""
-  baseDanceProgramId: BigInt
-}
-
-"""Methods to use when ordering `Category`."""
-enum CategoriesOrderBy {
-  NATURAL
-  PRIMARY_KEY_ASC
-  PRIMARY_KEY_DESC
-  ID_ASC
-  ID_DESC
-  NAME_ASC
-  NAME_DESC
-  SERIES_ASC
-  SERIES_DESC
-  DISCIPLINE_ASC
-  DISCIPLINE_DESC
-  AGE_GROUP_ASC
-  AGE_GROUP_DESC
-  GENDER_GROUP_ASC
-  GENDER_GROUP_DESC
-  CLASS_ASC
-  CLASS_DESC
-  COMPETITOR_TYPE_ASC
-  COMPETITOR_TYPE_DESC
-  BASE_DANCE_PROGRAM_ID_ASC
-  BASE_DANCE_PROGRAM_ID_DESC
-}
-
-"""A connection to a list of `CompetitionRound` values."""
-type CompetitionRoundsConnection {
-  """A list of `CompetitionRound` objects."""
-  nodes: [CompetitionRound!]!
-
-  """
-  A list of edges which contains the `CompetitionRound` and cursor to aid in pagination.
-  """
-  edges: [CompetitionRoundsEdge!]!
-
-  """Information to aid in pagination."""
-  pageInfo: PageInfo!
-
-  """
-  The count of *all* `CompetitionRound` you could get from the connection.
-  """
-  totalCount: Int!
-}
-
-"""A `CompetitionRound` edge in the connection."""
-type CompetitionRoundsEdge {
-  """A cursor for use in pagination."""
-  cursor: Cursor
-
-  """The `CompetitionRound` at the end of the edge."""
-  node: CompetitionRound!
-}
-
-"""
-A connection to a list of `FederationCompetitorCategoryProgress` values.
-"""
-type FederationCompetitorCategoryProgressesConnection {
-  """A list of `FederationCompetitorCategoryProgress` objects."""
-  nodes: [FederationCompetitorCategoryProgress!]!
-
-  """
-  A list of edges which contains the `FederationCompetitorCategoryProgress` and cursor to aid in pagination.
-  """
-  edges: [FederationCompetitorCategoryProgressesEdge!]!
-
-  """Information to aid in pagination."""
-  pageInfo: PageInfo!
-
-  """
-  The count of *all* `FederationCompetitorCategoryProgress` you could get from the connection.
-  """
-  totalCount: Int!
-}
-
-"""A `FederationCompetitorCategoryProgress` edge in the connection."""
-type FederationCompetitorCategoryProgressesEdge {
-  """A cursor for use in pagination."""
-  cursor: Cursor
-
-  """The `FederationCompetitorCategoryProgress` at the end of the edge."""
-  node: FederationCompetitorCategoryProgress!
-}
-
-"""
-A condition to be used against `FederationCompetitorCategoryProgress` object
-types. All fields are tested for equality and combined with a logical ‘and.’
-"""
-input FederationCompetitorCategoryProgressCondition {
-  """Checks for equality with the object’s `competitorId` field."""
-  competitorId: String
-
-  """Checks for equality with the object’s `categoryId` field."""
-  categoryId: BigInt
-
-  """Checks for equality with the object’s `points` field."""
-  points: BigFloat
-
-  """Checks for equality with the object’s `domesticFinals` field."""
-  domesticFinals: Int
-
-  """Checks for equality with the object’s `foreignFinals` field."""
-  foreignFinals: Int
-}
-
-"""Methods to use when ordering `FederationCompetitorCategoryProgress`."""
-enum FederationCompetitorCategoryProgressesOrderBy {
-  NATURAL
-  PRIMARY_KEY_ASC
-  PRIMARY_KEY_DESC
-  COMPETITOR_ID_ASC
-  COMPETITOR_ID_DESC
-  CATEGORY_ID_ASC
-  CATEGORY_ID_DESC
-  POINTS_ASC
-  POINTS_DESC
-  DOMESTIC_FINALS_ASC
-  DOMESTIC_FINALS_DESC
-  FOREIGN_FINALS_ASC
-  FOREIGN_FINALS_DESC
-}
-
-"""A connection to a list of `Ranklist` values."""
-type RanklistsConnection {
-  """A list of `Ranklist` objects."""
-  nodes: [Ranklist!]!
-
-  """
-  A list of edges which contains the `Ranklist` and cursor to aid in pagination.
-  """
-  edges: [RanklistsEdge!]!
-
-  """Information to aid in pagination."""
-  pageInfo: PageInfo!
-
-  """The count of *all* `Ranklist` you could get from the connection."""
-  totalCount: Int!
+type RanklistSnapshot {
+  id: BigInt!
+  ranklistId: BigInt!
+  kind: String!
+  asOfDate: Date!
+
+  """Reads a single `Ranklist` that is related to this `RanklistSnapshot`."""
+  ranklist: Ranklist
+
+  """Reads and enables pagination through a set of `RanklistEntry`."""
+  ranklistEntriesBySnapshotId(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: RanklistEntryCondition
+
+    """The method to use when ordering `RanklistEntry`."""
+    orderBy: [RanklistEntriesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): RanklistEntriesConnection!
 }
 
 type Ranklist {
@@ -3706,128 +2912,6 @@ type RanklistSnapshotsConnection {
   totalCount: Int!
 }
 
-type RanklistSnapshot {
-  id: BigInt!
-  ranklistId: BigInt!
-  kind: String!
-  asOfDate: Date!
-
-  """Reads a single `Ranklist` that is related to this `RanklistSnapshot`."""
-  ranklist: Ranklist
-
-  """Reads and enables pagination through a set of `RanklistEntry`."""
-  ranklistEntriesBySnapshotId(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Only read the last `n` values of the set."""
-    last: Int
-
-    """
-    Skip the first `n` values from our `after` cursor, an alternative to cursor
-    based pagination. May not be used with `last`.
-    """
-    offset: Int
-
-    """Read all values in the set before (above) this cursor."""
-    before: Cursor
-
-    """Read all values in the set after (below) this cursor."""
-    after: Cursor
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: RanklistEntryCondition
-
-    """The method to use when ordering `RanklistEntry`."""
-    orderBy: [RanklistEntriesOrderBy!] = [PRIMARY_KEY_ASC]
-  ): RanklistEntriesConnection!
-}
-
-"""A connection to a list of `RanklistEntry` values."""
-type RanklistEntriesConnection {
-  """A list of `RanklistEntry` objects."""
-  nodes: [RanklistEntry!]!
-
-  """
-  A list of edges which contains the `RanklistEntry` and cursor to aid in pagination.
-  """
-  edges: [RanklistEntriesEdge!]!
-
-  """Information to aid in pagination."""
-  pageInfo: PageInfo!
-
-  """The count of *all* `RanklistEntry` you could get from the connection."""
-  totalCount: Int!
-}
-
-type RanklistEntry {
-  snapshotId: BigInt!
-  competitorId: String!
-  ranking: Int!
-  rankingTo: Int
-  points: BigFloat
-
-  """
-  Reads a single `FederationCompetitor` that is related to this `RanklistEntry`.
-  """
-  competitor: FederationCompetitor
-
-  """
-  Reads a single `RanklistSnapshot` that is related to this `RanklistEntry`.
-  """
-  snapshot: RanklistSnapshot
-}
-
-"""A `RanklistEntry` edge in the connection."""
-type RanklistEntriesEdge {
-  """A cursor for use in pagination."""
-  cursor: Cursor
-
-  """The `RanklistEntry` at the end of the edge."""
-  node: RanklistEntry!
-}
-
-"""
-A condition to be used against `RanklistEntry` object types. All fields are
-tested for equality and combined with a logical ‘and.’
-"""
-input RanklistEntryCondition {
-  """Checks for equality with the object’s `snapshotId` field."""
-  snapshotId: BigInt
-
-  """Checks for equality with the object’s `competitorId` field."""
-  competitorId: String
-
-  """Checks for equality with the object’s `ranking` field."""
-  ranking: Int
-
-  """Checks for equality with the object’s `rankingTo` field."""
-  rankingTo: Int
-
-  """Checks for equality with the object’s `points` field."""
-  points: BigFloat
-  latestSnapshot: Boolean
-}
-
-"""Methods to use when ordering `RanklistEntry`."""
-enum RanklistEntriesOrderBy {
-  NATURAL
-  PRIMARY_KEY_ASC
-  PRIMARY_KEY_DESC
-  SNAPSHOT_ID_ASC
-  SNAPSHOT_ID_DESC
-  COMPETITOR_ID_ASC
-  COMPETITOR_ID_DESC
-  RANKING_ASC
-  RANKING_DESC
-  RANKING_TO_ASC
-  RANKING_TO_DESC
-  POINTS_ASC
-  POINTS_DESC
-}
-
 """A `RanklistSnapshot` edge in the connection."""
 type RanklistSnapshotsEdge {
   """A cursor for use in pagination."""
@@ -3870,74 +2954,52 @@ enum RanklistSnapshotsOrderBy {
   AS_OF_DATE_DESC
 }
 
-"""A `Ranklist` edge in the connection."""
-type RanklistsEdge {
-  """A cursor for use in pagination."""
-  cursor: Cursor
+"""
+A condition to be used against `RanklistEntry` object types. All fields are
+tested for equality and combined with a logical ‘and.’
+"""
+input RanklistEntryCondition {
+  """Checks for equality with the object’s `snapshotId` field."""
+  snapshotId: BigInt
 
-  """The `Ranklist` at the end of the edge."""
-  node: Ranklist!
+  """Checks for equality with the object’s `competitorId` field."""
+  competitorId: String
+
+  """Checks for equality with the object’s `ranking` field."""
+  ranking: Int
+
+  """Checks for equality with the object’s `rankingTo` field."""
+  rankingTo: Int
+
+  """Checks for equality with the object’s `points` field."""
+  points: BigFloat
+  latestSnapshot: Boolean
 }
 
-"""
-A condition to be used against `Ranklist` object types. All fields are tested
-for equality and combined with a logical ‘and.’
-"""
-input RanklistCondition {
-  """Checks for equality with the object’s `id` field."""
-  id: BigInt
-
-  """Checks for equality with the object’s `federation` field."""
-  federation: String
-
-  """Checks for equality with the object’s `categoryId` field."""
-  categoryId: BigInt
-
-  """Checks for equality with the object’s `name` field."""
-  name: String
-}
-
-"""Methods to use when ordering `Ranklist`."""
-enum RanklistsOrderBy {
+"""Methods to use when ordering `RanklistEntry`."""
+enum RanklistEntriesOrderBy {
   NATURAL
   PRIMARY_KEY_ASC
   PRIMARY_KEY_DESC
-  ID_ASC
-  ID_DESC
-  FEDERATION_ASC
-  FEDERATION_DESC
-  CATEGORY_ID_ASC
-  CATEGORY_ID_DESC
-  NAME_ASC
-  NAME_DESC
+  SNAPSHOT_ID_ASC
+  SNAPSHOT_ID_DESC
+  COMPETITOR_ID_ASC
+  COMPETITOR_ID_DESC
+  RANKING_ASC
+  RANKING_DESC
+  RANKING_TO_ASC
+  RANKING_TO_DESC
+  POINTS_ASC
+  POINTS_DESC
 }
 
-"""A connection to a list of `CompetitionRoundResult` values."""
-type CompetitionRoundResultsConnection {
-  """A list of `CompetitionRoundResult` objects."""
-  nodes: [CompetitionRoundResult!]!
-
-  """
-  A list of edges which contains the `CompetitionRoundResult` and cursor to aid in pagination.
-  """
-  edges: [CompetitionRoundResultsEdge!]!
-
-  """Information to aid in pagination."""
-  pageInfo: PageInfo!
-
-  """
-  The count of *all* `CompetitionRoundResult` you could get from the connection.
-  """
-  totalCount: Int!
-}
-
-"""A `CompetitionRoundResult` edge in the connection."""
-type CompetitionRoundResultsEdge {
+"""A `RanklistEntry` edge in the connection."""
+type RanklistEntriesEdge {
   """A cursor for use in pagination."""
   cursor: Cursor
 
-  """The `CompetitionRoundResult` at the end of the edge."""
-  node: CompetitionRoundResult!
+  """The `RanklistEntry` at the end of the edge."""
+  node: RanklistEntry!
 }
 
 type Person {
@@ -3945,6 +3007,7 @@ type Person {
   isAdmin: Boolean
   isMember: Boolean
   isTrainer: Boolean
+  ageGroup: String
   cohortIds: [BigInt]
   cstsCandidatesList(
     limit: Int
@@ -4480,6 +3543,35 @@ type Person {
     """The method to use when ordering `RanklistEntry`."""
     orderBy: [RanklistEntriesOrderBy!] = [PRIMARY_KEY_ASC]
   ): RanklistEntriesConnection!
+
+  """Reads and enables pagination through a set of `Competition`."""
+  federationCompetitions(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CompetitionCondition
+
+    """The method to use when ordering `Competition`."""
+    orderBy: [CompetitionsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CompetitionsConnection!
 }
 
 type PersonCstsCandidatesRecord {
@@ -4490,6 +3582,7 @@ type PersonCstsCandidatesRecord {
 }
 
 type Couple {
+  ageGroup: String
   id: BigInt!
   manId: BigInt!
   womanId: BigInt!
@@ -4613,6 +3706,35 @@ type Couple {
     """The method to use when ordering `RanklistEntry`."""
     orderBy: [RanklistEntriesOrderBy!] = [PRIMARY_KEY_ASC]
   ): RanklistEntriesConnection!
+
+  """Reads and enables pagination through a set of `Competition`."""
+  federationCompetitions(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CompetitionCondition
+
+    """The method to use when ordering `Competition`."""
+    orderBy: [CompetitionsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CompetitionsConnection!
 }
 
 enum RelationshipStatus {
@@ -8568,20 +7690,20 @@ input FederationCompetitorCondition {
   """Checks for equality with the object’s `federation` field."""
   federation: String
 
-  """Checks for equality with the object’s `externalId` field."""
-  externalId: BigInt
-
   """Checks for equality with the object’s `competitorType` field."""
   competitorType: CompetitorType
-
-  """Checks for equality with the object’s `ageGroup` field."""
-  ageGroup: String
 
   """Checks for equality with the object’s `name` field."""
   name: String
 
   """Checks for equality with the object’s `createdAt` field."""
   createdAt: Datetime
+
+  """Checks for equality with the object’s `ageGroup` field."""
+  ageGroup: String
+
+  """Checks for equality with the object’s `externalId` field."""
+  externalId: String
   categoryProgress: CompetitorCategoryProgressCondition
   competitorTypes: [CompetitorType!]
   competedSince: Date
@@ -8602,16 +7724,129 @@ enum FederationCompetitorsOrderBy {
   ID_DESC
   FEDERATION_ASC
   FEDERATION_DESC
-  EXTERNAL_ID_ASC
-  EXTERNAL_ID_DESC
   COMPETITOR_TYPE_ASC
   COMPETITOR_TYPE_DESC
-  AGE_GROUP_ASC
-  AGE_GROUP_DESC
   NAME_ASC
   NAME_DESC
   CREATED_AT_ASC
   CREATED_AT_DESC
+  AGE_GROUP_ASC
+  AGE_GROUP_DESC
+  EXTERNAL_ID_ASC
+  EXTERNAL_ID_DESC
+}
+
+"""A connection to a list of `Competition` values."""
+type CompetitionsConnection {
+  """A list of `Competition` objects."""
+  nodes: [Competition!]!
+
+  """
+  A list of edges which contains the `Competition` and cursor to aid in pagination.
+  """
+  edges: [CompetitionsEdge!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """The count of *all* `Competition` you could get from the connection."""
+  totalCount: Int!
+}
+
+"""A `Competition` edge in the connection."""
+type CompetitionsEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `Competition` at the end of the edge."""
+  node: Competition!
+}
+
+"""
+A condition to be used against `Competition` object types. All fields are tested
+for equality and combined with a logical ‘and.’
+"""
+input CompetitionCondition {
+  """Checks for equality with the object’s `id` field."""
+  id: BigInt
+
+  """Checks for equality with the object’s `federation` field."""
+  federation: String
+
+  """Checks for equality with the object’s `externalId` field."""
+  externalId: String
+
+  """Checks for equality with the object’s `eventId` field."""
+  eventId: BigInt
+
+  """Checks for equality with the object’s `categoryId` field."""
+  categoryId: BigInt
+
+  """Checks for equality with the object’s `startDate` field."""
+  startDate: Date
+
+  """Checks for equality with the object’s `endDate` field."""
+  endDate: Date
+
+  """Checks for equality with the object’s `checkInEnd` field."""
+  checkInEnd: Time
+
+  """Checks for equality with the object’s `registrationFee` field."""
+  registrationFee: BigFloat
+
+  """Checks for equality with the object’s `participantsTotal` field."""
+  participantsTotal: Int
+
+  """Checks for equality with the object’s `excusedTotal` field."""
+  excusedTotal: Int
+
+  """Checks for equality with the object’s `completedAt` field."""
+  completedAt: Datetime
+
+  """Checks for equality with the object’s `competitionType` field."""
+  competitionType: CompetitionType
+
+  """Checks for equality with the object’s `status` field."""
+  status: FederationEventStatus
+  competitorId: String
+  officialPersonId: String
+  participation: CompetitionParticipationFilter
+  date: CompetitionDateCondition
+}
+
+"""Methods to use when ordering `Competition`."""
+enum CompetitionsOrderBy {
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+  ID_ASC
+  ID_DESC
+  FEDERATION_ASC
+  FEDERATION_DESC
+  EXTERNAL_ID_ASC
+  EXTERNAL_ID_DESC
+  EVENT_ID_ASC
+  EVENT_ID_DESC
+  CATEGORY_ID_ASC
+  CATEGORY_ID_DESC
+  START_DATE_ASC
+  START_DATE_DESC
+  END_DATE_ASC
+  END_DATE_DESC
+  CHECK_IN_END_ASC
+  CHECK_IN_END_DESC
+  REGISTRATION_FEE_ASC
+  REGISTRATION_FEE_DESC
+  PARTICIPANTS_TOTAL_ASC
+  PARTICIPANTS_TOTAL_DESC
+  EXCUSED_TOTAL_ASC
+  EXCUSED_TOTAL_DESC
+  COMPLETED_AT_ASC
+  COMPLETED_AT_DESC
+  COMPETITION_TYPE_ASC
+  COMPETITION_TYPE_DESC
+  STATUS_ASC
+  STATUS_DESC
 }
 
 """A connection to a list of `TenantMembership` values."""
@@ -9165,9 +8400,6 @@ input FederationPersonCondition {
   """Checks for equality with the object’s `nationality` field."""
   nationality: String
 
-  """Checks for equality with the object’s `ageGroup` field."""
-  ageGroup: String
-
   """
   Checks for equality with the object’s `medicalCheckupExpiration` field.
   """
@@ -9181,6 +8413,9 @@ input FederationPersonCondition {
 
   """Checks for equality with the object’s `searchName` field."""
   searchName: String
+
+  """Checks for equality with the object’s `ageGroup` field."""
+  ageGroup: String
   search: String
 }
 
@@ -9207,8 +8442,6 @@ enum FederationPeopleOrderBy {
   DOB_DESC
   NATIONALITY_ASC
   NATIONALITY_DESC
-  AGE_GROUP_ASC
-  AGE_GROUP_DESC
   MEDICAL_CHECKUP_EXPIRATION_ASC
   MEDICAL_CHECKUP_EXPIRATION_DESC
   MEDICAL_CHECKUP_TYPE_ASC
@@ -9217,6 +8450,38 @@ enum FederationPeopleOrderBy {
   CREATED_AT_DESC
   SEARCH_NAME_ASC
   SEARCH_NAME_DESC
+  AGE_GROUP_ASC
+  AGE_GROUP_DESC
+}
+
+"""
+A connection to a list of `FederationCompetitorCategoryProgress` values.
+"""
+type FederationCompetitorCategoryProgressesConnection {
+  """A list of `FederationCompetitorCategoryProgress` objects."""
+  nodes: [FederationCompetitorCategoryProgress!]!
+
+  """
+  A list of edges which contains the `FederationCompetitorCategoryProgress` and cursor to aid in pagination.
+  """
+  edges: [FederationCompetitorCategoryProgressesEdge!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """
+  The count of *all* `FederationCompetitorCategoryProgress` you could get from the connection.
+  """
+  totalCount: Int!
+}
+
+"""A `FederationCompetitorCategoryProgress` edge in the connection."""
+type FederationCompetitorCategoryProgressesEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `FederationCompetitorCategoryProgress` at the end of the edge."""
+  node: FederationCompetitorCategoryProgress!
 }
 
 """
@@ -9395,13 +8660,962 @@ enum PeopleOrderBy {
   WEBSITE_URL_DESC
 }
 
-"""A `FederationCompetitorComponent` edge in the connection."""
-type FederationCompetitorComponentsEdge {
+"""A `FederationCompetitorClubAffiliation` edge in the connection."""
+type FederationCompetitorClubAffiliationsEdge {
   """A cursor for use in pagination."""
   cursor: Cursor
 
-  """The `FederationCompetitorComponent` at the end of the edge."""
-  node: FederationCompetitorComponent!
+  """The `FederationCompetitorClubAffiliation` at the end of the edge."""
+  node: FederationCompetitorClubAffiliation!
+}
+
+"""A connection to a list of `FederationEvent` values."""
+type FederationEventsConnection {
+  """A list of `FederationEvent` objects."""
+  nodes: [FederationEvent!]!
+
+  """
+  A list of edges which contains the `FederationEvent` and cursor to aid in pagination.
+  """
+  edges: [FederationEventsEdge!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """
+  The count of *all* `FederationEvent` you could get from the connection.
+  """
+  totalCount: Int!
+}
+
+"""A `FederationEvent` edge in the connection."""
+type FederationEventsEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `FederationEvent` at the end of the edge."""
+  node: FederationEvent!
+}
+
+"""
+A condition to be used against `FederationEvent` object types. All fields are
+tested for equality and combined with a logical ‘and.’
+"""
+input FederationEventCondition {
+  """Checks for equality with the object’s `id` field."""
+  id: BigInt
+
+  """Checks for equality with the object’s `federation` field."""
+  federation: String
+
+  """Checks for equality with the object’s `externalId` field."""
+  externalId: String
+
+  """Checks for equality with the object’s `name` field."""
+  name: String
+
+  """Checks for equality with the object’s `startDate` field."""
+  startDate: Date
+
+  """Checks for equality with the object’s `endDate` field."""
+  endDate: Date
+
+  """Checks for equality with the object’s `location` field."""
+  location: String
+
+  """Checks for equality with the object’s `city` field."""
+  city: String
+
+  """Checks for equality with the object’s `country` field."""
+  country: String
+
+  """Checks for equality with the object’s `streetAddress` field."""
+  streetAddress: String
+
+  """Checks for equality with the object’s `postalCode` field."""
+  postalCode: String
+
+  """Checks for equality with the object’s `addressNote` field."""
+  addressNote: String
+
+  """Checks for equality with the object’s `geoReference` field."""
+  geoReference: String
+
+  """Checks for equality with the object’s `floorSize` field."""
+  floorSize: String
+
+  """Checks for equality with the object’s `contactName` field."""
+  contactName: String
+
+  """Checks for equality with the object’s `contactPhone` field."""
+  contactPhone: String
+
+  """Checks for equality with the object’s `contactEmail` field."""
+  contactEmail: String
+
+  """Checks for equality with the object’s `websiteUrl` field."""
+  websiteUrl: String
+
+  """Checks for equality with the object’s `organizingClubId` field."""
+  organizingClubId: BigInt
+
+  """Checks for equality with the object’s `range` field."""
+  range: DateRangeInput
+
+  """Checks for equality with the object’s `venueLat` field."""
+  venueLat: Float
+
+  """Checks for equality with the object’s `venueLng` field."""
+  venueLng: Float
+
+  """Checks for equality with the object’s `venueLocationSource` field."""
+  venueLocationSource: String
+
+  """Checks for equality with the object’s `venueLocationRef` field."""
+  venueLocationRef: String
+
+  """Checks for equality with the object’s `status` field."""
+  status: FederationEventStatus
+  search: String
+  officialPersonId: String
+  onDate: Date
+}
+
+"""A range of `Date`."""
+input DateRangeInput {
+  """The starting bound of our range."""
+  start: DateRangeBoundInput
+
+  """The ending bound of our range."""
+  end: DateRangeBoundInput
+}
+
+"""
+The value at one end of a range. A range can either include this value, or not.
+"""
+input DateRangeBoundInput {
+  """The value at one end of our range."""
+  value: Date!
+
+  """Whether or not the value of this bound is included in the range."""
+  inclusive: Boolean!
+}
+
+"""Methods to use when ordering `FederationEvent`."""
+enum FederationEventsOrderBy {
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+  ID_ASC
+  ID_DESC
+  FEDERATION_ASC
+  FEDERATION_DESC
+  EXTERNAL_ID_ASC
+  EXTERNAL_ID_DESC
+  NAME_ASC
+  NAME_DESC
+  START_DATE_ASC
+  START_DATE_DESC
+  END_DATE_ASC
+  END_DATE_DESC
+  LOCATION_ASC
+  LOCATION_DESC
+  CITY_ASC
+  CITY_DESC
+  COUNTRY_ASC
+  COUNTRY_DESC
+  STREET_ADDRESS_ASC
+  STREET_ADDRESS_DESC
+  POSTAL_CODE_ASC
+  POSTAL_CODE_DESC
+  ADDRESS_NOTE_ASC
+  ADDRESS_NOTE_DESC
+  GEO_REFERENCE_ASC
+  GEO_REFERENCE_DESC
+  FLOOR_SIZE_ASC
+  FLOOR_SIZE_DESC
+  CONTACT_NAME_ASC
+  CONTACT_NAME_DESC
+  CONTACT_PHONE_ASC
+  CONTACT_PHONE_DESC
+  CONTACT_EMAIL_ASC
+  CONTACT_EMAIL_DESC
+  WEBSITE_URL_ASC
+  WEBSITE_URL_DESC
+  ORGANIZING_CLUB_ID_ASC
+  ORGANIZING_CLUB_ID_DESC
+  VENUE_LAT_ASC
+  VENUE_LAT_DESC
+  VENUE_LNG_ASC
+  VENUE_LNG_DESC
+  VENUE_LOCATION_SOURCE_ASC
+  VENUE_LOCATION_SOURCE_DESC
+  VENUE_LOCATION_REF_ASC
+  VENUE_LOCATION_REF_DESC
+  STATUS_ASC
+  STATUS_DESC
+}
+
+"""A connection to a list of `FederationEventOfficial` values."""
+type FederationEventOfficialsConnection {
+  """A list of `FederationEventOfficial` objects."""
+  nodes: [FederationEventOfficial!]!
+
+  """
+  A list of edges which contains the `FederationEventOfficial` and cursor to aid in pagination.
+  """
+  edges: [FederationEventOfficialsEdge!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """
+  The count of *all* `FederationEventOfficial` you could get from the connection.
+  """
+  totalCount: Int!
+}
+
+type FederationEventOfficial {
+  eventId: BigInt!
+  personId: String!
+  role: OfficialRole!
+  discipline: String!
+  grade: String
+
+  """
+  Reads a single `FederationEvent` that is related to this `FederationEventOfficial`.
+  """
+  event: FederationEvent
+
+  """
+  Reads a single `FederationPerson` that is related to this `FederationEventOfficial`.
+  """
+  person: FederationPerson
+}
+
+enum OfficialRole {
+  ADJUDICATOR
+  CHAIRPERSON
+  INVIGILATOR
+  SCRUTINEER
+  LEAD_SCRUTINEER
+}
+
+"""A `FederationEventOfficial` edge in the connection."""
+type FederationEventOfficialsEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `FederationEventOfficial` at the end of the edge."""
+  node: FederationEventOfficial!
+}
+
+"""
+A condition to be used against `FederationEventOfficial` object types. All
+fields are tested for equality and combined with a logical ‘and.’
+"""
+input FederationEventOfficialCondition {
+  """Checks for equality with the object’s `eventId` field."""
+  eventId: BigInt
+
+  """Checks for equality with the object’s `personId` field."""
+  personId: String
+
+  """Checks for equality with the object’s `role` field."""
+  role: OfficialRole
+
+  """Checks for equality with the object’s `discipline` field."""
+  discipline: String
+
+  """Checks for equality with the object’s `grade` field."""
+  grade: String
+}
+
+"""Methods to use when ordering `FederationEventOfficial`."""
+enum FederationEventOfficialsOrderBy {
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+  EVENT_ID_ASC
+  EVENT_ID_DESC
+  PERSON_ID_ASC
+  PERSON_ID_DESC
+  ROLE_ASC
+  ROLE_DESC
+  DISCIPLINE_ASC
+  DISCIPLINE_DESC
+  GRADE_ASC
+  GRADE_DESC
+}
+
+"""A connection to a list of `CompetitionOfficial` values."""
+type CompetitionOfficialsConnection {
+  """A list of `CompetitionOfficial` objects."""
+  nodes: [CompetitionOfficial!]!
+
+  """
+  A list of edges which contains the `CompetitionOfficial` and cursor to aid in pagination.
+  """
+  edges: [CompetitionOfficialsEdge!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """
+  The count of *all* `CompetitionOfficial` you could get from the connection.
+  """
+  totalCount: Int!
+}
+
+type CompetitionOfficial {
+  competitionId: BigInt!
+  personId: String!
+  role: OfficialRole!
+  externalId: String
+  judgeLabel: String
+
+  """
+  Reads a single `Competition` that is related to this `CompetitionOfficial`.
+  """
+  competition: Competition
+
+  """
+  Reads a single `FederationPerson` that is related to this `CompetitionOfficial`.
+  """
+  person: FederationPerson
+}
+
+"""A `CompetitionOfficial` edge in the connection."""
+type CompetitionOfficialsEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `CompetitionOfficial` at the end of the edge."""
+  node: CompetitionOfficial!
+}
+
+"""
+A condition to be used against `CompetitionOfficial` object types. All fields
+are tested for equality and combined with a logical ‘and.’
+"""
+input CompetitionOfficialCondition {
+  """Checks for equality with the object’s `competitionId` field."""
+  competitionId: BigInt
+
+  """Checks for equality with the object’s `personId` field."""
+  personId: String
+
+  """Checks for equality with the object’s `role` field."""
+  role: OfficialRole
+
+  """Checks for equality with the object’s `externalId` field."""
+  externalId: String
+
+  """Checks for equality with the object’s `judgeLabel` field."""
+  judgeLabel: String
+}
+
+"""Methods to use when ordering `CompetitionOfficial`."""
+enum CompetitionOfficialsOrderBy {
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+  COMPETITION_ID_ASC
+  COMPETITION_ID_DESC
+  PERSON_ID_ASC
+  PERSON_ID_DESC
+  ROLE_ASC
+  ROLE_DESC
+  EXTERNAL_ID_ASC
+  EXTERNAL_ID_DESC
+  JUDGE_LABEL_ASC
+  JUDGE_LABEL_DESC
+}
+
+"""
+A condition to be used against `CompetitionRound` object types. All fields are
+tested for equality and combined with a logical ‘and.’
+"""
+input CompetitionRoundCondition {
+  """Checks for equality with the object’s `id` field."""
+  id: BigInt
+
+  """Checks for equality with the object’s `competitionId` field."""
+  competitionId: BigInt
+
+  """Checks for equality with the object’s `roundLabel` field."""
+  roundLabel: String
+
+  """Checks for equality with the object’s `roundKey` field."""
+  roundKey: String
+
+  """Checks for equality with the object’s `roundIndex` field."""
+  roundIndex: Int
+
+  """Checks for equality with the object’s `danceProgramId` field."""
+  danceProgramId: BigInt
+
+  """Checks for equality with the object’s `scoringMethod` field."""
+  scoringMethod: ScoringMethod
+
+  """Checks for equality with the object’s `createdAt` field."""
+  createdAt: Datetime
+}
+
+"""Methods to use when ordering `CompetitionRound`."""
+enum CompetitionRoundsOrderBy {
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+  ID_ASC
+  ID_DESC
+  COMPETITION_ID_ASC
+  COMPETITION_ID_DESC
+  ROUND_LABEL_ASC
+  ROUND_LABEL_DESC
+  ROUND_KEY_ASC
+  ROUND_KEY_DESC
+  ROUND_INDEX_ASC
+  ROUND_INDEX_DESC
+  DANCE_PROGRAM_ID_ASC
+  DANCE_PROGRAM_ID_DESC
+  SCORING_METHOD_ASC
+  SCORING_METHOD_DESC
+  CREATED_AT_ASC
+  CREATED_AT_DESC
+}
+
+"""
+A condition to be used against `CompetitionRoundDance` object types. All fields
+are tested for equality and combined with a logical ‘and.’
+"""
+input CompetitionRoundDanceCondition {
+  """Checks for equality with the object’s `roundId` field."""
+  roundId: BigInt
+
+  """Checks for equality with the object’s `danceProgramId` field."""
+  danceProgramId: BigInt
+
+  """Checks for equality with the object’s `danceCode` field."""
+  danceCode: String
+
+  """Checks for equality with the object’s `danceOrder` field."""
+  danceOrder: Int
+}
+
+"""Methods to use when ordering `CompetitionRoundDance`."""
+enum CompetitionRoundDancesOrderBy {
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+  ROUND_ID_ASC
+  ROUND_ID_DESC
+  DANCE_PROGRAM_ID_ASC
+  DANCE_PROGRAM_ID_DESC
+  DANCE_CODE_ASC
+  DANCE_CODE_DESC
+  DANCE_ORDER_ASC
+  DANCE_ORDER_DESC
+}
+
+type CompetitionRoundJudge {
+  roundId: BigInt!
+  personJudgeId: String!
+  judgeIndex: Int!
+  judgeLabel: String
+
+  """
+  Reads a single `FederationPerson` that is related to this `CompetitionRoundJudge`.
+  """
+  personJudge: FederationPerson
+
+  """
+  Reads a single `CompetitionRound` that is related to this `CompetitionRoundJudge`.
+  """
+  round: CompetitionRound
+}
+
+"""
+A condition to be used against `CompetitionRoundJudge` object types. All fields
+are tested for equality and combined with a logical ‘and.’
+"""
+input CompetitionRoundJudgeCondition {
+  """Checks for equality with the object’s `roundId` field."""
+  roundId: BigInt
+
+  """Checks for equality with the object’s `personJudgeId` field."""
+  personJudgeId: String
+
+  """Checks for equality with the object’s `judgeIndex` field."""
+  judgeIndex: Int
+
+  """Checks for equality with the object’s `judgeLabel` field."""
+  judgeLabel: String
+}
+
+"""Methods to use when ordering `CompetitionRoundJudge`."""
+enum CompetitionRoundJudgesOrderBy {
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+  ROUND_ID_ASC
+  ROUND_ID_DESC
+  PERSON_JUDGE_ID_ASC
+  PERSON_JUDGE_ID_DESC
+  JUDGE_INDEX_ASC
+  JUDGE_INDEX_DESC
+  JUDGE_LABEL_ASC
+  JUDGE_LABEL_DESC
+}
+
+type JudgeScore {
+  roundId: BigInt!
+  danceOrder: Int!
+  danceCode: String!
+  judgePersonId: BigInt!
+  competitorId: String!
+  component: ScoreComponent!
+  score: BigFloat!
+  rawScore: String
+
+  """
+  Reads a single `CompetitionRoundDance` that is related to this `JudgeScore`.
+  """
+  competitionRoundDanceByRoundIdAndDanceOrderAndDanceCode: CompetitionRoundDance
+
+  """
+  Reads a single `CompetitionRound` that is related to this `JudgeScore`.
+  """
+  round: CompetitionRound
+}
+
+enum ScoreComponent {
+  MARK
+  PLACES
+  AJS_TQ
+  AJS_MM
+  AJS_PS
+  AJS_CP
+  AJS_REDUCTION
+}
+
+"""
+A condition to be used against `JudgeScore` object types. All fields are tested
+for equality and combined with a logical ‘and.’
+"""
+input JudgeScoreCondition {
+  """Checks for equality with the object’s `roundId` field."""
+  roundId: BigInt
+
+  """Checks for equality with the object’s `danceOrder` field."""
+  danceOrder: Int
+
+  """Checks for equality with the object’s `danceCode` field."""
+  danceCode: String
+
+  """Checks for equality with the object’s `judgePersonId` field."""
+  judgePersonId: BigInt
+
+  """Checks for equality with the object’s `competitorId` field."""
+  competitorId: String
+
+  """Checks for equality with the object’s `component` field."""
+  component: ScoreComponent
+
+  """Checks for equality with the object’s `score` field."""
+  score: BigFloat
+
+  """Checks for equality with the object’s `rawScore` field."""
+  rawScore: String
+}
+
+"""Methods to use when ordering `JudgeScore`."""
+enum JudgeScoresOrderBy {
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+  ROUND_ID_ASC
+  ROUND_ID_DESC
+  DANCE_ORDER_ASC
+  DANCE_ORDER_DESC
+  DANCE_CODE_ASC
+  DANCE_CODE_DESC
+  JUDGE_PERSON_ID_ASC
+  JUDGE_PERSON_ID_DESC
+  COMPETITOR_ID_ASC
+  COMPETITOR_ID_DESC
+  COMPONENT_ASC
+  COMPONENT_DESC
+  SCORE_ASC
+  SCORE_DESC
+  RAW_SCORE_ASC
+  RAW_SCORE_DESC
+}
+
+"""A connection to a list of `JudgeScore` values."""
+type JudgeScoresConnection {
+  """A list of `JudgeScore` objects."""
+  nodes: [JudgeScore!]!
+
+  """
+  A list of edges which contains the `JudgeScore` and cursor to aid in pagination.
+  """
+  edges: [JudgeScoresEdge!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """The count of *all* `JudgeScore` you could get from the connection."""
+  totalCount: Int!
+}
+
+"""A `JudgeScore` edge in the connection."""
+type JudgeScoresEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `JudgeScore` at the end of the edge."""
+  node: JudgeScore!
+}
+
+"""A `CompetitionRoundDance` edge in the connection."""
+type CompetitionRoundDancesEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `CompetitionRoundDance` at the end of the edge."""
+  node: CompetitionRoundDance!
+}
+
+"""
+A condition to be used against `Category` object types. All fields are tested
+for equality and combined with a logical ‘and.’
+"""
+input CategoryCondition {
+  """Checks for equality with the object’s `id` field."""
+  id: BigInt
+
+  """Checks for equality with the object’s `name` field."""
+  name: String
+
+  """Checks for equality with the object’s `series` field."""
+  series: String
+
+  """Checks for equality with the object’s `discipline` field."""
+  discipline: String
+
+  """Checks for equality with the object’s `genderGroup` field."""
+  genderGroup: String
+
+  """Checks for equality with the object’s `class` field."""
+  class: String
+
+  """Checks for equality with the object’s `competitorType` field."""
+  competitorType: CompetitorType
+
+  """Checks for equality with the object’s `baseDanceProgramId` field."""
+  baseDanceProgramId: BigInt
+
+  """Checks for equality with the object’s `ageGroup` field."""
+  ageGroup: String
+}
+
+"""Methods to use when ordering `Category`."""
+enum CategoriesOrderBy {
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+  ID_ASC
+  ID_DESC
+  NAME_ASC
+  NAME_DESC
+  SERIES_ASC
+  SERIES_DESC
+  DISCIPLINE_ASC
+  DISCIPLINE_DESC
+  GENDER_GROUP_ASC
+  GENDER_GROUP_DESC
+  CLASS_ASC
+  CLASS_DESC
+  COMPETITOR_TYPE_ASC
+  COMPETITOR_TYPE_DESC
+  BASE_DANCE_PROGRAM_ID_ASC
+  BASE_DANCE_PROGRAM_ID_DESC
+  AGE_GROUP_ASC
+  AGE_GROUP_DESC
+}
+
+"""A connection to a list of `CompetitionRound` values."""
+type CompetitionRoundsConnection {
+  """A list of `CompetitionRound` objects."""
+  nodes: [CompetitionRound!]!
+
+  """
+  A list of edges which contains the `CompetitionRound` and cursor to aid in pagination.
+  """
+  edges: [CompetitionRoundsEdge!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """
+  The count of *all* `CompetitionRound` you could get from the connection.
+  """
+  totalCount: Int!
+}
+
+"""A `CompetitionRound` edge in the connection."""
+type CompetitionRoundsEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `CompetitionRound` at the end of the edge."""
+  node: CompetitionRound!
+}
+
+"""A connection to a list of `Ranklist` values."""
+type RanklistsConnection {
+  """A list of `Ranklist` objects."""
+  nodes: [Ranklist!]!
+
+  """
+  A list of edges which contains the `Ranklist` and cursor to aid in pagination.
+  """
+  edges: [RanklistsEdge!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """The count of *all* `Ranklist` you could get from the connection."""
+  totalCount: Int!
+}
+
+"""A `Ranklist` edge in the connection."""
+type RanklistsEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `Ranklist` at the end of the edge."""
+  node: Ranklist!
+}
+
+"""
+A condition to be used against `Ranklist` object types. All fields are tested
+for equality and combined with a logical ‘and.’
+"""
+input RanklistCondition {
+  """Checks for equality with the object’s `id` field."""
+  id: BigInt
+
+  """Checks for equality with the object’s `federation` field."""
+  federation: String
+
+  """Checks for equality with the object’s `categoryId` field."""
+  categoryId: BigInt
+
+  """Checks for equality with the object’s `name` field."""
+  name: String
+}
+
+"""Methods to use when ordering `Ranklist`."""
+enum RanklistsOrderBy {
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+  ID_ASC
+  ID_DESC
+  FEDERATION_ASC
+  FEDERATION_DESC
+  CATEGORY_ID_ASC
+  CATEGORY_ID_DESC
+  NAME_ASC
+  NAME_DESC
+}
+
+type FederationCoupleAgeRule {
+  ageGroupCode: String!
+  division: String!
+  olderAge: IntRange!
+  youngerAge: IntRange!
+
+  """
+  Reads a single `AgeGroup` that is related to this `FederationCoupleAgeRule`.
+  """
+  ageGroupDetails: AgeGroup
+}
+
+"""
+A condition to be used against `FederationCoupleAgeRule` object types. All
+fields are tested for equality and combined with a logical ‘and.’
+"""
+input FederationCoupleAgeRuleCondition {
+  """Checks for equality with the object’s `ageGroupCode` field."""
+  ageGroupCode: String
+
+  """Checks for equality with the object’s `division` field."""
+  division: String
+}
+
+"""Methods to use when ordering `FederationCoupleAgeRule`."""
+enum FederationCoupleAgeRulesOrderBy {
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+  AGE_GROUP_CODE_ASC
+  AGE_GROUP_CODE_DESC
+  DIVISION_ASC
+  DIVISION_DESC
+}
+
+"""A connection to a list of `FederationPersonLicense` values."""
+type FederationPersonLicensesConnection {
+  """A list of `FederationPersonLicense` objects."""
+  nodes: [FederationPersonLicense!]!
+
+  """
+  A list of edges which contains the `FederationPersonLicense` and cursor to aid in pagination.
+  """
+  edges: [FederationPersonLicensesEdge!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """
+  The count of *all* `FederationPersonLicense` you could get from the connection.
+  """
+  totalCount: Int!
+}
+
+type FederationPersonLicense {
+  personId: String!
+  federation: String!
+  kind: PersonLicenseKind!
+  discipline: PersonLicenseDiscipline!
+  grade: String
+  validUntil: Date
+  status: PersonLicenseStatus!
+  createdAt: Datetime!
+
+  """
+  Reads a single `Federation` that is related to this `FederationPersonLicense`.
+  """
+  federationByFederation: Federation
+
+  """
+  Reads a single `FederationPerson` that is related to this `FederationPersonLicense`.
+  """
+  person: FederationPerson
+}
+
+enum PersonLicenseKind {
+  ATHLETE
+  TRAINER
+  ADJUDICATOR
+  CHAIRPERSON
+  INVIGILATOR
+  SCRUTINEER
+  LEAD_SCRUTINEER
+  EXAMINER
+  DJ
+  HEAD_JUDGE
+  OFFICIAL
+}
+
+enum PersonLicenseDiscipline {
+  GENERAL
+  STANDARD
+  LATIN
+  BREAKING
+  HIPHOP
+  CARIBBEAN
+  STAGE
+  SMOOTH
+  DISCO
+  SOLO_SYNCRO_CHOREO
+  TEN_DANCE
+  SHOW_DANCE_STANDARD
+  SHOW_DANCE_LATIN
+  FORMATION_STANDARD
+  FORMATION_LATIN
+  PD_STANDARD
+  PD_LATIN
+  PD_TEN_DANCE
+  PD_SHOW_DANCE_STANDARD
+  PD_SHOW_DANCE_LATIN
+  UNKNOWN
+}
+
+enum PersonLicenseStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+  RESTING
+  RETIRED
+  ASPIRING
+  SUSPENDED
+  UNKNOWN
+}
+
+"""A `FederationPersonLicense` edge in the connection."""
+type FederationPersonLicensesEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `FederationPersonLicense` at the end of the edge."""
+  node: FederationPersonLicense!
+}
+
+"""
+A condition to be used against `FederationPersonLicense` object types. All
+fields are tested for equality and combined with a logical ‘and.’
+"""
+input FederationPersonLicenseCondition {
+  """Checks for equality with the object’s `personId` field."""
+  personId: String
+
+  """Checks for equality with the object’s `federation` field."""
+  federation: String
+
+  """Checks for equality with the object’s `kind` field."""
+  kind: PersonLicenseKind
+
+  """Checks for equality with the object’s `discipline` field."""
+  discipline: PersonLicenseDiscipline
+
+  """Checks for equality with the object’s `grade` field."""
+  grade: String
+
+  """Checks for equality with the object’s `validUntil` field."""
+  validUntil: Date
+
+  """Checks for equality with the object’s `status` field."""
+  status: PersonLicenseStatus
+
+  """Checks for equality with the object’s `createdAt` field."""
+  createdAt: Datetime
+}
+
+"""Methods to use when ordering `FederationPersonLicense`."""
+enum FederationPersonLicensesOrderBy {
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+  PERSON_ID_ASC
+  PERSON_ID_DESC
+  FEDERATION_ASC
+  FEDERATION_DESC
+  KIND_ASC
+  KIND_DESC
+  DISCIPLINE_ASC
+  DISCIPLINE_DESC
+  GRADE_ASC
+  GRADE_DESC
+  VALID_UNTIL_ASC
+  VALID_UNTIL_DESC
+  STATUS_ASC
+  STATUS_DESC
+  CREATED_AT_ASC
+  CREATED_AT_DESC
 }
 
 """A connection to a list of `CompetitionRoundJudge` values."""
@@ -11430,6 +11644,49 @@ enum TenantsOrderBy {
   BANK_ACCOUNT_DESC
 }
 
+"""
+A condition to be used against `AgeGroup` object types. All fields are tested
+for equality and combined with a logical ‘and.’
+"""
+input AgeGroupCondition {
+  """Checks for equality with the object’s `code` field."""
+  code: String
+
+  """Checks for equality with the object’s `name` field."""
+  name: String
+
+  """Checks for equality with the object’s `isPerson` field."""
+  isPerson: Boolean
+
+  """Checks for equality with the object’s `isCouple` field."""
+  isCouple: Boolean
+
+  """Checks for equality with the object’s `isTeam` field."""
+  isTeam: Boolean
+
+  """Checks for equality with the object’s `isCompetition` field."""
+  isCompetition: Boolean
+}
+
+"""Methods to use when ordering `AgeGroup`."""
+enum AgeGroupsOrderBy {
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+  CODE_ASC
+  CODE_DESC
+  NAME_ASC
+  NAME_DESC
+  IS_PERSON_ASC
+  IS_PERSON_DESC
+  IS_COUPLE_ASC
+  IS_COUPLE_DESC
+  IS_TEAM_ASC
+  IS_TEAM_DESC
+  IS_COMPETITION_ASC
+  IS_COMPETITION_DESC
+}
+
 """A connection to a list of `CrawlerFetchJob` values."""
 type CrawlerFetchJobsConnection {
   """A list of `CrawlerFetchJob` objects."""
@@ -13372,22 +13629,6 @@ input EventSeriesPatch {
   updatedAt: Datetime
 }
 
-"""All input for the `updateEventSeriesByTenantIdAndId` mutation."""
-input UpdateEventSeriesByTenantIdAndIdInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-  tenantId: BigInt!
-  id: BigInt!
-
-  """
-  An object where the defined keys will be set on the `EventSeries` being updated.
-  """
-  patch: EventSeriesPatch!
-}
-
 """The output of our update `ScoreboardManualAdjustment` mutation."""
 type UpdateScoreboardManualAdjustmentPayload {
   """
@@ -13484,22 +13725,6 @@ input CohortPatch {
   ordering: Int
   externalIds: [String]
   isArchived: Boolean
-}
-
-"""All input for the `updateCohortByTenantIdAndId` mutation."""
-input UpdateCohortByTenantIdAndIdInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-  tenantId: BigInt!
-  id: BigInt!
-
-  """
-  An object where the defined keys will be set on the `Cohort` being updated.
-  """
-  patch: CohortPatch!
 }
 
 """The output of our update `Announcement` mutation."""
@@ -13648,22 +13873,6 @@ input PaymentPatch {
   updatedAt: Datetime
 }
 
-"""All input for the `updatePaymentByTenantIdAndId` mutation."""
-input UpdatePaymentByTenantIdAndIdInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-  tenantId: BigInt!
-  id: BigInt!
-
-  """
-  An object where the defined keys will be set on the `Payment` being updated.
-  """
-  patch: PaymentPatch!
-}
-
 """The output of our update `Location` mutation."""
 type UpdateLocationPayload {
   """
@@ -13711,22 +13920,6 @@ input LocationPatch {
   latitude: Float
   longitude: Float
   ordering: Int
-}
-
-"""All input for the `updateLocationByTenantIdAndId` mutation."""
-input UpdateLocationByTenantIdAndIdInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-  tenantId: BigInt!
-  id: BigInt!
-
-  """
-  An object where the defined keys will be set on the `Location` being updated.
-  """
-  patch: LocationPatch!
 }
 
 """The output of our update `TenantMembership` mutation."""
@@ -14157,22 +14350,6 @@ input EventInstancePatch {
   hasPublicDetails: Boolean
 }
 
-"""All input for the `updateEventInstanceByTenantIdAndId` mutation."""
-input UpdateEventInstanceByTenantIdAndIdInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-  tenantId: BigInt!
-  id: BigInt!
-
-  """
-  An object where the defined keys will be set on the `EventInstance` being updated.
-  """
-  patch: EventInstancePatch!
-}
-
 """The output of our update `Person` mutation."""
 type UpdatePersonPayload {
   """
@@ -14322,17 +14499,6 @@ input DeleteEventSeriesInput {
   id: BigInt!
 }
 
-"""All input for the `deleteEventSeriesByTenantIdAndId` mutation."""
-input DeleteEventSeriesByTenantIdAndIdInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-  tenantId: BigInt!
-  id: BigInt!
-}
-
 """The output of our delete `ScoreboardManualAdjustment` mutation."""
 type DeleteScoreboardManualAdjustmentPayload {
   """
@@ -14387,17 +14553,6 @@ input DeleteCohortInput {
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-  id: BigInt!
-}
-
-"""All input for the `deleteCohortByTenantIdAndId` mutation."""
-input DeleteCohortByTenantIdAndIdInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-  tenantId: BigInt!
   id: BigInt!
 }
 
@@ -14561,17 +14716,6 @@ input DeleteTransactionInput {
   id: BigInt!
 }
 
-"""All input for the `deleteTransactionByTenantIdAndId` mutation."""
-input DeleteTransactionByTenantIdAndIdInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-  tenantId: BigInt!
-  id: BigInt!
-}
-
 """The output of our delete `Payment` mutation."""
 type DeletePaymentPayload {
   """
@@ -14600,17 +14744,6 @@ input DeletePaymentInput {
   id: BigInt!
 }
 
-"""All input for the `deletePaymentByTenantIdAndId` mutation."""
-input DeletePaymentByTenantIdAndIdInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-  tenantId: BigInt!
-  id: BigInt!
-}
-
 """The output of our delete `Location` mutation."""
 type DeleteLocationPayload {
   """
@@ -14633,17 +14766,6 @@ input DeleteLocationInput {
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-  id: BigInt!
-}
-
-"""All input for the `deleteLocationByTenantIdAndId` mutation."""
-input DeleteLocationByTenantIdAndIdInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-  tenantId: BigInt!
   id: BigInt!
 }
 
@@ -14862,17 +14984,6 @@ input DeleteEventInstanceInput {
   id: BigInt!
 }
 
-"""All input for the `deleteEventInstanceByTenantIdAndId` mutation."""
-input DeleteEventInstanceByTenantIdAndIdInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-  tenantId: BigInt!
-  id: BigInt!
-}
-
 """The output of our delete `Person` mutation."""
 type DeletePersonPayload {
   """
@@ -14926,6 +15037,12 @@ input DeleteMembershipApplicationInput {
   id: BigInt!
 }
 
+input CompetitorCategoryProgressCondition {
+  ageGroups: [String!]
+  classes: [String!]
+  disciplines: [String!]
+}
+
 """The root query type which gives access points into the data universe."""
 type Query {
   """Get a single `CrawlerResponseCache`."""
@@ -14955,23 +15072,8 @@ type Query {
   """Get a single `CrawlerIncrementalRange`."""
   crawlerIncrementalRange(federation: String!, kind: String!): CrawlerIncrementalRange
 
-  """Get a single `AnnouncementAttachment`."""
-  announcementAttachment(tenantId: BigInt!, announcementId: BigInt!, fileId: BigInt!): AnnouncementAttachment
-
-  """Get a single `ArticleAttachment`."""
-  articleAttachment(tenantId: BigInt!, aktualityId: BigInt!, fileId: BigInt!): ArticleAttachment
-
   """Get a single `PaymentDebtor`."""
   paymentDebtor(id: BigInt!): PaymentDebtor
-
-  """Get a single `CompetitionEntry`."""
-  competitionEntry(competitionId: BigInt!, competitorId: String!): CompetitionEntry
-
-  """Get a single `CompetitionRoundJudge`."""
-  competitionRoundJudge(roundId: BigInt!, personJudgeId: String!): CompetitionRoundJudge
-
-  """Get a single `CompetitionRoundJudge`."""
-  competitionRoundJudgeByRoundIdAndJudgeIndex(roundId: BigInt!, judgeIndex: Int!): CompetitionRoundJudge
 
   """Get a single `Ranklist`."""
   ranklist(id: BigInt!): Ranklist
@@ -14979,29 +15081,14 @@ type Query {
   """Get a single `Ranklist`."""
   ranklistByFederationAndCategoryId(federation: String!, categoryId: BigInt!): Ranklist
 
-  """Get a single `CompetitionRoundDance`."""
-  competitionRoundDance(roundId: BigInt!, danceOrder: Int!): CompetitionRoundDance
-
-  """Get a single `FederationCompetitorCategoryProgress`."""
-  federationCompetitorCategoryProgress(competitorId: String!, categoryId: BigInt!): FederationCompetitorCategoryProgress
-
   """Get a single `EventSeries`."""
   eventSeries(id: BigInt!): EventSeries
-
-  """Get a single `EventSeries`."""
-  eventSeriesByTenantIdAndId(tenantId: BigInt!, id: BigInt!): EventSeries
 
   """Get a single `PaymentRecipient`."""
   paymentRecipient(id: BigInt!): PaymentRecipient
 
-  """Get a single `RanklistEntry`."""
-  ranklistEntry(snapshotId: BigInt!, competitorId: String!): RanklistEntry
-
   """Get a single `CohortGroup`."""
   cohortGroup(id: BigInt!): CohortGroup
-
-  """Get a single `CohortGroup`."""
-  cohortGroupByTenantIdAndId(tenantId: BigInt!, id: BigInt!): CohortGroup
 
   """Get a single `DanceProgram`."""
   danceProgram(id: BigInt!): DanceProgram
@@ -15018,18 +15105,6 @@ type Query {
   """Get a single `FederationClub`."""
   federationClubByFederationAndExternalId(federation: String!, externalId: String!): FederationClub
 
-  """Get a single `RanklistSnapshot`."""
-  ranklistSnapshot(id: BigInt!): RanklistSnapshot
-
-  """Get a single `RanklistSnapshot`."""
-  ranklistSnapshotByRanklistIdAndAsOfDateAndKind(ranklistId: BigInt!, asOfDate: Date!, kind: String!): RanklistSnapshot
-
-  """Get a single `FederationCompetitorClubAffiliation`."""
-  federationCompetitorClubAffiliation(competitorId: String!, clubId: BigInt!, validFrom: Date!): FederationCompetitorClubAffiliation
-
-  """Get a single `FederationPersonClubMembership`."""
-  federationPersonClubMembership(personId: String!, clubId: BigInt!, validFrom: Date!): FederationPersonClubMembership
-
   """Get a single `CrawlerRateLimitRule`."""
   crawlerRateLimitRule(host: String!): CrawlerRateLimitRule
 
@@ -15038,12 +15113,6 @@ type Query {
 
   """Get a single `Cohort`."""
   cohort(id: BigInt!): Cohort
-
-  """Get a single `Cohort`."""
-  cohortByTenantIdAndId(tenantId: BigInt!, id: BigInt!): Cohort
-
-  """Get a single `CompetitionResult`."""
-  competitionResult(competitionId: BigInt!, competitorId: String!): CompetitionResult
 
   """Get a single `Aktuality`."""
   aktuality(id: BigInt!): Aktuality
@@ -15054,35 +15123,17 @@ type Query {
   """Get a single `File`."""
   fileByObjectKey(objectKey: String!): File
 
-  """Get a single `CompetitionRoundResult`."""
-  competitionRoundResult(roundId: BigInt!, competitorId: String!): CompetitionRoundResult
-
   """Get a single `PersonInvitation`."""
   personInvitation(id: BigInt!): PersonInvitation
 
   """Get a single `PersonInvitation`."""
   personInvitationByAccessToken(accessToken: UUID!): PersonInvitation
 
-  """Get a single `FederationCompetitorComponent`."""
-  federationCompetitorComponent(competitorId: String!, personId: String!): FederationCompetitorComponent
-
   """Get a single `Category`."""
   category(id: BigInt!): Category
 
   """Get a single `Category`."""
   categoryBySeriesAndDisciplineAndAgeGroupAndGenderGroupAndClassAndCompetitorType(series: String!, discipline: String!, ageGroup: String!, genderGroup: String!, class: String!, competitorType: CompetitorType!): Category
-
-  """Get a single `CompetitionOfficial`."""
-  competitionOfficial(competitionId: BigInt!, personId: String!, role: OfficialRole!): CompetitionOfficial
-
-  """Get a single `FederationEventOfficial`."""
-  federationEventOfficial(eventId: BigInt!, personId: String!, role: OfficialRole!, discipline: String!): FederationEventOfficial
-
-  """Get a single `FederationCompetitor`."""
-  federationCompetitor(id: String!): FederationCompetitor
-
-  """Get a single `FederationCompetitor`."""
-  federationCompetitorByFederationAndExternalId(federation: String!, externalId: BigInt!): FederationCompetitor
 
   """Get a single `Announcement`."""
   announcement(id: BigInt!): Announcement
@@ -15096,17 +15147,20 @@ type Query {
   """Get a single `CompetitionRound`."""
   competitionRoundByCompetitionIdAndRoundKey(competitionId: BigInt!, roundKey: String!): CompetitionRound
 
-  """Get a single `JudgeScore`."""
-  judgeScore(roundId: BigInt!, danceOrder: Int!, judgePersonId: BigInt!, competitorId: BigInt!, component: ScoreComponent!): JudgeScore
-
   """Get a single `CrawlerResponse`."""
   crawlerResponse(id: BigInt!): CrawlerResponse
+
+  """Get a single `FederationCompetitor`."""
+  federationCompetitor(id: String!): FederationCompetitor
+
+  """Get a single `FederationCompetitor`."""
+  federationCompetitorByFederationAndExternalId(federation: String!, externalId: String!): FederationCompetitor
 
   """Get a single `Transaction`."""
   transaction(id: BigInt!): Transaction
 
-  """Get a single `Transaction`."""
-  transactionByTenantIdAndId(tenantId: BigInt!, id: BigInt!): Transaction
+  """Get a single `AgeGroup`."""
+  ageGroup(code: String!): AgeGroup
 
   """Get a single `AccessEvent`."""
   accessEvent(id: BigInt!): AccessEvent
@@ -15117,8 +15171,8 @@ type Query {
   """Get a single `Payment`."""
   payment(id: BigInt!): Payment
 
-  """Get a single `Payment`."""
-  paymentByTenantIdAndId(tenantId: BigInt!, id: BigInt!): Payment
+  """Get a single `User`."""
+  user(id: BigInt!): User
 
   """Get a single `FederationPerson`."""
   federationPerson(id: String!): FederationPerson
@@ -15126,20 +15180,11 @@ type Query {
   """Get a single `FederationPerson`."""
   federationPersonByFederationAndExternalId(federation: String!, externalId: BigInt!): FederationPerson
 
-  """Get a single `User`."""
-  user(id: BigInt!): User
-
   """Get a single `Location`."""
   location(id: BigInt!): Location
 
-  """Get a single `Location`."""
-  locationByTenantIdAndId(tenantId: BigInt!, id: BigInt!): Location
-
   """Get a single `TenantLocation`."""
   tenantLocation(id: BigInt!): TenantLocation
-
-  """Get a single `TenantLocation`."""
-  tenantLocationByTenantIdAndId(tenantId: BigInt!, id: BigInt!): TenantLocation
 
   """Get a single `TenantMembership`."""
   tenantMembership(id: BigInt!): TenantMembership
@@ -15171,14 +15216,8 @@ type Query {
   """Get a single `EventInstance`."""
   eventInstance(id: BigInt!): EventInstance
 
-  """Get a single `EventInstance`."""
-  eventInstanceByTenantIdAndId(tenantId: BigInt!, id: BigInt!): EventInstance
-
   """Get a single `Person`."""
   person(id: BigInt!): Person
-
-  """Get a single `FederationPersonLicense`."""
-  federationPersonLicense(personId: String!, kind: PersonLicenseKind!, discipline: PersonLicenseDiscipline!): FederationPersonLicense
 
   """Get a single `MembershipApplication`."""
   membershipApplication(id: BigInt!): MembershipApplication
@@ -15198,7 +15237,6 @@ type Query {
   """Get a single `EventInstanceRegistration`."""
   eventInstanceRegistration(id: BigInt!): EventInstanceRegistration
   currentClaims: JSON
-  classRank(class: String): Int
   invitationInfo(token: UUID): String
   invitationName(token: UUID): String
   scoreboardEntriesList(
@@ -15382,40 +15420,6 @@ type Query {
     orderBy: [DancesOrderBy!]
   ): [Dance!]
 
-  """Reads a set of `LocationImage`."""
-  locationImagesList(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Skip the first `n` values."""
-    offset: Int
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: LocationImageCondition
-
-    """The method to use when ordering `LocationImage`."""
-    orderBy: [LocationImagesOrderBy!]
-  ): [LocationImage!]
-
-  """Reads a set of `TenantLocationImage`."""
-  tenantLocationImagesList(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Skip the first `n` values."""
-    offset: Int
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: TenantLocationImageCondition
-
-    """The method to use when ordering `TenantLocationImage`."""
-    orderBy: [TenantLocationImagesOrderBy!]
-  ): [TenantLocationImage!]
-
   """Reads a set of `DanceProgramDance`."""
   danceProgramDancesList(
     """Only read the first `n` values of the set."""
@@ -15463,66 +15467,6 @@ type Query {
     """The method to use when ordering `CrawlerIncrementalRange`."""
     orderBy: [CrawlerIncrementalRangesOrderBy!] = [PRIMARY_KEY_ASC]
   ): CrawlerIncrementalRangesConnection
-
-  """
-  Reads and enables pagination through a set of `AnnouncementAttachment`.
-  """
-  announcementAttachments(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Only read the last `n` values of the set."""
-    last: Int
-
-    """
-    Skip the first `n` values from our `after` cursor, an alternative to cursor
-    based pagination. May not be used with `last`.
-    """
-    offset: Int
-
-    """Read all values in the set before (above) this cursor."""
-    before: Cursor
-
-    """Read all values in the set after (below) this cursor."""
-    after: Cursor
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: AnnouncementAttachmentCondition
-
-    """The method to use when ordering `AnnouncementAttachment`."""
-    orderBy: [AnnouncementAttachmentsOrderBy!] = [PRIMARY_KEY_ASC]
-  ): AnnouncementAttachmentsConnection
-
-  """Reads and enables pagination through a set of `ArticleAttachment`."""
-  articleAttachments(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Only read the last `n` values of the set."""
-    last: Int
-
-    """
-    Skip the first `n` values from our `after` cursor, an alternative to cursor
-    based pagination. May not be used with `last`.
-    """
-    offset: Int
-
-    """Read all values in the set before (above) this cursor."""
-    before: Cursor
-
-    """Read all values in the set after (below) this cursor."""
-    after: Cursor
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: ArticleAttachmentCondition
-
-    """The method to use when ordering `ArticleAttachment`."""
-    orderBy: [ArticleAttachmentsOrderBy!] = [PRIMARY_KEY_ASC]
-  ): ArticleAttachmentsConnection
 
   """Reads a set of `PaymentDebtor`."""
   paymentDebtorsList(
@@ -15846,36 +15790,6 @@ type Query {
     orderBy: [CategoriesOrderBy!]
   ): [Category!]
 
-  """Reads and enables pagination through a set of `FederationCompetitor`."""
-  federationCompetitors(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Only read the last `n` values of the set."""
-    last: Int
-
-    """
-    Skip the first `n` values from our `after` cursor, an alternative to cursor
-    based pagination. May not be used with `last`.
-    """
-    offset: Int
-
-    """Read all values in the set before (above) this cursor."""
-    before: Cursor
-
-    """Read all values in the set after (below) this cursor."""
-    after: Cursor
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: FederationCompetitorCondition
-    orderByCategory: CompetitorCategoryOrder
-
-    """The method to use when ordering `FederationCompetitor`."""
-    orderBy: [FederationCompetitorsOrderBy!] = [PRIMARY_KEY_ASC]
-  ): FederationCompetitorsConnection
-
   """Reads and enables pagination through a set of `Announcement`."""
   announcements(
     """Only read the first `n` values of the set."""
@@ -15951,6 +15865,36 @@ type Query {
     orderBy: [CrawlerResponsesOrderBy!] = [PRIMARY_KEY_ASC]
   ): CrawlerResponsesConnection
 
+  """Reads and enables pagination through a set of `FederationCompetitor`."""
+  federationCompetitors(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: FederationCompetitorCondition
+    orderByCategory: CompetitorCategoryOrder
+
+    """The method to use when ordering `FederationCompetitor`."""
+    orderBy: [FederationCompetitorsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): FederationCompetitorsConnection
+
   """Reads and enables pagination through a set of `Transaction`."""
   transactions(
     """Only read the first `n` values of the set."""
@@ -15980,6 +15924,23 @@ type Query {
     orderBy: [TransactionsOrderBy!] = [PRIMARY_KEY_ASC]
   ): TransactionsConnection
 
+  """Reads a set of `AgeGroup`."""
+  ageGroupsList(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Skip the first `n` values."""
+    offset: Int
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: AgeGroupCondition
+
+    """The method to use when ordering `AgeGroup`."""
+    orderBy: [AgeGroupsOrderBy!]
+  ): [AgeGroup!]
+
   """Reads a set of `AccessEvent`."""
   accessEventsList(
     """Only read the first `n` values of the set."""
@@ -15996,35 +15957,6 @@ type Query {
     """The method to use when ordering `AccessEvent`."""
     orderBy: [AccessEventsOrderBy!]
   ): [AccessEvent!]
-
-  """Reads and enables pagination through a set of `FederationPerson`."""
-  federationPeople(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Only read the last `n` values of the set."""
-    last: Int
-
-    """
-    Skip the first `n` values from our `after` cursor, an alternative to cursor
-    based pagination. May not be used with `last`.
-    """
-    offset: Int
-
-    """Read all values in the set before (above) this cursor."""
-    before: Cursor
-
-    """Read all values in the set after (below) this cursor."""
-    after: Cursor
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: FederationPersonCondition
-
-    """The method to use when ordering `FederationPerson`."""
-    orderBy: [FederationPeopleOrderBy!] = [PRIMARY_KEY_ASC]
-  ): FederationPeopleConnection
 
   """Reads and enables pagination through a set of `User`."""
   users(
@@ -16054,6 +15986,35 @@ type Query {
     """The method to use when ordering `User`."""
     orderBy: [UsersOrderBy!] = [PRIMARY_KEY_ASC]
   ): UsersConnection
+
+  """Reads and enables pagination through a set of `FederationPerson`."""
+  federationPeople(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: FederationPersonCondition
+
+    """The method to use when ordering `FederationPerson`."""
+    orderBy: [FederationPeopleOrderBy!] = [PRIMARY_KEY_ASC]
+  ): FederationPeopleConnection
 
   """Reads and enables pagination through a set of `CrawlerFetchJob`."""
   crawlerFetchJobs(
@@ -16613,14 +16574,6 @@ type Mutation {
     input: UpdateEventSeriesInput!
   ): UpdateEventSeriesPayload
 
-  """Updates a single `EventSeries` using a unique key and a patch."""
-  updateEventSeriesByTenantIdAndId(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: UpdateEventSeriesByTenantIdAndIdInput!
-  ): UpdateEventSeriesPayload
-
   """
   Updates a single `ScoreboardManualAdjustment` using a unique key and a patch.
   """
@@ -16637,14 +16590,6 @@ type Mutation {
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
     """
     input: UpdateCohortInput!
-  ): UpdateCohortPayload
-
-  """Updates a single `Cohort` using a unique key and a patch."""
-  updateCohortByTenantIdAndId(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: UpdateCohortByTenantIdAndIdInput!
   ): UpdateCohortPayload
 
   """Updates a single `Announcement` using a unique key and a patch."""
@@ -16671,28 +16616,12 @@ type Mutation {
     input: UpdatePaymentInput!
   ): UpdatePaymentPayload
 
-  """Updates a single `Payment` using a unique key and a patch."""
-  updatePaymentByTenantIdAndId(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: UpdatePaymentByTenantIdAndIdInput!
-  ): UpdatePaymentPayload
-
   """Updates a single `Location` using a unique key and a patch."""
   updateLocation(
     """
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
     """
     input: UpdateLocationInput!
-  ): UpdateLocationPayload
-
-  """Updates a single `Location` using a unique key and a patch."""
-  updateLocationByTenantIdAndId(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: UpdateLocationByTenantIdAndIdInput!
   ): UpdateLocationPayload
 
   """Updates a single `TenantMembership` using a unique key and a patch."""
@@ -16759,14 +16688,6 @@ type Mutation {
     input: UpdateEventInstanceInput!
   ): UpdateEventInstancePayload
 
-  """Updates a single `EventInstance` using a unique key and a patch."""
-  updateEventInstanceByTenantIdAndId(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: UpdateEventInstanceByTenantIdAndIdInput!
-  ): UpdateEventInstancePayload
-
   """Updates a single `Person` using a unique key and a patch."""
   updatePerson(
     """
@@ -16793,14 +16714,6 @@ type Mutation {
     input: DeleteEventSeriesInput!
   ): DeleteEventSeriesPayload
 
-  """Deletes a single `EventSeries` using a unique key."""
-  deleteEventSeriesByTenantIdAndId(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: DeleteEventSeriesByTenantIdAndIdInput!
-  ): DeleteEventSeriesPayload
-
   """Deletes a single `ScoreboardManualAdjustment` using a unique key."""
   deleteScoreboardManualAdjustment(
     """
@@ -16815,14 +16728,6 @@ type Mutation {
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
     """
     input: DeleteCohortInput!
-  ): DeleteCohortPayload
-
-  """Deletes a single `Cohort` using a unique key."""
-  deleteCohortByTenantIdAndId(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: DeleteCohortByTenantIdAndIdInput!
   ): DeleteCohortPayload
 
   """Deletes a single `Aktuality` using a unique key."""
@@ -16873,14 +16778,6 @@ type Mutation {
     input: DeleteTransactionInput!
   ): DeleteTransactionPayload
 
-  """Deletes a single `Transaction` using a unique key."""
-  deleteTransactionByTenantIdAndId(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: DeleteTransactionByTenantIdAndIdInput!
-  ): DeleteTransactionPayload
-
   """Deletes a single `Payment` using a unique key."""
   deletePayment(
     """
@@ -16889,28 +16786,12 @@ type Mutation {
     input: DeletePaymentInput!
   ): DeletePaymentPayload
 
-  """Deletes a single `Payment` using a unique key."""
-  deletePaymentByTenantIdAndId(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: DeletePaymentByTenantIdAndIdInput!
-  ): DeletePaymentPayload
-
   """Deletes a single `Location` using a unique key."""
   deleteLocation(
     """
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
     """
     input: DeleteLocationInput!
-  ): DeleteLocationPayload
-
-  """Deletes a single `Location` using a unique key."""
-  deleteLocationByTenantIdAndId(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: DeleteLocationByTenantIdAndIdInput!
   ): DeleteLocationPayload
 
   """Deletes a single `TenantMembership` using a unique key."""
@@ -16969,14 +16850,6 @@ type Mutation {
     input: DeleteEventInstanceInput!
   ): DeleteEventInstancePayload
 
-  """Deletes a single `EventInstance` using a unique key."""
-  deleteEventInstanceByTenantIdAndId(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: DeleteEventInstanceByTenantIdAndIdInput!
-  ): DeleteEventInstancePayload
-
   """Deletes a single `Person` using a unique key."""
   deletePerson(
     """
@@ -16994,10 +16867,32 @@ type Mutation {
   ): DeleteMembershipApplicationPayload
 }
 
-input CompetitorCategoryProgressCondition {
-  ageGroups: [String!]
-  classes: [String!]
-  disciplines: [String!]
+"""Intersect the supplied scopes to select federation competitors."""
+input CompetitionParticipantCondition {
+  """Local person IDs. An empty list matches nobody."""
+  personIds: [BigInt!]
+
+  """An exact local partnership, across federations."""
+  coupleId: BigInt
+
+  """When true, require a current member of the request tenant."""
+  currentTenant: Boolean
+
+  """Require a current member of this local cohort."""
+  cohortId: BigInt
+}
+
+input CompetitionParticipationFilter {
+  participant: CompetitionParticipantCondition
+  date: CompetitionDateCondition
+}
+
+input CompetitionDateCondition {
+  """Inclusive competition start date."""
+  since: Date
+
+  """Exclusive competition start date."""
+  until: Date
 }
 
 type ActivityEventAttendance implements ActivityTimelineItem {
