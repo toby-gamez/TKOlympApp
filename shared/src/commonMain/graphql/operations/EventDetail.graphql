@@ -19,7 +19,6 @@ query EventDetail($id: BigInt!) {
         location {
             id
             name
-            __typename
         }
         eventTrainersList: eventInstanceTrainersByInstanceIdList {
             id
@@ -29,16 +28,13 @@ query EventDetail($id: BigInt!) {
             person {
                 id
                 name
-                __typename
             }
-            __typename
         }
         eventInstancesList: childEventInstancesList(orderBy: SINCE_ASC) {
             id
             since
             until
             isCancelled
-            __typename
         }
         eventTargetCohortsList: targetCohortsList {
             cohortId
@@ -46,9 +42,7 @@ query EventDetail($id: BigInt!) {
                 id
                 name
                 colorRgb
-                __typename
             }
-            __typename
         }
         eventRegistrationsList: eventInstanceRegistrationsByInstanceIdList(
             condition: { registrationStatus: ACTIVE }
@@ -62,7 +56,6 @@ query EventDetail($id: BigInt!) {
                 name
                 firstName
                 lastName
-                __typename
             }
             coupleId
             couple {
@@ -72,25 +65,20 @@ query EventDetail($id: BigInt!) {
                     name
                     firstName
                     lastName
-                    __typename
                 }
                 woman {
                     id
                     name
                     firstName
                     lastName
-                    __typename
                 }
-                __typename
             }
             eventLessonDemandsByRegistrationIdList {
                 id
                 lessonCount
                 trainerId
-                __typename
             }
             createdAt
-            __typename
         }
         eventExternalRegistrationsList: eventExternalRegistrationsByInstanceIdList {
             id
@@ -98,8 +86,6 @@ query EventDetail($id: BigInt!) {
             email
             firstName
             lastName
-            __typename
         }
-        __typename
     }
 }

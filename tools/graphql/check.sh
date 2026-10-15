@@ -27,6 +27,19 @@ for f in "$OPS_DIR"/*.graphql; do
 done
 echo "ok"
 
+# A known-invalid entry must stay genuinely invalid: once the operation validates (or is deleted), the entry is
+# stale and would silently exempt it from CI forever.
+if [ -f known-invalid.txt ]; then
+  while IFS= read -r name; do
+    name="${name%%#*}"; name="${name// /}"
+    [ -n "$name" ] || continue
+    if [ ! -f "$OPS_DIR/$name.graphql" ]; then echo "::error::known-invalid.txt lists '$name' but that operation no longer exists - remove the line"; exit 1; fi
+    if npx --no-install graphql-inspector validate "$OPS_DIR/$name.graphql" "$SCHEMA" --relativePaths >/dev/null 2>&1; then
+      echo "::error::known-invalid.txt lists '$name' but it validates now - remove the line"; exit 1
+    fi
+  done < known-invalid.txt
+fi
+
 echo "== Validate operations against schema =="
 npx --no-install graphql-inspector validate "$OPS_DIR/*.graphql" "$SCHEMA" "${ignore[@]}" --relativePaths
 

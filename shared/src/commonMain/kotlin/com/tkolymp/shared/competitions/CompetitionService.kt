@@ -1,6 +1,7 @@
 package com.tkolymp.shared.competitions
 
 import com.tkolymp.shared.graphql.GraphQlOperations
+import com.tkolymp.shared.network.postAllNodes
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.cache.CacheService
@@ -141,9 +142,7 @@ class CompetitionService(
 
     // Only people with at least one federation competitor can have competitions.
     private suspend fun clubPersonIds(): List<Long> {
-        val resp = client.post(clubPeopleQuery)
-        val nodes = resp.jsonObject["data"]?.jsonObject?.get("people")?.jsonObject?.get("nodes") as? JsonArray
-            ?: return emptyList()
+        val nodes = client.postAllNodes(clubPeopleQuery, "people") ?: return emptyList()
         return nodes.mapNotNull { n ->
             val obj = n.jsonObject
             val hasCompetitor = (obj["federationPeople"]?.jsonObject?.get("nodes") as? JsonArray)?.any { fp ->

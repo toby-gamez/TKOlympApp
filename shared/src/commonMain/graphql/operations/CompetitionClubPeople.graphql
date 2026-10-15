@@ -1,5 +1,5 @@
-query CompetitionClubPeople {
-    people(first: 100) {
+query CompetitionClubPeople($first: Int, $offset: Int) {
+    people(first: $first, offset: $offset) {
         nodes {
             id
             federationPeople(first: 5) {

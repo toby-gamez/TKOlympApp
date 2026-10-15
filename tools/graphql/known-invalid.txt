@@ -1,6 +1,3 @@
-# Operations that the live schema already rejects (found when validation was introduced, 2026-10-14).
-# They are skipped by check.sh so CI stays green for NEW regressions only. Fix the operation + the
-# Kotlin parsing that depends on it, then delete the line.
-PersonBasic            # Person.cstsProgressList no longer exists
-PersonDetails          # Person.cstsProgressList no longer exists
-PersonEventAttendances # Person.eventAttendancesList no longer exists (use PersonEventRegistrations)
+# Operations that the live schema already rejects. They are skipped by check.sh so CI stays green for NEW
+# regressions only. Fix the operation + the Kotlin parsing that depends on it, then delete the line.
+# check.sh fails if a listed operation is actually valid (stale entry) or no longer exists.

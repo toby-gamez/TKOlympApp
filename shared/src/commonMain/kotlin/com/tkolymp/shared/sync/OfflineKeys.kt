@@ -27,8 +27,6 @@ object OfflineKeys {
     const val SCOREBOARD_PREFIX = "offline_scoreboard_"
     fun scoreboard(since: String, until: String) = "${SCOREBOARD_PREFIX}${since}_$until"
 
-    const val ATTENDANCE_PREFIX = "offline_attendance_"
-    fun attendance(personId: String) = "$ATTENDANCE_PREFIX$personId"
 
     const val COMPETITIONS = "offline_competitions"
     const val COMPETITIONS_PAST = "offline_competitions_past"

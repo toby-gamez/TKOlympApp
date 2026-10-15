@@ -72,7 +72,7 @@ suspend fun initNetworking(baseUrl: String, tenantId: String = "1") {
     }
 
     var authRef: AuthService? = null
-    val gql = GraphQlClientImpl(client, baseUrl, tenantId, tokenProvider = { authRef?.getToken() })
+    val gql = GraphQlClientImpl(client, baseUrl, tenantId, tokenProvider = { authRef?.getToken() }, onUnauthorized = { authRef?.refreshJwt() == true })
     val auth = AuthService(storage, gql)
     authRef = auth
 

@@ -1,5 +1,5 @@
 query ClubData {
-  tenant(id: "1") {
+  tenant: getCurrentTenant {
     tenantLocationsList { name }
     tenantTrainersList {
       person { id firstName lastName prefixTitle suffixTitle }

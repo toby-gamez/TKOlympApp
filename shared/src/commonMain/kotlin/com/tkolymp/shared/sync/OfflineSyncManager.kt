@@ -86,7 +86,6 @@ class OfflineSyncManager(
             try { syncPastCompetitions() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "syncPastCompetitions failed: ${ex.message}") }
             // Ensure basic club data is saved for offline UIs that read `offline_club`.
             try { syncClub() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "syncClub failed: ${ex.message}") }
-            try { syncAttendance() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "syncAttendance failed: ${ex.message}") }
             saveLastSyncTime(kotlin.time.Clock.System.now().toString())
             Logger.d("OfflineSyncManager", "syncAll: completed successfully")
         } catch (ex: Exception) {
@@ -433,8 +432,6 @@ class OfflineSyncManager(
 
     suspend fun loadClubBasics(): String? = try { offlineDataStorage.load(OfflineKeys.CLUB_BASIC) } catch (_: Exception) { null }
 
-    suspend fun loadAttendance(personId: String): String? = try { offlineDataStorage.load(OfflineKeys.attendance(personId)) } catch (_: Exception) { null }
-
     suspend fun getLastSyncTime(): String? = offlineDataStorage.load(OfflineKeys.META_LAST_SYNC)
 
     // Debug / inspection helpers for payments
@@ -652,10 +649,6 @@ class OfflineSyncManager(
         try { syncCompetitions() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll competitions failed: ${ex.message}") }
         try { syncPastCompetitions() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll pastCompetitions failed: ${ex.message}") }
 
-        // Attendance
-        onProgress("attendance", 0, 1)
-        try { syncAttendance() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll attendance failed: ${ex.message}") }
-
         saveLastSyncTime(kotlin.time.Clock.System.now().toString())
         Logger.d("OfflineSyncManager", "downloadAll: completed")
     }
@@ -701,27 +694,4 @@ class OfflineSyncManager(
         val json = offlineDataStorage.load(OfflineKeys.COMPETITIONS_PAST) ?: return emptyList()
         AppJson.decodeFromString(kotlinx.serialization.builtins.ListSerializer(Competition.serializer()), json)
     } catch (_: Exception) { emptyList() }
-
-    private suspend fun syncAttendance() {
-        val personId = try { userService.getCachedPersonId() } catch (_: Exception) { null }
-        if (personId.isNullOrBlank()) return
-        val idLong = personId.toLongOrNull()
-        val client = com.tkolymp.shared.ServiceLocator.graphQlClient
-        val query = GraphQlOperations.PersonEventAttendances
-        val variables = buildJsonObject {
-            if (idLong != null) put("id", JsonPrimitive(idLong))
-            else put("id", JsonPrimitive(personId))
-        }
-        val resp = try { client.post(query, variables) } catch (_: Exception) { return }
-        val arr = try {
-            resp.jsonObject["data"]?.jsonObject?.get("person")?.jsonObject
-                ?.get("eventAttendancesList") as? JsonArray ?: return
-        } catch (_: Exception) { return }
-        try {
-            offlineDataStorage.save(OfflineKeys.attendance(personId), AppJson.encodeToString(JsonArray.serializer(), arr))
-            Logger.d("OfflineSyncManager", "syncAttendance: saved ${arr.size} entries for person $personId")
-        } catch (ex: Exception) {
-            Logger.d("OfflineSyncManager", "syncAttendance save failed: ${ex.message}")
-        }
-    }
 }

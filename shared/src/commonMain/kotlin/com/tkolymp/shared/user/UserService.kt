@@ -128,16 +128,13 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
         val ids = mutableListOf<String>()
         val activeId = storage.getPersonId()
         try {
-            val users = resp.jsonObject["data"]?.jsonObject?.get("users")?.jsonObject?.get("nodes")?.jsonArray
-            users?.forEach { node ->
-                val proxies = node.jsonObject["userProxiesList"]?.jsonArray
-                proxies?.forEach { proxy ->
-                    val person = proxy.jsonObject["person"]?.jsonObject
-                    if (activeId != null && person?.get("id")?.jsonPrimitive?.contentOrNull != activeId) return@forEach
-                    val active = person?.get("activeCouplesList")?.jsonArray
-                    active?.forEach { c ->
-                        c.jsonObject["id"]?.jsonPrimitive?.contentOrNull?.let { ids.add(it) }
-                    }
+            val proxies = resp.jsonObject["data"]?.jsonObject?.get("getCurrentUser")?.jsonObject?.get("userProxiesList")?.jsonArray
+            proxies?.forEach { proxy ->
+                val person = proxy.jsonObject["person"]?.jsonObject
+                if (activeId != null && person?.get("id")?.jsonPrimitive?.contentOrNull != activeId) return@forEach
+                val active = person?.get("activeCouplesList")?.jsonArray
+                active?.forEach { c ->
+                    c.jsonObject["id"]?.jsonPrimitive?.contentOrNull?.let { ids.add(it) }
                 }
             }
         } catch (e: CancellationException) { throw e } catch (_: Exception) {}

@@ -1,6 +1,7 @@
 package com.tkolymp.shared.people
 
 import com.tkolymp.shared.graphql.GraphQlOperations
+import com.tkolymp.shared.network.postAllNodes
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.language.AppStrings
 import kotlinx.coroutines.CancellationException
@@ -167,11 +168,7 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
         } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         val query = GraphQlOperations.People
 
-        val el = try { client.post(query) } catch (_: Exception) { return emptyList() }
-        val nodes = (el as? JsonObject)
-            ?.get("data")?.let { it as? JsonObject }
-            ?.get("people")?.let { it as? JsonObject }
-            ?.get("nodes")?.let { it as? kotlinx.serialization.json.JsonArray }
+        val nodes = try { client.postAllNodes(query, "people") } catch (_: Exception) { return emptyList() }
             ?: return emptyList()
 
         val result = nodes.mapNotNull { nodeEl ->

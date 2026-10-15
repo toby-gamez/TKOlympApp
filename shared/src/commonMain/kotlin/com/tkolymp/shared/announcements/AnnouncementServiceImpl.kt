@@ -1,6 +1,7 @@
 package com.tkolymp.shared.announcements
 
 import com.tkolymp.shared.graphql.GraphQlOperations
+import com.tkolymp.shared.network.postAllNodes
 import com.tkolymp.shared.network.IGraphQlClient
 import com.tkolymp.shared.viewmodels.AppError
 import com.tkolymp.shared.viewmodels.DataResult
@@ -87,49 +88,44 @@ class AnnouncementServiceImpl(
             val cacheKey = "announcements_sticky_$sticky"
             cache.get<List<Announcement>>(cacheKey)?.let { return DataResult.Success(it) }
             val variables = buildJsonObject { put("sticky", JsonPrimitive(sticky)) }
-            val resp = client.post(query, variables)
-            val data = resp.jsonObject["data"] ?: return DataResult.Error(AppError.network("Malformed response: missing data"))
-            val announcements = (data.jsonObject["announcements"] ?: return DataResult.Error(AppError.network("Malformed response: missing announcements")))
-            val nodes = announcements.jsonObject["nodes"] ?: return DataResult.Error(AppError.network("Malformed response: missing nodes"))
-            if (nodes is JsonArray) {
-                val result = nodes.mapNotNull { elem ->
-                    try {
-                        val obj = elem.jsonObject
-                        val id = (obj["id"] as? JsonPrimitive)?.contentOrNull ?: return@mapNotNull null
-                        val title = (obj["title"] as? JsonPrimitive)?.contentOrNull
-                        val body = (obj["body"] as? JsonPrimitive)?.contentOrNull?.let { normalizeBody(it, attachmentUrls(obj)) }
-                        val createdAt = (obj["createdAt"] as? JsonPrimitive)?.contentOrNull
-                        val updatedAt = (obj["updatedAt"] as? JsonPrimitive)?.contentOrNull
-                        val isSticky = obj["isSticky"]?.jsonPrimitive?.booleanOrNull ?: false
-                        val isVisible = obj["status"]?.jsonPrimitive?.contentOrNull == "PUBLISHED"
-                        val authorObj = obj["author"] as? JsonObject
-                        val author = authorObj?.let {
-                            Author(
-                                id = (it["id"] as? JsonPrimitive)?.contentOrNull,
-                                uJmeno = (it["uJmeno"] as? JsonPrimitive)?.contentOrNull,
-                                uPrijmeni = (it["uPrijmeni"] as? JsonPrimitive)?.contentOrNull
-                            )
-                        } ?: authorNameOf(obj)
-                        Announcement(
-                            id = id,
-                            title = title,
-                            body = body,
-                            createdAt = createdAt,
-                            updatedAt = updatedAt,
-                            isSticky = isSticky,
-                            isVisible = isVisible,
-                            author = author
+            val nodes = client.postAllNodes(query, "announcements", variables)
+                ?: return DataResult.Error(AppError.network("Malformed response: missing announcements"))
+            val result = nodes.mapNotNull { elem ->
+                try {
+                    val obj = elem.jsonObject
+                    val id = (obj["id"] as? JsonPrimitive)?.contentOrNull ?: return@mapNotNull null
+                    val title = (obj["title"] as? JsonPrimitive)?.contentOrNull
+                    val body = (obj["body"] as? JsonPrimitive)?.contentOrNull?.let { normalizeBody(it, attachmentUrls(obj)) }
+                    val createdAt = (obj["createdAt"] as? JsonPrimitive)?.contentOrNull
+                    val updatedAt = (obj["updatedAt"] as? JsonPrimitive)?.contentOrNull
+                    val isSticky = obj["isSticky"]?.jsonPrimitive?.booleanOrNull ?: false
+                    val isVisible = obj["status"]?.jsonPrimitive?.contentOrNull == "PUBLISHED"
+                    val authorObj = obj["author"] as? JsonObject
+                    val author = authorObj?.let {
+                        Author(
+                            id = (it["id"] as? JsonPrimitive)?.contentOrNull,
+                            uJmeno = (it["uJmeno"] as? JsonPrimitive)?.contentOrNull,
+                            uPrijmeni = (it["uPrijmeni"] as? JsonPrimitive)?.contentOrNull
                         )
-                    } catch (e: CancellationException) { throw e } catch (t: Exception) {
-                        null
-                    }
+                    } ?: authorNameOf(obj)
+                    Announcement(
+                        id = id,
+                        title = title,
+                        body = body,
+                        createdAt = createdAt,
+                        updatedAt = updatedAt,
+                        isSticky = isSticky,
+                        isVisible = isVisible,
+                        author = author
+                    )
+                } catch (e: CancellationException) { throw e } catch (t: Exception) {
+                    null
                 }
-                if (result.isNotEmpty()) {
-                    try { cache.put(cacheKey, result, ttl = 2.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
-                }
-                return DataResult.Success(result)
             }
-            DataResult.Success(emptyList())
+            if (result.isNotEmpty()) {
+                try { cache.put(cacheKey, result, ttl = 2.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+            }
+            return DataResult.Success(result)
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             DataResult.Error(AppError.network(ex.message))
         }

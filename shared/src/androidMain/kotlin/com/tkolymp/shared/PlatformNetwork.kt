@@ -72,7 +72,7 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
     // created yet. Capture AuthService reference via a mutable lambda that is closed
     // over after AuthService is constructed — avoids the circular ServiceLocator dependency.
     var authRef: AuthService? = null
-    val gql = GraphQlClientImpl(client, baseUrl, tenantId, tokenProvider = { authRef?.getToken() })
+    val gql = GraphQlClientImpl(client, baseUrl, tenantId, tokenProvider = { authRef?.getToken() }, onUnauthorized = { authRef?.refreshJwt() == true })
     val auth = AuthService(storage, gql)
     authRef = auth  // close the loop
 
