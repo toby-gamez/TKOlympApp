@@ -39,9 +39,31 @@ query PersonBasic($id: BigInt!) {
       nodes {
         points
         finals: domesticFinals
-        competitor { name }
+        foreignFinals
+        competitor { name federation }
         category { id name series discipline ageGroup genderGroup class competitorType baseDanceProgramId }
       }
     }
+        federationPeople(first: 10) {
+            nodes {
+                federation externalId canonicalName dob nationality ageGroup
+                medicalCheckupExpiration medicalCheckupType
+                licenses(first: 30) { nodes { kind discipline grade validUntil status } }
+            }
+        }
+        federationRanklistEntries(first: 50) {
+            nodes {
+                ranking rankingTo points
+                competitor { name federation }
+                snapshot { asOfDate ranklist { name federation category { name } } }
+            }
+        }
+        federationCompetitions(first: 30, orderBy: START_DATE_DESC) {
+            nodes {
+                id federation startDate competitionType status participantsTotal
+                category { name }
+                event { name city country }
+            }
+        }
     }
 }

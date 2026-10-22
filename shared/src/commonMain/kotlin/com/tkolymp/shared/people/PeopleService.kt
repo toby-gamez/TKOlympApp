@@ -68,6 +68,46 @@ data class AddressDetails(
     val orientationNumber: String? = null
 )
 
+data class FederationLicense(
+    val kind: String?, val discipline: String?, val grade: String?, val validUntil: String?, val status: String?
+)
+
+data class FederationProfile(
+    val federation: String,
+    val externalId: String?,
+    val name: String?,
+    val birthDate: String?,
+    val nationality: String?,
+    val ageGroup: String?,
+    val medicalCheckupExpiration: String?,
+    val medicalCheckupType: String?,
+    val licenses: List<FederationLicense> = emptyList()
+)
+
+data class FederationRanking(
+    val federation: String?,
+    val ranklistName: String?,
+    val categoryName: String?,
+    val competitorName: String?,
+    val ranking: Int,
+    val rankingTo: Int?,
+    val points: String?,
+    val asOfDate: String?
+)
+
+data class FederationCompetitionEntry(
+    val id: String?,
+    val federation: String?,
+    val startDate: String?,
+    val competitionType: String?,
+    val status: String?,
+    val participants: Int?,
+    val categoryName: String?,
+    val eventName: String?,
+    val city: String?,
+    val country: String?
+)
+
 data class PersonDetails(
     val id: String,
     val firstName: String?,
@@ -93,7 +133,10 @@ data class PersonDetails(
     val facebookUrl: String? = null,
     val websiteUrl: String? = null,
     val note: String? = null,
-    val allCouplesList: List<CouplePeriod> = emptyList()
+    val allCouplesList: List<CouplePeriod> = emptyList(),
+    val federationProfiles: List<FederationProfile> = emptyList(),
+    val federationRankings: List<FederationRanking> = emptyList(),
+    val federationCompetitions: List<FederationCompetitionEntry> = emptyList()
 )
 
 data class ScoreboardEntry(
@@ -306,9 +349,50 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                     points = pObj["points"]?.jsonPrimitive?.contentOrNull,
                     finals = pObj["finals"]?.jsonPrimitive?.intOrNull,
                     competitorName = pObj.progressCompetitorName(),
-                    category = cat
+                    category = cat,
+                    federation = ((pObj["competitor"] as? JsonObject)?.get("federation") as? JsonPrimitive)?.contentOrNull,
+                    foreignFinals = pObj["foreignFinals"]?.jsonPrimitive?.intOrNull
                 )
             } ?: emptyList()
+
+            fun JsonObject.s(k: String): String? = (this[k] as? JsonPrimitive)?.contentOrNull?.takeIf { it.isNotBlank() }
+            fun JsonObject.o(k: String): JsonObject? = this[k] as? JsonObject
+            fun JsonObject?.nodes(k: String): List<JsonObject> =
+                (this?.get(k).progressNodes()).orEmpty().mapNotNull { it as? JsonObject }
+
+            val fedProfiles = personObj.nodes("federationPeople").mapNotNull { n ->
+                val fed = n.s("federation") ?: return@mapNotNull null
+                FederationProfile(
+                    federation = fed, externalId = n.s("externalId"), name = n.s("canonicalName"), birthDate = n.s("dob"),
+                    nationality = n.s("nationality"), ageGroup = n.s("ageGroup"),
+                    medicalCheckupExpiration = n.s("medicalCheckupExpiration"), medicalCheckupType = n.s("medicalCheckupType"),
+                    licenses = n.nodes("licenses").map { l ->
+                        FederationLicense(l.s("kind"), l.s("discipline"), l.s("grade"), l.s("validUntil"), l.s("status"))
+                    }
+                )
+            }
+            val fedRankings = personObj.nodes("federationRanklistEntries").mapNotNull { n ->
+                val rank = (n["ranking"] as? JsonPrimitive)?.intOrNull ?: return@mapNotNull null
+                val snap = n.o("snapshot")
+                val list = snap?.o("ranklist")
+                FederationRanking(
+                    federation = list?.s("federation") ?: n.o("competitor")?.s("federation"),
+                    ranklistName = list?.s("name"), categoryName = list?.o("category")?.s("name"),
+                    competitorName = n.o("competitor")?.s("name"),
+                    ranking = rank, rankingTo = (n["rankingTo"] as? JsonPrimitive)?.intOrNull,
+                    points = n.s("points"), asOfDate = snap?.s("asOfDate")
+                )
+            }
+            val fedCompetitions = personObj.nodes("federationCompetitions").map { n ->
+                val ev = n.o("event")
+                FederationCompetitionEntry(
+                    id = n.s("id"), federation = n.s("federation"), startDate = n.s("startDate"),
+                    competitionType = n.s("competitionType"), status = n.s("status"),
+                    participants = (n["participantsTotal"] as? JsonPrimitive)?.intOrNull,
+                    categoryName = n.o("category")?.s("name"),
+                    eventName = ev?.s("name"), city = ev?.s("city"), country = ev?.s("country")
+                )
+            }
             val pd = PersonDetails(
                 id, first, last, prefix, suffix, birth, csts, email, gender, isTrainer, phone, wdsf, couplesArr, memberships, el,
                 cstsProgressList = cstsProgress,
@@ -317,7 +401,10 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                 facebookUrl = facebookUrl,
                 websiteUrl = websiteUrl,
                 note = note,
-                allCouplesList = allCouples
+                allCouplesList = allCouples,
+                federationProfiles = fedProfiles,
+                federationRankings = fedRankings,
+                federationCompetitions = fedCompetitions
             )
             try { cache.put(cacheKey, pd, ttl = 15.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
             return pd

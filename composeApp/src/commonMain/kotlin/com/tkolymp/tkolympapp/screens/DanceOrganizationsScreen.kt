@@ -37,6 +37,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.competitivedata.DanceFederation
@@ -99,17 +100,34 @@ fun DanceOrganizationsScreen(
     }
 }
 
+/** Federation code as written in Czech/Slovak: ČSTS, SZTŠ (WDSF and unknown codes just upper-cased). */
+internal fun federationLabel(code: String): String = when (code.lowercase()) {
+    "csts" -> "ČSTS"
+    "szts" -> "SZTŠ"
+    else -> code.uppercase()
+}
+
+/** Flag of the federation's country, or the globe for the international WDSF; null for an unknown federation. */
+internal fun federationEmoji(code: String): String? = when (code.lowercase()) {
+    "csts" -> "\uD83C\uDDE8\uD83C\uDDFF"
+    "szts" -> "\uD83C\uDDF8\uD83C\uDDF0"
+    "wdsf" -> "\uD83C\uDF0D"
+    else -> null
+}
+
 @Composable
 private fun FederationCard(federation: DanceFederation, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Card(modifier = modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onClick), shape = RoundedCornerShape(16.dp)) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer, modifier = Modifier.size(48.dp)) {
+            Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainerHighest, modifier = Modifier.size(52.dp)) {
                 Box(contentAlignment = Alignment.Center) {
-                    Icon(Icons.Filled.Public, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                    val flag = federationEmoji(federation.code)
+                    if (flag != null) Text(flag, fontSize = 28.sp)
+                    else Icon(Icons.Filled.Public, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             Column(Modifier.weight(1f)) {
-                Text(federation.code.uppercase(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(federationLabel(federation.code), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Text(federation.name, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)

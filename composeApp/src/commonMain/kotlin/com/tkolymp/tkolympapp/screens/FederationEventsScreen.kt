@@ -138,7 +138,7 @@ fun FederationEventsScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(state.federationName.ifBlank { code.uppercase() }, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(state.federationName.ifBlank { federationLabel(code) }, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(strings.dataTitle, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 },
@@ -364,8 +364,7 @@ internal fun EventRow(event: FederationEventSummary, modifier: Modifier = Modifi
     val day = event.startDate.substring(8, 10).trimStart('0')
     Card(
         modifier = modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
+        shape = RoundedCornerShape(16.dp)
     ) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Column(

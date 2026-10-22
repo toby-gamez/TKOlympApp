@@ -97,19 +97,19 @@ fun getCoupleInfo(event: Event?, freeLabel: String = "VOLNO"): CoupleInfo? {
         return CoupleInfo(freeLabel, true)
     }
 
-    val registration = event.eventRegistrationsList.firstOrNull { it.couple != null }
-    val couple = registration?.couple
-
-    if (couple != null) {
-        val manLastName = couple.man?.lastName
-        val womanLastName = couple.woman?.lastName
-
-        return if (!manLastName.isNullOrBlank() && !womanLastName.isNullOrBlank()) {
-            CoupleInfo("$manLastName - $womanLastName", false)
-        } else {
-            CoupleInfo(freeLabel, true)
-        }
+    // Someone is registered, so the lesson is never "free" — fall back through couple names,
+    // single last names and person names before giving up on a label.
+    for (registration in event.eventRegistrationsList) {
+        val couple = registration.couple ?: continue
+        val man = couple.man?.lastName?.takeIf { it.isNotBlank() }
+        val woman = couple.woman?.lastName?.takeIf { it.isNotBlank() }
+        val label = listOfNotNull(man, woman).joinToString(" - ")
+        if (label.isNotBlank()) return CoupleInfo(label, false)
     }
-
-    return CoupleInfo(freeLabel, true)
+    for (registration in event.eventRegistrationsList) {
+        val person = registration.person ?: continue
+        val label = person.lastName?.takeIf { it.isNotBlank() } ?: person.name?.takeIf { it.isNotBlank() }
+        if (label != null) return CoupleInfo(label, false)
+    }
+    return CoupleInfo("?", false)
 }

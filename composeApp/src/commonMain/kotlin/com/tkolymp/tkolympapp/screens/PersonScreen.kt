@@ -334,7 +334,8 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
             }
 
             // Active couples card (hidden when the ČSTS Progress card already shows the couple)
-            val cstsProgressList = p.cstsProgressList
+            val cstsProgressList = p.cstsProgressList.filter { !it.federation.equals(WDSF, ignoreCase = true) }
+            val wdsfProgressList = p.cstsProgressList.filter { it.federation.equals(WDSF, ignoreCase = true) }
             if (p.activeCouplesList.isNotEmpty() && cstsProgressList.isEmpty()) {
                 StaggeredItem(index = 3, visible = cardsVisible, baseDelayMs = 50) {
                 Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
@@ -453,6 +454,17 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                     }
                 }
             }
+            // WDSF / federation data
+            p.federationProfiles.firstOrNull { it.federation.equals(WDSF, ignoreCase = true) }?.let { prof ->
+                StaggeredItem(index = 4, visible = cardsVisible, baseDelayMs = 50) { WdsfProfileCard(prof) }
+            }
+            if (wdsfProgressList.isNotEmpty()) {
+                StaggeredItem(index = 4, visible = cardsVisible, baseDelayMs = 50) { WdsfProgressCard(wdsfProgressList) }
+            }
+            // Rankings card hidden for now: the ranklist data is not up to date (FederationRankingsCard is ready).
+            if (p.federationCompetitions.isNotEmpty()) {
+                StaggeredItem(index = 4, visible = cardsVisible, baseDelayMs = 50) { FederationCompetitionsCard(p.federationCompetitions) }
+            }
             // (duplicate UI removed)
             StaggeredItem(index = 5, visible = cardsVisible, baseDelayMs = 50) {
                 Card(
@@ -484,7 +496,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
     }
 
 
-private fun formatDateStringSmall(raw: String?): String? {
+internal fun formatDateStringSmall(raw: String?): String? {
     if (raw.isNullOrBlank()) return null
     val s = raw.trim()
     val datePrefix = Regex("\\d{4}-\\d{2}-\\d{2}").find(s)?.value

@@ -20,7 +20,9 @@ data class CstsProgress(
     val points: String?,
     val finals: Int?,
     val competitorName: String?,
-    val category: CompetitionCategory?
+    val category: CompetitionCategory?,
+    val federation: String? = null,
+    val foreignFinals: Int? = null
 )
 
 @Serializable

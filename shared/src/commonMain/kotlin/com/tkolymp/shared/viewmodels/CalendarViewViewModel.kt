@@ -16,6 +16,7 @@ import com.tkolymp.shared.user.UserService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -183,12 +184,7 @@ class CalendarViewViewModel(
                         }
 
                         if (revision != loadRevision) return
-                        _state.value = currentState.copy(
-                            events = allTimelineEvents,
-                            layoutData = layoutData,
-                            isLoading = false,
-                            isOffline = true
-                        )
+                        _state.update { it.copy(events = allTimelineEvents, layoutData = layoutData, isLoading = false, isOffline = true) }
 
                         lastRangeStartIso = startIso
                         lastShowOnlyMine = currentState.showOnlyMine
@@ -248,7 +244,7 @@ class CalendarViewViewModel(
             }
 
             // If server returned empty map, try offline week summary before deciding to keep previous state
-            if (eventsGrouped.isEmpty()) {
+            if (eventsGrouped.isEmpty() && !isCurrentlyOnline) {
                 try {
                     val bucketName = if (currentState.showOnlyMine) "MINE" else "ALL"
                     val startDate = timeRange.start.date
@@ -329,12 +325,7 @@ class CalendarViewViewModel(
             }
 
             if (revision != loadRevision) return
-            _state.value = currentState.copy(
-                events = allTimelineEvents,
-                layoutData = layoutData,
-                isLoading = false,
-                isOffline = isOfflineUsed
-            )
+            _state.update { it.copy(events = allTimelineEvents, layoutData = layoutData, isLoading = false, isOffline = isOfflineUsed) }
 
             lastRangeStartIso = startIso
             lastShowOnlyMine = currentState.showOnlyMine
@@ -605,9 +596,7 @@ class CalendarViewViewModel(
      * Toggle between "My events" and "All events"
      */
     suspend fun toggleShowOnlyMine() {
-        _state.value = _state.value.copy(
-            showOnlyMine = !_state.value.showOnlyMine
-        )
+        _state.update { it.copy(showOnlyMine = !it.showOnlyMine) }
         loadEvents()
     }
     

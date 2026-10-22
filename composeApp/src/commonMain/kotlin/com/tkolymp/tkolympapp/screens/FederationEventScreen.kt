@@ -3,6 +3,7 @@ package com.tkolymp.tkolympapp.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -129,6 +130,7 @@ private fun EventContent(
     ) {
         item {
             Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+                SelectionContainer {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(event.name ?: "—", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     Text(formatDateRange(event.startDate, event.endDate), style = MaterialTheme.typography.bodyLarge)
@@ -150,6 +152,7 @@ private fun EventContent(
                             Text(" ${strings.website}")
                         }
                     }
+                }
                 }
             }
         }
@@ -201,7 +204,7 @@ private fun CompetitionCard(c: FederationCompetitionSummary, open: Boolean, stat
                 when {
                     c.id in state.loadingResults -> Box(Modifier.fillMaxWidth(), Alignment.Center) { CircularProgressIndicator(Modifier.size(24.dp)) }
                     results == null || results.results.isEmpty() -> Text(strings.noResultsYet, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    else -> Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    else -> SelectionContainer { Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         results.results.forEach { r ->
                             Row(verticalAlignment = Alignment.Top) {
                                 Text(
@@ -224,6 +227,7 @@ private fun CompetitionCard(c: FederationCompetitionSummary, open: Boolean, stat
                                 )
                             }
                         }
+                    }
                     }
                 }
             }

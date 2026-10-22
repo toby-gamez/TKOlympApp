@@ -1,8 +1,8 @@
 package com.tkolymp.shared.language
 
-/** "Taneční organizace" - federation competition data (CSTS, WDSF, SZTS). Defaults are Czech. */
+/** "Soutěže" - federation competition data (CSTS, WDSF, SZTS). Defaults are Czech. */
 data class DanceOrgStrings(
-    val title: String = "Taneční organizace",
+    val title: String = "Soutěže",
     val dataTitle: String = "Soutěžní data",
     val past: String = "Minulé",
     val upcoming: String = "Nadcházející",
