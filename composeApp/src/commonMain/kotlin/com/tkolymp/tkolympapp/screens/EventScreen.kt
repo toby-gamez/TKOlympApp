@@ -507,7 +507,7 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
-                val totalCount = state.registrations.size + state.externalRegistrations.size
+                val totalCount = state.registrations.size
                 Text("${AppStrings.current.registration.participants} ($totalCount)", style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(6.dp))
                 if (totalCount == 0) {
@@ -575,19 +575,6 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
 
                         val item = ParticipantItem(nameText, isMe, subItems, womanName, manName)
                         if (couple != null) coupleItems.add(item) else singleItems.add(item)
-                    }
-
-                    state.externalRegistrations.forEach { extRegEl ->
-                        val extReg = extRegEl.asJsonObjectOrNull() ?: return@forEach
-                        val firstName = extReg.str("firstName") ?: ""
-                        val lastName = extReg.str("lastName") ?: ""
-                        val email = extReg.str("email")
-                        val note = extReg.str("note")
-                        val subItems = buildList<String> {
-                            if (!email.isNullOrBlank()) add("${AppStrings.current.registration.emailPrefix}$email")
-                            if (!note.isNullOrBlank()) add("${AppStrings.current.registration.notePrefix}$note")
-                        }
-                        singleItems.add(ParticipantItem("$firstName $lastName${AppStrings.current.registration.externalSuffix}", false, subItems))
                     }
 
                     @Composable

@@ -54,7 +54,7 @@ class NextCompetitionWidget : GlanceAppWidget() {
                         .fillMaxSize()
                         .background(GlanceTheme.colors.surface)
                         .cornerRadius(16.dp)
-                        .clickable(actionStartActivity(deepLinkIntent(context, "competitions")))
+                        .clickable(actionStartActivity(deepLinkIntent(context, "organization/csts")))
                 ) {
                     Box(
                         modifier = GlanceModifier

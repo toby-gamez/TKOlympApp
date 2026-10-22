@@ -1,0 +1,26 @@
+query FederationCompetitionResults($id: BigInt!) {
+    competition(id: $id) {
+        id
+        startDate
+        competitionType
+        status
+        participantsTotal
+        category {
+            name
+        }
+        resultsList(first: 300, orderBy: RANKING_ASC) {
+            ranking
+            rankingTo
+            pointGain
+            isFinal
+            competitor {
+                id
+                name
+                competitorType
+                peopleList(first: 3) {
+                    name
+                }
+            }
+        }
+    }
+}

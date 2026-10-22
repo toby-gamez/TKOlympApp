@@ -56,6 +56,9 @@ import com.tkolymp.shared.language.getDeviceLanguageCode
 import com.tkolymp.shared.viewmodels.OnboardingViewModel
 import com.tkolymp.tkolympapp.platform.getAppVersion
 import com.tkolymp.tkolympapp.screens.AboutScreen
+import com.tkolymp.tkolympapp.screens.DanceOrganizationsScreen
+import com.tkolymp.tkolympapp.screens.FederationEventScreen
+import com.tkolymp.tkolympapp.screens.FederationEventsScreen
 import com.tkolymp.tkolympapp.screens.AnnouncementEditScreen
 import com.tkolymp.tkolympapp.screens.EventEditScreen
 import com.tkolymp.tkolympapp.screens.ChangelogScreen
@@ -65,7 +68,6 @@ import com.tkolymp.tkolympapp.screens.BirthdayNotificationsScreen
 import com.tkolymp.tkolympapp.screens.BoardScreen
 import com.tkolymp.tkolympapp.screens.CalendarScreen
 import com.tkolymp.tkolympapp.screens.CalendarViewScreen
-import com.tkolymp.tkolympapp.screens.CompetitionsScreen
 import com.tkolymp.tkolympapp.screens.EventScreen
 import com.tkolymp.tkolympapp.screens.EventsScreen
 import com.tkolymp.tkolympapp.screens.FreeLessonsScreen
@@ -436,7 +438,8 @@ fun AppNavHost(
                 onOpenBoard = { navController.navigate("board") },
                 onOpenEvents = { navController.navigate("events") },
                 onOpenPerson = { id -> navController.navigate("person/$id") },
-                onOpenCompetitions = { navController.navigate("competitions") }
+                onOpenCompetitions = { navController.navigate("organization/csts") },
+                onOpenFederationEvent = { id -> navController.navigate("federationEvent/$id") }
             )
         }
 
@@ -522,7 +525,7 @@ fun AppNavHost(
                 onSettingsClick = { navController.navigate("settings") },
                 onPersonalEventsClick = { navController.navigate("personal_events") },
                 onBarcodeClick = { pid -> navController.navigate(if (pid == null) "barcode" else "barcode?personId=$pid") },
-                onCompetitionsClick = { navController.navigate("competitions") },
+                onCompetitionsClick = { navController.navigate("organizations") },
                 onAchievementsClick = { navController.navigate("achievements") },
                 bottomPadding = bottomPadding
             )
@@ -659,13 +662,46 @@ fun AppNavHost(
         }
 
         composable(
-            route = "competitions",
+            route = "organizations",
             enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
             exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
             popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) },
             popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) }
         ) {
-            CompetitionsScreen(onBack = { navController.navigateUp() }, bottomPadding = bottomPadding)
+            DanceOrganizationsScreen(
+                onBack = { navController.navigateUp() },
+                onOpenOrganization = { code -> navController.navigate("organization/$code") },
+                bottomPadding = bottomPadding
+            )
+        }
+
+        composable(
+            route = "organization/{code}",
+            arguments = listOf(navArgument("code") { type = NavType.StringType; defaultValue = "" }),
+            enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
+            exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
+            popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) },
+            popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) }
+        ) { backStackEntry ->
+            val code = backStackEntry.arguments?.read { getString("code") }?.takeIf { it.isNotBlank() } ?: return@composable
+            FederationEventsScreen(
+                code = code,
+                onBack = { navController.navigateUp() },
+                onOpenEvent = { id -> navController.navigate("federationEvent/$id") },
+                bottomPadding = bottomPadding
+            )
+        }
+
+        composable(
+            route = "federationEvent/{eventId}",
+            arguments = listOf(navArgument("eventId") { type = NavType.StringType; defaultValue = "" }),
+            enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
+            exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
+            popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) },
+            popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) }
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.read { getString("eventId") }?.toLongOrNull() ?: return@composable
+            FederationEventScreen(eventId = id, onBack = { navController.navigateUp() }, bottomPadding = bottomPadding)
         }
 
         composable(

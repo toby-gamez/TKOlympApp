@@ -57,6 +57,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -76,7 +77,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
-import com.tkolymp.shared.competitions.Competition
+import com.tkolymp.shared.competitivedata.FederationEventSummary
 import com.tkolymp.tkolympapp.components.ErrorBanner
 import androidx.compose.material.icons.outlined.EventBusy
 import androidx.compose.material.icons.outlined.EmojiEvents
@@ -92,7 +93,8 @@ fun OverviewScreen(
     onOpenBoard: () -> Unit = {},
     onOpenEvents: () -> Unit = {},
     onOpenPerson: (String) -> Unit = {},
-    onOpenCompetitions: () -> Unit = {}
+    onOpenCompetitions: () -> Unit = {},
+    onOpenFederationEvent: (Long) -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -382,17 +384,12 @@ fun OverviewScreen(
                             CircularProgressIndicator()
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(AppStrings.current.competition.loadingCompetitions, style = MaterialTheme.typography.bodyMedium)
-                            Text(
-                                AppStrings.current.competition.loadingSlowNote,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
                         }
                     } else if (comp == null) {
                         EmptyState(title = AppStrings.current.competition.noUpcoming, icon = Icons.Outlined.EmojiEvents)
                     } else {
                         StaggeredItem(index = 0, visible = cardsVisible) {
-                            NearestCompetitionCard(competition = comp, onOpenCompetitions = onOpenCompetitions)
+                            NearestCompetitionCard(event = comp, onOpen = { onOpenFederationEvent(comp.id) })
                         }
                     }
                 }
@@ -584,33 +581,6 @@ private fun dateHeader(date: String, todayString: String, tomorrowString: String
 }
 
 @Composable
-private fun NearestCompetitionCard(competition: Competition, onOpenCompetitions: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .clickable { onOpenCompetitions() },
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Text(
-                text = competition.eventName ?: competition.competitorName ?: "",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            val boxBg = MaterialTheme.colorScheme.surfaceVariant
-            FlowRow(modifier = Modifier.fillMaxWidth()) {
-                competition.eventLocation?.takeIf { it.isNotBlank() }?.let { loc ->
-                    InfoChip(icon = Icons.Default.Place, text = loc, background = boxBg)
-                }
-                InfoChip(icon = Icons.Default.CalendarMonth, text = formatCompetitionDate(competition.competitionDate), background = boxBg)
-            }
-
-            CompetitionEntryRow(competition, showCategory = false, showCheckIn = false)
-        }
-    }
+private fun NearestCompetitionCard(event: FederationEventSummary, onOpen: () -> Unit) {
+    EventRow(event = event, modifier = Modifier.padding(vertical = 4.dp), onClick = onOpen)
 }
-

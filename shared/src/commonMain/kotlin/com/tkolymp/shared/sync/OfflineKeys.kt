@@ -31,6 +31,11 @@ object OfflineKeys {
     const val COMPETITIONS = "offline_competitions"
     const val COMPETITIONS_PAST = "offline_competitions_past"
 
+    // Federation ("Taneční organizace") data: only what the user has opened is saved.
+    const val CDATA_FEDERATIONS = "offline_cdata_federations"
+    fun cdataYears(code: String) = "offline_cdata_years_$code"
+    fun cdataEvents(code: String, year: Int) = "offline_cdata_events_${code}_$year"
+
     const val META_LAST_SYNC = "offline_meta_last_sync"
 
     /**

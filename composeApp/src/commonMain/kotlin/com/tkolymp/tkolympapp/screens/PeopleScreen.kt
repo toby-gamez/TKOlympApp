@@ -26,6 +26,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -51,6 +52,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -74,7 +76,9 @@ import com.tkolymp.tkolympapp.components.InitialsAvatar
 import com.tkolymp.tkolympapp.components.parseColorOrDefault
 import com.tkolymp.tkolympapp.util.StaggeredItem
 import com.tkolymp.tkolympapp.util.normalizeForSearch
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -235,7 +239,11 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
 
             }
 
-            val displayed = remember(people, sortMode, selectedGroups, groups, searchQuery, showTrainersOnly, trainerPersonIds) {
+            val displayed by produceState(
+                initialValue = emptyList<Person>(),
+                people, sortMode, selectedGroups, groups, searchQuery, showTrainersOnly, trainerPersonIds
+            ) {
+                value = withContext(Dispatchers.Default) {
                 val trainerFiltered = if (showTrainersOnly) people.filter { p -> p.id in trainerPersonIds } else people
                 val filtered = if (selectedGroups.isEmpty() || selectedGroups.size == groups.size) trainerFiltered else trainerFiltered.filter { p ->
                     p.cohortMembershipsList
@@ -250,8 +258,15 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
                         .any { normalizeForSearch(it).contains(q) }
                 }
                 when (sortMode) {
-                    SortMode.ALPHABETICAL -> searched.sortedBy { p -> listOf(p.firstName, p.lastName, p.suffixTitle).filterNotNull().filter { it.isNotBlank() }.joinToString(" ").lowercase() }
-                    SortMode.BIRTHDAY -> searched.sortedBy { daysUntilNextBirthday(it.birthDate) }
+                    SortMode.ALPHABETICAL -> searched
+                        .map { p -> listOf(p.firstName, p.lastName, p.suffixTitle).filterNotNull().filter { it.isNotBlank() }.joinToString(" ").lowercase() to p }
+                        .sortedBy { it.first }
+                        .map { it.second }
+                    SortMode.BIRTHDAY -> searched
+                        .map { daysUntilNextBirthday(it.birthDate) to it }
+                        .sortedBy { it.first }
+                        .map { it.second }
+                }
                 }
             }
             // manual refresh removed; initial load happens in LaunchedEffect
@@ -259,7 +274,15 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
             if (displayed.isEmpty()) {
                 EmptyState(title = AppStrings.current.people.noPeopleToShow, icon = Icons.Outlined.PersonSearch, fullPage = true)
             } else {
-                LazyColumn {
+                val listState = rememberLazyListState()
+                var scrolledForSort by remember { mutableStateOf(sortMode) }
+                LaunchedEffect(displayed) {
+                    if (scrolledForSort != sortMode) {
+                        scrolledForSort = sortMode
+                        listState.scrollToItem(0)
+                    }
+                }
+                LazyColumn(state = listState) {
                     itemsIndexed(displayed, key = { _, p -> p.id }) { index, p ->
                         StaggeredItem(index = index, visible = cardsVisible, baseDelayMs = 30, modifier = Modifier.animateItem()) {
                         Card(
@@ -388,10 +411,12 @@ internal fun formatDateString(raw: String?): String? {
     return formatShortDate(ld)
 }
 
+private val ISO_DATE_REGEX = Regex("\\d{4}-\\d{2}-\\d{2}")
+
 internal fun daysUntilNextBirthday(raw: String?): Int {
     if (raw.isNullOrBlank()) return Int.MAX_VALUE
     val s = raw.trim()
-    val datePrefix = Regex("\\d{4}-\\d{2}-\\d{2}").find(s)?.value
+    val datePrefix = ISO_DATE_REGEX.find(s)?.value
     val ld = if (datePrefix != null) {
         try { LocalDate.parse(datePrefix) } catch (_: Exception) { null }
     } else {

@@ -9,7 +9,7 @@ import com.tkolymp.shared.user.UserService
 import com.tkolymp.shared.viewmodels.AppError
 import com.tkolymp.shared.viewmodels.OverviewViewModel
 import com.tkolymp.tkolympapp.fakes.FakeAnnouncementService
-import com.tkolymp.tkolympapp.fakes.FakeCompetitionService
+import com.tkolymp.tkolympapp.fakes.FakeCompetitiveDataService
 import com.tkolymp.tkolympapp.fakes.FakeEventService
 import com.tkolymp.tkolympapp.fakes.FakeGraphQlClient
 import com.tkolymp.tkolympapp.fakes.FakeUserStorage
@@ -58,7 +58,7 @@ private fun makeOverviewVm(
     peopleService = PeopleService(FakeGraphQlClient(), CacheService()),
     cache = CacheService(),
     paymentService = com.tkolymp.shared.payments.PaymentService(FakeGraphQlClient(), CacheService()),
-    competitionService = FakeCompetitionService()
+    competitiveDataService = FakeCompetitiveDataService()
 )
 
 class OverviewViewModelTest {

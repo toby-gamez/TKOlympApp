@@ -32,7 +32,7 @@ object ToolboxWidgetConfig {
             ToolboxItem(ToolboxItemId.CALENDAR, R.drawable.ic_widget_calendar, nav.calendar, "calendar"),
             ToolboxItem(ToolboxItemId.BOARD, R.drawable.ic_widget_board, nav.board, "board"),
             ToolboxItem(ToolboxItemId.EVENTS, R.drawable.ic_widget_events, nav.events, "events"),
-            ToolboxItem(ToolboxItemId.COMPETITIONS, R.drawable.ic_widget_competitions, AppStrings.current.competition.competitions, "competitions"),
+            ToolboxItem(ToolboxItemId.COMPETITIONS, R.drawable.ic_widget_competitions, AppStrings.current.competition.competitions, "organization/csts"),
             ToolboxItem(ToolboxItemId.PROFILE, R.drawable.ic_widget_profile, nav.profile, "other"),
         )
     }

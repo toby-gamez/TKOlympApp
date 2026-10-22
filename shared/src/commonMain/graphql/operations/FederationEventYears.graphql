@@ -1,0 +1,13 @@
+query FederationEventYears($code: String!) {
+    federation(code: $code) {
+        code
+        name
+        eventFacets(includeCancelled: true) {
+            years {
+                year
+                eventCount
+                mappedEventCount
+            }
+        }
+    }
+}

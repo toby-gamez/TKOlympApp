@@ -80,12 +80,5 @@ query EventDetail($id: BigInt!) {
             }
             createdAt
         }
-        eventExternalRegistrationsList: eventExternalRegistrationsByInstanceIdList {
-            id
-            note
-            email
-            firstName
-            lastName
-        }
     }
 }

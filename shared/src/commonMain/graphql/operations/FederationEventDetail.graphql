@@ -1,0 +1,42 @@
+query FederationEventDetail($id: BigInt!) {
+    federationEvent(id: $id) {
+        id
+        federation
+        externalId
+        name
+        startDate
+        endDate
+        city
+        location
+        country
+        streetAddress
+        postalCode
+        addressNote
+        contactName
+        contactPhone
+        contactEmail
+        websiteUrl
+        venueLat
+        venueLng
+        status
+        organizingClub {
+            name
+        }
+        competitions(first: 300, orderBy: START_DATE_ASC) {
+            nodes {
+                id
+                startDate
+                competitionType
+                status
+                participantsTotal
+                category {
+                    name
+                    discipline
+                    ageGroup
+                    class
+                    series
+                }
+            }
+        }
+    }
+}

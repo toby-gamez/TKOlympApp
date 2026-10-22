@@ -76,6 +76,17 @@ class FakeCompetitionService(
     override suspend fun getNearestUpcoming(pPersonIds: List<Long>?): Competition? = upcoming.firstOrNull()
 }
 
+class FakeCompetitiveDataService(
+    private val events: List<com.tkolymp.shared.competitivedata.FederationEventSummary> = emptyList()
+) : com.tkolymp.shared.competitivedata.ICompetitiveDataService {
+    override suspend fun getFederations() = emptyList<com.tkolymp.shared.competitivedata.DanceFederation>()
+    override suspend fun getYears(federation: String) = emptyList<com.tkolymp.shared.competitivedata.FederationYear>()
+    override suspend fun getEvents(federation: String, year: Int, forceRefresh: Boolean) =
+        com.tkolymp.shared.competitivedata.LoadedData(events.filter { it.startDate.startsWith("$year") })
+    override suspend fun getEventDetail(eventId: Long): com.tkolymp.shared.competitivedata.FederationEventDetail? = null
+    override suspend fun getCompetitionResults(competitionId: Long): com.tkolymp.shared.competitivedata.FederationCompetitionResults? = null
+}
+
 class FakeNetworkMonitor(private val connected: Boolean = true) : NetworkMonitor {
     override fun isConnected(): Boolean = connected
 }
@@ -107,5 +118,4 @@ fun minimalEventJson(): JsonObject = buildJsonObject {
     put("eventTrainersList", JsonArray(emptyList()))
     put("eventTargetCohortsList", JsonArray(emptyList()))
     put("eventRegistrationsList", JsonArray(emptyList()))
-    put("eventExternalRegistrationsList", JsonArray(emptyList()))
 }

@@ -46,9 +46,9 @@ import com.tkolymp.shared.event.EventType
 import com.tkolymp.shared.event.toEventType
 import com.tkolymp.shared.calendar.parseCalendarJson
 import com.tkolymp.shared.payments.PaymentService
-import com.tkolymp.shared.competitions.Competition
+import com.tkolymp.shared.competitivedata.FederationEventSummary
+import com.tkolymp.shared.competitivedata.ICompetitiveDataService
 import androidx.compose.runtime.Immutable
-import com.tkolymp.shared.competitions.ICompetitionService
 
 @Immutable
 data class BirthdayEntry(
@@ -80,7 +80,7 @@ data class OverviewState(
     val myCoupleIds: List<String> = emptyList(),
     val isOffline: Boolean = false,
     val paymentDaysUntilDue: Int? = null,
-    val nearestCompetition: Competition? = null,
+    val nearestCompetition: FederationEventSummary? = null,
     val isCompetitionLoading: Boolean = false,
     override val isLoading: Boolean = false,
     override val error: AppError? = null
@@ -93,7 +93,7 @@ class OverviewViewModel(
     private val peopleService: com.tkolymp.shared.people.PeopleService = ServiceLocator.peopleService,
     private val cache: CacheService = ServiceLocator.cacheService,
     private val paymentService: PaymentService = ServiceLocator.paymentService,
-    private val competitionService: ICompetitionService = ServiceLocator.competitionService
+    private val competitiveDataService: ICompetitiveDataService = ServiceLocator.competitiveDataService
 ) : ViewModel() {
     private val _state = MutableStateFlow(OverviewState())
     val state: StateFlow<OverviewState> = _state.asStateFlow()
@@ -517,19 +517,33 @@ class OverviewViewModel(
 
     private var competitionJob: Job? = null
 
-    // Like camps, this previews the same browsable list the "more" button opens
-    // (CompetitionsScreen/CompetitionViewModel, unfiltered). It can take many seconds
-    // (one request per person), so it runs independently and never blocks the rest of
-    // the overview; the card fills in when it arrives.
+    // Previews the same CSTS event list the "more" button opens (organization/CSTS). Runs
+    // independently so it never blocks the rest of the overview; the card fills in when it arrives.
     private fun loadNearestCompetition() {
         competitionJob?.cancel()
         _state.value = _state.value.copy(isCompetitionLoading = true)
         competitionJob = viewModelScope.launch {
-            val competition = try {
-                competitionService.getNearestUpcoming(pPersonIds = null)
+            val event = try {
+                findNearestCstsEvent()
             } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
-            _state.value = _state.value.copy(nearestCompetition = competition, isCompetitionLoading = false)
+            // Never let a failed/empty answer wipe an event we already have.
+            _state.value = _state.value.copy(
+                nearestCompetition = event ?: _state.value.nearestCompetition,
+                isCompetitionLoading = false
+            )
         }
+    }
+
+    private suspend fun findNearestCstsEvent(): FederationEventSummary? {
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val todayIso = today.toString()
+        for (year in today.year..today.year + 1) {
+            val upcoming = competitiveDataService.getEvents(CSTS_CODE, year).data
+                .filter { !it.isCancelled && (it.endDate ?: it.startDate) >= todayIso }
+                .minByOrNull { it.startDate }
+            if (upcoming != null) return upcoming
+        }
+        return null
     }
 
     private fun isLesson(inst: EventInstance): Boolean =
@@ -538,3 +552,5 @@ class OverviewViewModel(
             !inst.event.eventTrainersList.firstOrNull().isNullOrBlank()
 
 }
+
+private const val CSTS_CODE = "csts"

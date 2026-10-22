@@ -1,0 +1,49 @@
+query FederationEvents($federation: String!, $since: Date!, $until: Date!, $first: Int, $offset: Int) {
+    federationEvents(
+        first: $first
+        offset: $offset
+        condition: { federation: $federation, includeCancelled: true, date: { since: $since, until: $until } }
+        orderBy: START_DATE_DESC
+    ) {
+        nodes {
+            id
+            externalId
+            name
+            startDate
+            endDate
+            city
+            location
+            country
+            venueLat
+            venueLng
+            status
+            competitions(first: 1) {
+                totalCount
+            }
+            typeCUP: competitions(first: 1, condition: { competitionType: CUP }) {
+                totalCount
+            }
+            typeRANKING: competitions(first: 1, condition: { competitionType: RANKING }) {
+                totalCount
+            }
+            typeLEAGUE: competitions(first: 1, condition: { competitionType: LEAGUE }) {
+                totalCount
+            }
+            typeCHAMPIONSHIP: competitions(first: 1, condition: { competitionType: CHAMPIONSHIP }) {
+                totalCount
+            }
+            typeTOP_LEVEL: competitions(first: 1, condition: { competitionType: TOP_LEVEL }) {
+                totalCount
+            }
+            typeSUPER_LEAGUE: competitions(first: 1, condition: { competitionType: SUPER_LEAGUE }) {
+                totalCount
+            }
+            typeG_CUP: competitions(first: 1, condition: { competitionType: G_CUP }) {
+                totalCount
+            }
+            completedCompetitions: competitions(first: 1, condition: { status: COMPLETED }) {
+                totalCount
+            }
+        }
+    }
+}

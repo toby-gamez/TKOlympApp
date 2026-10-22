@@ -53,7 +53,6 @@ data class EventState(
     val trainers: JsonArray = JsonArray(emptyList()),
     val cohorts: JsonArray = JsonArray(emptyList()),
     val registrations: JsonArray = JsonArray(emptyList()),
-    val externalRegistrations: JsonArray = JsonArray(emptyList()),
     val trainerDisplayNames: String = "",
     val cohortDisplayNames: String = "",
     val eventDateText: String = "",
@@ -170,7 +169,6 @@ class EventViewModel(
 
             val trainers = eventObj.get("eventTrainersList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
             val cohorts = eventObj.get("eventTargetCohortsList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
-            val externalRegistrations = eventObj.get("eventExternalRegistrationsList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
 
             val rawName = eventObj.str("name")
             val eventName = when {
@@ -261,7 +259,6 @@ class EventViewModel(
                 trainers = trainers,
                 cohorts = cohorts,
                 registrations = registrations,
-                externalRegistrations = externalRegistrations,
                 trainerDisplayNames = trainerDisplayNames,
                 cohortDisplayNames = cohortDisplayNames,
                 eventDateText = eventDateText,

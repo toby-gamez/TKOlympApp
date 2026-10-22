@@ -456,7 +456,7 @@ fun OtherScreen(
                     MainItem.TRAINERS -> AppStrings.current.otherScreen.trainersAndSpaces
                     MainItem.GROUPS -> AppStrings.current.otherScreen.trainingGroups
                     MainItem.LEADERBOARD -> AppStrings.current.otherScreen.leaderboard
-                    MainItem.COMPETITIONS -> AppStrings.current.competition.competitions
+                    MainItem.COMPETITIONS -> AppStrings.current.danceOrg.title
                 }
                 StaggeredItem(index = i, visible = itemsVisible, baseDelayMs = 35) {
                 Card(

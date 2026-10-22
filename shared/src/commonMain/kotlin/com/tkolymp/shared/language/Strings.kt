@@ -39,6 +39,7 @@ data class Strings(
     val personalEvents: PersonalEventStrings = PersonalEventStrings(),
     val tutorial: TutorialStrings = TutorialStrings(),
     val competition: CompetitionStrings = CompetitionStrings(),
+    val danceOrg: DanceOrgStrings = DanceOrgStrings(),
     val widget: WidgetStrings = WidgetStrings(),
     val campSchedule: CampScheduleStrings = CampScheduleStrings(),
     val achievements: AchievementStrings = AchievementStrings(),

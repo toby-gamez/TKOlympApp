@@ -26,6 +26,7 @@ import com.tkolymp.shared.network.NetworkMonitor
 import com.tkolymp.shared.sync.OfflineSyncManager
 import com.tkolymp.shared.personalevents.PersonalEventService
 import com.tkolymp.shared.competitions.ICompetitionService
+import com.tkolymp.shared.competitivedata.ICompetitiveDataService
 import com.tkolymp.shared.changelog.IChangelogService
 import com.tkolymp.shared.feedback.IFeedbackService
 import com.tkolymp.shared.management.IManagementService
@@ -60,6 +61,7 @@ class AppContainer(
     val offlineSyncManager: OfflineSyncManager,
     val announcementBadgeStorage: AnnouncementBadgeStorage,
     val competitionService: ICompetitionService,
+    val competitiveDataService: ICompetitiveDataService,
     val campScheduleService: CampScheduleService,
     val campScheduleReminderService: CampScheduleReminderService,
     val feedbackService: IFeedbackService,

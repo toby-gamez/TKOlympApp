@@ -7,6 +7,7 @@ import com.tkolymp.shared.campschedule.CampScheduleReminderService
 import com.tkolymp.shared.campschedule.CampScheduleService
 import com.tkolymp.shared.club.ClubService
 import com.tkolymp.shared.competitions.CompetitionService
+import com.tkolymp.shared.competitivedata.CompetitiveDataService
 import com.tkolymp.shared.errorreporting.CrashReportStorage
 import com.tkolymp.shared.errorreporting.ErrorReporter
 import com.tkolymp.shared.changelog.ChangelogService
@@ -94,6 +95,7 @@ suspend fun initNetworking(baseUrl: String, tenantId: String = "1") {
     val networkMonitor = NetworkMonitorIos()
     val personalEventService = PersonalEventService(offlineDataStorage, notificationScheduler, notificationStorage)
     val competitionSvc = CompetitionService(gql, cache)
+    val competitiveDataSvc = CompetitiveDataService(gql, cache, offlineDataStorage)
     val offlineSyncManager = OfflineSyncManager(
         eventSvc, announcementSvc, peopleSvc, offlineDataStorage,
         networkMonitor, userSvc, notificationSvc, clubSvc, paymentSvc, competitionSvc
@@ -128,6 +130,7 @@ suspend fun initNetworking(baseUrl: String, tenantId: String = "1") {
         offlineSyncManager = offlineSyncManager,
         announcementBadgeStorage = AnnouncementBadgeStorage(""),
         competitionService = competitionSvc,
+        competitiveDataService = competitiveDataSvc,
         campScheduleService = campScheduleSvc,
         campScheduleReminderService = campScheduleReminderSvc,
         feedbackService = feedbackSvc,

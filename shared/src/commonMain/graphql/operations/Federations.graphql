@@ -1,0 +1,6 @@
+query Federations {
+    federationsList {
+        code
+        name
+    }
+}
