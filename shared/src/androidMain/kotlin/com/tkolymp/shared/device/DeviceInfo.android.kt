@@ -1,6 +1,7 @@
 package com.tkolymp.shared.device
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 
 actual object DeviceInfo {
@@ -16,14 +17,13 @@ actual object DeviceInfo {
     /** Populated once from the app's own PackageInfo; call as early as possible (e.g. Application.onCreate / initNetworking). */
     fun init(context: Context) {
         _appVersion = try {
-            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            val versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                packageInfo.longVersionCode
+            val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.packageManager.getPackageInfo(context.packageName, PackageManager.PackageInfoFlags.of(0))
             } else {
                 @Suppress("DEPRECATION")
-                packageInfo.versionCode.toLong()
+                context.packageManager.getPackageInfo(context.packageName, 0)
             }
-            "${packageInfo.versionName} ($versionCode)"
+            "${packageInfo.versionName} (${packageInfo.longVersionCode})"
         } catch (_: Exception) {
             "unknown"
         }

@@ -28,7 +28,6 @@ import platform.Foundation.create
 import platform.Foundation.dataUsingEncoding
 import platform.Foundation.writeToURL
 import platform.UIKit.UIActivityViewController
-import platform.UIKit.UIApplication
 import platform.UIKit.UIDocumentPickerViewController
 
 @OptIn(ExperimentalForeignApi::class)
@@ -66,7 +65,7 @@ actual fun NotificationExportImportButton(
                             activityItems = listOf(fileUrl),
                             applicationActivities = null
                         )
-                        UIApplication.sharedApplication.keyWindow?.rootViewController
+                        keyWindowRootViewController()
                             ?.presentViewController(activityVc, animated = true, completion = null)
                         onMessage(AppStrings.current.importExport.exportSuccessful)
                     } catch (_: Exception) {
@@ -105,7 +104,7 @@ actual fun NotificationExportImportButton(
                     }
                 }
                 picker.delegate = delegate
-                UIApplication.sharedApplication.keyWindow?.rootViewController
+                keyWindowRootViewController()
                     ?.presentViewController(picker, animated = true, completion = null)
             }
         )

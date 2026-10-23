@@ -82,17 +82,18 @@ import com.tkolymp.tkolympapp.components.QuantityInput
 import com.tkolymp.shared.Logger
 import kotlinx.coroutines.CancellationException
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Instant
 import com.tkolymp.tkolympapp.components.EmptyState
 import androidx.compose.material.icons.outlined.NotificationsNone
 import androidx.compose.material.icons.outlined.NotificationsOff
-import androidx.compose.material.icons.outlined.Rule
+import androidx.compose.material.icons.automirrored.outlined.Rule
 
 /** (date "27. 7.", time "17:15") in the device's local time zone, or ("", "") if unparseable. */
 private fun formatReminderDateTime(iso: String): Pair<String, String> = try {
     val local = Instant.parse(iso).toLocalDateTime(TimeZone.currentSystemDefault())
-    val date = "${local.day}. ${local.monthNumber}."
+    val date = "${local.day}. ${local.month.number}."
     val time = "${local.hour.toString().padStart(2, '0')}:${local.minute.toString().padStart(2, '0')}"
     date to time
 } catch (e: Exception) {
@@ -432,7 +433,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
                                     EmptyState(
                                         title = AppStrings.current.notifications.noRules,
                                         subtitle = AppStrings.current.notifications.noRulesDescription,
-                                        icon = Icons.Outlined.Rule,
+                                        icon = Icons.AutoMirrored.Outlined.Rule,
                                         fullPage = true
                                     )
                                 }

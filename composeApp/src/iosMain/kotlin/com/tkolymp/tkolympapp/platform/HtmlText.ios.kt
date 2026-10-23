@@ -115,7 +115,7 @@ img, picture, video { width:100% !important; max-width:100% !important; height:a
                             platform.WebKit.WKNavigationTypeLinkActivated && url != null
                         ) {
                             if (url.scheme?.lowercase() in setOf("http", "https", "mailto", "tel")) {
-                                UIApplication.sharedApplication.openURL(url)
+                                UIApplication.sharedApplication.openURL(url, options = emptyMap<Any?, Any>(), completionHandler = null)
                             }
                             decisionHandler(WKNavigationActionPolicy.WKNavigationActionPolicyCancel)
                         } else {

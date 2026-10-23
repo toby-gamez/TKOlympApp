@@ -13,6 +13,7 @@ import androidx.glance.text.TextStyle
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.tkolympapp.MainActivity
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.number
 
 fun deepLinkIntent(context: Context, route: String): Intent {
     return Intent(context, MainActivity::class.java).apply {
@@ -21,12 +22,11 @@ fun deepLinkIntent(context: Context, route: String): Intent {
     }
 }
 
-@Suppress("DEPRECATION")
 fun formatWidgetTime(dateTime: LocalDateTime): String {
     val hour = dateTime.hour.toString().padStart(2, '0')
     val minute = dateTime.minute.toString().padStart(2, '0')
     val day = dateTime.day.toString().padStart(2, '0')
-    val month = dateTime.monthNumber.toString().padStart(2, '0')
+    val month = dateTime.month.number.toString().padStart(2, '0')
     return "$day.$month $hour:$minute"
 }
 

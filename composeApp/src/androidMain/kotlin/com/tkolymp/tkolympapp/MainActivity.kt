@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -45,7 +46,12 @@ class MainActivity : ComponentActivity() {
 
         // Store app version for the About screen (read from commonMain via getAppVersion())
         try {
-            val pkgInfo = packageManager.getPackageInfo(packageName, 0)
+            val pkgInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                packageManager.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0))
+            } else {
+                @Suppress("DEPRECATION")
+                packageManager.getPackageInfo(packageName, 0)
+            }
             appVersionName = pkgInfo.versionName
             appVersionCode = PackageInfoCompat.getLongVersionCode(pkgInfo)
         } catch (_: Exception) {}

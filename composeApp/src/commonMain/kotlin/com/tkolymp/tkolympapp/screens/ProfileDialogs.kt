@@ -12,7 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.FormatBold
 import androidx.compose.material.icons.filled.FormatItalic
-import androidx.compose.material.icons.filled.FormatListBulleted
+import androidx.compose.material.icons.automirrored.filled.FormatListBulleted
 import androidx.compose.material.icons.filled.FormatUnderlined
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -384,7 +384,7 @@ fun ChangePersonalDataDialog(
                         Icon(Icons.Default.FormatUnderlined, contentDescription = strings.profile.formatUnderline)
                     }
                     IconButton(onClick = { wrapNoteSelection("<ul><li>", "</li></ul>") }) {
-                        Icon(Icons.Default.FormatListBulleted, contentDescription = strings.profile.formatBulletList)
+                        Icon(Icons.AutoMirrored.Filled.FormatListBulleted, contentDescription = strings.profile.formatBulletList)
                     }
                 }
                 TextField(

@@ -2,7 +2,7 @@ package com.tkolymp.shared.notification
 
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import platform.posix.time
 import platform.UserNotifications.UNAuthorizationOptionAlert
 import platform.UserNotifications.UNAuthorizationOptionBadge

@@ -33,7 +33,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.ViewList
+import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -232,7 +232,7 @@ fun FederationEventsScreen(
                         )
                         SingleChoiceSegmentedButtonRow {
                             SegmentedButton(!state.showMap, { viewModel.setShowMap(false) }, SegmentedButtonDefaults.itemShape(0, 2),
-                                icon = { Icon(Icons.Filled.ViewList, contentDescription = null, modifier = Modifier.size(18.dp)) }) { Text(strings.list) }
+                                icon = { Icon(Icons.AutoMirrored.Filled.ViewList, contentDescription = null, modifier = Modifier.size(18.dp)) }) { Text(strings.list) }
                             SegmentedButton(state.showMap, { viewModel.setShowMap(true) }, SegmentedButtonDefaults.itemShape(1, 2),
                                 icon = { Icon(Icons.Filled.Map, contentDescription = null, modifier = Modifier.size(18.dp)) }) { Text(strings.map) }
                         }

@@ -3,7 +3,6 @@ import androidx.compose.foundation.clickable
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.shared.utils.formatShortDateTime
 import com.tkolymp.shared.utils.parseToLocal
-import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone

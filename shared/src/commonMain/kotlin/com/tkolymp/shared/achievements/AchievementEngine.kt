@@ -138,7 +138,7 @@ private fun LocalDate.isAfter(other: LocalDate): Boolean = this > other
 /** [since] shifted forward by [years], clamped to the last valid day of the target month (handles Feb 29). */
 private fun anniversaryOf(since: LocalDate, years: Int): LocalDate {
     val targetYear = since.year + years
-    var day = since.dayOfMonth
+    var day = since.day
     while (day > 0) {
         val candidate = runCatching { LocalDate(targetYear, since.month, day) }.getOrNull()
         if (candidate != null) return candidate

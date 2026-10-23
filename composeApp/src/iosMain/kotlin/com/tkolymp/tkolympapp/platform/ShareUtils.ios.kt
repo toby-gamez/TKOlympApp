@@ -22,11 +22,8 @@ import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSUserDomainMask
 import platform.Foundation.writeToFile
 import platform.UIKit.UIActivityViewController
-import platform.UIKit.UIApplication
-import platform.UIKit.UIGraphicsBeginImageContextWithOptions
-import platform.UIKit.UIGraphicsEndImageContext
-import platform.UIKit.UIGraphicsGetCurrentContext
-import platform.UIKit.UIGraphicsGetImageFromCurrentImageContext
+import platform.UIKit.UIGraphicsImageRenderer
+import platform.UIKit.UIGraphicsImageRendererFormat
 import platform.UIKit.UIImage
 import platform.UIKit.UIImagePNGRepresentation
 import platform.UIKit.UIColor
@@ -77,16 +74,21 @@ private fun shareImageBitmapOnMainThread(bitmap: ImageBitmap, fileBaseName: Stri
             val cgImage = CGBitmapContextCreateImage(ctx) ?: return
             val uiImage = UIImage(cGImage = cgImage)
 
-            UIGraphicsBeginImageContextWithOptions(
-                CGSizeMake(width.toDouble(), height.toDouble()), true, 1.0
+            val rendererFormat = UIGraphicsImageRendererFormat.defaultFormat().apply {
+                scale = 1.0
+                opaque = true
+            }
+            val renderer = UIGraphicsImageRenderer(
+                size = CGSizeMake(width.toDouble(), height.toDouble()),
+                format = rendererFormat
             )
-            UIColor.whiteColor.setFill()
-            UIRectFill(CGRectMake(0.0, 0.0, width.toDouble(), height.toDouble()))
-            uiImage.drawAtPoint(platform.CoreGraphics.CGPointMake(0.0, 0.0))
-            val finalImage = UIGraphicsGetImageFromCurrentImageContext()
-            UIGraphicsEndImageContext()
+            val finalImage = renderer.imageWithActions { _ ->
+                UIColor.whiteColor.setFill()
+                UIRectFill(CGRectMake(0.0, 0.0, width.toDouble(), height.toDouble()))
+                uiImage.drawAtPoint(platform.CoreGraphics.CGPointMake(0.0, 0.0))
+            }
 
-            val pngData = UIImagePNGRepresentation(finalImage ?: uiImage) ?: return
+            val pngData = UIImagePNGRepresentation(finalImage) ?: return
             val tmpDir = NSSearchPathForDirectoriesInDomains(
                 NSDocumentDirectory, NSUserDomainMask, true
             ).firstOrNull() as? String ?: return
@@ -98,7 +100,7 @@ private fun shareImageBitmapOnMainThread(bitmap: ImageBitmap, fileBaseName: Stri
                 activityItems = listOf(fileUrl),
                 applicationActivities = null
             )
-            UIApplication.sharedApplication.keyWindow?.rootViewController
+            keyWindowRootViewController()
                 ?.presentViewController(activityVc, animated = true, completion = null)
         }
     } catch (_: Exception) {}
