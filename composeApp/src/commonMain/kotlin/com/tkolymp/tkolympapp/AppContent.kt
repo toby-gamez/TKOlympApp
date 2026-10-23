@@ -214,12 +214,16 @@ fun AppContent(
             val navController = rememberNavController()
             val currentBackStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = currentBackStackEntry?.destination?.route
+            // The graph is only set once AppNavHost is composed (the final `when` branch);
+            // reading navController.graph before that throws "You must call setGraph()...".
+            val navReady = currentBackStackEntry != null
             val boardHasUnread by com.tkolymp.shared.announcements.AnnouncementBadge.hasUnread.collectAsStateWithLifecycle()
             val tutorialActive by com.tkolymp.shared.tutorial.TutorialManager.isActive.collectAsStateWithLifecycle()
             val tutorialStep by com.tkolymp.shared.tutorial.TutorialManager.currentStep.collectAsStateWithLifecycle()
 
-            LaunchedEffect(tutorialStep, tutorialActive) {
+            LaunchedEffect(tutorialStep, tutorialActive, navReady) {
                 TutorialHighlight.rect = null
+                if (!navReady) return@LaunchedEffect
                 if (tutorialActive) {
                     val route = com.tkolymp.shared.tutorial.TutorialManager.steps[tutorialStep].route
                     val currentRoute = navController.currentBackStackEntry?.destination?.route
@@ -246,9 +250,9 @@ fun AppContent(
                 }
             }
 
-            LaunchedEffect(loggedIn) {
+            LaunchedEffect(loggedIn, navReady) {
                 val route = pendingInitialRoute
-                if (loggedIn == true && route != null) {
+                if (loggedIn == true && navReady && route != null) {
                     pendingInitialRoute = null
                     navController.navigate(route) {
                         popUpTo(navController.graph.findStartDestination().id) { saveState = true }
