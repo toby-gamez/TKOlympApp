@@ -296,7 +296,8 @@ val StringsEn = Strings(
     ),
     people = PeopleStrings(
         searchByName = "Search by first or last name",
-        alphabetically = "Alphabetically",
+        bySurname = "By surname",
+        byFirstName = "By first name",
         mine = "Mine",
         noGroupsToShow = "No groups.",
         noPeopleToShow = "No people to show.",

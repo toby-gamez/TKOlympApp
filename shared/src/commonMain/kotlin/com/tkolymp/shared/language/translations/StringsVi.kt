@@ -273,7 +273,8 @@ val StringsVi = Strings(
     ),
     people = PeopleStrings(
         searchByName = "Tìm kiếm theo tên hoặc họ",
-        alphabetically = "Theo bảng chữ cái",
+        bySurname = "Theo họ",
+        byFirstName = "Theo tên",
         mine = "Của tôi",
         noGroupsToShow = "Không có nhóm nào.",
         noPeopleToShow = "Không có người nào để hiển thị.",

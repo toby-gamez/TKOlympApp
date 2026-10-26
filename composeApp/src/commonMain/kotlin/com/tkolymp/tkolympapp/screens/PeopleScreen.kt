@@ -88,14 +88,14 @@ import kotlinx.datetime.todayIn
 import com.tkolymp.tkolympapp.components.EmptyState
 import androidx.compose.material.icons.outlined.PersonSearch
 
-private enum class SortMode { ALPHABETICAL, BIRTHDAY }
+private enum class SortMode { SURNAME, FIRST_NAME, BIRTHDAY }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, onBirthdayNotificationsClick: () -> Unit = {}) {
     val viewModel = viewModel<PeopleViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val trainerPersonIds = state.trainerPersonIds
-    var sortMode by remember { mutableStateOf<SortMode>(SortMode.ALPHABETICAL) }
+    var sortMode by remember { mutableStateOf<SortMode>(SortMode.SURNAME) }
     var showSearch by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
@@ -181,8 +181,12 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
             Row(modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = { sortMode = SortMode.ALPHABETICAL }) {
-                    Text(AppStrings.current.people.alphabetically, color = if (sortMode == SortMode.ALPHABETICAL) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                TextButton(onClick = { sortMode = SortMode.SURNAME }) {
+                    Text(AppStrings.current.people.bySurname, color = if (sortMode == SortMode.SURNAME) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                TextButton(onClick = { sortMode = SortMode.FIRST_NAME }) {
+                    Text(AppStrings.current.people.byFirstName, color = if (sortMode == SortMode.FIRST_NAME) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 TextButton(onClick = { sortMode = SortMode.BIRTHDAY }) {
@@ -258,7 +262,11 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
                         .any { normalizeForSearch(it).contains(q) }
                 }
                 when (sortMode) {
-                    SortMode.ALPHABETICAL -> searched
+                    SortMode.SURNAME -> searched
+                        .map { p -> listOf(p.lastName, p.firstName, p.suffixTitle).filterNotNull().filter { it.isNotBlank() }.joinToString(" ").lowercase() to p }
+                        .sortedBy { it.first }
+                        .map { it.second }
+                    SortMode.FIRST_NAME -> searched
                         .map { p -> listOf(p.firstName, p.lastName, p.suffixTitle).filterNotNull().filter { it.isNotBlank() }.joinToString(" ").lowercase() to p }
                         .sortedBy { it.first }
                         .map { it.second }

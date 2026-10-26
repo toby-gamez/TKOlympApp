@@ -285,7 +285,8 @@ val StringsUa = Strings(
     ),
     people = PeopleStrings(
         searchByName = "Пошук за ім'ям або прізвищем",
-        alphabetically = "За алфавітом",
+        bySurname = "За прізвищем",
+        byFirstName = "За іменем",
         mine = "Мої",
         noGroupsToShow = "Немає груп.",
         noPeopleToShow = "Немає осіб для відображення.",

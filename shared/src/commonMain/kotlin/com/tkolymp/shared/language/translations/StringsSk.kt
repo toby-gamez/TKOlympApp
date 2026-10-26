@@ -315,7 +315,8 @@ val StringsSk = Strings(
     ),
     people = PeopleStrings(
         searchByName = "Hľadať podľa mena alebo priezviska",
-        alphabetically = "Abecedne",
+        bySurname = "Podľa priezviska",
+        byFirstName = "Podľa mena",
         mine = "Moje",
         noGroupsToShow = "Žiadne skupiny.",
         noPeopleToShow = "Žiadni ľudia na zobrazenie.",
