@@ -7,6 +7,8 @@ import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 
 class GraphQlClientImpl(
@@ -22,16 +24,16 @@ class GraphQlClientImpl(
     private val onUnauthorized: (suspend () -> Boolean)? = null,
 ) : IGraphQlClient {
 
-    override suspend fun post(query: String, variables: JsonObject?): JsonElement {
+    override suspend fun post(query: String, variables: JsonObject?): JsonElement = withContext(Dispatchers.Default) {
         val token = tokenProvider()
         val first = execute(query, variables, token)
-        if (first !is Outcome.Unauthorized) return first.unwrap()
+        if (first !is Outcome.Unauthorized) return@withContext first.unwrap()
 
         // Login/Refresh are how a token is obtained, so refreshing in response to them would recurse.
         val renewable = token != null && onUnauthorized != null && query != GraphQlOperations.Refresh && query != GraphQlOperations.Login
-        if (!renewable || onUnauthorized?.invoke() != true) return first.unwrap()
+        if (!renewable || onUnauthorized?.invoke() != true) return@withContext first.unwrap()
         Logger.d("GraphQlClient", "token rejected; retrying once after refresh")
-        return execute(query, variables, tokenProvider()).unwrap()
+        execute(query, variables, tokenProvider()).unwrap()
     }
 
     private sealed interface Outcome {

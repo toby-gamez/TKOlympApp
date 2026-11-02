@@ -13,6 +13,8 @@ import com.tkolymp.shared.calendar.ViewMode
 import com.tkolymp.shared.event.IEventService
 import com.tkolymp.shared.personalevents.TrainingType
 import com.tkolymp.shared.user.UserService
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -93,7 +95,12 @@ class CalendarViewViewModel(
      * Load events for the current date range and view mode
      */
     suspend fun loadEvents() {
+        // Bumped on the caller's thread so that concurrent calls get distinct revisions.
         val revision = ++loadRevision
+        withContext(Dispatchers.Default) { loadEventsInternal(revision) }
+    }
+
+    private suspend fun loadEventsInternal(revision: Int) {
         _state.value = _state.value.copy(isLoading = true, error = null)
         var isOfflineUsed = false
         

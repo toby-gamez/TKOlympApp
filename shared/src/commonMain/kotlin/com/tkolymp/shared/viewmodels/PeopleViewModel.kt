@@ -2,7 +2,9 @@ package com.tkolymp.shared.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.tkolymp.shared.ServiceLocator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.CancellationException
@@ -52,7 +54,9 @@ class PeopleViewModel(
         }
     }
 
-    suspend fun loadPeople(forceRefresh: Boolean = false) {
+    suspend fun loadPeople(forceRefresh: Boolean = false) = withContext(Dispatchers.Default) { loadPeopleInternal(forceRefresh) }
+
+    private suspend fun loadPeopleInternal(forceRefresh: Boolean) {
         if (_state.value.people.isNotEmpty() && !forceRefresh) return
         _state.value = _state.value.copy(isLoading = true, error = null)
         try {
