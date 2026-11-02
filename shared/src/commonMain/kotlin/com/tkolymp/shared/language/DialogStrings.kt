@@ -15,4 +15,8 @@ data class DialogStrings(
     val noName: String,
     val barcodeInfoTitle: String,
     val barcodeInfoText: String,
+    val updateTitle: String,
+    val updateText: String,
+    val updateButton: String,
+    val updateLater: String,
 )

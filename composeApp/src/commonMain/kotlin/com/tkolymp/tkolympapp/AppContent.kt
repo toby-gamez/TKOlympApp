@@ -15,11 +15,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -118,6 +120,30 @@ fun AppContent(
     }
     AppTheme(darkTheme = isDark) {
         val currentLanguage by AppStrings.languageFlow.collectAsStateWithLifecycle()
+
+        val updateAvailable by com.tkolymp.shared.update.UpdateChecker.updateAvailable.collectAsStateWithLifecycle()
+        val updateUriHandler = LocalUriHandler.current
+        LaunchedEffect(Unit) {
+            com.tkolymp.shared.update.UpdateChecker.setCurrentVersion(getAppVersion().first)
+        }
+        if (updateAvailable) {
+            AlertDialog(
+                onDismissRequest = { com.tkolymp.shared.update.UpdateChecker.dismiss() },
+                title = { Text(AppStrings.current.dialogs.updateTitle) },
+                text = { Text(AppStrings.current.dialogs.updateText) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        com.tkolymp.shared.update.UpdateChecker.dismiss()
+                        updateUriHandler.openUri(com.tkolymp.shared.update.UpdateChecker.PLAY_STORE_URL)
+                    }) { Text(AppStrings.current.dialogs.updateButton) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { com.tkolymp.shared.update.UpdateChecker.dismiss() }) {
+                        Text(AppStrings.current.dialogs.updateLater)
+                    }
+                },
+            )
+        }
 
         var loggedIn by remember { mutableStateOf<Boolean?>(null) }
         var showOnboarding by remember { mutableStateOf<Boolean?>(null) }

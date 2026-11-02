@@ -450,6 +450,10 @@ val StringsSk = Strings(
         noName = "(bez názvu)",
         barcodeInfoTitle = "Overenie na súťaži",
         barcodeInfoText = "Tento kód je identický s tým, ktorý dostanete cez oficiálne stránky. Slúži na preukazovanie sa pri prezencii súťaže ČSTS.",
+        updateTitle = "Dostupná aktualizácia",
+        updateText = "Je dostupná novšia verzia aplikácie. Aktualizuj prosím aplikáciu, aby všetko fungovalo správne.",
+        updateButton = "Otvoriť Google Play",
+        updateLater = "Neskôr",
     ),
     errorMessages = ErrorMessageStrings(
         errorLogin = "Nesprávne meno alebo heslo",

@@ -2,6 +2,7 @@ package com.tkolymp.shared.viewmodels
 
 import com.tkolymp.shared.errorreporting.ErrorReporter
 import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.shared.update.UpdateChecker
 
 sealed class AppError {
     abstract val message: String
@@ -22,6 +23,7 @@ sealed class AppError {
 
         fun network(message: String?, cause: Throwable? = null): AppError {
             val resolved = message ?: AppStrings.current.errorMessages.networkError
+            UpdateChecker.onNetworkError()
             // Timeouts / unreachable host are the user's connectivity (or a server blip), not an app bug.
             if (!isTransientNetworkFailure(message, cause)) ErrorReporter.report("AppError.network", resolved, cause)
             return Network(resolved)

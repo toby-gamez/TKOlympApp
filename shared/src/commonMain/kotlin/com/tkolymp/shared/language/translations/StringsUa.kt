@@ -450,6 +450,10 @@ val StringsUa = Strings(
         noName = "(без назви)",
         barcodeInfoTitle = "Перевірка на змаганні",
         barcodeInfoText = "Цей код ідентичний тому, що ви отримуєте через офіційний сайт. Використовується для підтвердження особи при реєстрації на змаганнях ČSTS.",
+        updateTitle = "Доступне оновлення",
+        updateText = "Доступна новіша версія застосунку. Будь ласка, оновіть застосунок, щоб усе працювало правильно.",
+        updateButton = "Відкрити Google Play",
+        updateLater = "Пізніше",
     ),
     errorMessages = ErrorMessageStrings(
         errorLogin = "Неправильне ім'я користувача або пароль",

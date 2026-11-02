@@ -27,6 +27,7 @@ data class ChangelogRelease(
     val body: String,
     val publishedAt: String?,
     val author: String = "Tobias Heneman",
+    val isPrerelease: Boolean = false,
 )
 
 interface IChangelogService {
@@ -56,6 +57,7 @@ class ChangelogService(private val httpClient: HttpClient) : IChangelogService {
                         body = r.body?.trim() ?: "",
                         publishedAt = r.publishedAt,
                         author = "Tobias Heneman",
+                        isPrerelease = r.prerelease,
                     )
                 }
         } catch (e: CancellationException) {

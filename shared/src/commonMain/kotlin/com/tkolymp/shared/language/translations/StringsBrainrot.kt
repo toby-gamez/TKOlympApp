@@ -451,6 +451,10 @@ val StringsBrainrot = Strings(
         noName = "(nameless fr)",
         barcodeInfoTitle = "Proof at the slay event bestie",
         barcodeInfoText = "This code is literally the same as the one from the official sigma pages fr fr. Use it to prove ur not mid at the ČSTS competition check-in no cap.",
+        updateTitle = "Update fr fr",
+        updateText = "New version just dropped no cap. Update the app or ur gonna be mid.",
+        updateButton = "Open Google Play",
+        updateLater = "Later bro",
     ),
     errorMessages = ErrorMessageStrings(
         errorLogin = "wrong username or password no cap",

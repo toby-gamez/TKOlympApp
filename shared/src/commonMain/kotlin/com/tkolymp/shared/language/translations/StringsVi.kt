@@ -450,6 +450,10 @@ val StringsVi = Strings(
         noName = "(không có tên)",
         barcodeInfoTitle = "Xác minh tại giải đấu",
         barcodeInfoText = "Mã này giống với mã bạn nhận được qua trang web chính thức. Dùng để xác nhận danh tính khi đăng ký tại giải đấu ČSTS.",
+        updateTitle = "Có bản cập nhật",
+        updateText = "Đã có phiên bản mới của ứng dụng. Vui lòng cập nhật để mọi thứ hoạt động đúng.",
+        updateButton = "Mở Google Play",
+        updateLater = "Để sau",
     ),
     errorMessages = ErrorMessageStrings(
         errorLogin = "Tên đăng nhập hoặc mật khẩu không đúng",

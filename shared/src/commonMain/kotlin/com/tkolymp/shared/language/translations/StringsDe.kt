@@ -450,6 +450,10 @@ val StringsDe = Strings(
         noName = "(unbenannt)",
         barcodeInfoTitle = "Nachweis bei der Veranstaltung",
         barcodeInfoText = "Dieser Code ist identisch mit dem, den Sie über die offiziellen Seiten erhalten. Er dient als Nachweis bei der Anmeldung zu ČSTS-Wettkämpfen.",
+        updateTitle = "Update verfügbar",
+        updateText = "Eine neuere Version der App ist verfügbar. Bitte aktualisiere die App, damit alles richtig funktioniert.",
+        updateButton = "Google Play öffnen",
+        updateLater = "Später",
     ),
     errorMessages = ErrorMessageStrings(
         errorLogin = "Benutzername oder Passwort falsch",

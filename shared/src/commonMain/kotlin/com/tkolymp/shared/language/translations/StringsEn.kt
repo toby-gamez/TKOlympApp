@@ -461,6 +461,10 @@ val StringsEn = Strings(
         noName = "(no name)",
         barcodeInfoTitle = "Verification at Competition",
         barcodeInfoText = "This code is identical to the one you receive through the official website. It is used for identification at the ČSTS competition registration.",
+        updateTitle = "Update available",
+        updateText = "A newer version of the app is available. Please update to keep everything working properly.",
+        updateButton = "Open Google Play",
+        updateLater = "Later",
     ),
     errorMessages = ErrorMessageStrings(
         errorLogin = "Incorrect username or password",
