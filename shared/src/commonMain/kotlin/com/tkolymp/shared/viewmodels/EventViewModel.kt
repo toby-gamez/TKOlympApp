@@ -187,7 +187,7 @@ class EventViewModel(
             val isPublic = eventObj.bool("isPublic") ?: false
             val enableNotes = eventObj.bool("enableNotes") ?: false
             val capacity = eventObj.int("capacity")
-            val remainingPersonSpots = eventObj.int("remainingPersonSpots")
+            val remainingPersonSpots = eventObj.get("remainingPersonSpots")?.asJsonObjectOrNull()?.int("remainingCapacity")
             val remainingLessons = eventObj.int("remainingLessons")
 
             val trainerDisplayNames = trainers.mapNotNull { trainerEl ->

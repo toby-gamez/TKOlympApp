@@ -3,8 +3,8 @@ query PersonDetails($id: BigInt!) {
     id birthDate lastName firstName email phone prefixTitle suffixTitle wdsfId cstsId gender isTrainer
     nationality nationalIdNumber instagramUsername tiktokUsername facebookUrl websiteUrl note
     address { city conscriptionNumber district orientationNumber postalCode region street }
-    activeCouplesList { id man { firstName lastName } woman { firstName lastName } }
-    allCouplesList { id manId womanId since until status }
+    activeCouplesList: couplesList(condition: { status: ACTIVE }) { id man { firstName lastName } woman { firstName lastName } }
+    allCouplesList: couplesList { id manId womanId since until status }
     cohortMembershipsList { cohort { id colorRgb name isVisible } since until }
     cstsProgressList: federationCategoryProgresses(first: 100) {
       nodes {

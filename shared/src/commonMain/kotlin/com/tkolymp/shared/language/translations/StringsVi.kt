@@ -206,6 +206,8 @@ val StringsVi = Strings(
         noRegistrationOwned = "Không tìm thấy đăng ký của bạn",
         registrationSuccess = "Đăng ký thành công",
         signedUp = "Đã đăng ký",
+        cannotRegisterTitle = "Không thể đăng ký",
+        cannotRegisterText = "Bạn không được phép đăng ký sự kiện này.",
     ),
     announcements = AnnouncementStrings(
         announcements = "Thông báo",

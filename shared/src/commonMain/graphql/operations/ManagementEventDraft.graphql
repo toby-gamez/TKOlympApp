@@ -1,8 +1,8 @@
 query ManagementEventDraft($id: BigInt!) {
-  eventInstance(id: $id) {
+  eventInstance: event(id: $id) {
     id name type since until locationId locationText capacity
     isVisible isPublic isLocked enableNotes isCancelled summary description
-    eventInstanceTrainersByInstanceIdList { personId }
+    eventInstanceTrainersByInstanceIdList: eventTrainersList { personId }
     targetCohortsList { cohortId }
   }
 }

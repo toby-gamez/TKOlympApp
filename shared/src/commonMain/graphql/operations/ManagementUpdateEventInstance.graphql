@@ -1,3 +1,3 @@
-mutation ManagementUpdateEventInstance($input: UpdateEventInstanceInput!) {
-  updateEventInstance(input: $input) { eventInstance { id } }
+mutation ManagementUpdateEventInstance($input: UpdateEventInput!) {
+  updateEventInstance: updateEvent(input: $input) { eventInstance: event { id } }
 }

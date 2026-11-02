@@ -18,9 +18,9 @@ query EventsForRange(
         locationText
         isVisible
         isPublic
-        trainersList { person { name } }
+        trainersList: eventTrainersList { person { name } }
         targetCohortsList { cohortId cohort { id name colorRgb } }
-        eventInstanceRegistrationsByInstanceIdList {
+        eventInstanceRegistrationsByInstanceIdList: registrationsList {
             id
             parentRegistrationId
             person { id name firstName lastName }

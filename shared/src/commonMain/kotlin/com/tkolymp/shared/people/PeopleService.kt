@@ -383,7 +383,7 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                     points = n.s("points"), asOfDate = snap?.s("asOfDate")
                 )
             }
-            val fedCompetitions = personObj.nodes("federationCompetitions").map { n ->
+            val fedCompetitions = root.nodes("federationCompetitions").map { n ->
                 val ev = n.o("event")
                 FederationCompetitionEntry(
                     id = n.s("id"), federation = n.s("federation"), startDate = n.s("startDate"),

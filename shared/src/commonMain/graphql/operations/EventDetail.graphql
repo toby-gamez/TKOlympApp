@@ -1,5 +1,5 @@
 query EventDetail($id: BigInt!) {
-    eventInstance(id: $id) {
+    eventInstance: event(id: $id) {
         id
         type
         name
@@ -9,7 +9,7 @@ query EventDetail($id: BigInt!) {
         until
         isCancelled
         capacity
-        remainingPersonSpots
+        remainingPersonSpots: registrationInfo { remainingCapacity }
         isLocked
         isVisible
         isPublic
@@ -20,7 +20,7 @@ query EventDetail($id: BigInt!) {
             id
             name
         }
-        eventTrainersList: eventInstanceTrainersByInstanceIdList {
+        eventTrainersList {
             id
             personId
             lessonsOffered
@@ -30,7 +30,7 @@ query EventDetail($id: BigInt!) {
                 name
             }
         }
-        eventInstancesList: childEventInstancesList(orderBy: SINCE_ASC) {
+        eventInstancesList: childEventsList(orderBy: SINCE_ASC) {
             id
             since
             until
@@ -44,7 +44,7 @@ query EventDetail($id: BigInt!) {
                 colorRgb
             }
         }
-        eventRegistrationsList: eventInstanceRegistrationsByInstanceIdList(
+        eventRegistrationsList: registrationsList(
             condition: { registrationStatus: ACTIVE }
         ) {
             id
@@ -73,7 +73,7 @@ query EventDetail($id: BigInt!) {
                     lastName
                 }
             }
-            eventLessonDemandsByRegistrationIdList {
+            eventLessonDemandsByRegistrationIdList: lessonRequestsList {
                 id
                 lessonCount
                 trainerId

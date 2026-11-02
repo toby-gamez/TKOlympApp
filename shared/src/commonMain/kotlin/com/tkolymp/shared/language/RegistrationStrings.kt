@@ -27,6 +27,8 @@ data class RegistrationStrings(
     val noRegistrationOwned: String,
     val registrationSuccess: String,
     val signedUp: String = "Signed up",
+    val cannotRegisterTitle: String = "Cannot register",
+    val cannotRegisterText: String = "You are not allowed to register for this event.",
     val notePrefix: String = "Note: ",
     val emailPrefix: String = "Email: ",
     val externalSuffix: String = " (external)",

@@ -218,6 +218,8 @@ val StringsUa = Strings(
         noRegistrationOwned = "Власну реєстрацію не знайдено",
         registrationSuccess = "Реєстрація пройшла успішно",
         signedUp = "Зареєстровано",
+        cannotRegisterTitle = "Неможливо зареєструватися",
+        cannotRegisterText = "Ви не можете зареєструватися на цю подію.",
     ),
     announcements = AnnouncementStrings(
         announcements = "Оголошення",

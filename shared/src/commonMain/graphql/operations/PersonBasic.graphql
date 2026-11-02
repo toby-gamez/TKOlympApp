@@ -17,12 +17,12 @@ query PersonBasic($id: BigInt!) {
         facebookUrl
         websiteUrl
         note
-        activeCouplesList {
+        activeCouplesList: couplesList(condition: { status: ACTIVE }) {
             man { firstName lastName }
             woman { firstName lastName }
             id
         }
-        allCouplesList {
+        allCouplesList: couplesList {
             id
             manId
             womanId
@@ -58,12 +58,12 @@ query PersonBasic($id: BigInt!) {
                 snapshot { asOfDate ranklist { name federation category { name } } }
             }
         }
-        federationCompetitions(first: 30, orderBy: START_DATE_DESC) {
-            nodes {
-                id federation startDate competitionType status participantsTotal
-                category { name }
-                event { name city country }
-            }
+    }
+    federationCompetitions: competitions(first: 30, orderBy: START_DATE_DESC, condition: { competitor: { personIds: [$id] } }) {
+        nodes {
+            id federation startDate competitionType status participantsTotal
+            category { name }
+            event { name city country }
         }
     }
 }

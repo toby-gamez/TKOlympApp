@@ -1,1 +1,1 @@
-mutation SetLessonDemand($input: SetLessonDemandInput!) { setLessonDemand(input: $input) { eventLessonDemand { id } } }
+mutation SetLessonDemand($input: SetLessonRequestInput!) { setLessonDemand: setLessonRequest(input: $input) { eventLessonDemand: result { id } } }

@@ -356,6 +356,17 @@ fun RegistrationScreen(
                         Spacer(modifier = Modifier.height(12.dp))
                         val showSelectError = remember { mutableStateOf(false) }
                         val showRegisterError = remember { mutableStateOf<String?>(null) }
+                        val showNotAllowed = remember { mutableStateOf(false) }
+                        if (showNotAllowed.value) {
+                            AlertDialog(
+                                onDismissRequest = { showNotAllowed.value = false },
+                                title = { Text(AppStrings.current.registration.cannotRegisterTitle) },
+                                text = { Text(AppStrings.current.registration.cannotRegisterText) },
+                                confirmButton = {
+                                    TextButton(onClick = { showNotAllowed.value = false }) { Text(AppStrings.current.commonActions.ok) }
+                                }
+                            )
+                        }
                         if (showSelectError.value) {
                             Text(AppStrings.current.registration.noRegistrationSelected, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                             Spacer(modifier = Modifier.height(8.dp))
@@ -385,7 +396,11 @@ fun RegistrationScreen(
                                     showSuccess.value = true
                                 } catch (e: CancellationException) { throw e } catch (t: Exception) {
                                     Logger.d("RegScreen", "Register failed: ${t.message}")
-                                    showRegisterError.value = t.message ?: AppStrings.current.errorMessages.unknownError
+                                    if (t.message?.contains("NOT_ALLOWED") == true) {
+                                        showNotAllowed.value = true
+                                    } else {
+                                        showRegisterError.value = t.message ?: AppStrings.current.errorMessages.unknownError
+                                    }
                                     isSubmitting.value = false
                                 }
                             }

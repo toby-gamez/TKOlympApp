@@ -180,13 +180,8 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
         )
     }) { padding ->
         val scope = rememberCoroutineScope()
-        // scroll to the top first so the reorder animates in view instead of the list following the old first item
         fun changeSort(mode: SortMode) {
-            if (mode == sortMode) return
-            scope.launch {
-                listState.scrollToItem(0)
-                viewModel.setSortMode(mode.name)
-            }
+            if (mode != sortMode) viewModel.setSortMode(mode.name)
         }
 
         SwipeToReload(
@@ -305,11 +300,12 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
 
             }
 
+            val appliedSort = remember { object { var mode = sortMode } }
             val displayed by produceState(
                 initialValue = emptyList<Person>(),
                 people, sortMode, selectedGroups, groups, searchQuery, showTrainersOnly, trainerPersonIds
             ) {
-                value = withContext(Dispatchers.Default) {
+                val sorted = withContext(Dispatchers.Default) {
                 val trainerFiltered = if (showTrainersOnly) people.filter { p -> p.id in trainerPersonIds } else people
                 val filtered = if (selectedGroups.isEmpty() || selectedGroups.size == groups.size) trainerFiltered else trainerFiltered.filter { p ->
                     p.cohortMembershipsList
@@ -338,6 +334,13 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
                         .map { it.second }
                 }
                 }
+                // the lazy list anchors to the previously first item by key; reset to the top in the same
+                // frame the re-sorted list is applied, otherwise that person stays on top and others appear above
+                if (appliedSort.mode != sortMode) {
+                    appliedSort.mode = sortMode
+                    listState.requestScrollToItem(0)
+                }
+                value = sorted
             }
             // manual refresh removed; initial load happens in LaunchedEffect
 

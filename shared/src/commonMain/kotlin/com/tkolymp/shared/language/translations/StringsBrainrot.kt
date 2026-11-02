@@ -219,6 +219,8 @@ val StringsBrainrot = Strings(
         noRegistrationOwned = "no registration found bestie",
         registrationSuccess = "registered no cap fr fr",
         signedUp = "locked in",
+        cannotRegisterTitle = "Cannot lock in",
+        cannotRegisterText = "You are not allowed to lock in for this event, no cap.",
     ),
     announcements = AnnouncementStrings(
         announcements = "Announcements",

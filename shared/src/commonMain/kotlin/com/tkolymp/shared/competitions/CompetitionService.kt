@@ -169,7 +169,7 @@ class CompetitionService(
             Logger.d("CompetitionService", "PersonCompetitions($personId, offset=$offset) response: ${resp.toString().length} chars")
             val person = (resp.jsonObject["data"]?.jsonObject?.get("people")?.jsonObject?.get("nodes") as? JsonArray)
                 ?.firstOrNull()?.jsonObject ?: return out
-            val competitions = (person["federationCompetitions"]?.jsonObject?.get("nodes") as? JsonArray).orEmpty()
+            val competitions = (resp.jsonObject["data"]?.jsonObject?.get("federationCompetitions")?.jsonObject?.get("nodes") as? JsonArray).orEmpty()
             out += parsePerson(person, competitions, since, until, upcoming)
             val oldest = competitions.lastOrNull()?.jsonObject?.get("startDate")?.jsonPrimitive?.contentOrNull
             if (competitions.size < pageSize || (oldest != null && oldest < since)) return out

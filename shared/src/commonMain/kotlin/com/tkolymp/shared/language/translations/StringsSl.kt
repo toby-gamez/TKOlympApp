@@ -218,6 +218,8 @@ val StringsSl = Strings(
         noRegistrationOwned = "Lastna registracija ni bila najdena",
         registrationSuccess = "Registracija je bila uspešna",
         signedUp = "Prijavljen",
+        cannotRegisterTitle = "Prijava ni mogoča",
+        cannotRegisterText = "Za ta dogodek se ne morete prijaviti.",
     ),
     announcements = AnnouncementStrings(
         announcements = "Obvestila",

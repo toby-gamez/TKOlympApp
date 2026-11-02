@@ -1,6 +1,6 @@
 query ClubData {
   tenant: getCurrentTenant {
-    tenantLocationsList { name }
+    tenantLocationsList: locationsList { name }
     tenantTrainersList {
       person { id firstName lastName prefixTitle suffixTitle }
       guestPrice45Min { amount currency }

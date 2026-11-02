@@ -1,4 +1,4 @@
-query PersonCompetitions($personId: BigInt, $first: Int, $offset: Int) {
+query PersonCompetitions($personId: BigInt!, $first: Int, $offset: Int) {
     people(first: 1, condition: { id: $personId }) {
         nodes {
             id
@@ -22,42 +22,42 @@ query PersonCompetitions($personId: BigInt, $first: Int, $offset: Int) {
                     }
                 }
             }
-            federationCompetitions(first: $first, offset: $offset, orderBy: START_DATE_DESC) {
-                nodes {
-                    id
-                    federation
-                    startDate
-                    checkInEnd
-                    competitionType
-                    participantsTotal
-                    category {
-                        id
-                        name
-                        series
-                        discipline
-                        ageGroup
-                        genderGroup
-                        class
-                        competitorType
-                        baseDanceProgramId
-                    }
-                    event {
-                        id
-                        name
-                        location
-                    }
-                    entriesList(first: 100) {
-                        competitorId
-                        cancelled
-                    }
-                    resultsList(first: 100) {
-                        competitorId
-                        ranking
-                        rankingTo
-                        pointGain
-                        isFinal
-                    }
-                }
+        }
+    }
+    federationCompetitions: competitions(first: $first, offset: $offset, orderBy: START_DATE_DESC, condition: { competitor: { personIds: [$personId] } }) {
+        nodes {
+            id
+            federation
+            startDate
+            checkInEnd
+            competitionType
+            participantsTotal
+            category {
+                id
+                name
+                series
+                discipline
+                ageGroup
+                genderGroup
+                class
+                competitorType
+                baseDanceProgramId
+            }
+            event {
+                id
+                name
+                location
+            }
+            entriesList(first: 100) {
+                competitorId
+                cancelled
+            }
+            resultsList(first: 100) {
+                competitorId
+                ranking
+                rankingTo
+                pointGain
+                isFinal
             }
         }
     }

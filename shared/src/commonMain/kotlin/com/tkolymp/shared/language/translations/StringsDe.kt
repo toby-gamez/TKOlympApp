@@ -218,6 +218,8 @@ val StringsDe = Strings(
         noRegistrationOwned = "Keine eigene Anmeldung gefunden",
         registrationSuccess = "Anmeldung erfolgreich",
         signedUp = "Angemeldet",
+        cannotRegisterTitle = "Anmeldung nicht möglich",
+        cannotRegisterText = "Du darfst dich für diese Veranstaltung nicht anmelden.",
     ),
     announcements = AnnouncementStrings(
         announcements = "Ankündigungen",

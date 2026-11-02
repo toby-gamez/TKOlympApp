@@ -248,6 +248,8 @@ val StringsSk = Strings(
         noRegistrationOwned = "Nenašla sa žiadna vlastná registrácia",
         registrationSuccess = "Registrácia prebehla úspešne",
         signedUp = "Prihlásený",
+        cannotRegisterTitle = "Nemožno sa prihlásiť",
+        cannotRegisterText = "Na túto udalosť sa nemôžete prihlásiť.",
     ),
     announcements = AnnouncementStrings(
         announcements = "Oznámenia",

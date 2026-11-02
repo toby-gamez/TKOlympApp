@@ -2,6 +2,7 @@ package com.tkolymp.shared.event
 
 import com.tkolymp.shared.graphql.GraphQlOperations
 import com.tkolymp.shared.Logger
+import com.tkolymp.shared.network.GraphQlException
 import kotlinx.coroutines.CancellationException
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.cache.CacheService
@@ -300,20 +301,23 @@ class EventService(
     ): JsonObject? {
         val variables = buildJsonObject {
             put("input", buildJsonObject {
-                put("pInstanceId", JsonPrimitive(instanceId.toString()))
-                put("pPersonId", if (personId != null) JsonPrimitive(personId.toString()) else JsonNull)
-                put("pCoupleId", if (coupleId != null) JsonPrimitive(coupleId.toString()) else JsonNull)
-                put("pIsRegistered", JsonPrimitive(isRegistered))
-                if (note != null) put("pNote", JsonPrimitive(note))
+                put("eventId", JsonPrimitive(instanceId.toString()))
+                put("personId", if (personId != null) JsonPrimitive(personId.toString()) else JsonNull)
+                put("coupleId", if (coupleId != null) JsonPrimitive(coupleId.toString()) else JsonNull)
+                put("isRegistered", JsonPrimitive(isRegistered))
+                if (note != null) put("note", JsonPrimitive(note))
                 if (lessonTrainerIds != null && lessonCounts != null) {
-                    put("pLessonTrainerIds", JsonArray(lessonTrainerIds.map { JsonPrimitive(it.toString()) }))
-                    put("pLessonCounts", JsonArray(lessonCounts.map { JsonPrimitive(it) }))
+                    put("lessonTrainerIds", JsonArray(lessonTrainerIds.map { JsonPrimitive(it.toString()) }))
+                    put("lessonCounts", JsonArray(lessonCounts.map { JsonPrimitive(it) }))
                 }
             })
         }
 
         val resp = try {
             client.post(setEventInstanceRegistrationMutation, variables)
+        } catch (ex: GraphQlException) {
+            Logger.d("EventService", "setEventInstanceRegistration: GraphQL error: ${ex.message}")
+            throw ex
         } catch (ex: Exception) {
             Logger.d("EventService", "setEventInstanceRegistration: network error: ${ex.message}")
             return null
@@ -341,8 +345,8 @@ class EventService(
         val mutation = GraphQlOperations.SetLessonDemand
         val variables = buildJsonObject {
             put("input", buildJsonObject {
-                put("instanceRegistrationId", JsonPrimitive(registrationId))
-                put("instanceTrainerId", JsonPrimitive(trainerId.toString()))
+                put("registrationId", JsonPrimitive(registrationId))
+                put("trainerId", JsonPrimitive(trainerId.toString()))
                 put("lessonCount", JsonPrimitive(lessonCount))
             })
         }

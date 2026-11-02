@@ -3,7 +3,7 @@ query ActiveCouples {
     userProxiesList {
       person {
         id
-        activeCouplesList { id man { firstName lastName } woman { firstName lastName } }
+        activeCouplesList: couplesList(condition: { status: ACTIVE }) { id man { firstName lastName } woman { firstName lastName } }
       }
     }
   }
