@@ -287,6 +287,7 @@ val StringsDe = Strings(
         searchByName = "Nach Vor- oder Nachname suchen",
         bySurname = "Nach Nachname",
         byFirstName = "Nach Vorname",
+        alphabetical = "Alphabetisch",
         mine = "Meine",
         noGroupsToShow = "Keine Gruppen.",
         noPeopleToShow = "Keine Personen anzuzeigen.",

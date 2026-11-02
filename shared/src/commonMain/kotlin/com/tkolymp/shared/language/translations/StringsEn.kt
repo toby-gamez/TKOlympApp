@@ -298,6 +298,7 @@ val StringsEn = Strings(
         searchByName = "Search by first or last name",
         bySurname = "By surname",
         byFirstName = "By first name",
+        alphabetical = "Alphabetical",
         mine = "Mine",
         noGroupsToShow = "No groups.",
         noPeopleToShow = "No people to show.",

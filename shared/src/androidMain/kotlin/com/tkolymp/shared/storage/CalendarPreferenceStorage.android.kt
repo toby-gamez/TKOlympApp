@@ -31,4 +31,11 @@ actual class CalendarPreferenceStorage actual constructor(platformContext: Any) 
         ids.add(eventId.toString())
         prefs.edit().putString("calendar_event_ids", ids.joinToString(",")).apply()
     }
+
+    actual override suspend fun getPeopleSortMode(): String =
+        prefs.getString("people_sort_mode", "FIRST_NAME") ?: "FIRST_NAME"
+
+    actual override suspend fun setPeopleSortMode(value: String) {
+        prefs.edit().putString("people_sort_mode", value).apply()
+    }
 }

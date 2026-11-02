@@ -7,4 +7,6 @@ expect class CalendarPreferenceStorage(platformContext: Any) {
     suspend fun setThemeMode(value: String)
     suspend fun isEventInCalendar(eventId: Long): Boolean
     suspend fun setEventInCalendar(eventId: Long)
+    suspend fun getPeopleSortMode(): String
+    suspend fun setPeopleSortMode(value: String)
 }

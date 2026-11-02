@@ -288,6 +288,7 @@ val StringsBrainrot = Strings(
         searchByName = "Search by name fr",
         bySurname = "Surname rizz",
         byFirstName = "Name rizz",
+        alphabetical = "Alphabet rizz",
         mine = "Mine",
         noGroupsToShow = "No groups rn.",
         noPeopleToShow = "No cap, nobody here.",

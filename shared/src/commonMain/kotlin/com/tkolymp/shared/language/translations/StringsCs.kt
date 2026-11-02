@@ -307,6 +307,7 @@ val StringsCs = Strings(
         searchByName = "Hledat podle jména nebo příjmení",
         bySurname = "Podle příjmení",
         byFirstName = "Podle jména",
+        alphabetical = "Abecedně",
         mine = "Moje",
         noGroupsToShow = "Žádné skupiny.",
         noPeopleToShow = "Žádní lidé k zobrazení.",

@@ -53,6 +53,9 @@ class FakeCalendarPreferenceStorage : ICalendarPreferenceStorage {
     override suspend fun setThemeMode(value: String) {}
     override suspend fun isEventInCalendar(eventId: Long): Boolean = eventIds.contains(eventId)
     override suspend fun setEventInCalendar(eventId: Long) { eventIds.add(eventId) }
+    private var peopleSortMode = "FIRST_NAME"
+    override suspend fun getPeopleSortMode(): String = peopleSortMode
+    override suspend fun setPeopleSortMode(value: String) { peopleSortMode = value }
 }
 
 class FakeNotificationStorage : INotificationStorage {

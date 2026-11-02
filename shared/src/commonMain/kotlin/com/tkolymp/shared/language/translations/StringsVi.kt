@@ -275,6 +275,7 @@ val StringsVi = Strings(
         searchByName = "Tìm kiếm theo tên hoặc họ",
         bySurname = "Theo họ",
         byFirstName = "Theo tên",
+        alphabetical = "Theo bảng chữ cái",
         mine = "Của tôi",
         noGroupsToShow = "Không có nhóm nào.",
         noPeopleToShow = "Không có người nào để hiển thị.",

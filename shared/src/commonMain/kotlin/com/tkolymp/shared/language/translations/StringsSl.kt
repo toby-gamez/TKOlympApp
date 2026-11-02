@@ -287,6 +287,7 @@ val StringsSl = Strings(
         searchByName = "Iskanje po imenu ali priimku",
         bySurname = "Po priimku",
         byFirstName = "Po imenu",
+        alphabetical = "Abecedno",
         mine = "Moje",
         noGroupsToShow = "Ni skupin.",
         noPeopleToShow = "Ni oseb za prikaz.",

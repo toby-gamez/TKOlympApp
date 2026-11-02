@@ -4,6 +4,7 @@ data class PeopleStrings(
     val searchByName: String,
     val bySurname: String,
     val byFirstName: String,
+    val alphabetical: String,
     val mine: String,
     val noGroupsToShow: String,
     val noPeopleToShow: String,

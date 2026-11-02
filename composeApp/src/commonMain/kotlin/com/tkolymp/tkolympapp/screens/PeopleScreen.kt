@@ -19,8 +19,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.draw.clip
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.layout.offset
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
@@ -33,7 +39,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.FamilyRestroom
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -61,6 +69,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -89,13 +98,49 @@ import com.tkolymp.tkolympapp.components.EmptyState
 import androidx.compose.material.icons.outlined.PersonSearch
 
 private enum class SortMode { SURNAME, FIRST_NAME, BIRTHDAY }
+
+@Composable
+private fun NameSortPill(bySurname: Boolean, onFirstName: () -> Unit, onSurname: () -> Unit, modifier: Modifier = Modifier) {
+    val scheme = MaterialTheme.colorScheme
+    val halfWidth = 48.dp
+    val indicatorX by animateDpAsState(if (bySurname) halfWidth else 0.dp, tween(220), label = "pillIndicator")
+    @Composable
+    fun Half(selected: Boolean, icon: androidx.compose.ui.graphics.vector.ImageVector, description: String, onClick: () -> Unit) {
+        val tint by animateColorAsState(
+            if (selected) scheme.onPrimaryContainer else scheme.onSurfaceVariant,
+            tween(220), label = "pillTint"
+        )
+        Box(
+            modifier = Modifier
+                .size(width = halfWidth, height = 36.dp)
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(imageVector = icon, contentDescription = description, tint = tint, modifier = Modifier.size(20.dp))
+        }
+    }
+    Box(modifier = modifier.clip(RoundedCornerShape(50)).background(scheme.surfaceVariant)) {
+        Box(
+            modifier = Modifier
+                .offset { IntOffset(indicatorX.roundToPx(), 0) }
+                .size(width = halfWidth, height = 36.dp)
+                .background(scheme.primaryContainer)
+        )
+        Row {
+            Half(!bySurname, Icons.Filled.Person, AppStrings.current.people.byFirstName, onFirstName)
+            Half(bySurname, Icons.Filled.FamilyRestroom, AppStrings.current.people.bySurname, onSurname)
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, onBirthdayNotificationsClick: () -> Unit = {}) {
     val viewModel = viewModel<PeopleViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val trainerPersonIds = state.trainerPersonIds
-    var sortMode by remember { mutableStateOf<SortMode>(SortMode.SURNAME) }
+    val sortMode = SortMode.entries.firstOrNull { it.name == state.sortMode } ?: SortMode.FIRST_NAME
+    val listState = rememberLazyListState()
     var showSearch by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
@@ -135,6 +180,14 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
         )
     }) { padding ->
         val scope = rememberCoroutineScope()
+        // scroll to the top first so the reorder animates in view instead of the list following the old first item
+        fun changeSort(mode: SortMode) {
+            if (mode == sortMode) return
+            scope.launch {
+                listState.scrollToItem(0)
+                viewModel.setSortMode(mode.name)
+            }
+        }
 
         SwipeToReload(
             isRefreshing = state.isLoading,
@@ -181,16 +234,25 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
             Row(modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = { sortMode = SortMode.SURNAME }) {
-                    Text(AppStrings.current.people.bySurname, color = if (sortMode == SortMode.SURNAME) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                val alphabetic = sortMode != SortMode.BIRTHDAY
+                TextButton(onClick = { if (!alphabetic) changeSort(SortMode.SURNAME) }) {
+                    Text(AppStrings.current.people.alphabetical, color = if (alphabetic) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
                 }
                 Spacer(modifier = Modifier.width(8.dp))
-                TextButton(onClick = { sortMode = SortMode.FIRST_NAME }) {
-                    Text(AppStrings.current.people.byFirstName, color = if (sortMode == SortMode.FIRST_NAME) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                TextButton(onClick = { sortMode = SortMode.BIRTHDAY }) {
+                TextButton(onClick = { changeSort(SortMode.BIRTHDAY) }) {
                     Text(AppStrings.current.profile.birthdays, color = if (sortMode == SortMode.BIRTHDAY) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                AnimatedVisibility(
+                    visible = alphabetic,
+                    enter = fadeIn(tween(160)) + expandHorizontally(tween(200), expandFrom = Alignment.End),
+                    exit = fadeOut(tween(120)) + shrinkHorizontally(tween(160), shrinkTowards = Alignment.End)
+                ) {
+                    NameSortPill(
+                        bySurname = sortMode == SortMode.SURNAME,
+                        onFirstName = { changeSort(SortMode.FIRST_NAME) },
+                        onSurname = { changeSort(SortMode.SURNAME) }
+                    )
                 }
             }
 
@@ -282,17 +344,9 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
             if (displayed.isEmpty()) {
                 EmptyState(title = AppStrings.current.people.noPeopleToShow, icon = Icons.Outlined.PersonSearch, fullPage = true)
             } else {
-                val listState = rememberLazyListState()
-                var scrolledForSort by remember { mutableStateOf(sortMode) }
-                LaunchedEffect(displayed) {
-                    if (scrolledForSort != sortMode) {
-                        scrolledForSort = sortMode
-                        listState.scrollToItem(0)
-                    }
-                }
                 LazyColumn(state = listState) {
                     itemsIndexed(displayed, key = { _, p -> p.id }) { index, p ->
-                        StaggeredItem(index = index, visible = cardsVisible, baseDelayMs = 30, modifier = Modifier.animateItem()) {
+                        StaggeredItem(index = index, visible = cardsVisible, baseDelayMs = 30, modifier = Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null, placementSpec = tween(320, easing = FastOutSlowInEasing))) {
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()

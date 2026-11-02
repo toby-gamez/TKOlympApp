@@ -287,6 +287,7 @@ val StringsUa = Strings(
         searchByName = "Пошук за ім'ям або прізвищем",
         bySurname = "За прізвищем",
         byFirstName = "За іменем",
+        alphabetical = "Абеткою",
         mine = "Мої",
         noGroupsToShow = "Немає груп.",
         noPeopleToShow = "Немає осіб для відображення.",

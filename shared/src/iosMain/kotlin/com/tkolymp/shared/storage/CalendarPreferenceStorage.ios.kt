@@ -33,4 +33,12 @@ actual class CalendarPreferenceStorage actual constructor(platformContext: Any) 
         defaults.setObject(ids.joinToString(","), "calendar_event_ids")
         defaults.synchronize()
     }
+
+    actual override suspend fun getPeopleSortMode(): String =
+        defaults.stringForKey("people_sort_mode") ?: "FIRST_NAME"
+
+    actual override suspend fun setPeopleSortMode(value: String) {
+        defaults.setObject(value, "people_sort_mode")
+        defaults.synchronize()
+    }
 }

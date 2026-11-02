@@ -1,6 +1,8 @@
 package com.tkolymp.shared.viewmodels
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
 import com.tkolymp.shared.ServiceLocator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.CancellationException
@@ -21,16 +23,34 @@ data class PeopleState(
     val filteredPeople: List<Person> = emptyList(),
     val searchQuery: String = "",
     val trainerPersonIds: Set<String> = emptySet(),
+    val sortMode: String = "FIRST_NAME",
     override val isLoading: Boolean = false,
     override val error: AppError? = null
 ) : ViewModelState
 
 class PeopleViewModel(
     private val peopleService: com.tkolymp.shared.people.PeopleService = ServiceLocator.peopleService,
-    private val clubService: com.tkolymp.shared.club.ClubService = ServiceLocator.clubService
+    private val clubService: com.tkolymp.shared.club.ClubService = ServiceLocator.clubService,
+    private val preferences: com.tkolymp.shared.storage.ICalendarPreferenceStorage = ServiceLocator.calendarPreferenceStorage
 ) : ViewModel() {
     private val _state = MutableStateFlow(PeopleState())
     val state: StateFlow<PeopleState> = _state.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            try {
+                val saved = preferences.getPeopleSortMode()
+                _state.value = _state.value.copy(sortMode = saved)
+            } catch (e: CancellationException) { throw e } catch (_: Exception) { }
+        }
+    }
+
+    fun setSortMode(mode: String) {
+        _state.value = _state.value.copy(sortMode = mode)
+        viewModelScope.launch {
+            try { preferences.setPeopleSortMode(mode) } catch (e: CancellationException) { throw e } catch (_: Exception) { }
+        }
+    }
 
     suspend fun loadPeople(forceRefresh: Boolean = false) {
         if (_state.value.people.isNotEmpty() && !forceRefresh) return
