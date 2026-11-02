@@ -22,8 +22,24 @@ sealed class AppError {
 
         fun network(message: String?, cause: Throwable? = null): AppError {
             val resolved = message ?: AppStrings.current.errorMessages.networkError
-            ErrorReporter.report("AppError.network", resolved, cause)
+            // Timeouts / unreachable host are the user's connectivity (or a server blip), not an app bug.
+            if (!isTransientNetworkFailure(message, cause)) ErrorReporter.report("AppError.network", resolved, cause)
             return Network(resolved)
+        }
+
+        private val transientMarkers = listOf(
+            "timeout", "timed out", "unable to resolve host", "unknownhost", "unresolved address",
+            "failed to connect", "connection reset", "connection refused", "network is unreachable",
+            "software caused connection abort", "broken pipe", "unexpected end of stream",
+        )
+
+        internal fun isTransientNetworkFailure(message: String?, cause: Throwable?): Boolean {
+            val text = buildString {
+                append(message.orEmpty())
+                var t = cause
+                while (t != null) { append(' ').append(t::class.simpleName).append(' ').append(t.message.orEmpty()); t = t.cause }
+            }.lowercase()
+            return transientMarkers.any { it in text }
         }
 
         fun notFound(message: String?, cause: Throwable? = null): AppError {
