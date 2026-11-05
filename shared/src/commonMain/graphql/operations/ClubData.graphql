@@ -8,6 +8,8 @@ query ClubData {
       isVisible
     }
     cohortsList(condition: { isVisible: true }, orderBy: [NAME_ASC]) {
+      id
+      image { url }
       colorRgb
       name
       description

@@ -1,0 +1,10 @@
+query CohortDetail($id: BigInt!) {
+  cohort(id: $id) {
+    id name description location colorRgb
+    image { url }
+    cohortGroup { name }
+    cohortMembershipsList(condition: { status: ACTIVE }) {
+      person { id firstName lastName prefixTitle suffixTitle isTrainer image { url } }
+    }
+  }
+}

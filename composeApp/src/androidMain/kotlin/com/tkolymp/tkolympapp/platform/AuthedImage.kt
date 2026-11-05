@@ -37,6 +37,13 @@ private fun sharedLoader(context: Context, pinned: Boolean): ImageLoader = synch
 @Composable
 internal fun rememberAuthedImage(url: String): AuthedImage? {
     val context = LocalContext.current
+    // The account's own photo is kept on the device so it also shows offline.
+    val offlineFile = remember(url) { OfflineAvatarStore.fileFor(context.applicationContext, url) }
+    if (offlineFile != null) {
+        return remember(offlineFile) {
+            AuthedImage(sharedLoader(context.applicationContext, false), ImageRequest.Builder(context).data(offlineFile).build())
+        }
+    }
     val needsAuth = remember(url) {
         val uri = Uri.parse(url)
         uri.scheme == "https" && uri.host == "tkolymp.cz" && uri.path?.startsWith("/f/") == true

@@ -18,6 +18,10 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.tkolymp.tkolympapp.components.InitialsAvatar
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -52,6 +56,8 @@ fun AppBottomBar(
     current: String,
     onSelect: (String) -> Unit,
     boardHasUnread: Boolean = false,
+    profileName: String? = null,
+    profileImageUrl: String? = null,
     modifier: Modifier = Modifier
 ) {
     NavigationBar(modifier = modifier) {
@@ -103,7 +109,20 @@ fun AppBottomBar(
         NavigationBarItem(
             selected = current == "other",
             onClick = { onSelect("other") },
-            icon = { AnimatedNavIcon(selected = current == "other", icon = Icons.Default.AccountCircle) },
+            icon = {
+                if (profileImageUrl != null && profileName != null) {
+                    InitialsAvatar(
+                        name = profileName,
+                        size = 30.dp,
+                        fontSize = 11.sp,
+                        imageUrl = profileImageUrl,
+                        borderColor = if (current == "other") MaterialTheme.colorScheme.primary else null,
+                        borderWidth = 2.dp
+                    )
+                } else {
+                    AnimatedNavIcon(selected = current == "other", icon = Icons.Default.AccountCircle)
+                }
+            },
             label = { Text(AppStrings.current.navigation.profile) }
         )
     }

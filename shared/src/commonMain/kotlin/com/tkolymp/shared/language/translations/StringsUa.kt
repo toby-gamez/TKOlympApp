@@ -301,6 +301,8 @@ val StringsUa = Strings(
         heatmapNoData = "Немає тренерів",
         heatmapPeriod = "Останні 4 тижні",
         me = "я",
+        cohortMembers = "Учасники",
+        noCohortMembers = "Учасників ще немає",
     ),
     timeline = TimelineStrings(
         timeline = "Вісь",
@@ -380,6 +382,7 @@ val StringsUa = Strings(
         payAccountLabel = "Рахунок",
         payAmountLabel = "Сума",
         payVariableSymbolLabel = "Змінний символ",
+        paySpecificSymbolLabel = "Специфічний символ",
         payCopied = "Скопійовано",
     ),
     calendarView = CalendarViewStrings(

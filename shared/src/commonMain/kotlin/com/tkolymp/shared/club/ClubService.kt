@@ -13,6 +13,8 @@ import com.tkolymp.shared.json.AppJson
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -29,7 +31,27 @@ data class Trainer(
     val isVisible: Boolean?
 )
 
-data class Cohort(val colorRgb: String?, val name: String?, val description: String?, val location: String?)
+data class Cohort(
+    val colorRgb: String?,
+    val name: String?,
+    val description: String?,
+    val location: String?,
+    val id: String? = null,
+    val imageUrl: String? = null
+)
+
+data class CohortMember(val id: String, val name: String, val isTrainer: Boolean, val imageUrl: String?)
+
+data class CohortDetail(
+    val id: String,
+    val name: String?,
+    val description: String?,
+    val location: String?,
+    val colorRgb: String?,
+    val imageUrl: String?,
+    val groupName: String?,
+    val members: List<CohortMember>
+)
 
 data class ClubData(val locations: List<Location>, val trainers: List<Trainer>, val cohorts: List<Cohort>, val raw: JsonElement?)
 
@@ -92,12 +114,48 @@ class ClubService(private val client: IGraphQlClient = ServiceLocator.graphQlCli
                 colorRgb = obj["colorRgb"]?.jsonPrimitive?.contentOrNull,
                 name = obj["name"]?.jsonPrimitive?.contentOrNull,
                 description = obj["description"]?.jsonPrimitive?.contentOrNull,
-                location = obj["location"]?.jsonPrimitive?.contentOrNull
+                location = obj["location"]?.jsonPrimitive?.contentOrNull,
+                id = obj["id"]?.jsonPrimitive?.contentOrNull,
+                imageUrl = obj.fileUrl()
             )
         }
 
         val cd = ClubData(locations, trainers, cohorts, el)
         try { cache.put(cacheKey, cd, ttl = 10.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         return cd
+    }
+
+    suspend fun fetchCohort(id: String): CohortDetail? {
+        val cacheKey = "cohort_$id"
+        try {
+            val cached: CohortDetail? = cache.get(cacheKey)
+            if (cached != null) return cached
+        } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+        val variables = buildJsonObject { put("id", id.toLongOrNull()?.let { JsonPrimitive(it) } ?: JsonPrimitive(id)) }
+        val el: JsonElement = try { client.post(GraphQlOperations.CohortDetail, variables) } catch (e: CancellationException) { throw e } catch (ex: Exception) {
+            Logger.d("ClubService", "fetchCohort failed: ${ex.message}")
+            return null
+        }
+        val obj = ((el as? JsonObject)?.get("data") as? JsonObject)?.get("cohort") as? JsonObject ?: return null
+        val members = (obj["cohortMembershipsList"] as? JsonArray)?.mapNotNull { m ->
+            val p = (m as? JsonObject)?.get("person") as? JsonObject ?: return@mapNotNull null
+            val pid = p["id"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+            val base = listOf("prefixTitle", "firstName", "lastName").mapNotNull { k -> p[k]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() } }.joinToString(" ")
+            val suffix = p["suffixTitle"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
+            val name = (if (suffix != null) "$base, $suffix" else base).ifBlank { pid }
+            CohortMember(pid, name, p["isTrainer"]?.jsonPrimitive?.contentOrNull == "true", p.fileUrl())
+        }?.sortedBy { it.name.lowercase() } ?: emptyList()
+        val detail = CohortDetail(
+            id = obj["id"]?.jsonPrimitive?.contentOrNull ?: id,
+            name = obj["name"]?.jsonPrimitive?.contentOrNull,
+            description = obj["description"]?.jsonPrimitive?.contentOrNull,
+            location = obj["location"]?.jsonPrimitive?.contentOrNull,
+            colorRgb = obj["colorRgb"]?.jsonPrimitive?.contentOrNull,
+            imageUrl = obj.fileUrl(),
+            groupName = (obj["cohortGroup"] as? JsonObject)?.get("name")?.jsonPrimitive?.contentOrNull,
+            members = members
+        )
+        try { cache.put(cacheKey, detail, ttl = 10.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+        return detail
     }
 }

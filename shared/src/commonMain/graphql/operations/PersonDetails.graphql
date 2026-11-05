@@ -1,7 +1,7 @@
 query PersonDetails($id: BigInt!) {
   person(id: $id) {
     id image { url } birthDate lastName firstName email phone prefixTitle suffixTitle wdsfId cstsId gender isTrainer
-    nationality nationalIdNumber instagramUsername tiktokUsername facebookUrl websiteUrl note
+    nationality nationalIdNumber taxIdentificationNumber instagramUsername tiktokUsername facebookUrl websiteUrl note
     address { city conscriptionNumber district orientationNumber postalCode region street }
     activeCouplesList: couplesList(condition: { status: ACTIVE }) { id man { firstName lastName image { url } } woman { firstName lastName image { url } } }
     allCouplesList: couplesList { id manId womanId since until status }

@@ -312,6 +312,8 @@ val StringsEn = Strings(
         heatmapNoData = "No trainers to show",
         heatmapPeriod = "Last 4 weeks",
         me = "me",
+        cohortMembers = "Members",
+        noCohortMembers = "No members yet",
     ),
     timeline = TimelineStrings(
         timeline = "Timeline",
@@ -391,6 +393,7 @@ val StringsEn = Strings(
         payAccountLabel = "Account",
         payAmountLabel = "Amount",
         payVariableSymbolLabel = "Variable symbol",
+        paySpecificSymbolLabel = "Specific symbol",
         payCopied = "Copied",
     ),
     calendarView = CalendarViewStrings(

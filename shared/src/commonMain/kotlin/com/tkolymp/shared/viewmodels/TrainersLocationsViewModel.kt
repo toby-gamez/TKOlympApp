@@ -119,7 +119,9 @@ class TrainersLocationsViewModel(
                                     colorRgb = c["colorRgb"]?.jsonPrimitive?.contentOrNull,
                                     name = c["name"]?.jsonPrimitive?.contentOrNull,
                                     description = c["description"]?.jsonPrimitive?.contentOrNull,
-                                    location = c["location"]?.jsonPrimitive?.contentOrNull
+                                    location = c["location"]?.jsonPrimitive?.contentOrNull,
+                            id = c["id"]?.jsonPrimitive?.contentOrNull,
+                            imageUrl = c.fileUrl()
                                 )
                             }
                         } else emptyList()

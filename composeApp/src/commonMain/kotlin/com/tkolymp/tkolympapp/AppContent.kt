@@ -25,6 +25,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.produceState
+import com.tkolymp.tkolympapp.platform.PersistOwnImageOffline
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -73,6 +75,7 @@ import com.tkolymp.tkolympapp.screens.CalendarViewScreen
 import com.tkolymp.tkolympapp.screens.EventScreen
 import com.tkolymp.tkolympapp.screens.EventsScreen
 import com.tkolymp.tkolympapp.screens.FreeLessonsScreen
+import com.tkolymp.tkolympapp.screens.CohortScreen
 import com.tkolymp.tkolympapp.screens.GroupsScreen
 import com.tkolymp.tkolympapp.screens.LanguageScreen
 import com.tkolymp.tkolympapp.screens.LeaderboardScreen
@@ -246,6 +249,23 @@ fun AppContent(
             // reading navController.graph before that throws "You must call setGraph()...".
             val navReady = currentBackStackEntry != null
             val boardHasUnread by com.tkolymp.shared.announcements.AnnouncementBadge.hasUnread.collectAsStateWithLifecycle()
+            // Own photo for the "Other" tab; only available once the person details have been cached.
+            val navProfile by produceState<Pair<String, String>?>(null, loggedIn, personRevision) {
+                value = if (loggedIn != true) null else try {
+                    val users = com.tkolymp.shared.ServiceLocator.userService
+                    var person = users.getCachedPersonDetails()
+                    // details cached before photos existed lack the image: refresh them once (no-op offline)
+                    if (person != null && person.imageUrl == null) {
+                        users.fetchAndStorePersonDetails(person.id)
+                        person = users.getCachedPersonDetails()
+                    }
+                    person?.let { p ->
+                        val url = com.tkolymp.shared.utils.withImageWidth(p.imageUrl, 96) ?: return@let null
+                        listOfNotNull(p.firstName, p.lastName).joinToString(" ").ifBlank { p.id } to url
+                    }
+                } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (_: Exception) { null }
+            }
+            PersistOwnImageOffline(navProfile?.second)
             val tutorialActive by com.tkolymp.shared.tutorial.TutorialManager.isActive.collectAsStateWithLifecycle()
             val tutorialStep by com.tkolymp.shared.tutorial.TutorialManager.currentStep.collectAsStateWithLifecycle()
 
@@ -299,7 +319,7 @@ fun AppContent(
                             enter = slideInVertically(initialOffsetY = { it }, animationSpec = tween(300)),
                             exit = slideOutVertically(targetOffsetY = { it }, animationSpec = tween(300))
                         ) {
-                            AppBottomBar(current = currentRoute ?: "overview", boardHasUnread = boardHasUnread, onSelect = { route ->
+                            AppBottomBar(current = currentRoute ?: "overview", boardHasUnread = boardHasUnread, profileName = navProfile?.first, profileImageUrl = navProfile?.second, onSelect = { route ->
                                 val startId = navController.graph.findStartDestination().id
                                 // "overview" is both a bottom-bar tab and the graph's start
                                 // destination, so popUpTo(startId){saveState=true} never actually
@@ -773,7 +793,29 @@ fun AppNavHost(
             popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) },
             popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) }
         ) {
-            GroupsScreen(onBack = { navController.navigateUp() }, bottomPadding = bottomPadding)
+            GroupsScreen(
+                onBack = { navController.navigateUp() },
+                onOpenCohort = { id -> navController.navigate("cohort/$id") },
+                bottomPadding = bottomPadding
+            )
+        }
+
+        composable(
+            route = "cohort/{cohortId}",
+            arguments = listOf(navArgument("cohortId") { type = NavType.StringType }),
+            enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
+            exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
+            popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) },
+            popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) }
+        ) { backStackEntry ->
+            backStackEntry.arguments?.read { getString("cohortId") }?.let { cid ->
+                CohortScreen(
+                    cohortId = cid,
+                    onBack = { navController.navigateUp() },
+                    onOpenPerson = { id -> navController.navigate("person/$id") },
+                    bottomPadding = bottomPadding
+                )
+            }
         }
 
         composable(
@@ -834,6 +876,7 @@ fun AppNavHost(
                     personId = pid,
                     onBack = { navController.navigateUp() },
                     onOpenCouple = { },
+                    onOpenCohort = { id -> navController.navigate("cohort/$id") },
                     onOpenAchievements = { id -> navController.navigate("person/$id/achievements") }
                 )
             }

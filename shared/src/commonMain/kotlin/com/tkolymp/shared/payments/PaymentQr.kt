@@ -64,3 +64,73 @@ private fun spdSafeText(text: String): String =
         .trim()
         .uppercase()
         .take(60)
+
+/** A payment described by a QR image embedded in event text (e.g. a camp fee). */
+data class QrPayment(
+    val account: String,
+    val amountMinor: Long?,
+    val currency: String,
+    val specificSymbol: String?,
+    val variableSymbol: String?,
+    val message: String?
+)
+
+private val payliboUrlRegex = Regex("""https?://api\.paylibo\.com/[^"'\s<>]+""", RegexOption.IGNORE_CASE)
+
+/**
+ * Finds paylibo.com QR-image URLs in [html] and reads the payment out of their query string, so the
+ * QR can be rebuilt on the device. [variableSymbol] (the user's birth number) is used unless the
+ * URL already carries one; only its digits are kept. Duplicates are removed.
+ */
+fun findPaymentQrs(html: String, variableSymbol: String?): List<QrPayment> {
+    val fallbackVs = variableSymbol?.filter { it.isDigit() }?.takeIf { it.isNotEmpty() }
+    return payliboUrlRegex.findAll(html.replace("&amp;", "&"))
+        .mapNotNull { parsePayliboUrl(it.value, fallbackVs) }
+        .distinct()
+        .toList()
+}
+
+internal fun parsePayliboUrl(url: String, fallbackVs: String?): QrPayment? {
+    val query = url.substringAfter('?', "")
+    if (query.isEmpty()) return null
+    val params = query.split('&').mapNotNull { part ->
+        val key = part.substringBefore('=')
+        if (key.isEmpty() || '=' !in part) null else key to urlDecode(part.substringAfter('='))
+    }.toMap()
+
+    val number = params["accountNumber"]?.takeIf { it.isNotBlank() } ?: return null
+    val bank = params["bankCode"]?.takeIf { it.isNotBlank() } ?: return null
+    val prefix = params["accountPrefix"]?.takeIf { it.isNotBlank() }
+    val account = (if (prefix != null) "$prefix-" else "") + "$number/$bank"
+    if (toIban(account) == null) return null
+
+    return QrPayment(
+        account = account,
+        amountMinor = params["amount"]?.let(::parseDecimalToMinorUnits),
+        currency = params["currency"]?.takeIf { it.length == 3 }?.uppercase() ?: "CZK",
+        specificSymbol = params["ss"]?.takeIf { it.isNotBlank() },
+        variableSymbol = params["vs"]?.takeIf { it.isNotBlank() } ?: fallbackVs,
+        message = params["message"]?.takeIf { it.isNotBlank() }
+    )
+}
+
+/** Formats minor units as "450" or "450.50". */
+fun formatMinorUnits(amountMinor: Long): String =
+    if (amountMinor % 100 == 0L) (amountMinor / 100).toString()
+    else "${amountMinor / 100}.${(amountMinor % 100).toString().padStart(2, '0')}"
+
+private fun urlDecode(raw: String): String {
+    val bytes = ArrayList<Byte>(raw.length)
+    var i = 0
+    while (i < raw.length) {
+        val c = raw[i]
+        when {
+            c == '+' -> { bytes.add(' '.code.toByte()); i++ }
+            c == '%' && i + 2 < raw.length && raw.substring(i + 1, i + 3).toIntOrNull(16) != null -> {
+                bytes.add(raw.substring(i + 1, i + 3).toInt(16).toByte()); i += 3
+            }
+            else -> { bytes.addAll(c.toString().encodeToByteArray().toList()); i++ }
+        }
+    }
+    return bytes.toByteArray().decodeToString()
+}

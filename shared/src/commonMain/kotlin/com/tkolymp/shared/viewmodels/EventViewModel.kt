@@ -15,6 +15,7 @@ import kotlinx.coroutines.withContext
 import kotlin.time.Instant
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
 import kotlin.time.Duration.Companion.days
@@ -45,6 +46,7 @@ data class EventState(
     val eventType: String = "",
     val eventDescription: String = "",
     val summary: String = "",
+    val paymentQrs: List<com.tkolymp.shared.payments.QrPayment> = emptyList(),
     val locationName: String? = null,
     val isVisible: Boolean = false,
     val isPublic: Boolean = false,
@@ -256,8 +258,16 @@ class EventViewModel(
             val scheduleText = if (selectedInstance != null) null
                                else describeSchedule(instances, AppStrings.currentLanguage.code)
 
+            val paymentQrs = com.tkolymp.shared.payments.findPaymentQrs(
+                summary + eventDescription,
+                if ((summary + eventDescription).contains("paylibo", ignoreCase = true)) {
+                    loadNationalIdNumber()
+                } else null
+            )
+
             _state.value = _state.value.copy(
                 eventJson = ev,
+                paymentQrs = paymentQrs,
                 eventName = eventName,
                 imageUrl = com.tkolymp.shared.utils.resolveFileUrl(eventObj.get("coverImage")?.asJsonObjectOrNull()?.str("url")),
                 eventType = type,
@@ -301,6 +311,22 @@ class EventViewModel(
             _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingEvent))
         }
     }
+
+    /**
+     * The user's personal ID (birth number), used as the payment variable symbol. The website stores
+     * it in `nationalIdNumber` or, when that is empty, `taxIdentificationNumber`. Read from the cached
+     * profile first, else fetched from the account.
+     */
+    private suspend fun loadNationalIdNumber(): String? = try {
+        val users = ServiceLocator.userService
+        val cached = users.getCachedPersonDetails()
+        (cached?.nationalIdNumber?.takeIf { it.isNotBlank() } ?: cached?.taxIdentificationNumber?.takeIf { it.isNotBlank() })
+            ?: users.getCachedPersonId()?.let { pid ->
+                val person = users.fetchAndStorePersonDetails(pid)
+                listOf("nationalIdNumber", "taxIdentificationNumber")
+                    .firstNotNullOfOrNull { key -> person?.get(key)?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() } }
+            }
+    } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
 
     /**
      * Removes the user's only registration straight from the event screen (no selection step).

@@ -65,7 +65,7 @@ class ProfileViewModel(
                             val hasCohorts = parsed?.get("cohortMembershipsList") != null
                             val hasEmail = parsed?.get("email") != null || parsed?.get("uEmail") != null
                             val hasCstsProgress = parsed?.containsKey("cstsProgressList") == true
-                            val hasNote = parsed?.containsKey("note") == true
+                            val hasNote = parsed?.containsKey("note") == true && parsed.containsKey("nationalIdNumber") && parsed.containsKey("taxIdentificationNumber")
                             !(hasActiveCouples && hasCohorts && hasEmail && hasCstsProgress && hasNote)
                         }
                     } catch (_: Exception) { true }
@@ -113,7 +113,8 @@ class ProfileViewModel(
                 jpegBytes == null -> userService.removeAvatar(pid)
                 else -> userService.uploadAvatar(pid, jpegBytes)
             }
-            if (ok) { load(); null } else strings.profile.photoUpdateFailed
+            if (ok) { load(); null }
+            else userService.getLastApiError()?.takeIf { it.isNotBlank() }?.let { "${strings.profile.photoUpdateFailed}: $it" } ?: strings.profile.photoUpdateFailed
         } catch (e: CancellationException) { throw e } catch (_: Exception) {
             strings.profile.photoUpdateFailed
         }

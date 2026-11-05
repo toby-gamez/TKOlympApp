@@ -48,7 +48,7 @@ fun buildPersonFieldList(person: PersonDetails?): List<Pair<String, String>> {
         person.birthDate?.let { add("birthDate" to it) }
         person.gender?.let { add("gender" to it) }
         person.nationality?.let { add("nationality" to it) }
-        person.nationalIdNumber?.let { add("nationalIdNumber" to it) }
+        (person.nationalIdNumber?.takeIf { it.isNotBlank() } ?: person.taxIdentificationNumber?.takeIf { it.isNotBlank() })?.let { add("nationalIdNumber" to it) }
         person.phone?.let { add("phone" to it) }
         person.wdsfId?.let { add("wdsfId" to it) }
         person.cstsId?.let { add("cstsId" to it) }

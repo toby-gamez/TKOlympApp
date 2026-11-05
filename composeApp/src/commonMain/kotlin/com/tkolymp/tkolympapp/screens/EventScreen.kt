@@ -1,5 +1,6 @@
 package com.tkolymp.tkolympapp.screens
 
+import com.tkolymp.tkolympapp.components.PaymentPayActions
 import com.tkolymp.shared.utils.fileUrl
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutLinearInEasing
@@ -428,6 +429,26 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                         )
                     }
                 }
+            }
+        }
+
+        // Platba (QR obrázky z popisu, přegenerované lokálně i s VS)
+        state.paymentQrs.forEach { pay ->
+            Spacer(modifier = Modifier.height(8.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                PaymentPayActions(
+                    bankAccount = pay.account,
+                    amountMinor = pay.amountMinor,
+                    currency = pay.currency,
+                    variableSymbol = pay.variableSymbol,
+                    specificSymbol = pay.specificSymbol,
+                    message = pay.message,
+                    modifier = Modifier.padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 12.dp),
+                    onMessage = { msg -> scope.launch { snackbarHostState.showSnackbar(msg) } }
+                )
             }
         }
 

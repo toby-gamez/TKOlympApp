@@ -129,6 +129,8 @@ data class PersonDetails(
     val address: AddressDetails? = null,
     val nationality: String? = null,
     val nationalIdNumber: String? = null,
+    /** The website stores the personal ID here; used when [nationalIdNumber] is empty. */
+    val taxIdentificationNumber: String? = null,
     val cstsProgressList: List<com.tkolymp.shared.competitions.CstsProgress> = emptyList(),
     val instagramUsername: String? = null,
     val tiktokUsername: String? = null,

@@ -80,7 +80,7 @@ import androidx.compose.material.icons.outlined.PersonOff
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (String) -> Unit = {}, onOpenAchievements: (String) -> Unit = {}) {
+fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (String) -> Unit = {}, onOpenAchievements: (String) -> Unit = {}, onOpenCohort: ((String) -> Unit)? = null) {
     val viewModel = viewModel<PersonViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -291,9 +291,11 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                             visibleGroups.forEach { mem ->
                                     val c = mem.cohort ?: return@forEach
                                     val color = remember(c.colorRgb) { try { parseColorOrDefault(c.colorRgb) } catch (_: Exception) { Color.Gray } }
+                                    val cohortId = c.id
                                     Card(modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(vertical = 2.dp)
+                                        .then(if (onOpenCohort != null && cohortId != null) Modifier.clickable { onOpenCohort(cohortId) } else Modifier)
                                     ) {
                                         Column(modifier = Modifier.padding(6.dp)) {
                                             val since = mem.since

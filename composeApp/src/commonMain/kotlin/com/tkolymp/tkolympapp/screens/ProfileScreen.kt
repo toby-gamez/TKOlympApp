@@ -76,6 +76,8 @@ import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.CoupleAvatar
 import com.tkolymp.tkolympapp.components.ErrorBanner
 import com.tkolymp.tkolympapp.components.ErrorState
+import com.tkolymp.tkolympapp.components.HeaderImageShape
+import com.tkolymp.tkolympapp.components.HeaderWithImage
 import com.tkolymp.tkolympapp.components.InitialsAvatar
 import com.tkolymp.tkolympapp.components.PersonNoteCard
 import com.tkolymp.tkolympapp.components.SocialLinksRow
@@ -173,22 +175,20 @@ fun ProfileScreen(
                 val displayName = derived.titleText ?: profileState.currentUser?.uLogin
 
                 // Header
-                Row(modifier = Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.Center) {
-                    InitialsAvatar(name = displayName ?: AppStrings.current.profile.displayNameFallback, size = 64.dp, fontSize = 22.sp, imageUrl = withImageWidth(person?.imageUrl, 256))
-                }
-                Text(
-                    displayName ?: AppStrings.current.profile.displayNameFallback,
-                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp).fillMaxWidth(),
-                    textAlign = TextAlign.Center
-                )
-                profileState.currentUser?.uLogin?.let { login ->
-                    if (login != displayName) {
-                        Text(login, style = MaterialTheme.typography.bodySmall, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                val headerName = displayName ?: AppStrings.current.profile.displayNameFallback
+                HeaderWithImage(
+                    title = headerName,
+                    imageUrl = withImageWidth(person?.imageUrl, 256),
+                    shape = HeaderImageShape.Circle,
+                    imageAtStart = true,
+                    fallback = { InitialsAvatar(name = headerName, size = 88.dp, fontSize = 30.sp) }
+                ) {
+                    profileState.currentUser?.uLogin?.let { login ->
+                        if (login != displayName) {
+                            Text(login, style = MaterialTheme.typography.bodySmall)
+                        }
                     }
-                }
-                if (person?.isTrainer == true) {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                    if (person?.isTrainer == true) {
                         ElevatedSuggestionChip(onClick = {}, label = { Text(AppStrings.current.profile.trainer) })
                     }
                 }

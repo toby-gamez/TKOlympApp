@@ -28,6 +28,7 @@ data class MiscStrings(
     val payAccountLabel: String = "Account",
     val payAmountLabel: String = "Amount",
     val payVariableSymbolLabel: String = "Variable symbol",
+    val paySpecificSymbolLabel: String = "Specific symbol",
     val payCopied: String = "Copied",
     val integrityError: String = "Application integrity error",
     val integrityDescription: String = "This copy was not released by the official developer. Download the original version from Google Play.",

@@ -153,7 +153,7 @@ fun ProfileEditScreen(onSaved: () -> Unit, onBack: () -> Unit) {
     var email by remember(formKey) { mutableStateOf((person?.email ?: state.currentUser?.uEmail) ?: "") }
     var csts by remember(formKey) { mutableStateOf(person?.cstsId ?: "") }
     var wdsf by remember(formKey) { mutableStateOf(person?.wdsfId ?: "") }
-    var nid by remember(formKey) { mutableStateOf(person?.nationalIdNumber ?: "") }
+    var nid by remember(formKey) { mutableStateOf(person?.nationalIdNumber?.takeIf { it.isNotBlank() } ?: person?.taxIdentificationNumber ?: "") }
     var nationalityId by remember(formKey) { mutableStateOf(person?.nationality ?: "") }
     var phone by remember(formKey) { mutableStateOf(person?.phone ?: "") }
     var birthIso by remember(formKey) { mutableStateOf(parseBirthDate(person?.birthDate)?.toString() ?: (person?.birthDate ?: "")) }
@@ -209,7 +209,7 @@ fun ProfileEditScreen(onSaved: () -> Unit, onBack: () -> Unit) {
             val err = vm.savePerson(
                 PersonUpdateRequest(
                     cstsId = csts, email = email, firstName = first, lastName = last,
-                    nationalIdNumber = nid, nationality = nationalityId, phone = phone, wdsfId = wdsf,
+                    nationalIdNumber = nid.takeIf { it != (person?.nationalIdNumber?.takeIf { v -> v.isNotBlank() } ?: person?.taxIdentificationNumber ?: "") }, nationality = nationalityId, phone = phone, wdsfId = wdsf,
                     prefixTitle = prefix, suffixTitle = suffix, gender = genderIso,
                     birthDateSet = true, birthDate = birthIso,
                     instagramUsername = instagram.trim().removePrefix("@"),

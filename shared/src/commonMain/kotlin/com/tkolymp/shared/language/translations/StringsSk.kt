@@ -331,6 +331,8 @@ val StringsSk = Strings(
         heatmapNoData = "Žiadni tréneri",
         heatmapPeriod = "Posledné 4 týždne",
         me = "ja",
+        cohortMembers = "Členovia",
+        noCohortMembers = "Zatiaľ žiadni členovia",
     ),
     timeline = TimelineStrings(
         timeline = "Os",
@@ -410,6 +412,7 @@ val StringsSk = Strings(
         payAccountLabel = "Účet",
         payAmountLabel = "Suma",
         payVariableSymbolLabel = "Variabilný symbol",
+        paySpecificSymbolLabel = "Špecifický symbol",
         payCopied = "Skopírované",
     ),
     calendarView = CalendarViewStrings(

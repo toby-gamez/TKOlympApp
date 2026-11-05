@@ -331,6 +331,8 @@ val StringsCs = Strings(
         heatmapNoData = "Žádní trenéři",
         heatmapPeriod = "Poslední 4 týdny",
         me = "já",
+        cohortMembers = "Členové",
+        noCohortMembers = "Zatím žádní členové",
     ),
     timeline = TimelineStrings(
         timeline = "Osa",
@@ -410,6 +412,7 @@ val StringsCs = Strings(
         payAccountLabel = "Účet",
         payAmountLabel = "Částka",
         payVariableSymbolLabel = "Variabilní symbol",
+        paySpecificSymbolLabel = "Specifický symbol",
         payCopied = "Zkopírováno",
         integrityError = "Chyba integrity aplikace",
         integrityDescription = "Tato kopie aplikace nebyla vydána oficiálním vývojářem. Stáhněte si originální verzi z Google Play.",

@@ -16,4 +16,6 @@ data class PeopleStrings(
     val heatmapNoData: String,
     val heatmapPeriod: String,
     val me: String,
+    val cohortMembers: String,
+    val noCohortMembers: String,
 )

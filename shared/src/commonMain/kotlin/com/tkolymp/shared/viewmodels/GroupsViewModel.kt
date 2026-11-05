@@ -1,5 +1,6 @@
 package com.tkolymp.shared.viewmodels
 
+import com.tkolymp.shared.utils.fileUrl
 import androidx.lifecycle.ViewModel
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.club.Cohort
@@ -53,7 +54,9 @@ class GroupsViewModel(
                             colorRgb = c["colorRgb"]?.jsonPrimitive?.contentOrNull,
                             name = c["name"]?.jsonPrimitive?.contentOrNull,
                             description = c["description"]?.jsonPrimitive?.contentOrNull,
-                            location = c["location"]?.jsonPrimitive?.contentOrNull
+                            location = c["location"]?.jsonPrimitive?.contentOrNull,
+                            id = c["id"]?.jsonPrimitive?.contentOrNull,
+                            imageUrl = c.fileUrl()
                         )
                     }
                     _state.value = _state.value.copy(cohorts = cohorts, isLoading = false)

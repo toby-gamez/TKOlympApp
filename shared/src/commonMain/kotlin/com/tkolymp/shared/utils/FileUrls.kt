@@ -4,7 +4,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 
-private const val SITE_ORIGIN = "https://tkolymp.cz"
+const val SITE_ORIGIN = "https://tkolymp.cz"
 
 /** Uploaded files come back as server-relative paths (`/f/...`); makes them absolute so an image loader can fetch them. */
 fun resolveFileUrl(url: String?): String? {

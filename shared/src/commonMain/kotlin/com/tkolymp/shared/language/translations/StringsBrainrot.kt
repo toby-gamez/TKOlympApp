@@ -302,6 +302,8 @@ val StringsBrainrot = Strings(
         heatmapNoData = "No gymbros rn",
         heatmapPeriod = "Last 4 weeks fr",
         me = "me fr",
+        cohortMembers = "Squad",
+        noCohortMembers = "No squad yet",
     ),
     timeline = TimelineStrings(
         timeline = "Axis fr",
@@ -381,6 +383,7 @@ val StringsBrainrot = Strings(
         payAccountLabel = "Account",
         payAmountLabel = "Amount",
         payVariableSymbolLabel = "Variable symbol (VS)",
+        paySpecificSymbolLabel = "Specific symbol (SS)",
         payCopied = "Copied, fr fr",
     ),
     calendarView = CalendarViewStrings(

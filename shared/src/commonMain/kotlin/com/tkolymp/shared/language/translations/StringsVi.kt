@@ -289,6 +289,8 @@ val StringsVi = Strings(
         heatmapNoData = "Không có HLV",
         heatmapPeriod = "4 tuần gần đây",
         me = "tôi",
+        cohortMembers = "Thành viên",
+        noCohortMembers = "Chưa có thành viên",
     ),
     timeline = TimelineStrings(
         timeline = "Trục thời gian",
@@ -368,6 +370,7 @@ val StringsVi = Strings(
         payAccountLabel = "Tài khoản",
         payAmountLabel = "Số tiền",
         payVariableSymbolLabel = "Ký hiệu biến",
+        paySpecificSymbolLabel = "Ký hiệu cụ thể",
         payCopied = "Đã sao chép",
     ),
     calendarView = CalendarViewStrings(

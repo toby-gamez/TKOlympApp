@@ -35,7 +35,8 @@ data class CurrentUser(
 )
 
 class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient = ServiceLocator.graphQlClient,
-                  private val storage: IUserStorage = ServiceLocator.userStorage) {
+                  private val storage: IUserStorage = ServiceLocator.userStorage,
+                  private val fileUploader: com.tkolymp.shared.files.IFileUploader? = null) {
     
     private val mutex = Mutex()
     private var lastApiError: String? = null
@@ -231,7 +232,7 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
                 category = cat
             )
         } ?: emptyList()
-        PersonDetails(id = id, firstName = p["firstName"]?.jsonPrimitive?.contentOrNull, lastName = p["lastName"]?.jsonPrimitive?.contentOrNull, prefixTitle = p["prefixTitle"]?.jsonPrimitive?.contentOrNull, suffixTitle = p["suffixTitle"]?.jsonPrimitive?.contentOrNull, birthDate = p["birthDate"]?.jsonPrimitive?.contentOrNull, cstsId = p["cstsId"]?.jsonPrimitive?.contentOrNull, email = p["email"]?.jsonPrimitive?.contentOrNull, gender = p["gender"]?.jsonPrimitive?.contentOrNull, isTrainer = p["isTrainer"]?.jsonPrimitive?.contentOrNull?.let { it == "true" }, phone = p["phone"]?.jsonPrimitive?.contentOrNull, wdsfId = p["wdsfId"]?.jsonPrimitive?.contentOrNull, activeCouplesList = couplesArr, cohortMembershipsList = memberships, rawResponse = AppJson.parseToJsonElement(jsonStr), address = address, nationality = p["nationality"]?.jsonPrimitive?.contentOrNull, nationalIdNumber = p["nationalIdNumber"]?.jsonPrimitive?.contentOrNull, cstsProgressList = cstsProgress, instagramUsername = p["instagramUsername"]?.jsonPrimitive?.contentOrNull, tiktokUsername = p["tiktokUsername"]?.jsonPrimitive?.contentOrNull, facebookUrl = p["facebookUrl"]?.jsonPrimitive?.contentOrNull, websiteUrl = p["websiteUrl"]?.jsonPrimitive?.contentOrNull, note = p["note"]?.jsonPrimitive?.contentOrNull, allCouplesList = allCouplesArr)
+        PersonDetails(id = id, firstName = p["firstName"]?.jsonPrimitive?.contentOrNull, lastName = p["lastName"]?.jsonPrimitive?.contentOrNull, prefixTitle = p["prefixTitle"]?.jsonPrimitive?.contentOrNull, suffixTitle = p["suffixTitle"]?.jsonPrimitive?.contentOrNull, birthDate = p["birthDate"]?.jsonPrimitive?.contentOrNull, cstsId = p["cstsId"]?.jsonPrimitive?.contentOrNull, email = p["email"]?.jsonPrimitive?.contentOrNull, gender = p["gender"]?.jsonPrimitive?.contentOrNull, isTrainer = p["isTrainer"]?.jsonPrimitive?.contentOrNull?.let { it == "true" }, phone = p["phone"]?.jsonPrimitive?.contentOrNull, wdsfId = p["wdsfId"]?.jsonPrimitive?.contentOrNull, activeCouplesList = couplesArr, cohortMembershipsList = memberships, rawResponse = AppJson.parseToJsonElement(jsonStr), address = address, nationality = p["nationality"]?.jsonPrimitive?.contentOrNull, nationalIdNumber = p["nationalIdNumber"]?.jsonPrimitive?.contentOrNull, taxIdentificationNumber = p["taxIdentificationNumber"]?.jsonPrimitive?.contentOrNull, cstsProgressList = cstsProgress, instagramUsername = p["instagramUsername"]?.jsonPrimitive?.contentOrNull, tiktokUsername = p["tiktokUsername"]?.jsonPrimitive?.contentOrNull, facebookUrl = p["facebookUrl"]?.jsonPrimitive?.contentOrNull, websiteUrl = p["websiteUrl"]?.jsonPrimitive?.contentOrNull, note = p["note"]?.jsonPrimitive?.contentOrNull, allCouplesList = allCouplesArr, imageUrl = p.fileUrl())
     } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
 
     private fun parseStoredCurrentUser(jsonStr: String): CurrentUser? = try {
@@ -288,7 +289,8 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
             addStringField("email", request.email)
             addStringField("firstName", request.firstName)
             addStringField("lastName", request.lastName)
-            addStringField("nationalIdNumber", request.nationalIdNumber)
+            // null = untouched: a stale/empty form must not wipe the stored national ID
+            request.nationalIdNumber?.let { addStringField("nationalIdNumber", it) }
             addStringField("nationality", request.nationality)
             addStringField("phone", request.phone)
             addIntField("wdsfId", request.wdsfId)
@@ -348,25 +350,32 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
         return data != null
     }
 
-    /** Clears the profile photo. A separate mutation: [updatePerson] writes every field of its request, so it can't carry a one-field patch. */
-    suspend fun removeAvatar(personId: String): Boolean {
-        val patch = buildJsonObject { put("imageId", JsonNull) }
+    /** Clears the profile photo. */
+    suspend fun removeAvatar(personId: String): Boolean = setImageId(personId, JsonNull)
+
+    /** Uploads [jpegBytes] as a new file and makes it the profile photo. */
+    suspend fun uploadAvatar(personId: String, jpegBytes: ByteArray): Boolean {
+        val uploader = fileUploader ?: run { lastApiError = "File upload is not configured"; return false }
+        val fileId = try { uploader.upload(jpegBytes, "image/jpeg", "avatar.jpg") } catch (e: CancellationException) { throw e } catch (ex: Exception) {
+            Logger.e("UserService", "avatar upload failed", ex)
+            lastApiError = ex.message
+            return false
+        }
+        // BigInt ids travel as strings in GraphQL variables, as the website sends them
+        return setImageId(personId, JsonPrimitive(fileId))
+    }
+
+    /**
+     * Patches only `imageId`. A separate mutation call: [updatePerson] writes every field of its request,
+     * so it can't carry a one-field patch.
+     */
+    private suspend fun setImageId(personId: String, imageId: JsonElement): Boolean {
+        val patch = buildJsonObject { put("imageId", imageId) }
         val variables = buildJsonObject { put("id", personId.toLongOrNull()?.let { JsonPrimitive(it) } ?: JsonPrimitive(personId)); put("patch", patch) }
         val resp = try { client.post(GraphQlOperations.UpdatePerson, variables) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return false }
         val ok = try { resp.jsonObject["data"]?.jsonObject?.get("updatePerson") != null } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
         if (ok) try { fetchAndStorePersonDetails(personId) } catch (e: CancellationException) { throw e } catch (_: Exception) { }
         return ok
-    }
-
-    /**
-     * Uploads [jpegBytes] as the profile photo.
-     * Not implemented yet: the club backend's file-upload endpoint (the request that creates a `/f/{id}/...` file,
-     * whose id then goes into `PersonPatch.imageId`) hasn't been identified, and the GraphQL schema has no mutation for it.
-     */
-    @Suppress("UNUSED_PARAMETER")
-    suspend fun uploadAvatar(personId: String, jpegBytes: ByteArray): Boolean {
-        lastApiError = "Avatar upload is not available yet"
-        return false
     }
 }
 

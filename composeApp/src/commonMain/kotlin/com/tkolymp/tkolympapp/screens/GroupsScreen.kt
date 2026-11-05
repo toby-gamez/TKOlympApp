@@ -1,6 +1,7 @@
 package com.tkolymp.tkolympapp.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -43,13 +43,16 @@ import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.GroupsViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.parseColorOrDefault
-import com.tkolymp.tkolympapp.platform.HtmlText
+import com.tkolymp.tkolympapp.platform.RemoteImage
+import com.tkolymp.shared.utils.withImageWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.clip
 import kotlinx.coroutines.launch
 import com.tkolymp.tkolympapp.components.ErrorBanner
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GroupsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
+fun GroupsScreen(onBack: () -> Unit = {}, onOpenCohort: ((String) -> Unit)? = null, bottomPadding: Dp = 0.dp) {
     val vm = viewModel<GroupsViewModel>()
     val state by vm.state.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { vm.load() }
@@ -93,50 +96,39 @@ fun GroupsScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .then(cohort.id?.let { id -> if (onOpenCohort != null) Modifier.clickable { onOpenCohort(id) } else null } ?: Modifier),
                     shape = RoundedCornerShape(16.dp)
                 ) {
-                    var contentHeight by remember { mutableStateOf(0.dp) }
-                    val density = androidx.compose.ui.platform.LocalDensity.current
-
                     Row(modifier = Modifier
                         .fillMaxWidth()
-                        .padding(12.dp), verticalAlignment = Alignment.Top) {
+                        .padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
 
                         val color = try { parseColorOrDefault(cohort.colorRgb) } catch (_: Exception) { MaterialTheme.colorScheme.primary }
 
                         Box(
                             modifier = Modifier
                                 .width(6.dp)
-                                .height(contentHeight)
+                                .height(40.dp)
                                 .background(color, RoundedCornerShape(6.dp))
                         )
 
                         Spacer(modifier = Modifier.width(12.dp))
 
-                        Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .onSizeChanged { contentHeight = with(density) { it.height.toDp() } }
-                        ) {
-                            Text(text = cohort.name ?: AppStrings.current.dialogs.noName, style = MaterialTheme.typography.titleMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
+                        Text(
+                            text = cohort.name ?: AppStrings.current.dialogs.noName,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                            modifier = Modifier.weight(1f)
+                        )
 
-                            if (!cohort.location.isNullOrBlank()) {
-                                Text(text = cohort.location ?: "", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
-                            }
-
-                            if (!cohort.description.isNullOrBlank()) {
-                                val raw = cohort.description ?: ""
-                                val cleaned = raw.lines().map { it.trim() }.filter { it.isNotEmpty() }.joinToString("\n").trim()
-                                HtmlText(
-                                    html = cleaned,
-                                    textColor = MaterialTheme.colorScheme.onSurface,
-                                    linkColor = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 6.dp)
-                                )
-                            }
+                        cohort.imageUrl?.let { url ->
+                            Spacer(modifier = Modifier.width(12.dp))
+                            RemoteImage(
+                                url = withImageWidth(url, 120),
+                                modifier = Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)),
+                                fallback = {}
+                            )
                         }
                     }
                 }
