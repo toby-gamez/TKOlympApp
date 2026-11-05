@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -25,6 +26,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.padding
@@ -56,6 +58,9 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.IntOffset
+import kotlin.math.roundToInt
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.language.AppStrings
@@ -118,8 +123,23 @@ fun TutorialOverlay(
     // Dynamic card positioning for overview (1–5) and Other screen (13–15); tabs screens (6–12)
     // always keep the card at the bottom to avoid covering the tab row.
     var overlayHeightPx by remember { mutableStateOf(0f) }
-    val spotlightCenterY = highlightRect?.let { (it.top + it.bottom) / 2f } ?: 0f
-    val cardAtTop = (step in 1..6 || step in 14..16) && overlayHeightPx > 0f && spotlightCenterY > overlayHeightPx * 0.52f
+    val spotlightCenterY = highlightRect?.let { (it.top + it.bottom) / 2f }
+    // The highlight is briefly null while switching screens; hold the last position then
+    // so the card doesn't dip to the bottom and back.
+    var cardAtTop by remember { mutableStateOf(false) }
+    if (!(step in 1..6 || step in 14..16)) {
+        cardAtTop = false
+    } else if (spotlightCenterY != null && overlayHeightPx > 0f) {
+        cardAtTop = spotlightCenterY > overlayHeightPx * 0.52f
+    }
+
+    // 0 = card at top, 1 = card at bottom; animated so the card glides instead of teleporting
+    var cardHeightPx by remember { mutableStateOf(0f) }
+    val cardBottomFraction by animateFloatAsState(
+        targetValue = if (cardAtTop) 0f else 1f,
+        animationSpec = tween(450),
+        label = "cardPosition"
+    )
 
     val strings = AppStrings.current.tutorial
 
@@ -127,7 +147,7 @@ fun TutorialOverlay(
         modifier = modifier
             .fillMaxSize()
             .onGloballyPositioned { overlayHeightPx = it.size.height.toFloat() },
-        contentAlignment = if (cardAtTop) Alignment.TopCenter else Alignment.BottomCenter
+        contentAlignment = Alignment.TopCenter
     ) {
         if (isActive) {
             Box(
@@ -166,14 +186,12 @@ fun TutorialOverlay(
         ) {
             Card(
                 modifier = Modifier
+                    .offset {
+                        IntOffset(0, ((overlayHeightPx - cardHeightPx).coerceAtLeast(0f) * cardBottomFraction).roundToInt())
+                    }
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .then(
-                        if (cardAtTop)
-                            Modifier.padding(top = topPadding + 8.dp)
-                        else
-                            Modifier.padding(bottom = bottomPadding + 8.dp)
-                    ),
+                    .onSizeChanged { cardHeightPx = it.height.toFloat() }
+                    .padding(start = 16.dp, end = 16.dp, top = topPadding + 8.dp, bottom = bottomPadding + 8.dp),
                 shape = RoundedCornerShape(24.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)

@@ -17,11 +17,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.draw.clip
 import com.tkolymp.tkolympapp.components.EmptyState
 import com.tkolymp.tkolympapp.components.InitialsAvatar
@@ -101,7 +99,7 @@ fun OverviewScreen(
             TopAppBar(title = { Text(AppStrings.current.navigation.overview) })
         }
     ) { padding ->
-        val scrollState = rememberScrollState()
+        val listState = rememberLazyListState()
         val viewModel = viewModel<OverviewViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
         val scope = rememberCoroutineScope()
@@ -117,12 +115,6 @@ fun OverviewScreen(
         val tutorialActive by TutorialManager.isActive.collectAsStateWithLifecycle()
         val tutorialStep by TutorialManager.currentStep.collectAsStateWithLifecycle()
 
-        val bvrUpcoming = remember { BringIntoViewRequester() }
-        val bvrBoard = remember { BringIntoViewRequester() }
-        val bvrCamps = remember { BringIntoViewRequester() }
-        val bvrCompetitions = remember { BringIntoViewRequester() }
-        val bvrBirthdays = remember { BringIntoViewRequester() }
-
         // Always-fresh bounds per section — updated unconditionally by onGloballyPositioned
         var boundsUpcoming by remember { mutableStateOf<Rect?>(null) }
         var boundsBoard by remember { mutableStateOf<Rect?>(null) }
@@ -132,13 +124,13 @@ fun OverviewScreen(
 
         LaunchedEffect(tutorialStep, tutorialActive) {
             if (!tutorialActive || tutorialStep !in 1..5) return@LaunchedEffect
-            val bvr = when (tutorialStep) {
-                1 -> bvrUpcoming; 2 -> bvrBoard; 3 -> bvrCamps
-                4 -> bvrCompetitions; else -> bvrBirthdays
-            }
-
-            bvr.bringIntoView()
-            // BVR suspends until the item is visible but layout takes another frame to settle
+            // Sections are lazy items, so scroll to one (composing it) before reading its bounds.
+            // The payment banner is an extra item ahead of the board section when it is shown.
+            val boardIndex = if (state.paymentDaysUntilDue != null) 2 else 1
+            listState.animateScrollToItem(
+                when (tutorialStep) { 1 -> 0; 2 -> boardIndex; 3 -> boardIndex + 1; 4 -> boardIndex + 2; else -> boardIndex + 3 }
+            )
+            // layout takes another frame to settle after the scroll
             delay(200)
 
             val bounds = when (tutorialStep) {
@@ -153,10 +145,9 @@ fun OverviewScreen(
             onRefresh = { scope.launch { viewModel.loadOverview(forceRefresh = true) } },
             modifier = Modifier.padding(top = padding.calculateTopPadding(), bottom = bottomPadding)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState),
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.Start
             ) {
@@ -164,10 +155,10 @@ fun OverviewScreen(
             val announcements = state.recentAnnouncements
 
             // Trainings section
+            item(key = "trainings") {
             Spacer(modifier = Modifier.height(8.dp))
             Column(
                 modifier = Modifier
-                    .bringIntoViewRequester(bvrUpcoming)
                     .onGloballyPositioned { coords ->
                         val b = coords.boundsInRoot()
                         boundsUpcoming = b
@@ -225,22 +216,24 @@ fun OverviewScreen(
                 }
             }
             } // Trainings section
-
-            state.paymentDaysUntilDue?.let { days ->
-                PaymentDueBanner(
-                    daysUntilDue = days,
-                    dueInTemplate = AppStrings.current.misc.paymentDueIn,
-                    overdueLabel = AppStrings.current.misc.paymentOverdue,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-                )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            state.paymentDaysUntilDue?.let { days ->
+                item(key = "payment") {
+                    PaymentDueBanner(
+                        daysUntilDue = days,
+                        dueInTemplate = AppStrings.current.misc.paymentDueIn,
+                        overdueLabel = AppStrings.current.misc.paymentOverdue,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                    )
+                }
+            }
 
             // Board announcements
+            item(key = "board") {
+            Spacer(modifier = Modifier.height(8.dp))
             Column(
                 modifier = Modifier
-                    .bringIntoViewRequester(bvrBoard)
                     .onGloballyPositioned { coords ->
                         val b = coords.boundsInRoot()
                         boundsBoard = b
@@ -307,12 +300,13 @@ fun OverviewScreen(
                 }
             }
             } // Board section
-            Spacer(modifier = Modifier.height(8.dp))
+            }
 
             // Camps section
+            item(key = "camps") {
+            Spacer(modifier = Modifier.height(8.dp))
             Column(
                 modifier = Modifier
-                    .bringIntoViewRequester(bvrCamps)
                     .onGloballyPositioned { coords ->
                         val b = coords.boundsInRoot()
                         boundsCamps = b
@@ -358,11 +352,12 @@ fun OverviewScreen(
                 }
             }
             } // Camps section
-            Spacer(modifier = Modifier.height(8.dp))
+            }
             // Nearest competition section
+            item(key = "competition") {
+            Spacer(modifier = Modifier.height(8.dp))
             Column(
                 modifier = Modifier
-                    .bringIntoViewRequester(bvrCompetitions)
                     .onGloballyPositioned { coords ->
                         val b = coords.boundsInRoot()
                         boundsCompetitions = b
@@ -400,11 +395,12 @@ fun OverviewScreen(
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            }
             // Upcoming birthdays
+            item(key = "birthdays") {
+            Spacer(modifier = Modifier.height(8.dp))
             Column(
                 modifier = Modifier
-                    .bringIntoViewRequester(bvrBirthdays)
                     .onGloballyPositioned { coords ->
                         val b = coords.boundsInRoot()
                         boundsBirthdays = b
@@ -492,10 +488,15 @@ fun OverviewScreen(
                 }
             }
             } // Birthdays section
-            if (state.isLoading) {
-                Text(AppStrings.current.commonActions.loading, modifier = Modifier.padding(12.dp))
             }
-            state.error?.let { ErrorBanner(error = it) }
+            if (state.isLoading || state.error != null) {
+                item(key = "status") {
+                    if (state.isLoading) {
+                        Text(AppStrings.current.commonActions.loading, modifier = Modifier.padding(12.dp))
+                    }
+                    state.error?.let { ErrorBanner(error = it) }
+                }
+            }
         }
     }
 }
