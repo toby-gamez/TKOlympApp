@@ -110,7 +110,8 @@ fun OverviewScreen(
             viewModel.loadOverview(forceRefresh = false)
         }
 
-        var cardsVisible by remember { mutableStateOf(false) }
+        // Already-loaded content (returning to this screen) shows immediately instead of replaying the fade-in.
+        var cardsVisible by remember { mutableStateOf(state.hasContent) }
         LaunchedEffect(state.isLoading) { if (!state.isLoading) cardsVisible = true }
 
         val tutorialActive by TutorialManager.isActive.collectAsStateWithLifecycle()

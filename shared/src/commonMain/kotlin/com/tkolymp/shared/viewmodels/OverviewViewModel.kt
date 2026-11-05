@@ -84,7 +84,10 @@ data class OverviewState(
     val isCompetitionLoading: Boolean = false,
     override val isLoading: Boolean = false,
     override val error: AppError? = null
-) : ViewModelState
+) : ViewModelState {
+    val hasContent: Boolean
+        get() = trainingSelectedDate != null || recentAnnouncements.isNotEmpty() || campsMapByDay.isNotEmpty()
+}
 
 class OverviewViewModel(
     private val eventService: com.tkolymp.shared.event.IEventService = ServiceLocator.eventService,
@@ -115,7 +118,10 @@ class OverviewViewModel(
         val todayString = today.toString()
         val tomorrowString = today.plus(1, DateTimeUnit.DAY).toString()
 
-        _state.value = _state.value.copy(isLoading = true, error = null, isOffline = false)
+        // Coming back to a screen that already has content refreshes silently; flipping isLoading would flash
+        // the pull-to-refresh indicator and recompose the whole page for nothing.
+        val showLoading = forceRefresh || !_state.value.hasContent
+        _state.value = _state.value.copy(isLoading = showLoading, error = null, isOffline = false)
         if (forceRefresh) {
             try {
                 val online = try { ServiceLocator.networkMonitor.isConnected() } catch (_: Exception) { true }
