@@ -870,10 +870,12 @@ val StringsSl = Strings(
         title = "Vaša zasebnost",
         body = "Preden nadaljuješ, prosimo preberi naš pravilnik o zasebnosti. Pojasnjuje, katere podatke o članih kluba zbiramo (npr. ime, kontaktne podatke in stanje plačil) in kako jih uporabljamo.",
         readPolicyLinkLabel = "Preberi pravilnik o zasebnosti",
-        checkboxLabel = "Prebral/a sem in se strinjam s pravilnikom o zasebnosti",
+        checkboxLabel = "Seznanjen/a sem s pravilnikom o zasebnosti",
         continueButton = "Naprej",
-        errorReportingLabel = "Pošiljaj anonimna poročila o napakah",
-        errorReportingDescription = "Aplikacija samodejno pošilja tehnična poročila o napakah in zrušitvah (brez osebnih podatkov), da jih lahko odpravimo. To lahko izključiš.",
+        errorReportingLabel = "Pošiljaj poročila o napakah",
+        errorReportingDescription = "Tehnična poročila o napakah in zrušitvah (model naprave, različica sistema in aplikacije — brez imena in e-pošte) se pošiljajo razvijalcu aplikacije, da lahko napake odpravi. To lahko kadar koli izključiš v Nastavitvah.",
+        settingsSection = "Zasebnost",
+        privacyPolicyRow = "Pravilnik o zasebnosti",
     ),
     feedback = FeedbackStrings(
         sectionTitle = "Povratne informacije",
@@ -889,6 +891,7 @@ val StringsSl = Strings(
         successMessage = "Hvala! Tvoje povratne informacije so bile poslane.",
         errorMessage = "Povratnih informacij ni bilo mogoče poslati. Poskusi znova.",
         validationError = "Prosimo, izpolni vsa polja.",
+        privacyNotice = "Ime, e-pošta in sporočilo se pošljejo razvijalcu aplikacije (tobiso.com) samo za obravnavo te povratne informacije.",
     ),
     management = ManagementStrings(
         trainerMode = "Trenerski način",

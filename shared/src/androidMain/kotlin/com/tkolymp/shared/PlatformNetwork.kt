@@ -146,6 +146,12 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
     )
 
     ServiceLocator.init(container)
+    // cacheDir/camp_schedule: camp-schedule photos (CampScheduleCapture/CampSchedulePhotoView);
+    // cacheDir/share: screenshots for the share sheet (ShareUtils). Paths must match those files and file_paths.xml.
+    val appContext = context.applicationContext
+    ServiceLocator.localFilesCleaner = {
+        listOf("camp_schedule", "share").forEach { java.io.File(appContext.cacheDir, it).deleteRecursively() }
+    }
 
     val onboarding = OnboardingStorage(context)
     ErrorReporter.setEnabled(onboarding.hasAcceptedPrivacyConsent() && onboarding.isErrorReportingEnabled())

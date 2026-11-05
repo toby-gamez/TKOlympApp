@@ -12,6 +12,7 @@ import com.tkolymp.shared.user.deriveProfileState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -87,6 +88,17 @@ class ProfileViewModel(
     }
 
     suspend fun logout() {
+        // Cohort push topics are per-device FCM subscriptions, not per-account: unless dropped here the next
+        // person to log in on this device keeps receiving the previous user's group (coach) messages.
+        // Read the cohort ids before userService.clear() wipes the cached person; bounded so an offline
+        // logout can't hang on Play Services.
+        try {
+            val cohortIds = userService.getCachedPersonDetails()?.cohortMembershipsList
+                ?.mapNotNull { it.cohort?.id }?.toSet().orEmpty()
+            if (cohortIds.isNotEmpty()) {
+                withTimeoutOrNull(5_000) { ServiceLocator.topicManager?.updateSubscriptions(emptySet(), cohortIds) }
+            }
+        } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         try { tokenStorage.clear() } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         try { userService.clear() } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         try { ServiceLocator.cacheService.clear() } catch (e: CancellationException) { throw e } catch (_: Exception) {}
@@ -101,6 +113,7 @@ class ProfileViewModel(
             notifications.saveEventReminders(emptyList())
             notifications.saveScheduledBirthdayNotificationIds(emptyList())
         } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+        try { withContext(Dispatchers.Default) { ServiceLocator.localFilesCleaner?.invoke() } } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         OtherViewModel.clearCache()
     }
 }

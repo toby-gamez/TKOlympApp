@@ -14,14 +14,17 @@ import platform.CoreCrypto.CC_SHA256
 import platform.CoreCrypto.CC_SHA256_DIGEST_LENGTH
 import platform.Foundation.NSApplicationSupportDirectory
 import platform.Foundation.NSData
+import platform.Foundation.NSDataWritingAtomic
+import platform.Foundation.NSDataWritingFileProtectionComplete
 import platform.Foundation.NSFileManager
+import platform.Foundation.NSFileProtectionComplete
+import platform.Foundation.NSFileProtectionKey
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSString
 import platform.Foundation.NSUTF8StringEncoding
 import platform.Foundation.NSUserDomainMask
 import platform.Foundation.create
 import platform.Foundation.dataUsingEncoding
-import platform.Foundation.writeToFile
 
 @OptIn(ExperimentalForeignApi::class)
 class OfflineDataStorageIos : OfflineDataStorage {
@@ -30,10 +33,21 @@ class OfflineDataStorageIos : OfflineDataStorage {
             NSApplicationSupportDirectory, NSUserDomainMask, true
         ).firstOrNull() as? String ?: ""
         val dir = "$appSupport/offline"
-        NSFileManager.defaultManager.createDirectoryAtPath(
-            dir, withIntermediateDirectories = true, attributes = null, error = null
-        )
+        val fm = NSFileManager.defaultManager
+        // Cached member/payment data: keep it unreadable while the device is locked (the default class only
+        // protects it until the first unlock after boot). New files inherit the directory's class; files
+        // written before this change are upgraded once here. The app never reads this cache in the background.
+        val protection = mapOf<Any?, Any?>(NSFileProtectionKey to NSFileProtectionComplete)
+        fm.createDirectoryAtPath(dir, withIntermediateDirectories = true, attributes = protection, error = null)
+        fm.setAttributes(protection, ofItemAtPath = dir, error = null)
+        fm.contentsOfDirectoryAtPath(dir, error = null)?.forEach { name ->
+            fm.setAttributes(protection, ofItemAtPath = "$dir/$name", error = null)
+        }
         dir
+    }
+
+    private companion object {
+        val PROTECTED_WRITE = NSDataWritingAtomic or NSDataWritingFileProtectionComplete
     }
 
     private val dirMutex = Mutex()
@@ -89,7 +103,7 @@ class OfflineDataStorageIos : OfflineDataStorage {
         val tmpPath = "$path.tmp"
         try {
             val content = map.entries.joinToString("\n") { "${it.key}\t${it.value}" }
-            (content as NSString).writeToFile(tmpPath, atomically = true, encoding = NSUTF8StringEncoding, error = null)
+            (content as NSString).dataUsingEncoding(NSUTF8StringEncoding)?.writeToFile(tmpPath, options = PROTECTED_WRITE, error = null)
             NSFileManager.defaultManager.moveItemAtPath(tmpPath, toPath = path, error = null)
         } catch (_: Exception) {}
     }
@@ -102,7 +116,7 @@ class OfflineDataStorageIos : OfflineDataStorage {
                 m.withLock {
                     try {
                         val tmpPath = "$path.tmp"
-                        (json as NSString).writeToFile(tmpPath, atomically = true, encoding = NSUTF8StringEncoding, error = null)
+                        (json as NSString).dataUsingEncoding(NSUTF8StringEncoding)?.writeToFile(tmpPath, options = PROTECTED_WRITE, error = null)
                         NSFileManager.defaultManager.moveItemAtPath(tmpPath, toPath = path, error = null)
                         val hashName = path.substringAfterLast("/")
                         val idx = readIndex()

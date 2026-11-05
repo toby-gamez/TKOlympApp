@@ -869,10 +869,12 @@ val StringsDe = Strings(
         title = "Ihre Privatsphäre",
         body = "Bevor du fortfährst, lies bitte unsere Datenschutzerklärung. Sie erklärt, welche Daten wir über Clubmitglieder erfassen (z. B. Name, Kontaktdaten und Zahlungsstatus) und wie sie verwendet werden.",
         readPolicyLinkLabel = "Datenschutzerklärung lesen",
-        checkboxLabel = "Ich habe die Datenschutzerklärung gelesen und akzeptiere sie",
+        checkboxLabel = "Ich habe die Datenschutzerklärung zur Kenntnis genommen",
         continueButton = "Weiter",
-        errorReportingLabel = "Anonyme Fehlerberichte senden",
-        errorReportingDescription = "Die App sendet automatisch technische Fehler- und Absturzberichte (ohne persönliche Daten), damit sie behoben werden können. Du kannst das abschalten.",
+        errorReportingLabel = "Fehlerberichte senden",
+        errorReportingDescription = "Technische Fehler- und Absturzberichte (Gerätemodell, System- und App-Version — ohne Name oder E-Mail) werden an den App-Entwickler gesendet, damit Fehler behoben werden können. Du kannst das jederzeit in den Einstellungen abschalten.",
+        settingsSection = "Datenschutz",
+        privacyPolicyRow = "Datenschutzerklärung",
     ),
     feedback = FeedbackStrings(
         sectionTitle = "Feedback",
@@ -888,6 +890,7 @@ val StringsDe = Strings(
         successMessage = "Danke! Dein Feedback wurde gesendet.",
         errorMessage = "Feedback konnte nicht gesendet werden. Bitte versuche es erneut.",
         validationError = "Bitte fülle alle Felder aus.",
+        privacyNotice = "Name, E-Mail und Nachricht werden nur zur Bearbeitung dieses Feedbacks an den App-Entwickler (tobiso.com) gesendet.",
     ),
     management = ManagementStrings(
         trainerMode = "Trainermodus",

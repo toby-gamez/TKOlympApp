@@ -46,6 +46,11 @@ object ServiceLocator {
     private var _container: AppContainer? = null
     // Optional platform-provided topic manager (set by platform initializer if available)
     @Volatile var topicManager: com.tkolymp.shared.notification.ITopicManager? = null
+    /**
+     * Platform hook that deletes app-written files holding personal data outside the storages in [AppContainer]
+     * (camp-schedule photos, shared screenshots/exports). Set by initNetworking(); called on logout.
+     */
+    @Volatile var localFilesCleaner: (() -> Unit)? = null
 
     val isInitialized: Boolean get() = _container != null
 
