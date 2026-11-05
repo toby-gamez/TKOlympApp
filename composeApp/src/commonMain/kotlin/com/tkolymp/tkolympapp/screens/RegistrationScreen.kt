@@ -67,6 +67,7 @@ import com.tkolymp.shared.registration.computeInitialRegistrant
 import com.tkolymp.shared.registration.computeRegisteredCoupleIds
 import com.tkolymp.shared.registration.computeRegisteredPersonIds
 import com.tkolymp.shared.registration.filterOwnedRegistrations
+import com.tkolymp.shared.registration.isTrainerUnavailable
 import com.tkolymp.shared.registration.RegMode
 import com.tkolymp.shared.registration.LessonInput
 import com.tkolymp.shared.registration.RegistrationInput
@@ -311,12 +312,13 @@ fun RegistrationScreen(
                         }
 
                         if (showLessonSelection) {
-                            if (trainers.isNotEmpty()) {
+                            if (trainers.any { !isTrainerUnavailable(it) }) {
                                 Text(AppStrings.current.registration.selectTrainersAndLessons, style = MaterialTheme.typography.bodyMedium)
                                 Spacer(modifier = Modifier.height(6.dp))
                             }
 
                             trainers.forEachIndexed { idx, tEl ->
+                                if (isTrainerUnavailable(tEl)) return@forEachIndexed
                                 val tObj = tEl as? JsonObject
                                 val tIdStr = tObj?.get("id")?.jsonPrimitive?.contentOrNull ?: idx.toString()
                                 val tName = tObj?.get("name")?.jsonPrimitive?.contentOrNull
@@ -486,9 +488,10 @@ fun RegistrationScreen(
                                 st
                             }
 
-                            if (showLessonSelection) {
+                            if (showLessonSelection && trainers.withIndex().any { (i, t) -> !isTrainerUnavailable(t) || (countsState.getOrNull(i) ?: 0) > 0 }) {
                                 Text(AppStrings.current.misc.editLessonClaims, style = MaterialTheme.typography.bodyMedium)
                                 trainers.forEachIndexed { idx, tEl ->
+                                    if (isTrainerUnavailable(tEl) && (countsState.getOrNull(idx) ?: 0) == 0) return@forEachIndexed
                                     val tObj = tEl as? JsonObject
                                     val tIdStr = tObj?.get("id")?.jsonPrimitive?.contentOrNull ?: idx.toString()
                                     val tName = tObj?.get("name")?.jsonPrimitive?.contentOrNull ?: regState.trainerNames[tIdStr] ?: "Trenér #$idx"
@@ -511,7 +514,8 @@ fun RegistrationScreen(
                                                 val old = countsState.getOrNull(idx) ?: 0
                                                 val maxForTrainer = (tObj?.get("lessonsRemaining")?.jsonPrimitive?.intOrNull
                                                     ?.let { if (it < 0) Int.MAX_VALUE else it } ?: Int.MAX_VALUE)
-                                                val newVal = (old + 1).coerceAtMost(maxForTrainer)
+                                                // never lower the count by "adding" when already at/over the limit
+                                                val newVal = if (old >= maxForTrainer) old else old + 1
                                                 if (idx < countsState.size) countsState[idx] = newVal else countsState.add(newVal)
                                                 Logger.d("RegScreen", "Edit mode: reg=$selectedId trainer=$idx old=$old max=$maxForTrainer new=$newVal")
                                             }) { Icon(Icons.Default.Add, contentDescription = AppStrings.current.commonActions.increase) }

@@ -83,13 +83,14 @@ internal fun RenderEventContent(item: EventInstance, tip: String? = null, showTy
         Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             androidx.compose.material3.Text(
                 text = name,
-                style = MaterialTheme.typography.titleMedium.copy(textDecoration = if (cancelled) TextDecoration.LineThrough else TextDecoration.None)
+                style = MaterialTheme.typography.titleMedium.copy(textDecoration = if (cancelled) TextDecoration.LineThrough else TextDecoration.None),
+                modifier = Modifier.weight(1f)
             )
-            Spacer(modifier = Modifier.weight(1f))
             if (showType) {
                 val typeText = item.event?.type ?: ""
                 val displayType = translateEventType(typeText)
                 if (!displayType.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.width(8.dp))
                     Box(modifier = Modifier
                         .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(8.dp))
                         .padding(horizontal = 8.dp, vertical = 4.dp)

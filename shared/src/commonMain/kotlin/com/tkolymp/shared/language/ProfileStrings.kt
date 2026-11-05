@@ -53,5 +53,5 @@ data class ProfileStrings(
     val cstsNotAvailable: String = "ČSTS ID not available",
     val cstsInvalidFormat: String = "ČSTS ID has invalid format",
     val turnsAge: String = "turns %d",
-    val yearsOld: String = "%d y",
+    val yearsOld: String = "%d years",
 )

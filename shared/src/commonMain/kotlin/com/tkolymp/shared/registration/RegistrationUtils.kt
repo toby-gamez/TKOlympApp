@@ -2,6 +2,7 @@ package com.tkolymp.shared.registration
 
 import com.tkolymp.shared.utils.asJsonArrayOrNull
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.contentOrNull
@@ -94,4 +95,50 @@ fun computeInitCountsFor(ownedRegistrations: JsonArray, trainers: JsonArray, reg
         } as? JsonObject
         found?.get("lessonCount")?.jsonPrimitive?.intOrNull ?: 0
     }
+}
+
+/** A trainer with a lesson limit of 0 has nothing to pick, so it is hidden from the lesson selection. */
+fun isTrainerUnavailable(trainer: JsonElement): Boolean =
+    (trainer as? JsonObject)?.get("lessonsRemaining")?.jsonPrimitive?.intOrNull == 0
+
+/** Only camps and reservations let the registrant pick trainers and lesson counts. */
+fun supportsLessonSelection(eventType: String?): Boolean =
+    eventType?.trim()?.lowercase().let { it == "camp" || it == "rezervation" }
+
+/**
+ * Whether the edit-registration screen has anything to change: a note (when [enableNotes]) or,
+ * for camps/reservations, lesson counts. Lessons are editable when some trainer still has free
+ * lessons, or when the registration already holds lessons with a trainer (they can be lowered).
+ * Evaluated per owned registration — true when at least one of them is editable.
+ */
+fun computeCanEditRegistration(
+    eventType: String?,
+    enableNotes: Boolean,
+    trainers: JsonArray,
+    ownedRegistrations: JsonArray
+): Boolean {
+    if (ownedRegistrations.isEmpty()) return false
+    if (enableNotes) return true
+    if (!supportsLessonSelection(eventType)) return false
+    return ownedRegistrations.any { reg ->
+        val regId = (reg as? JsonObject)?.get("id")?.jsonPrimitive?.contentOrNull ?: return@any false
+        val mine = computeInitCountsFor(ownedRegistrations, trainers, regId)
+        trainers.withIndex().any { (i, t) -> !isTrainerUnavailable(t) || (mine.getOrNull(i) ?: 0) > 0 }
+    }
+}
+
+/**
+ * Whether the user still has an account (themselves or a couple) that is not registered yet.
+ * Mirrors the candidates offered by the Register screen. If the person id has not loaded yet the
+ * answer is unknown, so the option stays available.
+ */
+fun computeCanRegisterAnother(
+    myPersonId: String?,
+    myCoupleIds: List<String>,
+    registrations: JsonArray
+): Boolean {
+    if (myPersonId.isNullOrBlank()) return true
+    val registeredPersonIds = computeRegisteredPersonIds(registrations)
+    val registeredCoupleIds = computeRegisteredCoupleIds(registrations)
+    return myPersonId !in registeredPersonIds || myCoupleIds.any { it !in registeredCoupleIds }
 }

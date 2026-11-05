@@ -32,6 +32,9 @@ import com.tkolymp.shared.json.AppJson
 import com.tkolymp.shared.event.EventType
 import androidx.compose.runtime.Immutable
 import com.tkolymp.shared.event.toEventType
+import com.tkolymp.shared.registration.computeCanEditRegistration
+import com.tkolymp.shared.registration.computeCanRegisterAnother
+import com.tkolymp.shared.registration.filterOwnedRegistrations
 
 @Immutable
 data class EventState(
@@ -65,6 +68,9 @@ data class EventState(
     val registerButtonVisible: Boolean = false,
     val registrationActionsRowVisible: Boolean = false,
     val editRegistrationButtonVisible: Boolean = false,
+    val canRegisterAnother: Boolean = false,
+    val ownedRegistrationCount: Int = 0,
+    val isDeletingRegistration: Boolean = false,
     val isAddedToCalendar: Boolean = false,
     val firstInstanceIso: String? = null,
     val reminderMinutesBefore: Int? = null,
@@ -77,6 +83,7 @@ data class EventState(
 sealed class EventSideEffect {
     data class CalendarResult(val success: Boolean) : EventSideEffect()
     data class ReminderResult(val set: Boolean) : EventSideEffect()
+    data class RegistrationDeleteFailed(val message: String) : EventSideEffect()
 }
 
 class EventViewModel(
@@ -92,7 +99,10 @@ class EventViewModel(
     private val _sideEffect = Channel<EventSideEffect>(Channel.BUFFERED)
     val sideEffect: Flow<EventSideEffect> = _sideEffect.receiveAsFlow()
 
+    private var lastInstanceId: Long? = null
+
     suspend fun loadEvent(eventId: Long, instanceId: Long? = null, forceRefresh: Boolean = false) {
+        lastInstanceId = instanceId
         _state.value = _state.value.copy(isLoading = true, error = null)
         try {
             // Eagerly check if already added to calendar
@@ -165,7 +175,11 @@ class EventViewModel(
             val isRegistrationOpen = if (isLocked) false else (eventObj.bool("isRegistrationOpen") ?: true)
             val registerButtonVisible = !isPast && !userRegistered && isRegistrationOpen && !isOfflineUsed
             val registrationActionsRowVisible = !isPast && userRegistered && isRegistrationOpen && !isOfflineUsed
-            val editRegistrationButtonVisible = type.toEventType() != EventType.LESSON && type.toEventType() != EventType.GROUP
+            val ownedRegistrations = filterOwnedRegistrations(registrations, myPerson, myCouples)
+            val trainersForEdit = eventObj.get("eventTrainersList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
+            val editRegistrationButtonVisible = type.toEventType() != EventType.LESSON && type.toEventType() != EventType.GROUP &&
+                computeCanEditRegistration(type, eventObj.bool("enableNotes") ?: false, trainersForEdit, ownedRegistrations)
+            val canRegisterAnother = computeCanRegisterAnother(myPerson, myCouples, registrations)
 
             val trainers = eventObj.get("eventTrainersList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
             val cohorts = eventObj.get("eventTargetCohortsList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
@@ -271,6 +285,9 @@ class EventViewModel(
                 registerButtonVisible = registerButtonVisible,
                 registrationActionsRowVisible = registrationActionsRowVisible,
                 editRegistrationButtonVisible = editRegistrationButtonVisible,
+                canRegisterAnother = canRegisterAnother,
+                ownedRegistrationCount = ownedRegistrations.size,
+                isDeletingRegistration = false,
                 isAddedToCalendar = alreadyAdded,
                 firstInstanceIso = firstDate,
                 reminderMinutesBefore = try { notificationService.getReminderForEvent(eventId)?.minutesBefore } catch (_: Exception) { null },
@@ -281,6 +298,44 @@ class EventViewModel(
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingEvent))
         }
+    }
+
+    /**
+     * Removes the user's only registration straight from the event screen (no selection step).
+     * No-op unless exactly one owned registration exists; multiple go through the delete screen.
+     */
+    suspend fun deleteOnlyRegistration(eventId: Long) {
+        val s = _state.value
+        if (s.isDeletingRegistration) return
+        val owned = filterOwnedRegistrations(s.registrations, s.myPersonId, s.myCoupleIds)
+        val reg = owned.singleOrNull()?.asJsonObjectOrNull() ?: return
+        val pid = reg["person"]?.asJsonObjectOrNull()?.str("id")?.toLongOrNull() ?: reg.str("personId")?.toLongOrNull()
+        val cid = reg["couple"]?.asJsonObjectOrNull()?.str("id")?.toLongOrNull() ?: reg.str("coupleId")?.toLongOrNull()
+        if (pid == null && cid == null) {
+            _sideEffect.trySend(EventSideEffect.RegistrationDeleteFailed(AppStrings.current.registration.noRegistrationOwned))
+            return
+        }
+        _state.value = s.copy(isDeletingRegistration = true)
+        val failure: String? = try {
+            val result = withContext(Dispatchers.Default) {
+                eventService.setEventInstanceRegistration(
+                    instanceId = eventId, personId = pid, coupleId = cid, isRegistered = false
+                )
+            }
+            if (result == null) AppStrings.current.errorMessages.networkError else null
+        } catch (e: CancellationException) { throw e } catch (e: Exception) {
+            e.message ?: AppStrings.current.errorMessages.unknownError
+        }
+        if (failure != null) {
+            _state.value = _state.value.copy(isDeletingRegistration = false)
+            if (_sideEffect.trySend(EventSideEffect.RegistrationDeleteFailed(failure)).isFailure) {
+                Logger.w("EventViewModel", "registration delete side-effect channel full, event dropped")
+            }
+            return
+        }
+        // loadEvent resets isDeletingRegistration on success
+        loadEvent(eventId, instanceId = lastInstanceId, forceRefresh = true)
+        _state.value = _state.value.copy(isDeletingRegistration = false)
     }
 
     suspend fun addToCalendar(eventId: Long) {

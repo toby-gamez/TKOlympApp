@@ -56,6 +56,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
@@ -98,6 +99,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.event.EventInstance
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.utils.formatFullCalendarDate
+import com.tkolymp.shared.viewmodels.BirthdayEntry
 import com.tkolymp.tkolympapp.LocalBottomBarPadding
 import com.tkolymp.tkolympapp.SwipeToReload
 import kotlinx.coroutines.delay
@@ -386,21 +388,7 @@ fun CalendarScreen(
                                 Text(header, style = MaterialTheme.typography.titleMedium)
                                 if (birthdays.isNotEmpty()) {
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Icon(
-                                        Icons.Filled.Cake,
-                                        contentDescription = AppStrings.current.profile.birthdays,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = birthdays.joinToString(", ") { it.name },
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        modifier = Modifier.weight(1f, fill = false)
-                                    )
+                                    BirthdaySummary(birthdays = birthdays, modifier = Modifier.weight(1f, fill = false))
                                 }
                             }
                             Spacer(modifier = Modifier.height(4.dp))
@@ -430,10 +418,25 @@ fun CalendarScreen(
                             }
 
                             if (filteredLessons.isEmpty() && filteredOther.isEmpty() && competitions.isEmpty()) {
-                                EmptyState(
-                                    title = AppStrings.current.calendarView.noEventsThisDay,
-                                    icon = Icons.Outlined.EventBusy
-                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        Icons.Outlined.EventBusy,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = AppStrings.current.calendarView.noEventsThisDay,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
                             }
                         }
                         } // StaggeredItem
@@ -964,6 +967,101 @@ private fun MonthCalendarGrid(
                                     )
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Single-line birthday names; when they don't fit, a "+N" chip opens a bottom sheet listing everyone. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BirthdaySummary(birthdays: List<BirthdayEntry>, modifier: Modifier = Modifier) {
+    var hiddenCount by remember(birthdays) { mutableIntStateOf(0) }
+    var showSheet by remember { mutableStateOf(false) }
+    val text = remember(birthdays) { birthdays.joinToString(", ") { it.name } }
+
+    Row(
+        modifier = modifier
+            .then(if (hiddenCount > 0) Modifier.clickable { showSheet = true } else Modifier),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            Icons.Filled.Cake,
+            contentDescription = AppStrings.current.profile.birthdays,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            onTextLayout = { layout ->
+                hiddenCount = if (layout.hasVisualOverflow) {
+                    val visibleEnd = layout.getLineEnd(0, visibleEnd = true)
+                    var offset = 0
+                    var shown = 0
+                    for (b in birthdays) {
+                        offset += b.name.length
+                        if (offset > visibleEnd) break
+                        shown++
+                        offset += 2
+                    }
+                    (birthdays.size - shown).coerceAtLeast(1)
+                } else 0
+            },
+            modifier = Modifier.weight(1f, fill = false)
+        )
+        if (hiddenCount > 0) {
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = "+$hiddenCount",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(MaterialTheme.colorScheme.primaryContainer)
+                    .padding(horizontal = 8.dp, vertical = 2.dp)
+            )
+        }
+    }
+
+    if (showSheet) {
+        ModalBottomSheet(onDismissRequest = { showSheet = false }) {
+            Column(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(bottom = 24.dp)
+            ) {
+                Text(
+                    AppStrings.current.profile.birthdays,
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+                )
+                birthdays.forEach { b ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Filled.Cake,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(b.name, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                        b.turningAge?.let {
+                            Text(
+                                AppStrings.current.profile.yearsOld.replace("%d", it.toString()),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
                 }

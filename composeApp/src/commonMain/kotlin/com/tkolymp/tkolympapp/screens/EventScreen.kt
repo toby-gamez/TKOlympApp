@@ -137,6 +137,7 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
     val uriHandler = LocalUriHandler.current
     var showReminderDialog by remember { mutableStateOf(false) }
     var showRegistrationDropdown by remember { mutableStateOf(false) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(initialTab) }
     val showRozpisTab = isRozpisTabVisible(state.eventType, state.firstInstanceIso, kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault()))
 
@@ -152,6 +153,7 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                               else AppStrings.current.events.addToCalendarFailed
                     snackbarHostState.showSnackbar(msg)
                 }
+                is EventSideEffect.RegistrationDeleteFailed -> snackbarHostState.showSnackbar(effect.message)
                 is EventSideEffect.ReminderResult -> {
                     val msg = if (effect.set) AppStrings.current.notifications.reminderSet
                               else AppStrings.current.notifications.reminderRemoveAction
@@ -651,8 +653,20 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
         // Floating registration button — no background, overlays scroll content
         val showRegistrationBar = state.registerButtonVisible || state.registrationActionsRowVisible
         if (showRegistrationBar && onOpenRegistration != null) {
+            // Single owned registration is deleted right here (confirm dialog); several go to the picker.
+            val requestDelete = {
+                showRegistrationDropdown = false
+                if (state.ownedRegistrationCount == 1) showDeleteConfirm = true
+                else onOpenRegistration.invoke("delete", null)
+            }
+            // Dropdown holds "register another" only while an account is left, and "delete"
+            // only when it is not already the primary button.
+            val editPrimary = state.registrationActionsRowVisible && state.editRegistrationButtonVisible
+            val menuHasAdd = state.canRegisterAnother
+            val menuHasDelete = editPrimary
+            val showSplit = state.registrationActionsRowVisible && (menuHasAdd || menuHasDelete)
             // Menu card — separate align so the button below never moves
-            if (state.registrationActionsRowVisible && state.editRegistrationButtonVisible) {
+            if (showSplit) {
                 AnimatedVisibility(
                     visible = showRegistrationDropdown,
                     modifier = Modifier
@@ -670,32 +684,33 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .clickable {
-                                showRegistrationDropdown = false
-                                onOpenRegistration.invoke("register", null)
-                            }
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp))
-                        Spacer(Modifier.width(12.dp))
-                        Text(AppStrings.current.registration.registerAnother, style = MaterialTheme.typography.bodyLarge)
+                    if (menuHasAdd) {
+                        Row(
+                            modifier = Modifier
+                                .clickable {
+                                    showRegistrationDropdown = false
+                                    onOpenRegistration.invoke("register", null)
+                                }
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp))
+                            Spacer(Modifier.width(12.dp))
+                            Text(AppStrings.current.registration.registerAnother, style = MaterialTheme.typography.bodyLarge)
+                        }
                     }
-                    HorizontalDivider()
-                    Row(
-                        modifier = Modifier
-                            .clickable {
-                                showRegistrationDropdown = false
-                                onOpenRegistration.invoke("delete", null)
-                            }
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(20.dp))
-                        Spacer(Modifier.width(12.dp))
-                        Text(AppStrings.current.registration.deleteRegistration, style = MaterialTheme.typography.bodyLarge)
+                    if (menuHasAdd && menuHasDelete) HorizontalDivider()
+                    if (menuHasDelete) {
+                        Row(
+                            modifier = Modifier
+                                .clickable { requestDelete() }
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(20.dp))
+                            Spacer(Modifier.width(12.dp))
+                            Text(AppStrings.current.registration.deleteRegistration, style = MaterialTheme.typography.bodyLarge)
+                        }
                     }
                 }
                 } // close AnimatedVisibility
@@ -709,19 +724,19 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                 contentAlignment = Alignment.Center
             ) {
                 when {
-                    state.registrationActionsRowVisible && state.editRegistrationButtonVisible -> {
+                    showSplit -> {
                         SplitButtonLayout(
                             modifier = Modifier.height(56.dp),
                             leadingButton = {
                                 SplitButtonDefaults.LeadingButton(
-                                    onClick = { onOpenRegistration.invoke("edit", null) },
+                                    onClick = { if (editPrimary) onOpenRegistration.invoke("edit", null) else requestDelete() },
                                     modifier = Modifier.fillMaxHeight(),
                                     shapes = SplitButtonDefaults.leadingButtonShapesFor(SplitButtonDefaults.MediumContainerHeight),
                                     contentPadding = SplitButtonDefaults.leadingButtonContentPaddingFor(SplitButtonDefaults.MediumContainerHeight)
                                 ) {
-                                    Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(20.dp))
+                                    Icon(if (editPrimary) Icons.Default.Edit else Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(20.dp))
                                     Spacer(Modifier.width(8.dp))
-                                    Text(AppStrings.current.registration.editRegistration)
+                                    Text(if (editPrimary) AppStrings.current.registration.editRegistration else AppStrings.current.registration.deleteRegistration)
                                 }
                             },
                             trailingButton = {
@@ -762,7 +777,8 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                     }
                     else -> {
                         Button(
-                            onClick = { onOpenRegistration.invoke("delete", null) },
+                            onClick = { requestDelete() },
+                            enabled = !state.isDeletingRegistration,
                             modifier = Modifier.height(56.dp),
                             shape = RoundedCornerShape(50)
                         ) {
@@ -781,6 +797,23 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
         }
         } // closes Box(fillMaxSize)
         } // closes else (non-Rozpis tab content)
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text(AppStrings.current.registration.deleteRegistrationConfirmTitle) },
+            text = { Text(AppStrings.current.registration.deleteRegistrationConfirmText) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteConfirm = false
+                    scope.launch { viewModel.deleteOnlyRegistration(eventId) }
+                }) { Text(AppStrings.current.commonActions.delete) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) { Text(AppStrings.current.commonActions.cancel) }
+            }
+        )
+    }
 
     // Reminder dialog
     if (showReminderDialog) {
