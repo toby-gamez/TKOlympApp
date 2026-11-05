@@ -1,0 +1,40 @@
+name: GraphQL validate
+
+# Every push/PR: all operations in shared/src/commonMain/graphql/operations must be valid against the
+# committed schema.graphql, and the generated Kotlin constants must compile.
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: npm
+        cache-dependency-path: tools/graphql/package-lock.json
+
+    - name: Install GraphQL tooling
+      run: npm ci --no-audit --no-fund
+      working-directory: tools/graphql
+
+    # Set FAIL_ON_DEPRECATED to '1' to make use of a deprecated field fail the build instead of warning.
+    - name: Validate operations against schema.graphql
+      run: tools/graphql/check.sh
+      env:
+        FAIL_ON_DEPRECATED: '0'
+
+    - uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Generate GraphQlOperations and compile shared
+      run: ./gradlew :shared:generateGraphQlOperations :shared:compileAndroidMain

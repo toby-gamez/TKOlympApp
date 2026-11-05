@@ -1,0 +1,28 @@
+name: GraphQL schema drift
+
+# Daily: download the live schema with curl, compare it with the committed one and fail on breaking
+# changes. The job summary lists breaking / dangerous / safe changes, newly deprecated fields
+# (and whether the app uses them) and the app's operations validated against the LIVE schema.
+on:
+  schedule:
+    - cron: '17 5 * * *'   # 05:17 UTC daily
+  workflow_dispatch:
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: npm
+        cache-dependency-path: tools/graphql/package-lock.json
+
+    - name: Install GraphQL tooling
+      run: npm ci --no-audit --no-fund
+      working-directory: tools/graphql
+
+    - name: Compare live schema with committed schema
+      run: tools/graphql/schema-drift.sh
