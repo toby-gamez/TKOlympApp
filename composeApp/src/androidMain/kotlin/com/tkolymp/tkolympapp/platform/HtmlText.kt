@@ -163,7 +163,7 @@ actual fun HtmlText(
                                 <!DOCTYPE html>
                                 <html>
                                 <head>
-                                <meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; img-src https: data:; style-src 'unsafe-inline'; script-src 'none'; form-action 'none'; base-uri 'none'\">
+                                <meta http-equiv=\"Content-Security-Policy\" content=\"${com.tkolymp.shared.html.HtmlSanitizer.CONTENT_SECURITY_POLICY}\">
                                 <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
                                 <meta name=\"format-detection\" content=\"telephone=no, date=no, address=no, email=no\">
                                 <style>

@@ -37,7 +37,19 @@ object HtmlSanitizer {
     )
 
     private val linkSchemes = listOf("http://", "https://", "mailto:", "tel:")
-    private val imageSchemes = listOf("http://", "https://")
+    private val imageSchemes = listOf("https://")
+
+    /**
+     * Hosts (and their subdomains) whose images are loaded inline. Any other image would be fetched as soon as
+     * the content is shown, telling that host the member's IP address and when they read it (tracking pixel),
+     * so it is rendered as a plain link the member can choose to open instead.
+     */
+    val trustedImageHosts: Set<String> = setOf("tkolymp.cz")
+
+    /** CSP for the WebViews that render sanitized HTML (Android + iOS); its img-src mirrors [trustedImageHosts]. */
+    val CONTENT_SECURITY_POLICY: String =
+        "default-src 'none'; img-src data: " + trustedImageHosts.joinToString(" ") { "https://$it https://*.$it" } +
+            "; style-src 'unsafe-inline'; script-src 'none'; form-action 'none'; base-uri 'none'"
 
     fun sanitize(html: String): String {
         val source = comments.replace(droppedWithContent.replace(html, ""), "")
@@ -64,8 +76,8 @@ object HtmlSanitizer {
                 if (name !in voidTags) out.append("</").append(name).append('>')
                 continue
             }
-            out.append('<').append(name)
             val allowed = allowedAttrs[name].orEmpty()
+            val kept = linkedMapOf<String, String>()
             val seen = mutableSetOf<String>()
             for (a in attrRegex.findAll(m.groupValues[3])) {
                 val attr = a.groupValues[1].lowercase()
@@ -77,6 +89,16 @@ object HtmlSanitizer {
                     "colspan", "rowspan" -> raw.trim().takeIf { it.length in 1..2 && it.all(Char::isDigit) }
                     else -> raw
                 } ?: continue
+                kept[attr] = value
+            }
+            val src = kept["src"]
+            if (name == "img" && src != null && !isTrustedImageHost(src)) {
+                val label = kept["alt"]?.takeIf { it.isNotBlank() } ?: src
+                out.append("<a href=\"").append(escapeAttr(src)).append("\">").append(escapeText(label)).append("</a>")
+                continue
+            }
+            out.append('<').append(name)
+            for ((attr, value) in kept) {
                 out.append(' ').append(attr).append("=\"").append(escapeAttr(value)).append('"')
             }
             out.append('>')
@@ -94,6 +116,18 @@ object HtmlSanitizer {
         if ("&" in head) return null
         return url.takeIf { schemes.any { lower.startsWith(it) } }
     }
+
+    /** True for an https URL whose host is one of [trustedImageHosts] or a subdomain of one. */
+    internal fun isTrustedImageHost(url: String): Boolean {
+        if (!url.lowercase().startsWith("https://")) return false
+        val authority = url.substring("https://".length).takeWhile { it != '/' && it != '?' && it != '#' }
+        if ('@' in authority || '\\' in authority) return false
+        val host = authority.substringBefore(':').lowercase().trimEnd('.')
+        return trustedImageHosts.any { host == it || host.endsWith(".$it") }
+    }
+
+    private fun escapeText(value: String): String =
+        value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
     private fun escapeAttr(value: String): String =
         value.replace("\"", "&quot;").replace("<", "&lt;").replace(">", "&gt;")

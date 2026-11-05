@@ -77,6 +77,12 @@ fun FeedbackDialog(
                         minLines = 3,
                         modifier = Modifier.fillMaxWidth()
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = strings.privacyNotice,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                     if (errorText != null) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(errorText!!, color = MaterialTheme.colorScheme.error)

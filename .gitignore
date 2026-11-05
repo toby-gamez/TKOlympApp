@@ -32,7 +32,6 @@ TkOlympApp/bin/*
 TkOlympApp/obj/*
 TkOlympApp/TkOlympApp.csproj
 global.json
-.github/*
 TkOlympApp.Tests/obj/*
 TkOlympApp.Tests/bin/*
 .gradle/*

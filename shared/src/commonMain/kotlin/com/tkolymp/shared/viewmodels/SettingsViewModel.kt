@@ -8,16 +8,20 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import androidx.compose.runtime.Immutable
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.CancellationException
+import com.tkolymp.shared.errorreporting.ErrorReporter
 
 @Immutable
 data class SettingsState(
     val preferTimeline: Boolean = false,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val errorReportingEnabled: Boolean = true,
     val isLoading: Boolean = false,
 )
 
 class SettingsViewModel(
-    private val storage: com.tkolymp.shared.storage.ICalendarPreferenceStorage = ServiceLocator.calendarPreferenceStorage
+    private val storage: com.tkolymp.shared.storage.ICalendarPreferenceStorage = ServiceLocator.calendarPreferenceStorage,
+    private val onboardingStorage: com.tkolymp.shared.storage.OnboardingStorage = ServiceLocator.onboardingStorage,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SettingsState())
@@ -32,7 +36,20 @@ class SettingsViewModel(
             "dark" -> ThemeMode.DARK
             else -> ThemeMode.SYSTEM
         }
-        _state.update { it.copy(preferTimeline = preferTimeline, themeMode = theme, isLoading = false) }
+        val errorReporting = try { onboardingStorage.isErrorReportingEnabled() } catch (e: CancellationException) { throw e } catch (_: Exception) { true }
+        _state.update { it.copy(preferTimeline = preferTimeline, themeMode = theme, errorReportingEnabled = errorReporting, isLoading = false) }
+    }
+
+    /**
+     * Lets the user change the error-report choice made on the privacy screen at any time
+     * (GDPR art. 7(3) / art. 21). Settings is only reachable after the privacy screen was accepted,
+     * so the switch alone decides whether reports (and their device info) are sent.
+     */
+    suspend fun setErrorReportingEnabled(enabled: Boolean) {
+        onboardingStorage.setErrorReportingEnabled(enabled)
+        ErrorReporter.setEnabled(enabled)
+        ErrorReporter.setDeviceInfoConsented(enabled)
+        _state.update { it.copy(errorReportingEnabled = enabled) }
     }
 
     suspend fun setPreferTimeline(value: Boolean) {

@@ -1,0 +1,14 @@
+# Weekly dependency updates, including security fixes (ISO 27001 A.8.8 vulnerability management).
+version: 2
+updates:
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      kotlin-and-compose:
+        patterns: ["org.jetbrains.kotlin*", "org.jetbrains.compose*", "androidx.compose*"]
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

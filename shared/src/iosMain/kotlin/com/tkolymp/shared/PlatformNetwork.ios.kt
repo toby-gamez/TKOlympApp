@@ -58,7 +58,7 @@ private const val FEEDBACK_BASE_URL = "https://www.tobiso.com/api"
 
 private val globalCrashStorage = CrashReportStorage("")
 
-@OptIn(kotlin.experimental.ExperimentalNativeApi::class)
+@OptIn(kotlin.experimental.ExperimentalNativeApi::class, ExperimentalForeignApi::class)
 suspend fun initNetworking(baseUrl: String, tenantId: String = "1") {
     // Mirrors Android's `Logger.isDebug = BuildConfig.DEBUG`: release binaries log nothing and send error reports.
     Logger.isDebug = kotlin.native.Platform.isDebugBinary
@@ -142,6 +142,20 @@ suspend fun initNetworking(baseUrl: String, tenantId: String = "1") {
     )
 
     ServiceLocator.init(container)
+    // ShareUtils.ios writes share-sheet PNGs and NotificationFileButtons.ios writes notification_settings.json
+    // into Documents; nothing else in the app writes there.
+    ServiceLocator.localFilesCleaner = {
+        val fm = platform.Foundation.NSFileManager.defaultManager
+        val docs = platform.Foundation.NSSearchPathForDirectoriesInDomains(
+            platform.Foundation.NSDocumentDirectory, platform.Foundation.NSUserDomainMask, true
+        ).firstOrNull() as? String
+        if (docs != null) {
+            fm.contentsOfDirectoryAtPath(docs, error = null)?.forEach { name ->
+                val n = name as? String ?: return@forEach
+                if (n.endsWith(".png") || n == "notification_settings.json") fm.removeItemAtPath("$docs/$n", error = null)
+            }
+        }
+    }
 
     val onboarding = OnboardingStorage("")
     ErrorReporter.setEnabled(onboarding.hasAcceptedPrivacyConsent() && onboarding.isErrorReportingEnabled())

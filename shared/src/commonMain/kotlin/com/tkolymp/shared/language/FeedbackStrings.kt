@@ -14,4 +14,6 @@ data class FeedbackStrings(
     val successMessage: String = "Thanks! Your feedback was sent.",
     val errorMessage: String = "Couldn't send feedback. Please try again.",
     val validationError: String = "Please fill in all fields.",
+    /** Recipient notice shown in the feedback form (GDPR art. 13(1)(e)). */
+    val privacyNotice: String = "Your name, e-mail and message are sent to the app developer (tobiso.com) only to handle this feedback.",
 )

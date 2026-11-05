@@ -21,6 +21,8 @@ import platform.WebKit.WKNavigationAction
 import platform.WebKit.WKNavigationActionPolicy
 import platform.WebKit.WKNavigationDelegateProtocol
 import platform.WebKit.WKUserContentController
+import platform.WebKit.WKUserScript
+import platform.WebKit.WKUserScriptInjectionTime
 import platform.WebKit.WKWebView
 import platform.WebKit.WKWebViewConfiguration
 import platform.WebKit.WKScriptMessage
@@ -60,6 +62,7 @@ actual fun HtmlText(
     }
     val htmlAutoLinked = autoLinkHtmlBody(com.tkolymp.shared.html.HtmlSanitizer.sanitize(htmlNoInline))
     val styledHtml = """<!DOCTYPE html><html><head>
+<meta http-equiv="Content-Security-Policy" content="${com.tkolymp.shared.html.HtmlSanitizer.CONTENT_SECURITY_POLICY}">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
 <style>
@@ -68,12 +71,20 @@ a { color:${linkHex}; }
 .tko-bank-account { text-decoration: underline dotted; cursor: pointer; }
 img, picture, video { width:100% !important; max-width:100% !important; height:auto !important; display:block; margin:0 auto; border-radius:10px; }
 </style></head><body>$htmlAutoLinked</body>
-<script>document.addEventListener('DOMContentLoaded', function(){var accs=document.getElementsByClassName('tko-bank-account');for(var i=0;i<accs.length;i++){(function(){var acc=accs[i].getAttribute('data-account');accs[i].onclick=function(){window.webkit.messageHandlers.bankAccountClick.postMessage(acc);};})();}});</script>
 </html>"""
 
     UIKitView(
         factory = {
             val config = WKWebViewConfiguration()
+            // Injected as a user script rather than an inline <script>: user scripts aren't subject to the page's
+            // CSP, so the page itself can keep script-src 'none' (same policy as Android).
+            config.userContentController.addUserScript(
+                WKUserScript(
+                    source = "(function(){var accs=document.getElementsByClassName('tko-bank-account');for(var i=0;i<accs.length;i++){(function(){var acc=accs[i].getAttribute('data-account');accs[i].onclick=function(){window.webkit.messageHandlers.bankAccountClick.postMessage(acc);};})();}})();",
+                    injectionTime = WKUserScriptInjectionTime.WKUserScriptInjectionTimeAtDocumentEnd,
+                    forMainFrameOnly = true
+                )
+            )
             if (onImageClick != null) {
                 val imageClickHandler = object : NSObject(), WKScriptMessageHandlerProtocol {
                     override fun userContentController(userContentController: WKUserContentController, didReceiveScriptMessage: WKScriptMessage) {

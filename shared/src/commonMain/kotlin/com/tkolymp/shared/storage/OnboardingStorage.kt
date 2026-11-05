@@ -9,7 +9,7 @@ expect class OnboardingStorage(platformContext: Any) {
     suspend fun setTutorialSeen()
     suspend fun hasAcceptedPrivacyConsent(): Boolean
     suspend fun setPrivacyConsentAccepted()
-    /** Whether automatic anonymous error/crash reports may be sent. Defaults to true; chosen on the privacy consent screen. */
+    /** Whether automatic (pseudonymous, scrubbed) error/crash reports may be sent. Defaults to true; chosen on the privacy screen, changeable in Settings. */
     suspend fun isErrorReportingEnabled(): Boolean
     suspend fun setErrorReportingEnabled(enabled: Boolean)
 }

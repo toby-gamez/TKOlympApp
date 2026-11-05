@@ -113,6 +113,7 @@ class ProfileViewModel(
             notifications.saveEventReminders(emptyList())
             notifications.saveScheduledBirthdayNotificationIds(emptyList())
         } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+        try { withContext(Dispatchers.Default) { ServiceLocator.localFilesCleaner?.invoke() } } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         OtherViewModel.clearCache()
     }
 }

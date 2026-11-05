@@ -871,10 +871,12 @@ val StringsBrainrot = Strings(
         title = "Privacy check, no cap",
         body = "Before you keep vibing, peep our Privacy Policy real quick. It's the tea on what club-member data we collect (name, contact info, payment status, the usual) and what we do with it.",
         readPolicyLinkLabel = "Read the Privacy Policy fr",
-        checkboxLabel = "I read it and I'm cool with the Privacy Policy, no cap",
+        checkboxLabel = "I read the Privacy Policy, no cap",
         continueButton = "Let's go fr",
-        errorReportingLabel = "Send anonymous crash reports, no cap",
-        errorReportingDescription = "Auto-sends error logs (no personal info) so the dev can fix bugs. You can turn it off, fr.",
+        errorReportingLabel = "Send crash reports, no cap",
+        errorReportingDescription = "Auto-sends error logs (phone model + OS/app version, no name or e-mail) to the dev so bugs get fixed. Turn it off whenever in Settings, fr.",
+        settingsSection = "Privacy",
+        privacyPolicyRow = "Privacy Policy",
     ),
     feedback = FeedbackStrings(
         sectionTitle = "Spill the tea",
@@ -890,6 +892,7 @@ val StringsBrainrot = Strings(
         successMessage = "W move! Your feedback hit different ✅",
         errorMessage = "L moment, feedback didn't send. Try again bestie.",
         validationError = "Fill everything out no cap.",
+        privacyNotice = "Your name, e-mail and message go to the app dev (tobiso.com) just to handle this feedback, fr.",
     ),
     management = ManagementStrings(
         trainerMode = "Coach mode fr",

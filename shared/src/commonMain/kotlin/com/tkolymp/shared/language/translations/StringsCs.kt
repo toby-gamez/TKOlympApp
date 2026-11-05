@@ -902,10 +902,12 @@ val StringsCs = Strings(
         title = "Vaše soukromí",
         body = "Než budeš pokračovat, přečti si prosím naše Zásady ochrany osobních údajů. Vysvětlují, jaké údaje o členech klubu shromažďujeme (např. jméno, kontaktní údaje a stav plateb) a jak je používáme.",
         readPolicyLinkLabel = "Přečíst Zásady ochrany osobních údajů",
-        checkboxLabel = "Přečetl/a jsem si a souhlasím se Zásadami ochrany osobních údajů",
+        checkboxLabel = "Beru na vědomí Zásady ochrany osobních údajů",
         continueButton = "Pokračovat",
-        errorReportingLabel = "Odesílat anonymní hlášení o chybách",
-        errorReportingDescription = "Aplikace automaticky odesílá technické záznamy o chybách a pádech (bez osobních údajů), aby je šlo opravit. Můžeš to vypnout.",
+        errorReportingLabel = "Odesílat hlášení o chybách",
+        errorReportingDescription = "Technické záznamy o chybách a pádech (model zařízení, verze systému a aplikace — bez jména a e-mailu) se odesílají vývojáři aplikace, aby šlo chyby opravit. Kdykoli to můžeš vypnout v Nastavení.",
+        settingsSection = "Soukromí",
+        privacyPolicyRow = "Zásady ochrany osobních údajů",
     ),
     feedback = FeedbackStrings(
         sectionTitle = "Zpětná vazba",
@@ -921,6 +923,7 @@ val StringsCs = Strings(
         successMessage = "Díky! Tvá zpětná vazba byla odeslána.",
         errorMessage = "Zpětnou vazbu se nepodařilo odeslat. Zkus to znovu.",
         validationError = "Vyplň prosím všechna pole.",
+        privacyNotice = "Jméno, e-mail a zpráva se odešlou vývojáři aplikace (tobiso.com) pouze za účelem vyřízení této zpětné vazby.",
     ),
     management = ManagementStrings(
         trainerMode = "Trenérský režim",

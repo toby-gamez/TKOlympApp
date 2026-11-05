@@ -23,22 +23,55 @@ of a shared device, and a consent flow whose wording and legal basis don't line 
 |---|---------|----------|--------|
 | H1 | Firebase Analytics + Crashlytics collected data before/without consent | High | **Fixed** |
 | H2 | FCM cohort topics stayed subscribed after logout | High | **Fixed** |
-| H3 | Error-reporting choice can't be changed/withdrawn after onboarding | High | Open |
-| M1 | Privacy policy accepted as "consent" and used as a gate | Medium | Open |
-| M2 | Error reports described as "anonymous", toggle pre-enabled | Medium | Open |
-| M3 | Third-party recipients (tobiso.com, GitHub, Google, image hosts) | Medium | Open (docs/contracts) |
+| H3 | Error-reporting choice can't be changed/withdrawn after onboarding | High | **Fixed** |
+| M1 | Privacy policy accepted as "consent" and used as a gate | Medium | **Fixed** (app); policy text: club |
+| M2 | Error reports described as "anonymous", toggle pre-enabled | Medium | **Fixed** (option 1) |
+| M3 | Third-party recipients (tobiso.com, GitHub, Google, image hosts) | Medium | **Partly fixed** (in-app notice); policy + DPA: club |
 | M4 | iOS logged in release builds (NSLog ignored `isDebug`) | Medium | **Fixed** |
-| M5 | No iOS privacy manifest (`PrivacyInfo.xcprivacy`) | Medium | Open |
-| M6 | Children's data — age of digital consent (15 in CZ) | Medium | Open (process) |
-| L1 | iOS WebView has no CSP (Android has one) | Low | Open |
-| L2 | Remote images in HTML loaded from any HTTPS host (IP leak / tracking pixels) | Low | Open |
-| L3 | iOS offline cache files lack explicit `NSFileProtectionComplete` | Low | Open |
-| L4 | Camp-schedule photos in cache dir survive logout | Low | Open |
-| L5 | Firebase API key in `google-services.json` — restrict in Google Cloud | Low | Open (console) |
-| L6 | CI has no dependency/secret scanning, lint, or tests; no `permissions:` block | Low | Open |
+| M5 | No iOS privacy manifest (`PrivacyInfo.xcprivacy`) | Medium | **Fixed** |
+| M6 | Children's data — age of digital consent (15 in CZ) | Medium | Mitigated (no consent-based processing left); policy: club |
+| L1 | iOS WebView has no CSP (Android has one) | Low | **Fixed** |
+| L2 | Remote images in HTML loaded from any HTTPS host (IP leak / tracking pixels) | Low | **Fixed** |
+| L3 | iOS offline cache files lack explicit `NSFileProtectionComplete` | Low | **Fixed** |
+| L4 | Camp-schedule photos in cache dir survive logout | Low | **Fixed** |
+| L5 | Firebase API key in `google-services.json` — restrict in Google Cloud | Low | Open (Google Cloud console, not code) |
+| L6 | CI has no dependency/secret scanning, lint, or tests; no `permissions:` block | Low | **Fixed** (secret scanning: enable in repo settings) |
 | L7 | Stale/misleading WebView JS-bridge comment | Info | **Fixed** |
 
 ---
+
+## Resolution notes (follow-up commit)
+
+- **H3:** Settings now has a *Privacy* section with the error-report switch (`SettingsViewModel.setErrorReportingEnabled`,
+  which updates storage and `ErrorReporter`) and a link to the privacy policy.
+- **M1:** the checkbox now reads *"Beru na vědomí Zásady ochrany osobních údajů"* (an acknowledgement) in all eight
+  languages. The club still needs to make sure the policy names the legal bases, recipients, retention periods
+  and the right to complain to ÚOOÚ.
+- **M2:** we chose option 1 (legitimate interest, on by default, opt-out at any time). "Anonymous" has been
+  removed, and the text now says what is sent (device model, OS and app version, no name or e-mail) and that it
+  can be turned off in Settings.
+- **M3:** the feedback form now says that name, e-mail and message go to the app developer (tobiso.com). Still
+  for the club to do: list all recipients in the privacy policy and sign a processing agreement (DPA) with the
+  tobiso.com operator.
+- **M5:** `iosApp/iosApp/PrivacyInfo.xcprivacy` added. It declares no tracking, the data types collected and the
+  `UserDefaults` reason `CA92.1`. Xcode includes it automatically because the folder is file-system-synchronised.
+  Check it against Xcode's *Generate Privacy Report* before submitting, because bundled SDKs ship their own
+  manifests.
+- **M6:** nothing in the app relies on consent any more, so the age-15 rule doesn't gate anything. The
+  child-friendly summary of the policy is still for the club to write.
+- **L1:** both platforms now use `HtmlSanitizer.CONTENT_SECURITY_POLICY` (`script-src 'none'`). On iOS the
+  bank-account script moved from an inline `<script>` into a `WKUserScript`, which page CSP doesn't block.
+- **L2:** images load only from `HtmlSanitizer.trustedImageHosts` (`tkolymp.cz` and its subdomains, HTTPS only).
+  Images from any other host become a tappable link, so nothing is fetched unless the member chooses to open it.
+  The CSP `img-src` mirrors this. To trust another host (for example a CDN), add it to the set.
+- **L3:** the iOS offline directory and files are written with `NSFileProtectionComplete`, and existing files
+  are upgraded once at startup.
+- **L4:** logout calls `ServiceLocator.localFilesCleaner`. On Android it deletes `cacheDir/camp_schedule` and
+  `cacheDir/share`. On iOS it deletes the share PNGs and the notification-settings export in Documents.
+- **L6:** CI now has `permissions: contents: read`, Gradle wrapper validation, shared unit tests and lint, plus
+  Dependabot for Gradle and GitHub Actions. Lint is report-only until existing findings are triaged; remove its
+  `continue-on-error` line after that. `.github/*` has been removed from `.gitignore`. Secret scanning and push
+  protection are switched on in the repository settings (Settings → Code security), not in code.
 
 ## Findings
 

@@ -870,10 +870,12 @@ val StringsVi = Strings(
         title = "Quyền riêng tư của bạn",
         body = "Trước khi tiếp tục, vui lòng đọc Chính sách quyền riêng tư của chúng tôi. Chính sách giải thích những dữ liệu chúng tôi thu thập về thành viên câu lạc bộ (như tên, thông tin liên hệ và tình trạng thanh toán) và cách chúng được sử dụng.",
         readPolicyLinkLabel = "Đọc Chính sách quyền riêng tư",
-        checkboxLabel = "Tôi đã đọc và đồng ý với Chính sách quyền riêng tư",
+        checkboxLabel = "Tôi đã đọc Chính sách quyền riêng tư",
         continueButton = "Tiếp tục",
-        errorReportingLabel = "Gửi báo cáo lỗi ẩn danh",
-        errorReportingDescription = "Ứng dụng tự động gửi báo cáo lỗi và sự cố kỹ thuật (không có dữ liệu cá nhân) để có thể khắc phục. Bạn có thể tắt tính năng này.",
+        errorReportingLabel = "Gửi báo cáo lỗi",
+        errorReportingDescription = "Báo cáo lỗi và sự cố kỹ thuật (kiểu thiết bị, phiên bản hệ điều hành và ứng dụng — không có tên hay e-mail) được gửi đến nhà phát triển ứng dụng để sửa lỗi. Bạn có thể tắt bất cứ lúc nào trong Cài đặt.",
+        settingsSection = "Quyền riêng tư",
+        privacyPolicyRow = "Chính sách quyền riêng tư",
     ),
     feedback = FeedbackStrings(
         sectionTitle = "Phản hồi",
@@ -889,6 +891,7 @@ val StringsVi = Strings(
         successMessage = "Cảm ơn! Phản hồi của bạn đã được gửi.",
         errorMessage = "Không thể gửi phản hồi. Vui lòng thử lại.",
         validationError = "Vui lòng điền vào tất cả các trường.",
+        privacyNotice = "Tên, e-mail và tin nhắn của bạn chỉ được gửi đến nhà phát triển ứng dụng (tobiso.com) để xử lý phản hồi này.",
     ),
     management = ManagementStrings(
         trainerMode = "Chế độ huấn luyện viên",

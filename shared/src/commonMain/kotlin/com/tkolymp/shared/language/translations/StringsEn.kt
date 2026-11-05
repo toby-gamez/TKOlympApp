@@ -881,10 +881,12 @@ val StringsEn = Strings(
         title = "Your privacy",
         body = "Before you continue, please read our Privacy Policy. It explains what data we collect about club members (such as name, contact details and payment status) and how it is used.",
         readPolicyLinkLabel = "Read the Privacy Policy",
-        checkboxLabel = "I have read and accept the Privacy Policy",
+        checkboxLabel = "I have read the Privacy Policy",
         continueButton = "Continue",
-        errorReportingLabel = "Send anonymous error reports",
-        errorReportingDescription = "The app automatically sends technical error and crash reports (no personal data) so problems can be fixed. You can turn this off.",
+        errorReportingLabel = "Send error reports",
+        errorReportingDescription = "Technical error and crash reports (device model, OS and app version — no name or e-mail) are sent to the app developer so bugs can be fixed. You can turn this off at any time in Settings.",
+        settingsSection = "Privacy",
+        privacyPolicyRow = "Privacy Policy",
     ),
     feedback = FeedbackStrings(
         sectionTitle = "Feedback",
@@ -900,6 +902,7 @@ val StringsEn = Strings(
         successMessage = "Thanks! Your feedback was sent.",
         errorMessage = "Couldn't send feedback. Please try again.",
         validationError = "Please fill in all fields.",
+        privacyNotice = "Your name, e-mail and message are sent to the app developer (tobiso.com) only to handle this feedback.",
     ),
     management = ManagementStrings(
         trainerMode = "Trainer mode",

@@ -627,12 +627,19 @@ fun AppNavHost(
             popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) },
             popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) }
         ) {
+            val uriHandler = LocalUriHandler.current
+            val langCode = when (AppStrings.currentLanguage) {
+                AppLanguage.UA -> "uk"
+                AppLanguage.BRAINROT -> "en"
+                else -> AppStrings.currentLanguage.code
+            }
             SettingsScreen(
                 onBack = { navController.navigateUp() },
                 onOpenLanguages = { navController.navigate("languages") },
                 onOpenNotifications = { navController.navigate("notifications") },
                 onOpenAbout = { navController.navigate("about") },
-                onOpenChangelog = { navController.navigate("changelog") }
+                onOpenChangelog = { navController.navigate("changelog") },
+                onOpenPrivacyPolicy = { uriHandler.openUri("https://toby-gamez.github.io/tkolymp-docs.github.io/privacy/?lang=$langCode") }
             )
         }
 

@@ -2,6 +2,7 @@ package com.tkolymp.tkolympapp.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,7 @@ import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.ViewTimeline
@@ -41,6 +43,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -59,7 +62,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.ServiceLocator
@@ -68,6 +73,7 @@ import com.tkolymp.shared.feedback.FeedbackType
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.tutorial.TutorialManager
 import com.tkolymp.shared.viewmodels.SettingsViewModel
+import com.tkolymp.tkolympapp.ui.theme.AppTheme
 import com.tkolymp.tkolympapp.util.StaggeredItem
 import kotlinx.coroutines.launch
 
@@ -79,6 +85,7 @@ fun SettingsScreen(
     onOpenNotifications: () -> Unit = {},
     onOpenAbout: () -> Unit = {},
     onOpenChangelog: () -> Unit = {},
+    onOpenPrivacyPolicy: () -> Unit = {},
 ) {
     val viewModel = viewModel<SettingsViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -382,8 +389,17 @@ fun SettingsScreen(
                 }
             }
 
-            // Feedback
+            // Privacy: the error-report choice from the privacy screen must stay changeable (GDPR art. 7(3)/21)
             StaggeredItem(index = 6, visible = itemsVisible, baseDelayMs = 50) {
+                PrivacySettingsSection(
+                    errorReportingEnabled = state.errorReportingEnabled,
+                    onErrorReportingChange = { enabled -> scope.launch { viewModel.setErrorReportingEnabled(enabled) } },
+                    onOpenPrivacyPolicy = onOpenPrivacyPolicy,
+                )
+            }
+
+            // Feedback
+            StaggeredItem(index = 7, visible = itemsVisible, baseDelayMs = 50) {
                 Column {
                     SettingsSectionHeader(text = AppStrings.current.feedback.sectionTitle)
                     Card(
@@ -446,7 +462,7 @@ fun SettingsScreen(
             }
 
             // App section: Changelog + About
-            StaggeredItem(index = 7, visible = itemsVisible, baseDelayMs = 50) {
+            StaggeredItem(index = 8, visible = itemsVisible, baseDelayMs = 50) {
                 Column {
                     SettingsSectionHeader(text = AppStrings.current.otherScreen.appSection)
                     Card(
@@ -530,6 +546,99 @@ fun SettingsScreen(
         feedbackDialogType?.let { type ->
             FeedbackDialog(type = type, onDismiss = { feedbackDialogType = null })
         }
+    }
+}
+
+@Composable
+private fun PrivacySettingsSection(
+    errorReportingEnabled: Boolean,
+    onErrorReportingChange: (Boolean) -> Unit,
+    onOpenPrivacyPolicy: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val p = AppStrings.current.privacyConsent
+    Column(modifier = modifier) {
+        SettingsSectionHeader(text = p.settingsSection)
+        Card(
+            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 4.dp, bottomEnd = 4.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 2.dp)
+                .toggleable(
+                    value = errorReportingEnabled,
+                    role = Role.Switch,
+                    onValueChange = onErrorReportingChange,
+                )
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 14.dp)
+            ) {
+                SettingsIconBox(Icons.Filled.BugReport)
+                Spacer(modifier = Modifier.width(16.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = p.errorReportingLabel,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = p.errorReportingDescription,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                // Row handles the toggle (one accessible switch node), so the Switch itself is not clickable.
+                Switch(checked = errorReportingEnabled, onCheckedChange = null)
+            }
+        }
+        Card(
+            shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 16.dp, bottomEnd = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 2.dp)
+                .clickable { onOpenPrivacyPolicy() }
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 14.dp)
+            ) {
+                SettingsIconBox(Icons.Filled.PrivacyTip)
+                Spacer(modifier = Modifier.width(16.dp))
+                Text(
+                    text = p.privacyPolicyRow,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.weight(1f)
+                )
+                Icon(
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Preview(name = "PrivacySettingsSection — Light")
+@Composable
+private fun PrivacySettingsSectionPreviewLight() {
+    AppTheme(darkTheme = false) {
+        PrivacySettingsSection(errorReportingEnabled = true, onErrorReportingChange = {}, onOpenPrivacyPolicy = {})
+    }
+}
+
+@Preview(name = "PrivacySettingsSection — Dark")
+@Composable
+private fun PrivacySettingsSectionPreviewDark() {
+    AppTheme(darkTheme = true) {
+        PrivacySettingsSection(errorReportingEnabled = false, onErrorReportingChange = {}, onOpenPrivacyPolicy = {})
     }
 }
 
