@@ -44,7 +44,7 @@ object HtmlSanitizer {
      * the content is shown, telling that host the member's IP address and when they read it (tracking pixel),
      * so it is rendered as a plain link the member can choose to open instead.
      */
-    val trustedImageHosts: Set<String> = setOf("tkolymp.cz")
+    val trustedImageHosts: Set<String> = setOf("tkolymp.cz", "paylibo.com")
 
     /** CSP for the WebViews that render sanitized HTML (Android + iOS); its img-src mirrors [trustedImageHosts]. */
     val CONTENT_SECURITY_POLICY: String =

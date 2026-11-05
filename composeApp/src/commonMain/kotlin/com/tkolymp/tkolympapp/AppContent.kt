@@ -88,6 +88,8 @@ import com.tkolymp.tkolympapp.screens.PersonScreen
 import com.tkolymp.tkolympapp.screens.PersonalEventEditScreen
 import com.tkolymp.tkolympapp.screens.PersonalEventsScreen
 import com.tkolymp.tkolympapp.screens.PrivacyConsentScreen
+import com.tkolymp.tkolympapp.screens.ChangePasswordScreen
+import com.tkolymp.tkolympapp.screens.ProfileEditScreen
 import com.tkolymp.tkolympapp.screens.ProfileScreen
 import com.tkolymp.tkolympapp.screens.RoleSelectionScreen
 import com.tkolymp.tkolympapp.screens.SettingsScreen
@@ -969,8 +971,31 @@ fun AppNavHost(
         ) {
             ProfileScreen(
                 onLogout = onLogout,
-                onBack = { navController.navigateUp() }
+                onBack = { navController.navigateUp() },
+                onEditProfile = { navController.navigate("profile/edit") },
+                onChangePassword = { navController.navigate("profile/password") }
             )
+        }
+
+        composable(
+            route = "profile/edit",
+            enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
+            exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
+            popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) },
+            popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) }
+        ) {
+            ProfileEditScreen(onSaved = { navController.navigateUp() }, onBack = { navController.navigateUp() })
+        }
+
+        composable(
+            route = "profile/password",
+            enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
+            exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
+            popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) },
+            popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) }
+        ) {
+            // Changing the password invalidates the session, so the user signs in again (as the dialog did).
+            ChangePasswordScreen(onSuccess = onLogout, onBack = { navController.navigateUp() })
         }
     }
 }

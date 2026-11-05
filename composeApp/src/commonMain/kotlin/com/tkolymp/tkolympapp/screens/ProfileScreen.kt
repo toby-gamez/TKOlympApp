@@ -46,7 +46,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -66,6 +70,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.language.NationalityHelper
 import com.tkolymp.shared.user.fmtProfileDate
+import com.tkolymp.shared.utils.withImageWidth
 import com.tkolymp.shared.viewmodels.ProfileViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.CoupleAvatar
@@ -104,7 +109,12 @@ private fun formatProfileValue(key: String, value: String): String {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
+fun ProfileScreen(
+    onLogout: () -> Unit = {},
+    onBack: (() -> Unit)? = null,
+    onEditProfile: () -> Unit = {},
+    onChangePassword: () -> Unit = {},
+) {
     val scope = rememberCoroutineScope()
     val refreshTriggerState = remember { mutableStateOf(0) }
 
@@ -112,6 +122,19 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
     val profileState by profileViewModel.state.collectAsStateWithLifecycle()
     val derived = profileState.derived
     LaunchedEffect(refreshTriggerState.value) { profileViewModel.load() }
+
+    // The edit screens change the cached person; reload when coming back to this one.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        var resumedOnce = false
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                if (resumedOnce) scope.launch { profileViewModel.load() } else resumedOnce = true
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     var sectionsVisible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { sectionsVisible = true }
@@ -151,7 +174,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
 
                 // Header
                 Row(modifier = Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.Center) {
-                    InitialsAvatar(name = displayName ?: AppStrings.current.profile.displayNameFallback, size = 64.dp, fontSize = 22.sp)
+                    InitialsAvatar(name = displayName ?: AppStrings.current.profile.displayNameFallback, size = 64.dp, fontSize = 22.sp, imageUrl = withImageWidth(person?.imageUrl, 256))
                 }
                 Text(
                     displayName ?: AppStrings.current.profile.displayNameFallback,
@@ -345,7 +368,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
                                         val manName = listOfNotNull(c.man?.firstName, c.man?.lastName).joinToString(" ").trim().takeIf { it.isNotBlank() }
                                         val womanName = listOfNotNull(c.woman?.firstName, c.woman?.lastName).joinToString(" ").trim().takeIf { it.isNotBlank() }
                                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 2.dp)) {
-                                            CoupleAvatar(womanName = womanName, manName = manName, size = 24.dp)
+                                            CoupleAvatar(womanName = womanName, manName = manName, size = 24.dp, womanImageUrl = c.woman?.imageUrl, manImageUrl = c.man?.imageUrl)
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text(listOfNotNull(manName, womanName).joinToString(" - "), style = MaterialTheme.typography.bodyMedium)
                                         }
@@ -560,61 +583,11 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
 
                 // Action buttons
                 Row(modifier = Modifier.fillMaxWidth().padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    var showChangePassDialog by remember { mutableStateOf(false) }
-                    var showEditPersonal by remember { mutableStateOf(false) }
-
-                    FilledTonalButton(onClick = { showChangePassDialog = true }, modifier = Modifier.weight(1f)) {
+                    FilledTonalButton(onClick = onChangePassword, modifier = Modifier.weight(1f)) {
                         Text(AppStrings.current.auth.changePassword)
                     }
-
-                    if (showChangePassDialog) {
-                        ChangePasswordDialog(onDismiss = { showChangePassDialog = false }, onSuccess = {
-                            scope.launch {
-                                profileViewModel.logout()
-                                showChangePassDialog = false
-                                onLogout()
-                            }
-                        })
-                    }
-
-                    FilledTonalButton(onClick = { showEditPersonal = true }, modifier = Modifier.weight(1f)) {
+                    FilledTonalButton(onClick = onEditProfile, modifier = Modifier.weight(1f)) {
                         Text(AppStrings.current.profile.changePersonalData)
-                    }
-
-                    if (showEditPersonal) {
-                        val p = profileState.person
-                        ChangePersonalDataDialog(
-                            initialFirst = p?.firstName ?: "",
-                            initialLast = p?.lastName ?: "",
-                            initialEmail = (p?.email ?: profileState.currentUser?.uEmail) ?: "",
-                            initialPrefix = p?.prefixTitle ?: "",
-                            initialSuffix = p?.suffixTitle ?: "",
-                            initialCstsId = p?.cstsId ?: "",
-                            initialWdsfId = p?.wdsfId ?: "",
-                            initialNationalIdNumber = p?.nationalIdNumber ?: "",
-                            initialNationality = p?.nationality ?: "",
-                            initialStreet = p?.address?.street ?: "",
-                            initialCity = p?.address?.city ?: "",
-                            initialPostal = p?.address?.postalCode ?: "",
-                            initialRegion = p?.address?.region ?: "",
-                            initialDistrict = p?.address?.district ?: "",
-                            initialConscription = p?.address?.conscriptionNumber ?: "",
-                            initialOrientation = p?.address?.orientationNumber ?: "",
-                            initialPhone = p?.phone ?: "",
-                            initialMobile = p?.phone ?: "",
-                            initialBirthDate = p?.birthDate ?: "",
-                            initialGender = p?.gender ?: "",
-                            initialInstagram = p?.instagramUsername ?: "",
-                            initialTiktok = p?.tiktokUsername ?: "",
-                            initialFacebook = p?.facebookUrl ?: "",
-                            initialWebsite = p?.websiteUrl ?: "",
-                            initialNote = p?.note ?: "",
-                            onDismiss = { showEditPersonal = false },
-                            onSave = { _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String, _: String ->
-                                showEditPersonal = false
-                                refreshTriggerState.value = refreshTriggerState.value + 1
-                            }
-                        )
                     }
                 }
 
@@ -649,4 +622,4 @@ fun ProfileScreen(onLogout: () -> Unit = {}, onBack: (() -> Unit)? = null) {
     }
 }
 
-// Dialog composables were moved to ProfileDialogs.kt
+

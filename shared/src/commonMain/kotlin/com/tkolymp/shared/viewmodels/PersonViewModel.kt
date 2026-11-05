@@ -1,5 +1,6 @@
 package com.tkolymp.shared.viewmodels
 
+import com.tkolymp.shared.utils.fileUrl
 import androidx.lifecycle.ViewModel
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.people.progressNodes
@@ -74,8 +75,8 @@ class PersonViewModel(
                             val womanObj = cObj["woman"] as? kotlinx.serialization.json.JsonObject
                             com.tkolymp.shared.people.ActiveCouple(
                                 id = blankToNull(cObj["id"]?.jsonPrimitive?.contentOrNull),
-                                man = com.tkolymp.shared.people.CoupleMember(manObj?.get("firstName")?.jsonPrimitive?.contentOrNull, manObj?.get("lastName")?.jsonPrimitive?.contentOrNull),
-                                woman = com.tkolymp.shared.people.CoupleMember(womanObj?.get("firstName")?.jsonPrimitive?.contentOrNull, womanObj?.get("lastName")?.jsonPrimitive?.contentOrNull)
+                                man = com.tkolymp.shared.people.CoupleMember(manObj?.get("firstName")?.jsonPrimitive?.contentOrNull, manObj?.get("lastName")?.jsonPrimitive?.contentOrNull, manObj.fileUrl()),
+                                woman = com.tkolymp.shared.people.CoupleMember(womanObj?.get("firstName")?.jsonPrimitive?.contentOrNull, womanObj?.get("lastName")?.jsonPrimitive?.contentOrNull, womanObj.fileUrl())
                             )
                         } ?: emptyList()
 

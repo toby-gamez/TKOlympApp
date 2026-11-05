@@ -7,6 +7,7 @@ import com.tkolymp.shared.people.PersonDetails
 import com.tkolymp.shared.user.CohortDisplay
 import com.tkolymp.shared.user.CurrentUser
 import com.tkolymp.shared.user.ProfileDerivedState
+import com.tkolymp.shared.user.PersonUpdateRequest
 import com.tkolymp.shared.user.UserService
 import com.tkolymp.shared.user.deriveProfileState
 import kotlinx.coroutines.CancellationException
@@ -84,6 +85,49 @@ class ProfileViewModel(
             throw e
         } catch (ex: Exception) {
             _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: com.tkolymp.shared.language.AppStrings.current.errorMessages.errorLoadingProfile, ex))
+        }
+    }
+
+    /** Saves [request] for the signed-in person; returns null on success or a user-facing error message. */
+    suspend fun savePerson(request: PersonUpdateRequest): String? {
+        val strings = com.tkolymp.shared.language.AppStrings.current
+        return try {
+            val pid = userService.getCachedPersonId()
+            when {
+                pid.isNullOrBlank() -> strings.cannotDetermineUserId
+                userService.updatePerson(pid, request) -> null
+                else -> "${strings.saveFailed}: ${userService.getLastApiError() ?: "?"}"
+            }
+        } catch (e: CancellationException) { throw e } catch (ex: Exception) {
+            ex.message ?: strings.saveFailed
+        }
+    }
+
+    /** Sets ([jpegBytes] given) or removes (null) the profile photo; returns null on success or an error message. */
+    suspend fun setAvatar(jpegBytes: ByteArray?): String? {
+        val strings = com.tkolymp.shared.language.AppStrings.current
+        return try {
+            val pid = userService.getCachedPersonId()
+            val ok = when {
+                pid.isNullOrBlank() -> return strings.cannotDetermineUserId
+                jpegBytes == null -> userService.removeAvatar(pid)
+                else -> userService.uploadAvatar(pid, jpegBytes)
+            }
+            if (ok) { load(); null } else strings.profile.photoUpdateFailed
+        } catch (e: CancellationException) { throw e } catch (_: Exception) {
+            strings.profile.photoUpdateFailed
+        }
+    }
+
+    /** Changes the password; returns null on success or a user-facing error message. */
+    suspend fun changePassword(oldPass: String, newPass: String): String? {
+        val strings = com.tkolymp.shared.language.AppStrings.current
+        return try {
+            if (userService.changePassword(oldPass, newPass)) null
+            else userService.getLastApiError()?.takeIf { it.isNotBlank() }?.let { "${strings.changePasswordFailed}: $it" } ?: strings.changePasswordFailed
+        } catch (e: CancellationException) { throw e } catch (ex: Exception) {
+            val cause = generateSequence(ex.cause) { it.cause }.mapNotNull { it.message }.firstOrNull()
+            "${strings.changePasswordFailed}: ${cause ?: ex.message ?: ex}"
         }
     }
 

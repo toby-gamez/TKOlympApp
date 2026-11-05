@@ -5,6 +5,7 @@ query EventDetail($id: BigInt!) {
         name
         summary
         description
+        coverImage { url }
         since
         until
         isCancelled
@@ -28,6 +29,7 @@ query EventDetail($id: BigInt!) {
             person {
                 id
                 name
+                image { url }
             }
         }
         eventInstancesList: childEventsList(orderBy: SINCE_ASC) {
@@ -56,6 +58,7 @@ query EventDetail($id: BigInt!) {
                 name
                 firstName
                 lastName
+                image { url }
             }
             coupleId
             couple {
@@ -65,12 +68,14 @@ query EventDetail($id: BigInt!) {
                     name
                     firstName
                     lastName
+                    image { url }
                 }
                 woman {
                     id
                     name
                     firstName
                     lastName
+                    image { url }
                 }
             }
             eventLessonDemandsByRegistrationIdList: lessonRequestsList {

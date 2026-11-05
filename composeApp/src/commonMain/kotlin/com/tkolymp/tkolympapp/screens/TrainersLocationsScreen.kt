@@ -209,7 +209,7 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                                                             val suffix = p?.suffixTitle?.takeIf { it.isNotBlank() }
                                                             val displayName = if (suffix != null) "$name, $suffix" else name
                                                             val avatarName = if (displayName.isBlank()) (p?.id ?: "?") else displayName
-                                                            InitialsAvatar(name = avatarName, size = 28.dp, fontSize = 11.sp)
+                                                            InitialsAvatar(name = avatarName, size = 28.dp, fontSize = 11.sp, imageUrl = p?.imageUrl)
                                                             Spacer(modifier = Modifier.width(12.dp))
                                                             Column {
                                                                 Text(text = if (displayName.isBlank()) (p?.id ?: "(trenér)") else displayName, style = MaterialTheme.typography.bodyLarge)

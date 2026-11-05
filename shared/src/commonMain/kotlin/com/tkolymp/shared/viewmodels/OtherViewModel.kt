@@ -1,5 +1,6 @@
 package com.tkolymp.shared.viewmodels
 
+import com.tkolymp.shared.utils.fileUrl
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tkolymp.shared.ServiceLocator
@@ -28,6 +29,7 @@ data class OtherState(
     val rawJson: String? = null,
     val personDetailsRaw: String? = null,
     val personDob: String? = null,
+    val personImageUrl: String? = null,
     val personFirstName: String? = null,
     val personLastName: String? = null,
     val personPrefix: String? = null,
@@ -100,6 +102,7 @@ class OtherViewModel(
                 var personFirstName: String? = null
                 var personLastName: String? = null
                 var personDob: String? = null
+                var personImageUrl: String? = null
                 var personPrefix: String? = null
                 var personSuffix: String? = null
 
@@ -118,6 +121,7 @@ class OtherViewModel(
                         personDetails?.let {
                             val p = AppJson.parseToJsonElement(it).jsonObject
                             personFirstName = p["firstName"]?.jsonPrimitive?.contentOrNull
+                            personImageUrl = p.fileUrl()
                             personLastName = p["lastName"]?.jsonPrimitive?.contentOrNull
                             personDob = p["birthDate"]?.jsonPrimitive?.contentOrNull
                                 ?: p["dateOfBirth"]?.jsonPrimitive?.contentOrNull
@@ -147,6 +151,7 @@ class OtherViewModel(
                     rawJson = raw,
                     personDetailsRaw = personDetails,
                     personDob = personDob,
+                    personImageUrl = personImageUrl,
                     personFirstName = personFirstName,
                     personLastName = personLastName,
                     personPrefix = personPrefix,

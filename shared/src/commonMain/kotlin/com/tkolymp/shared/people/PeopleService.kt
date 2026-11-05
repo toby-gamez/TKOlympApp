@@ -1,5 +1,6 @@
 package com.tkolymp.shared.people
 
+import com.tkolymp.shared.utils.fileUrl
 import com.tkolymp.shared.graphql.GraphQlOperations
 import com.tkolymp.shared.network.postAllNodes
 import com.tkolymp.shared.ServiceLocator
@@ -42,10 +43,11 @@ data class Person(
     val prefixTitle: String? = null,
     val suffixTitle: String? = null,
     val birthDate: String?,
-    val cohortMembershipsList: List<CohortMembership>
+    val cohortMembershipsList: List<CohortMembership>,
+    val imageUrl: String? = null
 )
 
-data class CoupleMember(val firstName: String?, val lastName: String?)
+data class CoupleMember(val firstName: String?, val lastName: String?, val imageUrl: String? = null)
 data class ActiveCouple(val id: String?, val man: CoupleMember?, val woman: CoupleMember?)
 
 /** A single man/woman pairing period from the club's own relationship records (not the CSTS federation feed) — has real `since`/`until` dates, unlike [ActiveCouple]. */
@@ -136,7 +138,8 @@ data class PersonDetails(
     val allCouplesList: List<CouplePeriod> = emptyList(),
     val federationProfiles: List<FederationProfile> = emptyList(),
     val federationRankings: List<FederationRanking> = emptyList(),
-    val federationCompetitions: List<FederationCompetitionEntry> = emptyList()
+    val federationCompetitions: List<FederationCompetitionEntry> = emptyList(),
+    val imageUrl: String? = null
 )
 
 data class ScoreboardEntry(
@@ -233,7 +236,7 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                 CohortMembership(Cohort(cId, cName, cColor, cVis))
             } ?: emptyList()
 
-            Person(id, first, last, prefix, suffix, birth, memberships)
+            Person(id, first, last, prefix, suffix, birth, memberships, node.fileUrl())
         }
         try { cache.put(cacheKey, result, ttl = 10.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
         return result
@@ -300,8 +303,8 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                         val cid = cObj.get("id")?.jsonPrimitive?.contentOrNull
                         val manObj = cObj.get("man") as? JsonObject
                         val womanObj = cObj.get("woman") as? JsonObject
-                        val man = CoupleMember(manObj?.get("firstName")?.jsonPrimitive?.contentOrNull, manObj?.get("lastName")?.jsonPrimitive?.contentOrNull)
-                        val woman = CoupleMember(womanObj?.get("firstName")?.jsonPrimitive?.contentOrNull, womanObj?.get("lastName")?.jsonPrimitive?.contentOrNull)
+                        val man = CoupleMember(manObj?.get("firstName")?.jsonPrimitive?.contentOrNull, manObj?.get("lastName")?.jsonPrimitive?.contentOrNull, manObj.fileUrl())
+                        val woman = CoupleMember(womanObj?.get("firstName")?.jsonPrimitive?.contentOrNull, womanObj?.get("lastName")?.jsonPrimitive?.contentOrNull, womanObj.fileUrl())
                         ActiveCouple(cid, man, woman)
             } ?: emptyList()
 
@@ -404,7 +407,8 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                 allCouplesList = allCouples,
                 federationProfiles = fedProfiles,
                 federationRankings = fedRankings,
-                federationCompetitions = fedCompetitions
+                federationCompetitions = fedCompetitions,
+                imageUrl = personObj.fileUrl()
             )
             try { cache.put(cacheKey, pd, ttl = 15.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
             return pd

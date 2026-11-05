@@ -399,6 +399,7 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
                                     name = personName.ifBlank { p.id },
                                     size = 40.dp,
                                     fontSize = 14.sp,
+                                    imageUrl = p.imageUrl,
                                 )
 
                                 Spacer(modifier = Modifier.width(12.dp))

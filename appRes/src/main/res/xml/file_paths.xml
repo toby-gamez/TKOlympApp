@@ -2,4 +2,5 @@
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
     <cache-path name="shared_images" path="share/" />
     <cache-path name="camp_schedule_capture" path="camp_schedule/" />
+    <cache-path name="avatar_capture" path="avatar/" />
 </paths>

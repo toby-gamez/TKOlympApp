@@ -41,6 +41,7 @@ data class EventState(
     val eventJson: JsonObject? = null,
     // Parsed display fields
     val eventName: String = "",
+    val imageUrl: String? = null,
     val eventType: String = "",
     val eventDescription: String = "",
     val summary: String = "",
@@ -258,6 +259,7 @@ class EventViewModel(
             _state.value = _state.value.copy(
                 eventJson = ev,
                 eventName = eventName,
+                imageUrl = com.tkolymp.shared.utils.resolveFileUrl(eventObj.get("coverImage")?.asJsonObjectOrNull()?.str("url")),
                 eventType = type,
                 eventDescription = eventDescription,
                 summary = summary,

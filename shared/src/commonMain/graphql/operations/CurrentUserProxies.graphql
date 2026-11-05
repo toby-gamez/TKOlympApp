@@ -1,1 +1,1 @@
-query CurrentUserProxies { getCurrentUser { userProxiesList { status person { id firstName lastName birthDate cstsId } } } }
+query CurrentUserProxies { getCurrentUser { userProxiesList { status person { id image { url } firstName lastName birthDate cstsId } } } }

@@ -58,7 +58,8 @@ data class BirthdayEntry(
     val days: Int,
     val turningAge: Int? = null,
     val birthYear: Int? = null,
-    val cohortColors: List<String> = emptyList()
+    val cohortColors: List<String> = emptyList(),
+    val imageUrl: String? = null
 )
 
 @Immutable
@@ -329,7 +330,8 @@ class OverviewViewModel(
                                             days = days,
                                             turningAge = turningAgeOnNextBirthday(p.birthDate),
                                             birthYear = p.birthDate?.trim()?.take(4)?.toIntOrNull(),
-                                            cohortColors = cohortColors
+                                            cohortColors = cohortColors,
+                                            imageUrl = p.imageUrl
                                         )
                                     }
                                 }
@@ -387,7 +389,8 @@ class OverviewViewModel(
                                                             formattedBirthDate = formatBirthDateString(p.birthDate),
                                                             days = days,
                                                             turningAge = turningAgeOnNextBirthday(p.birthDate),
-                                                            cohortColors = cohortColors
+                                                            cohortColors = cohortColors,
+                                                            imageUrl = p.imageUrl
                                                         )
                                                     }
                                                 }

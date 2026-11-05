@@ -16,6 +16,8 @@
 	<string>TK Olymp přidává tréninky a události přímo do vašeho kalendáře.</string>
 	<key>NSCalendarsWriteOnlyAccessDescription</key>
 	<string>TK Olymp přidává tréninky a události přímo do vašeho kalendáře.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>QR kód pro platbu se uloží do vaší galerie.</string>
 	<key>NSUserNotificationsUsageDescription</key>
 	<string>Upozornění vás připomenou na nadcházející tréninky a události.</string>
 

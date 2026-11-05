@@ -66,6 +66,8 @@ import com.tkolymp.shared.utils.parseToLocal
 import com.tkolymp.shared.viewmodels.PersonViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.CoupleAvatar
+import com.tkolymp.tkolympapp.components.HeaderImageShape
+import com.tkolymp.tkolympapp.components.HeaderWithImage
 import com.tkolymp.tkolympapp.components.InitialsAvatar
 import com.tkolymp.tkolympapp.components.PersonNoteCard
 import com.tkolymp.tkolympapp.components.SocialLinksRow
@@ -112,17 +114,14 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
             // Header (name)
             val baseName = listOf(p.prefixTitle, p.firstName, p.lastName).filterNotNull().filter { it.isNotBlank() }.joinToString(" ")
             val fullName = if (!p.suffixTitle.isNullOrBlank()) "$baseName, ${p.suffixTitle}" else baseName
-            Row(modifier = Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.Center) {
-                InitialsAvatar(name = fullName.ifBlank { p.id }, size = 64.dp, fontSize = 22.sp)
-            }
-            Text(
-                fullName.ifBlank { p.id },
-                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                modifier = Modifier.padding(top = 8.dp, bottom = 4.dp).fillMaxWidth(),
-                textAlign = TextAlign.Center
-            )
-            if (p.isTrainer == true) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            HeaderWithImage(
+                title = fullName.ifBlank { p.id },
+                imageUrl = p.imageUrl,
+                shape = HeaderImageShape.Circle,
+                imageAtStart = true,
+                fallback = { InitialsAvatar(name = fullName.ifBlank { p.id }, size = 88.dp, fontSize = 30.sp) }
+            ) {
+                if (p.isTrainer == true) {
                     SuggestionChip(
                         onClick = {},
                         label = { Text(AppStrings.current.profile.trainer) }
@@ -354,7 +353,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                                         val woman = c.woman
                                         val manName = listOfNotNull(man?.firstName, man?.lastName).joinToString(" ").trim().takeIf { it.isNotBlank() }
                                         val womanName = listOfNotNull(woman?.firstName, woman?.lastName).joinToString(" ").trim().takeIf { it.isNotBlank() }
-                                        CoupleAvatar(womanName = womanName, manName = manName, size = 24.dp)
+                                        CoupleAvatar(womanName = womanName, manName = manName, size = 24.dp, womanImageUrl = c.woman?.imageUrl, manImageUrl = c.man?.imageUrl)
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(listOfNotNull(manName, womanName).joinToString(" - "), style = MaterialTheme.typography.bodyMedium)
                                     }

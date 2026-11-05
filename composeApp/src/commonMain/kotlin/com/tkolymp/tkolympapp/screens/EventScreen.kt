@@ -1,5 +1,6 @@
 package com.tkolymp.tkolympapp.screens
 
+import com.tkolymp.shared.utils.fileUrl
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -33,6 +34,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.outlined.Event
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
@@ -42,6 +44,9 @@ import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import com.tkolymp.tkolympapp.components.CoupleAvatar
+import com.tkolymp.tkolympapp.components.HeaderIconFallback
+import com.tkolymp.tkolympapp.components.HeaderImageShape
+import com.tkolymp.tkolympapp.components.HeaderWithImage
 import com.tkolymp.tkolympapp.components.InitialsAvatar
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
@@ -65,6 +70,8 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SplitButtonDefaults
 import androidx.compose.material3.SplitButtonLayout
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -257,28 +264,6 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                     .verticalScroll(rememberScrollState())
                     .padding(12.dp)
                 ) {
-            Text(state.eventName, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier.padding(top = 12.dp, bottom = 4.dp).fillMaxWidth(), textAlign = TextAlign.Center)
-            if (state.userRegistered) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Default.Check,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = AppStrings.current.registration.signedUp,
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(10.dp))
             // isError = true → errorContainer, false → secondaryContainer
             val statusChips = buildList<String> {
                 if (state.isCancelled) add(AppStrings.current.stats.cancelled)
@@ -286,23 +271,36 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                 if (state.isLocked) add(AppStrings.current.events.registrationClosed)
                 if (state.enableNotes) add(AppStrings.current.events.notesAllowed)
             }
-            if (statusChips.isNotEmpty()) {
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    statusChips.forEach { label ->
-                        SuggestionChip(
-                            onClick = {},
-                            label = { Text(label) }
-                        )
+            HeaderWithImage(
+                title = state.eventName,
+                imageUrl = state.imageUrl,
+                shape = HeaderImageShape.RoundedRect,
+                keepImageRatio = true,
+                fallback = { HeaderIconFallback(Icons.Outlined.Event, square = true) }
+            ) {
+                if (state.userRegistered || statusChips.isNotEmpty()) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        if (state.userRegistered) {
+                            AssistChip(
+                                onClick = {},
+                                label = { Text(AppStrings.current.registration.signedUp) },
+                                leadingIcon = { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                                colors = AssistChipDefaults.assistChipColors(
+                                    labelColor = MaterialTheme.colorScheme.primary,
+                                    leadingIconContentColor = MaterialTheme.colorScheme.primary
+                                )
+                            )
+                        }
+                        statusChips.forEach { label ->
+                            SuggestionChip(onClick = {}, label = { Text(label) })
+                        }
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
-            } else {
-                Spacer(modifier = Modifier.height(8.dp))
             }
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Typ a základní info
             val displayType = translateEventType(state.eventType)
@@ -461,7 +459,12 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                                 .padding(vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            InitialsAvatar(name = trainerName, size = 28.dp, fontSize = 11.sp)
+                            InitialsAvatar(
+                                name = trainerName,
+                                size = 28.dp,
+                                fontSize = 11.sp,
+                                imageUrl = trainer["person"]?.asJsonObjectOrNull().fileUrl()
+                            )
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(label, style = MaterialTheme.typography.bodyMedium)
                         }
@@ -523,6 +526,9 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                         val subItems: List<String>,
                         val womanName: String? = null,
                         val manName: String? = null,
+                        val imageUrl: String? = null,
+                        val womanImageUrl: String? = null,
+                        val manImageUrl: String? = null,
                     )
                     val coupleItems = mutableListOf<ParticipantItem>()
                     val singleItems = mutableListOf<ParticipantItem>()
@@ -539,6 +545,9 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                         val womanName: String?
                         val manName: String?
                         val nameText: String
+                        val personImage = if (couple == null) person.fileUrl() else null
+                        val womanImage = couple?.get("woman").asJsonObjectOrNull().fileUrl()
+                        val manImage = couple?.get("man").asJsonObjectOrNull().fileUrl()
                         if (couple != null) {
                             womanName = couple["woman"].asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() }
                             manName = couple["man"].asJsonObjectOrNull()?.str("name")?.takeIf { it.isNotBlank() }
@@ -575,7 +584,7 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                             if (!note.isNullOrBlank()) add("${AppStrings.current.registration.notePrefix}$note")
                         }
 
-                        val item = ParticipantItem(nameText, isMe, subItems, womanName, manName)
+                        val item = ParticipantItem(nameText, isMe, subItems, womanName, manName, personImage, womanImage, manImage)
                         if (couple != null) coupleItems.add(item) else singleItems.add(item)
                     }
 
@@ -589,12 +598,15 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                                         manName = item.manName,
                                         size = 24.dp,
                                         fontSize = 9.sp,
+                                        womanImageUrl = item.womanImageUrl,
+                                        manImageUrl = item.manImageUrl,
                                     )
                                 } else {
                                     InitialsAvatar(
                                         name = item.name,
                                         size = 24.dp,
                                         fontSize = 9.sp,
+                                        imageUrl = item.imageUrl,
                                     )
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))

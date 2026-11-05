@@ -54,6 +54,9 @@ import com.tkolymp.shared.language.AppStrings
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.tkolymp.tkolympapp.components.HeaderIconFallback
+import com.tkolymp.tkolympapp.components.HeaderImageShape
+import com.tkolymp.tkolympapp.components.HeaderWithImage
 import com.tkolymp.tkolympapp.components.InitialsAvatar
 import com.tkolymp.tkolympapp.platform.FullscreenImageViewer
 import com.tkolymp.tkolympapp.util.StaggeredItem
@@ -126,11 +129,11 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null, onEdit: ((L
                     .verticalScroll(rememberScrollState())
                     .padding(12.dp)
                 ) {
-                    Text(
-                        a.title ?: AppStrings.current.dialogs.noName,
-                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                        modifier = Modifier.padding(top = 12.dp, bottom = 4.dp).fillMaxWidth(),
-                        textAlign = TextAlign.Center
+                    HeaderWithImage(
+                        title = a.title ?: AppStrings.current.dialogs.noName,
+                        imageUrl = a.imageUrl,
+                        shape = HeaderImageShape.RoundedRect,
+                        fallback = { HeaderIconFallback(Icons.Outlined.Campaign) }
                     )
                     Spacer(modifier = Modifier.height(10.dp))
 

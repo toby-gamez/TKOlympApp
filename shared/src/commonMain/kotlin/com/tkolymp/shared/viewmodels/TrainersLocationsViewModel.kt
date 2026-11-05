@@ -1,5 +1,6 @@
 package com.tkolymp.shared.viewmodels
 
+import com.tkolymp.shared.utils.fileUrl
 import androidx.lifecycle.ViewModel
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.club.ClubData
@@ -92,7 +93,8 @@ class TrainersLocationsViewModel(
                             firstName = personObj?.get("firstName")?.jsonPrimitive?.contentOrNull,
                             lastName = personObj?.get("lastName")?.jsonPrimitive?.contentOrNull,
                             prefixTitle = personObj?.get("prefixTitle")?.jsonPrimitive?.contentOrNull,
-                            suffixTitle = personObj?.get("suffixTitle")?.jsonPrimitive?.contentOrNull
+                            suffixTitle = personObj?.get("suffixTitle")?.jsonPrimitive?.contentOrNull,
+                            imageUrl = personObj.fileUrl()
                         )
                         val guestPrice = t["guestPrice45Min"] as? kotlinx.serialization.json.JsonObject
                         val gp = guestPrice?.let { com.tkolymp.shared.club.Money(it["amount"]?.jsonPrimitive?.contentOrNull?.toDoubleOrNull(), it["currency"]?.jsonPrimitive?.contentOrNull) }

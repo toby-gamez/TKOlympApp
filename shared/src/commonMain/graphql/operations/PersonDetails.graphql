@@ -1,9 +1,9 @@
 query PersonDetails($id: BigInt!) {
   person(id: $id) {
-    id birthDate lastName firstName email phone prefixTitle suffixTitle wdsfId cstsId gender isTrainer
+    id image { url } birthDate lastName firstName email phone prefixTitle suffixTitle wdsfId cstsId gender isTrainer
     nationality nationalIdNumber instagramUsername tiktokUsername facebookUrl websiteUrl note
     address { city conscriptionNumber district orientationNumber postalCode region street }
-    activeCouplesList: couplesList(condition: { status: ACTIVE }) { id man { firstName lastName } woman { firstName lastName } }
+    activeCouplesList: couplesList(condition: { status: ACTIVE }) { id man { firstName lastName image { url } } woman { firstName lastName image { url } } }
     allCouplesList: couplesList { id manId womanId since until status }
     cohortMembershipsList { cohort { id colorRgb name isVisible } since until }
     cstsProgressList: federationCategoryProgresses(first: 100) {

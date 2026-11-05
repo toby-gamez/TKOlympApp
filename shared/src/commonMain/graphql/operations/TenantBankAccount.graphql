@@ -1,0 +1,3 @@
+query TenantBankAccount {
+  getCurrentTenant { bankAccount }
+}

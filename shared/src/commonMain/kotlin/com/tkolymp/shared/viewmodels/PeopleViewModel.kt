@@ -1,5 +1,6 @@
 package com.tkolymp.shared.viewmodels
 
+import com.tkolymp.shared.utils.fileUrl
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -92,7 +93,7 @@ class PeopleViewModel(
                                         com.tkolymp.shared.people.CohortMembership(com.tkolymp.shared.people.Cohort(cid, cname, ccolor, cvis), mObj["since"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() }, mObj["until"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() })
                                     } catch (_: Exception) { null }
                                 }
-                                Person(id, first, last, null, null, null, memberships)
+                                Person(id, first, last, null, null, null, memberships, jo.fileUrl())
                             } catch (_: Exception) { null }
                         }
                         if (parsed.isNotEmpty()) {

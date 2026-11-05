@@ -1,6 +1,7 @@
 query PersonBasic($id: BigInt!) {
     person(id: $id) {
         id
+        image { url }
         birthDate
         cstsId
         email
@@ -18,8 +19,8 @@ query PersonBasic($id: BigInt!) {
         websiteUrl
         note
         activeCouplesList: couplesList(condition: { status: ACTIVE }) {
-            man { firstName lastName }
-            woman { firstName lastName }
+            man { firstName lastName image { url } }
+            woman { firstName lastName image { url } }
             id
         }
         allCouplesList: couplesList {

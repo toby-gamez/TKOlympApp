@@ -1,5 +1,6 @@
 package com.tkolymp.shared.user
 
+import com.tkolymp.shared.utils.fileUrl
 import com.tkolymp.shared.graphql.GraphQlOperations
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.people.progressNodes
@@ -23,7 +24,7 @@ import kotlinx.serialization.json.*
 import com.tkolymp.shared.json.AppJson
 
 @Serializable
-data class LinkedPerson(val id: String, val name: String, val birthDate: String? = null, val cstsId: String? = null)
+data class LinkedPerson(val id: String, val name: String, val birthDate: String? = null, val cstsId: String? = null, val imageUrl: String? = null)
 
 data class CurrentUser(
     val id: String?,
@@ -63,7 +64,7 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
                     val id = person["id"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
                     val name = listOfNotNull(person["firstName"]?.jsonPrimitive?.contentOrNull, person["lastName"]?.jsonPrimitive?.contentOrNull)
                         .filter { it.isNotBlank() }.joinToString(" ")
-                    status to LinkedPerson(id, name.ifBlank { "#$id" }, person["birthDate"]?.jsonPrimitive?.contentOrNull, person["cstsId"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() })
+                    status to LinkedPerson(id, name.ifBlank { "#$id" }, person["birthDate"]?.jsonPrimitive?.contentOrNull, person["cstsId"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }, person.fileUrl())
                 } ?: emptyList()
         } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
         // EXPIRED / PENDING links must not be offered as switchable persons — but if the account has no
@@ -185,7 +186,7 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
             val cid = cObj["id"]?.jsonPrimitive?.contentOrNull
             val manObj = cObj["man"] as? JsonObject
             val womanObj = cObj["woman"] as? JsonObject
-            ActiveCouple(cid, CoupleMember(manObj?.get("firstName")?.jsonPrimitive?.contentOrNull, manObj?.get("lastName")?.jsonPrimitive?.contentOrNull), CoupleMember(womanObj?.get("firstName")?.jsonPrimitive?.contentOrNull, womanObj?.get("lastName")?.jsonPrimitive?.contentOrNull))
+            ActiveCouple(cid, CoupleMember(manObj?.get("firstName")?.jsonPrimitive?.contentOrNull, manObj?.get("lastName")?.jsonPrimitive?.contentOrNull, manObj.fileUrl()), CoupleMember(womanObj?.get("firstName")?.jsonPrimitive?.contentOrNull, womanObj?.get("lastName")?.jsonPrimitive?.contentOrNull, womanObj.fileUrl()))
         } ?: emptyList()
         val allCouplesArr = (p["allCouplesList"] as? JsonArray)?.mapNotNull { cEl ->
             val cObj = cEl as? JsonObject ?: return@mapNotNull null
@@ -345,6 +346,27 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
             } catch (e: CancellationException) { throw e } catch (_: Exception) { }
         }
         return data != null
+    }
+
+    /** Clears the profile photo. A separate mutation: [updatePerson] writes every field of its request, so it can't carry a one-field patch. */
+    suspend fun removeAvatar(personId: String): Boolean {
+        val patch = buildJsonObject { put("imageId", JsonNull) }
+        val variables = buildJsonObject { put("id", personId.toLongOrNull()?.let { JsonPrimitive(it) } ?: JsonPrimitive(personId)); put("patch", patch) }
+        val resp = try { client.post(GraphQlOperations.UpdatePerson, variables) } catch (e: CancellationException) { throw e } catch (ex: Exception) { lastApiError = ex.message; return false }
+        val ok = try { resp.jsonObject["data"]?.jsonObject?.get("updatePerson") != null } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
+        if (ok) try { fetchAndStorePersonDetails(personId) } catch (e: CancellationException) { throw e } catch (_: Exception) { }
+        return ok
+    }
+
+    /**
+     * Uploads [jpegBytes] as the profile photo.
+     * Not implemented yet: the club backend's file-upload endpoint (the request that creates a `/f/{id}/...` file,
+     * whose id then goes into `PersonPatch.imageId`) hasn't been identified, and the GraphQL schema has no mutation for it.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    suspend fun uploadAvatar(personId: String, jpegBytes: ByteArray): Boolean {
+        lastApiError = "Avatar upload is not available yet"
+        return false
     }
 }
 

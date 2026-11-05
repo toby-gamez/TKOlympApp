@@ -3,6 +3,7 @@ package com.tkolymp.shared.announcements
 import com.tkolymp.shared.graphql.GraphQlOperations
 import com.tkolymp.shared.network.postAllNodes
 import com.tkolymp.shared.network.IGraphQlClient
+import com.tkolymp.shared.utils.resolveFileUrl
 import com.tkolymp.shared.viewmodels.AppError
 import com.tkolymp.shared.viewmodels.DataResult
 import kotlinx.coroutines.CancellationException
@@ -70,6 +71,16 @@ private fun percentDecode(s: String): String {
         } else { out.addAll(c.toString().encodeToByteArray().toList()); i++ }
     }
     return out.toByteArray().decodeToString()
+}
+
+/** URL of the first image attachment, used as the notice header picture. */
+private fun firstImageUrl(obj: JsonObject): String? {
+    val nodes = ((obj["attachments"] as? JsonObject)?.get("nodes") as? JsonArray) ?: return null
+    return nodes.firstNotNullOfOrNull { n ->
+        val file = (n as? JsonObject)?.get("file") as? JsonObject ?: return@firstNotNullOfOrNull null
+        val type = (file["contentType"] as? JsonPrimitive)?.contentOrNull
+        if (type?.startsWith("image/") == true) resolveFileUrl((file["url"] as? JsonPrimitive)?.contentOrNull) else null
+    }
 }
 
 private fun authorNameOf(obj: JsonObject): Author? {
@@ -166,7 +177,8 @@ class AnnouncementServiceImpl(
                     updatedAt = updatedAt,
                     isSticky = isSticky,
                     isVisible = isVisible,
-                    author = author
+                    author = author,
+                    imageUrl = firstImageUrl(obj)
                 )
                 try { cache.put(cacheKey, announcement, ttl = 5.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
                 DataResult.Success(announcement)

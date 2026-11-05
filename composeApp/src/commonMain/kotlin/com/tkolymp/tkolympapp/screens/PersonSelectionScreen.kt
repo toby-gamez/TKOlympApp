@@ -45,6 +45,7 @@ fun PersonSelectionScreen(
             ProfileCard(
                 name = person.name,
                 dob = person.birthDate,
+                imageUrl = person.imageUrl,
                 showQr = false,
                 onClick = { onSelect(person) },
                 onQrClick = {},

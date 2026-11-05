@@ -88,6 +88,23 @@ class PaymentService(
         return list
     }
 
+    /** The club's bank account (e.g. "123456789/0800"), or null when unavailable. */
+    suspend fun fetchBankAccount(): String? {
+        val cacheKey = "tenant_bank_account"
+        try {
+            val cached: String? = cache.get(cacheKey)
+            if (cached != null) return cached
+        } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+
+        val resp = try { client.post(GraphQlOperations.TenantBankAccount, null) } catch (e: CancellationException) { throw e } catch (_: Exception) { return null }
+        val account = ((resp as? JsonObject)?.get("data") as? JsonObject)
+            ?.get("getCurrentTenant")?.let { it as? JsonObject }
+            ?.get("bankAccount")?.jsonPrimitive?.contentOrNull
+            ?.takeIf { it.isNotBlank() } ?: return null
+        try { cache.put(cacheKey, account) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+        return account
+    }
+
     suspend fun fetchDebtorsForPerson(personId: String?): List<PaymentDebtorItem> {
         if (personId == null) return emptyList()
         val all = fetchPaymentDebtors()

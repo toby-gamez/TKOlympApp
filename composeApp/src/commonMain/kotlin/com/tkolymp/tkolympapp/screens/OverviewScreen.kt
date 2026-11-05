@@ -451,7 +451,7 @@ fun OverviewScreen(
                                     }
                                 }
                                 Spacer(modifier = Modifier.width(12.dp))
-                                InitialsAvatar(name = entry.name, size = 36.dp, fontSize = 13.sp)
+                                InitialsAvatar(name = entry.name, size = 36.dp, fontSize = 13.sp, imageUrl = entry.imageUrl)
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(

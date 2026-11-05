@@ -1,5 +1,6 @@
 package com.tkolymp.shared.event
 
+import com.tkolymp.shared.utils.fileUrl
 import com.tkolymp.shared.graphql.GraphQlOperations
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.network.GraphQlException
@@ -100,7 +101,9 @@ data class Event(
     val eventTrainersList: List<String> = emptyList(),
     val eventTargetCohortsList: List<TargetCohort> = emptyList(),
     val eventRegistrationsList: List<Registration> = emptyList(),
-    val location: Location? = null
+    val location: Location? = null,
+    /** Photo URL per entry of [eventTrainersList] (same index); empty or null when unknown, e.g. data loaded offline. */
+    val eventTrainerImageUrls: List<String?> = emptyList()
 )
 
 class EventService(
@@ -179,9 +182,11 @@ class EventService(
             val until = obj["until"]?.jsonPrimitive?.contentOrNull
             val updatedAt = obj["updatedAt"]?.jsonPrimitive?.contentOrNull
 
-            val trainers = (obj["trainersList"] as? JsonArray)
-                ?.mapNotNull { (it as? JsonObject)?.get("person")?.jsonObject?.get("name")?.jsonPrimitive?.contentOrNull }
+            val trainerPeople = (obj["trainersList"] as? JsonArray)
+                ?.mapNotNull { (it as? JsonObject)?.get("person")?.jsonObject }
+                ?.mapNotNull { p -> p["name"]?.jsonPrimitive?.contentOrNull?.let { it to p.fileUrl() } }
                 ?: emptyList()
+            val trainers = trainerPeople.map { it.first }
 
             val targetCohorts = (obj["targetCohortsList"] as? JsonArray)?.mapNotNull { item ->
                 val o = item as? JsonObject ?: return@mapNotNull null
@@ -216,6 +221,7 @@ class EventService(
                 isVisible = obj["isVisible"]?.jsonPrimitive?.booleanOrNull ?: false,
                 isPublic = obj["isPublic"]?.jsonPrimitive?.booleanOrNull ?: false,
                 eventTrainersList = trainers,
+                eventTrainerImageUrls = trainerPeople.map { it.second },
                 eventTargetCohortsList = targetCohorts,
                 eventRegistrationsList = registrations,
                 location = location

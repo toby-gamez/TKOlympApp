@@ -1,5 +1,6 @@
 package com.tkolymp.shared.club
 
+import com.tkolymp.shared.utils.fileUrl
 import com.tkolymp.shared.graphql.GraphQlOperations
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.Logger
@@ -19,7 +20,7 @@ data class Location(val name: String?)
 
 data class Money(val amount: Double?, val currency: String?)
 
-data class TrainerPerson(val id: String?, val firstName: String?, val lastName: String?, val prefixTitle: String?, val suffixTitle: String?)
+data class TrainerPerson(val id: String?, val firstName: String?, val lastName: String?, val prefixTitle: String?, val suffixTitle: String?, val imageUrl: String? = null)
 
 data class Trainer(
     val person: TrainerPerson?,
@@ -68,7 +69,8 @@ class ClubService(private val client: IGraphQlClient = ServiceLocator.graphQlCli
                 firstName = personObj?.get("firstName")?.jsonPrimitive?.contentOrNull,
                 lastName = personObj?.get("lastName")?.jsonPrimitive?.contentOrNull,
                 prefixTitle = personObj?.get("prefixTitle")?.jsonPrimitive?.contentOrNull,
-                suffixTitle = personObj?.get("suffixTitle")?.jsonPrimitive?.contentOrNull
+                suffixTitle = personObj?.get("suffixTitle")?.jsonPrimitive?.contentOrNull,
+                imageUrl = personObj.fileUrl()
             )
 
             fun parseMoney(key: String): Money? {

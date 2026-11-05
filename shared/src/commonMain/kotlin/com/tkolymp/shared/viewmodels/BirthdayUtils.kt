@@ -28,7 +28,8 @@ fun birthdayEntryFor(p: Person): BirthdayEntry {
         days = daysUntilNextBirthday(p.birthDate),
         turningAge = turningAgeOnNextBirthday(p.birthDate),
         birthYear = p.birthDate?.trim()?.take(4)?.toIntOrNull(),
-        cohortColors = cohortColors
+        cohortColors = cohortColors,
+        imageUrl = p.imageUrl
     )
 }
 

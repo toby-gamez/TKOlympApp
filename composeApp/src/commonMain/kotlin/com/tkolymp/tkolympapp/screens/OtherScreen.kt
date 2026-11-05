@@ -108,6 +108,7 @@ private fun formatDateString(raw: String): String? {
 internal fun ProfileCard(
     name: String?,
     dob: String?,
+    imageUrl: String? = null,
     showQr: Boolean,
     onClick: () -> Unit,
     onQrClick: () -> Unit,
@@ -135,7 +136,8 @@ internal fun ProfileCard(
             InitialsAvatar(
                 name = name ?: AppStrings.current.otherScreen.myAccount,
                 size = 56.dp,
-                fontSize = 20.sp
+                fontSize = 20.sp,
+                imageUrl = imageUrl
             )
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -252,6 +254,7 @@ fun OtherScreen(
                     ProfileCard(
                         name = person.name,
                         dob = person.birthDate,
+                        imageUrl = person.imageUrl,
                         showQr = person.cstsId != null,
                         selected = isActive,
                         onClick = {
@@ -308,6 +311,7 @@ fun OtherScreen(
             ProfileCard(
                 name = state.name,
                 dob = state.personDob,
+                imageUrl = state.personImageUrl,
                 showDebug = showDebug,
                 showQr = state.cstsId != null,
                 isLoading = state.isLoading,

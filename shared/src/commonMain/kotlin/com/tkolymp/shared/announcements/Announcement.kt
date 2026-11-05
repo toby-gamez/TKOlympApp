@@ -18,5 +18,6 @@ data class Announcement(
     val updatedAt: String? = null,
     val isSticky: Boolean = false,
     val isVisible: Boolean = false,
-    val author: Author? = null
+    val author: Author? = null,
+    val imageUrl: String? = null
 )

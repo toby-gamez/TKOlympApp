@@ -2,7 +2,7 @@ query ClubData {
   tenant: getCurrentTenant {
     tenantLocationsList: locationsList { name }
     tenantTrainersList {
-      person { id firstName lastName prefixTitle suffixTitle }
+      person { id image { url } firstName lastName prefixTitle suffixTitle }
       guestPrice45Min { amount currency }
       guestPayout45Min { amount currency }
       isVisible

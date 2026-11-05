@@ -2,6 +2,7 @@ query People($first: Int, $offset: Int) {
     people(first: $first, offset: $offset) {
         nodes {
             id
+            image { url }
             firstName
             lastName
             prefixTitle

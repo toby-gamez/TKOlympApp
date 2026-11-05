@@ -22,12 +22,19 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.QrCode2
+import androidx.compose.material.icons.filled.SaveAlt
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Tag
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -52,6 +59,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
+import com.tkolymp.shared.payments.buildSpdPayload
+import com.tkolymp.tkolympapp.components.renderQrImageBitmap
+import com.tkolymp.tkolympapp.platform.rememberSaveImageToGalleryCallback
+import com.tkolymp.tkolympapp.platform.rememberShareImageCallback
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -74,9 +87,13 @@ fun PaymentsScreen(vm: com.tkolymp.shared.payments.PaymentsViewModel, onBack: ()
     val isLoading by vm.isLoading.collectAsStateWithLifecycle()
     val payments by vm.items.collectAsState(initial = emptyList())
 
+    val bankAccount by vm.bankAccount.collectAsStateWithLifecycle()
+
     val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = { TopAppBar(
             title = { Text(AppStrings.current.otherScreen.payments) },
             navigationIcon = {
@@ -134,7 +151,11 @@ fun PaymentsScreen(vm: com.tkolymp.shared.payments.PaymentsViewModel, onBack: ()
                                     LazyColumn(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalArrangement = Arrangement.Top) {
                                         itemsIndexed(waitingItems, key = { _, item -> item.payment?.id ?: item.personId ?: item.hashCode() }) { index, it ->
                                             StaggeredItem(index = index, visible = cardsVisible, baseDelayMs = 40, modifier = Modifier.animateItem()) {
-                                                PaymentItemCard(item = it)
+                                                PaymentItemCard(
+                                                    item = it,
+                                                    bankAccount = bankAccount,
+                                                    onMessage = { msg -> scope.launch { snackbarHostState.showSnackbar(msg) } }
+                                                )
                                             }
                                         }
                                     }
@@ -162,7 +183,12 @@ fun PaymentsScreen(vm: com.tkolymp.shared.payments.PaymentsViewModel, onBack: ()
 }
 
 @Composable
-private fun PaymentItemCard(modifier: Modifier = Modifier, item: com.tkolymp.shared.payments.PaymentDebtorItem) {
+private fun PaymentItemCard(
+    modifier: Modifier = Modifier,
+    item: com.tkolymp.shared.payments.PaymentDebtorItem,
+    bankAccount: String? = null,
+    onMessage: (String) -> Unit = {}
+) {
     val isPaid = when {
         item.isUnpaid != null -> item.isUnpaid == false
         !item.payment?.status.isNullOrBlank() -> item.payment?.status.equals("PAID", ignoreCase = true)
@@ -253,7 +279,92 @@ private fun PaymentItemCard(modifier: Modifier = Modifier, item: com.tkolymp.sha
                         }
                     }
                 }
+                if (!isPaid && !bankAccount.isNullOrBlank()) {
+                    PaymentPayActions(
+                        bankAccount = bankAccount,
+                        amount = amount,
+                        amountMinor = item.price?.amount,
+                        currency = item.price?.currency ?: "CZK",
+                        variableSymbol = item.payment?.variableSymbol,
+                        specificSymbol = item.payment?.specificSymbol,
+                        message = name,
+                        onMessage = onMessage
+                    )
+                }
             }
+        }
+    }
+}
+
+@Composable
+private fun PaymentPayActions(
+    bankAccount: String,
+    amount: String,
+    amountMinor: Long?,
+    currency: String,
+    variableSymbol: String?,
+    specificSymbol: String?,
+    message: String,
+    modifier: Modifier = Modifier,
+    onMessage: (String) -> Unit
+) {
+    val misc = AppStrings.current.misc
+    val scope = rememberCoroutineScope()
+    val clipboard = LocalClipboard.current
+    val fileName = "tkolymp_payment_${variableSymbol ?: "qr"}"
+    val shareQr = rememberShareImageCallback(fileBaseName = fileName, shareTitle = misc.payQrShare)
+    val saveQr = rememberSaveImageToGalleryCallback(fileBaseName = fileName)
+
+    val qrBitmap = remember(bankAccount, amountMinor, currency, variableSymbol, specificSymbol, message) {
+        buildSpdPayload(bankAccount, amountMinor, currency, variableSymbol, specificSymbol, message)
+            ?.let { renderQrImageBitmap(it) }
+    }
+
+    fun copy(value: String) {
+        scope.launch {
+            clipboard.setClipEntry(ClipEntry.withPlainText(value))
+            onMessage(misc.payCopied)
+        }
+    }
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        CopyableDetail(misc.payAccountLabel, bankAccount, onCopy = { copy(bankAccount) })
+        CopyableDetail(misc.payAmountLabel, "$amount $currency", onCopy = { copy(amount) })
+        if (!variableSymbol.isNullOrBlank()) {
+            CopyableDetail(misc.payVariableSymbolLabel, variableSymbol, onCopy = { copy(variableSymbol) })
+        }
+        if (qrBitmap != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilledTonalButton(onClick = { scope.launch { shareQr(qrBitmap) } }) {
+                    Icon(Icons.Default.QrCode2, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(misc.payQrShare)
+                }
+                OutlinedButton(onClick = {
+                    scope.launch { onMessage(if (saveQr(qrBitmap)) misc.payQrSaved else misc.payQrSaveFailed) }
+                }) {
+                    Icon(Icons.Default.SaveAlt, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(misc.payQrSave)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CopyableDetail(label: String, value: String, onCopy: () -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(value, style = MaterialTheme.typography.bodyMedium)
+        }
+        IconButton(onClick = onCopy) {
+            Icon(Icons.Default.ContentCopy, contentDescription = AppStrings.current.misc.payCopied)
         }
     }
 }

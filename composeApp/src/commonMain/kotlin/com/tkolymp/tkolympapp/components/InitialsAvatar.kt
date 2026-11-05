@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.tkolymp.tkolympapp.platform.RemoteImage
 import kotlin.math.absoluteValue
 
 private val avatarPalette = listOf(
@@ -41,6 +42,7 @@ private fun initialsOf(name: String): String =
         .take(2).joinToString("") { it.first().uppercaseChar().toString() }
 
 /**
+ * @param imageUrl profile photo; the initials stay as the placeholder while it loads or when it is null.
  * @param borderColor optional cohort/group colour shown as a ring around the circle.
  * @param borderWidth ring thickness; ignored when [borderColor] is null.
  */
@@ -52,6 +54,7 @@ fun InitialsAvatar(
     fontSize: TextUnit = 9.sp,
     borderColor: Color? = null,
     borderWidth: Dp = 2.5.dp,
+    imageUrl: String? = null,
 ) {
     val avatarBgColor = colorForName(name)
     Box(
@@ -67,13 +70,18 @@ fun InitialsAvatar(
         else
             Modifier
         Box(modifier = innerMod, contentAlignment = Alignment.Center) {
-            Text(
-                text = initialsOf(name),
-                color = Color.White,
-                fontSize = fontSize,
-                fontWeight = FontWeight.SemiBold,
-                style = MaterialTheme.typography.labelSmall,
-            )
+            val initials = @Composable {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = initialsOf(name),
+                        color = Color.White,
+                        fontSize = fontSize,
+                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                }
+            }
+            if (imageUrl != null) RemoteImage(imageUrl, Modifier.fillMaxSize(), fallback = initials) else initials()
         }
     }
 }
@@ -86,6 +94,8 @@ fun CoupleAvatar(
     modifier: Modifier = Modifier,
     size: Dp = 24.dp,
     fontSize: TextUnit = 9.sp,
+    womanImageUrl: String? = null,
+    manImageUrl: String? = null,
 ) {
     val overlap = size * 0.45f
     Box(modifier = modifier.size(size + overlap)) {
@@ -94,6 +104,7 @@ fun CoupleAvatar(
                 name = manName,
                 size = size,
                 fontSize = fontSize,
+                imageUrl = manImageUrl,
                 modifier = Modifier.align(Alignment.BottomEnd),
             )
         }
@@ -102,6 +113,7 @@ fun CoupleAvatar(
                 name = womanName,
                 size = size,
                 fontSize = fontSize,
+                imageUrl = womanImageUrl,
                 modifier = Modifier.align(Alignment.TopStart),
             )
         }

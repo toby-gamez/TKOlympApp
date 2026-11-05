@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tkolymp.shared.campschedule.isRozpisTabVisible
 import com.tkolymp.shared.event.EventInstance
+import com.tkolymp.shared.event.firstTrainerImageUrl
 import com.tkolymp.shared.utils.formatTimesWithDate
 import com.tkolymp.shared.utils.formatTimesWithDayOfWeek
 import com.tkolymp.shared.utils.translateEventType
@@ -143,7 +144,7 @@ internal fun RenderEventContent(item: EventInstance, tip: String? = null, showTy
                     .padding(horizontal = 8.dp, vertical = 6.dp)
                 ) {
                     Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                        InitialsAvatar(name = trainerName, size = 18.dp, fontSize = 7.sp)
+                        InitialsAvatar(name = trainerName, size = 18.dp, fontSize = 7.sp, imageUrl = eventObj?.firstTrainerImageUrl())
                         Spacer(modifier = Modifier.width(6.dp))
                         androidx.compose.material3.Text(trainerName, style = MaterialTheme.typography.bodySmall, maxLines = 1)
                     }

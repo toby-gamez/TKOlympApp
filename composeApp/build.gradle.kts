@@ -58,6 +58,7 @@ kotlin {
             implementation(libs.compose.material3)
             implementation(compose.materialIconsExtended)
             implementation(libs.compose.ui)
+            implementation(libs.compose.ui.backhandler)
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.compose.components.resources)
             implementation(libs.richeditor.compose)
@@ -65,6 +66,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.androidx.navigation.compose)
             implementation(libs.kotlinx.datetime)
+            implementation(libs.qrcode.kotlin)
             implementation(projects.shared)
         }
         commonTest.dependencies {

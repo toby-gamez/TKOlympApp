@@ -11,6 +11,9 @@ import kotlinx.serialization.json.longOrNull
  */
 fun Event?.firstTrainerOrEmpty(): String = this?.eventTrainersList?.firstOrNull()?.trim() ?: ""
 
+/** Photo of the first trainer, null when there is none or it could not be loaded. */
+fun Event?.firstTrainerImageUrl(): String? = this?.eventTrainerImageUrls?.firstOrNull()
+
 /** Parses a single registration JsonObject into a [Registration]. Returns null for malformed input. */
 fun parseRegistrationFromJson(o: JsonObject): Registration? {
     val ridPrim = o["id"]?.jsonPrimitive

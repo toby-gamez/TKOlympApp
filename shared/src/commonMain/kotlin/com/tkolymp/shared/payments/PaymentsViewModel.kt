@@ -24,6 +24,9 @@ class PaymentsViewModel : ViewModel() {
     private val _items = MutableStateFlow<List<PaymentDebtorItem>>(emptyList())
     val items: StateFlow<List<PaymentDebtorItem>> = _items
 
+    private val _bankAccount = MutableStateFlow<String?>(null)
+    val bankAccount: StateFlow<String?> = _bankAccount
+
     init {
         load()
     }
@@ -31,6 +34,11 @@ class PaymentsViewModel : ViewModel() {
     fun load() {
         viewModelScope.launch {
             _isLoading.value = true
+            launch {
+                _bankAccount.value = try {
+                    withContext(Dispatchers.Default) { com.tkolymp.shared.ServiceLocator.paymentService.fetchBankAccount() }
+                } catch (e: kotlin.coroutines.cancellation.CancellationException) { throw e } catch (_: Exception) { null } ?: _bankAccount.value
+            }
             try {
                 val pid = withContext(Dispatchers.Default) { com.tkolymp.shared.ServiceLocator.userService.getCachedPersonId() }
 
