@@ -17,11 +17,10 @@
         android:enableOnBackInvokedCallback="true"
         android:theme="@style/AppTheme"
         tools:targetApi="33">
-        <!-- Firebase Analytics/Crashlytics are not used by app code (no logEvent calls; crashes go through
-             ErrorReporter, which honours the privacy-consent screen). Left on, they would collect device
-             identifiers and app-usage data from first launch, before and regardless of consent
-             (GDPR art. 6/7, Czech Act 127/2005 Coll. § 89(3)). Only enable them behind a consent check. -->
-        <meta-data android:name="firebase_analytics_collection_deactivated" android:value="true" />
+        <!-- Firebase Analytics is enabled (usage statistics only). Advertising ID and ad personalisation stay
+             off. Crashlytics stays off: crashes go through ErrorReporter, which honours the privacy settings.
+             Note: Czech Act 127/2005 Coll. § 89(3) / GDPR art. 6-7 expect prior consent for analytics. -->
+        <meta-data android:name="firebase_analytics_collection_deactivated" android:value="false" />
         <meta-data android:name="google_analytics_adid_collection_enabled" android:value="false" />
         <meta-data android:name="google_analytics_default_allow_ad_personalization_signals" android:value="false" />
         <meta-data android:name="firebase_crashlytics_collection_enabled" android:value="false" />

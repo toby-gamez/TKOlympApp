@@ -39,6 +39,7 @@ import com.tkolymp.tkolympapp.ui.theme.AppTheme
 @Composable
 fun PrivacyConsentScreen(
     onReadPolicyClick: () -> Unit,
+    onReadTermsClick: () -> Unit,
     onAccept: (errorReportingEnabled: Boolean) -> Unit,
 ) {
     val strings = AppStrings.current.privacyConsent
@@ -77,6 +78,16 @@ fun PrivacyConsentScreen(
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
                         .clickable(onClickLabel = strings.readPolicyLinkLabel) { onReadPolicyClick() }
+                        .padding(8.dp)
+                )
+                Text(
+                    text = strings.readTermsLinkLabel,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    textDecoration = TextDecoration.Underline,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .clickable(onClickLabel = strings.readTermsLinkLabel) { onReadTermsClick() }
                         .padding(8.dp)
                 )
             }
@@ -144,7 +155,7 @@ fun PrivacyConsentScreen(
 @Composable
 private fun PrivacyConsentScreenPreviewLight() {
     AppTheme(darkTheme = false) {
-        PrivacyConsentScreen(onReadPolicyClick = {}, onAccept = {})
+        PrivacyConsentScreen(onReadPolicyClick = {}, onReadTermsClick = {}, onAccept = {})
     }
 }
 
@@ -152,6 +163,6 @@ private fun PrivacyConsentScreenPreviewLight() {
 @Composable
 private fun PrivacyConsentScreenPreviewDark() {
     AppTheme(darkTheme = true) {
-        PrivacyConsentScreen(onReadPolicyClick = {}, onAccept = {})
+        PrivacyConsentScreen(onReadPolicyClick = {}, onReadTermsClick = {}, onAccept = {})
     }
 }

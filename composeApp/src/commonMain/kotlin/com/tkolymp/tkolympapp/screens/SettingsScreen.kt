@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.School
@@ -86,6 +87,7 @@ fun SettingsScreen(
     onOpenAbout: () -> Unit = {},
     onOpenChangelog: () -> Unit = {},
     onOpenPrivacyPolicy: () -> Unit = {},
+    onOpenTerms: () -> Unit = {},
 ) {
     val viewModel = viewModel<SettingsViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -395,6 +397,7 @@ fun SettingsScreen(
                     errorReportingEnabled = state.errorReportingEnabled,
                     onErrorReportingChange = { enabled -> scope.launch { viewModel.setErrorReportingEnabled(enabled) } },
                     onOpenPrivacyPolicy = onOpenPrivacyPolicy,
+                    onOpenTerms = onOpenTerms,
                 )
             }
 
@@ -554,6 +557,7 @@ private fun PrivacySettingsSection(
     errorReportingEnabled: Boolean,
     onErrorReportingChange: (Boolean) -> Unit,
     onOpenPrivacyPolicy: () -> Unit,
+    onOpenTerms: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val p = AppStrings.current.privacyConsent
@@ -585,7 +589,7 @@ private fun PrivacySettingsSection(
                         fontWeight = FontWeight.Medium
                     )
                     Text(
-                        text = p.errorReportingDescription,
+                        text = p.errorReportingSettingsDescription,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -596,7 +600,7 @@ private fun PrivacySettingsSection(
             }
         }
         Card(
-            shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 16.dp, bottomEnd = 16.dp),
+            shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 4.dp, bottomEnd = 4.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 2.dp)
@@ -623,6 +627,34 @@ private fun PrivacySettingsSection(
                 )
             }
         }
+        Card(
+            shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 16.dp, bottomEnd = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 2.dp)
+                .clickable { onOpenTerms() }
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 14.dp)
+            ) {
+                SettingsIconBox(Icons.Filled.Description)
+                Spacer(modifier = Modifier.width(16.dp))
+                Text(
+                    text = p.termsRow,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.weight(1f)
+                )
+                Icon(
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }
 
@@ -630,7 +662,7 @@ private fun PrivacySettingsSection(
 @Composable
 private fun PrivacySettingsSectionPreviewLight() {
     AppTheme(darkTheme = false) {
-        PrivacySettingsSection(errorReportingEnabled = true, onErrorReportingChange = {}, onOpenPrivacyPolicy = {})
+        PrivacySettingsSection(errorReportingEnabled = true, onErrorReportingChange = {}, onOpenPrivacyPolicy = {}, onOpenTerms = {})
     }
 }
 
@@ -638,7 +670,7 @@ private fun PrivacySettingsSectionPreviewLight() {
 @Composable
 private fun PrivacySettingsSectionPreviewDark() {
     AppTheme(darkTheme = true) {
-        PrivacySettingsSection(errorReportingEnabled = false, onErrorReportingChange = {}, onOpenPrivacyPolicy = {})
+        PrivacySettingsSection(errorReportingEnabled = false, onErrorReportingChange = {}, onOpenPrivacyPolicy = {}, onOpenTerms = {})
     }
 }
 

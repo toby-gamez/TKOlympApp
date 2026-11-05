@@ -360,6 +360,14 @@ fun AppContent(
                                         }
                                         uriHandler.openUri("https://toby-gamez.github.io/tkolymp-docs.github.io/privacy/?lang=$langCode")
                                     },
+                                    onReadTermsClick = {
+                                        val langCode = when (AppStrings.currentLanguage) {
+                                            AppLanguage.UA -> "uk"
+                                            AppLanguage.BRAINROT -> "en"
+                                            else -> AppStrings.currentLanguage.code
+                                        }
+                                        uriHandler.openUri("https://toby-gamez.github.io/tkolymp-docs.github.io/terms/?lang=$langCode")
+                                    },
                                     onAccept = { errorReportingEnabled ->
                                         scope.launch {
                                             try { ServiceLocator.onboardingStorage.setErrorReportingEnabled(errorReportingEnabled) } catch (_: Exception) {}
@@ -639,7 +647,8 @@ fun AppNavHost(
                 onOpenNotifications = { navController.navigate("notifications") },
                 onOpenAbout = { navController.navigate("about") },
                 onOpenChangelog = { navController.navigate("changelog") },
-                onOpenPrivacyPolicy = { uriHandler.openUri("https://toby-gamez.github.io/tkolymp-docs.github.io/privacy/?lang=$langCode") }
+                onOpenPrivacyPolicy = { uriHandler.openUri("https://toby-gamez.github.io/tkolymp-docs.github.io/privacy/?lang=$langCode") },
+                onOpenTerms = { uriHandler.openUri("https://toby-gamez.github.io/tkolymp-docs.github.io/terms/?lang=$langCode") }
             )
         }
 
