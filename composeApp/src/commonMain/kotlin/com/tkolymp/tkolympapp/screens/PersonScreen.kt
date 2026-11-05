@@ -66,6 +66,7 @@ import com.tkolymp.shared.utils.parseToLocal
 import com.tkolymp.shared.viewmodels.PersonViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.CoupleAvatar
+import com.tkolymp.shared.competitions.deriveDanceClasses
 import com.tkolymp.tkolympapp.components.HeaderImageShape
 import com.tkolymp.tkolympapp.components.HeaderWithImage
 import com.tkolymp.tkolympapp.components.InitialsAvatar
@@ -126,6 +127,9 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                         onClick = {},
                         label = { Text(AppStrings.current.profile.trainer) }
                     )
+                }
+                deriveDanceClasses(p.cstsProgressList)?.let { classes ->
+                    SuggestionChip(onClick = {}, label = { Text("STT/LAT  ${classes.label}") })
                 }
             }
             SocialLinksRow(person = p)

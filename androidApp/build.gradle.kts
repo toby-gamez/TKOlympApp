@@ -18,8 +18,8 @@ android {
         applicationId = "com.tkolymp.tkolympapp"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 28
-        versionName = "2.2.1"
+        versionCode = 29
+        versionName = "2.3"
         buildConfigField("String", "API_BASE_URL", "\"${localProps["api.base.url"] ?: ""}\"")
         buildConfigField("String", "TENANT_ID", "\"${localProps["tenant.id"] ?: ""}\"")
         ndk {

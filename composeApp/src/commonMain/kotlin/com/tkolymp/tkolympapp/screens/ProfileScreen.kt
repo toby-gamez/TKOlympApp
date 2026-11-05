@@ -76,6 +76,7 @@ import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.CoupleAvatar
 import com.tkolymp.tkolympapp.components.ErrorBanner
 import com.tkolymp.tkolympapp.components.ErrorState
+import com.tkolymp.shared.competitions.deriveDanceClasses
 import com.tkolymp.tkolympapp.components.HeaderImageShape
 import com.tkolymp.tkolympapp.components.HeaderWithImage
 import com.tkolymp.tkolympapp.components.InitialsAvatar
@@ -190,6 +191,9 @@ fun ProfileScreen(
                     }
                     if (person?.isTrainer == true) {
                         ElevatedSuggestionChip(onClick = {}, label = { Text(AppStrings.current.profile.trainer) })
+                    }
+                    person?.let { deriveDanceClasses(it.cstsProgressList) }?.let { classes ->
+                        ElevatedSuggestionChip(onClick = {}, label = { Text("STT/LAT  ${classes.label}") })
                     }
                 }
                 if (person != null) {
