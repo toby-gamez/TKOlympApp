@@ -58,7 +58,10 @@ private const val FEEDBACK_BASE_URL = "https://www.tobiso.com/api"
 
 private val globalCrashStorage = CrashReportStorage("")
 
+@OptIn(kotlin.experimental.ExperimentalNativeApi::class)
 suspend fun initNetworking(baseUrl: String, tenantId: String = "1") {
+    // Mirrors Android's `Logger.isDebug = BuildConfig.DEBUG`: release binaries log nothing and send error reports.
+    Logger.isDebug = kotlin.native.Platform.isDebugBinary
     installGlobalCrashReporting()
 
     val storage = TokenStorage("")
