@@ -83,9 +83,9 @@ fun FeedbackDialog(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    if (errorText != null) {
+                    errorText?.let { message ->
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(errorText!!, color = MaterialTheme.colorScheme.error)
+                        Text(message, color = MaterialTheme.colorScheme.error)
                     }
                     if (sending) {
                         Spacer(modifier = Modifier.height(8.dp))

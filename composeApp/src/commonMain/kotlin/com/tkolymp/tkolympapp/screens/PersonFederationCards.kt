@@ -155,7 +155,7 @@ private fun federationName(code: String?): String? = code?.let { federationEmoji
 /** Newest ranking per ranklist (federation + category + competitor); older snapshots are dropped. */
 internal fun latestRankings(all: List<FederationRanking>): List<FederationRanking> =
     all.groupBy { Triple(it.federation, it.ranklistName ?: it.categoryName, it.competitorName) }
-        .values.map { g -> g.maxByOrNull { it.asOfDate.orEmpty() }!! }
+        .values.mapNotNull { g -> g.maxByOrNull { it.asOfDate.orEmpty() } }
         .sortedWith(compareBy<FederationRanking> { it.federation.orEmpty() }.thenBy { it.ranking })
 
 @OptIn(ExperimentalLayoutApi::class)

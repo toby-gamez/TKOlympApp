@@ -83,7 +83,11 @@ fun EventMap(
     val land = remember(region) { MapGeometry.land(region).map { MapGeometry.toPath(it, region) } }
     val borders = remember(region) { MapGeometry.borders(region)?.let { MapGeometry.toPath(it, region) } }
     val points = remember(events, region) {
-        events.filter { it.hasCoordinates }.map { it to region.project(it.lng!!, it.lat!!) }
+        events.mapNotNull { ev ->
+            val lng = ev.lng ?: return@mapNotNull null
+            val lat = ev.lat ?: return@mapNotNull null
+            ev to region.project(lng, lat)
+        }
     }
 
     var zoom by remember(region) { mutableFloatStateOf(1f) }

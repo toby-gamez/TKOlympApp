@@ -101,17 +101,18 @@ fun PersonalEventsScreen(
             navigationIcon = { IconButton(onClick = onBack) { Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) } }
         )
     }) { innerPadding ->
-        if (state.error != null && state.events.isEmpty()) {
+        val error = state.error
+        if (error != null && state.events.isEmpty()) {
             ErrorState(
-                error = state.error!!,
+                error = error,
                 modifier = Modifier.padding(innerPadding),
                 onRetry = { scope.launch { vm.loadAll() } }
             )
         } else {
         LazyColumn(modifier = Modifier.padding(innerPadding).padding(bottom = bottomPadding)) {
-            if (state.error != null) {
+            if (error != null) {
                 item {
-                    ErrorBanner(error = state.error!!, onRetry = { scope.launch { vm.loadAll() } })
+                    ErrorBanner(error = error, onRetry = { scope.launch { vm.loadAll() } })
                 }
             }
             items(state.events, key = { ev -> ev.id }) { ev: PersonalEvent ->

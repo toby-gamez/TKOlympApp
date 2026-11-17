@@ -110,9 +110,10 @@ fun RozpisTabContent(
     LaunchedEffect(eventId) { viewModel.load(eventId, instances, eventName) }
 
     Column(modifier = modifier.fillMaxSize().padding(12.dp)) {
-        if (state.error != null && state.campDates.isEmpty()) {
+        val error = state.error
+        if (error != null && state.campDates.isEmpty()) {
             ErrorState(
-                error = state.error!!,
+                error = error,
                 modifier = Modifier.weight(1f),
                 onRetry = { scope.launch { viewModel.load(eventId, instances, eventName) } }
             )
@@ -133,9 +134,9 @@ fun RozpisTabContent(
             Spacer(Modifier.height(12.dp))
         }
 
-        if (state.error != null) {
+        if (error != null) {
             ErrorBanner(
-                error = state.error!!,
+                error = error,
                 onRetry = { state.selectedDate?.let { d -> scope.launch { viewModel.selectDate(d) } } }
             )
             Spacer(Modifier.height(12.dp))

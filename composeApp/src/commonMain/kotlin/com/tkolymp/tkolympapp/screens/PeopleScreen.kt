@@ -189,12 +189,13 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
             onRefresh = { scope.launch { viewModel.loadPeople() } },
             modifier = Modifier.padding(padding)
         ) {
+            val error = state.error
             if (state.isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
-            } else if (state.error != null && state.people.isEmpty()) {
-                ErrorState(error = state.error!!, onRetry = { scope.launch { viewModel.loadPeople() } })
+            } else if (error != null && state.people.isEmpty()) {
+                ErrorState(error = error, onRetry = { scope.launch { viewModel.loadPeople() } })
             } else {
                 val people = state.people
 

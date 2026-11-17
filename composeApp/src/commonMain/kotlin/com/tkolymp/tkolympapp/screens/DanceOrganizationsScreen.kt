@@ -77,9 +77,10 @@ fun DanceOrganizationsScreen(
             onRefresh = { scope.launch { viewModel.load() } },
             modifier = Modifier.fillMaxSize().padding(top = padding.calculateTopPadding(), bottom = bottomPadding)
         ) {
+            val error = state.error
             when {
                 state.federations.isEmpty() && state.isLoading -> Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
-                state.federations.isEmpty() && state.error != null -> ErrorState(state.error!!, onRetry = { scope.launch { viewModel.load() } })
+                state.federations.isEmpty() && error != null -> ErrorState(error, onRetry = { scope.launch { viewModel.load() } })
                 state.federations.isEmpty() -> EmptyState(AppStrings.current.danceOrg.noDataYet, fullPage = true)
                 else -> LazyColumn(
                     modifier = Modifier.fillMaxSize(),

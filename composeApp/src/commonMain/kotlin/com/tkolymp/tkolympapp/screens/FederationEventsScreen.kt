@@ -239,9 +239,10 @@ fun FederationEventsScreen(
                     }
                 }
 
+                val error = state.error
                 when {
-                    state.error != null && state.allEvents.isEmpty() -> item {
-                        ErrorState(state.error!!.message, fullPage = false, onRetry = { scope.launch { viewModel.load(code, forceRefresh = true) } })
+                    error != null && state.allEvents.isEmpty() -> item {
+                        ErrorState(error.message, fullPage = false, onRetry = { scope.launch { viewModel.load(code, forceRefresh = true) } })
                     }
                     state.isLoading && state.allEvents.isEmpty() -> item {
                         Box(Modifier.fillMaxWidth().padding(32.dp), Alignment.Center) { CircularProgressIndicator() }

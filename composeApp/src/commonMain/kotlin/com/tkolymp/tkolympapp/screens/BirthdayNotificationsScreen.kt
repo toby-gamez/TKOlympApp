@@ -101,14 +101,15 @@ fun BirthdayNotificationsScreen(onBack: () -> Unit = {}) {
             onRefresh = { viewModel.load() },
             modifier = Modifier.padding(padding)
         ) {
+            val error = state.error
             if (state.isLoading) {
                 Row(
                     modifier = Modifier.fillMaxSize(),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) { CircularProgressIndicator() }
-            } else if (state.error != null && state.nonTrainerPeople.isEmpty() && state.availableGroups.isEmpty()) {
-                ErrorState(error = state.error!!, onRetry = { viewModel.load() })
+            } else if (error != null && state.nonTrainerPeople.isEmpty() && state.availableGroups.isEmpty()) {
+                ErrorState(error = error, onRetry = { viewModel.load() })
             } else {
                 LazyColumn(
                     modifier = Modifier

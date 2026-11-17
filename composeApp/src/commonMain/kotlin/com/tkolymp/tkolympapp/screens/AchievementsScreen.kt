@@ -83,13 +83,14 @@ fun AchievementsScreen(personId: String? = null, onBack: () -> Unit = {}) {
             onRefresh = { scope.launch { viewModel.load(personId) } },
             modifier = Modifier.padding(padding)
         ) {
-            if (state.error != null && state.badges.isEmpty() && state.diplomas.isEmpty()) {
-                ErrorState(error = state.error!!, onRetry = { scope.launch { viewModel.load(personId) } })
+            val error = state.error
+            if (error != null && state.badges.isEmpty() && state.diplomas.isEmpty()) {
+                ErrorState(error = error, onRetry = { scope.launch { viewModel.load(personId) } })
             } else {
                 Column(modifier = Modifier.fillMaxSize()) {
                     OfflineBanner(isOffline = state.isOffline, message = strings.offlineMessage)
-                    if (state.error != null) {
-                        ErrorBanner(error = state.error!!, onRetry = { scope.launch { viewModel.load(personId) } })
+                    if (error != null) {
+                        ErrorBanner(error = error, onRetry = { scope.launch { viewModel.load(personId) } })
                     }
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(3),

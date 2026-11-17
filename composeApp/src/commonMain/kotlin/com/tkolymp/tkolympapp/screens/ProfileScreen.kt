@@ -161,8 +161,9 @@ fun ProfileScreen(
             onRefresh = { scope.launch { profileViewModel.load() } },
             modifier = Modifier.fillMaxSize().padding(padding)
         ) {
-            if (profileState.error != null && profileState.person == null) {
-                ErrorState(error = profileState.error!!, onRetry = { scope.launch { profileViewModel.load() } })
+            val error = profileState.error
+            if (error != null && profileState.person == null) {
+                ErrorState(error = error, onRetry = { scope.launch { profileViewModel.load() } })
             } else {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()).padding(8.dp),

@@ -332,9 +332,10 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                         .weight(1f)
                         .fillMaxHeight()
                         .let { m ->
-                            if (!state.locationName.isNullOrBlank()) {
+                            val locationName = state.locationName
+                            if (!locationName.isNullOrBlank()) {
                                 m.clickable {
-                                    val encoded = state.locationName!!.map { c ->
+                                    val encoded = locationName.map { c ->
                                         when {
                                             c.isLetterOrDigit() || c in "-_.~" -> c.toString()
                                             c == ' ' -> "+"
@@ -359,7 +360,7 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            if (!state.locationName.isNullOrBlank()) state.locationName!! else "—",
+                            state.locationName?.takeIf { it.isNotBlank() } ?: "—",
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
