@@ -75,10 +75,10 @@ class EventsViewModel(
                 if (grouped.isNotEmpty()) {
                     _state.value = _state.value.copy(eventsByDay = grouped, isLoading = false)
                 } else {
-                    _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingEvents))
+                    _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingEvents, ex))
                 }
             } catch (_: Exception) {
-                _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingEvents))
+                _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingEvents, ex))
             }
         }
     }

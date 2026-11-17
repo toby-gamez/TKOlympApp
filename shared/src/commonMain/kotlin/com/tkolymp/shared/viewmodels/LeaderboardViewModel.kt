@@ -179,7 +179,7 @@ class LeaderboardViewModel(
         } catch (ex: Exception) {
             _state.value = _state.value.copy(
                 isLoading = false,
-                error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingLeaderboard)
+                error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingLeaderboard, ex)
             )
         }
     }

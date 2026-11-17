@@ -1,9 +1,13 @@
 package com.tkolymp.tkolympapp
 
+import com.tkolymp.shared.errorreporting.ErrorReporter
 import com.tkolymp.shared.viewmodels.AppError
+import kotlinx.coroutines.CancellationException
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 class AppErrorTest {
 
@@ -57,5 +61,19 @@ class AppErrorTest {
         )
         val messages = errors.map { it.message }
         assertEquals(listOf("a", "b", "c"), messages)
+    }
+
+    @Test
+    fun `cancellation is detected directly and in the cause chain`() = with(ErrorReporter) {
+        assertTrue(CancellationException("The coroutine scope left the composition").isCancellation())
+        assertTrue(RuntimeException("wrapped", CancellationException("x")).isCancellation())
+        assertFalse(RuntimeException("boom").isCancellation())
+        assertFalse((null as Throwable?).isCancellation())
+    }
+
+    @Test
+    fun `generic factory still returns an error for a cancellation cause`() {
+        val err = AppError.generic("The coroutine scope left the composition", CancellationException("x"))
+        assertIs<AppError.Generic>(err)
     }
 }

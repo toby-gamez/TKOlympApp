@@ -138,7 +138,7 @@ class AnnouncementServiceImpl(
             }
             return DataResult.Success(result)
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            DataResult.Error(AppError.network(ex.message))
+            DataResult.Error(AppError.network(ex.message, ex))
         }
     }
 
@@ -186,7 +186,7 @@ class AnnouncementServiceImpl(
                 DataResult.Error(AppError.generic("Failed to parse announcement"))
             }
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            DataResult.Error(AppError.network(ex.message))
+            DataResult.Error(AppError.network(ex.message, ex))
         }
     }
 }

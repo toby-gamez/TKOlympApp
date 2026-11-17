@@ -1,5 +1,45 @@
 # CLAUDE.md
 
+## Governance: Taskino Is the System of Record
+
+Web UI: <http://localhost:8081>. The MCP server is registered in `.mcp.json`, and every tool
+defaults to the project `TKOlympApp`. Tool reference:
+[/home/tobias/Projects/external/taskino/mcp/docs/agent-guide.md](/home/tobias/Projects/external/taskino/mcp/docs/agent-guide.md).
+
+- **Preflight first,** before any work that creates, changes, or completes something in this
+  repo: make a real `list_tasks` call and check that it returns. Seeing the tools listed doesn't
+  prove they work. Answering questions or reading code needs no check.
+- **If the call fails:** say that Taskino is unreachable, then **stop**. No fallback task file, no
+  TODO list, and no carrying on with the plan to file tasks later. **Never start, restart, or
+  rebuild Taskino or the MCP build** (systemd user service `taskino`, or
+  `PORT=8081 NODE_ENV=production mise exec node@22 -- node server/dist/server.js` in
+  `~/Projects/external/taskino`; MCP is the local `node` build at `mcp/dist/index.js`). They belong to the owner. Only the
+  owner can override this, explicitly, and only for that conversation.
+- **Work from tasks, not from prompts.** When the owner asks for work in a prompt, find the
+  matching Taskino task or create one first, then work from it. Put scope, progress and results
+  in the task, not only in the chat. Skip this only when the owner explicitly says to work
+  without a task.
+- **Code modification guard:** change code only when a Taskino task exists in `TKOlympApp`
+  and the change fits its scope. No task: propose one instead of changing code. Authorized but
+  not filed: create the task first.
+- Before starting, check whether the task is already partly or fully built. If it's done, say so
+  and stop. If it's partial, build only what's missing. Set the task `in_progress` when you
+  start, and log progress with `add_note`.
+- **Finishing:** run `./gradlew :shared:testAndroidHostTest` for shared logic and `./gradlew :androidApp:assembleDebug` for UI/app changes (add `:androidApp:lintDebug` when touching resources/manifest). Then add a note saying what changed
+  and how it was verified, and set the task to `verification`. **Never set `done` (or
+  `isDone`) without the user's explicit confirmation.**
+- **Channels are not interchangeable:**
+  - The **Developer Journal** is lasting engineering context. Write it once the work is verified.
+  - `add_note` is progress on one task.
+  - **Documents** (HTML) are long-form docs and plans.
+- **Identity:** you write as the agent account `claude`. Its key reaches the MCP server
+  through `TASKINO_API_KEY` in the gitignored `.claude/settings.local.json`. If your notes show
+  **Guest**, the key isn't loaded, so tell the owner. Never copy the key into a tracked file.
+- Never link a task to a version unless the owner names one.
+- **Roadmap:** what's next lives in Taskino. Read the open tasks in `TKOlympApp`, and don't
+  keep a roadmap in this file.
+
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Build & Run

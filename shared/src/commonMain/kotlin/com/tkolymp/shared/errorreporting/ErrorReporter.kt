@@ -58,11 +58,16 @@ object ErrorReporter {
     /** Reports a handled (non-fatal) error. Safe to call from anywhere, any thread. No-op in debug builds. */
     fun report(context: String, message: String, throwable: Throwable? = null) {
         if (Logger.isDebug || !enabled) return
+        // A cancelled coroutine (e.g. "The coroutine scope left the composition") is normal lifecycle, not a bug.
+        if (throwable.isCancellation()) return
+        // No exception supplied: capture the call site so the report still shows where the error was raised.
+        val origin = throwable ?: Throwable("Call site (no exception supplied)")
         val signature = buildString {
             append(context)
             append('|')
             append(message.take(160))
-            throwable?.let { append('|'); append(it::class.simpleName) }
+            append('|'); append(origin::class.simpleName)
+            if (throwable == null) append('|').append(origin.stackTraceToString().lineSequence().drop(1).firstOrNull { "ErrorReporter" !in it && "AppError" !in it }.orEmpty().trim())
         }
         scope.launch {
             if (!shouldSend(signature)) return@launch
@@ -70,10 +75,21 @@ object ErrorReporter {
                 title = "Automatic error report",
                 context = context,
                 message = message,
-                throwable = throwable,
+                throwable = origin,
             )
             send(body)
         }
+    }
+
+    /** True when this throwable, or anything in its cause chain, is a coroutine cancellation. */
+    internal fun Throwable?.isCancellation(): Boolean {
+        var t = this
+        var depth = 0
+        while (t != null && depth++ < 10) {
+            if (t is kotlinx.coroutines.CancellationException) return true
+            t = t.cause
+        }
+        return false
     }
 
     /** Builds the persisted text for a fatal/uncaught exception; called synchronously from the crash handler. */
@@ -115,6 +131,7 @@ object ErrorReporter {
     private fun buildReportBody(title: String, context: String, message: String, throwable: Throwable?): String = buildString {
         appendLine(title)
         appendLine("Context: $context")
+        throwable?.let { appendLine("Exception: ${it::class.qualifiedName ?: it::class.simpleName}") }
         appendLine("Message: ${scrub(message)}")
         appendLine("Time: ${kotlin.time.Clock.System.now()}")
         if (deviceInfoConsented) {

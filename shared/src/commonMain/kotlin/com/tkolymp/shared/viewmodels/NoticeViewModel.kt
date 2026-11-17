@@ -56,7 +56,7 @@ class NoticeViewModel(
                     _state.value = _state.value.copy(announcement = result.announcement, isLoading = false, isOffline = result.usedOffline)
                 }
             } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-                _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoading))
+                _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoading, ex))
             }
         }
     }

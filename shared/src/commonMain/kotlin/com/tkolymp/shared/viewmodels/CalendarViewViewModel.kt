@@ -341,7 +341,7 @@ class CalendarViewViewModel(
             if (revision == loadRevision) {
                 _state.value = _state.value.copy(
                     isLoading = false,
-                    error = AppError.generic(e.message ?: AppStrings.current.errorMessages.errorLoadingEvent)
+                    error = AppError.generic(e.message ?: AppStrings.current.errorMessages.errorLoadingEvent, e)
                 )
             }
         }

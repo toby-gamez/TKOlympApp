@@ -138,7 +138,7 @@ class TrainersLocationsViewModel(
             val lessonCounts = try { computeTrainerLessonCounts() } catch (_: Exception) { emptyMap() }
             _state.value = _state.value.copy(clubData = d, trainerLessonCounts = lessonCounts, isLoading = false)
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoading))
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoading, ex))
         }
     }
 }

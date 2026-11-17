@@ -110,7 +110,7 @@ class RegistrationViewModel(
 
             _state.value = _state.value.copy(trainerNames = trainerMap, myPersonName = personName, myCoupleNames = coupleNames, registrationDisplayNames = regDisplayNames, isLoading = false)
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: com.tkolymp.shared.language.AppStrings.current.errorMessages.errorLoadingNames))
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: com.tkolymp.shared.language.AppStrings.current.errorMessages.errorLoadingNames, ex))
         }
     }
 }

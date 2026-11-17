@@ -68,7 +68,7 @@ class OtherViewModel(
             try {
                 userService.switchPerson(personId)
             } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-                _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoading))
+                _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoading, ex))
                 return@launch
             }
             fetchFromStorage()
@@ -161,7 +161,7 @@ class OtherViewModel(
                 lastKnownState = updated
                 _state.value = updated
             } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-                _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoading))
+                _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoading, ex))
             }
         }
     }

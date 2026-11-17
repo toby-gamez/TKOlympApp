@@ -152,7 +152,7 @@ class PersonViewModel(
             // nothing found
             _state.value = _state.value.copy(person = null, isLoading = false)
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingPerson))
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingPerson, ex))
         }
     }
 }

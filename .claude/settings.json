@@ -1,0 +1,16 @@
+{
+  "enabledMcpjsonServers": ["taskino"],
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/taskino-probe.js",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

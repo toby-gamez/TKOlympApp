@@ -34,7 +34,7 @@ class CohortViewModel(
             // keep what we already show when a refresh fails
             else _state.value.copy(isLoading = false, error = AppError.generic(AppStrings.current.errorMessages.errorLoadingData))
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
-            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoading))
+            _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoading, ex))
         }
     }
 }

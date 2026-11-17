@@ -44,7 +44,7 @@ class ChangelogViewModel(
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     isLoading = false,
-                    error = AppError.generic(e.message ?: "Failed to load changelog")
+                    error = AppError.generic(e.message ?: "Failed to load changelog", e)
                 )
             }
         }
