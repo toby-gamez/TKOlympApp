@@ -42,7 +42,7 @@ import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.ViewTimeline
 import androidx.compose.material.icons.filled.ViewWeek
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
+import com.tkolymp.tkolympapp.components.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api

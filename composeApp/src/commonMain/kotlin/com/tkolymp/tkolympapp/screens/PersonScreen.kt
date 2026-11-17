@@ -1,11 +1,17 @@
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.text.font.FontWeight
+import com.tkolymp.tkolympapp.components.RowDivider
+import com.tkolymp.tkolympapp.components.ScheduleCard
+import com.tkolymp.tkolympapp.components.SectionLabel
+import com.tkolymp.tkolympapp.ui.theme.Spacing
 import com.tkolymp.tkolympapp.components.cardLineBorder
 import com.tkolymp.tkolympapp.components.surfaceCardColors
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -14,7 +20,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -54,7 +59,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -101,7 +105,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
         val scope = rememberCoroutineScope()
 
         SwipeToReload(isRefreshing = state.isLoading, onRefresh = { scope.launch { viewModel.loadPerson(personId) } }, modifier = Modifier.padding(padding)) {
-            Column(modifier = Modifier.padding(8.dp).verticalScroll(rememberScrollState())) {
+            Column(modifier = Modifier.padding(horizontal = Spacing.default, vertical = Spacing.small).verticalScroll(rememberScrollState())) {
 
             state.error?.let { ErrorBanner(error = it, onRetry = { scope.launch { viewModel.loadPerson(personId) } }) }
 
@@ -127,248 +131,125 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
             SocialLinksRow(person = p)
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Basic Info - like EventScreen (Row with two Cards, then Card for email)
-            StaggeredItem(index = 0, visible = cardsVisible, baseDelayMs = 50) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.Cake,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
+            // Active couple (hidden when the ČSTS Progress card already shows the couple)
+            val cstsProgressList = p.cstsProgressList.filter { !it.federation.equals(WDSF, ignoreCase = true) }
+            val wdsfProgressList = p.cstsProgressList.filter { it.federation.equals(WDSF, ignoreCase = true) }
+            if (p.activeCouplesList.isNotEmpty() && cstsProgressList.isEmpty()) {
+                StaggeredItem(index = 0, visible = cardsVisible, baseDelayMs = 50) {
+                    Column {
+                        SectionLabel(AppStrings.current.profile.activeCouple, horizontalPadding = 0.dp)
+                        ScheduleCard {
+                            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(Spacing.small)) {
+                                p.activeCouplesList.forEach { c ->
+                                    val manName = listOfNotNull(c.man?.firstName, c.man?.lastName).joinToString(" ").trim().takeIf { it.isNotBlank() }
+                                    val womanName = listOfNotNull(c.woman?.firstName, c.woman?.lastName).joinToString(" ").trim().takeIf { it.isNotBlank() }
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                                        CoupleAvatar(womanName = womanName, manName = manName, size = 40.dp, womanImageUrl = c.woman?.imageUrl, manImageUrl = c.man?.imageUrl)
+                                        Spacer(Modifier.width(18.dp))
+                                        Text(listOfNotNull(manName, womanName).joinToString(" - "), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Personal data
+            val genderLabel = when (p.gender) {
+                "MAN" -> AppStrings.current.gender.genderMale
+                "WOMAN" -> AppStrings.current.gender.genderFemale
+                "UNSPECIFIED" -> AppStrings.current.gender.genderUnspecified
+                null, "" -> "—"
+                else -> (p.gender ?: "").lowercase()
+            }
+            StaggeredItem(index = 1, visible = cardsVisible, baseDelayMs = 50) {
+                Column {
+                    SectionLabel(AppStrings.current.profile.personalData, horizontalPadding = 0.dp)
+                    ScheduleCard {
                         val bdText = p.birthDate?.let { formatDateStringSmall(it) ?: it } ?: "—"
-                        val ageText = currentAge(p.birthDate)?.let {
-                            " · ${AppStrings.current.profile.yearsOld.replace("%d", it.toString())}"
-                        } ?: ""
-                        Text("$bdText$ageText", style = MaterialTheme.typography.bodyMedium)
-                    }
-                }
-                Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        val genderIcon = when (p.gender) {
-                            "MAN" -> Icons.Default.Male
-                            "WOMAN" -> Icons.Default.Female
-                            else -> Icons.AutoMirrored.Filled.HelpOutline
-                        }
-                        Icon(
-                            genderIcon,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        val genderLabel = when (p.gender) {
-                            "MAN" -> AppStrings.current.gender.genderMale
-                            "WOMAN" -> AppStrings.current.gender.genderFemale
-                            "UNSPECIFIED" -> AppStrings.current.gender.genderUnspecified
-                            null, "" -> "—"
-                            else -> (p.gender ?: "").lowercase()
-                        }
-                        Text(genderLabel, style = MaterialTheme.typography.bodyMedium)
+                        val ageText = currentAge(p.birthDate)?.let { " · ${AppStrings.current.profile.yearsOld.replace("%d", it.toString())}" } ?: ""
+                        ProfileValueRow(AppStrings.current.profile.birthDate, "$bdText$ageText")
+                        RowDivider()
+                        ProfileValueRow(AppStrings.current.profile.gender, genderLabel)
                     }
                 }
             }
-            } // StaggeredItem basic info
 
-            if (!p.email.isNullOrBlank()) {
-                StaggeredItem(index = 1, visible = cardsVisible, baseDelayMs = 50) {
-                Card(
-                    colors = surfaceCardColors(),
-                    border = cardLineBorder(),
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.Email,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(p.email ?: "—", style = MaterialTheme.typography.bodyMedium)
+            // Contacts
+            val emailText = p.email?.takeIf { it.isNotBlank() }
+            if (emailText != null) {
+                StaggeredItem(index = 2, visible = cardsVisible, baseDelayMs = 50) {
+                    Column {
+                        SectionLabel(AppStrings.current.profile.contacts, horizontalPadding = 0.dp)
+                        ScheduleCard { ProfileValueRow(AppStrings.current.profile.email, emailText) }
                     }
                 }
-                } // StaggeredItem email
             }
 
+            // External identification
             val cstsId = p.cstsId?.takeIf { it.isNotBlank() }
             val wdsfId = p.wdsfId?.takeIf { it.isNotBlank() }
             if (cstsId != null || wdsfId != null) {
-                StaggeredItem(index = 1, visible = cardsVisible, baseDelayMs = 50) {
-                val uriHandler = LocalUriHandler.current
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    if (cstsId != null) {
-                        Card(
-                            colors = surfaceCardColors(),
-                            border = cardLineBorder(),
-                            modifier = Modifier
-                                .weight(1f)
-                                .clickable { uriHandler.openUri("https://www.csts.cz/dancesport/evidence/lide/$cstsId/osobni_udaje") },
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    Icons.Default.Badge,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text("ČSTS IDT", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    Text(cstsId, style = MaterialTheme.typography.bodyMedium)
-                                }
-                                Icon(
-                                    Icons.AutoMirrored.Filled.OpenInNew,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                            }
-                        }
-                    }
-                    if (wdsfId != null) {
-                        Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
-                            Row(
-                                modifier = Modifier.padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    Icons.Default.Badge,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Column {
-                                    Text("WDSF MIN", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    Text(wdsfId, style = MaterialTheme.typography.bodyMedium)
-                                }
-                            }
+                StaggeredItem(index = 3, visible = cardsVisible, baseDelayMs = 50) {
+                    val uriHandler = LocalUriHandler.current
+                    Column {
+                        SectionLabel("ČSTS · WDSF", horizontalPadding = 0.dp)
+                        ScheduleCard {
+                            if (cstsId != null) ProfileValueRow(
+                                "ČSTS IDT", cstsId,
+                                onClick = { uriHandler.openUri("https://www.csts.cz/dancesport/evidence/lide/$cstsId/osobni_udaje") },
+                                trailingIcon = Icons.AutoMirrored.Filled.OpenInNew
+                            )
+                            if (cstsId != null && wdsfId != null) RowDivider()
+                            if (wdsfId != null) ProfileValueRow("WDSF MIN", wdsfId)
                         }
                     }
                 }
-                } // StaggeredItem csts/wdsf ids
             }
 
             if (!p.note.isNullOrBlank()) {
-                StaggeredItem(index = 1, visible = cardsVisible, baseDelayMs = 50) {
+                StaggeredItem(index = 4, visible = cardsVisible, baseDelayMs = 50) {
                     PersonNoteCard(note = p.note)
                 }
             }
 
-            // Tréninkové skupiny (stacked)
+            // Training groups
             val visibleGroups = p.cohortMembershipsList.filter { it.cohort?.isVisible != false }
             if (visibleGroups.isNotEmpty()) {
-                StaggeredItem(index = 2, visible = cardsVisible, baseDelayMs = 50) {
-                Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
-                    Column(modifier = Modifier.padding(8.dp)) {
-                        Text(AppStrings.current.otherScreen.trainingGroups, style = MaterialTheme.typography.labelLarge)
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
-                        Column {
-                            visibleGroups.forEach { mem ->
-                                    val c = mem.cohort ?: return@forEach
-                                    val color = remember(c.colorRgb) { try { parseColorOrDefault(c.colorRgb) } catch (_: Exception) { Color.Gray } }
-                                    val cohortId = c.id
-                                    Card(modifier = Modifier
+                StaggeredItem(index = 5, visible = cardsVisible, baseDelayMs = 50) {
+                    Column {
+                        SectionLabel(AppStrings.current.otherScreen.trainingGroups, horizontalPadding = 0.dp)
+                        ScheduleCard {
+                            visibleGroups.forEachIndexed { i, mem ->
+                                val c = mem.cohort ?: return@forEachIndexed
+                                val color = remember(c.colorRgb) { try { parseColorOrDefault(c.colorRgb) } catch (_: Exception) { Color.Gray } }
+                                val cohortId = c.id
+                                if (i > 0) RowDivider()
+                                Row(
+                                    modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(vertical = 2.dp)
                                         .then(if (onOpenCohort != null && cohortId != null) Modifier.clickable { onOpenCohort(cohortId) } else Modifier)
-                                    ) {
-                                        Column(modifier = Modifier.padding(6.dp)) {
-                                            val since = mem.since
-                                            val until = mem.until
-                                            Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .width(6.dp)
-                                                        .fillMaxHeight()
-                                                        .background(color, RoundedCornerShape(6.dp))
-                                                )
-
-                                                Spacer(modifier = Modifier.width(12.dp))
-
-                                                Column(modifier = Modifier.weight(1f)) {
-                                                    Text(
-                                                        text = (c.name ?: c.id ?: "-"),
-                                                        style = MaterialTheme.typography.titleSmall,
-                                                    )
-                                                    if (!since.isNullOrBlank()) {
-                                                        val sinceLabel = formatDateStringSmall(since) ?: since
-                                                        Text("${AppStrings.current.profile.dateFrom}: $sinceLabel", style = MaterialTheme.typography.labelSmall)
-                                                    }
-                                                    if (!until.isNullOrBlank()) {
-                                                        val untilLabel = formatDateStringSmall(until) ?: until
-                                                        Text("${AppStrings.current.profile.dateTo}: $untilLabel", style = MaterialTheme.typography.labelSmall)
-                                                    }
-                                                }
-                                            }
-                                        }
+                                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                                ) {
+                                    Box(Modifier.size(36.dp).background(color, RoundedCornerShape(10.dp)))
+                                    Column(Modifier.weight(1f)) {
+                                        Text(c.name ?: c.id ?: "-", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                                        val period = listOfNotNull(
+                                            mem.since?.takeIf { it.isNotBlank() }?.let { "${AppStrings.current.profile.dateFrom}: ${formatDateStringSmall(it) ?: it}" },
+                                            mem.until?.takeIf { it.isNotBlank() }?.let { "${AppStrings.current.profile.dateTo}: ${formatDateStringSmall(it) ?: it}" }
+                                        ).joinToString(" · ")
+                                        if (period.isNotBlank()) Text(period, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
-                                }
-                        }
-                    }
-                }
-                } // StaggeredItem groups
-            }
-
-            // Active couples card (hidden when the ČSTS Progress card already shows the couple)
-            val cstsProgressList = p.cstsProgressList.filter { !it.federation.equals(WDSF, ignoreCase = true) }
-            val wdsfProgressList = p.cstsProgressList.filter { it.federation.equals(WDSF, ignoreCase = true) }
-            if (p.activeCouplesList.isNotEmpty() && cstsProgressList.isEmpty()) {
-                StaggeredItem(index = 3, visible = cardsVisible, baseDelayMs = 50) {
-                Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Text(AppStrings.current.profile.activeCouple, style = MaterialTheme.typography.labelLarge)
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                        p.activeCouplesList.forEach { c ->
-                            Card(
-                                colors = surfaceCardColors(),
-                                border = cardLineBorder(),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 0.dp) // Remove extra vertical padding
-                            ) {
-                                Column(modifier = Modifier.padding(12.dp)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        val man = c.man
-                                        val woman = c.woman
-                                        val manName = listOfNotNull(man?.firstName, man?.lastName).joinToString(" ").trim().takeIf { it.isNotBlank() }
-                                        val womanName = listOfNotNull(woman?.firstName, woman?.lastName).joinToString(" ").trim().takeIf { it.isNotBlank() }
-                                        CoupleAvatar(womanName = womanName, manName = manName, size = 24.dp, womanImageUrl = c.woman?.imageUrl, manImageUrl = c.man?.imageUrl)
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(listOfNotNull(manName, womanName).joinToString(" - "), style = MaterialTheme.typography.bodyMedium)
-                                    }
-                                    // hide internal couple id in UI
                                 }
                             }
                         }
                     }
                 }
-                } // StaggeredItem couples
             }
+
             // ČSTS Progress
             if (cstsProgressList.isNotEmpty()) {
                 StaggeredItem(index = 4, visible = cardsVisible, baseDelayMs = 50) {

@@ -1,5 +1,6 @@
 package com.tkolymp.tkolympapp.screens
 
+import com.tkolymp.tkolympapp.components.SegmentedToggle
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -157,18 +158,13 @@ fun StatsScreen(
             }
 
             Column(modifier = Modifier.fillMaxSize()) {
-                PrimaryTabRow(selectedTabIndex = selectedTab) {
-                    Tab(
-                        selected = selectedTab == 0,
-                        onClick = { selectedTab = 0 },
-                        text = { Text(strings.statsTabTitle) }
-                    )
-                    Tab(
-                        selected = selectedTab == 1,
-                        onClick = { selectedTab = 1 },
-                        text = { Text(strings.attendanceTabTitle) }
-                    )
-                }
+                SegmentedToggle(
+                    labels = listOf(strings.statsTabTitle, strings.attendanceTabTitle),
+                    selectedIndex = selectedTab,
+                    onSelect = { selectedTab = it },
+                    fillWidth = true,
+                    modifier = Modifier.fillMaxWidth().padding(start = Spacing.default, end = Spacing.default, top = Spacing.small)
+                )
 
                 if (selectedTab == 1) {
                     AttendanceTabContent(
@@ -198,6 +194,7 @@ fun StatsScreen(
                         .padding(horizontal = Spacing.default),
                     verticalArrangement = Arrangement.spacedBy(Spacing.default)
                 ) {
+                    Spacer(Modifier.height(Spacing.xs))
                     SeasonSelector(
                         selected = selectedSeason,
                         seasons = seasons,
@@ -244,9 +241,9 @@ fun StatsScreen(
                                         .fillMaxWidth()
                                         .padding(top = Spacing.small),
                                     highlightIndex = highlightIndex,
-                                    barColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                                    highlightColor = MaterialTheme.colorScheme.primary,
-                                    dimColor = MaterialTheme.colorScheme.primaryContainer,
+                                    barColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                    highlightColor = com.tkolymp.tkolympapp.ui.theme.BrandLightPrimary,
+                                    dimColor = MaterialTheme.colorScheme.tertiaryContainer,
                                     labelEvery = 1,
                                     showLabels = false,
                                     onBarClick = { idx, _, _ ->

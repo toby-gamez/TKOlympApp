@@ -1,10 +1,19 @@
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.FontWeight
+import com.tkolymp.tkolympapp.components.MenuRow
+import com.tkolymp.tkolympapp.components.RowDivider
+import com.tkolymp.tkolympapp.components.ScheduleCard
+import com.tkolymp.tkolympapp.components.SectionLabel
+import com.tkolymp.tkolympapp.ui.theme.Spacing
 import com.tkolymp.tkolympapp.components.cardLineBorder
 import com.tkolymp.tkolympapp.components.surfaceCardColors
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -41,11 +50,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.tkolymp.shared.language.AppStrings
 import androidx.compose.foundation.layout.Box
 
@@ -79,126 +86,73 @@ fun AboutScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
-                .padding(top = padding.calculateTopPadding(), start = 12.dp, end = 12.dp),
+                .padding(top = padding.calculateTopPadding(), start = Spacing.default, end = Spacing.default, bottom = Spacing.large),
             horizontalAlignment = Alignment.Start
         ) {
-            Text("TK Olymp", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 8.dp, bottom = 4.dp))
-            Text("${AppStrings.current.misc.appVersion} ${appVersionName ?: "?"} (Build ${appVersionCode ?: "?"})", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 12.dp))
-
-            StaggeredItem(index = 0, visible = contentVisible, baseDelayMs = 60) {
-            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Text(text = AppStrings.current.about.appDescriptionTitle, style = MaterialTheme.typography.labelLarge)
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                    Text(text = AppStrings.current.about.appDescriptionText, modifier = Modifier.padding(top = 6.dp))
+            Row(modifier = Modifier.padding(top = Spacing.small), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.medium)) {
+                Box(
+                    modifier = Modifier.size(52.dp).clip(RoundedCornerShape(14.dp)).background(com.tkolymp.tkolympapp.ui.theme.BrandLightPrimary),
+                    contentAlignment = Alignment.Center
+                ) { com.tkolymp.tkolympapp.platform.AppLogo(size = 52.dp) }
+                Column {
+                    Text("TK Olymp", fontSize = 22.sp, lineHeight = 28.sp, fontWeight = FontWeight.Bold)
+                    Text("${AppStrings.current.misc.appVersion} ${appVersionName ?: "?"} (Build ${appVersionCode ?: "?"})", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
+
+            StaggeredItem(index = 0, visible = contentVisible, baseDelayMs = 60) {
+                Column {
+                    SectionLabel(AppStrings.current.about.appDescriptionTitle, horizontalPadding = 0.dp)
+                    ScheduleCard { Text(text = AppStrings.current.about.appDescriptionText, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(14.dp)) }
+                }
             }
 
             StaggeredItem(index = 1, visible = contentVisible, baseDelayMs = 60) {
-            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                Text(AppStrings.current.misc.licenseInfo, style = MaterialTheme.typography.labelLarge)
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                    Text(text = AppStrings.current.about.appLicenseText, modifier = Modifier.padding(top = 6.dp))
+                Column {
+                    SectionLabel(AppStrings.current.misc.licenseInfo, horizontalPadding = 0.dp)
+                    ScheduleCard { Text(text = AppStrings.current.about.appLicenseText, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(14.dp)) }
                 }
-            }
             }
 
             StaggeredItem(index = 2, visible = contentVisible, baseDelayMs = 60) {
-            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Text(text = AppStrings.current.about.authorsAndContributors, style = MaterialTheme.typography.labelLarge)
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Column {
+                SectionLabel(AppStrings.current.about.authorsAndContributors, horizontalPadding = 0.dp)
+                ScheduleCard {
+                  Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
                         text = buildAnnotatedString {
                             withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) { append("Tobias Heneman") }
                             append(AppStrings.current.about.leadDeveloperRole)
                         },
-                        modifier = Modifier.padding(top = 6.dp)
+                        modifier = Modifier
                     )
                     Text(
                         text = buildAnnotatedString {
                             withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) { append("Filip Cani Canibal") }
                             append(AppStrings.current.about.translatorRole)
                         },
-                        modifier = Modifier.padding(top = 4.dp)
+                        modifier = Modifier
                     )
                     Text(
                         text = buildAnnotatedString {
                             withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) { append("Přemysl Křížan") }
                             append(AppStrings.current.about.bugReporterRole)
                         },
-                        modifier = Modifier.padding(top = 4.dp)
+                        modifier = Modifier
                     )
                 }
             }
+                }
             }
 
             StaggeredItem(index = 3, visible = contentVisible, baseDelayMs = 60) {
-            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
-                Column {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onPrivacyClick() }
-                            .padding(horizontal = 16.dp, vertical = 14.dp)
-                    ) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier.size(36.dp).clip(CircleShape)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Security,
-                                contentDescription = AppStrings.current.otherScreen.privacyPolicy,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-                        Text(
-                            text = AppStrings.current.otherScreen.privacyPolicy,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(start = 12.dp).weight(1f)
-                        )
-                        Icon(
-                            imageVector = Icons.Filled.ChevronRight,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    HorizontalDivider()
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onTermsClick() }
-                            .padding(horizontal = 16.dp, vertical = 14.dp)
-                    ) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier.size(36.dp).clip(CircleShape)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Description,
-                                contentDescription = AppStrings.current.otherScreen.termsOfUse,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-                        Text(
-                            text = AppStrings.current.otherScreen.termsOfUse,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(start = 12.dp).weight(1f)
-                        )
-                        Icon(
-                            imageVector = Icons.Filled.ChevronRight,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                Column(modifier = Modifier.padding(top = Spacing.default)) {
+                    ScheduleCard {
+                        MenuRow(Icons.Filled.Security, AppStrings.current.otherScreen.privacyPolicy, onPrivacyClick)
+                        RowDivider()
+                        MenuRow(Icons.Filled.Description, AppStrings.current.otherScreen.termsOfUse, onTermsClick)
                     }
                 }
-            }
             }
 
             StaggeredItem(index = 4, visible = contentVisible, baseDelayMs = 60) {

@@ -263,10 +263,11 @@ fun SectionLabel(
     text: String,
     modifier: Modifier = Modifier,
     actionLabel: String? = null,
-    onAction: () -> Unit = {}
+    onAction: () -> Unit = {},
+    horizontalPadding: androidx.compose.ui.unit.Dp = Spacing.default
 ) {
     Row(
-        modifier = modifier.fillMaxWidth().padding(start = Spacing.default, end = Spacing.default, top = 20.dp, bottom = 6.dp),
+        modifier = modifier.fillMaxWidth().padding(start = horizontalPadding, end = horizontalPadding, top = 20.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {

@@ -1,5 +1,8 @@
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.ui.unit.sp
+import com.tkolymp.tkolympapp.components.QuickChip
+import com.tkolymp.tkolympapp.ui.theme.BrandLightPrimary
 import com.tkolymp.tkolympapp.components.cardLineBorder
 import com.tkolymp.tkolympapp.components.surfaceCardColors
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -97,10 +100,10 @@ internal fun SeasonSelector(
                 1 -> lastLabel
                 else -> season.label
             }
-            FilterChip(
+            QuickChip(
+                label = label,
                 selected = selected == season,
-                onClick = { if (selected != season) onSelect(season) },
-                label = { Text(label) }
+                onClick = { if (selected != season) onSelect(season) }
             )
         }
     }
@@ -293,33 +296,23 @@ internal fun SummaryCard(modifier: Modifier = Modifier, value: String, label: St
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+        colors = surfaceCardColors(),
+        border = cardLineBorder()
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 76.dp)
-                .padding(8.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = value,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.labelSmall,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                )
-            }
+        Column(modifier = Modifier.fillMaxWidth().heightIn(min = 76.dp).padding(12.dp), verticalArrangement = Arrangement.Center) {
+            Text(
+                text = value,
+                fontSize = 24.sp,
+                lineHeight = 30.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -922,18 +915,19 @@ internal fun ScoreCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+        colors = CardDefaults.cardColors(containerColor = BrandLightPrimary)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    strings.myScore,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                    strings.myScore.uppercase(),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.8.sp,
+                    color = Color.White
                 )
                 TextButton(onClick = onOpenLeaderboard) {
-                    Text(AppStrings.current.otherScreen.leaderboard, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                    Text(AppStrings.current.otherScreen.leaderboard, color = Color.White, fontWeight = FontWeight.SemiBold)
                 }
             }
 
@@ -943,22 +937,23 @@ internal fun ScoreCard(
 
             Text(
                 text = totalText,
-                style = MaterialTheme.typography.displaySmall,
+                fontSize = 34.sp,
+                lineHeight = 40.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
+                color = Color.White,
+                modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)
             )
 
             if (score.ranking != null) {
                 Text(
                     text = "#${score.ranking}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.9f)
                 )
                 Spacer(Modifier.height(8.dp))
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.2f))
+            HorizontalDivider(color = Color.White.copy(alpha = 0.3f))
             Spacer(Modifier.height(8.dp))
 
             listOfNotNull(
@@ -971,9 +966,9 @@ internal fun ScoreCard(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f))
+                    Text(label, style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.9f))
                     val fmt = if (value % 1.0 == 0.0) value.toInt().toString() else { val s = kotlin.math.round(value * 10).toLong(); "${s / 10}.${kotlin.math.abs(s % 10)}" }
-                    Text(fmt, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                    Text(fmt, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium, color = Color.White)
                 }
             }
         }

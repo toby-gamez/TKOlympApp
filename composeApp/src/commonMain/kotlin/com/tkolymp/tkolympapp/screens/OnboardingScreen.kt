@@ -1,5 +1,12 @@
 package com.tkolymp.tkolympapp.screens
 
+import com.tkolymp.tkolympapp.components.CampCard
+import com.tkolymp.tkolympapp.components.NoticeCard
+import com.tkolymp.tkolympapp.components.TimelineDot
+import com.tkolymp.tkolympapp.components.TimelineRow
+import com.tkolymp.tkolympapp.components.cardLineBorder
+import com.tkolymp.tkolympapp.components.successColor
+import com.tkolymp.tkolympapp.components.surfaceCardColors
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
@@ -39,7 +46,7 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.School
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.material3.Button
+import com.tkolymp.tkolympapp.components.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -360,181 +367,52 @@ private fun OnboardingPageScaffold(
 
 private val MockCardShape = RoundedCornerShape(16.dp)
 
+/** Mock of the calendar day list, built from the real timeline row so the tour shows the actual look. */
 @Composable
 private fun CalendarMockupCard(modifier: Modifier = Modifier) {
     val strings = AppStrings.current
-    Card(
-        modifier = modifier.shadow(4.dp, MockCardShape),
-        shape = MockCardShape,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-    ) {
-        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = Spacing.medium), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-            Text(strings.timeline.today, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 2.dp, bottom = 2.dp))
-            MockCalendarGroupCard("Kruháč 1", "ZŠ Holečkova", "16:00 - 16:45", accentColor = null)
-            MockCalendarGroupCard("Zlatá skupina LAT", "ZŠ Holečkova", "17:30 - 18:15", accentColor = Color(0xFFFFD700))
-            Spacer(Modifier.height(Spacing.xs))
-            Text(strings.timeline.tomorrow, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 2.dp, bottom = 2.dp))
-            MockCalendarLessonCard("Filip Karásek", "BEST Sportcentrum", "15:00 - 15:45", "Novák - Nováková", "45'")
+    val primary = MaterialTheme.colorScheme.primary
+    Card(modifier = modifier, shape = MockCardShape, colors = surfaceCardColors(), border = cardLineBorder()) {
+        Column(modifier = Modifier.padding(horizontal = Spacing.medium, vertical = Spacing.medium)) {
+            Text(strings.timeline.today.uppercase(), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(Spacing.small))
+            TimelineRow("16:00", TimelineDot.Filled(Color(0xFF43A047)), "Zelená skupina STT", "ZŠ Holečkova · Žaneta Brizgalová", true, false, {})
+            TimelineRow("17:30", TimelineDot.Filled(Color(0xFFC9A000)), "Zlatá skupina LAT", "ZŠ Holečkova · Miroslav Hýža", false, false, {})
+            TimelineRow("18:15", TimelineDot.Filled(primary), "Novák - Nováková", "Filip Karásek · BEST Sportcentrum · 45 min", false, false, {})
+            TimelineRow("19:00", TimelineDot.Free, strings.overview.freeLesson, "Roman Pecha · BEST Sportcentrum · 45 min", false, true, {}, titleColor = successColor())
         }
     }
 }
 
-@Composable
-private fun MockChip(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
-    Box(
-        modifier = Modifier
-            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
-            .padding(horizontal = 6.dp, vertical = 3.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(12.dp))
-            Spacer(Modifier.width(3.dp))
-            Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-    }
-}
-
-@Composable
-private fun MockCalendarGroupCard(name: String, location: String, time: String, accentColor: Color?, modifier: Modifier = Modifier) {
-    val color = accentColor ?: MaterialTheme.colorScheme.primary
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Row(modifier = Modifier.fillMaxWidth().padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .width(5.dp)
-                    .height(52.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(color)
-            )
-            Spacer(Modifier.width(10.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text(name, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
-                    Box(
-                        modifier = Modifier
-                            .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(6.dp))
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text(AppStrings.current.events.eventTypeGroup, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                    }
-                }
-                Spacer(Modifier.height(Spacing.xs))
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    MockChip(Icons.Filled.Place, location)
-                    MockChip(Icons.Filled.Schedule, time)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun MockCalendarLessonCard(trainer: String, location: String, time: String, names: String, duration: String, modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Row(modifier = Modifier.fillMaxWidth().padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .width(5.dp)
-                    .height(52.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(MaterialTheme.colorScheme.tertiary)
-            )
-            Spacer(Modifier.width(10.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text(trainer, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
-                    Box(
-                        modifier = Modifier
-                            .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(6.dp))
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text(AppStrings.current.events.eventTypeLesson, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                    }
-                }
-                Text(names, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(Modifier.height(Spacing.xs))
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    MockChip(Icons.Filled.Place, location)
-                    MockChip(Icons.Filled.Schedule, "$time · $duration")
-                }
-            }
-        }
-    }
-}
-
+/** Mock of the camps list using the real camp card. */
 @Composable
 private fun EventsMockupCard(modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier.shadow(4.dp, MockCardShape),
-        shape = MockCardShape,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-    ) {
-        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = Spacing.medium), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-            Text("28. March", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 2.dp, bottom = 2.dp))
-            MockEventCard("Soustředění MINI Olympteam - zelená a fialová skupina", "ZŠ Holečkova", "09:00 - 17:00")
-            Spacer(Modifier.height(Spacing.xs))
-            Text("13. March", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 2.dp, bottom = 2.dp))
-            MockEventCard("Desítkové soustředění Prštice 2026", "TJ Sokol Prštice", "13.3.–15.3.2026")
-            Spacer(Modifier.height(Spacing.xs))
-            Text("22. February", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 2.dp, bottom = 2.dp))
-            MockEventCard("Přípravný Camp před MČR LAT - Podbořany", "Filip Karásek", "09:00 - 20:00")
-        }
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(Spacing.medium)) {
+        CampCard(listOf(Color(0xFFE53935), Color(0xFF1E88E5)), "13.–15.", "března", "Desítkové soustředění Prštice 2026", "TJ Sokol Prštice", AppStrings.current.registration.signedUp, {}, whenLabel = "za 12 dní")
+        CampCard(listOf(Color(0xFF2E9E5B)), "28.", "března", "Soustředění MINI Olympteam", "ZŠ Holečkova", null, {}, whenLabel = "za 27 dní")
     }
 }
 
-@Composable
-private fun MockEventCard(name: String, location: String, time: String, modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.medium, vertical = 10.dp)) {
-            Text(name, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface, maxLines = 2)
-            Spacer(Modifier.height(2.dp))
-            Text(location, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(time, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-    }
-}
-
+/** Mock of the board using the real notice cards. */
 @Composable
 private fun BoardMockupCard(modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier.shadow(4.dp, MockCardShape),
-        shape = MockCardShape,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-    ) {
-        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = Spacing.medium), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            MockBoardPostCard("Termíny externích trenérů - jaro/léto 2026", "Filip Karásek", "úterý 7. 4. - Martin Odstrčil…")
-            MockBoardPostCard("Seznam soutěží - jaro 2026", "Roman Pecha", "Níže je tabulka zveřejněných naplánovaných soutěží…")
-            MockBoardPostCard("Plán přípravy na MČR 2026", "Miroslav Hýža", "Vážení sportovci, průběžně budou přidávány akce…")
-            MockBoardPostCard("Členská schůze", "Miroslav Hýža", "Vážení členové a rodiče, …")
-        }
-    }
-}
-
-@Composable
-private fun MockBoardPostCard(title: String, author: String, preview: String, modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.medium, vertical = 10.dp)) {
-            Text(title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Spacer(Modifier.height(2.dp))
-            Text(author, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
-            Text(preview, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        NoticeCard(
+            authorName = "Miroslav Hýža",
+            meta = "Miroslav Hýža · 2 d",
+            title = "Plán přípravy na MČR 2026",
+            body = "Vážení sportovci, průběžně budou přidávány akce a termíny společných příprav.",
+            onClick = {},
+            featured = true,
+            badge = AppStrings.current.announcements.newBadge
+        )
+        NoticeCard(
+            authorName = "Roman Pecha",
+            meta = "Roman Pecha · 5 d",
+            title = "Seznam soutěží - jaro 2026",
+            body = "Níže je tabulka zveřejněných naplánovaných soutěží.",
+            onClick = {}
+        )
     }
 }
 
@@ -550,9 +428,10 @@ private fun OtherFeaturesIconGrid(modifier: Modifier = Modifier) {
         Feature(Icons.Filled.Notifications, strings.otherScreen.notificationSettings),
     )
     Card(
-        modifier = modifier.shadow(6.dp, MockCardShape),
+        modifier = modifier,
         shape = MockCardShape,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = surfaceCardColors(),
+        border = cardLineBorder(),
     ) {
         Column(modifier = Modifier.padding(horizontal = Spacing.default, vertical = 20.dp), verticalArrangement = Arrangement.spacedBy(Spacing.default)) {
             features.chunked(3).forEach { row ->

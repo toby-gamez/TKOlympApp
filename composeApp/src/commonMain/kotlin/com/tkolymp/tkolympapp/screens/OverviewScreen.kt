@@ -246,12 +246,6 @@ fun OverviewScreen(
                         (state.trainingLessonsByTrainer.values.flatten() + state.trainingOtherEvents).sortedBy { it.since ?: "" }
                     }
                     Column(modifier = Modifier.padding(vertical = Spacing.xs)) {
-                        val dayBirthdays = state.birthdaysByDay[date] ?: emptyList()
-                        if (dayBirthdays.isNotEmpty()) {
-                            DateHeaderWithBirthdays("", dayBirthdays)
-                            Spacer(modifier = Modifier.height(Spacing.xs))
-                        }
-
                         val primary = MaterialTheme.colorScheme.primary
                         val muted = MaterialTheme.colorScheme.onSurfaceVariant
                         val ok = successColor()

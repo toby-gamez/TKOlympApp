@@ -140,10 +140,10 @@ private fun ReleaseCard(release: com.tkolymp.shared.changelog.ChangelogRelease) 
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f)
                 )
-                Text(
-                    text = release.tagName,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary
+                com.tkolymp.tkolympapp.components.InfoPill(
+                    release.tagName,
+                    MaterialTheme.colorScheme.tertiaryContainer,
+                    MaterialTheme.colorScheme.onTertiaryContainer
                 )
             }
             Row(
@@ -171,7 +171,7 @@ private fun ReleaseCard(release: com.tkolymp.shared.changelog.ChangelogRelease) 
                 }
             }
             if (release.body.isNotBlank()) {
-                HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
                 val richTextState = remember(release.tagName, release.body, linkColor, codeBackground) {
                     RichTextState().apply {
                         config.linkColor = linkColor

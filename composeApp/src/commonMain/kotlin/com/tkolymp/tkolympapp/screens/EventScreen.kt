@@ -87,7 +87,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
+import com.tkolymp.tkolympapp.components.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -314,7 +314,6 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                                 val statusChips = buildList<Pair<String, Boolean>> {
                                     if (state.isCancelled) add(AppStrings.current.stats.cancelled to true)
                                     if (state.isLocked) add(AppStrings.current.events.registrationClosed to false)
-                                    if (state.enableNotes) add(AppStrings.current.events.notesAllowed to false)
                                 }
                                 if (statusChips.isNotEmpty()) {
                                     FlowRow(

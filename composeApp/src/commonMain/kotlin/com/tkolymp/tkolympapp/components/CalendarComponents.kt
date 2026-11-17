@@ -506,3 +506,22 @@ fun SheetPrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = M
         }
     }
 }
+
+/** Full-width grey pill button (prototype secondary action); [danger] turns the label red. */
+@Composable
+fun SecondaryPillButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, icon: ImageVector? = null, danger: Boolean = false) {
+    Box(
+        modifier = modifier
+            .heightIn(min = 50.dp)
+            .clip(RoundedCornerShape(25.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .pressClickable(0.98f, onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        val fg = if (danger) accentColor() else MaterialTheme.colorScheme.onSurface
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.small)) {
+            if (icon != null) Icon(icon, contentDescription = null, tint = fg, modifier = Modifier.size(20.dp))
+            Text(text, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, color = fg)
+        }
+    }
+}

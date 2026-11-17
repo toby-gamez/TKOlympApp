@@ -74,7 +74,6 @@ import com.tkolymp.tkolympapp.screens.CalendarScreen
 import com.tkolymp.tkolympapp.screens.CalendarViewScreen
 import com.tkolymp.tkolympapp.screens.EventScreen
 import com.tkolymp.tkolympapp.screens.EventsScreen
-import com.tkolymp.tkolympapp.screens.FreeLessonsScreen
 import com.tkolymp.tkolympapp.screens.CohortScreen
 import com.tkolymp.tkolympapp.screens.GroupsScreen
 import com.tkolymp.tkolympapp.screens.LanguageScreen
@@ -528,19 +527,6 @@ fun AppNavHost(
                     bottomPadding = bottomPadding
                 )
             }
-        }
-
-        composable(
-            route = "free-lessons",
-            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
-            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
-            popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) },
-            popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
-        ) {
-            FreeLessonsScreen(
-                onBack = { navController.navigateUp() },
-                onOpenEvent = { id -> navController.navigate("event/$id") }
-            )
         }
 
         composable(

@@ -1,5 +1,7 @@
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.ui.unit.sp
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -26,12 +28,12 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
+import com.tkolymp.tkolympapp.components.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import com.tkolymp.tkolympapp.components.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -234,7 +236,7 @@ fun RegistrationScreen(
             is RegMode.Register -> {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(12.dp)) {
-                        Text(AppStrings.current.registration.selectRegistrant, style = MaterialTheme.typography.bodyMedium)
+                        Text(AppStrings.current.registration.selectRegistrant.uppercase(), style = MaterialTheme.typography.labelLarge, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, letterSpacing = 0.8.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp, bottom = 4.dp))
                         Spacer(modifier = Modifier.height(6.dp))
                         // compute already-registered person/couple ids so we don't offer them for new registration
                         val registeredPersonIds = remember(registrations) { computeRegisteredPersonIds(registrations) }
@@ -264,7 +266,7 @@ fun RegistrationScreen(
                                             .clickable { selectedRegistrant.value = Pair(myPersonId, null) },
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            RadioButton(selected = selectedRegistrant.value.first == myPersonId && selectedRegistrant.value.second == null,
+                                            RadioButton(colors = RadioButtonDefaults.colors(selectedColor = com.tkolymp.tkolympapp.ui.theme.BrandLightPrimary), selected = selectedRegistrant.value.first == myPersonId && selectedRegistrant.value.second == null,
                                                 onClick = { selectedRegistrant.value = Pair(myPersonId, null) })
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text(personLabel)
@@ -282,7 +284,7 @@ fun RegistrationScreen(
                                             .clickable { selectedRegistrant.value = Pair(null, cid) },
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            RadioButton(selected = selectedRegistrant.value.first == null && selectedRegistrant.value.second == cid,
+                                            RadioButton(colors = RadioButtonDefaults.colors(selectedColor = com.tkolymp.tkolympapp.ui.theme.BrandLightPrimary), selected = selectedRegistrant.value.first == null && selectedRegistrant.value.second == cid,
                                                 onClick = { selectedRegistrant.value = Pair(null, cid) })
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text(coupleLabel)
@@ -313,7 +315,7 @@ fun RegistrationScreen(
 
                         if (showLessonSelection) {
                             if (trainers.any { !isTrainerUnavailable(it) }) {
-                                Text(AppStrings.current.registration.selectTrainersAndLessons, style = MaterialTheme.typography.bodyMedium)
+                                Text(AppStrings.current.registration.selectTrainersAndLessons.uppercase(), style = MaterialTheme.typography.labelLarge, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, letterSpacing = 0.8.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp, bottom = 4.dp))
                                 Spacer(modifier = Modifier.height(6.dp))
                             }
 
@@ -416,7 +418,7 @@ fun RegistrationScreen(
             }
             is RegMode.Edit -> {
                 Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).padding(12.dp)) {
-                    Text(AppStrings.current.registration.selectRegistration, style = MaterialTheme.typography.bodyMedium)
+                    Text(AppStrings.current.registration.selectRegistration.uppercase(), style = MaterialTheme.typography.labelLarge, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, letterSpacing = 0.8.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp, bottom = 4.dp))
                     Spacer(modifier = Modifier.height(6.dp))
 
                         val selectedRegId = remember { mutableStateOf<String?>(null) }
@@ -459,7 +461,7 @@ fun RegistrationScreen(
                                     },
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    RadioButton(selected = selectedRegId.value == rid, onClick = { selectedRegId.value = rid })
+                                    RadioButton(colors = RadioButtonDefaults.colors(selectedColor = com.tkolymp.tkolympapp.ui.theme.BrandLightPrimary), selected = selectedRegId.value == rid, onClick = { selectedRegId.value = rid })
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(label)
                                 }
@@ -489,7 +491,7 @@ fun RegistrationScreen(
                             }
 
                             if (showLessonSelection && trainers.withIndex().any { (i, t) -> !isTrainerUnavailable(t) || (countsState.getOrNull(i) ?: 0) > 0 }) {
-                                Text(AppStrings.current.misc.editLessonClaims, style = MaterialTheme.typography.bodyMedium)
+                                Text(AppStrings.current.misc.editLessonClaims.uppercase(), style = MaterialTheme.typography.labelLarge, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, letterSpacing = 0.8.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp, bottom = 4.dp))
                                 trainers.forEachIndexed { idx, tEl ->
                                     if (isTrainerUnavailable(tEl) && (countsState.getOrNull(idx) ?: 0) == 0) return@forEachIndexed
                                     val tObj = tEl as? JsonObject
@@ -563,7 +565,7 @@ fun RegistrationScreen(
             is RegMode.Delete -> {
                 Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                     Column(modifier = Modifier.padding(12.dp)) {
-                        Text(AppStrings.current.registration.selectToDelete, style = MaterialTheme.typography.bodyMedium)
+                        Text(AppStrings.current.registration.selectToDelete.uppercase(), style = MaterialTheme.typography.labelLarge, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, letterSpacing = 0.8.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp, bottom = 4.dp))
                         Spacer(modifier = Modifier.height(6.dp))
                         val selectedReg = remember { mutableStateOf<String?>(null) }
                         val showDeleteError = remember { mutableStateOf<String?>(null) }
@@ -584,7 +586,7 @@ fun RegistrationScreen(
                                     .clickable { selectedReg.value = rid },
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    RadioButton(selected = selectedReg.value == rid, onClick = { selectedReg.value = rid })
+                                    RadioButton(colors = RadioButtonDefaults.colors(selectedColor = com.tkolymp.tkolympapp.ui.theme.BrandLightPrimary), selected = selectedReg.value == rid, onClick = { selectedReg.value = rid })
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(label)
                                 }
