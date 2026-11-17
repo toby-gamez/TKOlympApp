@@ -82,7 +82,8 @@ class CalendarViewModel(
 
     suspend fun load(weekOffset: Int, onlyMine: Boolean, forceRefresh: Boolean = false, weekStartOverride: kotlinx.datetime.LocalDate? = null) {
         val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-        val weekStart = weekStartOverride ?: today.plus(weekOffset * 7, DateTimeUnit.DAY)
+        // Weeks always run Monday..Sunday; the screen selects today inside the current week.
+        val weekStart = weekStartOverride ?: mondayOf(today).plus(weekOffset * 7, DateTimeUnit.DAY)
         val endDay = weekStart.plus(6, DateTimeUnit.DAY)
         val startIso = weekStart.toString() + "T00:00:00Z"
         val endIso = endDay.toString() + "T23:59:59Z"
@@ -118,7 +119,8 @@ class CalendarViewModel(
             eventsByDay = if (clearEvents) emptyMap() else _state.value.eventsByDay,
             lessonsByTrainerByDay = if (clearEvents) emptyMap() else _state.value.lessonsByTrainerByDay,
             otherEventsByDay = if (clearEvents) emptyMap() else _state.value.otherEventsByDay,
-            visibleDates = if (clearEvents) emptyList() else _state.value.visibleDates,
+            // The week itself is known up front, so the day strip stays put while events reload.
+            visibleDates = visibleDates,
             // Only reset isOffline when we're about to do a fresh online load; preserve it otherwise
             // to avoid the screen-level offline cache flickering away and back.
             isOffline = if (showLoadingIndicator && isCurrentlyOnline) false else _state.value.isOffline
@@ -566,3 +568,7 @@ class CalendarViewModel(
         } catch (e: CancellationException) { throw e } catch (_: Exception) { emptySet() }
     }
 }
+
+/** Monday of the ISO week containing [date]. */
+fun mondayOf(date: kotlinx.datetime.LocalDate): kotlinx.datetime.LocalDate =
+    date.minus(date.dayOfWeek.ordinal, DateTimeUnit.DAY)

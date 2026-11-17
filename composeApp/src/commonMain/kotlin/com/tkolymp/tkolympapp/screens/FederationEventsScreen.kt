@@ -1,5 +1,24 @@
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.sp
+import com.tkolymp.tkolympapp.components.AppTopBar
+import com.tkolymp.tkolympapp.components.DateTile
+import com.tkolymp.tkolympapp.components.InfoPill
+import com.tkolymp.tkolympapp.components.QuickChip
+import com.tkolymp.tkolympapp.components.SegmentedToggle
+import com.tkolymp.tkolympapp.components.cardLineBorder
+import com.tkolymp.tkolympapp.components.pressClickable
+import com.tkolymp.tkolympapp.components.successColor
+import com.tkolymp.tkolympapp.components.successContainerColor
+import com.tkolymp.tkolympapp.components.surfaceCardColors
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.EmojiEvents
@@ -8,9 +27,7 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -59,7 +76,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -135,18 +151,10 @@ fun FederationEventsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(state.federationName.ifBlank { federationLabel(code) }, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text(strings.dataTitle, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
-                    }
-                }
+            AppTopBar(
+                title = state.federationName.ifBlank { federationLabel(code) },
+                subtitle = strings.dataTitle,
+                onBack = onBack
             )
         }
     ) { padding ->
@@ -162,14 +170,13 @@ fun FederationEventsScreen(
             ) {
                 if (state.isOffline) item { OfflineBanner(isOffline = true, message = strings.offlineMessage) }
                 item {
-                    SingleChoiceSegmentedButtonRow(Modifier.padding(horizontal = 16.dp).fillMaxWidth()) {
-                        SegmentedButton(state.viewMode == EventsViewMode.UPCOMING, { scope.launch { viewModel.setViewMode(EventsViewMode.UPCOMING) } },
-                            SegmentedButtonDefaults.itemShape(0, 3)) { Text(strings.upcoming, maxLines = 1) }
-                        SegmentedButton(state.viewMode == EventsViewMode.PAST, { scope.launch { viewModel.setViewMode(EventsViewMode.PAST) } },
-                            SegmentedButtonDefaults.itemShape(1, 3)) { Text(strings.past, maxLines = 1) }
-                        SegmentedButton(state.viewMode == EventsViewMode.YEAR, { scope.launch { viewModel.setViewMode(EventsViewMode.YEAR) } },
-                            SegmentedButtonDefaults.itemShape(2, 3)) { Text(strings.allYear, maxLines = 1) }
-                    }
+                    val modes = EventsViewMode.entries
+                    SegmentedToggle(
+                        labels = listOf(strings.upcoming, strings.past, strings.allYear),
+                        selectedIndex = modes.indexOf(state.viewMode),
+                        onSelect = { scope.launch { viewModel.setViewMode(modes[it]) } },
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
                 }
                 if (state.viewMode == EventsViewMode.YEAR) item {
                     LazyRow(state = yearsState, contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -180,7 +187,7 @@ fun FederationEventsScreen(
                 }
                 item {
                     Row(Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(
+                        TextField(
                             value = state.query,
                             onValueChange = viewModel::setQuery,
                             placeholder = { Text(strings.searchHint) },
@@ -191,7 +198,13 @@ fun FederationEventsScreen(
                                 }
                             },
                             singleLine = true,
-                            shape = RoundedCornerShape(28.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent
+                            ),
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -199,25 +212,25 @@ fun FederationEventsScreen(
                 if (state.typeCounts.isNotEmpty()) item {
                     LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(state.typeCounts.toList(), key = { it.first }) { (type, n) ->
-                            FilterChip(
+                            QuickChip(
+                                label = "${strings.competitionType(type)} · $n",
                                 selected = type in state.selectedTypes,
-                                onClick = { viewModel.toggleType(type) },
-                                label = { Text("${strings.competitionType(type)} · $n") }
+                                onClick = { viewModel.toggleType(type) }
                             )
                         }
                     }
                 }
                 item {
                     LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        item { FilterChip(selected = state.month == null, onClick = { viewModel.selectMonth(null) }, label = { Text(strings.allYear) }) }
+                        item { QuickChip(strings.allYear, state.month == null, { viewModel.selectMonth(null) }) }
                         items((1..12).toList()) { m ->
                             val n = state.monthCounts[m] ?: 0
-                            FilterChip(
+                            QuickChip(
+                                label = strings.monthShort(m),
                                 selected = state.month == m,
                                 enabled = n > 0 || state.month == m,
                                 onClick = { viewModel.selectMonth(if (state.month == m) null else m) },
-                                label = { Text(strings.monthShort(m)) },
-                                leadingIcon = { Box(Modifier.size(8.dp).clip(CircleShape).background(monthColor(m))) }
+                                leading = { Box(Modifier.size(8.dp).clip(CircleShape).background(monthColor(m))) }
                             )
                         }
                     }
@@ -225,17 +238,18 @@ fun FederationEventsScreen(
                 item {
                     Row(Modifier.padding(horizontal = 16.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            "${state.events.size} / ${state.allEvents.size} ${strings.eventsSuffix}",
+                            "${state.events.size} / ${state.allEvents.size} ${strings.eventsSuffix}".uppercase(),
                             style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 0.8.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.weight(1f)
                         )
-                        SingleChoiceSegmentedButtonRow {
-                            SegmentedButton(!state.showMap, { viewModel.setShowMap(false) }, SegmentedButtonDefaults.itemShape(0, 2),
-                                icon = { Icon(Icons.Filled.ViewList, contentDescription = null, modifier = Modifier.size(18.dp)) }) { Text(strings.list) }
-                            SegmentedButton(state.showMap, { viewModel.setShowMap(true) }, SegmentedButtonDefaults.itemShape(1, 2),
-                                icon = { Icon(Icons.Filled.Map, contentDescription = null, modifier = Modifier.size(18.dp)) }) { Text(strings.map) }
-                        }
+                        SegmentedToggle(
+                            labels = listOf(strings.list, strings.map),
+                            selectedIndex = if (state.showMap) 1 else 0,
+                            onSelect = { viewModel.setShowMap(it == 1) }
+                        )
                     }
                 }
 
@@ -266,27 +280,31 @@ fun FederationEventsScreen(
 
 @Composable
 private fun YearChip(year: Int, count: Int, selected: Boolean, onClick: () -> Unit) {
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(14.dp),
-        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
-        contentColor = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+    val shape = RoundedCornerShape(14.dp)
+    val fg = if (selected) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSurface
+    Column(
+        Modifier
+            .clip(shape)
+            .then(if (selected) Modifier.background(MaterialTheme.colorScheme.tertiaryContainer) else Modifier.border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.18f), shape))
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 18.dp, vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(Modifier.padding(horizontal = 18.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(year.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text("$count ${AppStrings.current.danceOrg.eventsSuffix}", style = MaterialTheme.typography.labelSmall)
-        }
+        Text(year.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = fg)
+        Text("$count ${AppStrings.current.danceOrg.eventsSuffix}", style = MaterialTheme.typography.labelSmall, color = if (selected) fg else MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
 @Composable
 private fun MonthHeader(month: Int, year: String, count: Int) {
-    Row(Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.padding(start = 16.dp, end = 16.dp, top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.size(10.dp).clip(CircleShape).background(monthColor(month)))
         Text(
-            "  ${AppStrings.current.danceOrg.monthShort(month)} $year",
-            style = MaterialTheme.typography.titleSmall,
+            "  ${AppStrings.current.danceOrg.monthShort(month)} $year".uppercase(),
+            style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Bold,
+            letterSpacing = 0.8.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(1f)
         )
         Text(count.toString(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -364,18 +382,13 @@ internal fun EventRow(event: FederationEventSummary, modifier: Modifier = Modifi
     val accent = monthColor(event.month)
     val day = event.startDate.substring(8, 10).trimStart('0')
     Card(
-        modifier = modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onClick),
-        shape = RoundedCornerShape(16.dp)
+        modifier = modifier.fillMaxWidth().pressClickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        colors = surfaceCardColors(),
+        border = cardLineBorder()
     ) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Column(
-                Modifier.size(52.dp).clip(RoundedCornerShape(12.dp)).background(accent.copy(alpha = 0.18f)),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(day, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Text(strings.monthShort(event.month), style = MaterialTheme.typography.labelSmall, color = accent)
-            }
+            DateTile(day = day, month = strings.monthShort(event.month), monthColor = accent)
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     event.name ?: "—",
@@ -394,21 +407,19 @@ internal fun EventRow(event: FederationEventSummary, modifier: Modifier = Modifi
                 if (end != null && end.take(10) != event.startDate.take(10)) {
                     Text(formatDateRange(event.startDate, end), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    if (event.competitionCount > 0) Text(
-                        "${strings.competitionsCount}: ${event.competitionCount}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    if (event.hasResults) Icon(
-                        Icons.Filled.EmojiEvents,
-                        contentDescription = strings.withResults,
-                        modifier = Modifier.size(14.dp),
-                        tint = MaterialTheme.colorScheme.tertiary
-                    )
-                    if (event.isCancelled) Text(strings.statusCancelled, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.error)
+                if (event.competitionCount > 0 || event.hasResults || event.isCancelled) {
+                    Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        if (event.competitionCount > 0) InfoPill(
+                            "${strings.competitionsCount}: ${event.competitionCount}",
+                            MaterialTheme.colorScheme.tertiaryContainer,
+                            MaterialTheme.colorScheme.onTertiaryContainer
+                        )
+                        if (event.hasResults) InfoPill(strings.withResults, successContainerColor(), successColor(), icon = Icons.Filled.EmojiEvents)
+                        if (event.isCancelled) InfoPill(strings.statusCancelled, MaterialTheme.colorScheme.errorContainer, MaterialTheme.colorScheme.onErrorContainer)
+                    }
                 }
             }
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

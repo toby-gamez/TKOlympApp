@@ -16,6 +16,7 @@ import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.material3.MaterialTheme
@@ -60,22 +61,32 @@ fun AppBottomBar(
     profileImageUrl: String? = null,
     modifier: Modifier = Modifier
 ) {
-    NavigationBar(modifier = modifier) {
+    val itemColors = NavigationBarItemDefaults.colors(
+        indicatorColor = MaterialTheme.colorScheme.tertiaryContainer,
+        selectedIconColor = MaterialTheme.colorScheme.primary,
+        selectedTextColor = MaterialTheme.colorScheme.onSurface,
+        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+    NavigationBar(modifier = modifier, containerColor = MaterialTheme.colorScheme.background) {
         val calendarSelected = current == "calendar"
 
         NavigationBarItem(
+            colors = itemColors,
             selected = current == "overview",
             onClick = { onSelect("overview") },
             icon = { AnimatedNavIcon(selected = current == "overview", icon = Icons.Default.Home) },
             label = { Text(AppStrings.current.navigation.overview) }
         )
         NavigationBarItem(
+            colors = itemColors,
             selected = calendarSelected,
             onClick = { onSelect("calendar") },
             icon = { AnimatedNavIcon(selected = calendarSelected, icon = Icons.Default.CalendarMonth) },
             label = { Text(AppStrings.current.navigation.calendar) }
         )
         NavigationBarItem(
+            colors = itemColors,
             selected = current == "board",
             onClick = { onSelect("board") },
             icon = {
@@ -101,12 +112,14 @@ fun AppBottomBar(
             label = { Text(AppStrings.current.navigation.board) }
         )
         NavigationBarItem(
+            colors = itemColors,
             selected = current == "events",
             onClick = { onSelect("events") },
             icon = { AnimatedNavIcon(selected = current == "events", icon = Icons.Default.Event) },
             label = { Text(AppStrings.current.navigation.events) }
         )
         NavigationBarItem(
+            colors = itemColors,
             selected = current == "other",
             onClick = { onSelect("other") },
             icon = {

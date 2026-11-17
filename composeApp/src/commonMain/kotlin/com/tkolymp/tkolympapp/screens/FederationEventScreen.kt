@@ -1,7 +1,23 @@
 package com.tkolymp.tkolympapp.screens
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.sp
+import com.tkolymp.tkolympapp.components.AppTopBar
+import com.tkolymp.tkolympapp.components.InfoPill
+import com.tkolymp.tkolympapp.components.RankBadge
+import com.tkolymp.tkolympapp.components.SectionHeader
+import com.tkolymp.tkolympapp.components.cardLineBorder
+import com.tkolymp.tkolympapp.components.pressClickable
+import com.tkolymp.tkolympapp.components.successColor
+import com.tkolymp.tkolympapp.components.successContainerColor
+import com.tkolymp.tkolympapp.components.surfaceCardColors
+import com.tkolymp.tkolympapp.ui.theme.BrandLightPrimary
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.layout.Box
@@ -21,6 +37,7 @@ import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -41,7 +58,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -86,14 +102,7 @@ fun FederationEventScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(state.event?.name ?: strings.event, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
-                    }
-                }
-            )
+            AppTopBar(title = state.event?.name ?: strings.event, onBack = onBack)
         }
     ) { padding ->
         SwipeToReload(
@@ -129,34 +138,60 @@ private fun EventContent(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         item {
-            Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+            // Hero: same red card as "next training" on Overview, carrying date and place.
+            Card(
+                Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = BrandLightPrimary, contentColor = Color.White)
+            ) {
                 SelectionContainer {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(event.name ?: "—", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                    Text(formatDateRange(event.startDate, event.endDate), style = MaterialTheme.typography.bodyLarge)
-                    strings.status(event.status).takeIf { it.isNotBlank() }?.let {
-                        Text(it, style = MaterialTheme.typography.labelLarge, color = if (event.status == "CANCELLED") MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
+                    Column(Modifier.padding(start = 18.dp, end = 18.dp, top = 18.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        val status = strings.status(event.status).takeIf { it.isNotBlank() }
+                        if (status != null) Text(status.uppercase(), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp)
+                        Text(formatDateRange(event.startDate, event.endDate), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                        Text(event.name ?: "—", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        val where = listOfNotNull(event.city ?: event.location, event.country).distinct().joinToString(", ")
+                        if (where.isNotBlank()) Text(where, style = MaterialTheme.typography.bodyMedium)
                     }
-                    val address = listOfNotNull(
-                        event.streetAddress,
-                        listOfNotNull(event.postalCode, event.city ?: event.location).joinToString(" ").takeIf { it.isNotBlank() },
-                        event.country
-                    ).joinToString(", ")
-                    InfoLine(strings.address, address)
-                    InfoLine(strings.address, event.addressNote)
-                    InfoLine(strings.organizer, event.organizer)
-                    InfoLine(strings.contact, listOfNotNull(event.contactName, event.contactPhone, event.contactEmail).joinToString(", "))
-                    event.websiteUrl?.takeIf { it.isNotBlank() }?.let { url ->
-                        TextButton(onClick = { onOpenWeb(url) }) {
-                            Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Text(" ${strings.website}")
-                        }
-                    }
-                }
                 }
             }
         }
-        item { Text(strings.competitionsHeader, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
+        item {
+            val address = listOfNotNull(
+                event.streetAddress,
+                listOfNotNull(event.postalCode, event.city ?: event.location).joinToString(" ").takeIf { it.isNotBlank() },
+                event.country
+            ).joinToString(", ")
+            val rows = listOf(
+                strings.address to address,
+                strings.address to event.addressNote,
+                strings.organizer to event.organizer,
+                strings.contact to listOfNotNull(event.contactName, event.contactPhone, event.contactEmail).joinToString(", ")
+            ).filter { !it.second.isNullOrBlank() }
+            if (rows.isNotEmpty() || !event.websiteUrl.isNullOrBlank()) {
+                Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
+                    SelectionContainer {
+                        Column {
+                            rows.forEachIndexed { i, (label, value) ->
+                                if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                                InfoLine(label, value)
+                            }
+                            event.websiteUrl?.takeIf { it.isNotBlank() }?.let { url ->
+                                if (rows.isNotEmpty()) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                                Row(
+                                    Modifier.fillMaxWidth().clickable(role = Role.Button) { onOpenWeb(url) }.padding(horizontal = 16.dp, vertical = 14.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                                    Text("  ${strings.website}", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        item { SectionHeader(title = strings.competitionsHeader, modifier = Modifier.padding(horizontal = 0.dp).offset(x = (-16).dp)) }
         if (event.competitions.isEmpty()) {
             item { EmptyState(strings.noCompetitions, modifier = Modifier.padding(24.dp)) }
         } else {
@@ -174,9 +209,9 @@ private fun EventContent(
 @Composable
 private fun InfoLine(label: String, value: String?) {
     if (value.isNullOrBlank()) return
-    Row {
-        Text("$label: ", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(value, style = MaterialTheme.typography.bodyMedium)
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)) {
+        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(value, style = MaterialTheme.typography.bodyLarge)
     }
 }
 
@@ -184,8 +219,13 @@ private fun InfoLine(label: String, value: String?) {
 private fun CompetitionCard(c: FederationCompetitionSummary, open: Boolean, state: FederationEventDetailState, onToggle: () -> Unit) {
     val strings = AppStrings.current.danceOrg
     val results = state.results[c.id]
-    Card(Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onToggle), shape = RoundedCornerShape(12.dp)) {
-        Column(Modifier.padding(12.dp)) {
+    Card(
+        Modifier.fillMaxWidth().pressClickable(0.995f, onToggle),
+        shape = RoundedCornerShape(16.dp),
+        colors = surfaceCardColors(),
+        border = cardLineBorder()
+    ) {
+        Column(Modifier.padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(formatFederationCategory(c.categoryName), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
@@ -200,31 +240,23 @@ private fun CompetitionCard(c: FederationCompetitionSummary, open: Boolean, stat
                 Icon(if (open) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, contentDescription = null)
             }
             if (open) {
-                HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
                 when {
                     c.id in state.loadingResults -> Box(Modifier.fillMaxWidth(), Alignment.Center) { CircularProgressIndicator(Modifier.size(24.dp)) }
                     results == null || results.results.isEmpty() -> Text(strings.noResultsYet, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    else -> SelectionContainer { Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    else -> SelectionContainer { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         results.results.forEach { r ->
-                            Row(verticalAlignment = Alignment.Top) {
-                                Text(
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                RankBadge(
                                     if (r.rankingTo != null && r.rankingTo != r.ranking) "${r.ranking}.–${r.rankingTo}." else "${r.ranking}.",
-                                    modifier = Modifier.padding(end = 8.dp).then(Modifier.fillMaxWidth(0.18f)),
-                                    fontWeight = FontWeight.Bold
+                                    winner = r.ranking == 1,
+                                    modifier = Modifier.widthIn(min = 40.dp)
                                 )
-                                Text(r.competitorName ?: "—", modifier = Modifier.weight(1f))
+                                Text(r.competitorName ?: "—", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
                                 r.pointGain?.toDoubleOrNull()?.takeIf { it > 0 }?.let {
-                                    Text("+${it.toString().removeSuffix(".0")}${AppStrings.current.competition.pointsSuffix}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    InfoPill("+${it.toString().removeSuffix(".0")}${AppStrings.current.competition.pointsSuffix}", successContainerColor(), successColor())
                                 }
-                                if (r.isFinal) Text(
-                                    "F",
-                                    modifier = Modifier.padding(start = 6.dp)
-                                        .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(6.dp))
-                                        .padding(horizontal = 6.dp, vertical = 1.dp),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
+                                if (r.isFinal) InfoPill("F", MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.onTertiaryContainer)
                             }
                         }
                     }

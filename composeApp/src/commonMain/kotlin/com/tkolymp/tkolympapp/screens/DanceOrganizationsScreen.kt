@@ -1,5 +1,9 @@
 package com.tkolymp.tkolympapp.screens
 
+import com.tkolymp.tkolympapp.components.AppTopBar
+import com.tkolymp.tkolympapp.components.cardLineBorder
+import com.tkolymp.tkolympapp.components.pressClickable
+import com.tkolymp.tkolympapp.components.surfaceCardColors
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -62,14 +66,7 @@ fun DanceOrganizationsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(AppStrings.current.danceOrg.title) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
-                    }
-                }
-            )
+            AppTopBar(title = AppStrings.current.danceOrg.title, subtitle = AppStrings.current.danceOrg.dataTitle, onBack = onBack)
         }
     ) { padding ->
         SwipeToReload(
@@ -85,15 +82,8 @@ fun DanceOrganizationsScreen(
                 else -> LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    item {
-                        Text(
-                            AppStrings.current.danceOrg.dataTitle,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
                     items(state.federations, key = { it.code }) { f -> FederationCard(f, onClick = { onOpenOrganization(f.code) }) }
                 }
             }
@@ -118,9 +108,14 @@ internal fun federationEmoji(code: String): String? = when (code.lowercase()) {
 
 @Composable
 private fun FederationCard(federation: DanceFederation, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Card(modifier = modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onClick), shape = RoundedCornerShape(16.dp)) {
+    Card(
+        modifier = modifier.fillMaxWidth().pressClickable(0.985f, onClick),
+        shape = RoundedCornerShape(16.dp),
+        colors = surfaceCardColors(),
+        border = cardLineBorder()
+    ) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainerHighest, modifier = Modifier.size(52.dp)) {
+            Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.size(52.dp)) {
                 Box(contentAlignment = Alignment.Center) {
                     val flag = federationEmoji(federation.code)
                     if (flag != null) Text(flag, fontSize = 28.sp)
@@ -131,7 +126,7 @@ private fun FederationCard(federation: DanceFederation, onClick: () -> Unit, mod
                 Text(federationLabel(federation.code), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Text(federation.name, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

@@ -1,5 +1,11 @@
 package com.tkolymp.tkolympapp.screens
 
+import com.tkolymp.tkolympapp.components.InfoPill
+import com.tkolymp.tkolympapp.components.RankBadge
+import com.tkolymp.tkolympapp.components.cardLineBorder
+import com.tkolymp.tkolympapp.components.successColor
+import com.tkolymp.tkolympapp.components.successContainerColor
+import com.tkolymp.tkolympapp.components.surfaceCardColors
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -79,8 +85,10 @@ internal fun CompetitionEventCard(competitions: List<Competition>, onOpenWeb: ((
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 4.dp),
-        shape = RoundedCornerShape(16.dp)
+            .padding(vertical = 4.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = surfaceCardColors(),
+        border = cardLineBorder()
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -117,40 +125,26 @@ internal fun CompetitionEventCard(competitions: List<Competition>, onOpenWeb: ((
             val byCompetitor = competitions.groupBy { it.competitorName?.takeIf { n -> n.isNotBlank() } ?: it.personName ?: "" }
             byCompetitor.values.forEach { competitorComps ->
                 Spacer(modifier = Modifier.height(10.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
                 Spacer(modifier = Modifier.height(8.dp))
 
                 val rep = competitorComps.first()
                 val nameDisplay = rep.competitorName?.takeIf { it.isNotBlank() } ?: rep.personName ?: ""
-                if (nameDisplay.isNotBlank()) {
-                    val coupleNames = nameDisplay.split(" - ", limit = 2).map { it.trim() }.takeIf { it.size == 2 }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        if (coupleNames != null) {
-                            CoupleAvatar(womanName = coupleNames[0], manName = coupleNames[1], size = 24.dp)
-                        } else {
-                            InitialsAvatar(name = nameDisplay, size = 24.dp)
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(nameDisplay, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                    }
-                    Spacer(modifier = Modifier.height(6.dp))
-                }
-
                 val scheduled = competitorComps.filter { !it.hasResult }.sortedBy { it.checkInEnd }
                 val results = competitorComps.filter { it.hasResult }.sortedBy { it.ranking }
 
-                scheduled.forEach { comp -> CompetitionEntryRow(comp) }
+                scheduled.forEach { comp -> CompetitionEntryRow(comp, competitorName = nameDisplay) }
 
                 if (scheduled.isNotEmpty() && results.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(4.dp))
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 2.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                 }
 
-                results.forEach { comp -> CompetitionEntryRow(comp) }
+                results.forEach { comp -> CompetitionEntryRow(comp, competitorName = nameDisplay) }
             }
         }
     }
@@ -166,8 +160,8 @@ internal fun InfoChip(icon: androidx.compose.ui.graphics.vector.ImageVector, tex
     Box(
         modifier = Modifier
             .then(if (trailingMargin) Modifier.padding(end = 8.dp, bottom = 6.dp) else Modifier)
-            .background(background, RoundedCornerShape(8.dp))
-            .padding(horizontal = 8.dp, vertical = 6.dp)
+            .background(background, RoundedCornerShape(10.dp))
+            .padding(horizontal = 10.dp, vertical = 6.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
@@ -178,7 +172,12 @@ internal fun InfoChip(icon: androidx.compose.ui.graphics.vector.ImageVector, tex
 }
 
 @Composable
-internal fun CompetitionEntryRow(comp: Competition, showCategory: Boolean = true, showCheckIn: Boolean = true) {
+internal fun CompetitionEntryRow(
+    comp: Competition,
+    showCategory: Boolean = true,
+    showCheckIn: Boolean = true,
+    competitorName: String? = null
+) {
     val rawCategory = comp.category?.name?.takeIf { it.isNotBlank() }
         ?: comp.competitionType?.takeIf { it.isNotBlank() }
         ?: ""
@@ -189,54 +188,40 @@ internal fun CompetitionEntryRow(comp: Competition, showCategory: Boolean = true
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (showCheckIn) {
-            comp.checkInEnd?.take(5)?.takeIf { it.isNotBlank() }?.let { time ->
-                InfoChip(
-                    icon = Icons.Default.Schedule,
-                    text = time,
-                    background = MaterialTheme.colorScheme.surfaceVariant,
-                    trailingMargin = false
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-            }
+            // Check-in time sits in its own fixed column at the far left so rows line up.
+            Text(
+                text = comp.checkInEnd?.take(5)?.takeIf { it.isNotBlank() }.orEmpty(),
+                modifier = Modifier.width(44.dp),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold
+            )
         }
 
-        if (showCategory) {
-            Text(
-                text = categoryName,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.weight(1f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        } else {
-            Spacer(modifier = Modifier.weight(1f))
+        val name = competitorName?.takeIf { it.isNotBlank() }
+        val line = androidx.compose.ui.text.buildAnnotatedString {
+            if (name != null) {
+                pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.SemiBold))
+                append(name)
+                pop()
+            }
+            if (showCategory && categoryName.isNotBlank()) {
+                if (name != null) append(" · ")
+                append(categoryName)
+            }
         }
+        Text(
+            text = line,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
 
         if (comp.hasResult && comp.ranking != null) {
             val rankNum = comp.rankingTo?.takeIf { it != comp.ranking }
                 ?.let { "${comp.ranking}-$it." } ?: "${comp.ranking}."
             val total = comp.participants?.let { " / $it" } ?: ""
-            Row(
-                modifier = Modifier
-                    .padding(start = 6.dp)
-                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(6.dp))
-                    .padding(horizontal = 6.dp, vertical = 2.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    Icons.Default.EmojiEvents,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.size(13.dp)
-                )
-                Spacer(modifier = Modifier.width(3.dp))
-                Text(
-                    text = rankNum + total,
-                    style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
+            RankBadge(rankNum + total, winner = comp.ranking == 1, modifier = Modifier.padding(start = 6.dp))
         }
 
         val rightLabel = buildString {
@@ -250,27 +235,13 @@ internal fun CompetitionEntryRow(comp: Competition, showCategory: Boolean = true
             if (comp.isFinal) { if (isNotEmpty()) append(" "); append("F") }
         }
         if (rightLabel.isNotBlank()) {
-            Row(
-                modifier = Modifier
-                    .padding(start = 4.dp)
-                    .background(MaterialTheme.colorScheme.tertiaryContainer, RoundedCornerShape(6.dp))
-                    .padding(horizontal = 6.dp, vertical = 2.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    Icons.Default.BarChart,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onTertiaryContainer,
-                    modifier = Modifier.size(13.dp)
-                )
-                Spacer(modifier = Modifier.width(3.dp))
-                Text(
-                    text = rightLabel,
-                    style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer
-                )
-            }
+            InfoPill(
+                rightLabel,
+                successContainerColor(),
+                successColor(),
+                modifier = Modifier.padding(start = 4.dp),
+                icon = Icons.Default.BarChart
+            )
         }
     }
 }

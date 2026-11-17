@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -77,7 +79,12 @@ fun InitialsAvatar(
                         color = Color.White,
                         fontSize = fontSize,
                         fontWeight = FontWeight.SemiBold,
-                        style = MaterialTheme.typography.labelSmall,
+                        textAlign = TextAlign.Center,
+                        // Trim the font's built-in top/bottom space so the letters sit in the optical centre of the circle.
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            lineHeight = fontSize,
+                            lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.Both)
+                        ),
                     )
                 }
             }

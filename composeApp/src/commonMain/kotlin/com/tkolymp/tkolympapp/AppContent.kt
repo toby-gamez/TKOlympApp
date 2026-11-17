@@ -499,6 +499,7 @@ fun AppNavHost(
                 onOpenEvents = { navController.navigate("events") },
                 onOpenPerson = { id -> navController.navigate("person/$id") },
                 onOpenCompetitions = { navController.navigate("organization/csts") },
+                onOpenPayments = { navController.navigate("payments") },
                 onOpenFederationEvent = { id -> navController.navigate("federationEvent/$id") }
             )
         }
@@ -514,7 +515,6 @@ fun AppNavHost(
                 CalendarViewScreen(
                     onEventClick = { id, instId -> navController.navigate("event/$id" + if (instId != null) "?instanceId=$instId" else "") },
                     onSwitchToBlocks = { isTimelineView = false },
-                    onFindFreeLessons = { navController.navigate("free-lessons") },
                     bottomPadding = bottomPadding,
                 )
             } else {
@@ -524,7 +524,6 @@ fun AppNavHost(
                     onOpenEvent = { id, instId -> navController.navigate("event/$id" + if (instId != null) "?instanceId=$instId" else "") },
                     onOpenRozpis = { id, instId -> navController.navigate("event/$id?" + (if (instId != null) "instanceId=$instId&" else "") + "tab=1") },
                     onNavigateTimeline = { isTimelineView = true },
-                    onFindFreeLessons = { navController.navigate("free-lessons") },
                     onCreateEvent = { navController.navigate("event_edit") },
                     bottomPadding = bottomPadding
                 )

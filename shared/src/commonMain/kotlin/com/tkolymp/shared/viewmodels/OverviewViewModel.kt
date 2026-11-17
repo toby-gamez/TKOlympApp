@@ -79,6 +79,8 @@ data class OverviewState(
     val birthdaysByDay: Map<String, List<BirthdayEntry>> = emptyMap(),
     val myPersonId: String? = null,
     val myCoupleIds: List<String> = emptyList(),
+    /** Soonest upcoming instance the user is registered for; drives the hero card. */
+    val nextTraining: EventInstance? = null,
     val isOffline: Boolean = false,
     val paymentDaysUntilDue: Int? = null,
     val nearestCompetition: FederationEventSummary? = null,
@@ -515,6 +517,7 @@ class OverviewViewModel(
                 birthdaysByDay = birthdaysByDay,
                 myPersonId = pid,
                 myCoupleIds = cids,
+                nextTraining = findNextTraining(events, pid, cids, nowInstant),
                 paymentDaysUntilDue = paymentDaysUntilDue,
                 isLoading = false
             )

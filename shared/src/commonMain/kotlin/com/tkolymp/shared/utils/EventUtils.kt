@@ -220,6 +220,15 @@ fun durationMinutes(since: String?, until: String?): String? {
     }
 }
 
+/**
+ * The length in minutes when it is a standard lesson length (45 or 90), otherwise null.
+ * Anything else (camps spanning days, odd slots) has no meaningful "duration" to show in a list.
+ */
+fun standardDurationMinutes(since: String?, until: String?): Int? {
+    val raw = durationMinutes(since, until)?.removeSuffix("'")?.toIntOrNull() ?: return null
+    return raw.takeIf { it == 45 || it == 90 }
+}
+
 fun formatHtmlContent(html: String?): String {
     if (html.isNullOrBlank()) return ""
     

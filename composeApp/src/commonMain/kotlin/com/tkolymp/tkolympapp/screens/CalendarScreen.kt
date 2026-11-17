@@ -1,6 +1,49 @@
 
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material.icons.filled.Person
+import com.tkolymp.shared.viewmodels.mondayOf
+import com.tkolymp.tkolympapp.components.InitialsAvatar
+import com.tkolymp.tkolympapp.components.LayoutCard
+import com.tkolymp.tkolympapp.components.SheetChip
+import com.tkolymp.tkolympapp.components.SheetPrimaryButton
+import com.tkolymp.tkolympapp.components.SheetSectionLabel
+import com.tkolymp.tkolympapp.components.SheetSwitchRow
+import androidx.compose.material.icons.filled.Today
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.FilterAltOff
+import com.tkolymp.shared.event.firstTrainerOrEmpty
+import com.tkolymp.shared.utils.standardDurationMinutes
+import com.tkolymp.shared.utils.formatTimes
+import com.tkolymp.shared.utils.getLocalizedMonthName
+import com.tkolymp.shared.utils.parseToLocal
+import com.tkolymp.tkolympapp.components.AppTopBar
+import com.tkolymp.tkolympapp.components.ChipRow
+import com.tkolymp.tkolympapp.components.DayEmptyState
+import com.tkolymp.tkolympapp.components.FilterButton
+import com.tkolymp.tkolympapp.components.HourHeader
+import com.tkolymp.tkolympapp.components.QuickChip
+import com.tkolymp.tkolympapp.components.RowDivider
+import com.tkolymp.tkolympapp.components.ScheduleCard
+import com.tkolymp.tkolympapp.components.ScheduleRow
+import com.tkolymp.tkolympapp.components.ScheduleTag
+import com.tkolymp.tkolympapp.components.SegmentedToggle
+import com.tkolymp.tkolympapp.components.TimelineDot
+import com.tkolymp.tkolympapp.components.TimelineRow
+import com.tkolymp.tkolympapp.components.TrainerCard
+import com.tkolymp.tkolympapp.components.WeekDayCell
+import com.tkolymp.tkolympapp.components.WeekStrip
+import com.tkolymp.tkolympapp.components.successColor
+import com.tkolymp.tkolympapp.components.timelineInfo
+import com.tkolymp.tkolympapp.ui.theme.Spacing
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.FontWeight
+import kotlinx.datetime.number
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
@@ -129,7 +172,6 @@ fun CalendarScreen(
     onNavigateTimeline: (() -> Unit)? = null,
     onBack: (() -> Unit)? = null,
     onCreatePersonalEvent: (() -> Unit)? = null,
-    onFindFreeLessons: (() -> Unit)? = null,
     onCreateEvent: (() -> Unit)? = null,
     bottomPadding: Dp = 0.dp
 ) {
@@ -163,6 +205,12 @@ fun CalendarScreen(
 
     var selectedTrainers by remember { mutableStateOf<Set<String>>(emptySet()) }
     var selectedLocations by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var selectedDateIso by rememberSaveable { mutableStateOf<String?>(null) }
+    var onlyFree by remember { mutableStateOf(false) }
+    var hideCancelled by remember { mutableStateOf(false) }
+    var selectedTypes by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var trainerView by rememberSaveable { mutableStateOf(false) }
+    var collapsedTrainers by remember { mutableStateOf<Set<String>>(emptySet()) }
 
     val availableTrainers = remember(calState.lessonsByTrainerByDay) {
         calState.lessonsByTrainerByDay.values.flatMap { it.keys }.sorted().toSet()
@@ -178,6 +226,21 @@ fun CalendarScreen(
         selectedTrainers = emptySet()
         selectedLocations = emptySet()
     }
+
+    // Day shown in the list (also what the filter sheet counts and previews).
+    val activeDateIso = selectedDateIso?.takeIf { it in calState.visibleDates }
+        ?: calState.todayString.takeIf { it in calState.visibleDates } ?: calState.visibleDates.firstOrNull()
+    val rawDay = remember(activeDateIso, calState.lessonsByTrainerByDay, calState.otherEventsByDay) {
+        activeDateIso?.let { d -> calState.lessonsByTrainerByDay[d].orEmpty().values.flatten() + calState.otherEventsByDay[d].orEmpty() } ?: emptyList()
+    }
+    fun locationOf(inst: EventInstance): String? =
+        inst.event?.locationText?.takeIf { it.isNotBlank() } ?: inst.event?.location?.name?.takeIf { it.isNotBlank() }
+    fun passesFilters(inst: EventInstance): Boolean =
+        (selectedTrainers.isEmpty() || inst.event?.eventTrainersList?.any { it in selectedTrainers } == true) &&
+            (selectedLocations.isEmpty() || locationOf(inst) in selectedLocations) &&
+            (selectedTypes.isEmpty() || inst.event?.type?.lowercase() in selectedTypes) &&
+            (!hideCancelled || !inst.isCancelled) &&
+            (!onlyFree || timelineInfo(inst, calState.myPersonId, calState.myCoupleIds).isFree)
 
     // Cache last non-empty offline data to avoid brief disappearance on transient empty state
     val cachedVisibleDates = remember { mutableStateOf<List<String>?>(null) }
@@ -220,23 +283,38 @@ fun CalendarScreen(
         calendarViewModel.load(localWeekOffset, selectedTab == 0, weekStartOverride = customStartDate)
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+    val sheetMaxHeight = maxHeight * 0.88f
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(AppStrings.current.navigation.calendar) },
-                navigationIcon = {
-                    onBack?.let {
-                        IconButton(onClick = it) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
-                        }
-                    }
-                },
+            AppTopBar(
+                title = AppStrings.current.navigation.calendar,
+                subtitle = weekRangeLabel(calState.visibleDates),
                 actions = {
                     com.tkolymp.tkolympapp.components.ManageCreateAction(
                         label = AppStrings.current.management.newEvent,
                         onClick = onCreateEvent
                     )
+                    val shiftWeek = { delta: Int ->
+                        val start = customStartDate
+                        if (start != null) customStartDate = start.plus(delta * 7, DateTimeUnit.DAY)
+                        else { localWeekOffset += delta; onWeekOffsetChange(localWeekOffset) }
+                        selectedDateIso = null
+                    }
+                    if (localWeekOffset != 0 || customStartDate != null) {
+                        IconButton(onClick = {
+                            customStartDate = null
+                            localWeekOffset = 0
+                            onWeekOffsetChange(0)
+                            selectedDateIso = null
+                        }) { Icon(Icons.Filled.Today, contentDescription = AppStrings.current.calendarView.resetToToday) }
+                    }
+                    IconButton(onClick = { shiftWeek(-1) }) {
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = AppStrings.current.calendarView.previous)
+                    }
+                    IconButton(onClick = { shiftWeek(1) }) {
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = AppStrings.current.calendarView.next)
+                    }
                     Box(
                         modifier = Modifier
                             .padding(end = 4.dp)
@@ -276,18 +354,7 @@ fun CalendarScreen(
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.Start
             ) {
-                PrimaryTabRow(
-                    selectedTabIndex = selectedTab,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    tabs.forEachIndexed { index, title ->
-                        Tab(
-                            selected = selectedTab == index,
-                            onClick = { selectedTab = index },
-                            text = { Text(title) }
-                        )
-                    }
-                }
+                // week strip, mode toggle and chips are rendered below, once the day data is known
 
                 // Compute filtered+offline-merged data once; only recomputes when filter
                 // inputs actually change — not on every unrelated recomposition.
@@ -327,7 +394,47 @@ fun CalendarScreen(
                     }
                 }
 
-                val contentKey = Triple(localWeekOffset, customStartDate, selectedTab)
+                val filteredByDate = remember(filteredEventsByDay) { filteredEventsByDay.associateBy { it.first } }
+                val calStrings = AppStrings.current.calendarView
+                fun dayInstances(date: String): List<EventInstance> {
+                    val t = filteredByDate[date] ?: return emptyList()
+                    return (t.second.values.flatten() + t.third)
+                        .filter { !hideCancelled || !it.isCancelled }
+                        .filter { selectedTypes.isEmpty() || it.event?.type?.lowercase() in selectedTypes }
+                        .filter { !onlyFree || timelineInfo(it, calState.myPersonId, calState.myCoupleIds).isFree }
+                        .sortedBy { it.since ?: "" }
+                }
+                val visibleDates = calState.visibleDates
+                val activeDate = activeDateIso
+                val activeFilterCount = selectedTrainers.size + selectedLocations.size + selectedTypes.size + (if (onlyFree) 1 else 0) + (if (hideCancelled) 1 else 0)
+
+                val dayCells = visibleDates.mapIndexed { i, iso ->
+                    val ld = try { LocalDate.parse(iso) } catch (_: Exception) { null }
+                    WeekDayCell(
+                        abbr = calStrings.weekDayAbbreviations.getOrElse(ld?.dayOfWeek?.ordinal ?: i) { "" },
+                        number = ld?.day ?: 0,
+                        count = dayInstances(iso).size,
+                        selected = iso == activeDate,
+                        isToday = iso == calState.todayString
+                    )
+                }
+                WeekStrip(days = dayCells, onSelect = { i -> selectedDateIso = visibleDates.getOrNull(i) })
+
+                ChipRow {
+                    SegmentedToggle(labels = tabs, selectedIndex = selectedTab, onSelect = { selectedTab = it })
+                    FilterButton(label = calStrings.filters, activeCount = activeFilterCount, onClick = { showBottomSheet = true })
+                    QuickChip(calStrings.onlyFree, onlyFree, { onlyFree = !onlyFree })
+                    QuickChip(calStrings.hideCancelled, hideCancelled, { hideCancelled = !hideCancelled })
+                    availableLocations.forEach { loc ->
+                        QuickChip(loc, loc in selectedLocations, {
+                            selectedLocations = if (loc in selectedLocations) selectedLocations - loc else selectedLocations + loc
+                        })
+                    }
+                    selectedTrainers.forEach { tr ->
+                        QuickChip(tr, true, { selectedTrainers = selectedTrainers - tr }, removable = true)
+                    }
+                }
+
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -337,111 +444,150 @@ fun CalendarScreen(
                             if (tutorialActive && tutorialStep in 6..7) TutorialHighlight.rect = b
                         }
                 ) {
-                    key(contentKey) {
-                    var datesVisible by remember { mutableStateOf(false) }
-                    LaunchedEffect(contentKey) { datesVisible = false }
-                    LaunchedEffect(calState.visibleDates) { if (calState.visibleDates.isNotEmpty()) datesVisible = true }
+                    if (activeDate == null) {
+                        if (!calState.isLoading) {
+                            EmptyState(title = calStrings.emptyCalendar, icon = Icons.Outlined.CalendarMonth, fullPage = true)
+                        }
+                    } else {
+                        val instances = dayInstances(activeDate)
+                        val competitions = calState.competitionsByDay[activeDate] ?: emptyList()
+                        val birthdays = calState.birthdaysByDay[activeDate] ?: emptyList()
+                        val ld = try { LocalDate.parse(activeDate) } catch (_: Exception) { null }
+                        val dayLabel = ld?.let {
+                            val full = formatFullCalendarDate(it, AppStrings.currentLanguage.code, false)
+                            if (activeDate == calState.todayString) AppStrings.current.timeline.today + " · " + full else full
+                        } ?: activeDate
+                        val myId = calState.myPersonId
+                        val myCouples = calState.myCoupleIds
+                        val freeCount = instances.count { timelineInfo(it, myId, myCouples).isFree }
+                        val summary = if (instances.isEmpty()) "" else listOfNotNull(
+                            calStrings.eventsCount.replace("%d", instances.size.toString()),
+                            calStrings.freeCount.replace("%d", freeCount.toString()).takeIf { freeCount > 0 }
+                        ).joinToString(" · ")
 
-                    val competitionsByDay = calState.competitionsByDay
-                    val birthdaysByDay = calState.birthdaysByDay
-                    val visibleDateSet = calState.visibleDates.toSet()
-                    val filteredByDate = remember(filteredEventsByDay) {
-                        filteredEventsByDay.associateBy { it.first }
-                    }
-                    val allDatesToShow = remember(filteredEventsByDay, competitionsByDay, birthdaysByDay, calState.visibleDates) {
-                        (filteredEventsByDay.map { it.first } + competitionsByDay.keys.filter { it in visibleDateSet } + birthdaysByDay.keys.filter { it in visibleDateSet })
-                            .distinct().sorted()
-                    }
+                        Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = Spacing.default)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(start = Spacing.default, end = Spacing.default, top = Spacing.medium, bottom = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(Spacing.small)
+                            ) {
+                                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                                    Text(
+                                        dayLabel.uppercase(),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = 0.8.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    if (birthdays.isNotEmpty()) BirthdaySummary(birthdays = birthdays)
+                                }
+                                if (summary.isNotEmpty()) Text(summary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
 
-                    if (allDatesToShow.isEmpty() && !calState.isLoading) {
-                        EmptyState(
-                            title = AppStrings.current.calendarView.emptyCalendar,
-                            icon = Icons.Outlined.CalendarMonth,
-                            fullPage = true
-                        )
-                    } else Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
-                    ) {
-                    allDatesToShow.forEachIndexed { idx, date ->
-                        val triple = filteredByDate[date]
-                        val filteredLessons = triple?.second ?: emptyMap()
-                        val filteredOther = triple?.third ?: emptyList()
-                        val competitions = competitionsByDay[date] ?: emptyList()
-                        val birthdays = birthdaysByDay[date] ?: emptyList()
-
-                        StaggeredItem(index = idx, visible = datesVisible, baseDelayMs = 50) {
-                        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                            val header = when (date) {
-                                calState.todayString -> AppStrings.current.timeline.today.lowercase()
-                                calState.tomorrowString -> AppStrings.current.timeline.tomorrow.lowercase()
-                                else -> {
-                                    val ld = try { LocalDate.parse(date) } catch (_: Exception) { null }
-                                    if (ld == null) date else {
-                                        val todayYear = try { LocalDate.parse(calState.todayString).year } catch (_: Exception) { -1 }
-                                        formatFullCalendarDate(ld, AppStrings.currentLanguage.code, ld.year != todayYear)
+                            if (instances.isEmpty() && competitions.isEmpty()) {
+                                val filtered = activeFilterCount > 0 && (filteredByDate.isNotEmpty() || calState.lessonsByTrainerByDay.isNotEmpty() || calState.otherEventsByDay.isNotEmpty())
+                                DayEmptyState(
+                                    text = calStrings.noEventsThisDay,
+                                    icon = if (filtered) Icons.Outlined.FilterAltOff else Icons.Outlined.EventBusy,
+                                    resetLabel = if (filtered) calStrings.clearFilters else null,
+                                    onReset = {
+                                        selectedTrainers = emptySet(); selectedLocations = emptySet(); selectedTypes = emptySet(); onlyFree = false; hideCancelled = false
+                                    }
+                                )
+                            } else if (instances.isNotEmpty()) {
+                                val onOpen = { inst: EventInstance -> inst.event?.id?.let { onOpenEvent(it, inst.id) }; Unit }
+                                if (selectedTab == 0) {
+                                    val primary = MaterialTheme.colorScheme.primary
+                                    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+                                    val ok = successColor()
+                                    Column(Modifier.padding(horizontal = Spacing.default)) {
+                                        instances.forEachIndexed { i, inst ->
+                                            val info = timelineInfo(inst, myId, myCouples)
+                                            TimelineRow(
+                                                time = formatTimes(inst.since, null),
+                                                dot = when {
+                                                    info.isFree -> TimelineDot.Free
+                                                    info.cohortColor != null -> TimelineDot.Filled(info.cohortColor)
+                                                    info.isMine -> TimelineDot.Filled(primary)
+                                                    else -> TimelineDot.Filled(muted)
+                                                },
+                                                title = if (info.isFree) AppStrings.current.overview.freeLesson else info.title,
+                                                subtitle = info.subtitle,
+                                                isFirst = i == 0,
+                                                isLast = i == instances.lastIndex,
+                                                onClick = { onOpen(inst) },
+                                                titleColor = if (info.isFree) ok else MaterialTheme.colorScheme.onSurface,
+                                                strikeThrough = inst.isCancelled
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    SegmentedToggle(
+                                        labels = listOf(calStrings.viewTime, calStrings.viewTrainers),
+                                        selectedIndex = if (trainerView) 1 else 0,
+                                        onSelect = { trainerView = it == 1 },
+                                        modifier = Modifier.padding(horizontal = Spacing.default, vertical = Spacing.xs)
+                                    )
+                                    if (!trainerView) {
+                                        val byHour = instances.groupBy { parseToLocal(it.since)?.hour ?: -1 }.toSortedMap()
+                                        byHour.forEach { (hour, list) ->
+                                            HourHeader(
+                                                hour = if (hour < 0) "" else hour.toString().padStart(2, '0') + ":00",
+                                                count = calStrings.eventsCount.replace("%d", list.size.toString())
+                                            )
+                                            ScheduleCard(Modifier.padding(start = Spacing.default, end = Spacing.default, bottom = Spacing.xs)) {
+                                                list.forEachIndexed { i, inst ->
+                                                    if (i > 0) RowDivider()
+                                                    EventScheduleRow(inst, myId, myCouples, withTrainer = true, onClick = { onOpen(inst) })
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        val lessons = instances.filter { it.event?.type.equals("lesson", ignoreCase = true) }
+                                        val others = instances - lessons.toSet()
+                                        Column(Modifier.padding(horizontal = Spacing.default), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                            if (others.isNotEmpty()) {
+                                                ScheduleCard {
+                                                    others.forEachIndexed { i, inst ->
+                                                        if (i > 0) RowDivider()
+                                                        EventScheduleRow(inst, myId, myCouples, withTrainer = true, onClick = { onOpen(inst) })
+                                                    }
+                                                }
+                                            }
+                                            lessons.groupBy { it.event.firstTrainerOrEmpty() }.forEach { (trainer, list) ->
+                                                val free = list.count { timelineInfo(it, myId, myCouples).isFree }
+                                                val place = list.firstNotNullOfOrNull { it.event?.locationText?.takeIf(String::isNotBlank) ?: it.event?.location?.name?.takeIf(String::isNotBlank) }
+                                                TrainerCard(
+                                                    name = trainer,
+                                                    summary = listOfNotNull(
+                                                        place,
+                                                        calStrings.eventsCount.replace("%d", list.size.toString()),
+                                                        formatTimes(list.first().since, list.last().until)
+                                                    ).joinToString(" · "),
+                                                    freeBadge = free.takeIf { it > 0 }?.let { calStrings.freeCount.replace("%d", it.toString()) },
+                                                    expanded = trainer !in collapsedTrainers,
+                                                    onToggle = { collapsedTrainers = if (trainer in collapsedTrainers) collapsedTrainers - trainer else collapsedTrainers + trainer }
+                                                ) {
+                                                    list.forEach { inst ->
+                                                        RowDivider()
+                                                        EventScheduleRow(inst, myId, myCouples, withTrainer = false, onClick = { onOpen(inst) })
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
-                            }
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(header, style = MaterialTheme.typography.titleMedium)
-                                if (birthdays.isNotEmpty()) {
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    BirthdaySummary(birthdays = birthdays, modifier = Modifier.weight(1f, fill = false))
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-
-                            filteredLessons.forEach { (trainer, instances) ->
-                                LessonView(
-                                    trainerName = trainer,
-                                    instances = instances,
-                                    isAllTab = (selectedTab == 1),
-                                    myPersonId = calState.myPersonId,
-                                    myCoupleIds = calState.myCoupleIds,
-                                    onEventClick = { id, instId -> onOpenEvent(id, instId) }
-                                )
-                            }
-
-                            filteredOther.forEach { item ->
-                                RenderSingleEventCard(item = item, onEventClick = { id, instId -> onOpenEvent(id, instId) }, onOpenRozpis = onOpenRozpis)
                             }
 
                             if (competitions.isNotEmpty()) {
-                                competitions
-                                    .groupBy { it.eventId?.toString() ?: it.eventName ?: it.competitionDate }
-                                    .values
-                                    .forEach { eventComps ->
-                                        CompetitionEventCard(competitions = eventComps)
-                                    }
-                            }
-
-                            if (filteredLessons.isEmpty() && filteredOther.isEmpty() && competitions.isEmpty()) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        Icons.Outlined.EventBusy,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = AppStrings.current.calendarView.noEventsThisDay,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
+                                Column(Modifier.padding(horizontal = Spacing.default, vertical = Spacing.small)) {
+                                    competitions
+                                        .groupBy { it.eventId?.toString() ?: it.eventName ?: it.competitionDate }
+                                        .values
+                                        .forEach { eventComps -> CompetitionEventCard(competitions = eventComps) }
                                 }
                             }
                         }
-                        } // StaggeredItem
-                    }
-                    }
                     }
                 }
             }
@@ -484,9 +630,10 @@ fun CalendarScreen(
     ) {
         Surface(
             shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            color = MaterialTheme.colorScheme.surface,
             modifier = Modifier
                 .fillMaxWidth()
+                .heightIn(max = sheetMaxHeight)
                 .offset { IntOffset(0, sheetDragOffset.value.toInt().coerceAtLeast(0)) }
                 .pointerInput(Unit) {
                     val dismissThreshold = 100.dp.toPx()
@@ -514,52 +661,61 @@ fun CalendarScreen(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
                         ) { showBottomSheet = false }
-                        .padding(top = 22.dp, bottom = 8.dp),
+                        .padding(top = 10.dp, bottom = 2.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Box(
                         modifier = Modifier
-                            .width(32.dp)
+                            .width(36.dp)
                             .height(4.dp)
                             .background(
-                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                                RoundedCornerShape(50)
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.18f),
+                                RoundedCornerShape(2.dp)
                             )
                     )
                 }
+                val sheetTrainers = availableTrainers
+                    .map { t -> t to rawDay.count { it.event?.eventTrainersList?.contains(t) == true } }
+                    .sortedWith(compareByDescending<Pair<String, Int>> { it.second }.thenBy { it.first })
                 CalendarBottomSheetContent(
-                    today = today,
-                    currentWeekStart = customStartDate ?: today.plus(localWeekOffset * 7, DateTimeUnit.DAY),
-                    onNavigateTimeline = onNavigateTimeline?.let { nav ->
-                        { showBottomSheet = false; nav() }
+                    layout = when {
+                        selectedTab == 1 && trainerView -> CalendarLayout.Trainers
+                        else -> CalendarLayout.List
                     },
-                    onFindFreeLessons = onFindFreeLessons?.let { finder ->
-                        { showBottomSheet = false; finder() }
+                    showTrainersLayout = selectedTab == 1,
+                    onLayoutSelect = { l ->
+                        when (l) {
+                            CalendarLayout.List -> trainerView = false
+                            CalendarLayout.Trainers -> trainerView = true
+                            CalendarLayout.Axis -> { showBottomSheet = false; onNavigateTimeline?.invoke() }
+                        }
                     },
-                    onWeekSelected = { monday ->
-                        customStartDate = monday
-                    },
-                    onReset = {
-                        customStartDate = null
-                        localWeekOffset = 0
-                        onWeekOffsetChange(0)
-                    },
-                    availableTrainers = availableTrainers,
-                    availableLocations = availableLocations,
-                    selectedTrainers = selectedTrainers,
+                    axisAvailable = onNavigateTimeline != null,
+                    onlyFree = onlyFree,
+                    onOnlyFreeChange = { onlyFree = it },
+                    hideCancelled = hideCancelled,
+                    onHideCancelledChange = { hideCancelled = it },
+                    lessonCount = rawDay.count { it.event?.type.equals("lesson", ignoreCase = true) },
+                    groupCount = rawDay.count { it.event?.type.equals("group", ignoreCase = true) },
+                    selectedTypes = selectedTypes,
+                    onTypeToggle = { t -> selectedTypes = if (t in selectedTypes) selectedTypes - t else selectedTypes + t },
+                    locations = availableLocations.map { l -> l to rawDay.count { locationOf(it) == l } },
                     selectedLocations = selectedLocations,
-                    onTrainerToggle = { trainer ->
-                        selectedTrainers = if (trainer in selectedTrainers) selectedTrainers - trainer else selectedTrainers + trainer
-                    },
                     onLocationToggle = { location ->
                         selectedLocations = if (location in selectedLocations) selectedLocations - location else selectedLocations + location
                     },
-                    onResetFilters = {
-                        selectedTrainers = emptySet()
-                        selectedLocations = emptySet()
+                    trainers = sheetTrainers,
+                    selectedTrainers = selectedTrainers,
+                    onTrainerToggle = { trainer ->
+                        selectedTrainers = if (trainer in selectedTrainers) selectedTrainers - trainer else selectedTrainers + trainer
                     },
-                    competitionDates = calState.competitionsByDay.keys,
-                    birthdayDates = calState.birthdaysByDay.keys
+                    activeFilterCount = selectedTrainers.size + selectedLocations.size + selectedTypes.size + (if (onlyFree) 1 else 0) + (if (hideCancelled) 1 else 0),
+                    onResetFilters = {
+                        selectedTrainers = emptySet(); selectedLocations = emptySet(); selectedTypes = emptySet()
+                        onlyFree = false; hideCancelled = false
+                    },
+                    resultCount = rawDay.count { passesFilters(it) },
+                    onClose = { showBottomSheet = false }
                 )
             }
         }
@@ -567,410 +723,106 @@ fun CalendarScreen(
     } // Box
 }
 
-@Composable
-private fun CalendarFilterBar(
-    availableTrainers: Set<String>,
-    availableLocations: Set<String>,
-    selectedTrainers: Set<String>,
-    selectedLocations: Set<String>,
-    onTrainerToggle: (String) -> Unit,
-    onLocationToggle: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val showTrainers = availableTrainers.size >= 2
-    val showLocations = availableLocations.size >= 2
-    if (!showTrainers && !showLocations) return
+private enum class CalendarLayout { List, Trainers, Axis }
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
-            .padding(vertical = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (showTrainers) {
-            availableTrainers.forEach { trainer ->
-                FilterChip(
-                    selected = trainer in selectedTrainers,
-                    onClick = { onTrainerToggle(trainer) },
-                    label = { Text(trainer, maxLines = 1) }
-                )
-            }
-        }
-
-        if (showTrainers && showLocations) {
-            Box(
-                modifier = Modifier
-                    .height(24.dp)
-                    .width(1.dp)
-                    .background(MaterialTheme.colorScheme.outlineVariant)
-            )
-        }
-
-        if (showLocations) {
-            availableLocations.forEach { location ->
-                FilterChip(
-                    selected = location in selectedLocations,
-                    onClick = { onLocationToggle(location) },
-                    label = { Text(location, maxLines = 1) },
-                    leadingIcon = {
-                        Icon(
-                            Icons.Default.Place,
-                            contentDescription = null,
-                            modifier = Modifier.size(AssistChipDefaults.IconSize)
-                        )
-                    }
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CalendarBottomSheetContent(
-    today: LocalDate,
-    currentWeekStart: LocalDate,
-    onNavigateTimeline: (() -> Unit)?,
-    onFindFreeLessons: (() -> Unit)?,
-    onWeekSelected: (LocalDate) -> Unit,
-    onReset: () -> Unit,
-    availableTrainers: Set<String> = emptySet(),
-    availableLocations: Set<String> = emptySet(),
-    selectedTrainers: Set<String> = emptySet(),
-    selectedLocations: Set<String> = emptySet(),
-    onTrainerToggle: (String) -> Unit = {},
-    onLocationToggle: (String) -> Unit = {},
-    onResetFilters: (() -> Unit)? = null,
-    competitionDates: Set<String> = emptySet(),
-    birthdayDates: Set<String> = emptySet()
+    layout: CalendarLayout,
+    showTrainersLayout: Boolean,
+    onLayoutSelect: (CalendarLayout) -> Unit,
+    axisAvailable: Boolean,
+    onlyFree: Boolean,
+    onOnlyFreeChange: (Boolean) -> Unit,
+    hideCancelled: Boolean,
+    onHideCancelledChange: (Boolean) -> Unit,
+    lessonCount: Int,
+    groupCount: Int,
+    selectedTypes: Set<String>,
+    onTypeToggle: (String) -> Unit,
+    locations: List<Pair<String, Int>>,
+    selectedLocations: Set<String>,
+    onLocationToggle: (String) -> Unit,
+    trainers: List<Pair<String, Int>>,
+    selectedTrainers: Set<String>,
+    onTrainerToggle: (String) -> Unit,
+    activeFilterCount: Int,
+    onResetFilters: () -> Unit,
+    resultCount: Int,
+    onClose: () -> Unit
 ) {
-    var displayMonth by remember(currentWeekStart) {
-        mutableStateOf(LocalDate(currentWeekStart.year, currentWeekStart.month, 1))
-    }
-
-    // All sections animate in together
-    var showContent by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { showContent = true }
-
-    val enterAnim = fadeIn(tween(260)) + slideInVertically(tween(260)) { it / 4 }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .padding(bottom = LocalBottomBarPadding.current + 8.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        // ── View switcher ──────────────────────────────────────────────────────
-        AnimatedVisibility(visible = showContent && onNavigateTimeline != null, enter = enterAnim) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = AppStrings.current.calendarView.calendarOptionsTitle,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(
-                        selected = true,
-                        onClick = {},
-                        label = { Text(AppStrings.current.settings.calendarViewList) },
-                        leadingIcon = {
-                            Icon(
-                                Icons.Default.ViewAgenda,
-                                contentDescription = null,
-                                modifier = Modifier.size(AssistChipDefaults.IconSize)
-                            )
-                        }
-                    )
-                    FilterChip(
-                        selected = false,
-                        onClick = { onNavigateTimeline?.invoke() },
-                        label = { Text(AppStrings.current.onboarding.calendarViewTimeline) },
-                        leadingIcon = {
-                            Icon(
-                                Icons.Default.ViewTimeline,
-                                contentDescription = null,
-                                modifier = Modifier.size(AssistChipDefaults.IconSize)
-                            )
-                        }
-                    )
-                }
-                HorizontalDivider()
-            }
-        }
-
-        // ── Filters ────────────────────────────────────────────────────────────
-        AnimatedVisibility(
-            visible = showContent && (availableTrainers.size >= 2 || availableLocations.size >= 2),
-            enter = enterAnim
+    val strings = AppStrings.current.calendarView
+    val line = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = Spacing.small),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                CalendarFilterBar(
-                    availableTrainers = availableTrainers,
-                    availableLocations = availableLocations,
-                    selectedTrainers = selectedTrainers,
-                    selectedLocations = selectedLocations,
-                    onTrainerToggle = onTrainerToggle,
-                    onLocationToggle = onLocationToggle
+            Text(strings.filters, modifier = Modifier.weight(1f), fontSize = 22.sp, lineHeight = 28.sp, fontWeight = FontWeight.Bold)
+            if (activeFilterCount > 0) {
+                Text(
+                    strings.clearFilters,
+                    modifier = Modifier.heightIn(min = 48.dp).clickable(onClick = onResetFilters).padding(top = 14.dp),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.secondary
                 )
-                val filtersActive = selectedTrainers.isNotEmpty() || selectedLocations.isNotEmpty()
-                AnimatedVisibility(visible = filtersActive, enter = fadeIn(tween(160)), exit = fadeOut(tween(120))) {
-                    TextButton(
-                        onClick = { onResetFilters?.invoke() },
-                        modifier = Modifier.align(Alignment.End)
-                    ) {
-                        Text(AppStrings.current.calendarView.clearFilters)
-                    }
-                }
-                HorizontalDivider()
             }
         }
 
-        // ── Lesson finder ──────────────────────────────────────────────────────
-        AnimatedVisibility(visible = showContent && onFindFreeLessons != null, enter = enterAnim) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                androidx.compose.material3.FilledTonalButton(
-                    onClick = { onFindFreeLessons?.invoke() },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Search,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.size(8.dp))
-                    Text(
-                        AppStrings.current.freeLessons.findButton,
-                        style = MaterialTheme.typography.labelLarge
-                    )
+        Column(
+            modifier = Modifier
+                .weight(1f, fill = false)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp)
+                .padding(bottom = Spacing.small)
+        ) {
+            SheetSectionLabel(strings.layoutSection)
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.small)) {
+                LayoutCard(Icons.Default.ViewAgenda, strings.viewList, layout == CalendarLayout.List, { onLayoutSelect(CalendarLayout.List) }, Modifier.weight(1f))
+                if (showTrainersLayout) {
+                    LayoutCard(Icons.Default.Person, strings.viewTrainers, layout == CalendarLayout.Trainers, { onLayoutSelect(CalendarLayout.Trainers) }, Modifier.weight(1f))
                 }
-                HorizontalDivider()
+                if (axisAvailable) {
+                    LayoutCard(Icons.Default.ViewTimeline, strings.viewAxis, false, { onLayoutSelect(CalendarLayout.Axis) }, Modifier.weight(1f))
+                }
+            }
+
+            SheetSectionLabel(strings.showSection)
+            SheetSwitchRow(strings.onlyFreeLessons, strings.onlyFreeLessonsDesc, onlyFree, onOnlyFreeChange)
+            SheetSwitchRow(strings.hideCancelled, strings.hideCancelledDesc, hideCancelled, onHideCancelledChange)
+
+            SheetSectionLabel(strings.typeSection)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.small), verticalArrangement = Arrangement.spacedBy(Spacing.small)) {
+                SheetChip(strings.typeLessons, lessonCount, "lesson" in selectedTypes, { onTypeToggle("lesson") })
+                SheetChip(strings.typeGroups, groupCount, "group" in selectedTypes, { onTypeToggle("group") })
+            }
+
+            if (locations.size >= 2) {
+                SheetSectionLabel(strings.placeSection)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.small), verticalArrangement = Arrangement.spacedBy(Spacing.small)) {
+                    locations.forEach { (loc, n) -> SheetChip(loc, n, loc in selectedLocations, { onLocationToggle(loc) }) }
+                }
+            }
+
+            if (trainers.size >= 2) {
+                SheetSectionLabel(strings.trainerSection)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.small), verticalArrangement = Arrangement.spacedBy(Spacing.small)) {
+                    trainers.forEach { (name, n) ->
+                        SheetChip(name, n, name in selectedTrainers, { onTrainerToggle(name) }, leading = {
+                            InitialsAvatar(name = name, size = 24.dp, fontSize = 10.sp)
+                        })
+                    }
+                }
             }
         }
 
-        // ── Timestamp / week selector ──────────────────────────────────────────
-        AnimatedVisibility(visible = showContent, enter = enterAnim) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                // Month navigation header
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = {
-                        displayMonth = displayMonth.minus(DatePeriod(months = 1))
-                    }) {
-                        Icon(Icons.Default.ChevronLeft, contentDescription = AppStrings.current.calendarView.previous)
-                    }
-                    Text(
-                        text = "${displayMonth.month.name.lowercase().replaceFirstChar { it.uppercase() }} ${displayMonth.year}",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    IconButton(onClick = {
-                        displayMonth = displayMonth.plus(DatePeriod(months = 1))
-                    }) {
-                        Icon(Icons.Default.ChevronRight, contentDescription = AppStrings.current.calendarView.next)
-                    }
-                }
-
-                // Day-of-week header row
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    AppStrings.current.calendarView.weekDayAbbreviations.forEach { label ->
-                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                            Text(
-                                text = label,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                }
-
-                // Month grid with slide transition on month change
-                AnimatedContent(
-                    targetState = displayMonth,
-                    transitionSpec = {
-                        if (targetState > initialState) {
-                            (slideInHorizontally(tween(300)) { it } + fadeIn(tween(200))) togetherWith
-                                    (slideOutHorizontally(tween(300)) { -it } + fadeOut(tween(200)))
-                        } else {
-                            (slideInHorizontally(tween(300)) { -it } + fadeIn(tween(200))) togetherWith
-                                    (slideOutHorizontally(tween(300)) { it } + fadeOut(tween(200)))
-                        }
-                    },
-                    label = "month_transition"
-                ) { month ->
-                    MonthCalendarGrid(
-                        displayMonth = month,
-                        today = today,
-                        selectedWeekStart = currentWeekStart,
-                        onDayClick = { day ->
-                            val monday = day.plus(-day.dayOfWeek.ordinal, DateTimeUnit.DAY)
-                            onWeekSelected(monday)
-                        },
-                        competitionDates = competitionDates,
-                        birthdayDates = birthdayDates
-                    )
-                }
-
-                // Reset to current week
-                TextButton(
-                    onClick = onReset,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                ) {
-                    Text(AppStrings.current.calendarView.resetToToday)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun MonthCalendarGrid(
-    displayMonth: LocalDate,
-    today: LocalDate,
-    selectedWeekStart: LocalDate,
-    onDayClick: (LocalDate) -> Unit,
-    competitionDates: Set<String> = emptySet(),
-    birthdayDates: Set<String> = emptySet()
-) {
-    val selectedWeekEnd = remember(selectedWeekStart) { selectedWeekStart.plus(6, DateTimeUnit.DAY) }
-
-    val firstDayOfMonth = LocalDate(displayMonth.year, displayMonth.month, 1)
-    val dayOfWeekOffset = firstDayOfMonth.dayOfWeek.ordinal  // 0 = Monday … 6 = Sunday
-    val firstCellDate = firstDayOfMonth.plus(-dayOfWeekOffset, DateTimeUnit.DAY)
-
-    // Capture theme colors here — they can't be read inside drawBehind (DrawScope)
-    val barColor = MaterialTheme.colorScheme.primaryContainer
-    val circleColor = MaterialTheme.colorScheme.primary
-    val onCircleColor = MaterialTheme.colorScheme.onPrimary
-    val onSurfaceColor = MaterialTheme.colorScheme.onSurface
-    val competitionDotColor = MaterialTheme.colorScheme.tertiary
-
-    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        for (row in 0..5) {
-            val rowStart = firstCellDate.plus(row * 7, DateTimeUnit.DAY)
-            val rowEnd = rowStart.plus(6, DateTimeUnit.DAY)
-
-            // Intersection of the selected range with this calendar row
-            val rowHasSelection = rowEnd >= selectedWeekStart && rowStart <= selectedWeekEnd
-            val barStartCol = if (rowHasSelection)
-                maxOf(0, (selectedWeekStart.toEpochDays() - rowStart.toEpochDays()).toInt()) else 0
-            val barEndCol = if (rowHasSelection)
-                minOf(6, (selectedWeekEnd.toEpochDays() - rowStart.toEpochDays()).toInt()) else 0
-            // Left cap is rounded only when this is the absolute start of the 7-day period
-            val roundLeft = rowHasSelection && rowStart.plus(barStartCol, DateTimeUnit.DAY) == selectedWeekStart
-            // Right cap is rounded only when this is the absolute end of the 7-day period
-            val roundRight = rowHasSelection && rowStart.plus(barEndCol, DateTimeUnit.DAY) == selectedWeekEnd
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(40.dp)
-                    .drawBehind {
-                        if (!rowHasSelection) return@drawBehind
-
-                        val cellW = size.width / 7f
-                        val startX = barStartCol * cellW
-                        val endX = (barEndCol + 1) * cellW
-                        val barWidth = endX - startX
-                        // Bar height with vertical padding so it looks like a pill inside the cell
-                        val vPad = 4f
-                        val barH = size.height - vPad * 2
-                        val barTop = vPad
-                        val r = barH / 2f
-                        val capW = minOf(r, barWidth / 2f)
-
-                        // Step 1: draw fully-rounded rect covering the whole selection in this row
-                        drawRoundRect(
-                            color = barColor,
-                            topLeft = Offset(startX, barTop),
-                            size = Size(barWidth, barH),
-                            cornerRadius = CornerRadius(r, r)
-                        )
-                        // Step 2: square off the left end if it continues from a previous row
-                        if (!roundLeft) {
-                            drawRect(
-                                color = barColor,
-                                topLeft = Offset(startX, barTop),
-                                size = Size(capW, barH)
-                            )
-                        }
-                        // Step 3: square off the right end if it continues into the next row
-                        if (!roundRight) {
-                            drawRect(
-                                color = barColor,
-                                topLeft = Offset(endX - capW, barTop),
-                                size = Size(capW, barH)
-                            )
-                        }
-                    }
-            ) {
-                for (col in 0..6) {
-                    val date = rowStart.plus(col, DateTimeUnit.DAY)
-                    val isCurrentMonth = date.month == displayMonth.month
-                    val isToday = date == today
-                    val isRangeEdge = date == selectedWeekStart || date == selectedWeekEnd
-                    val showCircle = isToday || isRangeEdge
-                    val hasCompetition = date.toString() in competitionDates
-                    val hasBirthday = date.toString() in birthdayDates
-
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .clickable { onDayClick(date) },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (showCircle) {
-                            Box(
-                                modifier = Modifier
-                                    .size(34.dp)
-                                    .background(circleColor, CircleShape)
-                            )
-                        }
-                        Text(
-                            text = date.day.toString(),
-                            style = MaterialTheme.typography.bodySmall,
-                            textAlign = TextAlign.Center,
-                            color = when {
-                                showCircle -> onCircleColor
-                                !isCurrentMonth -> onSurfaceColor.copy(alpha = 0.3f)
-                                else -> onSurfaceColor
-                            }
-                        )
-                        if (hasCompetition || hasBirthday) {
-                            Row(
-                                modifier = Modifier
-                                    .align(Alignment.BottomCenter)
-                                    .padding(bottom = 2.dp),
-                                horizontalArrangement = Arrangement.spacedBy(2.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                if (hasBirthday) {
-                                    Icon(
-                                        Icons.Filled.Cake,
-                                        contentDescription = AppStrings.current.profile.birthdays,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(8.dp)
-                                    )
-                                }
-                                if (hasCompetition) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(4.dp)
-                                            .background(competitionDotColor, CircleShape)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+        Box(Modifier.fillMaxWidth().height(1.dp).background(line))
+        Box(Modifier.padding(start = 20.dp, end = 20.dp, top = Spacing.medium, bottom = Spacing.default + LocalBottomBarPadding.current)) {
+            SheetPrimaryButton(
+                text = if (resultCount > 0) strings.showResults.replace("%d", resultCount.toString()) else strings.noResults,
+                onClick = onClose
+            )
         }
     }
 }
@@ -1068,4 +920,63 @@ private fun BirthdaySummary(birthdays: List<BirthdayEntry>, modifier: Modifier =
             }
         }
     }
+}
+
+/** [ScheduleRow] for an [EventInstance], choosing mark colour and trailing tag the way the prototype does. */
+@Composable
+private fun EventScheduleRow(
+    inst: EventInstance,
+    myPersonId: String?,
+    myCoupleIds: List<String>,
+    withTrainer: Boolean,
+    onClick: () -> Unit
+) {
+    val info = timelineInfo(inst, myPersonId, myCoupleIds)
+    val strings = AppStrings.current.calendarView
+    val ok = successColor()
+    val isLesson = inst.event?.type.equals("lesson", ignoreCase = true)
+    val trainer = inst.event.firstTrainerOrEmpty()
+    val place = inst.event?.locationText?.takeIf { it.isNotBlank() } ?: inst.event?.location?.name.orEmpty()
+    val mark = when {
+        !isLesson && info.cohortColor != null -> info.cohortColor
+        info.isFree -> ok
+        info.isMine -> MaterialTheme.colorScheme.primary
+        inst.isCancelled -> Color.Transparent
+        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.18f)
+    }
+    val subtitle = when {
+        !isLesson -> listOf(trainer, place)
+        withTrainer -> listOf(trainer, place)
+        else -> emptyList()
+    }.filter { it.isNotBlank() }.joinToString(" · ").ifBlank { null }
+    ScheduleRow(
+        time = formatTimes(inst.since, null),
+        mark = mark,
+        title = if (info.isFree) AppStrings.current.overview.freeLesson else info.title,
+        subtitle = subtitle,
+        tag = when {
+            info.isFree -> ScheduleTag.Free(strings.signUpShort)
+            inst.isCancelled -> ScheduleTag.Cancelled(strings.cancelledTag)
+            info.isMine -> ScheduleTag.Mine(strings.youTag)
+            else -> standardDurationMinutes(inst.since, inst.until)?.let { ScheduleTag.Duration("$it'") } ?: ScheduleTag.None
+        },
+        onClick = onClick,
+        highlighted = info.isMine && !info.isFree,
+        strikeThrough = inst.isCancelled,
+        emphasized = info.isMine || !isLesson,
+        titleColor = when {
+            info.isFree -> ok
+            inst.isCancelled -> MaterialTheme.colorScheme.onSurfaceVariant
+            else -> MaterialTheme.colorScheme.onSurface
+        }
+    )
+}
+
+private fun weekRangeLabel(visibleDates: List<String>): String? {
+    val first = visibleDates.firstOrNull()?.let { try { LocalDate.parse(it) } catch (_: Exception) { null } } ?: return null
+    val last = visibleDates.lastOrNull()?.let { try { LocalDate.parse(it) } catch (_: Exception) { null } } ?: return null
+    val lang = AppStrings.currentLanguage.code
+    val lastMonth = getLocalizedMonthName(last.month.number, lang)
+    return if (first.month == last.month) "${first.day}.–${last.day}. $lastMonth"
+    else "${first.day}. ${getLocalizedMonthName(first.month.number, lang)} – ${last.day}. $lastMonth"
 }

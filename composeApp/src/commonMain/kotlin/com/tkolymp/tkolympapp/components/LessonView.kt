@@ -36,7 +36,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.event.EventInstance
 import com.tkolymp.shared.language.AppStrings
-import com.tkolymp.shared.utils.durationMinutes
+import com.tkolymp.shared.utils.standardDurationMinutes
 import com.tkolymp.shared.utils.formatTimes
 
 @Composable
@@ -112,7 +112,7 @@ internal fun LessonView(
                         }
                     }
                     val participantsEmpty = parts.isEmpty()
-                    val durationMin = durationMinutes(inst.since, inst.until)
+                    val durationMin = standardDurationMinutes(inst.since, inst.until)?.let { "$it'" }
                     val deco = if (inst.isCancelled) TextDecoration.LineThrough else TextDecoration.None
 
                     Row(

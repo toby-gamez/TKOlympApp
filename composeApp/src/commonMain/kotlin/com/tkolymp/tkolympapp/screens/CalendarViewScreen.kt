@@ -1,5 +1,23 @@
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import com.tkolymp.tkolympapp.components.AppTopBar
+import com.tkolymp.tkolympapp.components.ChipRow
+import com.tkolymp.tkolympapp.components.LayoutCard
+import com.tkolymp.tkolympapp.components.SegmentedToggle
+import com.tkolymp.tkolympapp.components.SheetPrimaryButton
+import com.tkolymp.tkolympapp.components.SheetSectionLabel
+import com.tkolymp.tkolympapp.components.successColor
+import com.tkolymp.tkolympapp.components.successContainerColor
+import com.tkolymp.tkolympapp.ui.theme.BrandLightPrimary
+import com.tkolymp.tkolympapp.ui.theme.Spacing
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
@@ -16,7 +34,6 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,7 +42,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -121,7 +137,6 @@ fun CalendarViewScreen(
     onEventClick: (Long, Long?) -> Unit = { _, _ -> },
     onBack: (() -> Unit)? = null,
     onSwitchToBlocks: (() -> Unit)? = null,
-    onFindFreeLessons: (() -> Unit)? = null,
     bottomPadding: Dp = 0.dp
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -156,21 +171,17 @@ fun CalendarViewScreen(
     Box(modifier = Modifier.fillMaxSize()) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(if (onSwitchToBlocks != null) AppStrings.current.navigation.calendar else AppStrings.current.timeline.timeline) },
-                navigationIcon = {
-                    onBack?.let {
-                        IconButton(onClick = it) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
-                        }
-                    }
-                },
+            AppTopBar(
+                title = if (onSwitchToBlocks != null) AppStrings.current.navigation.calendar else AppStrings.current.timeline.timeline,
+                subtitle = viewModel.getDateLabel(),
+                onBack = onBack,
                 actions = {
-                    FilterChip(
-                        selected = state.showOnlyMine,
-                        onClick = { scope.launch { viewModel.toggleShowOnlyMine() } },
-                        label = { Text(AppStrings.current.people.mine) }
-                    )
+                    IconButton(onClick = { scope.launch { viewModel.navigatePrevious() } }) {
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = AppStrings.current.calendarView.previous)
+                    }
+                    IconButton(onClick = { scope.launch { viewModel.navigateNext() } }) {
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = AppStrings.current.calendarView.next)
+                    }
                     IconButton(onClick = { showBottomSheet.value = true }) {
                         Icon(Icons.Default.MoreVert, contentDescription = AppStrings.current.commonActions.options)
                     }
@@ -184,13 +195,14 @@ fun CalendarViewScreen(
             .padding(padding)
             .background(MaterialTheme.colorScheme.background)
     ) {
-        CalendarTopBar(
-            dateLabel = viewModel.getDateLabel(),
-            onPreviousClick = { scope.launch { viewModel.navigatePrevious() } },
-            onNextClick = { scope.launch { viewModel.navigateNext() } }
-        )
-
-        HorizontalDivider()
+        ChipRow {
+            SegmentedToggle(
+                labels = listOf(AppStrings.current.people.mine, AppStrings.current.commonActions.all),
+                selectedIndex = if (state.showOnlyMine) 0 else 1,
+                onSelect = { i -> if ((i == 0) != state.showOnlyMine) scope.launch { viewModel.toggleShowOnlyMine() } }
+            )
+        }
+        Spacer(Modifier.height(Spacing.small))
 
         SwipeToReload(
             isRefreshing = state.isLoading,
@@ -240,6 +252,7 @@ fun CalendarViewScreen(
                 }
             }
         }
+        TimelineLegend()
     }
     }
 
@@ -269,7 +282,7 @@ fun CalendarViewScreen(
     ) {
         Surface(
             shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            color = MaterialTheme.colorScheme.surface,
             modifier = Modifier
                 .fillMaxWidth()
                 .offset { IntOffset(0, sheetDragOffset.value.toInt().coerceAtLeast(0)) }
@@ -299,16 +312,16 @@ fun CalendarViewScreen(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
                         ) { showBottomSheet.value = false }
-                        .padding(top = 22.dp, bottom = 8.dp),
+                        .padding(top = 10.dp, bottom = 2.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Box(
                         modifier = Modifier
-                            .width(32.dp)
+                            .width(36.dp)
                             .height(4.dp)
                             .background(
-                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                                RoundedCornerShape(50)
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.18f),
+                                RoundedCornerShape(2.dp)
                             )
                     )
                 }
@@ -316,8 +329,8 @@ fun CalendarViewScreen(
                     viewMode = state.viewMode,
                     onViewModeChange = { mode -> scope.launch { viewModel.setViewMode(mode) } },
                     onSwitchToBlocks = onSwitchToBlocks?.let { sw -> { showBottomSheet.value = false; sw() } },
-                    onFindFreeLessons = onFindFreeLessons?.let { finder -> { showBottomSheet.value = false; finder() } },
-                    onNavigateToday = { showBottomSheet.value = false; scope.launch { viewModel.navigateToday() } }
+                    onNavigateToday = { showBottomSheet.value = false; scope.launch { viewModel.navigateToday() } },
+                    onClose = { showBottomSheet.value = false }
                 )
             }
         }
@@ -361,121 +374,77 @@ private fun TimelineBottomSheetContent(
     viewMode: ViewMode,
     onViewModeChange: (ViewMode) -> Unit,
     onSwitchToBlocks: (() -> Unit)?,
-    onFindFreeLessons: (() -> Unit)?,
-    onNavigateToday: () -> Unit
+    onNavigateToday: () -> Unit,
+    onClose: () -> Unit
 ) {
-    var showContent by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { showContent = true }
-    val enterAnim = fadeIn(tween(260)) + slideInVertically(tween(260)) { it / 4 }
-
+    val strings = AppStrings.current.calendarView
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .padding(bottom = LocalBottomBarPadding.current + 8.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(horizontal = 20.dp)
+            .padding(bottom = LocalBottomBarPadding.current + Spacing.default)
     ) {
-        // View switcher: timeline (selected) vs list
-        AnimatedVisibility(visible = showContent && onSwitchToBlocks != null, enter = enterAnim) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = AppStrings.current.calendarView.calendarOptionsTitle,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(
-                        selected = true,
-                        onClick = {},
-                        label = { Text(AppStrings.current.onboarding.calendarViewTimeline) },
-                        leadingIcon = {
-                            Icon(
-                                Icons.Default.ViewTimeline,
-                                contentDescription = null,
-                                modifier = Modifier.size(AssistChipDefaults.IconSize)
-                            )
-                        }
-                    )
-                    FilterChip(
-                        selected = false,
-                        onClick = { onSwitchToBlocks?.invoke() },
-                        label = { Text(AppStrings.current.settings.calendarViewList) },
-                        leadingIcon = {
-                            Icon(
-                                Icons.Default.ViewAgenda,
-                                contentDescription = null,
-                                modifier = Modifier.size(AssistChipDefaults.IconSize)
-                            )
-                        }
-                    )
-                }
-                HorizontalDivider()
+        Text(strings.calendarOptionsTitle, modifier = Modifier.padding(top = Spacing.small), fontSize = 22.sp, lineHeight = 28.sp, fontWeight = FontWeight.Bold)
+
+        if (onSwitchToBlocks != null) {
+            SheetSectionLabel(strings.layoutSection)
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.small)) {
+                LayoutCard(Icons.Default.ViewAgenda, strings.viewList, false, { onSwitchToBlocks() }, Modifier.weight(1f))
+                LayoutCard(Icons.Default.ViewTimeline, strings.viewAxis, true, {}, Modifier.weight(1f))
             }
         }
 
-        // View mode: 1 day, 3 days, week
-        AnimatedVisibility(visible = showContent, enter = enterAnim) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ViewMode.entries.forEach { mode ->
-                        FilterChip(
-                            selected = viewMode == mode,
-                            onClick = { onViewModeChange(mode) },
-                            leadingIcon = {
-                                Icon(
-                                    when (mode) {
-                                        ViewMode.DAY -> Icons.Default.ViewDay
-                                        ViewMode.THREE_DAY -> Icons.Default.ViewAgenda
-                                        ViewMode.WEEK -> Icons.Default.ViewWeek
-                                    },
-                                    contentDescription = null,
-                                    modifier = Modifier.size(AssistChipDefaults.IconSize)
-                                )
-                            },
-                            label = {
-                                Text(
-                                    when (mode) {
-                                        ViewMode.DAY -> AppStrings.current.calendarView.viewModeDay
-                                        ViewMode.THREE_DAY -> AppStrings.current.calendarView.viewModeThreeDays
-                                        ViewMode.WEEK -> AppStrings.current.calendarView.viewModeWeek
-                                    }
-                                )
-                            }
-                        )
-                    }
+        SheetSectionLabel(strings.showSection)
+        SegmentedToggle(
+            labels = ViewMode.entries.map { mode ->
+                when (mode) {
+                    ViewMode.DAY -> strings.viewModeDay
+                    ViewMode.THREE_DAY -> strings.viewModeThreeDays
+                    ViewMode.WEEK -> strings.viewModeWeek
                 }
-        }
+            },
+            selectedIndex = ViewMode.entries.indexOf(viewMode),
+            onSelect = { onViewModeChange(ViewMode.entries[it]) },
+            modifier = Modifier.fillMaxWidth(),
+            fillWidth = true
+        )
 
-        // Reset to today
-        AnimatedVisibility(visible = showContent, enter = enterAnim) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                HorizontalDivider()
-                FilledTonalButton(
-                    onClick = onNavigateToday,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(Icons.Default.Today, contentDescription = null, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.size(8.dp))
-                    Text(AppStrings.current.calendarView.resetToToday, style = MaterialTheme.typography.labelLarge)
-                }
+        Spacer(Modifier.height(Spacing.default))
+        SheetPrimaryButton(text = strings.resetToToday, onClick = onNavigateToday)
+    }
+}
+
+/** Colour key under the axis, same four entries as the prototype. */
+@Composable
+internal fun TimelineLegend(modifier: Modifier = Modifier) {
+    val strings = AppStrings.current.calendarView
+    val ok = successColor()
+    val lineColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.18f)
+    Row(
+        modifier = modifier.fillMaxWidth().padding(horizontal = Spacing.default, vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.medium),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        LegendItem(AppStrings.current.people.mine) { Box(Modifier.size(width = 12.dp, height = 10.dp).background(BrandLightPrimary, RoundedCornerShape(3.dp))) }
+        LegendItem(strings.legendFree) {
+            Box(Modifier.size(width = 12.dp, height = 10.dp).background(successContainerColor(), RoundedCornerShape(3.dp)).border(1.5.dp, ok, RoundedCornerShape(3.dp)))
+        }
+        LegendItem(strings.legendTaken) {
+            Box(Modifier.size(width = 12.dp, height = 10.dp).background(MaterialTheme.colorScheme.surface, RoundedCornerShape(3.dp)).border(1.dp, lineColor, RoundedCornerShape(3.dp)))
+        }
+        LegendItem(strings.legendGroup) {
+            Box(Modifier.size(width = 12.dp, height = 10.dp).background(Color(0xFFC9A000).copy(alpha = 0.25f), RoundedCornerShape(3.dp))) {
+                Box(Modifier.fillMaxWidth().height(3.dp).background(Color(0xFFC9A000), RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp)))
             }
         }
+    }
+}
 
-        // Find free lessons
-        AnimatedVisibility(visible = showContent && onFindFreeLessons != null, enter = enterAnim) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                HorizontalDivider()
-                FilledTonalButton(
-                    onClick = { onFindFreeLessons?.invoke() },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.size(8.dp))
-                    Text(AppStrings.current.freeLessons.findButton, style = MaterialTheme.typography.labelLarge)
-                }
-            }
-        }
+@Composable
+private fun LegendItem(label: String, swatch: @Composable () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+        swatch()
+        Text(label, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -524,7 +493,9 @@ internal fun SingleDayTimelineView(
             HourMarkersColumn(
                 modifier = Modifier
                     .width(60.dp)
-                    .height(totalHeight)
+                    .height(totalHeight),
+                minuteHeight = minuteHeight,
+                showNow = selectedDate == today
             )
             
             // Events area
@@ -534,11 +505,12 @@ internal fun SingleDayTimelineView(
                     .height(totalHeight)
             ) {
                 // Grid lines
+                val gridColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     for (hour in 0..23) {
                         val y = hour * hourHeight.toPx()
                         drawLine(
-                            color = Color.LightGray,
+                            color = gridColor,
                             start = Offset(0f, y),
                             end = Offset(size.width, y),
                             strokeWidth = 1f
@@ -630,7 +602,9 @@ internal fun MultiDayTimelineView(
                     .width(50.dp)
                     .height(totalHeight)
                     .verticalScroll(verticalScrollState, enabled = false),
-                compact = true
+                compact = true,
+                minuteHeight = minuteHeight,
+                showNow = today in dates
             )
         }
         
@@ -651,15 +625,17 @@ internal fun MultiDayTimelineView(
                         // Day header
                         Text(
                             text = CalendarUtils.formatDayLabel(date),
-                            style = MaterialTheme.typography.labelMedium,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (date == today) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(dayHeaderHeight)
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .background(MaterialTheme.colorScheme.background)
                                 .padding(8.dp),
                             textAlign = TextAlign.Center
                         )
-                        
+
                         // Timeline for this day
                         Box(
                             modifier = Modifier
@@ -667,11 +643,12 @@ internal fun MultiDayTimelineView(
                                 .height(totalHeight)
                         ) {
                             // Grid lines
+                            val gridColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
                             Canvas(modifier = Modifier.fillMaxSize()) {
                                 for (hour in 0..23) {
                                     val y = hour * hourHeight.toPx()
                                     drawLine(
-                                        color = Color.LightGray,
+                                        color = gridColor,
                                         start = Offset(0f, y),
                                         end = Offset(size.width, y),
                                         strokeWidth = 1f
@@ -705,7 +682,7 @@ internal fun MultiDayTimelineView(
                     // Divider between days
                     VerticalDivider(
                         modifier = Modifier.height(totalHeight + dayHeaderHeight),
-                        color = MaterialTheme.colorScheme.outline
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
                     )
                 }
             }
@@ -715,33 +692,50 @@ internal fun MultiDayTimelineView(
 }
 
 /**
- * Hour markers column
+ * Hour markers column: labels centred on their grid line, plus a red pill with the current time.
  */
 @Composable
 internal fun HourMarkersColumn(
     modifier: Modifier = Modifier,
-    compact: Boolean = false
+    compact: Boolean = false,
+    minuteHeight: Dp = 1.dp,
+    showNow: Boolean = false
 ) {
     val hourHeight = if (compact) 48.dp else 60.dp
-    
-    Column(
-        modifier = modifier
-            .background(MaterialTheme.colorScheme.surface)
-    ) {
+    var now by remember { mutableStateOf(kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())) }
+    LaunchedEffect(showNow) {
+        while (showNow) {
+            now = kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+            kotlinx.coroutines.delay(60_000)
+        }
+    }
+
+    Box(modifier = modifier.background(MaterialTheme.colorScheme.background)) {
         for (hour in 0..23) {
-            Box(
+            Text(
+                text = "${hour.toString().padStart(2, '0')}:00",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
-                    .height(hourHeight)
-                    .fillMaxWidth(),
-                contentAlignment = Alignment.TopEnd
-            ) {
-                Text(
-                    text = "${hour.toString().padStart(2, '0')}:00",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(end = 4.dp, top = 0.dp)
-                )
-            }
+                    .align(Alignment.TopEnd)
+                    .offset(y = hourHeight * hour + if (hour == 0) 0.dp else (-7).dp)
+                    .padding(end = 6.dp)
+            )
+        }
+        if (showNow) {
+            Text(
+                text = CalendarUtils.formatTime(now),
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(y = minuteHeight * (now.hour * 60 + now.minute) - 8.dp)
+                    .padding(end = 3.dp)
+                    .background(BrandLightPrimary, RoundedCornerShape(5.dp))
+                    .padding(horizontal = 4.dp, vertical = 1.dp)
+            )
         }
     }
 }
@@ -763,19 +757,13 @@ internal fun NowLine(
     }
     val minutesFromMidnight = now.hour * 60 + now.minute
     val offsetDp = minuteHeight * minutesFromMidnight
-    
-    Canvas(
+
+    Box(
         modifier = modifier
-            .offset(y = offsetDp)
+            .offset(y = offsetDp - 1.dp)
             .height(2.dp)
-    ) {
-        drawLine(
-            color = Color.Red,
-            start = Offset(0f, 0f),
-            end = Offset(size.width, 0f),
-            strokeWidth = 4f
-        )
-    }
+            .background(BrandLightPrimary)
+    )
 }
 
 /**
@@ -821,112 +809,117 @@ internal fun TimelineEventCard(
     
     val isFreeLesson = coupleInfo?.isFree == true
     
-    // Get color
-    val backgroundColor = parseEventColor(event.colorRgb, event.type)
-
-    val contentColor = if (isLesson) {
-        if (isSystemInDarkTheme()) Color.White else Color(0xFF212121)
-    } else {
-        Color.White
-    }
-    
-    // Get trainer name for lessons
     val trainerName = remember(event.event, isLesson) {
-        if (isLesson) {
-            event.event?.eventTrainersList?.firstOrNull()
-        } else null
+        if (isLesson) event.event?.eventTrainersList?.firstOrNull() else null
     }
-    
-    // Determine max lines based on duration
+    val isMine = event.isMyEvent
+    val cancelled = event.isCancelled
+    val isGroup = !isLesson
+    val accent = parseEventColor(event.colorRgb, event.type)
+    val ok = successColor()
+    val onSurface = MaterialTheme.colorScheme.onSurface
+    val outline = onSurface.copy(alpha = 0.18f)
+    val shape = RoundedCornerShape(8.dp)
+    val density = LocalDensity.current
+
+    // Look follows the prototype: group = cohort tint + top bar, cancelled = grey, free = dashed green, mine = red, else outlined.
+    val background: Color
+    val foreground: Color
+    when {
+        isGroup -> { background = accent.copy(alpha = 0.2f); foreground = onSurface }
+        cancelled -> { background = MaterialTheme.colorScheme.surfaceVariant; foreground = MaterialTheme.colorScheme.onSurfaceVariant }
+        isFreeLesson -> { background = successContainerColor(); foreground = ok }
+        isMine -> { background = BrandLightPrimary; foreground = Color.White }
+        else -> { background = MaterialTheme.colorScheme.surface; foreground = onSurface }
+    }
+
     val titleMaxLines = when {
         compact -> 1
         layoutData.durationMinutes < 30 -> 1
         layoutData.durationMinutes < 60 -> 2
         else -> 3
     }
-    
-    BoxWithConstraints(
-        modifier = modifier.fillMaxSize()
-    ) {
+
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val totalWidth = maxWidth
         val cardWidth = totalWidth * widthFraction
         val leftOffset = totalWidth * leftFraction
-        
+
         Box(
             modifier = Modifier
                 .width(cardWidth)
-                .offset(
-                    x = leftOffset,
-                    y = offsetDp
-                )
+                .offset(x = leftOffset, y = offsetDp)
                 .height(heightDp.coerceAtLeast(20.dp))
-                .padding(horizontal = 1.dp)
-        ) {
-            Card(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clickable(onClick = onClick)
-                    .alpha(if (event.isCancelled) 0.5f else 1f),
-                colors = CardDefaults.cardColors(
-                    containerColor = backgroundColor
-                ),
-                shape = RoundedCornerShape(4.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 4.dp, vertical = 2.dp)
-                ) {
-                    // Title (couple name for lessons, event title for others)
-                    Text(
-                        text = displayTitle,
-                        style = if (compact) {
-                            MaterialTheme.typography.labelSmall
-                        } else {
-                            MaterialTheme.typography.bodyMedium
-                        },
-                        fontWeight = if (isFreeLesson || event.isMyEvent) FontWeight.Bold else FontWeight.Normal,
-                        textDecoration = if (event.isCancelled) TextDecoration.LineThrough else null,
-                        maxLines = titleMaxLines,
-                        overflow = TextOverflow.Ellipsis,
-                        color = if (isFreeLesson) Color(0xFF2E7D32) else contentColor
-                    )
-                    
-                    // Show short subtitle (e.g. personal training type) if present as first line of description
-                    val subtitle = formatHtmlContent(event.description).substringBefore('\n').takeIf { it.isNotBlank() }
-                    if (subtitle != null) {
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = subtitle,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = contentColor.copy(alpha = 0.9f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
-                    // Secondary info: trainer for lessons, time for others
-                    if (layoutData.durationMinutes > 30 && !compact) {
-                            if (isLesson && !trainerName.isNullOrBlank()) {
-                            Text(
-                                text = trainerName,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = contentColor.copy(alpha = 0.9f),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        } else if (!isLesson) {
-                            Text(
-                                text = "${CalendarUtils.formatTime(event.startTime)} - ${CalendarUtils.formatTime(event.endTime)}",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = contentColor.copy(alpha = 0.9f)
+                .padding(horizontal = 3.dp, vertical = 1.dp)
+                .clip(shape)
+                .background(background)
+                .then(
+                    when {
+                        isGroup -> Modifier.drawBehind {
+                            drawRect(accent, size = androidx.compose.ui.geometry.Size(size.width, with(density) { 3.dp.toPx() }))
+                            if (isMine) {
+                                val w = with(density) { 1.5.dp.toPx() }
+                                drawRoundRect(
+                                    BrandLightPrimary,
+                                    topLeft = Offset(w / 2, w / 2),
+                                    size = androidx.compose.ui.geometry.Size(size.width - w, size.height - w),
+                                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(with(density) { 8.dp.toPx() }),
+                                    style = androidx.compose.ui.graphics.drawscope.Stroke(w)
+                                )
+                            }
+                        }
+                        isFreeLesson && !cancelled -> Modifier.drawBehind {
+                            val w = with(density) { 1.5.dp.toPx() }
+                            drawRoundRect(
+                                ok,
+                                topLeft = Offset(w / 2, w / 2),
+                                size = androidx.compose.ui.geometry.Size(size.width - w, size.height - w),
+                                cornerRadius = androidx.compose.ui.geometry.CornerRadius(with(density) { 8.dp.toPx() }),
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(
+                                    w,
+                                    pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(14f, 10f))
+                                )
                             )
                         }
+                        !isMine && !cancelled -> Modifier.border(1.dp, outline, shape)
+                        else -> Modifier
                     }
+                )
+                .clickable(onClick = onClick)
+                .padding(horizontal = 6.dp, vertical = 3.dp)
+        ) {
+            Column {
+                if (!compact && layoutData.durationMinutes >= 30) {
+                    Text(
+                        text = "${CalendarUtils.formatTime(event.startTime)}–${CalendarUtils.formatTime(event.endTime)}",
+                        fontSize = 10.sp,
+                        lineHeight = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = foreground.copy(alpha = 0.85f),
+                        maxLines = 1
+                    )
+                }
+                Text(
+                    text = displayTitle,
+                    fontSize = 11.5.sp,
+                    lineHeight = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    textDecoration = if (cancelled) TextDecoration.LineThrough else null,
+                    maxLines = titleMaxLines,
+                    overflow = TextOverflow.Ellipsis,
+                    color = foreground
+                )
+                if (!compact && layoutData.durationMinutes >= 60 && isLesson && !trainerName.isNullOrBlank()) {
+                    Text(
+                        text = trainerName,
+                        fontSize = 10.sp,
+                        lineHeight = 13.sp,
+                        color = foreground.copy(alpha = 0.85f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
         }
     }
 }
-
-
