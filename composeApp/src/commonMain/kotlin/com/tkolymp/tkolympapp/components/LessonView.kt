@@ -1,5 +1,7 @@
 package com.tkolymp.tkolympapp.components
 
+import com.tkolymp.tkolympapp.components.cardLineBorder
+import com.tkolymp.tkolympapp.components.surfaceCardColors
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -50,6 +52,8 @@ internal fun LessonView(
     modifier: Modifier = Modifier
 ) {
     Card(
+        colors = surfaceCardColors(),
+        border = cardLineBorder(),
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),

@@ -1,12 +1,19 @@
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.Alignment
+import com.tkolymp.tkolympapp.components.AppTopBar
+import com.tkolymp.tkolympapp.ui.theme.BrandLightPrimary
+import com.tkolymp.tkolympapp.ui.theme.Spacing
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -23,7 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -68,14 +75,7 @@ fun AchievementsScreen(personId: String? = null, onBack: () -> Unit = {}) {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(strings.screenTitle) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
-                    }
-                }
-            )
+            AppTopBar(title = strings.screenTitle, onBack = onBack)
         }
     ) { padding ->
         SwipeToReload(
@@ -100,21 +100,23 @@ fun AchievementsScreen(personId: String? = null, onBack: () -> Unit = {}) {
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         item(span = { GridItemSpan(maxLineSpan) }) {
-                            Column {
-                                Text(
-                                    text = "${state.earnedCount}/${state.badges.size}",
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    modifier = Modifier.padding(bottom = 8.dp)
-                                )
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.medium)) {
                                 LinearProgressIndicator(
                                     progress = {
                                         if (state.badges.isEmpty()) 0f
                                         else state.earnedCount.toFloat() / state.badges.size
                                     },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.weight(1f).height(8.dp),
+                                    color = BrandLightPrimary,
                                     trackColor = MaterialTheme.colorScheme.surfaceVariant,
                                     strokeCap = StrokeCap.Round,
+                                    gapSize = 0.dp,
+                                    drawStopIndicator = {}
+                                )
+                                Text(
+                                    text = "${state.earnedCount}/${state.badges.size}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold
                                 )
                             }
                         }
@@ -128,9 +130,12 @@ fun AchievementsScreen(personId: String? = null, onBack: () -> Unit = {}) {
                         if (showDiplomas) {
                             item(span = { GridItemSpan(maxLineSpan) }) {
                                 Text(
-                                    text = strings.sectionDiplomas,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
+                                    text = strings.sectionDiplomas.uppercase(),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 0.8.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(top = 20.dp, bottom = 4.dp)
                                 )
                             }
 

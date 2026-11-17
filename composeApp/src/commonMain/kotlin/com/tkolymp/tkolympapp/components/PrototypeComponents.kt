@@ -1,13 +1,19 @@
 package com.tkolymp.tkolympapp.components
 
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.composed
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,7 +26,6 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -40,7 +45,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.tkolymp.shared.language.AppStrings
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -67,6 +72,11 @@ fun Modifier.pressClickable(pressedScale: Float = 0.98f, onClick: () -> Unit): M
 @Composable
 fun successColor(): Color =
     if (MaterialTheme.colorScheme.background.red < 0.5f) Color(0xFF81C784) else Color(0xFF2E7D32)
+
+/** The prototype's accent text/icon red (`--pr`): deep red in light theme, soft pink in dark. */
+@Composable
+fun accentColor(): Color =
+    if (MaterialTheme.colorScheme.background.red < 0.5f) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
 
 /** Tinted background paired with [successColor] (`--oktint`). */
 @Composable
@@ -205,22 +215,29 @@ fun CampCard(
     place: String,
     registeredLabel: String?,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    whenLabel: String? = null,
+    contentAlpha: Float = 1f
 ) {
     Card(
-        modifier = modifier.fillMaxWidth().pressClickable(0.985f, onClick),
+        modifier = modifier.fillMaxWidth().alpha(contentAlpha).pressClickable(0.985f, onClick),
         shape = RoundedCornerShape(16.dp),
         colors = surfaceCardColors(),
         border = cardLineBorder()
     ) {
-        Row(Modifier.fillMaxWidth().height(6.dp)) {
-            val colors = cohortColors.ifEmpty { listOf(MaterialTheme.colorScheme.primary) }
-            colors.forEach { Box(Modifier.weight(1f).fillMaxSize().background(it)) }
+        if (cohortColors.isNotEmpty()) {
+            Row(Modifier.fillMaxWidth().height(6.dp)) {
+                cohortColors.forEach { Box(Modifier.weight(1f).fillMaxSize().background(it)) }
+            }
         }
         Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 16.dp)) {
             Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(dateBig, fontSize = 28.sp, lineHeight = 32.sp, fontWeight = FontWeight.Bold)
                 Text(dateSmall, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (whenLabel != null) {
+                    Spacer(Modifier.weight(1f))
+                    Text(whenLabel, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
             Spacer(Modifier.height(6.dp))
             Text(name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
@@ -357,6 +374,155 @@ fun RankBadge(text: String, winner: Boolean, modifier: Modifier = Modifier) {
         fontWeight = FontWeight.Bold,
         color = if (winner) Color.White else MaterialTheme.colorScheme.onTertiaryContainer
     )
+}
+
+/**
+ * Announcement card. [featured] is the large first card of the board (bigger title, optional [badge]);
+ * otherwise the compact list card.
+ */
+@Composable
+fun NoticeCard(
+    authorName: String,
+    meta: String,
+    title: String,
+    body: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    featured: Boolean = false,
+    badge: String? = null
+) {
+    Card(
+        modifier = modifier.fillMaxWidth().pressClickable(0.985f, onClick),
+        shape = RoundedCornerShape(if (featured) 20.dp else 16.dp),
+        colors = surfaceCardColors(),
+        border = cardLineBorder()
+    ) {
+        Column(modifier = Modifier.padding(start = if (featured) 16.dp else 14.dp, end = if (featured) 16.dp else 14.dp, top = if (featured) 16.dp else 14.dp, bottom = if (featured) 18.dp else 14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.small)) {
+                if (authorName.isNotBlank()) {
+                    InitialsAvatar(name = authorName, size = if (featured) 28.dp else 22.dp, fontSize = if (featured) 11.sp else 9.sp)
+                }
+                Text(
+                    meta,
+                    modifier = Modifier.weight(1f),
+                    style = if (featured) MaterialTheme.typography.bodySmall else MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (badge != null) {
+                    Text(
+                        badge,
+                        modifier = Modifier.background(BrandPrimary(), RoundedCornerShape(6.dp)).padding(horizontal = 7.dp, vertical = 3.dp),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.5.sp,
+                        color = Color.White
+                    )
+                }
+            }
+            Text(
+                title,
+                modifier = Modifier.padding(top = if (featured) 12.dp else 8.dp),
+                fontSize = if (featured) 21.sp else 16.sp,
+                lineHeight = if (featured) 27.sp else 21.sp,
+                fontWeight = if (featured) FontWeight.Bold else FontWeight.SemiBold,
+                maxLines = if (featured) 3 else 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (body.isNotBlank()) {
+                Text(
+                    body,
+                    modifier = Modifier.padding(top = if (featured) 6.dp else 4.dp),
+                    fontSize = if (featured) 14.sp else 13.sp,
+                    lineHeight = if (featured) 21.sp else 19.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = if (featured) 3 else 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+/** Rounded filled search field (44dp) with a trailing clear/close button, as in the prototype board search. */
+@Composable
+fun SearchField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    onTrailingClick: () -> Unit,
+    trailingDescription: String,
+    modifier: Modifier = Modifier,
+    focusRequester: androidx.compose.ui.focus.FocusRequester? = null
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 44.dp)
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(14.dp))
+            .padding(start = Spacing.medium, end = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.small)
+    ) {
+        Icon(Icons.Filled.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+        Box(Modifier.weight(1f)) {
+            androidx.compose.foundation.text.BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
+                cursorBrush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.primary),
+                modifier = Modifier.fillMaxWidth().let { if (focusRequester != null) it.focusRequester(focusRequester) else it }
+            )
+            if (value.isEmpty()) Text(placeholder, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        IconButton(onClick = onTrailingClick) {
+            Icon(Icons.Filled.Close, contentDescription = trailingDescription, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+        }
+    }
+}
+
+/** Menu row: tinted rounded icon tile, label, chevron (prototype "Členové a klub"). */
+@Composable
+fun MenuRow(icon: ImageVector, label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth().pressClickable(0.995f, onClick).padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Box(
+            modifier = Modifier.size(36.dp).background(MaterialTheme.colorScheme.tertiaryContainer, RoundedCornerShape(10.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, contentDescription = null, tint = accentColor(), modifier = Modifier.size(20.dp))
+        }
+        Text(label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+    }
+}
+
+/** Square-ish shortcut card: accent icon over a short label. */
+@Composable
+fun QuickTile(icon: ImageVector, label: String, onClick: () -> Unit, modifier: Modifier = Modifier, showBadge: Boolean = false) {
+    Card(
+        modifier = modifier.pressClickable(0.95f, onClick),
+        shape = RoundedCornerShape(16.dp),
+        colors = surfaceCardColors(),
+        border = cardLineBorder()
+    ) {
+        Box(Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, top = 12.dp, bottom = 10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Icon(icon, contentDescription = null, tint = accentColor(), modifier = Modifier.size(24.dp))
+                Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            if (showBadge) Box(Modifier.align(Alignment.TopEnd).padding(top = 8.dp, end = 12.dp).size(8.dp).background(BrandPrimary(), CircleShape))
+        }
+    }
 }
 
 @Preview

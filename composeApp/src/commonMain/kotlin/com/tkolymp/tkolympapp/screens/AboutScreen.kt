@@ -1,5 +1,7 @@
 package com.tkolymp.tkolympapp.screens
 
+import com.tkolymp.tkolympapp.components.cardLineBorder
+import com.tkolymp.tkolympapp.components.surfaceCardColors
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,7 +27,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -84,7 +86,7 @@ fun AboutScreen(
             Text("${AppStrings.current.misc.appVersion} ${appVersionName ?: "?"} (Build ${appVersionCode ?: "?"})", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 12.dp))
 
             StaggeredItem(index = 0, visible = contentVisible, baseDelayMs = 60) {
-            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp)) {
+            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(text = AppStrings.current.about.appDescriptionTitle, style = MaterialTheme.typography.labelLarge)
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
@@ -94,7 +96,7 @@ fun AboutScreen(
             }
 
             StaggeredItem(index = 1, visible = contentVisible, baseDelayMs = 60) {
-            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp)) {
+            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                 Column(modifier = Modifier.padding(12.dp)) {
                 Text(AppStrings.current.misc.licenseInfo, style = MaterialTheme.typography.labelLarge)
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
@@ -104,7 +106,7 @@ fun AboutScreen(
             }
 
             StaggeredItem(index = 2, visible = contentVisible, baseDelayMs = 60) {
-            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp)) {
+            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(text = AppStrings.current.about.authorsAndContributors, style = MaterialTheme.typography.labelLarge)
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
@@ -134,7 +136,7 @@ fun AboutScreen(
             }
 
             StaggeredItem(index = 3, visible = contentVisible, baseDelayMs = 60) {
-            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp)) {
+            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                 Column {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,

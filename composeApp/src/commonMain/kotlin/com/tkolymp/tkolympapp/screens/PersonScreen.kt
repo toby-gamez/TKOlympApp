@@ -1,5 +1,7 @@
 package com.tkolymp.tkolympapp.screens
 
+import com.tkolymp.tkolympapp.components.cardLineBorder
+import com.tkolymp.tkolympapp.components.surfaceCardColors
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -38,7 +40,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -131,7 +133,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp)) {
+                Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                     Row(
                         modifier = Modifier.padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -150,7 +152,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                         Text("$bdText$ageText", style = MaterialTheme.typography.bodyMedium)
                     }
                 }
-                Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp)) {
+                Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                     Row(
                         modifier = Modifier.padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -183,6 +185,8 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
             if (!p.email.isNullOrBlank()) {
                 StaggeredItem(index = 1, visible = cardsVisible, baseDelayMs = 50) {
                 Card(
+                    colors = surfaceCardColors(),
+                    border = cardLineBorder(),
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                     shape = RoundedCornerShape(16.dp)
                 ) {
@@ -214,6 +218,8 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                 ) {
                     if (cstsId != null) {
                         Card(
+                            colors = surfaceCardColors(),
+                            border = cardLineBorder(),
                             modifier = Modifier
                                 .weight(1f)
                                 .clickable { uriHandler.openUri("https://www.csts.cz/dancesport/evidence/lide/$cstsId/osobni_udaje") },
@@ -244,7 +250,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                         }
                     }
                     if (wdsfId != null) {
-                        Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp)) {
+                        Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                             Row(
                                 modifier = Modifier.padding(12.dp),
                                 verticalAlignment = Alignment.CenterVertically
@@ -277,7 +283,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
             val visibleGroups = p.cohortMembershipsList.filter { it.cohort?.isVisible != false }
             if (visibleGroups.isNotEmpty()) {
                 StaggeredItem(index = 2, visible = cardsVisible, baseDelayMs = 50) {
-                Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
+                Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                     Column(modifier = Modifier.padding(8.dp)) {
                         Text(AppStrings.current.otherScreen.trainingGroups, style = MaterialTheme.typography.labelLarge)
                         HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
@@ -333,12 +339,14 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
             val wdsfProgressList = p.cstsProgressList.filter { it.federation.equals(WDSF, ignoreCase = true) }
             if (p.activeCouplesList.isNotEmpty() && cstsProgressList.isEmpty()) {
                 StaggeredItem(index = 3, visible = cardsVisible, baseDelayMs = 50) {
-                Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                     Column(modifier = Modifier.padding(12.dp)) {
                         Text(AppStrings.current.profile.activeCouple, style = MaterialTheme.typography.labelLarge)
                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                         p.activeCouplesList.forEach { c ->
                             Card(
+                                colors = surfaceCardColors(),
+                                border = cardLineBorder(),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(vertical = 0.dp) // Remove extra vertical padding
@@ -364,7 +372,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
             // ČSTS Progress
             if (cstsProgressList.isNotEmpty()) {
                 StaggeredItem(index = 4, visible = cardsVisible, baseDelayMs = 50) {
-                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
+                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text(AppStrings.current.competition.cstsProgress, style = MaterialTheme.typography.labelLarge)
                             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
@@ -463,6 +471,8 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
             // (duplicate UI removed)
             StaggeredItem(index = 5, visible = cardsVisible, baseDelayMs = 50) {
                 Card(
+                    colors = surfaceCardColors(),
+                    border = cardLineBorder(),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp)

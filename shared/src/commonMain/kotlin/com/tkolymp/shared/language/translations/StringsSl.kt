@@ -46,6 +46,7 @@ val StringsSl = Strings(
     ),
     otherScreen = OtherScreenStrings(
         appSection = "Aplikacija",
+        membersAndClub = "Člani in klub",
         people = "Ljudje",
         trainersAndSpaces = "Trenerji in vadišča",
         trainingGroups = "Vadbene skupine",
@@ -167,6 +168,8 @@ val StringsSl = Strings(
         upcomingEvents = "Prihajajoči dogodki",
         noEventsPlanned = "Ni načrtovanih dogodkov",
         noPastEvents = "Ni preteklih dogodkov",
+        runningLabel = "poteka",
+        pastLabel = "preteklo",
         noEventToShow = "Ni dogodka za prikaz",
         errorLoadingEvents = "Napaka pri nalaganju dogodkov",
         registrationOpen = "Odprto",
@@ -227,6 +230,8 @@ val StringsSl = Strings(
         errorLoadingAnnouncements = "Napaka pri nalaganju objav",
         announcement = "Obvestilo",
         noAnnouncementToShow = "Ni obvestila za prikaz",
+        newBadge = "NOVO",
+        daysAgo = "pred %d d.",
     ),
     notifications = NotificationStrings(
         notificationsGloballyEnabled = "Globalno omogočeno",

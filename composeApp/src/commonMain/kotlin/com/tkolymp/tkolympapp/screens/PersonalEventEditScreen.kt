@@ -1,6 +1,8 @@
 package com.tkolymp.tkolympapp.screens
 
 // rememberDatePickerState imported above
+import com.tkolymp.tkolympapp.components.cardLineBorder
+import com.tkolymp.tkolympapp.components.surfaceCardColors
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,7 +32,7 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TimePicker
-import androidx.compose.material3.TopAppBar
+import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
@@ -114,7 +116,7 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, o
     }) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding).padding(horizontal = 12.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             val focusManager = LocalFocusManager.current
-            Card(modifier = Modifier.fillMaxWidth()) {
+            Card(modifier = Modifier.fillMaxWidth(), colors = surfaceCardColors(), border = cardLineBorder()) {
                 Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
                         value = title.value,
@@ -253,7 +255,7 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, o
             }
 
             if (isRecurring.value) {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                Card(modifier = Modifier.fillMaxWidth(), colors = surfaceCardColors(), border = cardLineBorder()) {
                     Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         val recStartDate = try { if (recurrenceStartIso.value.isBlank()) null else Instant.parse(recurrenceStartIso.value).toLocalDateTime(TimeZone.currentSystemDefault()).date } catch (_: Exception) { null }
                         val recStartMillis = recStartDate?.let { LocalDateTime(it, LocalTime(0,0)).toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds() }

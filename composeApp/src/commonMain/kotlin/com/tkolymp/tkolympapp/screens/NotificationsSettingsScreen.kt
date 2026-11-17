@@ -1,5 +1,7 @@
 package com.tkolymp.tkolympapp.screens
 
+import com.tkolymp.tkolympapp.components.cardLineBorder
+import com.tkolymp.tkolympapp.components.surfaceCardColors
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,7 +47,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -217,7 +219,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
                                             if (myGroups.isEmpty()) {
                                                 Text(AppStrings.current.people.noGroupsToShow, style = MaterialTheme.typography.bodySmall)
                                             } else {
-                                                Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp), shape = RoundedCornerShape(16.dp)) {
+                                                Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                                                     Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                                                         Icon(imageVector = Icons.Filled.Notifications, contentDescription = AppStrings.current.people.trainingSpaces, modifier = Modifier.size(28.dp))
                                                         Spacer(modifier = Modifier.width(12.dp))
@@ -226,7 +228,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
                                                 }
                                                 myGroups.forEach { g ->
                                                     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                                                        Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp), shape = RoundedCornerShape(16.dp)) {
+                                                        Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                                                             Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                                                                 Icon(imageVector = Icons.Filled.Notifications, contentDescription = AppStrings.current.people.trainingSpaces, modifier = Modifier.size(28.dp))
                                                                 Spacer(modifier = Modifier.width(12.dp))
@@ -247,7 +249,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
                                         }
                                     } else {
                                         items(vmState.coachMessages, key = { it.id }) { msg ->
-                                            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(12.dp)) {
+                                            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(12.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                                                 Column(modifier = Modifier.padding(12.dp)) {
                                                     Text(text = msg.title ?: AppStrings.current.dialogs.noName)
                                                     val source = remember(vmState.availableGroups, msg.topic) {
@@ -280,7 +282,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
                                     }
                                     LazyColumn(modifier = Modifier.fillMaxSize()) {
                                         items(groupedReminders, key = { it.first().eventId }) { group ->
-                                            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp)) {
+                                            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                                                 Column(modifier = Modifier.padding(12.dp)) {
                                                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                                                         Text(
@@ -388,7 +390,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
                             if (selectedTab == 0) {
                                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                                     items(vmState.rules, key = { it.id }) { r ->
-                                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), shape = RoundedCornerShape(16.dp)) {
+                                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                                             Row(modifier = Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                                                 Column(modifier = Modifier.weight(1f)) {
                                                     val title = if (r.name.isNotBlank()) r.name else if (r.filterType == FilterType.ALL) AppStrings.current.notifications.allEventsFilter else AppStrings.current.misc.rule

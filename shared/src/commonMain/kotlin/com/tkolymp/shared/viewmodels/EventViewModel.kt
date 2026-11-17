@@ -76,6 +76,9 @@ data class EventState(
     val isDeletingRegistration: Boolean = false,
     val isAddedToCalendar: Boolean = false,
     val firstInstanceIso: String? = null,
+    /** Start/end of the shown slot: the selected instance, else first start..last end across instances. */
+    val heroStartIso: String? = null,
+    val heroEndIso: String? = null,
     val reminderMinutesBefore: Int? = null,
     val reminderId: String? = null,
     val isOffline: Boolean = false,
@@ -288,6 +291,8 @@ class EventViewModel(
                 trainerDisplayNames = trainerDisplayNames,
                 cohortDisplayNames = cohortDisplayNames,
                 eventDateText = eventDateText,
+                heroStartIso = selectedInstance?.str("since") ?: firstDate,
+                heroEndIso = selectedInstance?.str("until") ?: lastDate,
                 scheduleText = scheduleText,
                 myPersonId = myPerson,
                 myCoupleIds = myCouples,

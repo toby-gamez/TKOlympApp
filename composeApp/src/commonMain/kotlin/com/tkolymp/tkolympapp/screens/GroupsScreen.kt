@@ -1,5 +1,12 @@
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.ui.text.font.FontWeight
+import com.tkolymp.tkolympapp.components.cardLineBorder
+import com.tkolymp.tkolympapp.components.pressClickable
+import com.tkolymp.tkolympapp.components.surfaceCardColors
+import com.tkolymp.tkolympapp.ui.theme.Spacing
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,7 +31,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -45,7 +52,6 @@ import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.parseColorOrDefault
 import com.tkolymp.tkolympapp.platform.RemoteImage
 import com.tkolymp.shared.utils.withImageWidth
-import androidx.compose.foundation.layout.size
 import androidx.compose.ui.draw.clip
 import kotlinx.coroutines.launch
 import com.tkolymp.tkolympapp.components.ErrorBanner
@@ -91,50 +97,49 @@ fun GroupsScreen(onBack: () -> Unit = {}, onOpenCohort: ((String) -> Unit)? = nu
 
             state.error?.let { err -> ErrorBanner(error = err) }
 
-            state.cohorts.forEachIndexed { i, cohort ->
-                StaggeredItem(index = i, visible = cardsVisible, baseDelayMs = 50) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                        .then(cohort.id?.let { id -> if (onOpenCohort != null) Modifier.clickable { onOpenCohort(id) } else null } ?: Modifier),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Row(modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-
+            Column(
+                modifier = Modifier.padding(start = Spacing.default, end = Spacing.default, top = Spacing.medium),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                state.cohorts.forEachIndexed { i, cohort ->
+                    StaggeredItem(index = i, visible = cardsVisible, baseDelayMs = 50) {
                         val color = try { parseColorOrDefault(cohort.colorRgb) } catch (_: Exception) { MaterialTheme.colorScheme.primary }
-
-                        Box(
-                            modifier = Modifier
-                                .width(6.dp)
-                                .height(40.dp)
-                                .background(color, RoundedCornerShape(6.dp))
-                        )
-
-                        Spacer(modifier = Modifier.width(12.dp))
-
-                        Text(
-                            text = cohort.name ?: AppStrings.current.dialogs.noName,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        cohort.imageUrl?.let { url ->
-                            Spacer(modifier = Modifier.width(12.dp))
-                            RemoteImage(
-                                url = withImageWidth(url, 120),
-                                modifier = Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)),
-                                fallback = {}
-                            )
+                        val open = cohort.id?.let { id -> onOpenCohort?.let { open -> { open(id) } } }
+                        Card(
+                            modifier = Modifier.fillMaxWidth().let { if (open != null) it.pressClickable(0.985f, open) else it },
+                            shape = RoundedCornerShape(16.dp),
+                            colors = surfaceCardColors(),
+                            border = cardLineBorder()
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(14.dp)
+                            ) {
+                                Box(Modifier.size(44.dp).background(color, RoundedCornerShape(12.dp)))
+                                Text(
+                                    text = cohort.name ?: AppStrings.current.dialogs.noName,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                cohort.imageUrl?.let { url ->
+                                    RemoteImage(
+                                        url = withImageWidth(url, 120),
+                                        modifier = Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)),
+                                        fallback = {}
+                                    )
+                                }
+                                if (open != null) {
+                                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
                         }
                     }
                 }
-                } // StaggeredItem
             }
+            Spacer(Modifier.height(Spacing.default))
+        }
         }
     }
-}
 }

@@ -1,9 +1,24 @@
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.sp
+import com.tkolymp.tkolympapp.components.AppTopBar
+import com.tkolymp.tkolympapp.components.InitialsAvatar
+import com.tkolymp.tkolympapp.components.QuickChip
+import com.tkolymp.tkolympapp.components.cardLineBorder
+import com.tkolymp.tkolympapp.components.surfaceCardColors
+import com.tkolymp.tkolympapp.ui.theme.BrandLightPrimary
+import com.tkolymp.tkolympapp.ui.theme.Spacing
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -11,7 +26,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -28,7 +42,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -82,11 +96,7 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text(AppStrings.current.leaderboard.leaderboardTitle) }, navigationIcon = {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back, modifier = Modifier
-                .clickable { onBack() }
-                .padding(12.dp))
-        }) }
+        topBar = { AppTopBar(title = AppStrings.current.leaderboard.leaderboardTitle, onBack = onBack) }
     ) { padding ->
         SwipeToReload(
             isRefreshing = state.isLoading,
@@ -129,76 +139,80 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                                    .horizontalScroll(rememberScrollState())
+                                    .padding(start = Spacing.default, end = Spacing.default, top = Spacing.small),
+                                horizontalArrangement = Arrangement.spacedBy(Spacing.small),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
-                                    FilterChip(
-                                        selected = selectedGroups.isEmpty() || selectedGroups.size == groups.size,
-                                        onClick = { selectedGroups = emptySet() },
-                                        label = { Text(AppStrings.current.commonActions.all) }
+                                QuickChip(
+                                    label = AppStrings.current.commonActions.all,
+                                    selected = selectedGroups.isEmpty() || selectedGroups.size == groups.size,
+                                    onClick = { selectedGroups = emptySet() }
+                                )
+                                groups.forEach { (id, name) ->
+                                    QuickChip(
+                                        label = name,
+                                        selected = selectedGroups.contains(id),
+                                        onClick = { selectedGroups = if (selectedGroups.contains(id)) selectedGroups - id else selectedGroups + id }
                                     )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    groups.forEach { (id, name) ->
-                                        FilterChip(
-                                            selected = selectedGroups.contains(id),
-                                            onClick = {
-                                                selectedGroups = if (selectedGroups.contains(id)) selectedGroups - id else selectedGroups + id
-                                            },
-                                            label = { Text(name) }
-                                        )
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                    }
                                 }
                             }
 
                             var entranceVisible by remember { mutableStateOf(false) }
                             LaunchedEffect(state.rankings.isNotEmpty()) { if (state.rankings.isNotEmpty()) entranceVisible = true }
 
+                            fun scoreText(v: Double?): String = v?.let { if (it % 1.0 == 0.0) it.toInt().toString() else formatScore(it) } ?: "-"
+                            fun nameOf(item: com.tkolymp.shared.people.ScoreboardEntry) = listOfNotNull(item.personFirstName, item.personLastName).joinToString(" ")
+
                             Box(modifier = Modifier.fillMaxSize()) {
                                 LazyColumn(
                                     modifier = Modifier.fillMaxSize(),
-                                    verticalArrangement = Arrangement.Top,
-                                    contentPadding = PaddingValues(bottom = if (myEntry != null) 72.dp else 0.dp)
+                                    contentPadding = PaddingValues(top = 14.dp, bottom = if (myEntry != null) 84.dp else Spacing.default),
+                                    verticalArrangement = Arrangement.spacedBy(Spacing.xs)
                                 ) {
-                                    itemsIndexed(displayed, key = { _, item -> item.personId ?: item.hashCode() }) { index, item ->
-                                        val rank = (item.ranking ?: (index + 1))
-                                        val isTop = rank in 1..3
-                                        val colors = when (rank) {
-                                            1 -> CardDefaults.cardColors(containerColor = Color(0xFFFFD700).copy(alpha = 0.12f))
-                                            2 -> CardDefaults.cardColors(containerColor = Color(0xFFC0C0C0).copy(alpha = 0.12f))
-                                            3 -> CardDefaults.cardColors(containerColor = Color(0xFFCD7F32).copy(alpha = 0.12f))
-                                            else -> CardDefaults.cardColors()
+                                    val hasPodium = displayed.size >= 3
+                                    if (hasPodium) {
+                                        item {
+                                            // 2nd, 1st, 3rd — the winner stands tallest in the middle
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.default),
+                                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                                verticalAlignment = Alignment.Bottom
+                                            ) {
+                                                listOf(1, 0, 2).forEach { i ->
+                                                    val item = displayed[i]
+                                                    PodiumColumn(
+                                                        name = nameOf(item),
+                                                        place = i + 1,
+                                                        points = scoreText(item.totalScore),
+                                                        modifier = Modifier.weight(1f)
+                                                    )
+                                                }
+                                            }
+                                            Spacer(Modifier.height(Spacing.small))
                                         }
+                                    }
+                                    val rest = if (hasPodium) displayed.drop(3) else displayed
+                                    itemsIndexed(rest, key = { _, item -> item.personId ?: item.hashCode() }) { index, item ->
+                                        val rank = item.ranking ?: ((if (hasPodium) 3 else 0) + index + 1)
+                                        val isCurrent = item.personId != null && item.personId == currentPersonId.value
+                                        val name = nameOf(item)
                                         StaggeredItem(index = index, visible = entranceVisible, baseDelayMs = 40, durationMs = 250, modifier = Modifier.animateItem()) {
                                             Card(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                                                modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.default),
                                                 shape = RoundedCornerShape(16.dp),
-                                                colors = colors
+                                                colors = if (isCurrent) CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)) else surfaceCardColors(),
+                                                border = cardLineBorder()
                                             ) {
                                                 Row(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .padding(12.dp),
-                                                    verticalAlignment = ComposeAlignment.CenterVertically
+                                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+                                                    verticalAlignment = ComposeAlignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(Spacing.medium)
                                                 ) {
-                                                    Column(modifier = Modifier.weight(1f)) {
-                                                        val name = listOfNotNull(item.personFirstName, item.personLastName).joinToString(" ")
-                                                        val isCurrent = item.personId != null && item.personId == currentPersonId.value
-                                                        Text(
-                                                            text = "${rank}. $name",
-                                                            style = if (isTop) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge,
-                                                            fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
-                                                            color = MaterialTheme.colorScheme.onSurface
-                                                        )
-                                                    }
-                                                    Column(modifier = Modifier.wrapContentWidth(align = ComposeAlignment.End), horizontalAlignment = ComposeAlignment.End) {
-                                                        val total = item.totalScore
-                                                        val totalText = total?.let { if (it % 1.0 == 0.0) it.toInt().toString() else formatScore(it) } ?: "-"
-                                                        Text(text = totalText, style = MaterialTheme.typography.titleMedium)
-                                                    }
+                                                    Text("$rank", modifier = Modifier.width(24.dp), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                    InitialsAvatar(name = name, size = 34.dp, fontSize = 12.sp)
+                                                    Text(name, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Medium)
+                                                    Text(scoreText(item.totalScore), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
                                                 }
                                             }
                                         }
@@ -207,34 +221,21 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
 
                                 myEntry?.let { entry ->
                                     val rank = entry.ranking ?: (state.rankings.indexOf(entry) + 1)
-                                    val isTop = rank in 1..3
-                                    val name = listOfNotNull(entry.personFirstName, entry.personLastName).joinToString(" ")
-                                    val totalText = entry.totalScore?.let { if (it % 1.0 == 0.0) it.toInt().toString() else formatScore(it) } ?: "-"
+                                    val name = nameOf(entry)
                                     Card(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .align(Alignment.BottomCenter)
-                                            .padding(horizontal = 12.dp, vertical = 4.dp),
+                                            .padding(horizontal = Spacing.default, vertical = Spacing.small),
                                         shape = RoundedCornerShape(16.dp),
-                                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                                        colors = CardDefaults.cardColors(containerColor = BrandLightPrimary)
                                     ) {
                                         Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(12.dp),
+                                            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
                                             verticalAlignment = ComposeAlignment.CenterVertically
                                         ) {
-                                            Column(modifier = Modifier.weight(1f)) {
-                                                Text(
-                                                    text = "${rank}. $name",
-                                                    style = if (isTop) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                                )
-                                            }
-                                            Column(modifier = Modifier.wrapContentWidth(align = ComposeAlignment.End), horizontalAlignment = ComposeAlignment.End) {
-                                                Text(text = totalText, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                                            }
+                                            Text("$rank. $name", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = Color.White)
+                                            Text(scoreText(entry.totalScore), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White)
                                         }
                                     }
                                 }
@@ -251,4 +252,34 @@ private fun formatScore(v: Double): String {
     if (v % 1.0 == 0.0) return v.toInt().toString()
     val scaled = kotlin.math.round(v * 10).toLong()
     return "${scaled / 10}.${kotlin.math.abs(scaled % 10)}"
+}
+
+/** One step of the podium: ringed avatar, name and a block whose height reflects the place. */
+@Composable
+private fun PodiumColumn(name: String, place: Int, points: String, modifier: Modifier = Modifier) {
+    val first = place == 1
+    val avatarSize = if (first) 72.dp else 58.dp
+    val blockHeight = when (place) { 1 -> 96.dp; 2 -> 72.dp; else -> 56.dp }
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Box(
+            modifier = Modifier.size(avatarSize).border(3.dp, if (first) BrandLightPrimary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.18f), CircleShape).padding(5.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            InitialsAvatar(name = name, size = avatarSize - 10.dp, fontSize = 16.sp)
+        }
+        Text(name, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, textAlign = androidx.compose.ui.text.style.TextAlign.Center, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(blockHeight)
+                .clip(RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp, bottomStart = 4.dp, bottomEnd = 4.dp))
+                .background(if (first) BrandLightPrimary else MaterialTheme.colorScheme.surface)
+                .then(if (first) Modifier else Modifier.border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.18f), RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp, bottomStart = 4.dp, bottomEnd = 4.dp))),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text("$place", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = if (first) Color.White else MaterialTheme.colorScheme.onSurface)
+            Text(points, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = if (first) Color.White else MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
 }

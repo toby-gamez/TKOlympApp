@@ -1,5 +1,18 @@
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import com.tkolymp.tkolympapp.components.InfoPill
+import com.tkolymp.tkolympapp.components.RowDivider
+import com.tkolymp.tkolympapp.components.SegmentedToggle
+import com.tkolymp.tkolympapp.components.cardLineBorder
+import com.tkolymp.tkolympapp.components.successColor
+import com.tkolymp.tkolympapp.components.successContainerColor
+import com.tkolymp.tkolympapp.components.surfaceCardColors
+import com.tkolymp.tkolympapp.ui.theme.Spacing
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -21,7 +34,6 @@ import com.tkolymp.tkolympapp.util.tabContentTransitionSpec
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Schedule
@@ -38,7 +50,7 @@ import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -105,11 +117,13 @@ fun PaymentsScreen(vm: com.tkolymp.shared.payments.PaymentsViewModel, onBack: ()
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             } else {
                 Column(modifier = Modifier.fillMaxSize()) {
-                    PrimaryTabRow(selectedTabIndex = selectedTab, modifier = Modifier.fillMaxWidth()) {
-                        tabs.forEachIndexed { index, title ->
-                            Tab(selected = selectedTab == index, onClick = { selectedTab = index }, text = { Text(title) })
-                        }
-                    }
+                    SegmentedToggle(
+                        labels = tabs,
+                        selectedIndex = selectedTab,
+                        onSelect = { selectedTab = it },
+                        fillWidth = true,
+                        modifier = Modifier.fillMaxWidth().padding(start = Spacing.default, end = Spacing.default, top = Spacing.small)
+                    )
 
                     val (waitingItems, paidItems) = payments.partition { item ->
                         item.isUnpaid == true || (item.isUnpaid == null && (item.payment?.status.isNullOrBlank() || item.payment?.status?.equals("PAID", ignoreCase = true) != true))
@@ -138,7 +152,11 @@ fun PaymentsScreen(vm: com.tkolymp.shared.payments.PaymentsViewModel, onBack: ()
                                     }
                                 }
                                 if (waitingItems.isNotEmpty()) {
-                                    LazyColumn(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalArrangement = Arrangement.Top) {
+                                    LazyColumn(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        contentPadding = PaddingValues(start = Spacing.default, end = Spacing.default, top = 14.dp, bottom = Spacing.default),
+                                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
                                         itemsIndexed(waitingItems, key = { _, item -> item.payment?.id ?: item.personId ?: item.hashCode() }) { index, it ->
                                             StaggeredItem(index = index, visible = cardsVisible, baseDelayMs = 40, modifier = Modifier.animateItem()) {
                                                 PaymentItemCard(
@@ -155,7 +173,11 @@ fun PaymentsScreen(vm: com.tkolymp.shared.payments.PaymentsViewModel, onBack: ()
                                 if (paidItems.isEmpty()) {
                                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(AppStrings.current.misc.paymentsEmptyNoPaid) }
                                 } else {
-                                    LazyColumn(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalArrangement = Arrangement.Top) {
+                                    LazyColumn(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        contentPadding = PaddingValues(start = Spacing.default, end = Spacing.default, top = 14.dp, bottom = Spacing.default),
+                                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
                                         itemsIndexed(paidItems, key = { _, item -> item.payment?.id ?: item.personId ?: item.hashCode() }) { index, it ->
                                             StaggeredItem(index = index, visible = cardsVisible, baseDelayMs = 40, modifier = Modifier.animateItem()) {
                                                 PaymentItemCard(item = it)
@@ -195,91 +217,78 @@ private fun PaymentItemCard(
         return formatShortDateTime(ldt.date, ldt.hour, ldt.minute)
     }
 
-    val stripColor = if (isPaid) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary
+    val dueText = fmtDate(item.payment?.dueAt).takeIf { it != "-" }
+    val ok = successColor()
+    val currency = item.price?.currency ?: "CZK"
+    val displayName = name.ifEmpty { "${AppStrings.current.misc.personFallback}${item.personId ?: "?"}" }
 
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp)
-            .clip(RoundedCornerShape(12.dp)),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+    if (isPaid) {
+        // Paid: compact row with a green check
+        Card(
+            modifier = modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = surfaceCardColors(),
+            border = cardLineBorder()
         ) {
-            Box(
-                modifier = Modifier
-                    .width(6.dp)
-                    .height(72.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(stripColor)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = name.ifEmpty { "${AppStrings.current.misc.personFallback}${item.personId ?: "?"}" },
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                val boxBg = MaterialTheme.colorScheme.surfaceVariant
-                FlowRow(modifier = Modifier.fillMaxWidth()) {
-                    Box(
-                        modifier = Modifier
-                            .padding(end = 8.dp, bottom = 8.dp)
-                            .background(boxBg, RoundedCornerShape(8.dp))
-                            .padding(horizontal = 8.dp, vertical = 6.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Payments, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("$amount ${item.price?.currency ?: "CZK"}", style = MaterialTheme.typography.bodySmall)
-                        }
-                    }
-                    val dueText = fmtDate(item.payment?.dueAt)
-                    if (dueText != "-") {
-                        Box(
-                            modifier = Modifier
-                                .padding(end = 8.dp, bottom = 8.dp)
-                                .background(boxBg, RoundedCornerShape(8.dp))
-                                .padding(horizontal = 8.dp, vertical = 6.dp)
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Schedule, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("${AppStrings.current.misc.dueLabel} $dueText", style = MaterialTheme.typography.bodySmall)
-                            }
-                        }
-                    }
-                    val vs = item.payment?.variableSymbol
-                    if (!vs.isNullOrBlank()) {
-                        Box(
-                            modifier = Modifier
-                                .padding(end = 8.dp, bottom = 8.dp)
-                                .background(boxBg, RoundedCornerShape(8.dp))
-                                .padding(horizontal = 8.dp, vertical = 6.dp)
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Tag, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(vs, style = MaterialTheme.typography.bodySmall)
-                            }
-                        }
-                    }
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 13.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.medium)
+            ) {
+                Box(Modifier.size(36.dp).background(successContainerColor(), CircleShape), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.Check, contentDescription = null, tint = ok, modifier = Modifier.size(20.dp))
                 }
-                if (!isPaid && !bankAccount.isNullOrBlank()) {
-                    PaymentPayActions(
-                        bankAccount = bankAccount,
-                        amountMinor = item.price?.amount,
-                        currency = item.price?.currency ?: "CZK",
-                        variableSymbol = item.payment?.variableSymbol,
-                        specificSymbol = item.payment?.specificSymbol,
-                        message = name,
-                        onMessage = onMessage
+                Column(Modifier.weight(1f)) {
+                    Text(displayName, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+                    if (dueText != null) Text(dueText, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Text("$amount $currency", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+            }
+        }
+        return
+    }
+
+    // Pending: big amount card with the due date pill and the pay actions
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = surfaceCardColors(),
+        border = cardLineBorder()
+    ) {
+        Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.small)) {
+                Text(displayName, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                if (dueText != null) {
+                    InfoPill(
+                        "${AppStrings.current.misc.dueLabel} $dueText",
+                        MaterialTheme.colorScheme.tertiaryContainer,
+                        MaterialTheme.colorScheme.onTertiaryContainer
                     )
                 }
+            }
+            Text(
+                "$amount $currency",
+                modifier = Modifier.padding(top = Spacing.small),
+                fontSize = 36.sp,
+                lineHeight = 42.sp,
+                fontWeight = FontWeight.Bold
+            )
+            val vs = item.payment?.variableSymbol
+            if (!vs.isNullOrBlank()) {
+                Text("VS $vs", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            if (!bankAccount.isNullOrBlank()) {
+                Spacer(Modifier.height(Spacing.medium))
+                RowDivider()
+                PaymentPayActions(
+                    bankAccount = bankAccount,
+                    amountMinor = item.price?.amount,
+                    currency = currency,
+                    variableSymbol = item.payment?.variableSymbol,
+                    specificSymbol = item.payment?.specificSymbol,
+                    message = name,
+                    onMessage = onMessage
+                )
             }
         }
     }

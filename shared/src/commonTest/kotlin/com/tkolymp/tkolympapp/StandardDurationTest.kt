@@ -29,3 +29,20 @@ class StandardDurationTest {
         assertNull(standardDurationMinutes("x", "y"))
     }
 }
+
+class DaysSinceTest {
+    private val today = kotlinx.datetime.LocalDate(2026, 11, 18)
+
+    @Test
+    fun sameDayIsZero() = assertEquals(0, com.tkolymp.shared.utils.daysSince("2026-11-18T12:00:00", today))
+
+    @Test
+    fun countsWholeDays() = assertEquals(3, com.tkolymp.shared.utils.daysSince("2026-11-15T09:00:00", today))
+
+    @Test
+    fun futureAndGarbageAreHandled() {
+        assertEquals(0, com.tkolymp.shared.utils.daysSince("2026-11-25T09:00:00", today))
+        assertNull(com.tkolymp.shared.utils.daysSince("nope", today))
+        assertNull(com.tkolymp.shared.utils.daysSince(null, today))
+    }
+}

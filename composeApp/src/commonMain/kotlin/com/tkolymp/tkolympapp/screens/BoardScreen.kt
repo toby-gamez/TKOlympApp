@@ -1,4 +1,15 @@
 package com.tkolymp.tkolympapp.screens
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.itemsIndexed
+import com.tkolymp.shared.utils.daysSince
+import com.tkolymp.shared.utils.formatShortDate
+import com.tkolymp.shared.utils.parseToLocal
+import com.tkolymp.tkolympapp.components.AppTopBar
+import com.tkolymp.tkolympapp.components.NoticeCard
+import com.tkolymp.tkolympapp.components.SearchField
+import com.tkolymp.tkolympapp.components.SegmentedToggle
+import com.tkolymp.tkolympapp.ui.theme.Spacing
+import kotlinx.datetime.todayIn
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.EmptyState
 import com.tkolymp.tkolympapp.components.ManageCreateAction
@@ -23,7 +34,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -116,8 +127,8 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}, onC
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(AppStrings.current.navigation.board) },
+            AppTopBar(
+                title = AppStrings.current.navigation.board,
                 actions = {
                     ManageCreateAction(
                         label = AppStrings.current.management.newAnnouncement,
@@ -137,43 +148,29 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}, onC
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
-            PrimaryTabRow(
-                selectedTabIndex = localSelectedTab,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = localSelectedTab == index,
-                        onClick = { localSelectedTab = index },
-                        text = { Text(title) }
-                    )
-                }
-            }
-
             AnimatedVisibility(
                 visible = showSearch,
                 enter = fadeIn(tween(200)) + expandVertically(tween(200)),
                 exit = fadeOut(tween(150)) + shrinkVertically(tween(150))
             ) {
-                TextField(
+                SearchField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
-                        .focusRequester(focusRequester),
-                    singleLine = true,
-                    leadingIcon = { Icon(imageVector = Icons.Filled.Search, contentDescription = null) },
-                    trailingIcon = {
-                        IconButton(onClick = {
-                            if (searchQuery.isNotBlank()) searchQuery = "" else showSearch = false
-                        }) {
-                            Icon(imageVector = Icons.Filled.Close, contentDescription = AppStrings.current.commonActions.cancel)
-                        }
-                    },
-                    placeholder = { Text(AppStrings.current.commonActions.search) }
+                    placeholder = AppStrings.current.commonActions.search,
+                    onTrailingClick = { if (searchQuery.isNotBlank()) searchQuery = "" else showSearch = false },
+                    trailingDescription = AppStrings.current.commonActions.cancel,
+                    modifier = Modifier.padding(start = Spacing.default, end = Spacing.default, top = Spacing.small),
+                    focusRequester = focusRequester
                 )
             }
+
+            SegmentedToggle(
+                labels = tabs,
+                selectedIndex = localSelectedTab,
+                onSelect = { localSelectedTab = it },
+                fillWidth = true,
+                modifier = Modifier.fillMaxWidth().padding(start = Spacing.default, end = Spacing.default, top = Spacing.small)
+            )
 
             LaunchedEffect(localSelectedTab) {
                 viewModel.selectTab(localSelectedTab)
@@ -212,37 +209,32 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}, onC
                     if (filtered.isEmpty() && !state.isLoading) {
                         EmptyState(title = AppStrings.current.announcements.noAnnouncementsToShow, icon = Icons.Outlined.Campaign, fullPage = true)
                     } else {
-                        LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                            items(filtered) { a ->
-                                val i = filtered.indexOf(a)
+                        val today = remember { kotlin.time.Clock.System.todayIn(kotlinx.datetime.TimeZone.currentSystemDefault()) }
+                        val strings = AppStrings.current
+                        LazyColumn(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentPadding = PaddingValues(start = Spacing.default, end = Spacing.default, top = 14.dp, bottom = Spacing.default),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            itemsIndexed(filtered, key = { _, a -> a.id }) { i, a ->
                                 StaggeredItem(index = i, visible = listVisible) {
-                                    Card(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 12.dp, vertical = 4.dp)
-                                            .clickable {
-                                                a.id.toLongOrNull()?.let { nid -> onOpenNotice(nid) }
-                                            },
-                                        shape = RoundedCornerShape(16.dp)
-                                    ) {
-                                        Column(modifier = Modifier.padding(14.dp)) {
-                                            Text(a.title ?: AppStrings.current.dialogs.noName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                                            val authorName = listOfNotNull(a.author?.uJmeno, a.author?.uPrijmeni).joinToString(" ").trim()
-                                            if (authorName.isNotEmpty()) {
-                                                Spacer(modifier = Modifier.height(2.dp))
-                                                Text(authorName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                            }
-                                            Spacer(modifier = Modifier.height(6.dp))
-                                            val plainBody = remember(a.id, a.body) { formatHtmlContent(a.body ?: "") }
-                                            Text(
-                                                plainBody,
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                maxLines = 2,
-                                                overflow = TextOverflow.Ellipsis,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
+                                    val authorName = listOfNotNull(a.author?.uJmeno, a.author?.uPrijmeni).joinToString(" ").trim()
+                                    val age = daysSince(a.createdAt, today)
+                                    val ago = when {
+                                        age == null -> null
+                                        age == 0 -> strings.timeline.today
+                                        age < 14 -> strings.announcements.daysAgo.replace("%d", age.toString())
+                                        else -> parseToLocal(a.createdAt)?.let { formatShortDate(it.date) }
                                     }
+                                    NoticeCard(
+                                        authorName = authorName,
+                                        meta = listOfNotNull(authorName.takeIf { it.isNotBlank() }, ago).joinToString(" · "),
+                                        title = a.title ?: strings.dialogs.noName,
+                                        body = remember(a.id, a.body) { formatHtmlContent(a.body ?: "") },
+                                        onClick = { a.id.toLongOrNull()?.let { nid -> onOpenNotice(nid) } },
+                                        featured = i == 0,
+                                        badge = strings.announcements.newBadge.takeIf { i == 0 && age != null && age <= 3 }
+                                    )
                                 }
                             }
                         }

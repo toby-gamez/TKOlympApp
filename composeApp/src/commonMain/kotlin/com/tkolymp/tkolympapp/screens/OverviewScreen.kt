@@ -12,6 +12,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.HorizontalDivider
 import com.tkolymp.tkolympapp.components.SectionHeader
 import com.tkolymp.tkolympapp.components.timelineInfo
+import com.tkolymp.tkolympapp.components.campDateRange
+import com.tkolymp.tkolympapp.components.campMonth
 import com.tkolymp.tkolympapp.components.isRegisteredBy
 import com.tkolymp.tkolympapp.components.pressClickable
 import com.tkolymp.tkolympapp.components.SectionLabel
@@ -730,17 +732,6 @@ private fun NearestCompetitionCard(event: FederationEventSummary, onOpen: () -> 
         onClick = onOpen,
         strikeThrough = event.isCancelled
     )
-}
-
-private fun campDateRange(since: String?, until: String?): String {
-    val a = parseToLocal(since) ?: return ""
-    val b = parseToLocal(until)
-    return if (b == null || b.date == a.date) "${a.day}." else "${a.day}.–${b.day}."
-}
-
-private fun campMonth(since: String?): String {
-    val a = parseToLocal(since) ?: return ""
-    return getLocalizedMonthName(a.month.number, AppStrings.currentLanguage.code)
 }
 
 private fun overviewSubtitle(): String {

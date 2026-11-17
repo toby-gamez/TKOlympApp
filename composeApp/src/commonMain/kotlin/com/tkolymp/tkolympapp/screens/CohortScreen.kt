@@ -1,5 +1,7 @@
 package com.tkolymp.tkolympapp.screens
 
+import com.tkolymp.tkolympapp.components.cardLineBorder
+import com.tkolymp.tkolympapp.components.surfaceCardColors
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,7 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -115,7 +117,7 @@ fun CohortScreen(
 
                 val description = cohort.description?.lines()?.map { it.trim() }?.filter { it.isNotEmpty() }?.joinToString("\n")?.trim()
                 if (!description.isNullOrBlank()) {
-                    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+                    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                         // The bar is drawn behind the content: HtmlText is a WebView and must not be
                         // measured with intrinsic sizes (it is drawn at zero height and crashes the renderer).
                         HtmlText(
@@ -137,7 +139,7 @@ fun CohortScreen(
                     }
                 }
 
-                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                     Column(modifier = Modifier.padding(12.dp)) {
                         Text("${AppStrings.current.people.cohortMembers} (${cohort.members.size})", style = MaterialTheme.typography.titleMedium)
                         Spacer(Modifier.height(6.dp))

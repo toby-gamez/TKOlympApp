@@ -29,12 +29,15 @@ import com.tkolymp.shared.utils.AppConstants
 @Immutable
 data class EventsState(
     val eventsByDay: Map<String, List<EventInstance>> = emptyMap(),
+    val myPersonId: String? = null,
+    val myCoupleIds: List<String> = emptyList(),
     override val isLoading: Boolean = false,
     override val error: AppError? = null
 ) : ViewModelState
 
 class EventsViewModel(
-    private val eventService: com.tkolymp.shared.event.IEventService = ServiceLocator.eventService
+    private val eventService: com.tkolymp.shared.event.IEventService = ServiceLocator.eventService,
+    private val userService: com.tkolymp.shared.user.UserService? = null
 ) : ViewModel() {
     private val _state = MutableStateFlow(EventsState())
     val state: StateFlow<EventsState> = _state.asStateFlow()
@@ -42,6 +45,7 @@ class EventsViewModel(
     suspend fun loadCampsNextYear(forceRefresh: Boolean = false) {
         Logger.d("EventsViewModel", "loadCampsNextYear: forceRefresh=$forceRefresh")
         _state.value = _state.value.copy(isLoading = true, error = null)
+        loadMyIds()
         try {
             // Invalidate events cache only when explicitly requested to avoid unnecessary network calls
             if (forceRefresh) {
@@ -120,6 +124,14 @@ class EventsViewModel(
                 inst.since?.substringBefore('T') ?: inst.updatedAt?.substringBefore('T') ?: inst.until?.substringBefore('T') ?: ""
             }
             .filterValues { it.isNotEmpty() }
+    }
+
+    /** Cached ids of the signed-in user, so camp cards can show "registered". Missing service (tests) means no ids. */
+    private suspend fun loadMyIds() {
+        val users = userService ?: try { ServiceLocator.userService } catch (_: Exception) { null } ?: return
+        val pid = try { users.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+        val cids = try { users.getCachedCoupleIds() } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
+        _state.value = _state.value.copy(myPersonId = pid, myCoupleIds = cids)
     }
 
     fun clearError() {

@@ -1,5 +1,15 @@
 package com.tkolymp.tkolympapp.screens
 
+import com.tkolymp.tkolympapp.components.AppTopBar
+import com.tkolymp.tkolympapp.components.MenuRow
+import com.tkolymp.tkolympapp.components.QuickTile
+import com.tkolymp.tkolympapp.components.RowDivider
+import com.tkolymp.tkolympapp.components.ScheduleCard
+import com.tkolymp.tkolympapp.components.SectionLabel
+import com.tkolymp.tkolympapp.components.cardLineBorder
+import com.tkolymp.tkolympapp.components.pressClickable
+import com.tkolymp.tkolympapp.components.surfaceCardColors
+import com.tkolymp.tkolympapp.ui.theme.Spacing
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -42,7 +52,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -123,9 +133,10 @@ internal fun ProfileCard(
         modifier = modifier
             .fillMaxWidth()
             .then(cardModifier)
-            .clickable { onClick() },
+            .pressClickable(0.985f) { onClick() },
         shape = RoundedCornerShape(20.dp),
-        border = if (selected) androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
+        colors = surfaceCardColors(),
+        border = if (selected) androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else cardLineBorder()
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -135,42 +146,46 @@ internal fun ProfileCard(
         ) {
             InitialsAvatar(
                 name = name ?: AppStrings.current.otherScreen.myAccount,
-                size = 56.dp,
-                fontSize = 20.sp,
+                size = 60.dp,
+                fontSize = 21.sp,
                 imageUrl = imageUrl
             )
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(14.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = name ?: AppStrings.current.otherScreen.myAccount,
-                    style = MaterialTheme.typography.titleLarge,
+                    fontSize = 21.sp,
+                    lineHeight = 27.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 if (dob != null && !showDebug) {
                     Text(
                         formatDateString(dob) ?: dob,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
-                        modifier = Modifier.padding(top = 2.dp)
-                    )
-                }
-            }
-
-            if (showQr) {
-                IconButton(onClick = onQrClick, modifier = qrModifier) {
-                    Icon(
-                        imageVector = Icons.Filled.QrCode2,
-                        contentDescription = "Barcode",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
             if (isLoading) {
                 CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                Spacer(modifier = Modifier.width(Spacing.small))
+            }
+
+            if (showQr) {
+                IconButton(
+                    onClick = onQrClick,
+                    modifier = qrModifier.size(44.dp).background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.QrCode2,
+                        contentDescription = "Barcode",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             }
         }
     }
@@ -274,8 +289,8 @@ fun OtherScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(AppStrings.current.navigation.profile) },
+            AppTopBar(
+                title = AppStrings.current.navigation.profile,
                 actions = {
                     com.tkolymp.tkolympapp.components.ManagementModeBadge(
                         modifier = Modifier.align(Alignment.CenterVertically)
@@ -333,104 +348,17 @@ fun OtherScreen(
 
             state.error?.let { ErrorBanner(error = it) }
 
-            // Quad buttons: Payments | Stats | My trainings | Achievements (four equal icon-only cards)
+            // Quick tiles: Payments | Stats | My trainings | Achievements
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(start = Spacing.default, end = Spacing.default, top = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.small)
             ) {
-                Box(modifier = Modifier.weight(1f).pressScaleEffect()) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onPaymentsClick() },
-                        shape = RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp, topEnd = 8.dp, bottomEnd = 8.dp),
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Payments,
-                                contentDescription = AppStrings.current.otherScreen.payments,
-                                tint = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-                }
-
-                Box(modifier = Modifier.weight(1f).pressScaleEffect()) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onStatsClick() },
-                        shape = RoundedCornerShape(8.dp),
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.BarChart,
-                                contentDescription = AppStrings.current.stats.statsTitle,
-                                tint = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-                }
-
-                Box(modifier = Modifier.weight(1f).pressScaleEffect()) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onPersonalEventsClick() },
-                        shape = RoundedCornerShape(8.dp),
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.FitnessCenter,
-                                contentDescription = AppStrings.current.personalEvents.myTrainings,
-                                tint = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-                }
-
-                Box(modifier = Modifier.weight(1f).pressScaleEffect()) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onAchievementsClick() },
-                        shape = RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp, topEnd = 16.dp, bottomEnd = 16.dp),
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.WorkspacePremium,
-                                contentDescription = AppStrings.current.achievements.profilePreviewTitle,
-                                tint = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-                }
+                QuickTile(Icons.Filled.Payments, AppStrings.current.otherScreen.payments, onPaymentsClick, Modifier.weight(1f))
+                QuickTile(Icons.Filled.BarChart, AppStrings.current.stats.statsTitle, onStatsClick, Modifier.weight(1f))
+                QuickTile(Icons.Filled.FitnessCenter, AppStrings.current.personalEvents.myTrainings, onPersonalEventsClick, Modifier.weight(1f))
+                QuickTile(Icons.Filled.WorkspacePremium, AppStrings.current.achievements.profilePreviewTitle, onAchievementsClick, Modifier.weight(1f))
             }
 
             // První sekce - Členové a klub
@@ -443,9 +371,8 @@ fun OtherScreen(
                         if (tutorialActive && tutorialStep == 15) TutorialHighlight.rect = b
                     }
             ) {
-            Spacer(modifier = Modifier.height(12.dp))
+            SectionLabel(text = AppStrings.current.otherScreen.membersAndClub)
 
-            // Render main items except Payments and Stats normally
             val mainItems = listOf(
                 Pair(MainItem.PEOPLE, Icons.Filled.People),
                 Pair(MainItem.TRAINERS, Icons.Filled.FitnessCenter),
@@ -454,65 +381,32 @@ fun OtherScreen(
                 Pair(MainItem.COMPETITIONS, Icons.Filled.MilitaryTech)
             )
 
-            mainItems.forEachIndexed { i, (item, icon) ->
-                val label = when (item) {
-                    MainItem.PEOPLE -> AppStrings.current.otherScreen.people
-                    MainItem.TRAINERS -> AppStrings.current.otherScreen.trainersAndSpaces
-                    MainItem.GROUPS -> AppStrings.current.otherScreen.trainingGroups
-                    MainItem.LEADERBOARD -> AppStrings.current.otherScreen.leaderboard
-                    MainItem.COMPETITIONS -> AppStrings.current.danceOrg.title
-                }
-                StaggeredItem(index = i, visible = itemsVisible, baseDelayMs = 35) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp)
-                        .clickable {
-                            when (item) {
-                                MainItem.PEOPLE -> onPeopleClick()
-                                MainItem.TRAINERS -> onTrainersClick()
-                                MainItem.GROUPS -> onGroupsClick()
-                                MainItem.LEADERBOARD -> onLeaderboardClick()
-                                MainItem.COMPETITIONS -> onCompetitionsClick()
-                            }
-                        },
-                    shape = RoundedCornerShape(16.dp),
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp)
-                    ) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surface)
-                        ) {
-                            Icon(
-                                imageVector = icon,
-                                contentDescription = label,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(22.dp)
-                            )
+            StaggeredItem(index = 0, visible = itemsVisible, baseDelayMs = 35) {
+                ScheduleCard(Modifier.padding(horizontal = Spacing.default)) {
+                    mainItems.forEachIndexed { i, (item, icon) ->
+                        val label = when (item) {
+                            MainItem.PEOPLE -> AppStrings.current.otherScreen.people
+                            MainItem.TRAINERS -> AppStrings.current.otherScreen.trainersAndSpaces
+                            MainItem.GROUPS -> AppStrings.current.otherScreen.trainingGroups
+                            MainItem.LEADERBOARD -> AppStrings.current.otherScreen.leaderboard
+                            MainItem.COMPETITIONS -> AppStrings.current.danceOrg.title
                         }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(
-                            text = label,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Icon(
-                            imageVector = Icons.Default.ChevronRight,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        if (i > 0) RowDivider()
+                        MenuRow(
+                            icon = icon,
+                            label = label,
+                            onClick = {
+                                when (item) {
+                                    MainItem.PEOPLE -> onPeopleClick()
+                                    MainItem.TRAINERS -> onTrainersClick()
+                                    MainItem.GROUPS -> onGroupsClick()
+                                    MainItem.LEADERBOARD -> onLeaderboardClick()
+                                    MainItem.COMPETITIONS -> onCompetitionsClick()
+                                }
+                            }
                         )
                     }
                 }
-                } // StaggeredItem
             }
             } // people section Column
 

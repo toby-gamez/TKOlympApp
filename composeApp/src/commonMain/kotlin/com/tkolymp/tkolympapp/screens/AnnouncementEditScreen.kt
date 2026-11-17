@@ -1,5 +1,7 @@
 package com.tkolymp.tkolympapp.screens
 
+import com.tkolymp.tkolympapp.components.cardLineBorder
+import com.tkolymp.tkolympapp.components.surfaceCardColors
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,7 +26,7 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -107,7 +109,7 @@ fun AnnouncementEditScreen(
             }
             state.error?.let { ErrorBanner(error = it, onRetry = null) }
 
-            Card(modifier = Modifier.fillMaxWidth()) {
+            Card(modifier = Modifier.fillMaxWidth(), colors = surfaceCardColors(), border = cardLineBorder()) {
                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
                         value = draft.title,
@@ -121,7 +123,7 @@ fun AnnouncementEditScreen(
                 }
             }
 
-            Card(modifier = Modifier.fillMaxWidth()) {
+            Card(modifier = Modifier.fillMaxWidth(), colors = surfaceCardColors(), border = cardLineBorder()) {
                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(strings.status, style = MaterialTheme.typography.titleSmall)
                     val statuses = ManagedAnnouncementStatus.entries
@@ -148,7 +150,7 @@ fun AnnouncementEditScreen(
             }
 
             if (state.options.cohorts.isNotEmpty()) {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                Card(modifier = Modifier.fillMaxWidth(), colors = surfaceCardColors(), border = cardLineBorder()) {
                     OptionChips(
                         label = strings.audience,
                         options = state.options.cohorts,

@@ -1,5 +1,11 @@
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.ui.unit.sp
+import com.tkolymp.tkolympapp.components.AppTopBar
+import com.tkolymp.tkolympapp.components.SegmentedToggle
+import com.tkolymp.tkolympapp.components.accentColor
+import com.tkolymp.tkolympapp.components.cardLineBorder
+import com.tkolymp.tkolympapp.components.surfaceCardColors
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.selection.toggleable
@@ -49,7 +55,7 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -110,17 +116,7 @@ fun SettingsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(s.title) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = AppStrings.current.commonActions.back
-                        )
-                    }
-                }
-            )
+            AppTopBar(title = s.title, onBack = onBack)
         }
     ) { innerPadding ->
         Column(
@@ -136,6 +132,8 @@ fun SettingsScreen(
                 Column {
                     SettingsSectionHeader(text = s.appearanceSection)
                     Card(
+                        colors = surfaceCardColors(),
+                        border = cardLineBorder(),
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -158,16 +156,13 @@ fun SettingsScreen(
                             Spacer(modifier = Modifier.height(10.dp))
                             val modes = listOf(ThemeMode.SYSTEM, ThemeMode.LIGHT, ThemeMode.DARK)
                             val labels = listOf(s.themeSystem, s.themeLight, s.themeDark)
-                            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                                modes.forEachIndexed { index, mode ->
-                                    SegmentedButton(
-                                        selected = state.themeMode == mode,
-                                        onClick = { scope.launch { viewModel.setThemeMode(mode) } },
-                                        shape = SegmentedButtonDefaults.itemShape(index = index, count = modes.size),
-                                        icon = {}
-                                    ) { Text(labels[index], style = MaterialTheme.typography.labelSmall) }
-                                }
-                            }
+                            SegmentedToggle(
+                                labels = labels,
+                                selectedIndex = modes.indexOf(state.themeMode).coerceAtLeast(0),
+                                onSelect = { i -> scope.launch { viewModel.setThemeMode(modes[i]) } },
+                                fillWidth = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
                         }
                     }
                 }
@@ -178,6 +173,8 @@ fun SettingsScreen(
                 Column {
                     SettingsSectionHeader(text = s.calendarSection)
                     Card(
+                        colors = surfaceCardColors(),
+                        border = cardLineBorder(),
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -198,35 +195,13 @@ fun SettingsScreen(
                                 )
                             }
                             Spacer(modifier = Modifier.height(10.dp))
-                            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                                SegmentedButton(
-                                    selected = !state.preferTimeline,
-                                    onClick = { scope.launch { viewModel.setPreferTimeline(false) } },
-                                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-                                    icon = {
-                                        Icon(
-                                            Icons.Filled.ViewWeek,
-                                            contentDescription = null,
-                                            modifier = Modifier
-                                                .size(SegmentedButtonDefaults.IconSize)
-                                                .rotate(90f)
-                                        )
-                                    }
-                                ) { Text(s.calendarViewList, style = MaterialTheme.typography.labelSmall) }
-
-                                SegmentedButton(
-                                    selected = state.preferTimeline,
-                                    onClick = { scope.launch { viewModel.setPreferTimeline(true) } },
-                                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                                    icon = {
-                                        Icon(
-                                            Icons.Filled.ViewTimeline,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(SegmentedButtonDefaults.IconSize)
-                                        )
-                                    }
-                                ) { Text(s.calendarViewTimeline, style = MaterialTheme.typography.labelSmall) }
-                            }
+                            SegmentedToggle(
+                                labels = listOf(s.calendarViewList, s.calendarViewTimeline),
+                                selectedIndex = if (state.preferTimeline) 1 else 0,
+                                onSelect = { i -> scope.launch { viewModel.setPreferTimeline(i == 1) } },
+                                fillWidth = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
                         }
                     }
                 }
@@ -237,6 +212,8 @@ fun SettingsScreen(
                 Column {
                     SettingsSectionHeader(text = AppStrings.current.otherScreen.languages)
                     Card(
+                        colors = surfaceCardColors(),
+                        border = cardLineBorder(),
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -272,6 +249,8 @@ fun SettingsScreen(
                 Column {
                     SettingsSectionHeader(text = AppStrings.current.otherScreen.notificationSettings)
                     Card(
+                        colors = surfaceCardColors(),
+                        border = cardLineBorder(),
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -307,6 +286,8 @@ fun SettingsScreen(
                 Column {
                     SettingsSectionHeader(text = AppStrings.current.tutorial.tutorialRowLabel)
                     Card(
+                        colors = surfaceCardColors(),
+                        border = cardLineBorder(),
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -348,6 +329,8 @@ fun SettingsScreen(
                 Column {
                     SettingsSectionHeader(text = s.offlineSection)
                     Card(
+                        colors = surfaceCardColors(),
+                        border = cardLineBorder(),
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -407,6 +390,8 @@ fun SettingsScreen(
                 Column {
                     SettingsSectionHeader(text = AppStrings.current.feedback.sectionTitle)
                     Card(
+                        colors = surfaceCardColors(),
+                        border = cardLineBorder(),
                         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 4.dp, bottomEnd = 4.dp),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -435,6 +420,8 @@ fun SettingsScreen(
                         }
                     }
                     Card(
+                        colors = surfaceCardColors(),
+                        border = cardLineBorder(),
                         shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 16.dp, bottomEnd = 16.dp),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -470,6 +457,8 @@ fun SettingsScreen(
                 Column {
                     SettingsSectionHeader(text = AppStrings.current.otherScreen.appSection)
                     Card(
+                        colors = surfaceCardColors(),
+                        border = cardLineBorder(),
                         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 4.dp, bottomEnd = 4.dp),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -498,6 +487,8 @@ fun SettingsScreen(
                         }
                     }
                     Card(
+                        colors = surfaceCardColors(),
+                        border = cardLineBorder(),
                         shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 16.dp, bottomEnd = 16.dp),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -565,6 +556,8 @@ private fun PrivacySettingsSection(
     Column(modifier = modifier) {
         SettingsSectionHeader(text = p.settingsSection)
         Card(
+            colors = surfaceCardColors(),
+            border = cardLineBorder(),
             shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 4.dp, bottomEnd = 4.dp),
             modifier = Modifier
                 .fillMaxWidth()
@@ -601,6 +594,8 @@ private fun PrivacySettingsSection(
             }
         }
         Card(
+            colors = surfaceCardColors(),
+            border = cardLineBorder(),
             shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 4.dp, bottomEnd = 4.dp),
             modifier = Modifier
                 .fillMaxWidth()
@@ -629,6 +624,8 @@ private fun PrivacySettingsSection(
             }
         }
         Card(
+            colors = surfaceCardColors(),
+            border = cardLineBorder(),
             shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 16.dp, bottomEnd = 16.dp),
             modifier = Modifier
                 .fillMaxWidth()
@@ -678,10 +675,12 @@ private fun PrivacySettingsSectionPreviewDark() {
 @Composable
 private fun SettingsSectionHeader(text: String) {
     Text(
-        text = text,
-        style = MaterialTheme.typography.titleMedium,
+        text = text.uppercase(),
+        style = MaterialTheme.typography.labelLarge,
         fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(start = Spacing.default, top = Spacing.default, bottom = Spacing.xs)
+        letterSpacing = 0.8.sp,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(start = Spacing.default, top = 20.dp, bottom = Spacing.small)
     )
 }
 
@@ -690,15 +689,15 @@ private fun SettingsIconBox(icon: ImageVector) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
-            .size(44.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surface)
+            .size(36.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(MaterialTheme.colorScheme.tertiaryContainer)
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(22.dp)
+            tint = accentColor(),
+            modifier = Modifier.size(20.dp)
         )
     }
 }

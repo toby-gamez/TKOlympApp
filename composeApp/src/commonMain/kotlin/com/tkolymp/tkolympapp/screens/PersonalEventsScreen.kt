@@ -1,5 +1,19 @@
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.ui.text.font.FontWeight
+import com.tkolymp.shared.utils.formatFullCalendarDate
+import com.tkolymp.tkolympapp.components.SheetPrimaryButton
+import com.tkolymp.tkolympapp.components.accentColor
+import com.tkolymp.tkolympapp.components.cardLineBorder
+import com.tkolymp.tkolympapp.components.pressClickable
+import com.tkolymp.tkolympapp.components.surfaceCardColors
+import com.tkolymp.tkolympapp.ui.theme.Spacing
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -29,7 +43,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -52,6 +66,15 @@ import kotlinx.coroutines.launch
 import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+
+/** "čt 19. 11. · 19:00–20:00" style line; falls back to the raw start when it can't be parsed. */
+private fun formatEventWhen(ev: PersonalEvent): String {
+    val date = try {
+        Instant.parse(ev.startIso).toLocalDateTime(TimeZone.currentSystemDefault()).date
+    } catch (_: Exception) { null }
+    val time = formatEventTime(ev)
+    return if (date == null) time else "${formatFullCalendarDate(date, AppStrings.currentLanguage.code, false)} · $time"
+}
 
 private fun formatEventTime(ev: PersonalEvent): String {
     return try {
@@ -83,18 +106,6 @@ fun PersonalEventsScreen(
     LaunchedEffect(Unit) { vm.loadAll(); showFab = true }
 
     Scaffold(
-        floatingActionButton = {
-            onCreatePersonalEvent?.let { handler ->
-                AnimatedVisibility(
-                    visible = showFab,
-                    enter = scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)) + fadeIn(tween(200))
-                ) {
-                    FloatingActionButton(onClick = handler) {
-                        Icon(imageVector = Icons.Filled.FitnessCenter, contentDescription = AppStrings.current.personalEvents.newTraining)
-                    }
-                }
-            }
-        },
         topBar = {
         TopAppBar(
             title = { Text(AppStrings.current.personalEvents.myTrainings) },
@@ -115,35 +126,70 @@ fun PersonalEventsScreen(
                     ErrorBanner(error = error, onRetry = { scope.launch { vm.loadAll() } })
                 }
             }
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = Spacing.default, end = Spacing.default, top = Spacing.medium)
+                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(14.dp))
+                        .padding(horizontal = 14.dp, vertical = 11.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Icon(Icons.Outlined.Info, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+                    Text(
+                        text = AppStrings.current.personalEvents.savedLocallyNote,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
             items(state.events, key = { ev -> ev.id }) { ev: PersonalEvent ->
-                Card(modifier = Modifier
-                    .fillMaxWidth()
-                    .defaultMinSize(minHeight = 48.dp)
-                    .animateItem()
-                    .padding(8.dp)
-                    .clickable { onEdit(ev.id) }) {
-                    Row(modifier = Modifier.padding(12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateItem()
+                        .padding(start = Spacing.default, end = Spacing.default, top = 10.dp)
+                        .pressClickable(0.985f) { onEdit(ev.id) },
+                    shape = RoundedCornerShape(16.dp),
+                    colors = surfaceCardColors(),
+                    border = cardLineBorder()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(14.dp).fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier.size(48.dp).background(MaterialTheme.colorScheme.tertiaryContainer, RoundedCornerShape(12.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Filled.FitnessCenter, contentDescription = null, tint = accentColor(), modifier = Modifier.size(22.dp))
+                        }
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(text = ev.title, style = MaterialTheme.typography.titleMedium)
-                            Text(text = formatEventTime(ev), style = MaterialTheme.typography.bodySmall)
+                            Text(text = ev.title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                            Text(text = formatEventWhen(ev), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            ev.location?.takeIf { it.isNotBlank() }?.let {
+                                Text(text = it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
                         }
                         IconButton(onClick = {
                             selectedId = ev.id
                             showConfirm = true
                         }) {
-                            Icon(imageVector = Icons.Filled.Delete, contentDescription = AppStrings.current.commonActions.delete)
+                            Icon(imageVector = Icons.Filled.Delete, contentDescription = AppStrings.current.commonActions.delete, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
             }
-            item {
-                Text(
-                    text = AppStrings.current.personalEvents.savedLocallyNote,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp)
-                )
+            onCreatePersonalEvent?.let { handler ->
+                item {
+                    SheetPrimaryButton(
+                        text = AppStrings.current.personalEvents.newTraining,
+                        onClick = handler,
+                        icon = Icons.Filled.Add,
+                        modifier = Modifier.padding(start = Spacing.default, end = Spacing.default, top = 14.dp, bottom = Spacing.default)
+                    )
+                }
             }
         }
         }

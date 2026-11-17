@@ -46,6 +46,7 @@ val StringsUa = Strings(
     ),
     otherScreen = OtherScreenStrings(
         appSection = "Додаток",
+        membersAndClub = "Учасники та клуб",
         people = "Люди",
         trainersAndSpaces = "Тренери та зали",
         trainingGroups = "Тренувальні групи",
@@ -167,6 +168,8 @@ val StringsUa = Strings(
         upcomingEvents = "Майбутні заходи",
         noEventsPlanned = "Немає запланованих заходів",
         noPastEvents = "Немає минулих заходів",
+        runningLabel = "триває",
+        pastLabel = "минуло",
         noEventToShow = "Немає заходу для відображення",
         errorLoadingEvents = "Помилка завантаження заходів",
         registrationOpen = "Відкрита",
@@ -227,6 +230,8 @@ val StringsUa = Strings(
         errorLoadingAnnouncements = "Помилка завантаження оголошень",
         announcement = "Оголошення",
         noAnnouncementToShow = "Немає оголошення для відображення",
+        newBadge = "НОВЕ",
+        daysAgo = "%d дн. тому",
     ),
     notifications = NotificationStrings(
         notificationsGloballyEnabled = "Глобально увімкнено",

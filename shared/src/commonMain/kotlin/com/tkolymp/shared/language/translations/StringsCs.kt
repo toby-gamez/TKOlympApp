@@ -46,6 +46,7 @@ val StringsCs = Strings(
     ),
     otherScreen = OtherScreenStrings(
         appSection = "Aplikace",
+        membersAndClub = "Členové a klub",
         people = "Lidé",
         trainersAndSpaces = "Trenéři a tréninkové prostory",
         trainingGroups = "Tréninkové skupiny",
@@ -192,6 +193,8 @@ val StringsCs = Strings(
         upcomingEvents = "Nadcházející akce",
         noEventsPlanned = "Žádné naplánované akce",
         noPastEvents = "Žádné proběhlé akce",
+        runningLabel = "probíhá",
+        pastLabel = "proběhlo",
         noEventToShow = "Žádná událost k zobrazení",
         errorLoadingEvents = "Chyba při načítání akcí",
         registrationOpen = "Otevřeno",
@@ -262,6 +265,8 @@ val StringsCs = Strings(
         errorLoadingAnnouncements = "Chyba při načítání příspěvků",
         announcement = "Oznámení",
         noAnnouncementToShow = "Žádné oznámení k zobrazení",
+        newBadge = "NOVÉ",
+        daysAgo = "před %d d.",
     ),
     notifications = NotificationStrings(
         notificationsGloballyEnabled = "Globálně zapnuto",

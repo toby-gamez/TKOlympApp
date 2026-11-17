@@ -229,6 +229,12 @@ fun standardDurationMinutes(since: String?, until: String?): Int? {
     return raw.takeIf { it == 45 || it == 90 }
 }
 
+/** Whole calendar days between the local date of [iso] and [today]; null when unparsable, never negative. */
+fun daysSince(iso: String?, today: LocalDate): Int? {
+    val date = parseToLocal(iso)?.date ?: return null
+    return (today.toEpochDays() - date.toEpochDays()).coerceAtLeast(0).toInt()
+}
+
 fun formatHtmlContent(html: String?): String {
     if (html.isNullOrBlank()) return ""
     

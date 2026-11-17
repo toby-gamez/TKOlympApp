@@ -1,6 +1,8 @@
 package com.tkolymp.tkolympapp.screens
 
 // Biometric support removed — no FragmentActivity import
+import com.tkolymp.tkolympapp.components.cardLineBorder
+import com.tkolymp.tkolympapp.components.surfaceCardColors
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -44,7 +46,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -198,14 +200,14 @@ fun ProfileScreen(
                         modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs),
                         horizontalArrangement = Arrangement.spacedBy(Spacing.small)
                     ) {
-                        Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp)) {
+                        Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                             Row(modifier = Modifier.padding(Spacing.medium), verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.Cake, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(person?.birthDate?.let { fmtProfileDate(it) } ?: "—", style = MaterialTheme.typography.bodyMedium)
                             }
                         }
-                        Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp)) {
+                        Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                             Row(modifier = Modifier.padding(Spacing.medium), verticalAlignment = Alignment.CenterVertically) {
                                 val genderIcon = when (person?.gender) {
                                     "MAN" -> Icons.Default.Male
@@ -231,7 +233,7 @@ fun ProfileScreen(
                 val emailText = derived.emailText
                 if (!emailText.isNullOrBlank()) {
                     StaggeredItem(index = 1, visible = sectionsVisible, baseDelayMs = 50) {
-                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp)) {
+                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                             Row(modifier = Modifier.padding(Spacing.medium), verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.Email, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
@@ -245,7 +247,7 @@ fun ProfileScreen(
                 val phoneText = person?.phone
                 if (!phoneText.isNullOrBlank()) {
                     StaggeredItem(index = 2, visible = sectionsVisible, baseDelayMs = 50) {
-                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp)) {
+                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                             Row(modifier = Modifier.padding(Spacing.medium), verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.Phone, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
@@ -267,6 +269,8 @@ fun ProfileScreen(
                         ) {
                             if (cstsId != null) {
                                 Card(
+                                    colors = surfaceCardColors(),
+                                    border = cardLineBorder(),
                                     modifier = Modifier
                                         .weight(1f)
                                         .clickable { uriHandler.openUri("https://www.csts.cz/dancesport/evidence/lide/$cstsId/osobni_udaje") },
@@ -284,7 +288,7 @@ fun ProfileScreen(
                                 }
                             }
                             if (wdsfId != null) {
-                                Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp)) {
+                                Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                                     Row(modifier = Modifier.padding(Spacing.medium), verticalAlignment = Alignment.CenterVertically) {
                                         Icon(Icons.Default.Badge, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                                         Spacer(modifier = Modifier.width(6.dp))
@@ -308,7 +312,7 @@ fun ProfileScreen(
 
                 // Address
                 StaggeredItem(index = 4, visible = sectionsVisible, baseDelayMs = 50) {
-                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp)) {
+                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                         Column(modifier = Modifier.padding(Spacing.medium)) {
                             Text(AppStrings.current.address.address, style = MaterialTheme.typography.labelLarge)
                             HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.small))
@@ -353,7 +357,7 @@ fun ProfileScreen(
                 val cstsProgressList = person?.cstsProgressList ?: emptyList()
                 if (cstsProgressList.isEmpty()) {
                     StaggeredItem(index = 5, visible = sectionsVisible, baseDelayMs = 50) {
-                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp)) {
+                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                             Column(modifier = Modifier.padding(Spacing.medium)) {
                                 Text(AppStrings.current.profile.activeCouple, style = MaterialTheme.typography.labelLarge)
                                 HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.small))
@@ -382,14 +386,14 @@ fun ProfileScreen(
 
                 // Training groups
                 StaggeredItem(index = 6, visible = sectionsVisible, baseDelayMs = 50) {
-                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp)) {
+                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                         Column(modifier = Modifier.padding(Spacing.medium)) {
                             Text(AppStrings.current.otherScreen.trainingGroups, style = MaterialTheme.typography.labelLarge)
                             HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.small))
                             if (derived.cohortItems.isNotEmpty()) {
                                 derived.cohortItems.forEach { item ->
                                     val color = try { parseColorOrDefault(item.colorRgb) } catch (_: Exception) { Color.Gray }
-                                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
+                                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                                         Column(modifier = Modifier.padding(6.dp)) {
                                             Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
                                                 Box(modifier = Modifier.width(6.dp).fillMaxHeight().background(color, RoundedCornerShape(6.dp)))
@@ -412,7 +416,7 @@ fun ProfileScreen(
 
                 // ČSTS Progress
                 StaggeredItem(index = 7, visible = sectionsVisible, baseDelayMs = 50) {
-                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp)) {
+                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                         Column(modifier = Modifier.padding(Spacing.medium)) {
                             Text(AppStrings.current.competition.cstsProgress, style = MaterialTheme.typography.labelLarge)
                             HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.small))
@@ -526,7 +530,7 @@ fun ProfileScreen(
                 val combined = remainingPersonal + remainingContact
                 if (combined.isNotEmpty()) {
                     StaggeredItem(index = 8, visible = sectionsVisible, baseDelayMs = 50) {
-                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp)) {
+                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                             Column(modifier = Modifier.padding(Spacing.medium)) {
                                 Text(AppStrings.current.profile.personalData, style = MaterialTheme.typography.labelLarge)
                                 HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.small))
@@ -543,7 +547,7 @@ fun ProfileScreen(
 
                 if (derived.externalList.isNotEmpty()) {
                     StaggeredItem(index = 9, visible = sectionsVisible, baseDelayMs = 50) {
-                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp)) {
+                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                             Column(modifier = Modifier.padding(Spacing.medium)) {
                                 Text(AppStrings.current.profile.externalIdSection, style = MaterialTheme.typography.labelLarge)
                                 HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.small))
@@ -561,7 +565,7 @@ fun ProfileScreen(
                 val filteredOtherList = derived.otherList.filter { (k, _) -> k !in setOf("isTrainer", "username") }
                 if (filteredOtherList.isNotEmpty()) {
                     StaggeredItem(index = 10, visible = sectionsVisible, baseDelayMs = 50) {
-                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp)) {
+                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                             Column(modifier = Modifier.padding(Spacing.medium)) {
                                 Text(AppStrings.current.profile.otherDetails, style = MaterialTheme.typography.labelLarge)
                                 HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.small))

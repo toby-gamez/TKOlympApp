@@ -1,5 +1,8 @@
 package com.tkolymp.tkolympapp.components
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.fillMaxWidth
+import com.tkolymp.tkolympapp.ui.theme.BrandLightPrimary
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -43,24 +46,26 @@ fun BadgeTile(
     isNew: Boolean = false,
     onClick: () -> Unit = {},
 ) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
+    Box(
         modifier = modifier
-            .width(96.dp)
-            .padding(8.dp)
-            .clickable(onClick = onClick)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
+            .alpha(if (earned) 1f else 0.7f)
+            .pressClickable(0.96f, onClick)
             .semantics { contentDescription = label }
     ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(56.dp)) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth().padding(start = 6.dp, end = 6.dp, top = 14.dp, bottom = 12.dp)
+        ) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(56.dp)
+                    .size(52.dp)
                     .clip(CircleShape)
-                    .background(
-                        if (earned) MaterialTheme.colorScheme.primaryContainer
-                        else MaterialTheme.colorScheme.surfaceVariant
-                    )
+                    .background(if (earned) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Text(
                     text = icon,
@@ -68,26 +73,26 @@ fun BadgeTile(
                     modifier = Modifier.alpha(if (earned) 1f else 0.35f)
                 )
             }
-            // Outside the circle-clipped box above — a pill inside it gets sliced into a
-            // ribbon-shaped wedge by the CircleShape clip instead of reading as a corner badge.
-            if (isNew) {
-                NewIndicatorPill(modifier = Modifier.align(Alignment.TopEnd).offset(x = 4.dp, y = (-4).dp))
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = label,
+                fontSize = 12.sp,
+                lineHeight = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            if (progressText != null) {
+                Text(
+                    text = progressText,
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
-        Spacer(modifier = Modifier.height(6.dp))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            textAlign = TextAlign.Center,
-            maxLines = 2,
-            color = if (earned) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        if (progressText != null) {
-            Text(
-                text = progressText,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+        if (isNew) {
+            NewIndicatorPill(modifier = Modifier.align(Alignment.TopEnd).padding(top = 8.dp, end = 8.dp))
         }
     }
 }
@@ -99,14 +104,14 @@ fun NewIndicatorPill(modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center,
         modifier = modifier
             .clip(RoundedCornerShape(6.dp))
-            .background(MaterialTheme.colorScheme.error)
-            .padding(horizontal = 4.dp, vertical = 1.dp)
+            .background(BrandLightPrimary)
+            .padding(horizontal = 5.dp, vertical = 2.dp)
     ) {
         Text(
             text = AppStrings.current.achievements.newPillLabel,
-            fontSize = 8.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onError,
+            fontSize = 9.sp,
+            fontWeight = FontWeight.ExtraBold,
+            color = androidx.compose.ui.graphics.Color.White,
         )
     }
 }

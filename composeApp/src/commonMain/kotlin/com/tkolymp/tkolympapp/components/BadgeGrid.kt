@@ -1,6 +1,10 @@
 package com.tkolymp.tkolympapp.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -47,7 +51,11 @@ fun LazyGridScope.badgeGridSections(
 
         item(span = { GridItemSpan(maxLineSpan) }) {
             val earnedInCategory = items.count { it.earned }
-            Column {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 14.dp, bottom = 2.dp),
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
                 Text(
                     text = when (category) {
                         BadgeCategory.CAMP -> strings.sectionCamps
@@ -56,17 +64,13 @@ fun LazyGridScope.badgeGridSections(
                         BadgeCategory.COMPETITIONS -> strings.sectionCompetitions
                         BadgeCategory.REPERTOIRE -> strings.sectionRepertoire
                         BadgeCategory.RHYTHM -> strings.sectionRhythm
-                    } + " · $earnedInCategory/${items.size}",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(top = 12.dp, bottom = 4.dp)
+                    }.uppercase(),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.8.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                LinearProgressIndicator(
-                    progress = { earnedInCategory.toFloat() / items.size },
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                    strokeCap = StrokeCap.Round,
-                )
+                Text("$earnedInCategory/${items.size}", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 

@@ -2,6 +2,19 @@ package com.tkolymp.tkolympapp.screens
 
 // no manual refresh button
  
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.text.font.FontWeight
+import com.tkolymp.tkolympapp.components.AppTopBar
+import com.tkolymp.tkolympapp.components.QuickChip
+import com.tkolymp.tkolympapp.components.SearchField
+import com.tkolymp.tkolympapp.components.SegmentedToggle
+import com.tkolymp.tkolympapp.components.cardLineBorder
+import com.tkolymp.tkolympapp.components.pressClickable
+import com.tkolymp.tkolympapp.components.surfaceCardColors
+import com.tkolymp.tkolympapp.ui.theme.Spacing
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -15,7 +28,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.draw.clip
 import androidx.compose.animation.AnimatedVisibility
@@ -54,7 +66,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TopAppBar
+import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -162,13 +174,9 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
     LaunchedEffect(state.people) { if (state.people.isNotEmpty()) cardsVisible = true }
 
     Scaffold(topBar = {
-        TopAppBar(
-            title = { Text(AppStrings.current.otherScreen.people) },
-            navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
-                }
-            },
+        AppTopBar(
+            title = AppStrings.current.otherScreen.people,
+            onBack = onBack,
             actions = {
                 IconButton(onClick = onBirthdayNotificationsClick) {
                     Icon(imageVector = Icons.Filled.Notifications, contentDescription = AppStrings.current.notifications.birthdayNotificationsTitle)
@@ -206,38 +214,27 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
                 enter = fadeIn(tween(160)) + expandVertically(tween(160)),
                 exit = fadeOut(tween(120)) + shrinkVertically(tween(120))
             ) {
-                TextField(
+                SearchField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                        .focusRequester(focusRequester),
-                    singleLine = true,
-                    leadingIcon = { Icon(imageVector = Icons.Filled.Search, contentDescription = "") },
-                    trailingIcon = {
-                        IconButton(onClick = {
-                            if (searchQuery.isNotBlank()) searchQuery = "" else showSearch = false
-                        }) {
-                            Icon(imageVector = Icons.Filled.Close, contentDescription = AppStrings.current.commonActions.cancel)
-                        }
-                    },
-                    placeholder = { Text(AppStrings.current.people.searchByName) }
+                    placeholder = AppStrings.current.people.searchByName,
+                    onTrailingClick = { if (searchQuery.isNotBlank()) searchQuery = "" else showSearch = false },
+                    trailingDescription = AppStrings.current.commonActions.cancel,
+                    modifier = Modifier.padding(start = Spacing.default, end = Spacing.default, top = Spacing.small),
+                    focusRequester = focusRequester
                 )
             }
 
             // sort controls
             Row(modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                .padding(start = Spacing.default, end = Spacing.default, top = Spacing.small), verticalAlignment = Alignment.CenterVertically) {
                 val alphabetic = sortMode != SortMode.BIRTHDAY
-                TextButton(onClick = { if (!alphabetic) changeSort(SortMode.SURNAME) }) {
-                    Text(AppStrings.current.people.alphabetical, color = if (alphabetic) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                TextButton(onClick = { changeSort(SortMode.BIRTHDAY) }) {
-                    Text(AppStrings.current.profile.birthdays, color = if (sortMode == SortMode.BIRTHDAY) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
-                }
+                SegmentedToggle(
+                    labels = listOf(AppStrings.current.people.alphabetical, AppStrings.current.profile.birthdays),
+                    selectedIndex = if (alphabetic) 0 else 1,
+                    onSelect = { i -> if (i == 0) { if (!alphabetic) changeSort(SortMode.SURNAME) } else changeSort(SortMode.BIRTHDAY) }
+                )
                 Spacer(modifier = Modifier.weight(1f))
                 AnimatedVisibility(
                     visible = alphabetic,
@@ -270,35 +267,19 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                    .horizontalScroll(rememberScrollState())
+                    .padding(start = Spacing.default, end = Spacing.default, top = 10.dp, bottom = Spacing.xs),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.small),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
-                    // 'Vše' clears selection (empty = show all)
-                    FilterChip(
-                        selected = selectedGroups.isEmpty() && !showTrainersOnly,
-                        onClick = { selectedGroups = emptySet(); showTrainersOnly = false },
-                        label = { Text(AppStrings.current.commonActions.all) }
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    FilterChip(
-                        selected = showTrainersOnly,
-                        onClick = { showTrainersOnly = !showTrainersOnly },
-                        label = { Text(AppStrings.current.profile.trainers) }
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    groups.forEach { (id, name) ->
-                        FilterChip(
-                            selected = selectedGroups.contains(id),
-                            onClick = {
-                                selectedGroups = if (selectedGroups.contains(id)) selectedGroups - id else selectedGroups + id
-                            },
-                            label = { Text(name) }
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                    }
+                // 'Vše' clears selection (empty = show all)
+                QuickChip(AppStrings.current.commonActions.all, selectedGroups.isEmpty() && !showTrainersOnly, { selectedGroups = emptySet(); showTrainersOnly = false })
+                QuickChip(AppStrings.current.profile.trainers, showTrainersOnly, { showTrainersOnly = !showTrainersOnly })
+                groups.forEach { (id, name) ->
+                    QuickChip(name, selectedGroups.contains(id), {
+                        selectedGroups = if (selectedGroups.contains(id)) selectedGroups - id else selectedGroups + id
+                    })
                 }
-
             }
 
             val appliedSort = remember { object { var mode = sortMode } }
@@ -354,14 +335,15 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 4.dp)
-                                .clickable { onPersonClick(p.id) },
-                            shape = RoundedCornerShape(16.dp)
+                                .padding(horizontal = Spacing.default, vertical = 4.dp)
+                                .pressClickable(0.99f) { onPersonClick(p.id) },
+                            shape = RoundedCornerShape(16.dp),
+                            colors = surfaceCardColors(),
+                            border = cardLineBorder()
                         ) {
                             Row(modifier = Modifier
                                 .fillMaxWidth()
-                                .height(IntrinsicSize.Min)
-                                .padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                .padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                                 val cohortColors = remember(p.id, p.cohortMembershipsList) {
                                     p.cohortMembershipsList
                                         .filter { m ->
@@ -378,30 +360,23 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
                                             }
                                         }
                                 }
-                                Column(
-                                    modifier = Modifier
-                                        .width(6.dp)
-                                        .fillMaxHeight()
-                                        .clip(RoundedCornerShape(6.dp))
-                                ) {
-                                    if (cohortColors.isNotEmpty()) {
-                                        cohortColors.forEach { color ->
-                                            Box(modifier = Modifier.fillMaxWidth().weight(1f).background(color))
-                                        }
-                                    } else {
-                                        Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primary))
-                                    }
-                                }
-                                Spacer(modifier = Modifier.width(12.dp))
+                                // cohort colour shows as the ring around the avatar (first current cohort)
                                 val personName = listOfNotNull(p.firstName, p.lastName)
                                     .filter { it.isNotBlank() }.joinToString(" ")
 
-                                InitialsAvatar(
-                                    name = personName.ifBlank { p.id },
-                                    size = 40.dp,
-                                    fontSize = 14.sp,
-                                    imageUrl = p.imageUrl,
-                                )
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .border(2.dp, cohortColors.firstOrNull() ?: MaterialTheme.colorScheme.primary, CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    InitialsAvatar(
+                                        name = personName.ifBlank { p.id },
+                                        size = 32.dp,
+                                        fontSize = 12.sp,
+                                        imageUrl = p.imageUrl,
+                                    )
+                                }
 
                                 Spacer(modifier = Modifier.width(12.dp))
 
@@ -414,7 +389,8 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
                                     val name = if (!p.suffixTitle.isNullOrBlank()) "$base, ${p.suffixTitle}" else base
                                     Text(
                                         name.ifBlank { p.id },
-                                        style = MaterialTheme.typography.titleMedium,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.Medium,
                                         color = if (isBirthdayToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                                     )
                                     p.birthDate?.let { raw ->

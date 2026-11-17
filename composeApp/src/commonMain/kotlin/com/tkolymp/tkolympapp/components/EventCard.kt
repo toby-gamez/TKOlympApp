@@ -1,5 +1,7 @@
 package com.tkolymp.tkolympapp.components
 
+import com.tkolymp.tkolympapp.components.cardLineBorder
+import com.tkolymp.tkolympapp.components.surfaceCardColors
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Box
@@ -194,6 +196,8 @@ internal fun RenderSingleEventCard(
     modifier: Modifier = Modifier
 ) {
     Card(
+        colors = surfaceCardColors(),
+        border = cardLineBorder(),
         modifier = modifier
             .fillMaxWidth()
             .defaultMinSize(minHeight = 48.dp)

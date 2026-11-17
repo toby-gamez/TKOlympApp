@@ -1,5 +1,7 @@
 package com.tkolymp.tkolympapp.screens
 
+import com.tkolymp.tkolympapp.components.cardLineBorder
+import com.tkolymp.tkolympapp.components.surfaceCardColors
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -327,6 +329,8 @@ internal fun SummaryCard(modifier: Modifier = Modifier, value: String, label: St
 @Composable
 internal fun StatsCard(modifier: Modifier = Modifier.fillMaxWidth(), title: String, content: @Composable () -> Unit) {
     Card(
+        colors = surfaceCardColors(),
+        border = cardLineBorder(),
         modifier = modifier,
         shape = RoundedCornerShape(16.dp)
     ) {
@@ -1019,7 +1023,7 @@ internal fun AttendanceTabContent(
             return@Column
         }
 
-        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1045,7 +1049,7 @@ internal fun AttendanceTabContent(
         )
 
         attendanceMonths.forEach { month ->
-            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(
                         text = "${month.monthLabel} (${month.sessions.size})",

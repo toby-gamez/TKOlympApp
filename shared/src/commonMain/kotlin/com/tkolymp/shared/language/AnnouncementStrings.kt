@@ -6,4 +6,7 @@ data class AnnouncementStrings(
     val errorLoadingAnnouncements: String,
     val announcement: String,
     val noAnnouncementToShow: String,
+    val newBadge: String,
+    /** Contains one `%d` for the number of days. */
+    val daysAgo: String,
 )

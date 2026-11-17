@@ -47,6 +47,7 @@ val StringsBrainrot = Strings(
     ),
     otherScreen = OtherScreenStrings(
         appSection = "The App no cap",
+        membersAndClub = "Squad & club",
         people = "Fam",
         trainersAndSpaces = "Gymbros & Gyms",
         trainingGroups = "Rizz Groups",
@@ -168,6 +169,8 @@ val StringsBrainrot = Strings(
         upcomingEvents = "Upcoming Bangers",
         noEventsPlanned = "No events planned rn",
         noPastEvents = "No past events fr",
+        runningLabel = "running rn",
+        pastLabel = "past",
         noEventToShow = "Nothing to show bestie",
         errorLoadingEvents = "Error loading events rip",
         registrationOpen = "Open",
@@ -228,6 +231,8 @@ val StringsBrainrot = Strings(
         errorLoadingAnnouncements = "Error loading posts rip",
         announcement = "big announcement",
         noAnnouncementToShow = "no announcements rn bestie",
+        newBadge = "NEW",
+        daysAgo = "%d d ago fr",
     ),
     notifications = NotificationStrings(
         notificationsGloballyEnabled = "Globally Enabled",

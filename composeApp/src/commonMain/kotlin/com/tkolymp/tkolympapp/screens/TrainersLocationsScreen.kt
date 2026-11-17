@@ -1,10 +1,25 @@
 package com.tkolymp.tkolympapp.screens
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import com.tkolymp.tkolympapp.components.AppTopBar
+import com.tkolymp.tkolympapp.components.SectionLabel
+import com.tkolymp.tkolympapp.components.SegmentedToggle
+import com.tkolymp.tkolympapp.components.accentColor
+import com.tkolymp.tkolympapp.components.cardLineBorder
+import com.tkolymp.tkolympapp.components.pressClickable
+import com.tkolymp.tkolympapp.components.surfaceCardColors
+import com.tkolymp.tkolympapp.ui.theme.BrandLightPrimary
+import com.tkolymp.tkolympapp.ui.theme.Spacing
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,7 +27,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -30,7 +44,7 @@ import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -44,11 +58,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import com.tkolymp.shared.club.Trainer
@@ -81,14 +93,7 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
 
     Scaffold(topBar = {
-        TopAppBar(
-            title = { Text(AppStrings.current.otherScreen.trainersAndSpaces) },
-            navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
-                }
-            }
-        )
+        AppTopBar(title = AppStrings.current.otherScreen.trainersAndSpaces, onBack = onBack)
     }) { padding ->
         SwipeToReload(
             isRefreshing = state.isLoading,
@@ -105,18 +110,13 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
             } ?: emptyList()
 
             Column(modifier = Modifier.fillMaxSize()) {
-                PrimaryTabRow(selectedTabIndex = selectedTab) {
-                    Tab(
-                        selected = selectedTab == 0,
-                        onClick = { selectedTab = 0 },
-                        text = { Text(AppStrings.current.people.tabOverview) }
-                    )
-                    Tab(
-                        selected = selectedTab == 1,
-                        onClick = { selectedTab = 1 },
-                        text = { Text(AppStrings.current.people.tabWorkload) }
-                    )
-                }
+                SegmentedToggle(
+                    labels = listOf(AppStrings.current.people.tabOverview, AppStrings.current.people.tabWorkload),
+                    selectedIndex = selectedTab,
+                    onSelect = { selectedTab = it },
+                    fillWidth = true,
+                    modifier = Modifier.fillMaxWidth().padding(start = Spacing.default, end = Spacing.default, top = Spacing.small)
+                )
 
                 AnimatedContent(targetState = selectedTab, modifier = Modifier.fillMaxSize()) { tab ->
                     when (tab) {
@@ -132,7 +132,7 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                             } else {
                                 LazyColumn(modifier = Modifier) {
                                     item(key = "header_locations") {
-                                        Text(AppStrings.current.people.trainingSpaces, modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                        SectionLabel(AppStrings.current.people.trainingSpaces)
                                     }
 
                                     val visibleLocations = club.locations.filter { loc ->
@@ -146,9 +146,9 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                                                 Card(
                                                     modifier = Modifier
                                                         .fillMaxWidth()
-                                                        .padding(horizontal = 12.dp, vertical = 4.dp)
-                                                        .clickable {
-                                                            val q = loc.name ?: return@clickable
+                                                        .padding(horizontal = Spacing.default, vertical = 4.dp)
+                                                        .pressClickable(0.99f) {
+                                                            val q = loc.name ?: return@pressClickable
                                                             val encoded = q.map { c ->
                                                                 when {
                                                                     c.isLetterOrDigit() || c in "-_.~" -> c.toString()
@@ -159,11 +159,19 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                                                             try { uriHandler.openUri("https://www.google.com/maps/search/?api=1&query=$encoded") } catch (_: Exception) { }
                                                         },
                                                     shape = RoundedCornerShape(16.dp),
+                                                    colors = surfaceCardColors(),
+                                                    border = cardLineBorder()
                                                 ) {
-                                                    Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                                                        Icon(imageVector = Icons.Filled.Place, contentDescription = AppStrings.current.people.trainingSpaces, modifier = Modifier.size(28.dp))
+                                                    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                                        Box(
+                                                            Modifier.size(38.dp).background(MaterialTheme.colorScheme.tertiaryContainer, RoundedCornerShape(10.dp)),
+                                                            contentAlignment = Alignment.Center
+                                                        ) {
+                                                            Icon(imageVector = Icons.Filled.Place, contentDescription = AppStrings.current.people.trainingSpaces, tint = accentColor(), modifier = Modifier.size(20.dp))
+                                                        }
                                                         Spacer(modifier = Modifier.width(12.dp))
-                                                        Text(text = loc.name ?: AppStrings.current.dialogs.noName, style = MaterialTheme.typography.bodyLarge)
+                                                        Text(text = loc.name ?: AppStrings.current.dialogs.noName, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                                                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                                     }
                                                 }
                                             }
@@ -173,7 +181,7 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                                     }
 
                                     item(key = "header_trainers") {
-                                        Text(AppStrings.current.profile.trainers, modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                        SectionLabel(AppStrings.current.profile.trainers)
                                     }
 
                                     fun formatPrice(amount: Double?, currency: String?): String? {
@@ -195,10 +203,12 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                                                 Card(
                                                     modifier = Modifier
                                                         .fillMaxWidth()
-                                                        .padding(horizontal = 12.dp, vertical = 4.dp),
-                                                    shape = RoundedCornerShape(16.dp)
+                                                        .padding(horizontal = Spacing.default, vertical = 4.dp),
+                                                    shape = RoundedCornerShape(16.dp),
+                                                    colors = surfaceCardColors(),
+                                                    border = cardLineBorder()
                                                 ) {
-                                                    Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                                    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                                             val p = t.person
                                                             val name = listOfNotNull(
@@ -209,15 +219,15 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                                                             val suffix = p?.suffixTitle?.takeIf { it.isNotBlank() }
                                                             val displayName = if (suffix != null) "$name, $suffix" else name
                                                             val avatarName = if (displayName.isBlank()) (p?.id ?: "?") else displayName
-                                                            InitialsAvatar(name = avatarName, size = 28.dp, fontSize = 11.sp, imageUrl = p?.imageUrl)
+                                                            InitialsAvatar(name = avatarName, size = 38.dp, fontSize = 12.sp, imageUrl = p?.imageUrl)
                                                             Spacer(modifier = Modifier.width(12.dp))
                                                             Column {
-                                                                Text(text = if (displayName.isBlank()) (p?.id ?: "(trenér)") else displayName, style = MaterialTheme.typography.bodyLarge)
+                                                                Text(text = if (displayName.isBlank()) (p?.id ?: "(trenér)") else displayName, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
                                                             }
                                                         }
                                                         val priceStr = formatPrice(t.guestPrice45Min?.amount, t.guestPrice45Min?.currency)
                                                         if (priceStr != null) {
-                                                            Text(text = priceStr, style = MaterialTheme.typography.bodyMedium)
+                                                            Text(text = priceStr, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                                         }
                                                     }
                                                 }
@@ -258,31 +268,32 @@ private fun TrainerHeatmapTab(
         return
     }
 
-    Column(Modifier.fillMaxSize()) {
-        Text(
-            AppStrings.current.people.heatmapPeriod,
-            modifier = Modifier.padding(start = 8.dp, top = 8.dp, bottom = 2.dp),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 4.dp, vertical = 4.dp)
-        ) {
-            Spacer(Modifier.weight(NAME_WEIGHT))
-            dayLabels.forEach { label ->
-                Text(
-                    label,
-                    Modifier.weight(1f),
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(start = Spacing.default, end = Spacing.default, top = 14.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = surfaceCardColors(),
+        border = cardLineBorder()
+    ) {
+        Column(Modifier.padding(14.dp)) {
+            Text(
+                AppStrings.current.people.heatmapPeriod,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Row(Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 4.dp)) {
+                Spacer(Modifier.weight(NAME_WEIGHT))
+                dayLabels.forEach { label ->
+                    Text(
+                        label,
+                        Modifier.weight(1f),
+                        textAlign = TextAlign.Center,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
-        }
-        LazyColumn(Modifier.fillMaxSize()) {
-            itemsIndexed(trainers, key = { index, t -> "h_${index}_${t.person?.id}" }) { _, trainer ->
+            trainers.forEachIndexed { index, trainer ->
                 val fullName = listOfNotNull(
                     trainer.person?.firstName?.trim(),
                     trainer.person?.lastName?.trim()
@@ -296,42 +307,26 @@ private fun TrainerHeatmapTab(
                     "$f $l".trim()
                 } ?: "(trenér)"
 
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp, vertical = 2.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        shortName,
-                        Modifier.weight(NAME_WEIGHT),
-                        style = MaterialTheme.typography.bodySmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(shortName, Modifier.weight(NAME_WEIGHT), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     for (d in 0..6) {
                         val cnt = dayArray[d]
                         val intensity = if (cnt == 0) 0f else 0.15f + (cnt.toFloat() / maxCount) * 0.85f
-                        val bg = if (cnt == 0) surface.copy(alpha = 0.3f) else primary.copy(alpha = intensity)
+                        val bg = if (cnt == 0) surface else BrandLightPrimary.copy(alpha = intensity)
                         Box(
-                            Modifier
-                                .weight(1f)
-                                .aspectRatio(1f)
-                                .padding(2.dp)
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(bg),
+                            Modifier.weight(1f).padding(2.dp).height(26.dp).clip(RoundedCornerShape(6.dp)).background(bg),
                             contentAlignment = Alignment.Center
                         ) {
                             if (cnt > 0) {
-                                Text(
-                                    cnt.toString(),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = if (intensity > 0.6f) MaterialTheme.colorScheme.onPrimary
-                                    else MaterialTheme.colorScheme.onSurface
-                                )
+                                Text(cnt.toString(), fontSize = 10.sp, fontWeight = FontWeight.SemiBold, color = if (intensity > 0.6f) Color.White else MaterialTheme.colorScheme.onSurface)
                             }
                         }
                     }
+                }
+            }
+            Row(Modifier.padding(top = Spacing.medium), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf(surface, BrandLightPrimary.copy(alpha = 0.3f), BrandLightPrimary.copy(alpha = 0.6f), BrandLightPrimary).forEach {
+                    Box(Modifier.size(width = 14.dp, height = 10.dp).background(it, RoundedCornerShape(3.dp)))
                 }
             }
         }

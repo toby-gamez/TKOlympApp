@@ -1,5 +1,7 @@
 package com.tkolymp.tkolympapp.components
 
+import com.tkolymp.tkolympapp.components.cardLineBorder
+import com.tkolymp.tkolympapp.components.surfaceCardColors
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -97,7 +99,7 @@ fun SocialLinksRow(person: PersonDetails, modifier: Modifier = Modifier) {
 @Composable
 fun PersonNoteCard(note: String?, modifier: Modifier = Modifier) {
     if (note.isNullOrBlank()) return
-    Card(modifier = modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
+    Card(modifier = modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(AppStrings.current.profile.note, style = MaterialTheme.typography.labelLarge)
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))

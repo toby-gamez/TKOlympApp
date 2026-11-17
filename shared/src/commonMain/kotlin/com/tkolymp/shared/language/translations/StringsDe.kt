@@ -46,6 +46,7 @@ val StringsDe = Strings(
     ),
     otherScreen = OtherScreenStrings(
         appSection = "App",
+        membersAndClub = "Mitglieder & Verein",
         people = "Personen",
         trainersAndSpaces = "Trainer & Trainingsstätten",
         trainingGroups = "Trainingsgruppen",
@@ -167,6 +168,8 @@ val StringsDe = Strings(
         upcomingEvents = "Bevorstehende Events",
         noEventsPlanned = "Keine Events geplant",
         noPastEvents = "Keine vergangenen Events",
+        runningLabel = "läuft",
+        pastLabel = "vorbei",
         noEventToShow = "Kein Event zum Anzeigen",
         errorLoadingEvents = "Fehler beim Laden der Events",
         registrationOpen = "Offen",
@@ -227,6 +230,8 @@ val StringsDe = Strings(
         errorLoadingAnnouncements = "Fehler beim Laden der Beiträge",
         announcement = "Ankündigung",
         noAnnouncementToShow = "Keine Ankündigung zum Anzeigen",
+        newBadge = "NEU",
+        daysAgo = "vor %d T.",
     ),
     notifications = NotificationStrings(
         notificationsGloballyEnabled = "Global aktiviert",

@@ -490,7 +490,7 @@ fun SheetChip(
 
 /** Full-width red pill at the bottom of the sheet. */
 @Composable
-fun SheetPrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun SheetPrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, icon: ImageVector? = null) {
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -500,6 +500,9 @@ fun SheetPrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = M
             .pressClickable(0.98f, onClick),
         contentAlignment = Alignment.Center
     ) {
-        Text(text, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, color = Color.White)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.small)) {
+            if (icon != null) Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+            Text(text, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, color = Color.White)
+        }
     }
 }

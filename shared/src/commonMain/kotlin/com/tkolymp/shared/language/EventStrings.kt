@@ -7,6 +7,8 @@ data class EventStrings(
     val upcomingEvents: String,
     val noEventsPlanned: String,
     val noPastEvents: String,
+    val runningLabel: String,
+    val pastLabel: String,
     val noEventToShow: String,
     val errorLoadingEvents: String,
     val registrationOpen: String,

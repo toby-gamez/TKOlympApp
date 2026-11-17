@@ -1,5 +1,7 @@
 package com.tkolymp.tkolympapp.screens
 
+import com.tkolymp.tkolympapp.components.cardLineBorder
+import com.tkolymp.tkolympapp.components.surfaceCardColors
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,7 +31,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -127,7 +129,7 @@ fun EventEditScreen(
             }
             state.error?.let { ErrorBanner(error = it, onRetry = null) }
 
-            Card(modifier = Modifier.fillMaxWidth()) {
+            Card(modifier = Modifier.fillMaxWidth(), colors = surfaceCardColors(), border = cardLineBorder()) {
                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
                         value = draft.name,
@@ -162,7 +164,7 @@ fun EventEditScreen(
                 }
             }
 
-            Card(modifier = Modifier.fillMaxWidth()) {
+            Card(modifier = Modifier.fillMaxWidth(), colors = surfaceCardColors(), border = cardLineBorder()) {
                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     var locationExpanded by remember { mutableStateOf(false) }
                     val locationName = state.options.locations.firstOrNull { it.id == draft.locationId }?.name ?: strings.noLocation
@@ -209,7 +211,7 @@ fun EventEditScreen(
                 }
             }
 
-            Card(modifier = Modifier.fillMaxWidth()) {
+            Card(modifier = Modifier.fillMaxWidth(), colors = surfaceCardColors(), border = cardLineBorder()) {
                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     val hint = if (state.isEditing) strings.trainersCohortsEditHint else null
                     OptionChips(
@@ -230,7 +232,7 @@ fun EventEditScreen(
                 }
             }
 
-            Card(modifier = Modifier.fillMaxWidth()) {
+            Card(modifier = Modifier.fillMaxWidth(), colors = surfaceCardColors(), border = cardLineBorder()) {
                 Column(Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
                     SwitchRow(strings.isVisible, draft.isVisible, { v -> viewModel.updateDraft { it.copy(isVisible = v) } })
                     SwitchRow(strings.isPublic, draft.isPublic, { v -> viewModel.updateDraft { it.copy(isPublic = v) } })
@@ -242,7 +244,7 @@ fun EventEditScreen(
                 }
             }
 
-            Card(modifier = Modifier.fillMaxWidth()) {
+            Card(modifier = Modifier.fillMaxWidth(), colors = surfaceCardColors(), border = cardLineBorder()) {
                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
                         value = draft.summary,

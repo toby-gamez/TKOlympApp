@@ -46,6 +46,7 @@ val StringsVi = Strings(
     ),
     otherScreen = OtherScreenStrings(
         appSection = "Ứng dụng",
+        membersAndClub = "Thành viên & câu lạc bộ",
         people = "Mọi người",
         trainersAndSpaces = "Huấn luyện viên & Sân tập",
         trainingGroups = "Nhóm tập luyện",
@@ -155,6 +156,8 @@ val StringsVi = Strings(
         upcomingEvents = "Sự kiện sắp tới",
         noEventsPlanned = "Không có sự kiện nào được lên kế hoạch",
         noPastEvents = "Không có sự kiện nào đã qua",
+        runningLabel = "đang diễn ra",
+        pastLabel = "đã qua",
         noEventToShow = "Không có sự kiện nào để hiển thị",
         errorLoadingEvents = "Lỗi khi tải sự kiện",
         registrationOpen = "Mở",
@@ -215,6 +218,8 @@ val StringsVi = Strings(
         errorLoadingAnnouncements = "Lỗi khi tải bài đăng",
         announcement = "Thông báo",
         noAnnouncementToShow = "Không có thông báo để hiển thị",
+        newBadge = "MỚI",
+        daysAgo = "%d ngày trước",
     ),
     notifications = NotificationStrings(
         notificationsGloballyEnabled = "Bật toàn cục",

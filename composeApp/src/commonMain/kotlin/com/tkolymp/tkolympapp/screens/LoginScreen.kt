@@ -1,5 +1,18 @@
 package com.tkolymp.tkolympapp.screens
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.ui.graphics.Color
+import com.tkolymp.tkolympapp.components.SheetPrimaryButton
+import com.tkolymp.tkolympapp.components.accentColor
+import com.tkolymp.tkolympapp.ui.theme.Spacing
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -11,7 +24,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
@@ -39,7 +51,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import com.tkolymp.tkolympapp.components.BackgroundPluses
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalUriHandler
@@ -87,160 +98,162 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface),
-        contentAlignment = Alignment.Center
+            .background(MaterialTheme.colorScheme.background)
     ) {
-        BackgroundPluses(modifier = Modifier.fillMaxSize())
         Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .imePadding()
-                .padding(horizontal = 32.dp, vertical = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(start = 24.dp, end = 24.dp, top = 56.dp, bottom = 32.dp),
+            horizontalAlignment = Alignment.Start
         ) {
-            // Brand image
             AnimatedVisibility(
                 visible = contentVisible,
-                enter = fadeIn(tween(400)) + scaleIn(tween(400), initialScale = 0.82f)
+                enter = fadeIn(tween(300)) + slideInVertically(tween(300)) { it / 6 }
             ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(100.dp)
-                        .clip(CircleShape)
-                        .background(brandLightPrimary())
-                ) {
-                    AppLogo(size = 100.dp)
-                }
-            }
+                Column {
+                    // Brand row
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(brandLightPrimary())
+                        ) { AppLogo(size = 44.dp) }
+                        Text("TK Olymp", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onSurface)
+                    }
 
-            Spacer(modifier = Modifier.height(4.dp))
-
-            AnimatedVisibility(
-                visible = contentVisible,
-                enter = fadeIn(tween(350, delayMillis = 120)) + slideInVertically(tween(350, delayMillis = 120)) { it / 5 }
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        "TK Olymp",
-                        style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        AppStrings.current.auth.login,
+                        modifier = Modifier.padding(top = 40.dp),
+                        fontSize = 30.sp,
+                        lineHeight = 36.sp,
+                        fontWeight = FontWeight.Bold
                     )
                     Text(
                         AppStrings.current.auth.loginSubtitle,
+                        modifier = Modifier.padding(top = 4.dp),
                         style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                }
-            }
 
-            Spacer(modifier = Modifier.height(4.dp))
+                    val hasError = state.error != null
+                    var showPassword by remember { mutableStateOf(false) }
 
-            AnimatedVisibility(
-                visible = contentVisible,
-                enter = fadeIn(tween(300, delayMillis = 220))
-            ) {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            OutlinedTextField(
-                value = state.username,
-                onValueChange = { credentialFromPicker = false; viewModel.updateUsername(it) },
-                label = { Text(AppStrings.current.auth.emailOrUsername) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(12.dp),
-                singleLine = true
-            )
+                    LoginFieldLabel(AppStrings.current.auth.emailOrUsername, topPadding = 28.dp)
+                    LoginField(
+                        value = state.username,
+                        onValueChange = { credentialFromPicker = false; viewModel.updateUsername(it) },
+                        icon = Icons.Filled.Person,
+                        isError = hasError
+                    )
 
-            var showPassword by remember { mutableStateOf(false) }
+                    LoginFieldLabel(AppStrings.current.auth.password, topPadding = 16.dp)
+                    LoginField(
+                        value = state.password,
+                        onValueChange = { credentialFromPicker = false; viewModel.updatePassword(it) },
+                        icon = Icons.Filled.Lock,
+                        isError = hasError,
+                        visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailing = {
+                            IconButton(onClick = { showPassword = !showPassword }) {
+                                Icon(
+                                    imageVector = if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                    contentDescription = if (showPassword) AppStrings.current.commonActions.hidePassword else AppStrings.current.commonActions.showPassword,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    )
 
-            OutlinedTextField(
-                value = state.password,
-                onValueChange = { credentialFromPicker = false; viewModel.updatePassword(it) },
-                label = { Text(AppStrings.current.auth.password) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.surface),
-                visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-                shape = RoundedCornerShape(12.dp),
-                singleLine = true,
-                trailingIcon = {
-                    IconButton(onClick = { showPassword = !showPassword }) {
-                        Icon(
-                            imageVector = if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                            contentDescription = if (showPassword) AppStrings.current.commonActions.hidePassword else AppStrings.current.commonActions.showPassword
+                    AnimatedVisibility(visible = hasError, enter = fadeIn(tween(200))) {
+                        Row(Modifier.padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Icon(Icons.Filled.ErrorOutline, contentDescription = null, tint = accentColor(), modifier = Modifier.size(16.dp))
+                            Text(state.error?.message ?: "", style = MaterialTheme.typography.bodySmall, color = accentColor())
+                        }
+                    }
+
+                    Spacer(Modifier.height(24.dp))
+                    SheetPrimaryButton(
+                        text = if (state.isLoading) "" else AppStrings.current.auth.login,
+                        onClick = {
+                            if (state.isLoading) return@SheetPrimaryButton
+                            val username = state.username
+                            val password = state.password
+                            val skipSave = credentialFromPicker
+                            scope.launch {
+                                val ok = viewModel.login()
+                                if (ok) {
+                                    if (!skipSave) saveCredentials(username, password)
+                                    onSuccess()
+                                }
+                            }
+                        }
+                    )
+                    if (state.isLoading) {
+                        Box(Modifier.fillMaxWidth().padding(top = 12.dp), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(modifier = Modifier.size(22.dp), strokeWidth = 2.dp)
+                        }
+                    }
+
+                    val uriHandler = LocalUriHandler.current
+                    TextButton(
+                        onClick = { uriHandler.openUri("https://tkolymp.cz/zapomenute-heslo") },
+                        modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = Spacing.small)
+                    ) {
+                        Text(
+                            text = AppStrings.current.auth.forgotPassword,
+                            color = accentColor(),
+                            fontWeight = FontWeight.SemiBold,
+                            textAlign = TextAlign.Center
                         )
                     }
                 }
-            )
-
-            Button(
-                onClick = {
-                    if (state.isLoading) return@Button
-                    val username = state.username
-                    val password = state.password
-                    val skipSave = credentialFromPicker
-                    scope.launch {
-                        val ok = viewModel.login()
-                        if (ok) {
-                            if (!skipSave) saveCredentials(username, password)
-                            onSuccess()
-                        }
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(16.dp),
-                enabled = !state.isLoading,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
-            ) {
-                if (state.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(22.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text(AppStrings.current.auth.login, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                }
-            }
-
-                val uriHandler = LocalUriHandler.current
-                TextButton(
-                    onClick = {
-                        uriHandler.openUri("https://tkolymp.cz/zapomenute-heslo")
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = AppStrings.current.auth.forgotPassword,
-                        color = MaterialTheme.colorScheme.primary,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            } // Column inside AnimatedVisibility
-            } // AnimatedVisibility form
-
-            AnimatedVisibility(
-                visible = state.error != null,
-                enter = fadeIn(tween(200))
-            ) {
-                Text(
-                    state.error?.message ?: "",
-                    color = MaterialTheme.colorScheme.error,
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.bodyMedium
-                )
             }
         }
     }
+}
+
+@Composable
+private fun LoginFieldLabel(text: String, topPadding: androidx.compose.ui.unit.Dp) {
+    Text(
+        text,
+        modifier = Modifier.padding(top = topPadding, bottom = 6.dp),
+        style = MaterialTheme.typography.labelLarge,
+        fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+}
+
+/** Filled 52dp field with a leading icon; the border turns red on error (prototype login). */
+@Composable
+private fun LoginField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    isError: Boolean,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    trailing: (@Composable () -> Unit)? = null
+) {
+    val shape = RoundedCornerShape(14.dp)
+    TextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 52.dp)
+            .border(1.dp, if (isError) brandLightPrimary() else Color.Transparent, shape),
+        shape = shape,
+        singleLine = true,
+        visualTransformation = visualTransformation,
+        leadingIcon = { Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp)) },
+        trailingIcon = trailing,
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            errorContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            errorIndicatorColor = Color.Transparent
+        )
+    )
 }
