@@ -98,7 +98,7 @@ fun PersonalEventsScreen(
         topBar = {
         TopAppBar(
             title = { Text(AppStrings.current.personalEvents.myTrainings) },
-            navigationIcon = { IconButton(onClick = onBack) { Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) } }
+            navigationIcon = { IconButton(onClick = onBack) { Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back) } }
         )
     }) { innerPadding ->
         val error = state.error

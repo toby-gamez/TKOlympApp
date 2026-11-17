@@ -67,8 +67,7 @@ import com.tkolymp.shared.viewmodels.PersonViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.CoupleAvatar
 import com.tkolymp.shared.competitions.deriveDanceClasses
-import com.tkolymp.tkolympapp.components.HeaderImageShape
-import com.tkolymp.tkolympapp.components.HeaderWithImage
+import com.tkolymp.tkolympapp.components.PersonHeader
 import com.tkolymp.tkolympapp.components.InitialsAvatar
 import com.tkolymp.tkolympapp.components.PersonNoteCard
 import com.tkolymp.tkolympapp.components.SocialLinksRow
@@ -115,23 +114,14 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
             // Header (name)
             val baseName = listOf(p.prefixTitle, p.firstName, p.lastName).filterNotNull().filter { it.isNotBlank() }.joinToString(" ")
             val fullName = if (!p.suffixTitle.isNullOrBlank()) "$baseName, ${p.suffixTitle}" else baseName
-            HeaderWithImage(
-                title = fullName.ifBlank { p.id },
+            PersonHeader(
+                rawName = fullName.ifBlank { p.id },
                 imageUrl = p.imageUrl,
-                shape = HeaderImageShape.Circle,
-                imageAtStart = true,
-                fallback = { InitialsAvatar(name = fullName.ifBlank { p.id }, size = 88.dp, fontSize = 30.sp) }
-            ) {
-                if (p.isTrainer == true) {
-                    SuggestionChip(
-                        onClick = {},
-                        label = { Text(AppStrings.current.profile.trainer) }
-                    )
-                }
-                deriveDanceClasses(p.cstsProgressList)?.let { classes ->
-                    SuggestionChip(onClick = {}, label = { Text("STT/LAT  ${classes.label}") })
-                }
-            }
+                details = listOfNotNull(
+                    AppStrings.current.profile.trainer.takeIf { p.isTrainer == true },
+                    deriveDanceClasses(p.cstsProgressList)?.let { "STT/LAT ${it.label}" }
+                )
+            )
             SocialLinksRow(person = p)
             Spacer(modifier = Modifier.height(10.dp))
 

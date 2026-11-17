@@ -41,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tkolymp.tkolympapp.ui.theme.Spacing
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.utils.roundTo1dp
@@ -57,7 +58,7 @@ import androidx.compose.material.icons.outlined.BarChart
 @Composable
 fun StatsScreen(
     onBack: () -> Unit = {},
-    bottomPadding: Dp = 0.dp,
+    bottomPadding: Dp = Spacing.none,
     onOpenLeaderboard: () -> Unit = {},
     viewModel: StatsViewModel = viewModel()
 ) {
@@ -194,8 +195,8 @@ fun StatsScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                        .padding(horizontal = Spacing.default),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.default)
                 ) {
                     SeasonSelector(
                         selected = selectedSeason,
@@ -241,7 +242,7 @@ fun StatsScreen(
                                     data = barData,
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(top = 8.dp),
+                                        .padding(top = Spacing.small),
                                     highlightIndex = highlightIndex,
                                     barColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
                                     highlightColor = MaterialTheme.colorScheme.primary,
@@ -316,7 +317,7 @@ fun StatsScreen(
                         }
                     }
 
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(Spacing.large))
                 }
             }
         }

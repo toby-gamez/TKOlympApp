@@ -68,6 +68,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.tkolymp.tkolympapp.ui.theme.Spacing
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.appearance.ThemeMode
 import com.tkolymp.shared.feedback.FeedbackType
@@ -127,7 +128,7 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(innerPadding)
-                .padding(bottom = 16.dp),
+                .padding(bottom = Spacing.default),
             verticalArrangement = Arrangement.Top
         ) {
             // Appearance
@@ -138,9 +139,9 @@ fun SettingsScreen(
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                            .padding(horizontal = Spacing.default, vertical = Spacing.xs)
                     ) {
-                        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+                        Column(modifier = Modifier.padding(horizontal = Spacing.default, vertical = 14.dp)) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.fillMaxWidth()
@@ -180,9 +181,9 @@ fun SettingsScreen(
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                            .padding(horizontal = Spacing.default, vertical = Spacing.xs)
                     ) {
-                        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+                        Column(modifier = Modifier.padding(horizontal = Spacing.default, vertical = 14.dp)) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.fillMaxWidth()
@@ -239,14 +240,14 @@ fun SettingsScreen(
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                            .padding(horizontal = Spacing.default, vertical = Spacing.xs)
                             .clickable { onOpenLanguages() }
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 14.dp)
+                                .padding(horizontal = Spacing.default, vertical = 14.dp)
                         ) {
                             SettingsIconBox(Icons.Filled.Psychology)
                             Spacer(modifier = Modifier.width(16.dp))
@@ -274,14 +275,14 @@ fun SettingsScreen(
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                            .padding(horizontal = Spacing.default, vertical = Spacing.xs)
                             .clickable { onOpenNotifications() }
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 14.dp)
+                                .padding(horizontal = Spacing.default, vertical = 14.dp)
                         ) {
                             SettingsIconBox(Icons.Filled.Notifications)
                             Spacer(modifier = Modifier.width(16.dp))
@@ -309,14 +310,14 @@ fun SettingsScreen(
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                            .padding(horizontal = Spacing.default, vertical = Spacing.xs)
                             .clickable { TutorialManager.start() }
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 14.dp)
+                                .padding(horizontal = Spacing.default, vertical = 14.dp)
                         ) {
                             SettingsIconBox(Icons.Filled.School)
                             Spacer(modifier = Modifier.width(16.dp))
@@ -350,9 +351,9 @@ fun SettingsScreen(
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                            .padding(horizontal = Spacing.default, vertical = Spacing.xs)
                     ) {
-                        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+                        Column(modifier = Modifier.padding(horizontal = Spacing.default, vertical = 14.dp)) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.fillMaxWidth()
@@ -409,14 +410,14 @@ fun SettingsScreen(
                         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 4.dp, bottomEnd = 4.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 2.dp)
+                            .padding(horizontal = Spacing.default, vertical = 2.dp)
                             .clickable { feedbackDialogType = FeedbackType.BUG_REPORT }
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 14.dp)
+                                .padding(horizontal = Spacing.default, vertical = 14.dp)
                         ) {
                             SettingsIconBox(Icons.Filled.BugReport)
                             Spacer(modifier = Modifier.width(16.dp))
@@ -437,14 +438,14 @@ fun SettingsScreen(
                         shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 16.dp, bottomEnd = 16.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 2.dp)
+                            .padding(horizontal = Spacing.default, vertical = 2.dp)
                             .clickable { feedbackDialogType = FeedbackType.FEATURE_SUGGESTION }
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 14.dp)
+                                .padding(horizontal = Spacing.default, vertical = 14.dp)
                         ) {
                             SettingsIconBox(Icons.Filled.Lightbulb)
                             Spacer(modifier = Modifier.width(16.dp))
@@ -472,14 +473,14 @@ fun SettingsScreen(
                         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 4.dp, bottomEnd = 4.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 2.dp)
+                            .padding(horizontal = Spacing.default, vertical = 2.dp)
                             .clickable { onOpenChangelog() }
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 14.dp)
+                                .padding(horizontal = Spacing.default, vertical = 14.dp)
                         ) {
                             SettingsIconBox(Icons.Filled.NewReleases)
                             Spacer(modifier = Modifier.width(16.dp))
@@ -500,14 +501,14 @@ fun SettingsScreen(
                         shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 16.dp, bottomEnd = 16.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 2.dp)
+                            .padding(horizontal = Spacing.default, vertical = 2.dp)
                             .clickable { onOpenAbout() }
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 14.dp)
+                                .padding(horizontal = Spacing.default, vertical = 14.dp)
                         ) {
                             SettingsIconBox(Icons.Filled.Info)
                             Spacer(modifier = Modifier.width(16.dp))
@@ -567,7 +568,7 @@ private fun PrivacySettingsSection(
             shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 4.dp, bottomEnd = 4.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 2.dp)
+                .padding(horizontal = Spacing.default, vertical = 2.dp)
                 .toggleable(
                     value = errorReportingEnabled,
                     role = Role.Switch,
@@ -578,7 +579,7 @@ private fun PrivacySettingsSection(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 14.dp)
+                    .padding(horizontal = Spacing.default, vertical = 14.dp)
             ) {
                 SettingsIconBox(Icons.Filled.BugReport)
                 Spacer(modifier = Modifier.width(16.dp))
@@ -603,14 +604,14 @@ private fun PrivacySettingsSection(
             shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 4.dp, bottomEnd = 4.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 2.dp)
+                .padding(horizontal = Spacing.default, vertical = 2.dp)
                 .clickable { onOpenPrivacyPolicy() }
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 14.dp)
+                    .padding(horizontal = Spacing.default, vertical = 14.dp)
             ) {
                 SettingsIconBox(Icons.Filled.PrivacyTip)
                 Spacer(modifier = Modifier.width(16.dp))
@@ -631,14 +632,14 @@ private fun PrivacySettingsSection(
             shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 16.dp, bottomEnd = 16.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 2.dp)
+                .padding(horizontal = Spacing.default, vertical = 2.dp)
                 .clickable { onOpenTerms() }
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 14.dp)
+                    .padding(horizontal = Spacing.default, vertical = 14.dp)
             ) {
                 SettingsIconBox(Icons.Filled.Description)
                 Spacer(modifier = Modifier.width(16.dp))
@@ -680,7 +681,7 @@ private fun SettingsSectionHeader(text: String) {
         text = text,
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp)
+        modifier = Modifier.padding(start = Spacing.default, top = Spacing.default, bottom = Spacing.xs)
     )
 }
 

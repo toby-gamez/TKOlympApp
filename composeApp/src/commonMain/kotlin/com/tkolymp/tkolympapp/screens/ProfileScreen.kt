@@ -67,6 +67,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.tkolymp.tkolympapp.ui.theme.Spacing
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.language.NationalityHelper
 import com.tkolymp.shared.user.fmtProfileDate
@@ -77,8 +78,7 @@ import com.tkolymp.tkolympapp.components.CoupleAvatar
 import com.tkolymp.tkolympapp.components.ErrorBanner
 import com.tkolymp.tkolympapp.components.ErrorState
 import com.tkolymp.shared.competitions.deriveDanceClasses
-import com.tkolymp.tkolympapp.components.HeaderImageShape
-import com.tkolymp.tkolympapp.components.HeaderWithImage
+import com.tkolymp.tkolympapp.components.PersonHeader
 import com.tkolymp.tkolympapp.components.InitialsAvatar
 import com.tkolymp.tkolympapp.components.PersonNoteCard
 import com.tkolymp.tkolympapp.components.SocialLinksRow
@@ -166,7 +166,7 @@ fun ProfileScreen(
                 ErrorState(error = error, onRetry = { scope.launch { profileViewModel.load() } })
             } else {
             Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()).padding(8.dp),
+                modifier = Modifier.verticalScroll(rememberScrollState()).padding(Spacing.small),
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.Start
             ) {
@@ -178,25 +178,15 @@ fun ProfileScreen(
 
                 // Header
                 val headerName = displayName ?: AppStrings.current.profile.displayNameFallback
-                HeaderWithImage(
-                    title = headerName,
+                PersonHeader(
+                    rawName = headerName,
                     imageUrl = withImageWidth(person?.imageUrl, 256),
-                    shape = HeaderImageShape.Circle,
-                    imageAtStart = true,
-                    fallback = { InitialsAvatar(name = headerName, size = 88.dp, fontSize = 30.sp) }
-                ) {
-                    profileState.currentUser?.uLogin?.let { login ->
-                        if (login != displayName) {
-                            Text(login, style = MaterialTheme.typography.bodySmall)
-                        }
-                    }
-                    if (person?.isTrainer == true) {
-                        ElevatedSuggestionChip(onClick = {}, label = { Text(AppStrings.current.profile.trainer) })
-                    }
-                    person?.let { deriveDanceClasses(it.cstsProgressList) }?.let { classes ->
-                        ElevatedSuggestionChip(onClick = {}, label = { Text("STT/LAT  ${classes.label}") })
-                    }
-                }
+                    subtitle = profileState.currentUser?.uLogin?.takeIf { it != displayName },
+                    details = listOfNotNull(
+                        AppStrings.current.profile.trainer.takeIf { person?.isTrainer == true },
+                        person?.let { deriveDanceClasses(it.cstsProgressList) }?.let { "STT/LAT ${it.label}" }
+                    )
+                )
                 if (person != null) {
                     SocialLinksRow(person = person)
                 }
@@ -205,18 +195,18 @@ fun ProfileScreen(
                 // Birth date + Gender
                 StaggeredItem(index = 0, visible = sectionsVisible, baseDelayMs = 50) {
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.small)
                     ) {
                         Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp)) {
-                            Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Row(modifier = Modifier.padding(Spacing.medium), verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.Cake, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(person?.birthDate?.let { fmtProfileDate(it) } ?: "—", style = MaterialTheme.typography.bodyMedium)
                             }
                         }
                         Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp)) {
-                            Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Row(modifier = Modifier.padding(Spacing.medium), verticalAlignment = Alignment.CenterVertically) {
                                 val genderIcon = when (person?.gender) {
                                     "MAN" -> Icons.Default.Male
                                     "WOMAN" -> Icons.Default.Female
@@ -241,8 +231,8 @@ fun ProfileScreen(
                 val emailText = derived.emailText
                 if (!emailText.isNullOrBlank()) {
                     StaggeredItem(index = 1, visible = sectionsVisible, baseDelayMs = 50) {
-                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
-                            Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp)) {
+                            Row(modifier = Modifier.padding(Spacing.medium), verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.Email, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(emailText, style = MaterialTheme.typography.bodyMedium)
@@ -255,8 +245,8 @@ fun ProfileScreen(
                 val phoneText = person?.phone
                 if (!phoneText.isNullOrBlank()) {
                     StaggeredItem(index = 2, visible = sectionsVisible, baseDelayMs = 50) {
-                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
-                            Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp)) {
+                            Row(modifier = Modifier.padding(Spacing.medium), verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.Phone, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(phoneText, style = MaterialTheme.typography.bodyMedium)
@@ -272,8 +262,8 @@ fun ProfileScreen(
                     StaggeredItem(index = 2, visible = sectionsVisible, baseDelayMs = 50) {
                         val uriHandler = LocalUriHandler.current
                         Row(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs),
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.small)
                         ) {
                             if (cstsId != null) {
                                 Card(
@@ -282,7 +272,7 @@ fun ProfileScreen(
                                         .clickable { uriHandler.openUri("https://www.csts.cz/dancesport/evidence/lide/$cstsId/osobni_udaje") },
                                     shape = RoundedCornerShape(16.dp)
                                 ) {
-                                    Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Row(modifier = Modifier.padding(Spacing.medium), verticalAlignment = Alignment.CenterVertically) {
                                         Icon(Icons.Default.Badge, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Column(modifier = Modifier.weight(1f)) {
@@ -295,7 +285,7 @@ fun ProfileScreen(
                             }
                             if (wdsfId != null) {
                                 Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp)) {
-                                    Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Row(modifier = Modifier.padding(Spacing.medium), verticalAlignment = Alignment.CenterVertically) {
                                         Icon(Icons.Default.Badge, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Column {
@@ -318,10 +308,10 @@ fun ProfileScreen(
 
                 // Address
                 StaggeredItem(index = 4, visible = sectionsVisible, baseDelayMs = 50) {
-                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
-                        Column(modifier = Modifier.padding(12.dp)) {
+                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp)) {
+                        Column(modifier = Modifier.padding(Spacing.medium)) {
                             Text(AppStrings.current.address.address, style = MaterialTheme.typography.labelLarge)
-                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                            HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.small))
                             if (derived.addressFields.isNotEmpty()) {
                                 val addrMap = derived.addressFields.toMap()
                                 val street = addrMap["street"]?.takeIf { it.isNotBlank() }
@@ -363,10 +353,10 @@ fun ProfileScreen(
                 val cstsProgressList = person?.cstsProgressList ?: emptyList()
                 if (cstsProgressList.isEmpty()) {
                     StaggeredItem(index = 5, visible = sectionsVisible, baseDelayMs = 50) {
-                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
-                            Column(modifier = Modifier.padding(12.dp)) {
+                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp)) {
+                            Column(modifier = Modifier.padding(Spacing.medium)) {
                                 Text(AppStrings.current.profile.activeCouple, style = MaterialTheme.typography.labelLarge)
-                                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                                HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.small))
                                 val couples = person?.activeCouplesList ?: emptyList()
                                 if (couples.isNotEmpty()) {
                                     couples.forEach { c ->
@@ -392,10 +382,10 @@ fun ProfileScreen(
 
                 // Training groups
                 StaggeredItem(index = 6, visible = sectionsVisible, baseDelayMs = 50) {
-                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
-                        Column(modifier = Modifier.padding(12.dp)) {
+                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp)) {
+                        Column(modifier = Modifier.padding(Spacing.medium)) {
                             Text(AppStrings.current.otherScreen.trainingGroups, style = MaterialTheme.typography.labelLarge)
-                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                            HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.small))
                             if (derived.cohortItems.isNotEmpty()) {
                                 derived.cohortItems.forEach { item ->
                                     val color = try { parseColorOrDefault(item.colorRgb) } catch (_: Exception) { Color.Gray }
@@ -422,10 +412,10 @@ fun ProfileScreen(
 
                 // ČSTS Progress
                 StaggeredItem(index = 7, visible = sectionsVisible, baseDelayMs = 50) {
-                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
-                        Column(modifier = Modifier.padding(12.dp)) {
+                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp)) {
+                        Column(modifier = Modifier.padding(Spacing.medium)) {
                             Text(AppStrings.current.competition.cstsProgress, style = MaterialTheme.typography.labelLarge)
-                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                            HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.small))
                             if (cstsProgressList.isNotEmpty()) {
                                 val byCompetitor = cstsProgressList.groupBy { it.competitorName?.takeIf { n -> n.isNotBlank() } ?: "" }
                                 byCompetitor.entries.forEachIndexed { idx, (competitorName, entries) ->
@@ -468,7 +458,7 @@ fun ProfileScreen(
                                                 val ptsStr = if (pts % 1.0 == 0.0) pts.toInt().toString() else { val s = kotlin.math.round(pts * 10).toLong(); "${s / 10}.${kotlin.math.abs(s % 10)}" }
                                                 Row(
                                                     modifier = Modifier
-                                                        .padding(start = 4.dp)
+                                                        .padding(start = Spacing.xs)
                                                         .background(MaterialTheme.colorScheme.tertiaryContainer, RoundedCornerShape(6.dp))
                                                         .padding(horizontal = 6.dp, vertical = 2.dp),
                                                     verticalAlignment = Alignment.CenterVertically
@@ -486,7 +476,7 @@ fun ProfileScreen(
                                             if (entryFinals != null && entryFinals > 0) {
                                                 Row(
                                                     modifier = Modifier
-                                                        .padding(start = 4.dp)
+                                                        .padding(start = Spacing.xs)
                                                         .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(6.dp))
                                                         .padding(horizontal = 6.dp, vertical = 2.dp),
                                                     verticalAlignment = Alignment.CenterVertically
@@ -536,13 +526,13 @@ fun ProfileScreen(
                 val combined = remainingPersonal + remainingContact
                 if (combined.isNotEmpty()) {
                     StaggeredItem(index = 8, visible = sectionsVisible, baseDelayMs = 50) {
-                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
-                            Column(modifier = Modifier.padding(12.dp)) {
+                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp)) {
+                            Column(modifier = Modifier.padding(Spacing.medium)) {
                                 Text(AppStrings.current.profile.personalData, style = MaterialTheme.typography.labelLarge)
-                                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                                HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.small))
                                 combined.forEach { (k, v) ->
                                     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.Start) {
-                                        Text("${labelMap[k] ?: humanizeKey(k)}:", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(end = 8.dp))
+                                        Text("${labelMap[k] ?: humanizeKey(k)}:", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(end = Spacing.small))
                                         Text(formatProfileValue(k, v), style = MaterialTheme.typography.bodySmall)
                                     }
                                 }
@@ -553,13 +543,13 @@ fun ProfileScreen(
 
                 if (derived.externalList.isNotEmpty()) {
                     StaggeredItem(index = 9, visible = sectionsVisible, baseDelayMs = 50) {
-                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
-                            Column(modifier = Modifier.padding(12.dp)) {
+                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp)) {
+                            Column(modifier = Modifier.padding(Spacing.medium)) {
                                 Text(AppStrings.current.profile.externalIdSection, style = MaterialTheme.typography.labelLarge)
-                                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                                HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.small))
                                 derived.externalList.forEach { (k, v) ->
                                     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.Start) {
-                                        Text("${labelMap[k] ?: humanizeKey(k)}:", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(end = 8.dp))
+                                        Text("${labelMap[k] ?: humanizeKey(k)}:", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(end = Spacing.small))
                                         Text(formatProfileValue(k, v), style = MaterialTheme.typography.bodySmall)
                                     }
                                 }
@@ -571,13 +561,13 @@ fun ProfileScreen(
                 val filteredOtherList = derived.otherList.filter { (k, _) -> k !in setOf("isTrainer", "username") }
                 if (filteredOtherList.isNotEmpty()) {
                     StaggeredItem(index = 10, visible = sectionsVisible, baseDelayMs = 50) {
-                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(16.dp)) {
-                            Column(modifier = Modifier.padding(12.dp)) {
+                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs), shape = RoundedCornerShape(16.dp)) {
+                            Column(modifier = Modifier.padding(Spacing.medium)) {
                                 Text(AppStrings.current.profile.otherDetails, style = MaterialTheme.typography.labelLarge)
-                                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                                HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.small))
                                 filteredOtherList.forEach { (k, v) ->
                                     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.Start) {
-                                        Text("${labelMap[k] ?: humanizeKey(k)}:", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(end = 8.dp))
+                                        Text("${labelMap[k] ?: humanizeKey(k)}:", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(end = Spacing.small))
                                         Text(formatProfileValue(k, v), style = MaterialTheme.typography.bodySmall)
                                     }
                                 }
@@ -587,7 +577,7 @@ fun ProfileScreen(
                 }
 
                 // Action buttons
-                Row(modifier = Modifier.fillMaxWidth().padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(modifier = Modifier.fillMaxWidth().padding(top = Spacing.default), horizontalArrangement = Arrangement.spacedBy(Spacing.small)) {
                     FilledTonalButton(onClick = onChangePassword, modifier = Modifier.weight(1f)) {
                         Text(AppStrings.current.auth.changePassword)
                     }
@@ -618,7 +608,7 @@ fun ProfileScreen(
                     )
                 }
 
-                Button(onClick = { showLogoutConfirm = true }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                Button(onClick = { showLogoutConfirm = true }, modifier = Modifier.fillMaxWidth().padding(top = Spacing.small)) {
                     Text(AppStrings.current.commonActions.logout)
                 }
             }

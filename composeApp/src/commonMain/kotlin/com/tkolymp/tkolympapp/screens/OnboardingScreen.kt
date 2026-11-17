@@ -64,6 +64,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.tkolymp.tkolympapp.ui.theme.Spacing
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.OnboardingViewModel
 import com.tkolymp.shared.models.UserRole
@@ -123,9 +124,9 @@ fun OnboardingScreen(
             // Dot indicators
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.small),
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(vertical = 24.dp)
+                modifier = Modifier.padding(vertical = Spacing.large)
             ) {
                 (1 until PAGE_COUNT).forEach { index ->
                     val width by animateDpAsState(
@@ -165,7 +166,7 @@ fun OnboardingScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp)
+                    .padding(horizontal = Spacing.xl)
                     .height(52.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -194,7 +195,7 @@ private fun WelcomeOnboardingPage(onNext: () -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 32.dp),
+                .padding(horizontal = Spacing.xl),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
         Spacer(modifier = Modifier.weight(1f))
@@ -227,7 +228,7 @@ private fun WelcomeOnboardingPage(onNext: () -> Unit) {
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
                 .border(3.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(16.dp))
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+                .padding(horizontal = 20.dp, vertical = Spacing.default),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -257,7 +258,7 @@ private fun WelcomeOnboardingPage(onNext: () -> Unit) {
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                contentDescription = null,
+                contentDescription = AppStrings.current.commonActions.next,
                 modifier = Modifier.size(36.dp)
             )
         }
@@ -367,11 +368,11 @@ private fun CalendarMockupCard(modifier: Modifier = Modifier) {
         shape = MockCardShape,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
-        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = Spacing.medium), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
             Text(strings.timeline.today, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 2.dp, bottom = 2.dp))
             MockCalendarGroupCard("Kruháč 1", "ZŠ Holečkova", "16:00 - 16:45", accentColor = null)
             MockCalendarGroupCard("Zlatá skupina LAT", "ZŠ Holečkova", "17:30 - 18:15", accentColor = Color(0xFFFFD700))
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(Spacing.xs))
             Text(strings.timeline.tomorrow, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 2.dp, bottom = 2.dp))
             MockCalendarLessonCard("Filip Karásek", "BEST Sportcentrum", "15:00 - 15:45", "Novák - Nováková", "45'")
         }
@@ -421,7 +422,7 @@ private fun MockCalendarGroupCard(name: String, location: String, time: String, 
                         Text(AppStrings.current.events.eventTypeGroup, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
                     }
                 }
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(Spacing.xs))
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     MockChip(Icons.Filled.Place, location)
                     MockChip(Icons.Filled.Schedule, time)
@@ -459,7 +460,7 @@ private fun MockCalendarLessonCard(trainer: String, location: String, time: Stri
                     }
                 }
                 Text(names, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(Spacing.xs))
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     MockChip(Icons.Filled.Place, location)
                     MockChip(Icons.Filled.Schedule, "$time · $duration")
@@ -476,13 +477,13 @@ private fun EventsMockupCard(modifier: Modifier = Modifier) {
         shape = MockCardShape,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
-        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = Spacing.medium), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
             Text("28. March", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 2.dp, bottom = 2.dp))
             MockEventCard("Soustředění MINI Olympteam - zelená a fialová skupina", "ZŠ Holečkova", "09:00 - 17:00")
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(Spacing.xs))
             Text("13. March", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 2.dp, bottom = 2.dp))
             MockEventCard("Desítkové soustředění Prštice 2026", "TJ Sokol Prštice", "13.3.–15.3.2026")
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(Spacing.xs))
             Text("22. February", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 2.dp, bottom = 2.dp))
             MockEventCard("Přípravný Camp před MČR LAT - Podbořany", "Filip Karásek", "09:00 - 20:00")
         }
@@ -496,7 +497,7 @@ private fun MockEventCard(name: String, location: String, time: String, modifier
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp)) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.medium, vertical = 10.dp)) {
             Text(name, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface, maxLines = 2)
             Spacer(Modifier.height(2.dp))
             Text(location, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -512,7 +513,7 @@ private fun BoardMockupCard(modifier: Modifier = Modifier) {
         shape = MockCardShape,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
-        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = Spacing.medium), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             MockBoardPostCard("Termíny externích trenérů - jaro/léto 2026", "Filip Karásek", "úterý 7. 4. - Martin Odstrčil…")
             MockBoardPostCard("Seznam soutěží - jaro 2026", "Roman Pecha", "Níže je tabulka zveřejněných naplánovaných soutěží…")
             MockBoardPostCard("Plán přípravy na MČR 2026", "Miroslav Hýža", "Vážení sportovci, průběžně budou přidávány akce…")
@@ -528,7 +529,7 @@ private fun MockBoardPostCard(title: String, author: String, preview: String, mo
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp)) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.medium, vertical = 10.dp)) {
             Text(title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(2.dp))
             Text(author, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
@@ -553,7 +554,7 @@ private fun OtherFeaturesIconGrid(modifier: Modifier = Modifier) {
         shape = MockCardShape,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(modifier = Modifier.padding(horizontal = Spacing.default, vertical = 20.dp), verticalArrangement = Arrangement.spacedBy(Spacing.default)) {
             features.chunked(3).forEach { row ->
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                     row.forEach { feature ->
@@ -599,7 +600,7 @@ private fun RoleSelectionPage(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 32.dp),
+            .padding(horizontal = Spacing.xl),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -614,12 +615,12 @@ private fun RoleSelectionPage(
         Spacer(Modifier.height(28.dp))
 
         Text(title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(Spacing.small))
         Text(description, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(Spacing.large))
 
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxWidth()) {
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.default), modifier = Modifier.fillMaxWidth()) {
             RoleOptionCard(
                 icon = Icons.Filled.Groups,
                 label = AppStrings.current.onboarding.roleDancer,
@@ -663,9 +664,9 @@ private fun RoleOptionCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(Spacing.default),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(Spacing.small)
         ) {
             Icon(imageVector = icon, contentDescription = null, tint = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(36.dp))
             Text(label, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, textAlign = TextAlign.Center)
@@ -710,7 +711,7 @@ fun RoleSelectionScreen(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 32.dp)
+                .padding(horizontal = Spacing.xl)
                 .height(52.dp),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)

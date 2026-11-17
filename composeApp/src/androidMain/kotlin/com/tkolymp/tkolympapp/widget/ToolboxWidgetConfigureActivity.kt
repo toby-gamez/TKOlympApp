@@ -183,7 +183,7 @@ private fun ConfigureScreen(
                                         this[index] = tmp
                                     }
                                 }
-                            ) { Icon(Icons.Default.ArrowUpward, contentDescription = null) }
+                            ) { Icon(Icons.Default.ArrowUpward, contentDescription = AppStrings.current.commonActions.moveUp) }
                             IconButton(
                                 enabled = index < selection.size - 1,
                                 onClick = {
@@ -193,11 +193,11 @@ private fun ConfigureScreen(
                                         this[index] = tmp
                                     }
                                 }
-                            ) { Icon(Icons.Default.ArrowDownward, contentDescription = null) }
+                            ) { Icon(Icons.Default.ArrowDownward, contentDescription = AppStrings.current.commonActions.moveDown) }
                             IconButton(
                                 enabled = selection.size > ToolboxWidgetConfig.MIN_ITEMS,
                                 onClick = { selection = selection - itemId }
-                            ) { Icon(Icons.Default.Close, contentDescription = null) }
+                            ) { Icon(Icons.Default.Close, contentDescription = AppStrings.current.commonActions.remove) }
                         }
                     }
                 }
@@ -226,7 +226,7 @@ private fun ConfigureScreen(
                             IconButton(
                                 enabled = canAdd,
                                 onClick = { selection = selection + item.id }
-                            ) { Icon(Icons.Default.Add, contentDescription = null) }
+                            ) { Icon(Icons.Default.Add, contentDescription = AppStrings.current.commonActions.add) }
                         }
                     }
                     if (selection.size >= ToolboxWidgetConfig.MAX_ITEMS) {

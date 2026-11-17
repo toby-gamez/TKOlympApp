@@ -93,6 +93,11 @@ val StringsCs = Strings(
         decrease = "Snížit",
         increase = "Přidat",
         options = "Možnosti",
+        next = "Další",
+        moveUp = "Posunout nahoru",
+        moveDown = "Posunout dolů",
+        remove = "Odebrat",
+        add = "Přidat",
     ),
     auth = AuthStrings(
         emailOrUsername = "Email nebo uživatelské jméno",
