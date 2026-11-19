@@ -724,6 +724,7 @@ fun AppNavHost(
             DanceOrganizationsScreen(
                 onBack = { navController.navigateUp() },
                 onOpenOrganization = { code -> navController.navigate("organization/$code") },
+                onOpenFederationEvent = { id -> navController.navigate("federationEvent/$id") },
                 bottomPadding = bottomPadding
             )
         }

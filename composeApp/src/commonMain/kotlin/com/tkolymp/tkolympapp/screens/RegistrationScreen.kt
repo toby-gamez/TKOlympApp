@@ -1,7 +1,5 @@
 package com.tkolymp.tkolympapp.screens
 
-import androidx.compose.material3.RadioButtonDefaults
-import androidx.compose.ui.unit.sp
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -28,13 +26,12 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
-import com.tkolymp.tkolympapp.components.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import com.tkolymp.tkolympapp.components.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -54,6 +51,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -72,6 +70,8 @@ import com.tkolymp.shared.registration.filterOwnedRegistrations
 import com.tkolymp.shared.registration.isTrainerUnavailable
 import com.tkolymp.shared.viewmodels.RegistrationViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
+import com.tkolymp.tkolympapp.components.Button
+import com.tkolymp.tkolympapp.components.OutlinedTextField
 import com.tkolymp.tkolympapp.components.TopAppBar
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
@@ -647,4 +647,6 @@ fun RegistrationScreen(
             }
         }
     }
-}}}
+}
+    }
+}

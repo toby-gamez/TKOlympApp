@@ -22,8 +22,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -1092,10 +1094,19 @@ internal fun AttendanceSessionRow(
     notExcusedLabel: String = "Unexcused",
     unknownLabel: String = "Unknown"
 ) {
+    val isLesson = session.eventType?.equals("lesson", ignoreCase = true) == true
+    val accent = if (isLesson) LessonAccent else MaterialTheme.colorScheme.primary
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        Box(
+            modifier = Modifier
+                .size(10.dp)
+                .clip(CircleShape)
+                .background(accent)
+        )
+        Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             val timeText = remember(session.since, session.until) { formatTimesWithDateAlways(session.since, session.until) }
             Text(
@@ -1164,3 +1175,6 @@ internal fun AttendanceSessionRow(
         }
     }
 }
+
+/** The theme is all red, so lessons get a fixed blue to stand apart from other trainings. */
+private val LessonAccent = Color(0xFF1E88E5)

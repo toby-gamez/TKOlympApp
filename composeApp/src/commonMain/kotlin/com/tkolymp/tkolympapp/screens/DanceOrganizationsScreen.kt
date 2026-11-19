@@ -1,10 +1,13 @@
 package com.tkolymp.tkolympapp.screens
 
 import com.tkolymp.tkolympapp.components.AppTopBar
-import com.tkolymp.tkolympapp.components.cardLineBorder
-import com.tkolymp.tkolympapp.components.pressClickable
-import com.tkolymp.tkolympapp.components.surfaceCardColors
 import androidx.compose.foundation.clickable
+import com.tkolymp.tkolympapp.ui.theme.Spacing
+import com.tkolymp.tkolympapp.components.RowDivider
+import com.tkolymp.tkolympapp.components.ScheduleCard
+import com.tkolymp.tkolympapp.components.SectionLabel
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,20 +18,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Public
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
@@ -57,6 +56,7 @@ import kotlinx.coroutines.launch
 fun DanceOrganizationsScreen(
     onBack: () -> Unit = {},
     onOpenOrganization: (code: String) -> Unit = {},
+    onOpenFederationEvent: (id: Long) -> Unit = {},
     bottomPadding: Dp = 0.dp
 ) {
     val viewModel = viewModel<DanceOrganizationsViewModel>()
@@ -81,10 +81,27 @@ fun DanceOrganizationsScreen(
                 state.federations.isEmpty() -> EmptyState(AppStrings.current.danceOrg.noDataYet, fullPage = true)
                 else -> LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 16.dp)
                 ) {
-                    items(state.federations, key = { it.code }) { f -> FederationCard(f, onClick = { onOpenOrganization(f.code) }) }
+                    state.nearestCompetition?.let { comp ->
+                        item(key = "nearest") {
+                            SectionLabel(AppStrings.current.competition.nearestCompetition)
+                            NearestCompetitionCard(
+                                event = comp,
+                                onOpen = { onOpenFederationEvent(comp.id) },
+                                modifier = Modifier.padding(horizontal = Spacing.default)
+                            )
+                        }
+                    }
+                    item(key = "federations") {
+                        SectionLabel(AppStrings.current.danceOrg.dataTitle)
+                        ScheduleCard(Modifier.padding(horizontal = Spacing.default)) {
+                            state.federations.forEachIndexed { i, f ->
+                                if (i > 0) RowDivider()
+                                FederationRow(f, onClick = { onOpenOrganization(f.code) })
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -106,27 +123,24 @@ internal fun federationEmoji(code: String): String? = when (code.lowercase()) {
     else -> null
 }
 
+/** One federation row: code tile, name, "Soutěžní data" subtitle and chevron (prototype "Soutěžní data" list). */
 @Composable
-private fun FederationCard(federation: DanceFederation, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier.fillMaxWidth().pressClickable(0.985f, onClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = surfaceCardColors(),
-        border = cardLineBorder()
+private fun FederationRow(federation: DanceFederation, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.size(52.dp)) {
-                Box(contentAlignment = Alignment.Center) {
-                    val flag = federationEmoji(federation.code)
-                    if (flag != null) Text(flag, fontSize = 28.sp)
-                    else Icon(Icons.Filled.Public, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-            Column(Modifier.weight(1f)) {
-                Text(federationLabel(federation.code), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text(federation.name, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        Box(
+            modifier = Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceVariant),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(federationLabel(federation.code), fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1)
         }
+        Column(Modifier.weight(1f)) {
+            Text(federation.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+            Text(AppStrings.current.danceOrg.dataTitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

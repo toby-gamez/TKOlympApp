@@ -184,6 +184,7 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                                                     PodiumColumn(
                                                         name = nameOf(item),
                                                         place = i + 1,
+                                                        rank = item.ranking ?: (i + 1),
                                                         points = scoreText(item.totalScore),
                                                         modifier = Modifier.weight(1f)
                                                     )
@@ -254,9 +255,9 @@ private fun formatScore(v: Double): String {
     return "${scaled / 10}.${kotlin.math.abs(scaled % 10)}"
 }
 
-/** One step of the podium: ringed avatar, name and a block whose height reflects the place. */
+/** One step of the podium: ringed avatar, name and a block whose height reflects the position; [rank] is the real (possibly filtered-out-of) ranking shown. */
 @Composable
-private fun PodiumColumn(name: String, place: Int, points: String, modifier: Modifier = Modifier) {
+private fun PodiumColumn(name: String, place: Int, rank: Int, points: String, modifier: Modifier = Modifier) {
     val first = place == 1
     val avatarSize = if (first) 72.dp else 58.dp
     val blockHeight = when (place) { 1 -> 96.dp; 2 -> 72.dp; else -> 56.dp }
@@ -278,7 +279,7 @@ private fun PodiumColumn(name: String, place: Int, points: String, modifier: Mod
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text("$place", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = if (first) Color.White else MaterialTheme.colorScheme.onSurface)
+            Text("$rank", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = if (first) Color.White else MaterialTheme.colorScheme.onSurface)
             Text(points, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = if (first) Color.White else MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }

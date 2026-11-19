@@ -710,7 +710,7 @@ private fun dateHeader(date: String, todayString: String, tomorrowString: String
 }
 
 @Composable
-private fun NearestCompetitionCard(event: FederationEventSummary, onOpen: () -> Unit) {
+internal fun NearestCompetitionCard(event: FederationEventSummary, onOpen: () -> Unit, modifier: Modifier = Modifier) {
     val strings = AppStrings.current
     val start = try { LocalDate.parse(event.startDate.take(10)) } catch (_: Exception) { null }
     val today = kotlin.time.Clock.System.todayIn(kotlinx.datetime.TimeZone.currentSystemDefault())
@@ -724,6 +724,7 @@ private fun NearestCompetitionCard(event: FederationEventSummary, onOpen: () -> 
         meta = listOf(date, where).filter { it.isNotBlank() }.joinToString(" · "),
         footnote = event.competitionCount.takeIf { it > 0 }?.let { "${strings.danceOrg.competitionsCount}: $it" },
         onClick = onOpen,
+        modifier = modifier,
         strikeThrough = event.isCancelled
     )
 }

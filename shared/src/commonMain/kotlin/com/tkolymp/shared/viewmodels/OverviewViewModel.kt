@@ -546,17 +546,8 @@ class OverviewViewModel(
         }
     }
 
-    private suspend fun findNearestCstsEvent(): FederationEventSummary? {
-        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-        val todayIso = today.toString()
-        for (year in today.year..today.year + 1) {
-            val upcoming = competitiveDataService.getEvents(CSTS_CODE, year).data
-                .filter { !it.isCancelled && (it.endDate ?: it.startDate) >= todayIso }
-                .minByOrNull { it.startDate }
-            if (upcoming != null) return upcoming
-        }
-        return null
-    }
+    private suspend fun findNearestCstsEvent(): FederationEventSummary? =
+        competitiveDataService.findNearestUpcomingEvent(CSTS_CODE)
 
     private fun isLesson(inst: EventInstance): Boolean =
         inst.event?.type?.toEventType() == EventType.LESSON == true &&

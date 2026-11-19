@@ -16,13 +16,29 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 import kotlin.time.Clock
 
+/** Soonest non-cancelled event of [federationCode] that has not ended yet, looking at this year and the next. */
+internal suspend fun ICompetitiveDataService.findNearestUpcomingEvent(federationCode: String): FederationEventSummary? {
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val todayIso = today.toString()
+    for (year in today.year..today.year + 1) {
+        val upcoming = getEvents(federationCode, year).data
+            .filter { !it.isCancelled && (it.endDate ?: it.startDate) >= todayIso }
+            .minByOrNull { it.startDate }
+        if (upcoming != null) return upcoming
+    }
+    return null
+}
+
 /** Organization list screen ("Taneční organizace"). */
 @Immutable
 data class DanceOrganizationsState(
     val federations: List<DanceFederation> = emptyList(),
+    val nearestCompetition: FederationEventSummary? = null,
     override val isLoading: Boolean = false,
     override val error: AppError? = null
 ) : ViewModelState
+
+private const val NEAREST_COMPETITION_FEDERATION = "csts"
 
 class DanceOrganizationsViewModel(
     private val service: ICompetitiveDataService = ServiceLocator.competitiveDataService
@@ -36,6 +52,9 @@ class DanceOrganizationsViewModel(
             val list = service.getFederations()
             // Never let an empty "success" wipe data we already have.
             _state.update { it.copy(federations = list.ifEmpty { it.federations }, isLoading = false) }
+            // Best effort: the countdown card is optional, so a failure here must not turn the list into an error.
+            val nearest = try { service.findNearestUpcomingEvent(NEAREST_COMPETITION_FEDERATION) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+            _state.update { it.copy(nearestCompetition = nearest ?: it.nearestCompetition) }
         } catch (e: CancellationException) { throw e } catch (e: Exception) {
             _state.update { it.copy(isLoading = false, error = AppError.network(e.message, e)) }
         }
