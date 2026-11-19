@@ -1,5 +1,6 @@
 package com.tkolymp.shared.competitivedata
 
+import com.tkolymp.shared.competitions.CompetitionOfficial
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.cache.CacheService
 import com.tkolymp.shared.Logger
@@ -10,7 +11,15 @@ import com.tkolymp.shared.network.postAllNodes
 import com.tkolymp.shared.storage.OfflineDataStorage
 import com.tkolymp.shared.sync.OfflineKeys
 import kotlinx.coroutines.CancellationException
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.todayIn
 import kotlinx.serialization.json.*
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 
 /** Reads the public "Soutěžní data" (federation events and competitions of CSTS, WDSF, SZTS). */
@@ -87,6 +96,8 @@ class CompetitiveDataService(
         }
         val detail = FederationEventDetail(
             id = eventId,
+            externalId = e.str("externalId"),
+            extraId = e.str("extraId"),
             federation = e.str("federation") ?: "",
             name = e.str("name"), startDate = e.str("startDate") ?: return null, endDate = e.str("endDate"),
             city = e.str("city"), location = e.str("location"), country = e.str("country"),
@@ -96,10 +107,62 @@ class CompetitiveDataService(
             lat = e.dbl("venueLat"), lng = e.dbl("venueLng"),
             status = e.str("status") ?: "UNKNOWN",
             organizer = e["organizingClub"]?.asObj()?.str("name"),
-            competitions = comps
+            competitions = comps,
+            officials = parseOfficials(e)
         )
         cache.put(key, detail, ttl = 10.minutes)
         return detail
+    }
+
+    override suspend fun getHighlights(kind: HighlightKind): List<FederationHighlight> {
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val key = "cdata_highlights_${kind}_$today"
+        cache.get<List<FederationHighlight>>(key)?.let { return it }
+        val (since, until) = when (kind) {
+            HighlightKind.LAST_WEEKEND -> {
+                // The most recent Sunday before today and the Saturday before it; `until` is exclusive.
+                val daysSinceSunday = (today.dayOfWeek.isoDayNumber % 7).let { if (it == 0) 7 else it }
+                val sunday = today.minus(daysSinceSunday, DateTimeUnit.DAY)
+                sunday.minus(1, DateTimeUnit.DAY) to sunday.plus(1, DateTimeUnit.DAY)
+            }
+            else -> LocalDate(today.year, 1, 1) to LocalDate(today.year + 1, 1, 1)
+        }
+        val vars = buildJsonObject {
+            put("since", since.toString())
+            put("until", until.toString())
+            put("first", HIGHLIGHT_LIMIT)
+            when (kind) {
+                HighlightKind.YEAR_ACHIEVEMENTS -> put("highlight", true)
+                HighlightKind.HALL_OF_CHAMPIONS -> {
+                    put("maxRanking", 3)
+                    put("types", buildJsonArray { add("CHAMPIONSHIP") })
+                }
+                HighlightKind.LAST_WEEKEND -> put("maxRanking", 3)
+            }
+        }
+        val resp = client.post(GraphQlOperations.FederationHighlights, vars)
+        val nodes = resp.data()?.get("competitionResults")?.asObj()?.get("nodes") as? JsonArray ?: error("Malformed response")
+        val list = nodes.mapNotNull { n ->
+            val o = n.asObj() ?: return@mapNotNull null
+            val comp = o["competition"]?.asObj() ?: return@mapNotNull null
+            val competitor = o["competitor"]?.asObj()
+            FederationHighlight(
+                competitionId = comp.str("id")?.toLongOrNull() ?: return@mapNotNull null,
+                eventId = comp["event"]?.asObj()?.str("id")?.toLongOrNull(),
+                eventName = comp["event"]?.asObj()?.str("name"),
+                startDate = comp.str("startDate") ?: return@mapNotNull null,
+                competitionType = comp.str("competitionType"),
+                categoryName = comp["category"]?.asObj()?.str("name"),
+                ranking = o.int("ranking") ?: return@mapNotNull null,
+                rankingTo = o.int("rankingTo"),
+                competitorName = competitor?.str("name")?.takeIf { it.isNotBlank() }
+                    ?: (competitor?.get("peopleList") as? JsonArray)?.mapNotNull { it.asObj()?.str("name") }
+                        ?.joinToString(" - ")?.takeIf { it.isNotBlank() }
+            )
+        }.sortedWith(compareBy({ it.ranking }, { it.startDate }, { it.categoryName }))
+        // An empty answer is legitimate (e.g. a quiet weekend) but may also be the server under load: cache it briefly.
+        cache.put(key, list, ttl = if (list.isEmpty()) 1.minutes else 15.minutes)
+        return list
     }
 
     override suspend fun getCompetitionResults(competitionId: Long): FederationCompetitionResults? {
@@ -125,11 +188,27 @@ class CompetitiveDataService(
             status = c.str("status") ?: "UNKNOWN",
             participants = c.int("participantsTotal"),
             categoryName = c["category"]?.asObj()?.str("name"),
-            results = rows
+            results = rows,
+            officials = parseOfficials(c),
+            entries = (c["entriesList"] as? JsonArray).orEmpty().mapNotNull { n ->
+                val e = n.asObj() ?: return@mapNotNull null
+                if ((e["cancelled"] as? JsonPrimitive)?.booleanOrNull == true) return@mapNotNull null
+                val competitor = e["competitor"]?.asObj()
+                competitor?.str("name")?.takeIf { it.isNotBlank() }
+                    ?: (competitor?.get("peopleList") as? JsonArray)?.mapNotNull { it.asObj()?.str("name") }
+                        ?.joinToString(" - ")?.takeIf { it.isNotBlank() }
+            }.sorted()
         )
         cache.put(key, result, ttl = 10.minutes)
         return result
     }
+
+    // Event-level lists repeat a person once per discipline, so identical person+role rows are collapsed.
+    private fun parseOfficials(o: JsonObject): List<CompetitionOfficial> =
+        (o["officials"]?.asObj()?.get("nodes") as? JsonArray).orEmpty().mapNotNull { n ->
+            val r = n.asObj() ?: return@mapNotNull null
+            CompetitionOfficial(r["person"]?.asObj()?.str("canonicalName"), r.str("role"), r.str("judgeLabel"))
+        }.distinctBy { it.name to it.role }
 
     private fun parseSummary(o: JsonObject): FederationEventSummary? = FederationEventSummary(
         id = o.str("id")?.toLongOrNull() ?: return null,
@@ -168,6 +247,7 @@ class CompetitiveDataService(
         try { store.load(key)?.let { AppJson.decodeFromString<T>(it) } } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
 
     private companion object {
+        const val HIGHLIGHT_LIMIT = 100
         val COMPETITION_TYPES = listOf("CUP", "RANKING", "LEAGUE", "CHAMPIONSHIP", "TOP_LEVEL", "SUPER_LEAGUE", "G_CUP")
     }
 

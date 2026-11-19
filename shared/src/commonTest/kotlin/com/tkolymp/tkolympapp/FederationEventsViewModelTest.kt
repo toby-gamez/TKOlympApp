@@ -16,6 +16,7 @@ private class FakeCompetitiveData(private val events: List<FederationEventSummar
     override suspend fun getYears(federation: String) = events.map { it.startDate.take(4).toInt() }.distinct().sorted().map { FederationYear(it, 1, 1) }
     override suspend fun getEvents(federation: String, year: Int, forceRefresh: Boolean) = LoadedData(events.filter { it.startDate.startsWith("$year") })
     override suspend fun getEventDetail(eventId: Long): FederationEventDetail? = null
+    override suspend fun getHighlights(kind: HighlightKind) = emptyList<FederationHighlight>()
     override suspend fun getCompetitionResults(competitionId: Long): FederationCompetitionResults? = null
 }
 

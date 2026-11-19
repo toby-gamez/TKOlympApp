@@ -68,6 +68,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.competitions.Competition
+import com.tkolymp.shared.competitions.CompetitionOfficial
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.utils.formatFullCalendarDate
 import com.tkolymp.tkolympapp.components.CoupleAvatar
@@ -165,8 +166,64 @@ internal fun CompetitionEventCard(competitions: List<Competition>, onOpenWeb: ((
                         )
                     }
             }
+
+            val officials = remember(competitions) {
+                competitions.flatMap { it.officials }.distinctBy { it.name to it.role }
+            }
+            if (officials.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(10.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                Spacer(modifier = Modifier.height(8.dp))
+                JuryList(officials)
+            }
         }
     }
+}
+
+/** Adjudicators under "Porota"; every other role (chairperson, invigilator, scrutineers) under "Funkcionáři". */
+@Composable
+internal fun JuryList(officials: List<CompetitionOfficial>) {
+    val strings = AppStrings.current.competition
+    val (jury, others) = remember(officials) { officials.partition { it.role == "ADJUDICATOR" } }
+    if (jury.isNotEmpty()) {
+        OfficialsHeader(strings.jury)
+        jury.distinctBy { it.name }.forEach { o ->
+            Text(
+                text = listOfNotNull(o.judgeLabel?.takeIf { it.isNotBlank() }, o.name?.takeIf { it.isNotBlank() }).joinToString(" "),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(vertical = 1.dp)
+            )
+        }
+    }
+    if (others.isNotEmpty()) {
+        if (jury.isNotEmpty()) Spacer(modifier = Modifier.height(8.dp))
+        OfficialsHeader(strings.officials)
+        others.sortedBy { OFFICIAL_ROLE_ORDER.indexOf(it.role).let { i -> if (i < 0) OFFICIAL_ROLE_ORDER.size else i } }.forEach { o ->
+            Row(modifier = Modifier.padding(vertical = 1.dp)) {
+                Text(
+                    text = strings.term(o.role),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.width(120.dp)
+                )
+                Text(text = o.name.orEmpty(), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+private val OFFICIAL_ROLE_ORDER = listOf("CHAIRPERSON", "INVIGILATOR", "LEAD_SCRUTINEER", "SCRUTINEER")
+
+@Composable
+private fun OfficialsHeader(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.primary
+    )
+    Spacer(modifier = Modifier.height(4.dp))
 }
 
 private fun competitionCategoryLabel(comp: Competition): String {

@@ -34,6 +34,8 @@ internal suspend fun ICompetitiveDataService.findNearestUpcomingEvent(federation
 data class DanceOrganizationsState(
     val federations: List<DanceFederation> = emptyList(),
     val nearestCompetition: FederationEventSummary? = null,
+    /** Per list; a kind that failed to load is simply absent. */
+    val highlights: Map<HighlightKind, List<FederationHighlight>> = emptyMap(),
     override val isLoading: Boolean = false,
     override val error: AppError? = null
 ) : ViewModelState
@@ -55,6 +57,13 @@ class DanceOrganizationsViewModel(
             // Best effort: the countdown card is optional, so a failure here must not turn the list into an error.
             val nearest = try { service.findNearestUpcomingEvent(NEAREST_COMPETITION_FEDERATION) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
             _state.update { it.copy(nearestCompetition = nearest ?: it.nearestCompetition) }
+            // Also best effort, and each list on its own so one failing query does not hide the others.
+            val loaded = coroutineScope {
+                HighlightKind.entries.map { kind ->
+                    async { try { kind to service.getHighlights(kind) } catch (e: CancellationException) { throw e } catch (_: Exception) { null } }
+                }.awaitAll().filterNotNull().toMap()
+            }
+            _state.update { it.copy(highlights = it.highlights + loaded.filter { (kind, list) -> list.isNotEmpty() || kind !in it.highlights }) }
         } catch (e: CancellationException) { throw e } catch (e: Exception) {
             _state.update { it.copy(isLoading = false, error = AppError.network(e.message, e)) }
         }
@@ -205,6 +214,8 @@ data class FederationEventDetailState(
     val event: FederationEventDetail? = null,
     val results: Map<Long, FederationCompetitionResults> = emptyMap(),
     val loadingResults: Set<Long> = emptySet(),
+    /** Full names ("First Last") of the people in our club, used to highlight them among competitors. */
+    val clubPersonNames: List<String> = emptyList(),
     override val isLoading: Boolean = false,
     override val error: AppError? = null
 ) : ViewModelState
@@ -223,6 +234,15 @@ class FederationEventDetailViewModel(
         } catch (e: CancellationException) { throw e } catch (e: Exception) {
             _state.update { it.copy(isLoading = false, error = AppError.network(e.message, e)) }
         }
+    }
+
+    suspend fun loadClubPeople() {
+        if (_state.value.clubPersonNames.isNotEmpty()) return
+        try {
+            val names = ServiceLocator.peopleService.fetchPeople()
+                .mapNotNull { listOfNotNull(it.firstName, it.lastName).joinToString(" ").takeIf { n -> n.isNotBlank() } }
+            _state.update { it.copy(clubPersonNames = names) }
+        } catch (e: CancellationException) { throw e } catch (_: Exception) {}
     }
 
     suspend fun loadResults(competitionId: Long) {

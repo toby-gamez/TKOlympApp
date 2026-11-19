@@ -27,6 +27,8 @@ data class DanceOrgStrings(
     val noEvents: String = "Žádné události",
     val noCompetitions: String = "Zatím žádné soutěže",
     val noResultsYet: String = "Výsledky zatím nejsou",
+    val registeredHeader: String = "Přihlášení",
+    val signUp: String = "Přihlásit se",
     val competitionsHeader: String = "Soutěže",
     val organizer: String = "Pořadatel",
     val contact: String = "Kontakt",
@@ -45,6 +47,10 @@ data class DanceOrgStrings(
     val resetMap: String = "Obnovit pohled",
     val noMapEvents: String = "Žádné události se souřadnicemi",
     val noDataYet: String = "Data zatím nejsou k dispozici",
+    val yearHighlights: String = "Úspěchy roku",
+    val hallOfChampions: String = "Galerie mistrů",
+    val lastWeekend: String = "Poslední víkend",
+    val noHighlights: String = "Zatím žádné výsledky",
     val months: String = "led,úno,bře,dub,kvě,čvn,čvc,srp,zář,říj,lis,pro",
 ) {
     /** Short month name for [month] in 1..12. */

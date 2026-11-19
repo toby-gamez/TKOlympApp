@@ -44,6 +44,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tkolymp.shared.competitivedata.DanceFederation
+import com.tkolymp.shared.competitivedata.FederationHighlight
+import com.tkolymp.shared.competitivedata.HighlightKind
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.DanceOrganizationsViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
@@ -93,6 +95,26 @@ fun DanceOrganizationsScreen(
                             )
                         }
                     }
+                    HighlightKind.entries.forEach { kind ->
+                        val list = state.highlights[kind] ?: return@forEach
+                        item(key = "highlights_$kind") {
+                            SectionLabel(highlightTitle(kind))
+                            ScheduleCard(Modifier.padding(horizontal = Spacing.default)) {
+                                if (list.isEmpty()) {
+                                    Text(
+                                        AppStrings.current.danceOrg.noHighlights,
+                                        modifier = Modifier.padding(14.dp),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                list.take(HIGHLIGHTS_SHOWN).forEachIndexed { i, h ->
+                                    if (i > 0) RowDivider()
+                                    HighlightRow(h, onClick = { h.eventId?.let(onOpenFederationEvent) })
+                                }
+                            }
+                        }
+                    }
                     item(key = "federations") {
                         SectionLabel(AppStrings.current.danceOrg.dataTitle)
                         ScheduleCard(Modifier.padding(horizontal = Spacing.default)) {
@@ -105,6 +127,44 @@ fun DanceOrganizationsScreen(
                 }
             }
         }
+    }
+}
+
+private const val HIGHLIGHTS_SHOWN = 10
+
+private fun highlightTitle(kind: HighlightKind): String = with(AppStrings.current.danceOrg) {
+    when (kind) {
+        HighlightKind.YEAR_ACHIEVEMENTS -> yearHighlights
+        HighlightKind.HALL_OF_CHAMPIONS -> hallOfChampions
+        HighlightKind.LAST_WEEKEND -> lastWeekend
+    }
+}
+
+/** One placement: rank tile, competitor, then "category · event" and a chevron when the event can be opened. */
+@Composable
+private fun HighlightRow(highlight: FederationHighlight, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val clickable = highlight.eventId != null
+    Row(
+        modifier = modifier.fillMaxWidth()
+            .then(if (clickable) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Box(
+            modifier = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceVariant),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("${highlight.ranking}.", fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1)
+        }
+        Column(Modifier.weight(1f)) {
+            Text(highlight.competitorName ?: "–", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium, maxLines = 2)
+            val detail = listOfNotNull(highlight.categoryName, highlight.eventName).joinToString(" · ")
+            if (detail.isNotEmpty()) {
+                Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
+            }
+        }
+        if (clickable) Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

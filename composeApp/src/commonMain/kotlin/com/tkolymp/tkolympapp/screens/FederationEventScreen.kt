@@ -36,6 +36,11 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.material.icons.filled.HowToReg
+import com.tkolymp.tkolympapp.components.RowDivider
+import com.tkolymp.tkolympapp.components.SheetPrimaryButton
+import com.tkolymp.tkolympapp.ui.theme.Spacing
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -69,6 +74,7 @@ import com.tkolymp.shared.competitivedata.FederationEventDetail
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.FederationEventDetailState
 import com.tkolymp.shared.viewmodels.FederationEventDetailViewModel
+import com.tkolymp.tkolympapp.util.normalizeForSearch
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.EmptyState
 import com.tkolymp.tkolympapp.components.ErrorState
@@ -99,24 +105,40 @@ fun FederationEventScreen(
     val strings = AppStrings.current.danceOrg
     val uriHandler = LocalUriHandler.current
     LaunchedEffect(eventId) { viewModel.load(eventId) }
+    LaunchedEffect(Unit) { viewModel.loadClubPeople() }
+
+    val event = state.event
+    val signUp = remember(event) { event?.let { signUpUrl(it) } }
 
     Scaffold(
         topBar = {
-            AppTopBar(title = state.event?.name ?: strings.event, onBack = onBack)
+            AppTopBar(title = event?.name ?: strings.event, onBack = onBack)
         }
     ) { padding ->
-        SwipeToReload(
-            isRefreshing = state.isLoading,
-            onRefresh = { scope.launch { viewModel.load(eventId) } },
-            modifier = Modifier.fillMaxSize().padding(top = padding.calculateTopPadding())
-        ) {
-            val event = state.event
-            when {
-                event == null && state.isLoading -> Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
-                event == null -> ErrorState(state.error?.message, onRetry = { scope.launch { viewModel.load(eventId) } })
-                else -> EventContent(event, state, bottomPadding,
-                    onOpenWeb = { uriHandler.openUri(it) },
-                    onExpand = { id -> scope.launch { viewModel.loadResults(id) } })
+        Column(Modifier.fillMaxSize().padding(top = padding.calculateTopPadding())) {
+            SwipeToReload(
+                isRefreshing = state.isLoading,
+                onRefresh = { scope.launch { viewModel.load(eventId) } },
+                modifier = Modifier.weight(1f).fillMaxWidth()
+            ) {
+                when {
+                    event == null && state.isLoading -> Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
+                    event == null -> ErrorState(state.error?.message, onRetry = { scope.launch { viewModel.load(eventId) } })
+                    else -> EventContent(event, state, if (signUp == null) bottomPadding else 0.dp,
+                        onOpenWeb = { uriHandler.openUri(it) },
+                        onExpand = { id -> scope.launch { viewModel.loadResults(id) } })
+                }
+            }
+            if (signUp != null) {
+                Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface)) {
+                    RowDivider()
+                    SheetPrimaryButton(
+                        text = strings.signUp,
+                        onClick = { uriHandler.openUri(signUp) },
+                        modifier = Modifier.navigationBarsPadding().padding(start = Spacing.default, end = Spacing.default, top = Spacing.medium, bottom = 14.dp),
+                        icon = Icons.Default.HowToReg
+                    )
+                }
             }
         }
     }
@@ -191,6 +213,13 @@ private fun EventContent(
                 }
             }
         }
+        if (event.officials.isNotEmpty()) {
+            item {
+                Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
+                    SelectionContainer { Column(Modifier.padding(14.dp)) { JuryList(event.officials) } }
+                }
+            }
+        }
         item { SectionHeader(title = strings.competitionsHeader, modifier = Modifier.padding(horizontal = 0.dp).offset(x = (-16).dp)) }
         if (event.competitions.isEmpty()) {
             item { EmptyState(strings.noCompetitions, modifier = Modifier.padding(24.dp)) }
@@ -206,6 +235,20 @@ private fun EventContent(
     }
 }
 
+/**
+ * Where to sign up for an event that is not finished yet. ČSTS has one sign-up page per event, addressed by the
+ * event's `externalId` and `extraId`; for the other federations only the event's own website is known.
+ */
+private fun signUpUrl(event: FederationEventDetail): String? {
+    if (event.status == "COMPLETED" || event.status == "CANCELLED") return null
+    return when (event.federation.lowercase()) {
+        "csts" -> if (event.externalId != null && event.extraId != null) {
+            "https://www.csts.cz/dancesport/kalendar_akci/event/${event.externalId}/competition/${event.extraId}/prihlaseni"
+        } else null
+        else -> event.websiteUrl?.takeIf { it.isNotBlank() }
+    }
+}
+
 @Composable
 private fun InfoLine(label: String, value: String?) {
     if (value.isNullOrBlank()) return
@@ -215,10 +258,32 @@ private fun InfoLine(label: String, value: String?) {
     }
 }
 
+/** Order- and accent-insensitive key for a person name, so "Novák Jan" matches "Jan Novák". */
+private fun nameKey(name: String): String =
+    normalizeForSearch(name).split(' ', '-', ',').filter { it.isNotBlank() }.sorted().joinToString(" ")
+
+/** True for a competitor (a person, or a pair written "A - B") with at least one member in our club. */
 @Composable
-private fun CompetitionCard(c: FederationCompetitionSummary, open: Boolean, state: FederationEventDetailState, onToggle: () -> Unit) {
+private fun rememberClubNameMatcher(clubNames: List<String>): (String) -> Boolean {
+    val keys = remember(clubNames) { clubNames.map(::nameKey).toHashSet() }
+    return remember(keys) {
+        { competitor: String ->
+            keys.isNotEmpty() && (keys.contains(nameKey(competitor)) ||
+                competitor.split(" - ", " / ", " + ").any { keys.contains(nameKey(it)) })
+        }
+    }
+}
+
+@Composable
+private fun CompetitionCard(
+    c: FederationCompetitionSummary,
+    open: Boolean,
+    state: FederationEventDetailState,
+    onToggle: () -> Unit
+) {
     val strings = AppStrings.current.danceOrg
     val results = state.results[c.id]
+    val isClub = rememberClubNameMatcher(state.clubPersonNames)
     Card(
         Modifier.fillMaxWidth().pressClickable(0.995f, onToggle),
         shape = RoundedCornerShape(16.dp),
@@ -243,6 +308,17 @@ private fun CompetitionCard(c: FederationCompetitionSummary, open: Boolean, stat
                 HorizontalDivider(Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
                 when {
                     c.id in state.loadingResults -> Box(Modifier.fillMaxWidth(), Alignment.Center) { CircularProgressIndicator(Modifier.size(24.dp)) }
+                    results != null && results.results.isEmpty() && results.entries.isNotEmpty() -> SelectionContainer {
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(
+                                "${strings.registeredHeader} (${results.entries.size})",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            results.entries.forEach { Text(it, style = MaterialTheme.typography.bodyMedium, fontWeight = if (isClub(it)) FontWeight.Bold else null) }
+                        }
+                    }
                     results == null || results.results.isEmpty() -> Text(strings.noResultsYet, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     else -> SelectionContainer { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         results.results.forEach { r ->
@@ -252,7 +328,12 @@ private fun CompetitionCard(c: FederationCompetitionSummary, open: Boolean, stat
                                     winner = r.ranking == 1,
                                     modifier = Modifier.widthIn(min = 40.dp)
                                 )
-                                Text(r.competitorName ?: "—", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                                Text(
+                                    r.competitorName ?: "—",
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = if (r.competitorName?.let(isClub) == true) FontWeight.Bold else null
+                                )
                                 r.pointGain?.toDoubleOrNull()?.takeIf { it > 0 }?.let {
                                     InfoPill("+${it.toString().removeSuffix(".0")}${AppStrings.current.competition.pointsSuffix}", successContainerColor(), successColor())
                                 }
@@ -261,6 +342,10 @@ private fun CompetitionCard(c: FederationCompetitionSummary, open: Boolean, stat
                         }
                     }
                     }
+                }
+                if (results != null && results.officials.isNotEmpty()) {
+                    HorizontalDivider(Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                    SelectionContainer { Column { JuryList(results.officials) } }
                 }
             }
         }

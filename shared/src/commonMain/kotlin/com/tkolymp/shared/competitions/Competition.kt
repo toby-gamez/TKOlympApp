@@ -26,6 +26,13 @@ data class CstsProgress(
 )
 
 @Serializable
+data class CompetitionOfficial(
+    val name: String?,
+    val role: String?,
+    val judgeLabel: String? = null
+)
+
+@Serializable
 data class Competition(
     val competitionId: Long?,
     val competitionDate: String,
@@ -48,5 +55,6 @@ data class Competition(
     val ranking: Int?,
     val rankingTo: Int?,
     val pointGain: String?,
-    val category: CompetitionCategory?
+    val category: CompetitionCategory?,
+    val officials: List<CompetitionOfficial> = emptyList()
 )

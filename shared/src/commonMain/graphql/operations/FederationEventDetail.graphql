@@ -3,6 +3,7 @@ query FederationEventDetail($id: BigInt!) {
         id
         federation
         externalId
+        extraId
         name
         startDate
         endDate
@@ -21,6 +22,14 @@ query FederationEventDetail($id: BigInt!) {
         status
         organizingClub {
             name
+        }
+        officials(first: 100) {
+            nodes {
+                role
+                person {
+                    canonicalName
+                }
+            }
         }
         competitions(first: 300, orderBy: START_DATE_ASC) {
             nodes {

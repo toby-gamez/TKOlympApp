@@ -1,0 +1,30 @@
+query FederationHighlights($since: Date!, $until: Date!, $maxRanking: Int, $highlight: Boolean, $types: [CompetitionType!], $first: Int) {
+    competitionResults(
+        first: $first
+        orderBy: RANKING_ASC
+        condition: { date: { since: $since, until: $until }, maxRanking: $maxRanking, highlight: $highlight, competitionTypes: $types }
+    ) {
+        nodes {
+            ranking
+            rankingTo
+            competitor {
+                name
+                peopleList(first: 3) {
+                    name
+                }
+            }
+            competition {
+                id
+                startDate
+                competitionType
+                category {
+                    name
+                }
+                event {
+                    id
+                    name
+                }
+            }
+        }
+    }
+}

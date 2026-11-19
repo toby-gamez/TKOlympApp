@@ -1,0 +1,71 @@
+query CompetitionsInRange($since: Date, $until: Date, $personIds: [BigInt!]!, $first: Int, $offset: Int) {
+    competitions(
+        first: $first
+        offset: $offset
+        orderBy: START_DATE_ASC
+        condition: { date: { since: $since, until: $until }, competitor: { personIds: $personIds } }
+    ) {
+        nodes {
+            id
+            federation
+            startDate
+            checkInEnd
+            competitionType
+            participantsTotal
+            category {
+                id
+                name
+                series
+                discipline
+                ageGroup
+                genderGroup
+                class
+                competitorType
+                baseDanceProgramId
+            }
+            event {
+                id
+                name
+                location
+            }
+            officials(first: 50) {
+                nodes {
+                    role
+                    judgeLabel
+                    person {
+                        canonicalName
+                    }
+                }
+            }
+            entriesList(first: 100, condition: { competitor: { personIds: $personIds } }) {
+                competitorId
+                cancelled
+                competitor {
+                    id
+                    name
+                    competitorType
+                    peopleList(first: 10) {
+                        id
+                        name
+                    }
+                }
+            }
+            resultsList(first: 100, condition: { competitor: { personIds: $personIds } }) {
+                competitorId
+                ranking
+                rankingTo
+                pointGain
+                isFinal
+                competitor {
+                    id
+                    name
+                    competitorType
+                    peopleList(first: 10) {
+                        id
+                        name
+                    }
+                }
+            }
+        }
+    }
+}

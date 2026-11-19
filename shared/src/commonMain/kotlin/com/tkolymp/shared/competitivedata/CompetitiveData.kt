@@ -1,5 +1,6 @@
 package com.tkolymp.shared.competitivedata
 
+import com.tkolymp.shared.competitions.CompetitionOfficial
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -48,6 +49,9 @@ data class FederationCompetitionSummary(
 @Serializable
 data class FederationEventDetail(
     val id: Long,
+    /** The federation's own event id and secondary id; ČSTS sign-up links are built from both. */
+    val externalId: String? = null,
+    val extraId: String? = null,
     val federation: String,
     val name: String?,
     val startDate: String,
@@ -66,7 +70,8 @@ data class FederationEventDetail(
     val lng: Double?,
     val status: String,
     val organizer: String?,
-    val competitions: List<FederationCompetitionSummary>
+    val competitions: List<FederationCompetitionSummary>,
+    val officials: List<CompetitionOfficial> = emptyList()
 )
 
 @Serializable
@@ -87,7 +92,27 @@ data class FederationCompetitionResults(
     val status: String,
     val participants: Int?,
     val categoryName: String?,
-    val results: List<FederationResultRow>
+    val results: List<FederationResultRow>,
+    val officials: List<CompetitionOfficial> = emptyList(),
+    /** Names of the non-cancelled entries, sorted by name. */
+    val entries: List<String> = emptyList()
+)
+
+/** Which highlight list of the "Soutěžní data" screen to load; the first two cover the current calendar year. */
+enum class HighlightKind { YEAR_ACHIEVEMENTS, HALL_OF_CHAMPIONS, LAST_WEEKEND }
+
+/** One notable placement: [competitorName] finished [ranking]. in [categoryName] at [eventName]. */
+@Serializable
+data class FederationHighlight(
+    val competitionId: Long,
+    val eventId: Long?,
+    val eventName: String?,
+    val startDate: String,
+    val competitionType: String?,
+    val categoryName: String?,
+    val ranking: Int,
+    val rankingTo: Int?,
+    val competitorName: String?
 )
 
 /** [data] plus whether it is the saved copy served because the live request failed. */

@@ -297,25 +297,46 @@ class CalendarViewModel(
     }
 
     private var competitionJob: Job? = null
+    // The week/filter the competitions in the state belong to.
+    private var competitionsFor: Pair<kotlinx.datetime.LocalDate, Boolean>? = null
 
-    // Competitions need one request per person and can take many seconds, so they load
-    // independently of the events and the week renders without waiting for them.
+    // Competitions need a few requests and can take seconds, so they load independently of the
+    // events and the week renders without waiting for them. Until the fetch lands, the last
+    // offline sync is shown for a new week/filter (never the previous tab's data); a refresh of
+    // the same week keeps what is on screen.
     private fun loadCompetitions(weekStart: kotlinx.datetime.LocalDate, endDay: kotlinx.datetime.LocalDate, onlyMine: Boolean, pid: String?) {
         competitionJob?.cancel()
         val personIds = if (onlyMine) pid?.toLongOrNull()?.let { listOf(it) } else null
+        val since = weekStart.toString()
+        val until = endDay.plus(1, DateTimeUnit.DAY).toString()
         competitionJob = viewModelScope.launch {
+            if (competitionsFor != weekStart to onlyMine) {
+                val stored = try {
+                    withContext(Dispatchers.Default) {
+                        competitionService.getStoredUpcoming(since, until, personIds).groupBy { it.competitionDate }
+                    }
+                } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyMap() }
+                if (lastWeekStart == weekStart && lastOnlyMine == onlyMine) {
+                    competitionsFor = weekStart to onlyMine
+                    _state.value = _state.value.copy(competitionsByDay = stored)
+                }
+            }
             val byDay = try {
                 withContext(Dispatchers.Default) {
                     competitionService.getUpcomingCompetitions(
-                        pSince = weekStart.toString(),
-                        pUntil = endDay.plus(1, DateTimeUnit.DAY).toString(),
+                        pSince = since,
+                        pUntil = until,
                         pPersonIds = personIds
                     ).groupBy { it.competitionDate }
                 }
-            } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyMap() }
+            } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
             // Drop the result if the user has moved to another week / filter meanwhile.
             if (lastWeekStart == weekStart && lastOnlyMine == onlyMine) {
-                _state.value = _state.value.copy(competitionsByDay = byDay)
+                // A failed fetch keeps whatever is already shown instead of blanking it.
+                if (byDay != null) {
+                    competitionsFor = weekStart to onlyMine
+                    _state.value = _state.value.copy(competitionsByDay = byDay)
+                }
             }
         }
     }

@@ -8,7 +8,7 @@ plugins {
 
 // Generates `GraphQlOperations` (one const per src/commonMain/graphql/operations/<Name>.graphql)
 // so the documents live in .graphql files (validated in CI) but need no runtime resource loading.
-val generateGraphQlOperations by tasks.registering {
+val generateGraphQlOperations = tasks.register("generateGraphQlOperations") {
     val opsDir = layout.projectDirectory.dir("src/commonMain/graphql/operations")
     val outDir = layout.buildDirectory.dir("generated/graphql/commonMain/kotlin")
     inputs.dir(opsDir).withPropertyName("operations")
@@ -71,19 +71,19 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.compose.runtime)
         }
-        val androidMain by getting {
+        getByName("androidMain") {
             dependencies {
                 implementation(libs.ksafe)
                 implementation(libs.ktor.okhttp)
                 implementation(libs.androidx.core.ktx)
             }
         }
-        val iosArm64Main by getting {
+        getByName("iosArm64Main") {
             dependencies {
                 implementation(libs.ktor.darwin)
             }
         }
-        val iosSimulatorArm64Main by getting {
+        getByName("iosSimulatorArm64Main") {
             dependencies {
                 implementation(libs.ktor.darwin)
             }

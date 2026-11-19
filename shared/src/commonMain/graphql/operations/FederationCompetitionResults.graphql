@@ -8,6 +8,24 @@ query FederationCompetitionResults($id: BigInt!) {
         category {
             name
         }
+        officials(first: 50) {
+            nodes {
+                role
+                judgeLabel
+                person {
+                    canonicalName
+                }
+            }
+        }
+        entriesList(first: 300) {
+            cancelled
+            competitor {
+                name
+                peopleList(first: 3) {
+                    name
+                }
+            }
+        }
         resultsList(first: 300, orderBy: RANKING_ASC) {
             ranking
             rankingTo
