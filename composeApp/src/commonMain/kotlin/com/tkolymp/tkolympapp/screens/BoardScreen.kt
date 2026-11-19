@@ -198,13 +198,17 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}, onC
                     LaunchedEffect(tab) { listVisible = false }
                     val announcements = if (tab == 1) state.permanentAnnouncements else state.currentAnnouncements
                     LaunchedEffect(tab, announcements.isNotEmpty()) { if (announcements.isNotEmpty()) listVisible = true }
-                    val filtered = announcements.filter { a ->
+                    val filtered = remember(announcements, searchQuery) {
                         val q = searchQuery.trim()
-                        if (q.isBlank()) return@filter true
-                        val nq = normalizeForSearch(q)
-                        val titleOk = a.title?.let { normalizeForSearch(it).contains(nq) } == true
-                        val bodyOk = try { normalizeForSearch(formatHtmlContent(a.body ?: "")).contains(nq) } catch (_: Exception) { false }
-                        titleOk || bodyOk
+                        if (q.isBlank()) announcements
+                        else {
+                            val nq = normalizeForSearch(q)
+                            announcements.filter { a ->
+                                val titleOk = a.title?.let { normalizeForSearch(it).contains(nq) } == true
+                                val bodyOk = try { normalizeForSearch(formatHtmlContent(a.body ?: "")).contains(nq) } catch (_: Exception) { false }
+                                titleOk || bodyOk
+                            }
+                        }
                     }
                     if (filtered.isEmpty() && !state.isLoading) {
                         EmptyState(title = AppStrings.current.announcements.noAnnouncementsToShow, icon = Icons.Outlined.Campaign, fullPage = true)

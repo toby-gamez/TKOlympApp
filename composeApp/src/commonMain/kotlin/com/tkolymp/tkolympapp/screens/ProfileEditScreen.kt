@@ -90,10 +90,11 @@ import kotlinx.datetime.number
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Instant
+import com.tkolymp.tkolympapp.util.ISO_DATE_PREFIX_REGEX
 
 private fun parseBirthDate(s: String?): LocalDate? {
     if (s.isNullOrBlank()) return null
-    val iso = Regex("\\d{4}-\\d{2}-\\d{2}").find(s.trim())?.value
+    val iso = ISO_DATE_PREFIX_REGEX.find(s.trim())?.value
     if (iso != null) return try { LocalDate.parse(iso) } catch (_: Exception) { null }
     return parseToLocal(s)?.date
 }

@@ -83,6 +83,7 @@ import kotlinx.datetime.LocalDate
 import com.tkolymp.tkolympapp.components.EmptyState
 import com.tkolymp.tkolympapp.components.ErrorBanner
 import androidx.compose.material.icons.outlined.PersonOff
+import com.tkolymp.tkolympapp.util.ISO_DATE_PREFIX_REGEX
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -385,7 +386,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
 internal fun formatDateStringSmall(raw: String?): String? {
     if (raw.isNullOrBlank()) return null
     val s = raw.trim()
-    val datePrefix = Regex("\\d{4}-\\d{2}-\\d{2}").find(s)?.value
+    val datePrefix = ISO_DATE_PREFIX_REGEX.find(s)?.value
     val ld = if (datePrefix != null) {
         try { LocalDate.parse(datePrefix) } catch (_: Exception) { null }
     } else {

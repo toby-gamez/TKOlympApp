@@ -184,30 +184,34 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}, onO
             // keep content visible during refresh; SwipeToReload shows the progress indicator
 
             // Ensure we only show CAMP events here (defensive: viewmodel should already filter)
-            var grouped = state.eventsByDay.mapValues { entry ->
-                entry.value.filter { it.event?.type?.equals("CAMP", ignoreCase = true) == true }
-            }.filterValues { it.isNotEmpty() }
+            val grouped = remember(state.eventsByDay) {
+                state.eventsByDay.mapValues { entry ->
+                    entry.value.filter { it.event?.type?.equals("CAMP", ignoreCase = true) == true }
+                }.filterValues { it.isNotEmpty() }
+            }
 
             // Offline fallback handled in EventsViewModel; UI should not scan storage directly.
 
             // If search is active, filter across all dates (not limited to planned/past)
-            val filteredGrouped = if (searchQuery.isBlank()) {
-                grouped
-            } else {
-                val nq = normalizeForSearch(searchQuery.trim())
-                grouped.flatMap { (dateStr, list) -> list.map { dateStr to it } }
-                    .filter { (_dateStr, item) ->
-                        val title = item.event?.name ?: ""
-                        val titleOk = title.isNotBlank() && normalizeForSearch(title).contains(nq)
-                        val body = try { formatHtmlContent(item.event?.description ?: "") } catch (_: Exception) { "" }
-                        val bodyOk = body.isNotBlank() && normalizeForSearch(body).contains(nq)
-                        val trainers = (item.event?.eventTrainersList ?: emptyList()).joinToString(" ")
-                        val trainersOk = trainers.isNotBlank() && normalizeForSearch(trainers).contains(nq)
-                        val typeOk = item.event?.type?.let { normalizeForSearch(it).contains(nq) } == true
-                        titleOk || bodyOk || trainersOk || typeOk
-                    }
-                    .groupBy({ it.first }, { it.second })
-                    .filterValues { it.isNotEmpty() }
+            val filteredGrouped = remember(grouped, searchQuery) {
+                if (searchQuery.isBlank()) {
+                    grouped
+                } else {
+                    val nq = normalizeForSearch(searchQuery.trim())
+                    grouped.flatMap { (dateStr, list) -> list.map { dateStr to it } }
+                        .filter { (_dateStr, item) ->
+                            val title = item.event?.name ?: ""
+                            val titleOk = title.isNotBlank() && normalizeForSearch(title).contains(nq)
+                            val body = try { formatHtmlContent(item.event?.description ?: "") } catch (_: Exception) { "" }
+                            val bodyOk = body.isNotBlank() && normalizeForSearch(body).contains(nq)
+                            val trainers = (item.event?.eventTrainersList ?: emptyList()).joinToString(" ")
+                            val trainersOk = trainers.isNotBlank() && normalizeForSearch(trainers).contains(nq)
+                            val typeOk = item.event?.type?.let { normalizeForSearch(it).contains(nq) } == true
+                            titleOk || bodyOk || trainersOk || typeOk
+                        }
+                        .groupBy({ it.first }, { it.second })
+                        .filterValues { it.isNotEmpty() }
+                }
             }
 
             AnimatedContent(
@@ -228,49 +232,52 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}, onO
                     // Naplánováno: still running or in the future (ascending).
                     // Multi-day camps are keyed by their start date, so a running camp
                     // must be kept here by its end date (until), not the bucket's start date.
-                    val planned = filteredGrouped.mapValues { (_, list) ->
-                        list.filter { inst ->
-                            val end = eventEndDate(inst)
-                            end == null || end >= today
-                        }
-                    }.filterValues { it.isNotEmpty() }
-                        .entries.sortedBy { it.key }.associate { it.key to it.value }
+                    val plannedCamps = remember(filteredGrouped, today) {
+                        filteredGrouped.mapValues { (_, list) ->
+                            list.filter { inst ->
+                                val end = eventEndDate(inst)
+                                end == null || end >= today
+                            }
+                        }.filterValues { it.isNotEmpty() }
+                            .entries.sortedBy { it.key }.associate { it.key to it.value }
+                            .values.flatten().sortedBy { it.since }
+                    }
 
 
                     CampList(
-                        camps = planned.values.flatten().sortedBy { it.since },
+                        camps = plannedCamps,
                         emptyTitle = AppStrings.current.events.noEventsPlanned,
                         emptyIcon = Icons.Outlined.EventBusy,
                         today = today,
                         myPersonId = state.myPersonId,
                         myCoupleIds = state.myCoupleIds,
                         visible = sectionsVisible,
-                        past = false,
                         onOpenEvent = onOpenEvent
                     )
                 } else {
                     // Proběhlé: fully finished events only — a still-running multi-day camp
                     // stays out of here until its end date (until) has passed.
-                    val past = filteredGrouped.mapValues { (_, list) ->
-                        list.filter { inst ->
-                            val end = eventEndDate(inst)
-                            end != null && end < today
-                        }
-                    }.filterValues { it.isNotEmpty() }
-                        .toList().sortedByDescending { (dateStr, _) ->
-                        try { LocalDate.parse(dateStr) } catch (_: Exception) { LocalDate(1, 1, 1) }
+                    val pastCamps = remember(filteredGrouped, today) {
+                        filteredGrouped.mapValues { (_, list) ->
+                            list.filter { inst ->
+                                val end = eventEndDate(inst)
+                                end != null && end < today
+                            }
+                        }.filterValues { it.isNotEmpty() }
+                            .toList().sortedByDescending { (dateStr, _) ->
+                            try { LocalDate.parse(dateStr) } catch (_: Exception) { LocalDate(1, 1, 1) }
+                        }.flatMap { it.second }.sortedByDescending { it.since }
                     }
 
 
                     CampList(
-                        camps = past.flatMap { it.second }.sortedByDescending { it.since },
+                        camps = pastCamps,
                         emptyTitle = AppStrings.current.events.noPastEvents,
                         emptyIcon = Icons.Outlined.History,
                         today = today,
                         myPersonId = state.myPersonId,
                         myCoupleIds = state.myCoupleIds,
                         visible = sectionsVisible,
-                        past = true,
                         onOpenEvent = onOpenEvent
                     )
                 }
@@ -307,7 +314,6 @@ private fun CampList(
     myPersonId: String?,
     myCoupleIds: List<String>,
     visible: Boolean,
-    past: Boolean,
     onOpenEvent: (Long) -> Unit
 ) {
     LazyColumn(
@@ -335,8 +341,7 @@ private fun CampList(
                     place = event?.locationText?.takeIf { it.isNotBlank() } ?: event?.location?.name.orEmpty(),
                     registeredLabel = if (isRegisteredBy(inst, myPersonId, myCoupleIds)) AppStrings.current.registration.signedUp else null,
                     onClick = { event?.id?.let(onOpenEvent) },
-                    whenLabel = campWhenLabel(inst, today),
-                    contentAlpha = if (past) 0.75f else 1f
+                    whenLabel = campWhenLabel(inst, today)
                 )
             }
         }

@@ -41,7 +41,7 @@ val StringsCs = Strings(
         overview = "Přehled",
         calendar = "Kalendář",
         board = "Nástěnka",
-        events = "Akce",
+        events = "Soustředění",
         profile = "Profil",
     ),
     otherScreen = OtherScreenStrings(
@@ -599,7 +599,7 @@ val StringsCs = Strings(
         totalScore = "Celkové skóre",
         lessonScore = "Lekce",
         groupScore = "Skupinové",
-        eventScore = "Akce",
+        eventScore = "Soustředění",
         manualScore = "Manuální",
         currentSeason = "Aktuální sezóna",
         lastSeason = "Minulá sezóna",

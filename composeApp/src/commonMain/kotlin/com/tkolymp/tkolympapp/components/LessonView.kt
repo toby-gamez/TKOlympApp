@@ -96,23 +96,25 @@ internal fun LessonView(
 
                 instances.forEach { inst ->
                     val time = formatTimes(inst.since, inst.until)
-                    val regs = inst.event?.eventRegistrationsList?.filter { it.parentRegistrationId == null } ?: emptyList()
-                    val parts: List<Pair<String, Boolean>> = regs.mapNotNull { r ->
-                        val display = r.person?.name ?: run {
-                            val man = r.couple?.man
-                            val woman = r.couple?.woman
-                            if (man != null && woman != null) {
-                                val manSurname = man.lastName?.takeIf { it.isNotBlank() } ?: man.firstName?.takeIf { it.isNotBlank() } ?: ""
-                                val womanSurname = woman.lastName?.takeIf { it.isNotBlank() } ?: woman.firstName?.takeIf { it.isNotBlank() } ?: ""
-                                val pair = listOfNotNull(manSurname.takeIf { it.isNotBlank() }, womanSurname.takeIf { it.isNotBlank() }).joinToString(" - ")
-                                if (pair.isNotBlank()) pair else null
-                            } else null
-                        }
-                        if (display == null) null else {
-                            val personIdStr = r.person?.id?.toString()
-                            val coupleIdStr = r.couple?.id?.toString()
-                            val isMine = (myPersonId != null && personIdStr == myPersonId) || (coupleIdStr != null && myCoupleIds.contains(coupleIdStr))
-                            Pair(display, isMine)
+                    val parts: List<Pair<String, Boolean>> = remember(inst, myPersonId, myCoupleIds) {
+                        val regs = inst.event?.eventRegistrationsList?.filter { it.parentRegistrationId == null } ?: emptyList()
+                        regs.mapNotNull { r ->
+                            val display = r.person?.name ?: run {
+                                val man = r.couple?.man
+                                val woman = r.couple?.woman
+                                if (man != null && woman != null) {
+                                    val manSurname = man.lastName?.takeIf { it.isNotBlank() } ?: man.firstName?.takeIf { it.isNotBlank() } ?: ""
+                                    val womanSurname = woman.lastName?.takeIf { it.isNotBlank() } ?: woman.firstName?.takeIf { it.isNotBlank() } ?: ""
+                                    val pair = listOfNotNull(manSurname.takeIf { it.isNotBlank() }, womanSurname.takeIf { it.isNotBlank() }).joinToString(" - ")
+                                    if (pair.isNotBlank()) pair else null
+                                } else null
+                            }
+                            if (display == null) null else {
+                                val personIdStr = r.person?.id?.toString()
+                                val coupleIdStr = r.couple?.id?.toString()
+                                val isMine = (myPersonId != null && personIdStr == myPersonId) || (coupleIdStr != null && myCoupleIds.contains(coupleIdStr))
+                                Pair(display, isMine)
+                            }
                         }
                     }
                     val participantsEmpty = parts.isEmpty()

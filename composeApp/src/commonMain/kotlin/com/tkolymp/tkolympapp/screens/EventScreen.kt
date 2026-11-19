@@ -150,11 +150,12 @@ import kotlinx.serialization.json.JsonArray
 import com.tkolymp.tkolympapp.platform.FullscreenImageViewer
 import com.tkolymp.tkolympapp.components.ErrorState
 
+private val TIME_REGEX = Regex("""\d{2}:\d{2}""")
+
 private fun boldTimes(text: String) = buildAnnotatedString {
     if (text.any { it == '.' || it.isLetter() }) {
-        val regex = Regex("""\d{2}:\d{2}""")
         var last = 0
-        for (match in regex.findAll(text)) {
+        for (match in TIME_REGEX.findAll(text)) {
             append(text.substring(last, match.range.first))
             withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(match.value) }
             last = match.range.last + 1
@@ -671,7 +672,6 @@ private fun ParticipantRowView(item: ParticipantItem) {
     ) {
         if (item.womanName != null || item.manName != null) {
             CoupleAvatar(womanName = item.womanName, manName = item.manName, size = 22.dp, fontSize = 9.sp, womanImageUrl = item.womanImageUrl, manImageUrl = item.manImageUrl)
-            Spacer(Modifier.width(10.dp))
         } else {
             InitialsAvatar(name = item.name, size = 32.dp, fontSize = 12.sp, imageUrl = item.imageUrl)
         }

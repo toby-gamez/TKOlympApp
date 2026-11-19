@@ -108,6 +108,7 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
 import com.tkolymp.tkolympapp.components.EmptyState
 import androidx.compose.material.icons.outlined.PersonSearch
+import com.tkolymp.tkolympapp.util.ISO_DATE_PREFIX_REGEX
 
 private enum class SortMode { SURNAME, FIRST_NAME, BIRTHDAY }
 
@@ -445,7 +446,7 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
 internal fun formatDateString(raw: String?): String? {
     if (raw.isNullOrBlank()) return null
     val s = raw.trim()
-    val datePrefix = Regex("\\d{4}-\\d{2}-\\d{2}").find(s)?.value
+    val datePrefix = ISO_DATE_PREFIX_REGEX.find(s)?.value
     val ld = if (datePrefix != null) {
         try { LocalDate.parse(datePrefix) } catch (_: Exception) { null }
     } else {

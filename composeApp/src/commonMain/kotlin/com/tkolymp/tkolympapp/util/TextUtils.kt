@@ -27,8 +27,21 @@ private val ACCENT_MAP = mapOf(
     'ß' to 's'
 )
 
-fun stripAccents(s: String): String = buildString(s.length) {
-    for (c in s) append(ACCENT_MAP[c] ?: c)
+private val ACCENT_FROM: String = ACCENT_MAP.keys.joinToString("")
+private val ACCENT_TO: String = ACCENT_MAP.values.joinToString("")
+
+fun stripAccents(s: String): String {
+    // Fast path: plain ASCII text has nothing to strip, so skip the per-character lookups.
+    if (s.all { it.code < 128 }) return s
+    return buildString(s.length) {
+        for (c in s) {
+            val i = if (c.code < 128) -1 else ACCENT_FROM.indexOf(c)
+            append(if (i >= 0) ACCENT_TO[i] else c)
+        }
+    }
 }
 
 fun normalizeForSearch(s: String): String = stripAccents(s).lowercase()
+
+/** Matches a leading `yyyy-MM-dd` date; hoisted so callers do not recompile it on every call. */
+val ISO_DATE_PREFIX_REGEX = Regex("\\d{4}-\\d{2}-\\d{2}")

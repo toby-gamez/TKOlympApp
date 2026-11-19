@@ -84,6 +84,7 @@ import com.tkolymp.shared.viewmodels.OtherViewModel
 import kotlinx.datetime.LocalDate
 import kotlin.coroutines.cancellation.CancellationException
 import com.tkolymp.tkolympapp.components.ErrorBanner
+import com.tkolymp.tkolympapp.util.ISO_DATE_PREFIX_REGEX
 
 private enum class MainItem { PEOPLE, TRAINERS, GROUPS, LEADERBOARD, COMPETITIONS }
 
@@ -105,7 +106,7 @@ private fun shouldShowError(t: Throwable?): Boolean {
 
 private fun formatDateString(raw: String): String? {
     val s = raw.trim()
-    val datePrefix = Regex("\\d{4}-\\d{2}-\\d{2}").find(s)?.value
+    val datePrefix = ISO_DATE_PREFIX_REGEX.find(s)?.value
     val ld = if (datePrefix != null) {
         try { LocalDate.parse(datePrefix) } catch (_: Exception) { null }
     } else {

@@ -175,7 +175,8 @@ fun FederationEventsScreen(
                         labels = listOf(strings.upcoming, strings.past, strings.allYear),
                         selectedIndex = modes.indexOf(state.viewMode),
                         onSelect = { scope.launch { viewModel.setViewMode(modes[it]) } },
-                        modifier = Modifier.padding(horizontal = 16.dp)
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        fillWidth = true
                     )
                 }
                 if (state.viewMode == EventsViewMode.YEAR) item {

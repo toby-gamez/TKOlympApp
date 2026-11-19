@@ -280,7 +280,7 @@ fun CalendarScreen(
     LaunchedEffect(weekOffset) { if (localWeekOffset != weekOffset) localWeekOffset = weekOffset }
 
     LaunchedEffect(selectedTab, localWeekOffset, customStartDate) {
-        calendarViewModel.load(localWeekOffset, selectedTab == 0, weekStartOverride = customStartDate)
+        calendarViewModel.load(localWeekOffset, selectedTab == 0, weekStartOverride = customStartDate, skipIfFresh = true)
     }
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {

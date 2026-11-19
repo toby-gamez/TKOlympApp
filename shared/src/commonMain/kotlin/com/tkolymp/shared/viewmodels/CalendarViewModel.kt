@@ -65,6 +65,9 @@ data class CalendarState(
     override val error: AppError? = null
 ) : ViewModelState
 
+/** Revisiting the already-loaded week within this window reuses the kept state instead of reloading. */
+private const val FRESH_WINDOW_MS = 60_000L
+
 class CalendarViewModel(
     private val eventService: com.tkolymp.shared.event.IEventService = ServiceLocator.eventService,
     private val userService: com.tkolymp.shared.user.UserService = ServiceLocator.userService,
@@ -79,8 +82,27 @@ class CalendarViewModel(
     private var lastWeekOffset: Int? = null
     private var lastWeekStart: kotlinx.datetime.LocalDate? = null
     private var lastOnlyMine: Boolean? = null
+    private var lastLoadedAtMs: Long = 0L
 
-    suspend fun load(weekOffset: Int, onlyMine: Boolean, forceRefresh: Boolean = false, weekStartOverride: kotlinx.datetime.LocalDate? = null) {
+    private fun isFresh(weekStart: kotlinx.datetime.LocalDate, onlyMine: Boolean, todayString: String): Boolean {
+        val st = _state.value
+        return lastWeekStart == weekStart && lastOnlyMine == onlyMine &&
+            !st.isLoading && !st.isOffline && st.error == null && st.visibleDates.isNotEmpty() &&
+            st.todayString == todayString &&
+            Clock.System.now().toEpochMilliseconds() - lastLoadedAtMs < FRESH_WINDOW_MS
+    }
+
+    /**
+     * @param skipIfFresh when true, a repeat call for the already-loaded week/tab shortly after a successful online
+     * load is a no-op, so revisiting the screen shows the kept state instead of redoing the merge work.
+     */
+    suspend fun load(
+        weekOffset: Int,
+        onlyMine: Boolean,
+        forceRefresh: Boolean = false,
+        weekStartOverride: kotlinx.datetime.LocalDate? = null,
+        skipIfFresh: Boolean = false
+    ) {
         val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
         // Weeks always run Monday..Sunday; the screen selects today inside the current week.
         val weekStart = weekStartOverride ?: mondayOf(today).plus(weekOffset * 7, DateTimeUnit.DAY)
@@ -94,6 +116,8 @@ class CalendarViewModel(
         }
         val todayString = today.toString()
         val tomorrowString = today.plus(1, DateTimeUnit.DAY).toString()
+
+        if (skipIfFresh && !forceRefresh && isFresh(weekStart, onlyMine, todayString)) return
 
         val isFirstLoad = lastWeekStart == null
         val weekChanged = weekStart != lastWeekStart
@@ -238,6 +262,7 @@ class CalendarViewModel(
 
             lastWeekStart = weekStart
             lastOnlyMine = onlyMine
+            lastLoadedAtMs = Clock.System.now().toEpochMilliseconds()
 
             val hasCancelledMineToShow = if (onlyMine) {
                 val dismissedIds = loadDismissedIds()

@@ -122,33 +122,60 @@ internal fun CompetitionEventCard(competitions: List<Competition>, onOpenWeb: ((
                 InfoChip(icon = Icons.Default.CalendarMonth, text = formatCompetitionDate(first.competitionDate), background = boxBg)
             }
 
-            val byCompetitor = competitions.groupBy { it.competitorName?.takeIf { n -> n.isNotBlank() } ?: it.personName ?: "" }
-            byCompetitor.values.forEach { competitorComps ->
+            val byCategory = competitions
+                .groupBy { competitionCategoryLabel(it) }
+                .values
+                .sortedBy { group -> group.mapNotNull { it.checkInEnd }.minOrNull() ?: "99:99" }
+            byCategory.forEach { group ->
                 Spacer(modifier = Modifier.height(10.dp))
                 HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
                 Spacer(modifier = Modifier.height(8.dp))
 
-                val rep = competitorComps.first()
-                val nameDisplay = rep.competitorName?.takeIf { it.isNotBlank() } ?: rep.personName ?: ""
-                val scheduled = competitorComps.filter { !it.hasResult }.sortedBy { it.checkInEnd }
-                val results = competitorComps.filter { it.hasResult }.sortedBy { it.ranking }
-
-                scheduled.forEach { comp -> CompetitionEntryRow(comp, competitorName = nameDisplay) }
-
-                if (scheduled.isNotEmpty() && results.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 2.dp),
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+                val time = group.mapNotNull { it.checkInEnd?.take(5)?.takeIf { t -> t.isNotBlank() } }.minOrNull()
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (time != null) {
+                        Text(
+                            text = time,
+                            modifier = Modifier.padding(end = 8.dp),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Text(
+                        text = competitionCategoryLabel(group.first()),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
                 }
+                Spacer(modifier = Modifier.height(4.dp))
 
-                results.forEach { comp -> CompetitionEntryRow(comp, competitorName = nameDisplay) }
+                group
+                    .sortedWith(compareBy({ !it.hasResult }, { it.ranking ?: Int.MAX_VALUE }, { competitionEntryName(it) }))
+                    .forEach { comp ->
+                        CompetitionEntryRow(
+                            comp,
+                            showCategory = false,
+                            showCheckIn = false,
+                            competitorName = competitionEntryName(comp)
+                        )
+                    }
             }
         }
     }
 }
+
+private fun competitionCategoryLabel(comp: Competition): String {
+    val raw = comp.category?.name?.takeIf { it.isNotBlank() }
+        ?: comp.competitionType?.takeIf { it.isNotBlank() }
+        ?: ""
+    return AppStrings.current.competition.formatType(raw)
+}
+
+private fun competitionEntryName(comp: Competition): String =
+    comp.competitorName?.takeIf { it.isNotBlank() } ?: comp.personName ?: ""
 
 internal fun formatCompetitionDate(raw: String): String {
     val date = try { LocalDate.parse(raw.substringBefore('T')) } catch (_: Exception) { return raw }

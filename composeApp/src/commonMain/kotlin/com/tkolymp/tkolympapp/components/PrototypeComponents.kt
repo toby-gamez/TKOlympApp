@@ -14,7 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -64,8 +64,12 @@ import com.tkolymp.tkolympapp.ui.theme.Spacing
 fun Modifier.pressClickable(pressedScale: Float = 0.98f, onClick: () -> Unit): Modifier = composed {
     val source = remember { MutableInteractionSource() }
     val pressed by source.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (pressed) pressedScale else 1f, label = "pressScale")
-    this.scale(scale).clickable(interactionSource = source, indication = LocalIndication.current, onClick = onClick)
+    // Keep the animated value as State and read it in the graphicsLayer block so each frame only redraws.
+    val scale = animateFloatAsState(if (pressed) pressedScale else 1f, label = "pressScale")
+    this.graphicsLayer {
+        scaleX = scale.value
+        scaleY = scale.value
+    }.clickable(interactionSource = source, indication = LocalIndication.current, onClick = onClick)
 }
 
 /** Green used for "free"/"ok" states in the prototype (`--ok`); lighter in dark theme. */

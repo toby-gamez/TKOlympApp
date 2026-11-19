@@ -48,6 +48,8 @@ import com.tkolymp.shared.language.AppStrings
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 
+private val TIME_REGEX = Regex("""\d{2}:\d{2}""")
+
 internal fun parseColorOrDefault(hex: String?): Color {
     if (hex.isNullOrBlank()) return Color.Gray
     return try {
@@ -164,9 +166,8 @@ internal fun RenderEventContent(item: EventInstance, tip: String? = null, showTy
                         Spacer(modifier = Modifier.width(6.dp))
                         val timeAnnotated = buildAnnotatedString {
                             if (timeText.any { it == '.' || it.isLetter() }) {
-                                val regex = Regex("""\d{2}:\d{2}""")
                                 var last = 0
-                                for (match in regex.findAll(timeText)) {
+                                for (match in TIME_REGEX.findAll(timeText)) {
                                     append(timeText.substring(last, match.range.first))
                                     withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(match.value) }
                                     last = match.range.last + 1
