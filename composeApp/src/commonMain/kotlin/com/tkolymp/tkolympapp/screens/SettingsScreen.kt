@@ -6,6 +6,7 @@ import com.tkolymp.tkolympapp.components.SegmentedToggle
 import com.tkolymp.tkolympapp.components.accentColor
 import com.tkolymp.tkolympapp.components.cardLineBorder
 import com.tkolymp.tkolympapp.components.surfaceCardColors
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.selection.toggleable
@@ -27,6 +28,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Download
@@ -47,6 +50,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -79,6 +83,8 @@ import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.appearance.ThemeMode
 import com.tkolymp.shared.feedback.FeedbackType
 import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.shared.language.SettingsStrings
+import com.tkolymp.shared.sync.OFFLINE_DOWNLOAD_STAGES
 import com.tkolymp.shared.tutorial.TutorialManager
 import com.tkolymp.shared.viewmodels.SettingsViewModel
 import com.tkolymp.tkolympapp.ui.theme.AppTheme
@@ -553,7 +559,7 @@ fun SettingsScreen(
                                         else -> Icon(Icons.Filled.RadioButtonUnchecked, contentDescription = null, tint = MaterialTheme.colorScheme.outline, modifier = Modifier.size(18.dp))
                                     }
                                 }
-                                Spacer(modifier = Modifier.width(Spacing.sm))
+                                Spacer(modifier = Modifier.width(Spacing.small))
                                 Text(
                                     text = offlineStageName(s, stage),
                                     style = MaterialTheme.typography.bodyMedium,
@@ -577,16 +583,16 @@ fun SettingsScreen(
     }
 }
 
-private fun offlineStageName(s: com.tkolymp.shared.language.AppStrings.Strings, stage: String): String = when (stage) {
-    "calendar" -> s.settings.offlineStageCalendar
-    "user" -> s.settings.offlineStageUser
-    "announcements" -> s.settings.offlineStageAnnouncements
-    "people" -> s.settings.offlineStagePeople
-    "payments" -> s.settings.offlineStagePayments
-    "scoreboard" -> s.settings.offlineStageScoreboard
-    "club" -> s.settings.offlineStageClub
-    "events" -> s.settings.offlineStageEvents
-    else -> s.settings.offlineStageCompetitions
+private fun offlineStageName(s: SettingsStrings, stage: String): String = when (stage) {
+    "calendar" -> s.offlineStageCalendar
+    "user" -> s.offlineStageUser
+    "announcements" -> s.offlineStageAnnouncements
+    "people" -> s.offlineStagePeople
+    "payments" -> s.offlineStagePayments
+    "scoreboard" -> s.offlineStageScoreboard
+    "club" -> s.offlineStageClub
+    "events" -> s.offlineStageEvents
+    else -> s.offlineStageCompetitions
 }
 
 @Composable
@@ -725,7 +731,7 @@ private fun SettingsSectionHeader(text: String) {
         fontWeight = FontWeight.Bold,
         letterSpacing = 0.8.sp,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(start = Spacing.default, top = 20.dp, bottom = Spacing.small)
+        modifier = Modifier.padding(start = Spacing.default, top = 20.dp, bottom = Spacing.smallall)
     )
 }
 
