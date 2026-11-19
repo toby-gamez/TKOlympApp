@@ -2,6 +2,21 @@ package com.tkolymp.tkolympapp.screens
 
 import com.tkolymp.tkolympapp.components.AppTopBar
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.tkolymp.shared.viewmodels.ClubResultsState
+import com.tkolymp.shared.viewmodels.ClubResultsViewModel
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.number
 import com.tkolymp.tkolympapp.ui.theme.Spacing
 import com.tkolymp.tkolympapp.components.RowDivider
 import com.tkolymp.tkolympapp.components.ScheduleCard
@@ -15,7 +30,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -64,7 +81,10 @@ fun DanceOrganizationsScreen(
     val viewModel = viewModel<DanceOrganizationsViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
+    val clubVm = viewModel<ClubResultsViewModel>()
+    val clubState by clubVm.state.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { viewModel.load() }
+    LaunchedEffect(Unit) { clubVm.load() }
 
     Scaffold(
         topBar = {
@@ -95,26 +115,6 @@ fun DanceOrganizationsScreen(
                             )
                         }
                     }
-                    HighlightKind.entries.forEach { kind ->
-                        val list = state.highlights[kind] ?: return@forEach
-                        item(key = "highlights_$kind") {
-                            SectionLabel(highlightTitle(kind))
-                            ScheduleCard(Modifier.padding(horizontal = Spacing.default)) {
-                                if (list.isEmpty()) {
-                                    Text(
-                                        AppStrings.current.danceOrg.noHighlights,
-                                        modifier = Modifier.padding(14.dp),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                list.take(HIGHLIGHTS_SHOWN).forEachIndexed { i, h ->
-                                    if (i > 0) RowDivider()
-                                    HighlightRow(h, onClick = { h.eventId?.let(onOpenFederationEvent) })
-                                }
-                            }
-                        }
-                    }
                     item(key = "federations") {
                         SectionLabel(AppStrings.current.danceOrg.dataTitle)
                         ScheduleCard(Modifier.padding(horizontal = Spacing.default)) {
@@ -124,13 +124,12 @@ fun DanceOrganizationsScreen(
                             }
                         }
                     }
+                    clubResultsItems(clubState, clubVm, onOpenFederationEvent)
                 }
             }
         }
     }
 }
-
-private const val HIGHLIGHTS_SHOWN = 10
 
 private fun highlightTitle(kind: HighlightKind): String = with(AppStrings.current.danceOrg) {
     when (kind) {
@@ -140,9 +139,130 @@ private fun highlightTitle(kind: HighlightKind): String = with(AppStrings.curren
     }
 }
 
-/** One placement: rank tile, competitor, then "category · event" and a chevron when the event can be opened. */
+/** The club's result lists as lazy items: tabs, year / type filters, then the grouped rows. */
+private fun LazyListScope.clubResultsItems(state: ClubResultsState, vm: ClubResultsViewModel, onOpenEvent: (Long) -> Unit) {
+    val strings = AppStrings.current.danceOrg
+    val hall = state.kind == HighlightKind.HALL_OF_CHAMPIONS
+    item(key = "club_header") {
+        SectionLabel(strings.clubResults)
+        Row(
+            Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = Spacing.default),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            HighlightKind.entries.forEach { kind ->
+                FilterChip(selected = state.kind == kind, onClick = { vm.selectKind(kind) }, label = { Text(highlightTitle(kind)) })
+            }
+        }
+        if (state.kind == HighlightKind.LAST_WEEKEND) {
+            val range = state.results
+            if (range?.since != null && range.until != null) {
+                Text(
+                    weekRangeLabel(range.since!!, range.until!!),
+                    modifier = Modifier.padding(horizontal = Spacing.default, vertical = 8.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        } else {
+            YearPicker(state.years, state.year, allowAll = hall, onSelect = vm::selectYear, modifier = Modifier.padding(horizontal = Spacing.default, vertical = 8.dp))
+        }
+        if (hall && state.availableTypes.size > 1) {
+            Row(
+                Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = Spacing.default),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                state.availableTypes.forEach { type ->
+                    FilterChip(selected = type !in state.hiddenTypes, onClick = { vm.toggleType(type) }, label = { Text(strings.competitorType(type)) })
+                }
+            }
+        }
+    }
+    val rows = state.rows
+    when {
+        state.isLoading && state.results == null -> item(key = "club_loading") {
+            Box(Modifier.fillMaxWidth().padding(24.dp), Alignment.Center) { CircularProgressIndicator() }
+        }
+        state.error != null && state.results == null -> item(key = "club_error") {
+            Text(state.error!!.message ?: "", Modifier.padding(Spacing.default), color = MaterialTheme.colorScheme.error)
+        }
+        rows.isEmpty() -> item(key = "club_empty") {
+            Text(strings.noHighlights, Modifier.padding(Spacing.default), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        else -> {
+            // The champions' gallery is grouped by competitor, the others by event (newest first, as sorted).
+            val groups = if (hall) rows.groupBy { it.competitorId ?: it.competitorName } else rows.groupBy { it.competitionEventKey() }
+            groups.forEach { (key, group) ->
+                item(key = "club_group_$key") {
+                    ScheduleCard(Modifier.padding(horizontal = Spacing.default, vertical = 6.dp)) {
+                        val first = group.first()
+                        if (hall) HallHeader(first.competitorName, group) else EventHeader(first.startDate, first.eventName)
+                        RowDivider()
+                        group.forEachIndexed { i, h ->
+                            if (i > 0) RowDivider()
+                            HighlightRow(h, byCompetitor = hall, onClick = { h.eventId?.let(onOpenEvent) })
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun FederationHighlight.competitionEventKey(): Any = eventId ?: (startDate to eventName)
+
+/** Placing number on a square tinted by podium place (plain for 4th and lower). */
 @Composable
-private fun HighlightRow(highlight: FederationHighlight, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun PlaceBadge(highlight: FederationHighlight) {
+    val container = when (highlight.ranking) {
+        1 -> MaterialTheme.colorScheme.primaryContainer
+        2 -> MaterialTheme.colorScheme.secondaryContainer
+        3 -> MaterialTheme.colorScheme.tertiaryContainer
+        else -> MaterialTheme.colorScheme.surfaceVariant
+    }
+    Box(
+        Modifier.height(40.dp).widthIn(min = 40.dp).clip(RoundedCornerShape(12.dp)).background(container).padding(horizontal = 6.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            "${highlight.ranking}." + (highlight.rankingTo?.takeIf { it > highlight.ranking }?.let { "–$it." } ?: ""),
+            fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1
+        )
+    }
+}
+
+/** Date tile (day over month) and the event name. */
+@Composable
+private fun EventHeader(isoDate: String, name: String?) {
+    val parts = formatIsoDate(isoDate).split(". ")
+    Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(
+            Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.primary),
+            horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
+        ) {
+            Text(parts.getOrElse(0) { "" }, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onPrimary)
+            Text(AppStrings.current.danceOrg.monthShort(parts.getOrNull(1)?.toIntOrNull() ?: 0), fontSize = 10.sp, color = MaterialTheme.colorScheme.onPrimary)
+        }
+        Text(name ?: "–", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 2)
+    }
+}
+
+/** Competitor name plus a count per podium place ("1. ×3"). */
+@Composable
+private fun HallHeader(name: String?, group: List<FederationHighlight>) {
+    Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(name ?: "–", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 2)
+        (1..3).forEach { place ->
+            val n = group.count { it.ranking == place }
+            if (n > 0) Box(Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surfaceVariant).padding(horizontal = 8.dp, vertical = 4.dp)) {
+                Text("$place. ×$n", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+/** Placing tile, category, and competitor (or date in the champions' gallery, where the competitor heads the group). */
+@Composable
+private fun HighlightRow(highlight: FederationHighlight, byCompetitor: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val clickable = highlight.eventId != null
     Row(
         modifier = modifier.fillMaxWidth()
@@ -151,22 +271,38 @@ private fun HighlightRow(highlight: FederationHighlight, onClick: () -> Unit, mo
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Box(
-            modifier = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceVariant),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("${highlight.ranking}.", fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1)
-        }
+        PlaceBadge(highlight)
         Column(Modifier.weight(1f)) {
-            Text(highlight.competitorName ?: "–", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium, maxLines = 2)
-            val detail = listOfNotNull(highlight.categoryName, highlight.eventName).joinToString(" · ")
-            if (detail.isNotEmpty()) {
-                Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
-            }
+            Text(highlight.categoryName?.let { AppStrings.current.competition.formatType(it) } ?: "–", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium, maxLines = 2)
+            val sub = if (byCompetitor) formatIsoDate(highlight.startDate) else highlight.competitorName
+            if (sub != null) Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
         }
         if (clickable) Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
+
+@Composable
+private fun YearPicker(years: List<Int>, selected: Int?, allowAll: Boolean, onSelect: (Int?) -> Unit, modifier: Modifier = Modifier) {
+    var open by remember { mutableStateOf(false) }
+    val strings = AppStrings.current.danceOrg
+    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(strings.yearLabel, style = MaterialTheme.typography.bodyMedium)
+        Box {
+            OutlinedButton(onClick = { open = true }) { Text(selected?.toString() ?: strings.allYears) }
+            DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+                if (allowAll) DropdownMenuItem(text = { Text(strings.allYears) }, onClick = { open = false; onSelect(null) })
+                years.forEach { y -> DropdownMenuItem(text = { Text(y.toString()) }, onClick = { open = false; onSelect(y) }) }
+            }
+        }
+    }
+}
+
+/** "16.–22. 11. 2026 (47. týden)" for an inclusive Monday..Sunday range. */
+private fun weekRangeLabel(since: String, until: String): String = runCatching {
+    val a = LocalDate.parse(since); val b = LocalDate.parse(until)
+    val week = (a.dayOfYear - a.dayOfWeek.isoDayNumber + 10) / 7
+    "${a.day}.–${b.day}. ${b.month.number}. ${b.year} ($week. ${AppStrings.current.danceOrg.weekLabel})"
+}.getOrDefault("$since – $until")
 
 /** Federation code as written in Czech/Slovak: ČSTS, SZTŠ (WDSF and unknown codes just upper-cased). */
 internal fun federationLabel(code: String): String = when (code.lowercase()) {

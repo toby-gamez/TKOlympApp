@@ -81,7 +81,9 @@ data class FederationResultRow(
     val pointGain: String?,
     val competitorName: String?,
     /** The API's `isFinal` flag (a ČSTS "final" credit), shown as "F" like on the old competition screens. */
-    val isFinal: Boolean = false
+    val isFinal: Boolean = false,
+    /** True when the competitor (or a member of the pair) is a person from our club's people list. */
+    val isClub: Boolean = false
 )
 
 @Serializable
@@ -95,13 +97,15 @@ data class FederationCompetitionResults(
     val results: List<FederationResultRow>,
     val officials: List<CompetitionOfficial> = emptyList(),
     /** Names of the non-cancelled entries, sorted by name. */
-    val entries: List<String> = emptyList()
+    val entries: List<String> = emptyList(),
+    /** The subset of [entries] that belongs to our club. */
+    val clubEntries: Set<String> = emptySet()
 )
 
-/** Which highlight list of the "Soutěžní data" screen to load; the first two cover the current calendar year. */
+/** The club result lists of the "Soutěžní data" screen. */
 enum class HighlightKind { YEAR_ACHIEVEMENTS, HALL_OF_CHAMPIONS, LAST_WEEKEND }
 
-/** One notable placement: [competitorName] finished [ranking]. in [categoryName] at [eventName]. */
+/** One placement of a club competitor: [competitorName] finished [ranking]. in [categoryName] at [eventName]. */
 @Serializable
 data class FederationHighlight(
     val competitionId: Long,
@@ -112,8 +116,14 @@ data class FederationHighlight(
     val categoryName: String?,
     val ranking: Int,
     val rankingTo: Int?,
+    val competitorId: String?,
+    /** CompetitorType name: COUPLE, SOLO, DUO, TRIO, TEAM, GROUP, FORMATION. */
+    val competitorType: String?,
     val competitorName: String?
 )
+
+/** [rows] of one list plus the covered range, [since] to [until] both inclusive (ISO dates). */
+data class ClubResults(val rows: List<FederationHighlight>, val since: String?, val until: String?)
 
 /** [data] plus whether it is the saved copy served because the live request failed. */
 data class LoadedData<T>(val data: T, val fromOffline: Boolean = false)

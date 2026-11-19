@@ -16,4 +16,13 @@ data class SettingsStrings(
     val offlineDownloadButton: String,
     val offlineDownloadingTitle: String,
     val offlineStageLabel: String,
+    val offlineStageCalendar: String,
+    val offlineStageUser: String,
+    val offlineStageAnnouncements: String,
+    val offlineStagePeople: String,
+    val offlineStagePayments: String,
+    val offlineStageScoreboard: String,
+    val offlineStageClub: String,
+    val offlineStageEvents: String,
+    val offlineStageCompetitions: String,
 )

@@ -74,7 +74,6 @@ import com.tkolymp.shared.competitivedata.FederationEventDetail
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.FederationEventDetailState
 import com.tkolymp.shared.viewmodels.FederationEventDetailViewModel
-import com.tkolymp.tkolympapp.util.normalizeForSearch
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.EmptyState
 import com.tkolymp.tkolympapp.components.ErrorState
@@ -105,7 +104,6 @@ fun FederationEventScreen(
     val strings = AppStrings.current.danceOrg
     val uriHandler = LocalUriHandler.current
     LaunchedEffect(eventId) { viewModel.load(eventId) }
-    LaunchedEffect(Unit) { viewModel.loadClubPeople() }
 
     val event = state.event
     val signUp = remember(event) { event?.let { signUpUrl(it) } }
@@ -258,22 +256,6 @@ private fun InfoLine(label: String, value: String?) {
     }
 }
 
-/** Order- and accent-insensitive key for a person name, so "Novák Jan" matches "Jan Novák". */
-private fun nameKey(name: String): String =
-    normalizeForSearch(name).split(' ', '-', ',').filter { it.isNotBlank() }.sorted().joinToString(" ")
-
-/** True for a competitor (a person, or a pair written "A - B") with at least one member in our club. */
-@Composable
-private fun rememberClubNameMatcher(clubNames: List<String>): (String) -> Boolean {
-    val keys = remember(clubNames) { clubNames.map(::nameKey).toHashSet() }
-    return remember(keys) {
-        { competitor: String ->
-            keys.isNotEmpty() && (keys.contains(nameKey(competitor)) ||
-                competitor.split(" - ", " / ", " + ").any { keys.contains(nameKey(it)) })
-        }
-    }
-}
-
 @Composable
 private fun CompetitionCard(
     c: FederationCompetitionSummary,
@@ -283,7 +265,6 @@ private fun CompetitionCard(
 ) {
     val strings = AppStrings.current.danceOrg
     val results = state.results[c.id]
-    val isClub = rememberClubNameMatcher(state.clubPersonNames)
     Card(
         Modifier.fillMaxWidth().pressClickable(0.995f, onToggle),
         shape = RoundedCornerShape(16.dp),
@@ -316,7 +297,7 @@ private fun CompetitionCard(
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.primary
                             )
-                            results.entries.forEach { Text(it, style = MaterialTheme.typography.bodyMedium, fontWeight = if (isClub(it)) FontWeight.Bold else null) }
+                            results.entries.forEach { Text(it, style = MaterialTheme.typography.bodyMedium, fontWeight = if (it in results.clubEntries) FontWeight.Bold else null) }
                         }
                     }
                     results == null || results.results.isEmpty() -> Text(strings.noResultsYet, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -332,7 +313,7 @@ private fun CompetitionCard(
                                     r.competitorName ?: "—",
                                     modifier = Modifier.weight(1f),
                                     style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = if (r.competitorName?.let(isClub) == true) FontWeight.Bold else null
+                                    fontWeight = if (r.isClub) FontWeight.Bold else null
                                 )
                                 r.pointGain?.toDoubleOrNull()?.takeIf { it > 0 }?.let {
                                     InfoPill("+${it.toString().removeSuffix(".0")}${AppStrings.current.competition.pointsSuffix}", successContainerColor(), successColor())

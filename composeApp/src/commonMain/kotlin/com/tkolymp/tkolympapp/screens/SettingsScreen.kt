@@ -522,17 +522,50 @@ fun SettingsScreen(
 
         // Download progress dialog
         if (downloading.value) {
+            val stages = OFFLINE_DOWNLOAD_STAGES
+            val currentIdx = stages.indexOf(progressStage.value).coerceAtLeast(0)
+            val stageFraction = if (progressTotal.value > 0) progressDone.value.toFloat() / progressTotal.value else 0f
+            val overall by animateFloatAsState((currentIdx + stageFraction) / stages.size, label = "downloadProgress")
             AlertDialog(
                 onDismissRequest = {},
                 confirmButton = {},
                 title = { Text(s.offlineDownloadingTitle) },
                 text = {
-                    Column {
-                        Text("${s.offlineStageLabel} ${progressStage.value}")
-                        Spacer(modifier = Modifier.height(8.dp))
-                        if (progressTotal.value > 0) Text("${progressDone.value} / ${progressTotal.value}")
-                        Spacer(modifier = Modifier.height(8.dp))
-                        CircularProgressIndicator()
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                        LinearProgressIndicator(progress = { overall }, modifier = Modifier.fillMaxWidth())
+                        Text(
+                            "${(overall * 100).toInt()} %",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(Spacing.xs))
+                        stages.forEachIndexed { idx, stage ->
+                            val state = when {
+                                idx < currentIdx -> 2
+                                idx == currentIdx -> 1
+                                else -> 0
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(modifier = Modifier.size(20.dp), contentAlignment = Alignment.Center) {
+                                    when (state) {
+                                        2 -> Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                                        1 -> CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.size(16.dp))
+                                        else -> Icon(Icons.Filled.RadioButtonUnchecked, contentDescription = null, tint = MaterialTheme.colorScheme.outline, modifier = Modifier.size(18.dp))
+                                    }
+                                }
+                                Spacer(modifier = Modifier.width(Spacing.sm))
+                                Text(
+                                    text = offlineStageName(s, stage),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = if (state == 1) FontWeight.SemiBold else FontWeight.Normal,
+                                    color = if (state == 0) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                if (state == 1 && progressTotal.value > 1) {
+                                    Text("${progressDone.value} / ${progressTotal.value}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                        }
                     }
                 }
             )
@@ -542,6 +575,18 @@ fun SettingsScreen(
             FeedbackDialog(type = type, onDismiss = { feedbackDialogType = null })
         }
     }
+}
+
+private fun offlineStageName(s: com.tkolymp.shared.language.AppStrings.Strings, stage: String): String = when (stage) {
+    "calendar" -> s.settings.offlineStageCalendar
+    "user" -> s.settings.offlineStageUser
+    "announcements" -> s.settings.offlineStageAnnouncements
+    "people" -> s.settings.offlineStagePeople
+    "payments" -> s.settings.offlineStagePayments
+    "scoreboard" -> s.settings.offlineStageScoreboard
+    "club" -> s.settings.offlineStageClub
+    "events" -> s.settings.offlineStageEvents
+    else -> s.settings.offlineStageCompetitions
 }
 
 @Composable

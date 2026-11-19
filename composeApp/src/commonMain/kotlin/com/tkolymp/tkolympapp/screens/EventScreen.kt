@@ -175,7 +175,6 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
     val scope = rememberCoroutineScope()
     val uriHandler = LocalUriHandler.current
     var showReminderDialog by remember { mutableStateOf(false) }
-    var showRegistrationDropdown by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(initialTab) }
     val showRozpisTab = isRozpisTabVisible(state.eventType, state.firstInstanceIso, kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault()))
@@ -473,21 +472,6 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                 }
             }
 
-            // "Register another" / "delete" menu; opened from the round button in the registration bar
-            if (showRegistrationBar && onOpenRegistration != null) {
-                RegistrationMenu(
-                    visible = showRegistrationDropdown,
-                    state = state,
-                    onDismiss = { showRegistrationDropdown = false },
-                    onRegisterAnother = { showRegistrationDropdown = false; onOpenRegistration.invoke("register", null) },
-                    onDelete = {
-                        showRegistrationDropdown = false
-                        if (state.ownedRegistrationCount == 1) showDeleteConfirm = true else onOpenRegistration.invoke("delete", null)
-                    },
-                    modifier = Modifier.align(Alignment.BottomEnd).padding(end = Spacing.default, bottom = Spacing.small)
-                )
-            }
-
             fullScreenImageUrl.value?.let { url ->
                 FullscreenImageViewer(imageUrl = url) { fullScreenImageUrl.value = null }
             }
@@ -496,12 +480,9 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
         if (showRegistrationBar && onOpenRegistration != null) {
             RegistrationBar(
                 state = state,
-                menuOpen = showRegistrationDropdown,
-                onToggleMenu = { showRegistrationDropdown = it },
                 onRegister = { onOpenRegistration.invoke("register", null) },
                 onEdit = { onOpenRegistration.invoke("edit", null) },
                 onDelete = {
-                    showRegistrationDropdown = false
                     if (state.ownedRegistrationCount == 1) showDeleteConfirm = true else onOpenRegistration.invoke("delete", null)
                 }
             )
@@ -785,69 +766,16 @@ private fun EventHeader(
     }
 }
 
-/** Floating card with the secondary registration actions. */
-@Composable
-private fun RegistrationMenu(
-    visible: Boolean,
-    state: EventState,
-    onDismiss: () -> Unit,
-    onRegisterAnother: () -> Unit,
-    onDelete: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val editPrimary = state.registrationActionsRowVisible && state.editRegistrationButtonVisible
-    val hasAdd = state.canRegisterAnother
-    val hasDelete = editPrimary
-    AnimatedVisibility(
-        visible = visible && (hasAdd || hasDelete),
-        modifier = modifier,
-        enter = fadeIn(tween(120)) + slideInVertically(tween(180, easing = FastOutSlowInEasing), initialOffsetY = { it / 3 }),
-        exit = fadeOut(tween(80)) + slideOutVertically(tween(130, easing = FastOutLinearInEasing), targetOffsetY = { it / 3 })
-    ) {
-        Card(
-            modifier = Modifier.widthIn(max = 260.dp).shadow(8.dp, RoundedCornerShape(16.dp), clip = false),
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-        ) {
-            if (hasAdd) {
-                Row(
-                    modifier = Modifier.clickable { onRegisterAnother() }.padding(horizontal = 16.dp, vertical = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(12.dp))
-                    Text(AppStrings.current.registration.registerAnother, style = MaterialTheme.typography.bodyLarge)
-                }
-            }
-            if (hasAdd && hasDelete) HorizontalDivider()
-            if (hasDelete) {
-                Row(
-                    modifier = Modifier.clickable { onDelete() }.padding(horizontal = 16.dp, vertical = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.error)
-                    Spacer(Modifier.width(12.dp))
-                    Text(AppStrings.current.registration.deleteRegistration, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.error)
-                }
-            }
-        }
-    }
-}
-
-/** Bottom action bar: red "register" pill, or edit/delete pill plus an overflow button when more actions exist. */
+/** Bottom action bar: red "register" pill, or edit pill plus a small delete button (one registration per user). */
 @Composable
 private fun RegistrationBar(
     state: EventState,
-    menuOpen: Boolean,
-    onToggleMenu: (Boolean) -> Unit,
     onRegister: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
     val strings = AppStrings.current.registration
     val editPrimary = state.registrationActionsRowVisible && state.editRegistrationButtonVisible
-    val menuHasItems = state.registrationActionsRowVisible && (state.canRegisterAnother || editPrimary)
     Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface)) {
         RowDivider()
         Row(
@@ -875,15 +803,15 @@ private fun RegistrationBar(
                     modifier = Modifier.weight(1f)
                 )
             }
-            if (menuHasItems) {
+            if (editPrimary) {
                 Box(
                     modifier = Modifier
                         .size(52.dp)
-                        .background(if (menuOpen) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.surfaceVariant, CircleShape)
-                        .clickable(role = androidx.compose.ui.semantics.Role.Button) { onToggleMenu(!menuOpen) },
+                        .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+                        .clickable(enabled = !state.isDeletingRegistration, role = androidx.compose.ui.semantics.Role.Button, onClick = onDelete),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.MoreVert, contentDescription = AppStrings.current.commonActions.options, tint = MaterialTheme.colorScheme.onSurface)
+                    Icon(Icons.Default.Delete, contentDescription = AppStrings.current.registration.deleteRegistration, tint = MaterialTheme.colorScheme.error)
                 }
             }
         }

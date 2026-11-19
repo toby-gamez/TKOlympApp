@@ -7,7 +7,6 @@ data class RegistrationStrings(
     val deleteSelectedRegistration: String,
     val confirmDeleteRegistration: String,
     val confirmDeleteRule: String,
-    val registerAnother: String,
     val register: String,
     val selectRegistration: String,
     val selectWhomToRegister: String,

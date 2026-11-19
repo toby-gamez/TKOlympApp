@@ -4,7 +4,10 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.competitivedata.*
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -34,8 +37,6 @@ internal suspend fun ICompetitiveDataService.findNearestUpcomingEvent(federation
 data class DanceOrganizationsState(
     val federations: List<DanceFederation> = emptyList(),
     val nearestCompetition: FederationEventSummary? = null,
-    /** Per list; a kind that failed to load is simply absent. */
-    val highlights: Map<HighlightKind, List<FederationHighlight>> = emptyMap(),
     override val isLoading: Boolean = false,
     override val error: AppError? = null
 ) : ViewModelState
@@ -57,13 +58,79 @@ class DanceOrganizationsViewModel(
             // Best effort: the countdown card is optional, so a failure here must not turn the list into an error.
             val nearest = try { service.findNearestUpcomingEvent(NEAREST_COMPETITION_FEDERATION) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
             _state.update { it.copy(nearestCompetition = nearest ?: it.nearestCompetition) }
-            // Also best effort, and each list on its own so one failing query does not hide the others.
-            val loaded = coroutineScope {
-                HighlightKind.entries.map { kind ->
-                    async { try { kind to service.getHighlights(kind) } catch (e: CancellationException) { throw e } catch (_: Exception) { null } }
-                }.awaitAll().filterNotNull().toMap()
-            }
-            _state.update { it.copy(highlights = it.highlights + loaded.filter { (kind, list) -> list.isNotEmpty() || kind !in it.highlights }) }
+        } catch (e: CancellationException) { throw e } catch (e: Exception) {
+            _state.update { it.copy(isLoading = false, error = AppError.network(e.message, e)) }
+        }
+    }
+}
+
+/** Club result lists under the federation list: one tab per [HighlightKind]. */
+@Immutable
+data class ClubResultsState(
+    val kind: HighlightKind = HighlightKind.YEAR_ACHIEVEMENTS,
+    /** Years that have federation data, newest first. */
+    val years: List<Int> = emptyList(),
+    /** Selected year of the current list; null = all years (only offered by the hall of champions). */
+    val year: Int? = null,
+    /** CompetitorType names hidden in the hall of champions; empty = all shown. */
+    val hiddenTypes: Set<String> = emptySet(),
+    val results: ClubResults? = null,
+    override val isLoading: Boolean = false,
+    override val error: AppError? = null
+) : ViewModelState {
+    /** Rows after the competitor-type filter. */
+    val rows: List<FederationHighlight>
+        get() = results?.rows.orEmpty().filter { kind != HighlightKind.HALL_OF_CHAMPIONS || it.competitorType !in hiddenTypes }
+    /** CompetitorType names present in the loaded rows, for the filter chips. */
+    val availableTypes: List<String>
+        get() = results?.rows.orEmpty().mapNotNull { it.competitorType }.distinct().sorted()
+}
+
+class ClubResultsViewModel(
+    private val service: ICompetitiveDataService = ServiceLocator.competitiveDataService
+) : ViewModel() {
+    private val _state = MutableStateFlow(ClubResultsState(year = Clock.System.todayIn(TimeZone.currentSystemDefault()).year))
+    val state: StateFlow<ClubResultsState> = _state.asStateFlow()
+    private var job: Job? = null
+
+    /** Loads the years once and the current list. */
+    suspend fun load() {
+        if (_state.value.years.isEmpty()) {
+            val years = try { service.getYears("csts").map { it.year }.sortedDescending() } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
+            _state.update { it.copy(years = years) }
+        }
+        fetch()
+    }
+
+    fun selectKind(kind: HighlightKind) {
+        if (kind == _state.value.kind) return
+        val thisYear = Clock.System.todayIn(TimeZone.currentSystemDefault()).year
+        _state.update {
+            it.copy(kind = kind, year = if (kind == HighlightKind.HALL_OF_CHAMPIONS) null else thisYear, results = null, hiddenTypes = emptySet(), error = null)
+        }
+        launchFetch()
+    }
+
+    fun selectYear(year: Int?) {
+        if (year == _state.value.year) return
+        _state.update { it.copy(year = year, results = null, hiddenTypes = emptySet(), error = null) }
+        launchFetch()
+    }
+
+    fun toggleType(type: String) =
+        _state.update { it.copy(hiddenTypes = if (type in it.hiddenTypes) it.hiddenTypes - type else it.hiddenTypes + type) }
+
+    private fun launchFetch() {
+        job?.cancel()
+        job = viewModelScope.launch { fetch() }
+    }
+
+    private suspend fun fetch() {
+        val s = _state.value
+        _state.update { it.copy(isLoading = true, error = null) }
+        try {
+            val r = service.getClubResults(s.kind, s.year)
+            _state.update { if (it.kind == s.kind && it.year == s.year) it.copy(results = r, isLoading = false) else it }
         } catch (e: CancellationException) { throw e } catch (e: Exception) {
             _state.update { it.copy(isLoading = false, error = AppError.network(e.message, e)) }
         }
@@ -214,8 +281,6 @@ data class FederationEventDetailState(
     val event: FederationEventDetail? = null,
     val results: Map<Long, FederationCompetitionResults> = emptyMap(),
     val loadingResults: Set<Long> = emptySet(),
-    /** Full names ("First Last") of the people in our club, used to highlight them among competitors. */
-    val clubPersonNames: List<String> = emptyList(),
     override val isLoading: Boolean = false,
     override val error: AppError? = null
 ) : ViewModelState
@@ -234,15 +299,6 @@ class FederationEventDetailViewModel(
         } catch (e: CancellationException) { throw e } catch (e: Exception) {
             _state.update { it.copy(isLoading = false, error = AppError.network(e.message, e)) }
         }
-    }
-
-    suspend fun loadClubPeople() {
-        if (_state.value.clubPersonNames.isNotEmpty()) return
-        try {
-            val names = ServiceLocator.peopleService.fetchPeople()
-                .mapNotNull { listOfNotNull(it.firstName, it.lastName).joinToString(" ").takeIf { n -> n.isNotBlank() } }
-            _state.update { it.copy(clubPersonNames = names) }
-        } catch (e: CancellationException) { throw e } catch (_: Exception) {}
     }
 
     suspend fun loadResults(competitionId: Long) {

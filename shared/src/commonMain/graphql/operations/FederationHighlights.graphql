@@ -1,14 +1,17 @@
-query FederationHighlights($since: Date!, $until: Date!, $maxRanking: Int, $highlight: Boolean, $types: [CompetitionType!], $first: Int) {
+query FederationHighlights($since: Date, $until: Date, $personIds: [BigInt!], $maxRanking: Int, $types: [CompetitionType!], $first: Int, $offset: Int) {
     competitionResults(
         first: $first
-        orderBy: RANKING_ASC
-        condition: { date: { since: $since, until: $until }, maxRanking: $maxRanking, highlight: $highlight, competitionTypes: $types }
+        offset: $offset
+        orderBy: [COMPETITION_ID_DESC, COMPETITOR_ID_ASC]
+        condition: { date: { since: $since, until: $until }, maxRanking: $maxRanking, competitionTypes: $types, competitor: { personIds: $personIds } }
     ) {
         nodes {
             ranking
             rankingTo
             competitor {
+                id
                 name
+                competitorType
                 peopleList(first: 3) {
                     name
                 }

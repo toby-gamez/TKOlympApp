@@ -34,7 +34,6 @@ import com.tkolymp.shared.event.EventType
 import androidx.compose.runtime.Immutable
 import com.tkolymp.shared.event.toEventType
 import com.tkolymp.shared.registration.computeCanEditRegistration
-import com.tkolymp.shared.registration.computeCanRegisterAnother
 import com.tkolymp.shared.registration.filterOwnedRegistrations
 
 @Immutable
@@ -71,7 +70,6 @@ data class EventState(
     val registerButtonVisible: Boolean = false,
     val registrationActionsRowVisible: Boolean = false,
     val editRegistrationButtonVisible: Boolean = false,
-    val canRegisterAnother: Boolean = false,
     val ownedRegistrationCount: Int = 0,
     val isDeletingRegistration: Boolean = false,
     val isAddedToCalendar: Boolean = false,
@@ -185,7 +183,6 @@ class EventViewModel(
             val trainersForEdit = eventObj.get("eventTrainersList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
             val editRegistrationButtonVisible = type.toEventType() != EventType.LESSON && type.toEventType() != EventType.GROUP &&
                 computeCanEditRegistration(type, eventObj.bool("enableNotes") ?: false, trainersForEdit, ownedRegistrations)
-            val canRegisterAnother = computeCanRegisterAnother(myPerson, myCouples, registrations)
 
             val trainers = eventObj.get("eventTrainersList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
             val cohorts = eventObj.get("eventTargetCohortsList")?.asJsonArrayOrNull() ?: JsonArray(emptyList())
@@ -302,7 +299,6 @@ class EventViewModel(
                 registerButtonVisible = registerButtonVisible,
                 registrationActionsRowVisible = registrationActionsRowVisible,
                 editRegistrationButtonVisible = editRegistrationButtonVisible,
-                canRegisterAnother = canRegisterAnother,
                 ownedRegistrationCount = ownedRegistrations.size,
                 isDeletingRegistration = false,
                 isAddedToCalendar = alreadyAdded,

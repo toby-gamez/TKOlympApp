@@ -126,19 +126,3 @@ fun computeCanEditRegistration(
         trainers.withIndex().any { (i, t) -> !isTrainerUnavailable(t) || (mine.getOrNull(i) ?: 0) > 0 }
     }
 }
-
-/**
- * Whether the user still has an account (themselves or a couple) that is not registered yet.
- * Mirrors the candidates offered by the Register screen. If the person id has not loaded yet the
- * answer is unknown, so the option stays available.
- */
-fun computeCanRegisterAnother(
-    myPersonId: String?,
-    myCoupleIds: List<String>,
-    registrations: JsonArray
-): Boolean {
-    if (myPersonId.isNullOrBlank()) return true
-    val registeredPersonIds = computeRegisteredPersonIds(registrations)
-    val registeredCoupleIds = computeRegisteredCoupleIds(registrations)
-    return myPersonId !in registeredPersonIds || myCoupleIds.any { it !in registeredCoupleIds }
-}

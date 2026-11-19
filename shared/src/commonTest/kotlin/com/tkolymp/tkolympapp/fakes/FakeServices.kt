@@ -84,7 +84,7 @@ class FakeCompetitiveDataService(
     override suspend fun getEvents(federation: String, year: Int, forceRefresh: Boolean) =
         com.tkolymp.shared.competitivedata.LoadedData(events.filter { it.startDate.startsWith("$year") })
     override suspend fun getEventDetail(eventId: Long): com.tkolymp.shared.competitivedata.FederationEventDetail? = null
-    override suspend fun getHighlights(kind: com.tkolymp.shared.competitivedata.HighlightKind) = emptyList<com.tkolymp.shared.competitivedata.FederationHighlight>()
+    override suspend fun getClubResults(kind: com.tkolymp.shared.competitivedata.HighlightKind, year: Int?) = com.tkolymp.shared.competitivedata.ClubResults(emptyList(), null, null)
     override suspend fun getCompetitionResults(competitionId: Long): com.tkolymp.shared.competitivedata.FederationCompetitionResults? = null
 }
 

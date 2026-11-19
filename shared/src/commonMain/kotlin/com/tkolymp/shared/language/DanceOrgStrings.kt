@@ -51,10 +51,35 @@ data class DanceOrgStrings(
     val hallOfChampions: String = "Galerie mistrů",
     val lastWeekend: String = "Poslední víkend",
     val noHighlights: String = "Zatím žádné výsledky",
+    val yearLabel: String = "Rok",
+    val allYears: String = "Všechny roky",
+    val competitorTypeHeader: String = "Typ soutěžícího",
+    val competitorCouple: String = "Pár",
+    val competitorSolo: String = "Sólo",
+    val competitorDuo: String = "Duo",
+    val competitorTrio: String = "Trio",
+    val competitorTeam: String = "Tým",
+    val competitorGroup: String = "Skupina",
+    val competitorFormation: String = "Formace",
+    val clubResults: String = "Výsledky klubu",
+    val placing: String = "místo",
+    val weekLabel: String = "týden",
     val months: String = "led,úno,bře,dub,kvě,čvn,čvc,srp,zář,říj,lis,pro",
 ) {
     /** Short month name for [month] in 1..12. */
     fun monthShort(month: Int): String = months.split(",").getOrElse(month - 1) { "" }
+
+    /** Label for a CompetitorType name; unknown names are returned as they are. */
+    fun competitorType(raw: String): String = when (raw) {
+        "COUPLE" -> competitorCouple
+        "SOLO" -> competitorSolo
+        "DUO" -> competitorDuo
+        "TRIO" -> competitorTrio
+        "TEAM" -> competitorTeam
+        "GROUP" -> competitorGroup
+        "FORMATION" -> competitorFormation
+        else -> raw
+    }
 
     /** Label for a CompetitionType name; G Cup has no translation and keeps its name. */
     fun competitionType(raw: String): String = when (raw) {

@@ -11,6 +11,9 @@ import com.tkolymp.shared.network.postAllNodes
 import com.tkolymp.shared.storage.OfflineDataStorage
 import com.tkolymp.shared.sync.OfflineKeys
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -114,35 +117,73 @@ class CompetitiveDataService(
         return detail
     }
 
-    override suspend fun getHighlights(kind: HighlightKind): List<FederationHighlight> {
+    override suspend fun getClubResults(kind: HighlightKind, year: Int?): ClubResults {
         val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-        val key = "cdata_highlights_${kind}_$today"
-        cache.get<List<FederationHighlight>>(key)?.let { return it }
-        val (since, until) = when (kind) {
+        val effectiveYear = if (kind == HighlightKind.YEAR_ACHIEVEMENTS) year ?: today.year else year
+        val key = "cdata_club_results_${kind}_${effectiveYear}_$today"
+        cache.get<ClubResults>(key)?.let { return it }
+        val ids = clubPersonIds()
+        val result = when (kind) {
             HighlightKind.LAST_WEEKEND -> {
-                // The most recent Sunday before today and the Saturday before it; `until` is exclusive.
-                val daysSinceSunday = (today.dayOfWeek.isoDayNumber % 7).let { if (it == 0) 7 else it }
-                val sunday = today.minus(daysSinceSunday, DateTimeUnit.DAY)
-                sunday.minus(1, DateTimeUnit.DAY) to sunday.plus(1, DateTimeUnit.DAY)
-            }
-            else -> LocalDate(today.year, 1, 1) to LocalDate(today.year + 1, 1, 1)
-        }
-        val vars = buildJsonObject {
-            put("since", since.toString())
-            put("until", until.toString())
-            put("first", HIGHLIGHT_LIMIT)
-            when (kind) {
-                HighlightKind.YEAR_ACHIEVEMENTS -> put("highlight", true)
-                HighlightKind.HALL_OF_CHAMPIONS -> {
-                    put("maxRanking", 3)
-                    put("types", buildJsonArray { add("CHAMPIONSHIP") })
+                val monday = today.minus(today.dayOfWeek.isoDayNumber - 1, DateTimeUnit.DAY)
+                // The current week, or the one before it while nothing has been danced yet.
+                val current = fetchClubResults(ids, monday, monday.plus(7, DateTimeUnit.DAY), null, null)
+                if (current.isNotEmpty()) {
+                    ClubResults(current, monday.toString(), monday.plus(6, DateTimeUnit.DAY).toString())
+                } else {
+                    val previous = monday.minus(7, DateTimeUnit.DAY)
+                    ClubResults(fetchClubResults(ids, previous, monday, null, null), previous.toString(), monday.minus(1, DateTimeUnit.DAY).toString())
                 }
-                HighlightKind.LAST_WEEKEND -> put("maxRanking", 3)
             }
+            HighlightKind.YEAR_ACHIEVEMENTS ->
+                ClubResults(fetchClubResults(ids, LocalDate(effectiveYear!!, 1, 1), LocalDate(effectiveYear + 1, 1, 1), null, CHAMPIONSHIP), null, null)
+            HighlightKind.HALL_OF_CHAMPIONS ->
+                ClubResults(
+                    fetchClubResults(ids, effectiveYear?.let { LocalDate(it, 1, 1) }, effectiveYear?.let { LocalDate(it + 1, 1, 1) }, 3, CHAMPIONSHIP),
+                    null, null
+                )
         }
-        val resp = client.post(GraphQlOperations.FederationHighlights, vars)
-        val nodes = resp.data()?.get("competitionResults")?.asObj()?.get("nodes") as? JsonArray ?: error("Malformed response")
-        val list = nodes.mapNotNull { n ->
+        return cacheClubResults(key, result)
+    }
+
+    private suspend fun cacheClubResults(key: String, result: ClubResults): ClubResults {
+        // An empty answer is legitimate (a quiet week) but may also be the server under load: cache it briefly.
+        cache.put(key, result, ttl = if (result.rows.isEmpty()) 1.minutes else 15.minutes)
+        return result
+    }
+
+    /** People of the club that have a federation competitor; the result query is filtered by them. */
+    private suspend fun clubPersonIds(): List<Long> {
+        cache.get<List<Long>>(CLUB_IDS_KEY)?.let { return it }
+        val nodes = client.postAllNodes(GraphQlOperations.CompetitionClubPeople, "people") ?: error("Malformed response")
+        val ids = nodes.mapNotNull { n ->
+            val obj = n.asObj() ?: return@mapNotNull null
+            val hasCompetitor = (obj["federationPeople"]?.asObj()?.get("nodes") as? JsonArray)?.any { fp ->
+                (fp.asObj()?.get("competitorComponents")?.asObj()?.int("totalCount") ?: 0) > 0
+            } ?: false
+            if (hasCompetitor) obj.str("id")?.toLongOrNull() else null
+        }
+        cache.put(CLUB_IDS_KEY, ids, ttl = 60.minutes)
+        return ids
+    }
+
+    private suspend fun fetchClubResults(ids: List<Long>, since: LocalDate?, until: LocalDate?, maxRanking: Int?, type: String?): List<FederationHighlight> {
+        if (ids.isEmpty()) return emptyList()
+        val rows = coroutineScope {
+            ids.chunked(CHUNK_SIZE).map { chunk ->
+                async {
+                    val vars = buildJsonObject {
+                        since?.let { put("since", it.toString()) }
+                        until?.let { put("until", it.toString()) }
+                        put("personIds", JsonArray(chunk.map { JsonPrimitive(it.toString()) }))
+                        maxRanking?.let { put("maxRanking", it) }
+                        type?.let { put("types", buildJsonArray { add(it) }) }
+                    }
+                    client.postAllNodes(GraphQlOperations.FederationHighlights, "competitionResults", vars) ?: error("Malformed response")
+                }
+            }.awaitAll().flatten()
+        }
+        return rows.mapNotNull { n ->
             val o = n.asObj() ?: return@mapNotNull null
             val comp = o["competition"]?.asObj() ?: return@mapNotNull null
             val competitor = o["competitor"]?.asObj()
@@ -155,14 +196,14 @@ class CompetitiveDataService(
                 categoryName = comp["category"]?.asObj()?.str("name"),
                 ranking = o.int("ranking") ?: return@mapNotNull null,
                 rankingTo = o.int("rankingTo"),
+                competitorId = competitor?.str("id"),
+                competitorType = competitor?.str("competitorType"),
                 competitorName = competitor?.str("name")?.takeIf { it.isNotBlank() }
                     ?: (competitor?.get("peopleList") as? JsonArray)?.mapNotNull { it.asObj()?.str("name") }
                         ?.joinToString(" - ")?.takeIf { it.isNotBlank() }
             )
-        }.sortedWith(compareBy({ it.ranking }, { it.startDate }, { it.categoryName }))
-        // An empty answer is legitimate (e.g. a quiet weekend) but may also be the server under load: cache it briefly.
-        cache.put(key, list, ttl = if (list.isEmpty()) 1.minutes else 15.minutes)
-        return list
+        }.distinctBy { it.competitionId to it.competitorId }
+            .sortedWith(compareByDescending<FederationHighlight> { it.startDate }.thenBy { it.eventName }.thenBy { it.categoryName }.thenBy { it.ranking })
     }
 
     override suspend fun getCompetitionResults(competitionId: Long): FederationCompetitionResults? {
@@ -178,8 +219,18 @@ class CompetitiveDataService(
                     ?.joinToString(" - ")?.takeIf { it.isNotBlank() }
             FederationResultRow(
                 o.int("ranking") ?: return@mapNotNull null, o.int("rankingTo"), o.str("pointGain"), name,
-                isFinal = (o["isFinal"] as? JsonPrimitive)?.booleanOrNull ?: false
+                isFinal = (o["isFinal"] as? JsonPrimitive)?.booleanOrNull ?: false,
+                isClub = competitor?.let(::isClubCompetitor) ?: false
             )
+        }
+        val entryRows = (c["entriesList"] as? JsonArray).orEmpty().mapNotNull { n ->
+            val e = n.asObj() ?: return@mapNotNull null
+            if ((e["cancelled"] as? JsonPrimitive)?.booleanOrNull == true) return@mapNotNull null
+            val competitor = e["competitor"]?.asObj()
+            val name = competitor?.str("name")?.takeIf { it.isNotBlank() }
+                ?: (competitor?.get("peopleList") as? JsonArray)?.mapNotNull { it.asObj()?.str("name") }
+                    ?.joinToString(" - ")?.takeIf { it.isNotBlank() }
+            name?.let { it to (competitor?.let(::isClubCompetitor) ?: false) }
         }
         val result = FederationCompetitionResults(
             id = competitionId,
@@ -190,18 +241,16 @@ class CompetitiveDataService(
             categoryName = c["category"]?.asObj()?.str("name"),
             results = rows,
             officials = parseOfficials(c),
-            entries = (c["entriesList"] as? JsonArray).orEmpty().mapNotNull { n ->
-                val e = n.asObj() ?: return@mapNotNull null
-                if ((e["cancelled"] as? JsonPrimitive)?.booleanOrNull == true) return@mapNotNull null
-                val competitor = e["competitor"]?.asObj()
-                competitor?.str("name")?.takeIf { it.isNotBlank() }
-                    ?: (competitor?.get("peopleList") as? JsonArray)?.mapNotNull { it.asObj()?.str("name") }
-                        ?.joinToString(" - ")?.takeIf { it.isNotBlank() }
-            }.sorted()
+            entries = entryRows.map { it.first }.sorted(),
+            clubEntries = entryRows.filter { it.second }.map { it.first }.toSet()
         )
         cache.put(key, result, ttl = 10.minutes)
         return result
     }
+
+    /** The API links a federation competitor to our own people (by id) through `peopleList`; it is empty for outsiders. */
+    private fun isClubCompetitor(competitor: JsonObject): Boolean =
+        (competitor["peopleList"] as? JsonArray).orEmpty().isNotEmpty()
 
     // Event-level lists repeat a person once per discipline, so identical person+role rows are collapsed.
     private fun parseOfficials(o: JsonObject): List<CompetitionOfficial> =
@@ -247,7 +296,9 @@ class CompetitiveDataService(
         try { store.load(key)?.let { AppJson.decodeFromString<T>(it) } } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
 
     private companion object {
-        const val HIGHLIGHT_LIMIT = 100
+        const val CHUNK_SIZE = 25
+        const val CHAMPIONSHIP = "CHAMPIONSHIP"
+        const val CLUB_IDS_KEY = "competitions_club_person_ids"
         val COMPETITION_TYPES = listOf("CUP", "RANKING", "LEAGUE", "CHAMPIONSHIP", "TOP_LEVEL", "SUPER_LEAGUE", "G_CUP")
     }
 

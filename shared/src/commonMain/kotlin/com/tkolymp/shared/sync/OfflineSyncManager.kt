@@ -38,6 +38,9 @@ import com.tkolymp.shared.viewmodels.DataResult
 
 enum class CalendarBucket { MINE, ALL, CAMPS }
 
+/** Steps of [OfflineSyncManager.downloadAll] in execution order; the ids are what `onProgress` reports as the stage. */
+val OFFLINE_DOWNLOAD_STAGES = listOf("calendar", "user", "announcements", "people", "payments", "scoreboard", "club", "events", "competitions")
+
 class OfflineSyncManager(
     private val eventService: IEventService,
     private val announcementService: IAnnouncementService,
@@ -265,7 +268,7 @@ class OfflineSyncManager(
      * Fetches per-person details (trainer flag, birth date, titles) in concurrent batches and builds the
      * offline PEOPLE array. Shared by [syncPeople] and [downloadAll].
      */
-    private suspend fun buildPeopleJson(people: List<com.tkolymp.shared.people.Person>): JsonArray = buildJsonArray {
+    private suspend fun buildPeopleJson(people: List<com.tkolymp.shared.people.Person>, onChunkDone: (Int) -> Unit = {}): JsonArray = buildJsonArray {
         val chunks = people.chunked(20)
         val detailsMap = mutableMapOf<String, com.tkolymp.shared.people.PersonDetails?>()
         for (chunk in chunks) {
@@ -276,6 +279,7 @@ class OfflineSyncManager(
                 val results = deferred.map { d -> try { d.await() } catch (_: Exception) { null } }
                 chunk.forEachIndexed { idx, p -> detailsMap[p.id] = results.getOrNull(idx) }
             }
+            onChunkDone(detailsMap.size)
         }
 
         people.forEach { p ->
@@ -512,6 +516,7 @@ class OfflineSyncManager(
                 notificationService.initializeIfNeeded(role)
             } catch (_: Exception) {}
         } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll user data failed: ${ex.message}") }
+        onProgress("user", 1, 1)
 
         // Announcements
         onProgress("announcements", 0, 1)
@@ -529,13 +534,15 @@ class OfflineSyncManager(
                 } catch (_: Exception) {}
             }
         } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll announcements failed: ${ex.message}") }
+        onProgress("announcements", 1, 1)
 
         // People
         onProgress("people", 0, 1)
         try {
             val ppl = withRetry { peopleService.fetchPeople() }
             if (ppl.isNotEmpty()) {
-                val peopleJson = buildPeopleJson(ppl)
+                onProgress("people", 0, ppl.size)
+                val peopleJson = buildPeopleJson(ppl) { done -> onProgress("people", done, ppl.size) }
                 val encoded = AppJson.encodeToString(JsonArray.serializer(), peopleJson)
                 try {
                     offlineDataStorage.save(OfflineKeys.PEOPLE, encoded)
@@ -545,12 +552,14 @@ class OfflineSyncManager(
                 }
             }
         } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll people failed: ${ex.message}") }
+        onProgress("people", 1, 1)
 
             // Payments
             onProgress("payments", 0, 1)
             try {
                 try { syncPayments() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll payments failed: ${ex.message}") }
             } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll payments outer failed: ${ex.message}") }
+        onProgress("payments", 1, 1)
 
         // Scoreboard (global)
         onProgress("scoreboard", 0, 1)
@@ -583,6 +592,7 @@ class OfflineSyncManager(
                 }
             }
         } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll scoreboard failed: ${ex.message}") }
+        onProgress("scoreboard", 1, 1)
 
         // Club data
         onProgress("club", 0, 1)
@@ -590,6 +600,7 @@ class OfflineSyncManager(
             val cd = try { withRetry { clubService.fetchClubData() } } catch (ex: Exception) { null }
             if (cd != null) persistClubData(cd.raw)
         } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll club failed: ${ex.message}") }
+        onProgress("club", 1, 1)
 
         // Event details
         val evList = collectedEventIds.toList()
@@ -648,6 +659,7 @@ class OfflineSyncManager(
         onProgress("competitions", 0, 1)
         try { syncCompetitions() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll competitions failed: ${ex.message}") }
         try { syncPastCompetitions() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll pastCompetitions failed: ${ex.message}") }
+        onProgress("competitions", 1, 1)
 
         saveLastSyncTime(kotlin.time.Clock.System.now().toString())
         Logger.d("OfflineSyncManager", "downloadAll: completed")

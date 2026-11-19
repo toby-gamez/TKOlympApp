@@ -1,7 +1,6 @@
 package com.tkolymp.tkolympapp
 
 import com.tkolymp.shared.registration.computeCanEditRegistration
-import com.tkolymp.shared.registration.computeCanRegisterAnother
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -64,21 +63,5 @@ class RegistrationEditRulesTest {
     fun `edit hidden for event types without lesson selection or notes`() {
         val free = JsonArray(listOf(trainer(1, 5)))
         assertFalse(computeCanEditRegistration("other", false, free, JsonArray(listOf(personReg("r1", "p1")))))
-    }
-
-    @Test
-    fun `register another false when self and all couples registered`() {
-        val regs = JsonArray(listOf(personReg("r1", "p1"), coupleReg("r2", "c1")))
-        assertFalse(computeCanRegisterAnother("p1", listOf("c1"), regs))
-    }
-
-    @Test
-    fun `register another true when a couple is left`() {
-        assertTrue(computeCanRegisterAnother("p1", listOf("c1", "c2"), JsonArray(listOf(personReg("r1", "p1"), coupleReg("r2", "c1")))))
-    }
-
-    @Test
-    fun `register another stays available while person id is unknown`() {
-        assertTrue(computeCanRegisterAnother(null, emptyList(), JsonArray(emptyList())))
     }
 }
