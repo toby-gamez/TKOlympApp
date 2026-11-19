@@ -9,6 +9,8 @@ data class TutorialStrings(
     val introDesc: String = "We'll walk you through the key features of the app. Tap Next to begin, or Skip to explore on your own.",
 
     // Overview sections
+    val overviewNextTrainingTitle: String = "Your Next Training",
+    val overviewNextTrainingDesc: String = "The most important card on the screen: your very next training with its time, place and trainer. Tap it to open the details.",
     val overviewUpcomingTitle: String = "Upcoming Trainings",
     val overviewUpcomingDesc: String = "Your upcoming training sessions. Tap a session card to see the location, time and who else is attending.",
     val overviewBoardTitle: String = "Board Snippet",

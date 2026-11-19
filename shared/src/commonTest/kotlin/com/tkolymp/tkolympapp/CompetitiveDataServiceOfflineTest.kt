@@ -55,4 +55,30 @@ class CompetitiveDataServiceOfflineTest {
         client.online = false
         assertEquals(listOf("Jarní pohár"), service(client, storage).getEvents("csts", 2026).data.map { it.name })
     }
+
+    @Test fun servesSavedCompetitionResultsWhenTheRequestFails() = runTest {
+        val storage = FakeOfflineDataStorage()
+        val client = object : IGraphQlClient {
+            var online = true
+            override suspend fun post(query: String, variables: JsonObject?): JsonElement {
+                if (!online) error("no network")
+                return buildJsonObject {
+                    put("data", buildJsonObject {
+                        put("competition", buildJsonObject {
+                            put("id", "7"); put("startDate", "2026-05-01"); put("status", "DONE")
+                            put("resultsList", buildJsonArray {
+                                add(buildJsonObject { put("ranking", 1) })
+                            })
+                        })
+                    })
+                }
+            }
+        }
+        assertEquals(1, service(client, storage).getCompetitionResults(7)!!.results.size)
+
+        client.online = false
+        val saved = service(client, storage).getCompetitionResults(7)
+        assertEquals(1, saved!!.results.size)
+        assertFailsWith<IllegalStateException> { service(client, FakeOfflineDataStorage()).getCompetitionResults(7) }
+    }
 }

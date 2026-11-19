@@ -11,6 +11,7 @@ object TutorialManager {
         // Intro
         TutorialStep("overview", "intro"),
         // Overview sections
+        TutorialStep("overview", "overviewNextTraining"),
         TutorialStep("overview", "overviewUpcoming"),
         TutorialStep("overview", "overviewBoard"),
         TutorialStep("overview", "overviewCamps"),

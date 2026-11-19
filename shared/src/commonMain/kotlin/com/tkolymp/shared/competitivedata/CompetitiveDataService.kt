@@ -80,6 +80,12 @@ class CompetitiveDataService(
     override suspend fun getEventDetail(eventId: Long): FederationEventDetail? {
         val key = "cdata_event_$eventId"
         cache.get<FederationEventDetail>(key)?.let { return it }
+        val loaded = withOfflineValue(OfflineKeys.cdataEventDetail(eventId)) { fetchEventDetail(eventId) }
+        if (!loaded.fromOffline) loaded.data?.let { cache.put(key, it, ttl = 10.minutes) }
+        return loaded.data
+    }
+
+    private suspend fun fetchEventDetail(eventId: Long): FederationEventDetail? {
         val resp = client.post(GraphQlOperations.FederationEventDetail, buildJsonObject { put("id", eventId.toString()) })
         val e = resp.data()?.get("federationEvent")?.asObj() ?: return null
         val comps = (e["competitions"]?.asObj()?.get("nodes") as? JsonArray).orEmpty().mapNotNull { n ->
@@ -113,7 +119,6 @@ class CompetitiveDataService(
             competitions = comps,
             officials = parseOfficials(e)
         )
-        cache.put(key, detail, ttl = 10.minutes)
         return detail
     }
 
@@ -122,8 +127,18 @@ class CompetitiveDataService(
         val effectiveYear = if (kind == HighlightKind.YEAR_ACHIEVEMENTS) year ?: today.year else year
         val key = "cdata_club_results_${kind}_${effectiveYear}_$today"
         cache.get<ClubResults>(key)?.let { return it }
+        // The offline key has no date: offline, the last list that had rows beats an empty one.
+        val loaded = withOfflineValue(OfflineKeys.cdataClubResults(kind.name, effectiveYear), worthSaving = { it.rows.isNotEmpty() }) {
+            fetchClubResultsFor(kind, effectiveYear, today)
+        }
+        val result = loaded.data!!
+        if (!loaded.fromOffline) cacheClubResults(key, result)
+        return result
+    }
+
+    private suspend fun fetchClubResultsFor(kind: HighlightKind, effectiveYear: Int?, today: LocalDate): ClubResults {
         val ids = clubPersonIds()
-        val result = when (kind) {
+        return when (kind) {
             HighlightKind.LAST_WEEKEND -> {
                 val monday = today.minus(today.dayOfWeek.isoDayNumber - 1, DateTimeUnit.DAY)
                 // The current week, or the one before it while nothing has been danced yet.
@@ -143,13 +158,11 @@ class CompetitiveDataService(
                     null, null
                 )
         }
-        return cacheClubResults(key, result)
     }
 
-    private suspend fun cacheClubResults(key: String, result: ClubResults): ClubResults {
+    private suspend fun cacheClubResults(key: String, result: ClubResults) {
         // An empty answer is legitimate (a quiet week) but may also be the server under load: cache it briefly.
         cache.put(key, result, ttl = if (result.rows.isEmpty()) 1.minutes else 15.minutes)
-        return result
     }
 
     /** People of the club that have a federation competitor; the result query is filtered by them. */
@@ -209,6 +222,12 @@ class CompetitiveDataService(
     override suspend fun getCompetitionResults(competitionId: Long): FederationCompetitionResults? {
         val key = "cdata_results_$competitionId"
         cache.get<FederationCompetitionResults>(key)?.let { return it }
+        val loaded = withOfflineValue(OfflineKeys.cdataResults(competitionId)) { fetchCompetitionResults(competitionId) }
+        if (!loaded.fromOffline) loaded.data?.let { cache.put(key, it, ttl = 10.minutes) }
+        return loaded.data
+    }
+
+    private suspend fun fetchCompetitionResults(competitionId: Long): FederationCompetitionResults? {
         val resp = client.post(GraphQlOperations.FederationCompetitionResults, buildJsonObject { put("id", competitionId.toString()) })
         val c = resp.data()?.get("competition")?.asObj() ?: return null
         val rows = (c["resultsList"] as? JsonArray).orEmpty().mapNotNull { n ->
@@ -244,7 +263,6 @@ class CompetitiveDataService(
             entries = entryRows.map { it.first }.sorted(),
             clubEntries = entryRows.filter { it.second }.map { it.first }.toSet()
         )
-        cache.put(key, result, ttl = 10.minutes)
         return result
     }
 
@@ -283,6 +301,26 @@ class CompetitiveDataService(
             val fresh = fetch()
             if (store != null) try {
                 if (fresh.isNotEmpty() || load<T>(store, key).isNullOrEmpty()) store.save(key, AppJson.encodeToString(fresh))
+            } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("CompetitiveDataService", "offline save $key failed: ${e.message}") }
+            return LoadedData(fresh)
+        } catch (e: CancellationException) { throw e } catch (e: Exception) {
+            val saved = store?.let { load<T>(it, key) } ?: throw e
+            Logger.d("CompetitiveDataService", "serving saved $key: ${e.message}")
+            return LoadedData(saved, fromOffline = true)
+        }
+    }
+
+    /** [withOffline] for a single value; a null answer (not found) is passed through and never saved. */
+    private suspend inline fun <reified T : Any> withOfflineValue(
+        key: String,
+        worthSaving: (T) -> Boolean = { true },
+        fetch: () -> T?
+    ): LoadedData<T?> {
+        val store = offline
+        try {
+            val fresh = fetch()
+            if (fresh != null && store != null && worthSaving(fresh)) try {
+                store.save(key, AppJson.encodeToString(fresh))
             } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("CompetitiveDataService", "offline save $key failed: ${e.message}") }
             return LoadedData(fresh)
         } catch (e: CancellationException) { throw e } catch (e: Exception) {

@@ -227,17 +227,17 @@ fun OtherScreen(
     var peopleSectionBounds by remember { mutableStateOf<Rect?>(null) }
 
     LaunchedEffect(tutorialStep, tutorialActive) {
-        if (!tutorialActive || tutorialStep !in 13..15) return@LaunchedEffect
-        if (tutorialStep == 15) {
+        if (!tutorialActive || tutorialStep !in 14..16) return@LaunchedEffect
+        if (tutorialStep == 16) {
             bvrPeople.bringIntoView()
         } else {
             scrollState.animateScrollTo(0)
         }
         delay(200)
         when (tutorialStep) {
-            13 -> accountBounds?.let { TutorialHighlight.rect = it }
-            14 -> (qrBounds ?: accountBounds)?.let { TutorialHighlight.rect = it }
-            15 -> peopleSectionBounds?.let { TutorialHighlight.rect = it }
+            14 -> accountBounds?.let { TutorialHighlight.rect = it }
+            15 -> (qrBounds ?: accountBounds)?.let { TutorialHighlight.rect = it }
+            16 -> peopleSectionBounds?.let { TutorialHighlight.rect = it }
         }
     }
 
@@ -338,12 +338,12 @@ fun OtherScreen(
                     .onGloballyPositioned { coords ->
                         val b = coords.boundsInRoot()
                         accountBounds = b
-                        if (tutorialActive && tutorialStep == 13) TutorialHighlight.rect = b
+                        if (tutorialActive && tutorialStep == 14) TutorialHighlight.rect = b
                     },
                 qrModifier = Modifier.onGloballyPositioned { coords ->
                     val b = coords.boundsInRoot()
                     qrBounds = b
-                    if (tutorialActive && tutorialStep == 14) TutorialHighlight.rect = b
+                    if (tutorialActive && tutorialStep == 15) TutorialHighlight.rect = b
                 }
             )
 
@@ -369,7 +369,7 @@ fun OtherScreen(
                     .onGloballyPositioned { coords ->
                         val b = coords.boundsInRoot()
                         peopleSectionBounds = b
-                        if (tutorialActive && tutorialStep == 15) TutorialHighlight.rect = b
+                        if (tutorialActive && tutorialStep == 16) TutorialHighlight.rect = b
                     }
             ) {
             SectionLabel(text = AppStrings.current.otherScreen.membersAndClub)

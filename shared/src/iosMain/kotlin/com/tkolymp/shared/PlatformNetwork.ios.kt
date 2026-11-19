@@ -102,7 +102,7 @@ suspend fun initNetworking(baseUrl: String, tenantId: String = "1") {
     val competitiveDataSvc = CompetitiveDataService(gql, cache, offlineDataStorage)
     val offlineSyncManager = OfflineSyncManager(
         eventSvc, announcementSvc, peopleSvc, offlineDataStorage,
-        networkMonitor, userSvc, notificationSvc, clubSvc, paymentSvc, competitionSvc
+        networkMonitor, userSvc, notificationSvc, clubSvc, paymentSvc, competitionSvc, competitiveDataSvc
     )
     val campScheduleSvc = CampScheduleService(offlineDataStorage)
     val campScheduleReminderSvc = CampScheduleReminderService(offlineDataStorage, notificationScheduler, campScheduleSvc, notificationStorage)

@@ -123,6 +123,7 @@ data class FederationHighlight(
 )
 
 /** [rows] of one list plus the covered range, [since] to [until] both inclusive (ISO dates). */
+@Serializable
 data class ClubResults(val rows: List<FederationHighlight>, val since: String?, val until: String?)
 
 /** [data] plus whether it is the saved copy served because the live request failed. */

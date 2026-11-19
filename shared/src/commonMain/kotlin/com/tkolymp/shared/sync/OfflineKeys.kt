@@ -35,6 +35,9 @@ object OfflineKeys {
     const val CDATA_FEDERATIONS = "offline_cdata_federations"
     fun cdataYears(code: String) = "offline_cdata_years_$code"
     fun cdataEvents(code: String, year: Int) = "offline_cdata_events_${code}_$year"
+    fun cdataEventDetail(id: Long) = "offline_cdata_event_$id"
+    fun cdataResults(competitionId: Long) = "offline_cdata_results_$competitionId"
+    fun cdataClubResults(kind: String, year: Int?) = "offline_cdata_club_${kind}_${year ?: "all"}"
 
     const val META_LAST_SYNC = "offline_meta_last_sync"
 

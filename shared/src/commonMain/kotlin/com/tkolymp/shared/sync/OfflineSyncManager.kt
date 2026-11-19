@@ -57,7 +57,8 @@ class OfflineSyncManager(
     private val notificationService: com.tkolymp.shared.notification.NotificationService,
     private val clubService: com.tkolymp.shared.club.ClubService,
     private val paymentService: com.tkolymp.shared.payments.PaymentService,
-    private val competitionService: ICompetitionService
+    private val competitionService: ICompetitionService,
+    private val competitiveDataService: com.tkolymp.shared.competitivedata.ICompetitiveDataService? = null
 ) {
     
 
@@ -93,6 +94,7 @@ class OfflineSyncManager(
             syncPeople()
             try { syncCompetitions() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "syncCompetitions failed: ${ex.message}") }
             try { syncPastCompetitions() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "syncPastCompetitions failed: ${ex.message}") }
+            try { syncFederationEvents() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "syncFederationEvents failed: ${ex.message}") }
             // Ensure basic club data is saved for offline UIs that read `offline_club`.
             try { syncClub() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "syncClub failed: ${ex.message}") }
             saveLastSyncTime(kotlin.time.Clock.System.now().toString())
@@ -726,6 +728,7 @@ class OfflineSyncManager(
         coroutineScope {
             launch { try { syncCompetitions() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll competitions failed: ${ex.message}") } }
             launch { try { syncPastCompetitions() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll pastCompetitions failed: ${ex.message}") } }
+            launch { try { syncFederationEvents() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll federationEvents failed: ${ex.message}") } }
         }
         onProgress("competitions", 1, 1)
 
@@ -753,6 +756,14 @@ class OfflineSyncManager(
         val json = offlineDataStorage.load(OfflineKeys.COMPETITIONS) ?: return emptyList()
         AppJson.decodeFromString(kotlinx.serialization.builtins.ListSerializer(Competition.serializer()), json)
     } catch (_: Exception) { emptyList() }
+
+    // Fetching through the service saves the lists offline; this is what the Overview "nearest
+    // competition" card reads (this year and the next, as findNearestUpcomingEvent does).
+    private suspend fun syncFederationEvents() {
+        val service = competitiveDataService ?: return
+        val year = Clock.System.todayIn(TimeZone.currentSystemDefault()).year
+        for (y in year..year + 1) service.getEvents("csts", y, forceRefresh = true)
+    }
 
     private suspend fun syncPastCompetitions() {
         val today = Clock.System.todayIn(TimeZone.currentSystemDefault())

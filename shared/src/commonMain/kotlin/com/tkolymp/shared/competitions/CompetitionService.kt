@@ -109,7 +109,8 @@ class CompetitionService(
             } catch (e: CancellationException) { throw e } catch (e: Exception) {
                 Logger.d("CompetitionService", "upcoming fetch failed: ${e.message}")
                 val offline = offlineSyncManager?.loadCompetitions()?.filter { c ->
-                    c.competitionDate >= since && c.competitionDate <= until
+                    c.competitionDate >= since && c.competitionDate <= until &&
+                        (pPersonIds == null || c.personId in pPersonIds)
                 }?.sortedBy { it.competitionDate }?.take(first) ?: emptyList()
                 Fetched(offline, complete = false)
             }
@@ -138,7 +139,8 @@ class CompetitionService(
             } catch (e: CancellationException) { throw e } catch (e: Exception) {
                 Logger.d("CompetitionService", "past fetch failed: ${e.message}")
                 val offline = offlineSyncManager?.loadPastCompetitions()?.filter { c ->
-                    c.competitionDate >= since && c.competitionDate <= until
+                    c.competitionDate >= since && c.competitionDate <= until &&
+                        (pPersonIds == null || c.personId in pPersonIds)
                 }?.sortedByDescending { it.competitionDate }?.take(first) ?: emptyList()
                 Fetched(offline, complete = false)
             }

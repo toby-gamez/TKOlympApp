@@ -169,6 +169,7 @@ fun OverviewScreen(
         }
 
         // Always-fresh bounds per section — updated unconditionally by onGloballyPositioned
+        var boundsNextTraining by remember { mutableStateOf<Rect?>(null) }
         var boundsUpcoming by remember { mutableStateOf<Rect?>(null) }
         var boundsBoard by remember { mutableStateOf<Rect?>(null) }
         var boundsCamps by remember { mutableStateOf<Rect?>(null) }
@@ -176,11 +177,11 @@ fun OverviewScreen(
         var boundsBirthdays by remember { mutableStateOf<Rect?>(null) }
 
         LaunchedEffect(tutorialStep, tutorialActive) {
-            if (!tutorialActive || tutorialStep !in 1..5) return@LaunchedEffect
+            if (!tutorialActive || tutorialStep !in 1..6) return@LaunchedEffect
             // Sections are lazy items, so scroll to one (composing it) before reading its bounds.
             // Hidden (empty) sections are skipped, so the item index is looked up by key.
             val index = sectionKeys.indexOf(
-                when (tutorialStep) { 1 -> "trainings"; 2 -> "board"; 3 -> "camps"; 4 -> "competition"; else -> "birthdays" }
+                when (tutorialStep) { 1, 2 -> "trainings"; 3 -> "board"; 4 -> "camps"; 5 -> "competition"; else -> "birthdays" }
             )
             if (index < 0) return@LaunchedEffect
             listState.animateScrollToItem(index)
@@ -188,8 +189,8 @@ fun OverviewScreen(
             delay(200)
 
             val bounds = when (tutorialStep) {
-                1 -> boundsUpcoming; 2 -> boundsBoard; 3 -> boundsCamps
-                4 -> boundsCompetitions; else -> boundsBirthdays
+                1 -> boundsNextTraining ?: boundsUpcoming; 2 -> boundsUpcoming; 3 -> boundsBoard
+                4 -> boundsCamps; 5 -> boundsCompetitions; else -> boundsBirthdays
             }
             if (bounds != null) TutorialHighlight.rect = bounds
         }
@@ -214,7 +215,13 @@ fun OverviewScreen(
                 NextTrainingHero(
                     instance = next,
                     onClick = { next.event?.id?.let { onOpenEvent(it, next.id) } },
-                    modifier = Modifier.padding(start = Spacing.default, end = Spacing.default, top = 14.dp)
+                    modifier = Modifier
+                        .padding(start = Spacing.default, end = Spacing.default, top = 14.dp)
+                        .onGloballyPositioned { coords ->
+                            val b = coords.boundsInRoot()
+                            boundsNextTraining = b
+                            if (tutorialActive && tutorialStep == 1) TutorialHighlight.rect = b
+                        }
                 )
             }
             Column(
@@ -222,7 +229,7 @@ fun OverviewScreen(
                     .onGloballyPositioned { coords ->
                         val b = coords.boundsInRoot()
                         boundsUpcoming = b
-                        if (tutorialActive && tutorialStep == 1) TutorialHighlight.rect = b
+                        if (tutorialActive && tutorialStep == 2) TutorialHighlight.rect = b
                     }
             ) {
             SectionLabel(
@@ -308,7 +315,7 @@ fun OverviewScreen(
                     .onGloballyPositioned { coords ->
                         val b = coords.boundsInRoot()
                         boundsBoard = b
-                        if (tutorialActive && tutorialStep == 2) TutorialHighlight.rect = b
+                        if (tutorialActive && tutorialStep == 3) TutorialHighlight.rect = b
                     }
             ) {
             SectionHeader(
@@ -396,7 +403,7 @@ fun OverviewScreen(
                     .onGloballyPositioned { coords ->
                         val b = coords.boundsInRoot()
                         boundsCamps = b
-                        if (tutorialActive && tutorialStep == 3) TutorialHighlight.rect = b
+                        if (tutorialActive && tutorialStep == 4) TutorialHighlight.rect = b
                     }
             ) {
             SectionHeader(
@@ -458,7 +465,7 @@ fun OverviewScreen(
                     .onGloballyPositioned { coords ->
                         val b = coords.boundsInRoot()
                         boundsCompetitions = b
-                        if (tutorialActive && tutorialStep == 4) TutorialHighlight.rect = b
+                        if (tutorialActive && tutorialStep == 5) TutorialHighlight.rect = b
                     }
             ) {
                 SectionHeader(
@@ -494,7 +501,7 @@ fun OverviewScreen(
                     .onGloballyPositioned { coords ->
                         val b = coords.boundsInRoot()
                         boundsBirthdays = b
-                        if (tutorialActive && tutorialStep == 5) TutorialHighlight.rect = b
+                        if (tutorialActive && tutorialStep == 6) TutorialHighlight.rect = b
                     }
             ) {
             SectionHeader(title = AppStrings.current.profile.birthdays)
