@@ -16,6 +16,9 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
@@ -37,6 +40,9 @@ import com.tkolymp.shared.event.EventType
 import com.tkolymp.shared.viewmodels.DataResult
 
 enum class CalendarBucket { MINE, ALL, CAMPS }
+
+private const val EVENT_FETCH_CONCURRENCY = 12
+private const val EVENT_SAVE_BATCH = 150
 
 /** Steps of [OfflineSyncManager.downloadAll] in execution order; the ids are what `onProgress` reports as the stage. */
 val OFFLINE_DOWNLOAD_STAGES = listOf("calendar", "user", "announcements", "people", "payments", "scoreboard", "club", "events", "competitions")
@@ -270,17 +276,22 @@ class OfflineSyncManager(
      * offline PEOPLE array. Shared by [syncPeople] and [downloadAll].
      */
     private suspend fun buildPeopleJson(people: List<com.tkolymp.shared.people.Person>, onChunkDone: (Int) -> Unit = {}): JsonArray = buildJsonArray {
-        val chunks = people.chunked(20)
-        val detailsMap = mutableMapOf<String, com.tkolymp.shared.people.PersonDetails?>()
-        for (chunk in chunks) {
-            coroutineScope {
-                val deferred = chunk.map { p -> async {
-                    try { withRetry { peopleService.fetchPerson(p.id) } } catch (_: Exception) { null }
-                } }
-                val results = deferred.map { d -> try { d.await() } catch (_: Exception) { null } }
-                chunk.forEachIndexed { idx, p -> detailsMap[p.id] = results.getOrNull(idx) }
-            }
-            onChunkDone(detailsMap.size)
+        // Sliding window instead of fixed batches: a batch waits for its slowest request.
+        val detailsMap = HashMap<String, com.tkolymp.shared.people.PersonDetails?>()
+        val permits = kotlinx.coroutines.sync.Semaphore(EVENT_FETCH_CONCURRENCY)
+        val lock = kotlinx.coroutines.sync.Mutex()
+        coroutineScope {
+            people.map { p ->
+                async {
+                    permits.withPermit {
+                        val d = try { withRetry { peopleService.fetchPerson(p.id) } } catch (_: Exception) { null }
+                        lock.withLock {
+                            detailsMap[p.id] = d
+                            onChunkDone(detailsMap.size)
+                        }
+                    }
+                }
+            }.awaitAll()
         }
 
         people.forEach { p ->
@@ -495,32 +506,46 @@ class OfflineSyncManager(
         var calDone = 0
         val collectedEventIds = mutableSetOf<Long>()
 
-        for (bucket in buckets) {
-            for (weekOffset in weekOffsets) {
-                onProgress("calendar", ++calDone, totalCalendar)
-                val rawWeekStart = today.plus(weekOffset * 7, DateTimeUnit.DAY)
-                val weekStart = rawWeekStart.minus(rawWeekStart.dayOfWeek.ordinal, DateTimeUnit.DAY)
-                val endDay = weekStart.plus(6, DateTimeUnit.DAY)
-                val startIso = "${weekStart}T00:00:00Z"
-                val endIso = "${endDay}T23:59:59Z"
-                val onlyMine = bucket == CalendarBucket.MINE
-                val onlyType = if (bucket == CalendarBucket.CAMPS) EventType.CAMP.rawValue else null
-                val grouped = try { withRetry { eventService.fetchEventsGroupedByDay(startIso, endIso, onlyMine = onlyMine, first = AppConstants.FETCH_LIMIT_PERIOD, offset = 0, onlyType = onlyType, cacheNamespace = null) } } catch (ex: Exception) { emptyMap<String, List<EventInstance>>() }
-                if (grouped.isNotEmpty()) {
-                    val jo = buildCalendarWeekJson(grouped)
-                    try { offlineDataStorage.save(OfflineKeys.calendarWeek(bucket, weekStart.toString()), AppJson.encodeToString(JsonObject.serializer(), jo)) } catch (_: Exception) {}
-                    collectedEventIds += grouped.values.flatten().mapNotNull { it.event?.id }
+        // All bucket/week requests run concurrently (each takes ~2 s, 27 sequential ones took about a minute).
+        onProgress("calendar", 0, totalCalendar)
+        val calPermits = kotlinx.coroutines.sync.Semaphore(EVENT_FETCH_CONCURRENCY)
+        val calLock = kotlinx.coroutines.sync.Mutex()
+        val calEntries = HashMap<String, String>()
+        coroutineScope {
+            buckets.flatMap { bucket -> weekOffsets.map { bucket to it } }.map { (bucket, weekOffset) ->
+                async {
+                    calPermits.withPermit {
+                        val rawWeekStart = today.plus(weekOffset * 7, DateTimeUnit.DAY)
+                        val weekStart = rawWeekStart.minus(rawWeekStart.dayOfWeek.ordinal, DateTimeUnit.DAY)
+                        val endDay = weekStart.plus(6, DateTimeUnit.DAY)
+                        val startIso = "${weekStart}T00:00:00Z"
+                        val endIso = "${endDay}T23:59:59Z"
+                        val onlyMine = bucket == CalendarBucket.MINE
+                        val onlyType = if (bucket == CalendarBucket.CAMPS) EventType.CAMP.rawValue else null
+                        val grouped = try { withRetry { eventService.fetchEventsGroupedByDay(startIso, endIso, onlyMine = onlyMine, first = AppConstants.FETCH_LIMIT_PERIOD, offset = 0, onlyType = onlyType, cacheNamespace = null) } } catch (ex: Exception) { emptyMap<String, List<EventInstance>>() }
+                        val encoded = if (grouped.isNotEmpty()) AppJson.encodeToString(JsonObject.serializer(), buildCalendarWeekJson(grouped)) else null
+                        calLock.withLock {
+                            if (encoded != null) {
+                                calEntries[OfflineKeys.calendarWeek(bucket, weekStart.toString())] = encoded
+                                collectedEventIds += grouped.values.flatten().mapNotNull { it.event?.id }
+                            }
+                            onProgress("calendar", ++calDone, totalCalendar)
+                        }
+                    }
                 }
-            }
+            }.awaitAll()
         }
+        try { offlineDataStorage.saveAll(calEntries) } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll save calendar weeks failed: ${ex.message}") }
 
         // User data
         onProgress("user", 0, 1)
         try {
             val pid = try { withRetry { userService.fetchAndStorePersonId() } } catch (_: Exception) { null }
-            try { withRetry { userService.fetchAndStoreActiveCouples() } } catch (_: Exception) {}
-            if (!pid.isNullOrBlank()) {
-                try { withRetry { userService.fetchAndStorePersonDetails(pid) } } catch (_: Exception) {}
+            coroutineScope {
+                launch { try { withRetry { userService.fetchAndStoreActiveCouples() } } catch (_: Exception) {} }
+                if (!pid.isNullOrBlank()) {
+                    launch { try { withRetry { userService.fetchAndStorePersonDetails(pid) } } catch (_: Exception) {} }
+                }
             }
             // Ensure notification defaults exist. Pass stored user role so parents don't get default rules.
             try {
@@ -540,8 +565,11 @@ class OfflineSyncManager(
                     is DataResult.Error -> throw Exception("announcements(sticky=$sticky): ${r.error.message}")
                 }
             }
-            val sticky = fetchAnnouncements(true)
-            val non = fetchAnnouncements(false)
+            val (sticky, non) = coroutineScope {
+                val st = async { fetchAnnouncements(true) }
+                val nn = async { fetchAnnouncements(false) }
+                st.await() to nn.await()
+            }
             Logger.d("OfflineSyncManager", "downloadAll: announcements sticky=${sticky.size} nonSticky=${non.size}")
             if (sticky.isNotEmpty()) offlineDataStorage.save(OfflineKeys.ANN_STICKY, AppJson.encodeToString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), sticky))
             if (non.isNotEmpty()) offlineDataStorage.save(OfflineKeys.ANN_NONSTICKY, AppJson.encodeToString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), non))
@@ -625,9 +653,6 @@ class OfflineSyncManager(
         onProgress("club", 1, 1)
 
         // Event details
-        val evList = collectedEventIds.toList()
-        val totalEv = evList.size
-        var evDone = 0
         // Ensure we also download ALL CAMP events separately (beyond weekly buckets)
         try {
             val allCamps = try {
@@ -660,28 +685,48 @@ class OfflineSyncManager(
         } catch (ex: Exception) {
             Logger.d("OfflineSyncManager", "fetch all camps failed: ${ex.message}")
         }
-        // Fetched concurrently in small batches — sequential one-by-one fetches of up to
-        // FETCH_LIMIT_FULL events could take minutes of continuous background network traffic.
-        for (chunk in evList.chunked(20)) {
-            val fetched = coroutineScope {
-                chunk.map { evId ->
-                    async {
-                        try {
+        // Sliding window of EVENT_FETCH_CONCURRENCY requests (a fixed batch waits for its slowest request),
+        // progress reported per event and results persisted in batches via saveAll.
+        val allEventIds = collectedEventIds.toList() // after the camps above, so camp details are included too
+        val totalAll = allEventIds.size
+        onProgress("events", 0, totalAll)
+        val permits = kotlinx.coroutines.sync.Semaphore(EVENT_FETCH_CONCURRENCY)
+        val lock = kotlinx.coroutines.sync.Mutex()
+        val saveLock = kotlinx.coroutines.sync.Mutex()
+        val pending = HashMap<String, String>()
+        var finished = 0
+        coroutineScope {
+            allEventIds.map { evId ->
+                async {
+                    // Persisting runs outside the permit and the bookkeeping lock so a slow write (the storage
+                    // index grows with every batch) never stalls the downloads.
+                    val batch = permits.withPermit {
+                        val entry = try {
                             val full = withRetry { eventService.fetchEventById(evId, forceRefresh = false) }
                             if (full != null) OfflineKeys.eventDetail(evId) to AppJson.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), full) else null
                         } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll event ${evId} failed: ${ex.message}"); null }
+                        lock.withLock {
+                            if (entry != null) pending[entry.first] = entry.second
+                            finished++
+                            onProgress("events", finished, totalAll)
+                            if (pending.size >= EVENT_SAVE_BATCH || finished == totalAll) pending.toMap().also { pending.clear() } else null
+                        }
                     }
-                }.awaitAll()
-            }
-            try { offlineDataStorage.saveAll(fetched.filterNotNull().toMap()) } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll save event details failed: ${ex.message}") }
-            evDone += chunk.size
-            onProgress("events", evDone, totalEv)
+                    if (batch != null) saveLock.withLock {
+                        val t0 = Clock.System.now().toEpochMilliseconds()
+                        try { offlineDataStorage.saveAll(batch) } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll save event details failed: ${ex.message}") }
+                        Logger.d("OfflineSyncManager", "downloadAll: saved ${batch.size} event details in ${Clock.System.now().toEpochMilliseconds() - t0}ms")
+                    }
+                }
+            }.awaitAll()
         }
 
         // Competitions
         onProgress("competitions", 0, 1)
-        try { syncCompetitions() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll competitions failed: ${ex.message}") }
-        try { syncPastCompetitions() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll pastCompetitions failed: ${ex.message}") }
+        coroutineScope {
+            launch { try { syncCompetitions() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll competitions failed: ${ex.message}") } }
+            launch { try { syncPastCompetitions() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll pastCompetitions failed: ${ex.message}") } }
+        }
         onProgress("competitions", 1, 1)
 
         saveLastSyncTime(kotlin.time.Clock.System.now().toString())

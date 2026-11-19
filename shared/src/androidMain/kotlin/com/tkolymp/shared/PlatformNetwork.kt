@@ -73,6 +73,8 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
                 readTimeout(15, TimeUnit.SECONDS)
                 writeTimeout(15, TimeUnit.SECONDS)
                 certificatePinner(certificatePinner)
+                // OkHttp defaults to 5 concurrent requests per host, which throttles bulk downloads (offline sync).
+                dispatcher(okhttp3.Dispatcher().apply { maxRequests = 64; maxRequestsPerHost = 16 })
             }
         }
 
