@@ -3,6 +3,7 @@ package com.tkolymp.tkolympapp.screens
 import com.tkolymp.tkolympapp.components.InfoPill
 import com.tkolymp.tkolympapp.components.RankBadge
 import com.tkolymp.tkolympapp.components.cardLineBorder
+import com.tkolymp.tkolympapp.components.pressClickable
 import com.tkolymp.tkolympapp.components.successColor
 import com.tkolymp.tkolympapp.components.successContainerColor
 import com.tkolymp.tkolympapp.components.surfaceCardColors
@@ -79,13 +80,14 @@ import com.tkolymp.tkolympapp.components.EmptyState
 import androidx.compose.material.icons.outlined.EmojiEvents
 
 @Composable
-internal fun CompetitionEventCard(competitions: List<Competition>, onOpenWeb: (() -> Unit)? = null) {
+internal fun CompetitionEventCard(competitions: List<Competition>, onOpenWeb: (() -> Unit)? = null, onClick: (() -> Unit)? = null) {
     val first = competitions.first()
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 4.dp)
+            .then(if (onClick != null) Modifier.pressClickable(0.985f, onClick) else Modifier),
         shape = RoundedCornerShape(16.dp),
         colors = surfaceCardColors(),
         border = cardLineBorder()

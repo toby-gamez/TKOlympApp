@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Today
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.FilterAltOff
+import com.tkolymp.shared.competitions.Competition
 import com.tkolymp.shared.event.firstTrainerOrEmpty
 import com.tkolymp.shared.utils.standardDurationMinutes
 import com.tkolymp.shared.utils.formatTimes
@@ -108,6 +109,7 @@ import androidx.compose.material3.TextButton
 import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.key
 import androidx.compose.runtime.LaunchedEffect
@@ -117,6 +119,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -162,6 +165,21 @@ import com.tkolymp.tkolympapp.util.tabContentTransitionSpec
 import androidx.compose.material.icons.outlined.EventBusy
 import androidx.compose.material.icons.outlined.CalendarMonth
 
+/** A `Set<String>` that survives navigation and recreation (sets are not natively saveable). */
+// Competitions of one day grouped into the per-event cards shown in the list.
+private fun competitionsByEvent(competitions: List<Competition>?): List<List<Competition>> =
+    competitions.orEmpty().groupBy { it.eventId?.toString() ?: it.eventName ?: it.competitionDate }.values.toList()
+
+private fun competitionEventCount(competitions: List<Competition>?): Int = competitionsByEvent(competitions).size
+
+@Composable
+private fun rememberSavedStringSet() = rememberSaveable(
+    saver = listSaver<MutableState<Set<String>>, String>(
+        save = { it.value.toList() },
+        restore = { mutableStateOf(it.toSet()) }
+    )
+) { mutableStateOf<Set<String>>(emptySet()) }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
@@ -169,6 +187,7 @@ fun CalendarScreen(
     onWeekOffsetChange: (Int) -> Unit = {},
     onOpenEvent: (Long, Long?) -> Unit = { _, _ -> },
     onOpenRozpis: (Long, Long?) -> Unit = { _, _ -> },
+    onOpenFederationEvent: (Long) -> Unit = {},
     onNavigateTimeline: (() -> Unit)? = null,
     onBack: (() -> Unit)? = null,
     onCreatePersonalEvent: (() -> Unit)? = null,
@@ -203,12 +222,12 @@ fun CalendarScreen(
     val sheetDragOffset = remember { Animatable(0f) }
     LaunchedEffect(showBottomSheet) { if (showBottomSheet) sheetDragOffset.snapTo(0f) }
 
-    var selectedTrainers by remember { mutableStateOf<Set<String>>(emptySet()) }
-    var selectedLocations by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var selectedTrainers by rememberSavedStringSet()
+    var selectedLocations by rememberSavedStringSet()
     var selectedDateIso by rememberSaveable { mutableStateOf<String?>(null) }
-    var onlyFree by remember { mutableStateOf(false) }
-    var hideCancelled by remember { mutableStateOf(false) }
-    var selectedTypes by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var onlyFree by rememberSaveable { mutableStateOf(false) }
+    var hideCancelled by rememberSaveable { mutableStateOf(false) }
+    var selectedTypes by rememberSavedStringSet()
     var trainerView by rememberSaveable { mutableStateOf(false) }
     var collapsedTrainers by remember { mutableStateOf<Set<String>>(emptySet()) }
 
@@ -222,9 +241,15 @@ fun CalendarScreen(
         }.sorted().toSet()
     }
 
+    // Filters are kept when returning to this screen; only an actual week change clears the trainer/location picks.
+    var filterWeekKey by rememberSaveable { mutableStateOf("$localWeekOffset|$customStartDate") }
     LaunchedEffect(localWeekOffset, customStartDate) {
-        selectedTrainers = emptySet()
-        selectedLocations = emptySet()
+        val key = "$localWeekOffset|$customStartDate"
+        if (key != filterWeekKey) {
+            filterWeekKey = key
+            selectedTrainers = emptySet()
+            selectedLocations = emptySet()
+        }
     }
 
     // Day shown in the list (also what the filter sheet counts and previews).
@@ -413,7 +438,7 @@ fun CalendarScreen(
                     WeekDayCell(
                         abbr = calStrings.weekDayAbbreviations.getOrElse(ld?.dayOfWeek?.ordinal ?: i) { "" },
                         number = ld?.day ?: 0,
-                        count = dayInstances(iso).size,
+                        count = dayInstances(iso).size + competitionEventCount(calState.competitionsByDay[iso]),
                         selected = iso == activeDate,
                         isToday = iso == calState.todayString
                     )
@@ -460,8 +485,9 @@ fun CalendarScreen(
                         val myId = calState.myPersonId
                         val myCouples = calState.myCoupleIds
                         val freeCount = instances.count { timelineInfo(it, myId, myCouples).isFree }
-                        val summary = if (instances.isEmpty()) "" else listOfNotNull(
-                            calStrings.eventsCount.replace("%d", instances.size.toString()),
+                        val totalCount = instances.size + competitionEventCount(competitions)
+                        val summary = if (totalCount == 0) "" else listOfNotNull(
+                            calStrings.eventsCount.replace("%d", totalCount.toString()),
                             calStrings.freeCount.replace("%d", freeCount.toString()).takeIf { freeCount > 0 }
                         ).joinToString(" · ")
 
@@ -581,10 +607,12 @@ fun CalendarScreen(
 
                             if (competitions.isNotEmpty()) {
                                 Column(Modifier.padding(horizontal = Spacing.default, vertical = Spacing.small)) {
-                                    competitions
-                                        .groupBy { it.eventId?.toString() ?: it.eventName ?: it.competitionDate }
-                                        .values
-                                        .forEach { eventComps -> CompetitionEventCard(competitions = eventComps) }
+                                    competitionsByEvent(competitions)
+                                        .forEach { eventComps -> CompetitionEventCard(
+                                            competitions = eventComps,
+                                            onClick = eventComps.first().eventId?.let { id -> { onOpenFederationEvent(id) } }
+                                        )
+                                    }
                                 }
                             }
                         }

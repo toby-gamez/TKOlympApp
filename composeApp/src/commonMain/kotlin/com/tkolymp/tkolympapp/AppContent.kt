@@ -522,6 +522,7 @@ fun AppNavHost(
                     onWeekOffsetChange = onWeekOffsetChange,
                     onOpenEvent = { id, instId -> navController.navigate("event/$id" + if (instId != null) "?instanceId=$instId" else "") },
                     onOpenRozpis = { id, instId -> navController.navigate("event/$id?" + (if (instId != null) "instanceId=$instId&" else "") + "tab=1") },
+                    onOpenFederationEvent = { id -> navController.navigate("federationEvent/$id") },
                     onNavigateTimeline = { isTimelineView = true },
                     onCreateEvent = { navController.navigate("event_edit") },
                     bottomPadding = bottomPadding
