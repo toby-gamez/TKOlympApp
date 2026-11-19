@@ -124,14 +124,16 @@ class OfflineSyncManager(
 
                 // Save per-person lists for quick lookup
                 val grouped = list.groupBy { it.personId ?: "" }
+                val perPerson = HashMap<String, String>()
                 grouped.forEach { (pid, items) ->
                     if (pid.isNotBlank()) {
                         val perArr = buildJsonArray {
                             items.forEach { itItem -> add(AppJson.parseToJsonElement(itItem.raw?.toString() ?: JsonObject(emptyMap()).toString())) }
                         }
-                        try { offlineDataStorage.save(OfflineKeys.paymentsForPerson(pid), AppJson.encodeToString(JsonArray.serializer(), perArr)) } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save offline_payments_person_${pid} failed: ${ex.message}") }
+                        perPerson[OfflineKeys.paymentsForPerson(pid)] = AppJson.encodeToString(JsonArray.serializer(), perArr)
                     }
                 }
+                try { offlineDataStorage.saveAll(perPerson) } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save offline_payments_person_* failed: ${ex.message}") }
             }
         } catch (ex: Exception) {
             Logger.d("OfflineSyncManager", "syncPayments exception: ${ex.message}")
@@ -218,22 +220,21 @@ class OfflineSyncManager(
                 // in small batches (sequential one-by-one fetches were taking minutes for busy weeks).
                 val allEventIds = grouped.values.flatten().mapNotNull { it.event?.id }.distinct()
                 for (chunk in allEventIds.chunked(20)) {
-                    coroutineScope {
+                    val fetched = coroutineScope {
                         chunk.map { evId ->
                             async {
                                 try {
                                     val full = eventService.fetchEventById(evId, forceRefresh = false)
-                                    if (full != null) {
-                                        offlineDataStorage.save(OfflineKeys.eventDetail(evId), AppJson.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), full))
-                                        Logger.d("OfflineSyncManager", "saved event detail offline_event_${evId}")
-                                    }
+                                    if (full != null) OfflineKeys.eventDetail(evId) to AppJson.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), full) else null
                                 } catch (ex: Exception) {
-                                    Logger.d("OfflineSyncManager", "fetch/save event ${evId} failed: ${ex.message}")
+                                    Logger.d("OfflineSyncManager", "fetch event ${evId} failed: ${ex.message}")
                                     // ignore individual event failures
+                                    null
                                 }
                             }
                         }.awaitAll()
                     }
+                    try { offlineDataStorage.saveAll(fetched.filterNotNull().toMap()) } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save event details failed: ${ex.message}") }
                 }
             }
         }
@@ -390,13 +391,15 @@ class OfflineSyncManager(
             } catch (ex: Exception) { Logger.d("OfflineSyncManager", "save nonsticky announcements failed: ${ex.message}") }
             // Save bodies for every announcement (sticky + non-sticky) so the detail screen can
             // load any of them offline, not just the handful most recently synced.
+            val bodies = HashMap<String, String>()
             (sticky + non).forEach { ann ->
                 try {
                     ann.id.toLongOrNull()?.let { id ->
-                        offlineDataStorage.save(OfflineKeys.announcementBody(id), AppJson.encodeToString(com.tkolymp.shared.announcements.Announcement.serializer(), ann))
+                        bodies[OfflineKeys.announcementBody(id)] = AppJson.encodeToString(com.tkolymp.shared.announcements.Announcement.serializer(), ann)
                     }
                 } catch (_: Exception) {}
             }
+            try { offlineDataStorage.saveAll(bodies) } catch (_: Exception) {}
         } catch (_: Exception) {}
     }
 
@@ -471,7 +474,16 @@ class OfflineSyncManager(
         throw lastEx ?: Exception("unknown")
     }
 
-    suspend fun downloadAll(onProgress: (String, Int, Int) -> Unit = { _, _, _ -> }) = withContext(Dispatchers.Default) {
+    suspend fun downloadAll(report: (String, Int, Int) -> Unit = { _, _, _ -> }) = withContext(Dispatchers.Default) {
+        val startMs = Clock.System.now().toEpochMilliseconds()
+        var lastStage = ""
+        val onProgress: (String, Int, Int) -> Unit = { stage, done, total ->
+            if (stage != lastStage) {
+                lastStage = stage
+                Logger.d("OfflineSyncManager", "downloadAll: stage=$stage started at +${(Clock.System.now().toEpochMilliseconds() - startMs) / 1000}s")
+            }
+            report(stage, done, total)
+        }
         migrateIfNeeded()
         if (!networkMonitor.isConnected()) throw Exception("Network unavailable")
         Logger.d("OfflineSyncManager", "downloadAll: starting")
@@ -521,18 +533,28 @@ class OfflineSyncManager(
         // Announcements
         onProgress("announcements", 0, 1)
         try {
-            val sticky = withRetry { announcementService.getAnnouncements(true) }.let { r -> if (r is DataResult.Success) r.data else emptyList() }
-            val non = withRetry { announcementService.getAnnouncements(false) }.let { r -> if (r is DataResult.Success) r.data else emptyList() }
+            // getAnnouncements reports failures as DataResult.Error instead of throwing; unwrap so withRetry retries and the failure is logged.
+            suspend fun fetchAnnouncements(sticky: Boolean) = withRetry {
+                when (val r = announcementService.getAnnouncements(sticky)) {
+                    is DataResult.Success -> r.data
+                    is DataResult.Error -> throw Exception("announcements(sticky=$sticky): ${r.error.message}")
+                }
+            }
+            val sticky = fetchAnnouncements(true)
+            val non = fetchAnnouncements(false)
+            Logger.d("OfflineSyncManager", "downloadAll: announcements sticky=${sticky.size} nonSticky=${non.size}")
             if (sticky.isNotEmpty()) offlineDataStorage.save(OfflineKeys.ANN_STICKY, AppJson.encodeToString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), sticky))
             if (non.isNotEmpty()) offlineDataStorage.save(OfflineKeys.ANN_NONSTICKY, AppJson.encodeToString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), non))
             // Save individual bodies too so the detail screen loads offline for any announcement.
+            val bodies = HashMap<String, String>()
             (sticky + non).forEach { ann ->
                 try {
                     ann.id.toLongOrNull()?.let { id ->
-                        offlineDataStorage.save(OfflineKeys.announcementBody(id), AppJson.encodeToString(com.tkolymp.shared.announcements.Announcement.serializer(), ann))
+                        bodies[OfflineKeys.announcementBody(id)] = AppJson.encodeToString(com.tkolymp.shared.announcements.Announcement.serializer(), ann)
                     }
                 } catch (_: Exception) {}
             }
+            offlineDataStorage.saveAll(bodies)
         } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll announcements failed: ${ex.message}") }
         onProgress("announcements", 1, 1)
 
@@ -641,16 +663,17 @@ class OfflineSyncManager(
         // Fetched concurrently in small batches — sequential one-by-one fetches of up to
         // FETCH_LIMIT_FULL events could take minutes of continuous background network traffic.
         for (chunk in evList.chunked(20)) {
-            coroutineScope {
+            val fetched = coroutineScope {
                 chunk.map { evId ->
                     async {
                         try {
                             val full = withRetry { eventService.fetchEventById(evId, forceRefresh = false) }
-                            if (full != null) offlineDataStorage.save(OfflineKeys.eventDetail(evId), AppJson.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), full))
-                        } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll event ${evId} failed: ${ex.message}") }
+                            if (full != null) OfflineKeys.eventDetail(evId) to AppJson.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), full) else null
+                        } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll event ${evId} failed: ${ex.message}"); null }
                     }
                 }.awaitAll()
             }
+            try { offlineDataStorage.saveAll(fetched.filterNotNull().toMap()) } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll save event details failed: ${ex.message}") }
             evDone += chunk.size
             onProgress("events", evDone, totalEv)
         }

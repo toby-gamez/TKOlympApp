@@ -286,7 +286,7 @@ class EventService(
             return null
         }
         val ev = data["eventInstance"]
-        Logger.d("EventService", "fetchEventById($id): event value type=${ev?.let { it::class.simpleName }}, value=$ev")
+        Logger.d("EventService", "fetchEventById($id): event value type=${ev?.let { it::class.simpleName }}, length=${ev?.toString()?.length}")
         val obj = (ev as? JsonObject)
         if (obj != null) {
             try { cache.put(cacheKey, obj, ttl = 5.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) { }

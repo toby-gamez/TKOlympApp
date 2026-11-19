@@ -731,7 +731,7 @@ private fun SettingsSectionHeader(text: String) {
         fontWeight = FontWeight.Bold,
         letterSpacing = 0.8.sp,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(start = Spacing.default, top = 20.dp, bottom = Spacing.smallall)
+        modifier = Modifier.padding(start = Spacing.default, top = 20.dp, bottom = Spacing.small)
     )
 }
 

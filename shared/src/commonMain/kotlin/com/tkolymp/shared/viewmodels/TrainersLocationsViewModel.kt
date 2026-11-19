@@ -22,6 +22,7 @@ import com.tkolymp.shared.sync.OfflineKeys
 import kotlin.time.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import androidx.compose.runtime.Immutable
 import kotlinx.datetime.todayIn
@@ -45,7 +46,9 @@ class TrainersLocationsViewModel(
             val counts = mutableMapOf<String, IntArray>()
             val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
             for (weekOffset in -1..2) {
-                val weekStart = today.plus(weekOffset * 7, DateTimeUnit.DAY)
+                // Offline week caches are keyed by the Monday of the week (see OfflineSyncManager).
+                val rawWeekStart = today.plus(weekOffset * 7, DateTimeUnit.DAY)
+                val weekStart = rawWeekStart.minus(rawWeekStart.dayOfWeek.ordinal, DateTimeUnit.DAY)
                 val key = OfflineKeys.calendarWeek(CalendarBucket.ALL, weekStart.toString())
                 val raw = try { ServiceLocator.offlineDataStorage.load(key) } catch (_: Exception) { null }
                 if (raw.isNullOrBlank()) continue

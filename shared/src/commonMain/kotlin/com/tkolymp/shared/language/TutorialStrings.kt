@@ -25,8 +25,8 @@ data class TutorialStrings(
     val calendarMineDesc: String = "Shows only trainings from your own training groups and individual lessons — your quickest view of the week ahead.",
     val calendarAllTitle: String = "All Tab",
     val calendarAllDesc: String = "Shows every session across all groups. Useful for finding sessions you could join and sign up for.",
-    val calendarFilterTitle: String = "Filter & Week Navigation",
-    val calendarFilterDesc: String = "Tap ⋮ to filter sessions by trainer or location. Use the arrows in the app bar to jump forward or back by week.",
+    val calendarFilterTitle: String = "Filters & Week Navigation",
+    val calendarFilterDesc: String = "Tap the Filters chip (or ⋮) to change the layout and filter by type, place or trainer. Quick chips toggle only free lessons and hide cancelled. Use the week strip and arrows to jump between days and weeks.",
 
     // Board sections
     val boardListTitle: String = "Announcements",
@@ -42,7 +42,7 @@ data class TutorialStrings(
 
     // Other sections
     val otherAccountTitle: String = "Your Account",
-    val otherAccountDesc: String = "Your profile card — tap it to view or edit your profile. Quick buttons below let you jump to Payments, Stats, training overview or create personal trainings.",
+    val otherAccountDesc: String = "Your profile card — tap it to view or edit your profile. The four tiles below open Payments, Stats, My trainings and Achievements.",
     val otherQrTitle: String = "ČSTS Competition Code",
     val otherQrDesc: String = "Your personal code containing your ČSTS dancer ID. Show it at ČSTS competitions to verify your attendance at check-in.",
     val otherPeopleTitle: String = "Members & Club",

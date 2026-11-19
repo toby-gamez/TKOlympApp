@@ -97,6 +97,20 @@ class OfflineDataStorageAndroid(context: Context) : OfflineDataStorage {
         }
     }
 
+    // save() rewrites the whole index and awaits a full persist per entry, all under one global lock, so
+    // saving hundreds of event details was quadratic. Here blobs go to ksafe's in-memory cache (persisted
+    // in coalesced background batches) and the index is read and written once.
+    override suspend fun saveAll(entries: Map<String, String>) {
+        if (entries.isEmpty()) return
+        val hashed = entries.map { (key, json) -> Triple(key, sha256Hex(key), json) }
+        dirMutex.withLock {
+            hashed.forEach { (_, hash, json) -> ksafe.putDirect(hash, json) }
+            val idx = readIndex()
+            hashed.forEach { (key, hash, _) -> idx[hash] = key }
+            writeIndex(idx)
+        }
+    }
+
     override suspend fun load(key: String): String? {
         val hash = sha256Hex(key)
         val m = mutexFor(hash)
