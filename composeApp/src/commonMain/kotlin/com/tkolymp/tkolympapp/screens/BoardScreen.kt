@@ -1,6 +1,7 @@
 package com.tkolymp.tkolympapp.screens
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.itemsIndexed
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonNoticeList
 import com.tkolymp.shared.utils.daysSince
 import com.tkolymp.shared.utils.formatShortDate
 import com.tkolymp.shared.utils.parseToLocal
@@ -210,7 +211,9 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}, onC
                             }
                         }
                     }
-                    if (filtered.isEmpty() && !state.isLoading) {
+                    if (filtered.isEmpty() && state.isLoading) {
+                        SkeletonNoticeList()
+                    } else if (filtered.isEmpty()) {
                         EmptyState(title = AppStrings.current.announcements.noAnnouncementsToShow, icon = Icons.Outlined.Campaign, fullPage = true)
                     } else {
                         val today = remember { kotlin.time.Clock.System.todayIn(kotlinx.datetime.TimeZone.currentSystemDefault()) }

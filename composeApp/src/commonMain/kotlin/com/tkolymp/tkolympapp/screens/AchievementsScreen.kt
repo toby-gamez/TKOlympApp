@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.Alignment
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonBadgeGrid
 import com.tkolymp.tkolympapp.components.AppTopBar
 import com.tkolymp.tkolympapp.ui.theme.BrandLightPrimary
 import com.tkolymp.tkolympapp.ui.theme.Spacing
@@ -86,6 +87,8 @@ fun AchievementsScreen(personId: String? = null, onBack: () -> Unit = {}) {
             val error = state.error
             if (error != null && state.badges.isEmpty() && state.diplomas.isEmpty()) {
                 ErrorState(error = error, onRetry = { scope.launch { viewModel.load(personId) } })
+            } else if (state.isLoading && state.badges.isEmpty() && state.diplomas.isEmpty()) {
+                SkeletonBadgeGrid()
             } else {
                 Column(modifier = Modifier.fillMaxSize()) {
                     OfflineBanner(isOffline = state.isOffline, message = strings.offlineMessage)

@@ -189,6 +189,7 @@ type CrawlerTarget {
   lastProcessErrorAt: Datetime
   lastResponseId: BigInt
   lastSuccessfulResponseId: BigInt
+  referenceDate: Date
 
   """
   Reads a single `CrawlerResponse` that is related to this `CrawlerTarget`.
@@ -243,6 +244,9 @@ enum CrawlerProcessStatus {
   OK
   ERROR
 }
+
+"""A calendar date in YYYY-MM-DD format."""
+scalar Date
 
 """A location in a connection that can be used for resuming pagination."""
 scalar Cursor
@@ -394,6 +398,9 @@ input CrawlerTargetCondition {
   Checks for equality with the object’s `lastSuccessfulResponseId` field.
   """
   lastSuccessfulResponseId: BigInt
+
+  """Checks for equality with the object’s `referenceDate` field."""
+  referenceDate: Date
   eventId: BigInt
   competitionId: BigInt
   keyContains: String
@@ -428,6 +435,8 @@ enum CrawlerTargetsOrderBy {
   LAST_RESPONSE_ID_DESC
   LAST_SUCCESSFUL_RESPONSE_ID_ASC
   LAST_SUCCESSFUL_RESPONSE_ID_DESC
+  REFERENCE_DATE_ASC
+  REFERENCE_DATE_DESC
 }
 
 """A `CrawlerResponse` edge in the connection."""
@@ -699,9 +708,6 @@ enum CompetitorType {
   TEAM
 }
 
-"""A calendar date in YYYY-MM-DD format."""
-scalar Date
-
 type FederationEventFacet {
   years: [FederationEventYear]!
 }
@@ -944,6 +950,23 @@ type FederationPerson {
     orderBy: [CompetitionRoundJudgesOrderBy!] = [PRIMARY_KEY_ASC]
   ): CompetitionRoundJudgeConnection!
 
+  """Reads and enables pagination through a set of `OfficialAssignment`."""
+  officialAssignmentsByPersonIdList(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Skip the first `n` values."""
+    offset: Int
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: OfficialAssignmentCondition
+
+    """The method to use when ordering `OfficialAssignment`."""
+    orderBy: [OfficialAssignmentsOrderBy!]
+  ): [OfficialAssignment!]!
+
   """Reads and enables pagination through a set of `Person`."""
   peopleList(
     """Only read the first `n` values of the set."""
@@ -977,6 +1000,7 @@ type FederationPerson {
     """The method to use when ordering `CompetitionResult`."""
     orderBy: [CompetitionResultsOrderBy!]
   ): [CompetitionResult!]!
+  isMine: Boolean!
 }
 
 enum Gender {
@@ -1662,6 +1686,25 @@ type Competition {
     """The method to use when ordering `CompetitionResult`."""
     orderBy: [CompetitionResultsOrderBy!]
   ): [CompetitionResult!]!
+
+  """
+  Reads and enables pagination through a set of `CompetitionParticipation`.
+  """
+  participationsList(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Skip the first `n` values."""
+    offset: Int
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CompetitionParticipationCondition
+
+    """The method to use when ordering `CompetitionParticipation`."""
+    orderBy: [CompetitionParticipationsOrderBy!]
+  ): [CompetitionParticipation!]!
 }
 
 """
@@ -1806,6 +1849,58 @@ type FederationEvent {
     """The method to use when ordering `Competition`."""
     orderBy: [CompetitionsOrderBy!]
   ): [Competition!]!
+
+  """
+  Reads and enables pagination through a set of `CompetitionParticipation`.
+  """
+  participationsList(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Skip the first `n` values."""
+    offset: Int
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CompetitionParticipationCondition
+
+    """Apply calendar selectors in addition to the native condition."""
+    calendarFilter: CalendarFilterInput
+
+    """
+    Apply one of your saved searches within the current tenant, replacing calendarFilter.
+    """
+    savedSearch: BigInt
+
+    """The method to use when ordering `CompetitionParticipation`."""
+    orderBy: [CompetitionParticipationsOrderBy!]
+  ): [CompetitionParticipation!]!
+
+  """Reads and enables pagination through a set of `OfficialAssignment`."""
+  officialAssignmentsList(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Skip the first `n` values."""
+    offset: Int
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: OfficialAssignmentCondition
+
+    """Apply calendar selectors in addition to the native condition."""
+    calendarFilter: CalendarFilterInput
+
+    """
+    Apply one of your saved searches within the current tenant, replacing calendarFilter.
+    """
+    savedSearch: BigInt
+
+    """The method to use when ordering `OfficialAssignment`."""
+    orderBy: [OfficialAssignmentsOrderBy!]
+  ): [OfficialAssignment!]!
 }
 
 """A range of `Date`."""
@@ -2059,6 +2154,9 @@ type FederationCompetitor {
   latestResultAt: Date
   latestEntryAt: Date
   divisions: [String]!
+  active: Boolean
+  since: Datetime
+  until: Datetime
 
   """
   Reads a single `AgeGroup` that is related to this `FederationCompetitor`.
@@ -2271,6 +2369,25 @@ type FederationCompetitor {
     orderBy: [RanklistEntriesOrderBy!] = [PRIMARY_KEY_ASC]
   ): RanklistEntryConnection!
 
+  """
+  Reads and enables pagination through a set of `CompetitionParticipation`.
+  """
+  competitionParticipationsList(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Skip the first `n` values."""
+    offset: Int
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CompetitionParticipationCondition
+
+    """The method to use when ordering `CompetitionParticipation`."""
+    orderBy: [CompetitionParticipationsOrderBy!]
+  ): [CompetitionParticipation!]!
+
   """Reads and enables pagination through a set of `Person`."""
   peopleList(
     """Only read the first `n` values of the set."""
@@ -2350,6 +2467,7 @@ type FederationCompetitor {
     """The method to use when ordering `CompetitionResult`."""
     orderBy: [CompetitionResultsOrderBy!]
   ): [CompetitionResult!]!
+  isMine: Boolean!
 }
 
 """A connection to a list of `FederationCompetitorComponent` values."""
@@ -3101,12 +3219,121 @@ type RanklistEntryEdge {
   node: RanklistEntry!
 }
 
+type CompetitionParticipation {
+  competitionId: BigInt!
+  competitorId: String!
+  cancelled: Boolean!
+  ranking: Int
+  rankingTo: Int
+  pointGain: BigFloat
+  finalGain: BigFloat
+  isFinal: Boolean
+  completionStatus: String
+  eventId: BigInt!
+  date: Date!
+  startNumber: String
+
+  """
+  Reads a single `FederationEvent` that is related to this `CompetitionParticipation`.
+  """
+  event: FederationEvent!
+
+  """
+  Reads a single `Competition` that is related to this `CompetitionParticipation`.
+  """
+  competition: Competition!
+
+  """
+  Reads a single `FederationCompetitor` that is related to this `CompetitionParticipation`.
+  """
+  competitor: FederationCompetitor!
+}
+
+"""
+A condition to be used against `CompetitionParticipation` object types. All
+fields are tested for equality and combined with a logical ‘and.’
+"""
+input CompetitionParticipationCondition {
+  """Checks for equality with the object’s `competitionId` field."""
+  competitionId: BigInt
+
+  """Checks for equality with the object’s `competitorId` field."""
+  competitorId: String
+
+  """Checks for equality with the object’s `cancelled` field."""
+  cancelled: Boolean
+
+  """Checks for equality with the object’s `ranking` field."""
+  ranking: Int
+
+  """Checks for equality with the object’s `rankingTo` field."""
+  rankingTo: Int
+
+  """Checks for equality with the object’s `pointGain` field."""
+  pointGain: BigFloat
+
+  """Checks for equality with the object’s `finalGain` field."""
+  finalGain: BigFloat
+
+  """Checks for equality with the object’s `isFinal` field."""
+  isFinal: Boolean
+
+  """Checks for equality with the object’s `completionStatus` field."""
+  completionStatus: String
+
+  """Checks for equality with the object’s `eventId` field."""
+  eventId: BigInt
+
+  """Checks for equality with the object’s `date` field."""
+  date: Date
+
+  """Checks for equality with the object’s `startNumber` field."""
+  startNumber: String
+
+  """Include cancelled entries without a ranked result."""
+  includeCancelledEntries: Boolean
+
+  """
+  Inclusive start and exclusive end of the participation or assignment dates.
+  """
+  dateRange: DateRangeCondition
+  includeCancelledCompetitions: Boolean
+  competitor: CompetitionParticipantCondition
+}
+
+"""Methods to use when ordering `CompetitionParticipation`."""
+enum CompetitionParticipationsOrderBy {
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+  COMPETITION_ID_ASC
+  COMPETITION_ID_DESC
+  COMPETITOR_ID_ASC
+  COMPETITOR_ID_DESC
+  CANCELLED_ASC
+  CANCELLED_DESC
+  RANKING_ASC
+  RANKING_DESC
+  RANKING_TO_ASC
+  RANKING_TO_DESC
+  POINT_GAIN_ASC
+  POINT_GAIN_DESC
+  FINAL_GAIN_ASC
+  FINAL_GAIN_DESC
+  IS_FINAL_ASC
+  IS_FINAL_DESC
+  COMPLETION_STATUS_ASC
+  COMPLETION_STATUS_DESC
+  EVENT_ID_ASC
+  EVENT_ID_DESC
+  DATE_ASC
+  DATE_DESC
+  START_NUMBER_ASC
+  START_NUMBER_DESC
+}
+
 type Person {
-  isAdmin: Boolean
-  isMember: Boolean
-  isTrainer: Boolean
   ageGroup: String
-  cohortIds: [BigInt]
   birthday(since: Date): Date
   federationCandidatesList(
     federation: String
@@ -3632,6 +3859,12 @@ type Person {
     """The method to use when ordering `RanklistEntry`."""
     orderBy: [RanklistEntriesOrderBy!] = [PRIMARY_KEY_ASC]
   ): RanklistEntryConnection!
+  cohortIds: [BigInt]
+  tenantIds: [BigInt]
+  isMember: Boolean
+  isTrainer: Boolean
+  isAdmin: Boolean
+  isExternal: Boolean!
 
   """Partnerships involving this person."""
   couplesList(
@@ -3649,86 +3882,6 @@ type Person {
     """The method to use when ordering `Couple`."""
     orderBy: [CouplesOrderBy!]
   ): [Couple!]!
-
-  """Reads and enables pagination through a set of `EventRegistration`."""
-  eventInstanceRegistrationsList(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Skip the first `n` values."""
-    offset: Int
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: EventRegistrationCondition
-
-    """The method to use when ordering `EventRegistration`."""
-    orderBy: [EventRegistrationsOrderBy!]
-  ): [EventRegistration!]! @deprecated(reason: "Use eventRegistrationsList.")
-
-  """Partnerships involving this person."""
-  allCouplesList(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Skip the first `n` values."""
-    offset: Int
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: CoupleCondition
-
-    """The method to use when ordering `Couple`."""
-    orderBy: [CouplesOrderBy!]
-  ): [Couple!]! @deprecated(reason: "Use couplesList.")
-
-  """Partnerships involving this person."""
-  activeCouplesList(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Skip the first `n` values."""
-    offset: Int
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: CoupleCondition
-
-    """The method to use when ordering `Couple`."""
-    orderBy: [CouplesOrderBy!]
-  ): [Couple!]! @deprecated(reason: "Use couplesList with condition.status: ACTIVE.")
-
-  """Competitions entered by this person, across federations."""
-  federationCompetitions(
-    """Only read the first `n` values of the set."""
-    first: Int = 30
-
-    """Only read the last `n` values of the set."""
-    last: Int
-
-    """
-    Skip the first `n` values from our `after` cursor, an alternative to cursor
-    based pagination. May not be used with `last`.
-    """
-    offset: Int
-
-    """Read all values in the set before (above) this cursor."""
-    before: Cursor
-
-    """Read all values in the set after (below) this cursor."""
-    after: Cursor
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: CompetitionCondition
-
-    """The method to use when ordering `Competition`."""
-    orderBy: [CompetitionsOrderBy!] = [PRIMARY_KEY_ASC]
-  ): CompetitionConnection! @deprecated(reason: "Use competitions with condition.competitor.personIds.")
 }
 
 type PersonFederationCandidatesRecord {
@@ -3934,6 +4087,7 @@ type File {
 }
 
 type User {
+  claims: JSON
   id: BigInt!
   uLogin: String
   uJmeno: String
@@ -4100,6 +4254,23 @@ type User {
     """The method to use when ordering `SecurityEvent`."""
     orderBy: [SecurityEventsOrderBy!]
   ): [SecurityEvent!]!
+
+  """Reads and enables pagination through a set of `EventSavedSearch`."""
+  eventSavedSearchesList(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Skip the first `n` values."""
+    offset: Int
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: EventSavedSearchCondition
+
+    """The method to use when ordering `EventSavedSearch`."""
+    orderBy: [EventSavedSearchesOrderBy!]
+  ): [EventSavedSearch!]!
 }
 
 """A connection to a list of `Aktuality` values."""
@@ -4417,9 +4588,9 @@ type MembershipApplication {
   nationalIdNumber: String
   cstsId: Int
   wdsfId: Int
-  prefixTitle: String
-  suffixTitle: String
-  bio: String
+  prefixTitle: String!
+  suffixTitle: String!
+  bio: String!
   email: String
   phone: String
   createdBy: BigInt!
@@ -5136,9 +5307,6 @@ type Interval {
 }
 
 type Account {
-  balance: BigFloat
-  assets(since: Datetime, until: Datetime): BigFloat
-  liabilities(since: Datetime, until: Datetime): BigFloat
   id: BigInt!
   tenantId: BigInt!
   personId: BigInt
@@ -5275,6 +5443,7 @@ type Account {
     """The method to use when ordering `Posting`."""
     orderBy: [PostingsOrderBy!]
   ): [Posting!]!
+  balance: BigFloat
 }
 
 """
@@ -5494,13 +5663,6 @@ type Event {
     offset: Int
   ): [EventApproxPriceRecord!]
   registrationInfo: EventRegistrationInfo
-  trainersList(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Skip the first `n` values."""
-    offset: Int
-  ): [TenantTrainer!] @deprecated(reason: "Use eventTrainersList.")
   id: BigInt!
   tenantId: BigInt!
   createdAt: Datetime!
@@ -5522,13 +5684,13 @@ type Event {
   capacityUnit: EventCapacityUnit!
   description: String
   summary: String
-  isLocked: Boolean
   enableNotes: Boolean
   filesLegacy: String
   seriesId: BigInt
   hasPublicDetails: Boolean!
   coverImageId: BigInt
   seriesInfo: SeriesInfo
+  registrationPeriod: DatetimeRange
 
   """Reads a single `File` that is related to this `Event`."""
   coverImage: File
@@ -5664,6 +5826,14 @@ type Event {
     """
     condition: EventRegistrationCondition
 
+    """Apply calendar selectors in addition to the native condition."""
+    calendarFilter: CalendarFilterInput
+
+    """
+    Apply one of your saved searches within the current tenant, replacing calendarFilter.
+    """
+    savedSearch: BigInt
+
     """The method to use when ordering `EventRegistration`."""
     orderBy: [EventRegistrationsOrderBy!]
   ): [EventRegistration!]!
@@ -5684,59 +5854,8 @@ type Event {
     """The method to use when ordering `EventTargetCohort`."""
     orderBy: [EventTargetCohortsOrderBy!]
   ): [EventTargetCohort!]!
-  remainingPersonSpots: Int @deprecated(reason: "Use registrationInfo.remainingCapacity.")
-  eventExternalRegistrationsByInstanceIdList: [EventExternalRegistration!]! @deprecated(reason: "Use registrationsList.")
-
-  """Reads and enables pagination through a set of `Event`."""
-  childEventInstancesList(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Skip the first `n` values."""
-    offset: Int
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: EventCondition
-
-    """The method to use when ordering `Event`."""
-    orderBy: [EventsOrderBy!]
-  ): [Event!]! @deprecated(reason: "Use childEventsList.")
-
-  """Reads and enables pagination through a set of `EventTrainer`."""
-  eventInstanceTrainersByInstanceIdList(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Skip the first `n` values."""
-    offset: Int
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: EventTrainerCondition
-
-    """The method to use when ordering `EventTrainer`."""
-    orderBy: [EventTrainersOrderBy!]
-  ): [EventTrainer!]! @deprecated(reason: "Use eventTrainersList.")
-
-  """Reads and enables pagination through a set of `EventRegistration`."""
-  eventInstanceRegistrationsByInstanceIdList(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Skip the first `n` values."""
-    offset: Int
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: EventRegistrationCondition
-
-    """The method to use when ordering `EventRegistration`."""
-    orderBy: [EventRegistrationsOrderBy!]
-  ): [EventRegistration!]! @deprecated(reason: "Use registrationsList.")
+  isLocked: Boolean @deprecated(reason: "Use registrationPeriod.")
+  hasMyRegistration: Boolean!
 }
 
 type EventApproxPriceRecord {
@@ -5750,34 +5869,7 @@ type EventRegistrationInfo {
   remainingCapacity: Int
   my: Boolean
   canRegister: Boolean
-}
-
-type TenantTrainer {
-  tenantName: String
-  tenantId: BigInt!
-  personId: BigInt!
-  since: Datetime!
-  until: Datetime
-  createdAt: Datetime!
-  updatedAt: Datetime!
-  id: BigInt!
-  isVisible: Boolean!
-  description: String!
-  memberPrice45Min: Price
-  guestPrice45Min: Price
-  memberPayout45Min: Price
-  guestPayout45Min: Price
-  createPayoutPayments: Boolean!
-  status: RelationshipStatus!
-  memberPrice45MinAmount: BigFloat
-  memberPayout45MinAmount: BigFloat
-  guestPrice45MinAmount: BigFloat
-  guestPayout45MinAmount: BigFloat
-  currency: String
-  isExternal: Boolean!
-
-  """Reads a single `Person` that is related to this `TenantTrainer`."""
-  person: Person
+  registrationOpen: Boolean
 }
 
 enum EventType {
@@ -5938,9 +6030,6 @@ input EventCondition {
   """Checks for equality with the object’s `summary` field."""
   summary: String
 
-  """Checks for equality with the object’s `isLocked` field."""
-  isLocked: Boolean
-
   """Checks for equality with the object’s `enableNotes` field."""
   enableNotes: Boolean
 
@@ -6012,8 +6101,6 @@ enum EventsOrderBy {
   DESCRIPTION_DESC
   SUMMARY_ASC
   SUMMARY_DESC
-  IS_LOCKED_ASC
-  IS_LOCKED_DESC
   ENABLE_NOTES_ASC
   ENABLE_NOTES_DESC
   FILES_LEGACY_ASC
@@ -6189,7 +6276,6 @@ type EventSeries {
 
 type EventTrainer {
   lessonsRemaining: Int
-  tenantTrainer: TenantTrainer
   id: BigInt!
   tenantId: BigInt!
   eventId: BigInt!
@@ -6220,7 +6306,7 @@ type EventTrainer {
     """The method to use when ordering `EventLessonRequest`."""
     orderBy: [EventLessonRequestsOrderBy!]
   ): [EventLessonRequest!]!
-  name: String @deprecated(reason: "Use person { name }.")
+  tenantTrainer: TenantTrainer
 }
 
 type EventLessonRequest {
@@ -6341,24 +6427,6 @@ type EventRegistration {
     """The method to use when ordering `EventRegistration`."""
     orderBy: [EventRegistrationsOrderBy!]
   ): [EventRegistration!]!
-  instanceId: BigInt! @deprecated(reason: "Use eventId.")
-
-  """Reads and enables pagination through a set of `EventLessonRequest`."""
-  eventLessonDemandsByRegistrationIdList(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Skip the first `n` values."""
-    offset: Int
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: EventLessonRequestCondition
-
-    """The method to use when ordering `EventLessonRequest`."""
-    orderBy: [EventLessonRequestsOrderBy!]
-  ): [EventLessonRequest!]! @deprecated(reason: "Use lessonRequestsList.")
 }
 
 enum AttendanceType {
@@ -6389,6 +6457,8 @@ type Couple {
   updatedAt: Datetime!
   status: RelationshipStatus!
   imageId: BigInt
+  name: String!
+  shortName: String!
 
   """Reads a single `File` that is related to this `Couple`."""
   image: File
@@ -6585,6 +6655,11 @@ input EventRegistrationCondition {
 
   """Checks for equality with the object’s `source` field."""
   source: EventRegistrationSource
+
+  """
+  Exclude automatic cohort registrations; retain explicit and legacy registrations.
+  """
+  excludeCohortSource: Boolean
   participant: CompetitionParticipantCondition
 }
 
@@ -6680,6 +6755,15 @@ input FederationCompetitorCondition {
 
   """Checks for equality with the object’s `latestEntryAt` field."""
   latestEntryAt: Date
+
+  """Checks for equality with the object’s `active` field."""
+  active: Boolean
+
+  """Checks for equality with the object’s `since` field."""
+  since: Datetime
+
+  """Checks for equality with the object’s `until` field."""
+  until: Datetime
   categoryProgress: CompetitorCategoryProgressCondition
   competitorTypes: [CompetitorType!]
   competedSince: Date
@@ -6712,6 +6796,12 @@ enum FederationCompetitorsOrderBy {
   LATEST_RESULT_AT_DESC
   LATEST_ENTRY_AT_ASC
   LATEST_ENTRY_AT_DESC
+  ACTIVE_ASC
+  ACTIVE_DESC
+  SINCE_ASC
+  SINCE_DESC
+  UNTIL_ASC
+  UNTIL_DESC
 }
 
 """
@@ -6760,6 +6850,34 @@ enum EventLessonRequestsOrderBy {
   CREATED_AT_DESC
   UPDATED_AT_ASC
   UPDATED_AT_DESC
+}
+
+type TenantTrainer {
+  tenantId: BigInt!
+  personId: BigInt!
+  since: Datetime!
+  until: Datetime
+  createdAt: Datetime!
+  updatedAt: Datetime!
+  id: BigInt!
+  isVisible: Boolean!
+  description: String!
+  memberPrice45Min: Price
+  guestPrice45Min: Price
+  memberPayout45Min: Price
+  guestPayout45Min: Price
+  createPayoutPayments: Boolean!
+  status: RelationshipStatus!
+  memberPrice45MinAmount: BigFloat
+  memberPayout45MinAmount: BigFloat
+  guestPrice45MinAmount: BigFloat
+  guestPayout45MinAmount: BigFloat
+  currency: String
+  isExternal: Boolean!
+
+  """Reads a single `Person` that is related to this `TenantTrainer`."""
+  person: Person
+  tenantName: String
 }
 
 """
@@ -6975,7 +7093,6 @@ enum EventTargetCohortsOrderBy {
 }
 
 type PaymentDebtor {
-  isUnpaid: Boolean
   price: PaymentDebtorPriceRecord
   id: BigInt!
   tenantId: BigInt!
@@ -6987,6 +7104,7 @@ type PaymentDebtor {
 
   """Reads a single `Person` that is related to this `PaymentDebtor`."""
   person: Person
+  isUnpaid: Boolean @deprecated(reason: "Use payment.status.")
 }
 
 type PaymentDebtorPriceRecord {
@@ -7011,7 +7129,9 @@ input PaymentDebtorCondition {
   """Checks for equality with the object’s `personId` field."""
   personId: BigInt
 
-  """Checks for equality with the object’s `isUnpaid` field."""
+  """
+  Whether the related payment is unpaid. Null matches an inaccessible payment.
+  """
   isUnpaid: Boolean
 }
 
@@ -7699,7 +7819,6 @@ enum FilesOrderBy {
 }
 
 type AccessCredential {
-  isAllowed: Boolean
   lastUsed: Datetime
   id: BigInt!
   tenantId: BigInt!
@@ -7719,6 +7838,7 @@ type AccessCredential {
 
   """Reads a single `Person` that is related to this `AccessCredential`."""
   person: Person
+  isAllowed: Boolean
 }
 
 """
@@ -7892,6 +8012,77 @@ enum SecurityEventsOrderBy {
   EFFECTIVE_AT_DESC
 }
 
+type EventSavedSearch {
+  id: BigInt!
+  tenantId: BigInt!
+  userId: BigInt!
+  name: String!
+  condition: EventSearchCondition!
+  feedKey: UUID
+  crossTenant: Boolean!
+
+  """Reads a single `User` that is related to this `EventSavedSearch`."""
+  user: User
+}
+
+type EventSearchCondition {
+  types: [EventType]
+  trainerIds: [BigInt]
+  locationIds: [BigInt]
+  parentId: BigInt
+  participantIds: [BigInt]
+  cohortId: BigInt
+  onlyMine: Boolean
+  relevantOnly: Boolean
+  canRegister: Boolean
+  withCompetitions: Boolean
+  coupleId: BigInt
+  withBirthdays: Boolean
+}
+
+"""
+A universally unique identifier as defined by [RFC 4122](https://tools.ietf.org/html/rfc4122).
+"""
+scalar UUID
+
+"""
+A condition to be used against `EventSavedSearch` object types. All fields are
+tested for equality and combined with a logical ‘and.’
+"""
+input EventSavedSearchCondition {
+  """Checks for equality with the object’s `id` field."""
+  id: BigInt
+
+  """Checks for equality with the object’s `tenantId` field."""
+  tenantId: BigInt
+
+  """Checks for equality with the object’s `userId` field."""
+  userId: BigInt
+
+  """Checks for equality with the object’s `name` field."""
+  name: String
+
+  """Checks for equality with the object’s `crossTenant` field."""
+  crossTenant: Boolean
+}
+
+"""Methods to use when ordering `EventSavedSearch`."""
+enum EventSavedSearchesOrderBy {
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+  ID_ASC
+  ID_DESC
+  TENANT_ID_ASC
+  TENANT_ID_DESC
+  USER_ID_ASC
+  USER_ID_DESC
+  NAME_ASC
+  NAME_DESC
+  CROSS_TENANT_ASC
+  CROSS_TENANT_DESC
+}
+
 """A connection to a list of `Person` values."""
 type PersonConnection {
   """A list of `Person` objects."""
@@ -8001,36 +8192,9 @@ input PersonCondition {
   birthday: DateRangeCondition
   ids: [BigInt!]
   onlyMine: Boolean
-}
 
-"""Filters people by current or former tenant membership state."""
-input PersonMembershipCondition {
-  """The membership state to filter by."""
-  state: PersonMembershipState
-
-  """
-  Membership states to include. An empty list includes current and former people; overrides state.
-  """
-  states: [PersonMembershipState!]
-
-  """
-  Cohort IDs to match. An empty list means people without a matching cohort membership.
-  """
-  inCohorts: [BigInt!]
-
-  """Whether the person has a trainer relationship in the selected state."""
-  isTrainer: Boolean
-
-  """
-  Whether the person has an administrator relationship in the selected state.
-  """
-  isAdmin: Boolean
-}
-
-"""Which tenant membership state a person membership filter targets."""
-enum PersonMembershipState {
-  CURRENT
-  FORMER
+  """Match either partner of this couple."""
+  coupleId: BigInt
 }
 
 """Methods to use when ordering `Person`."""
@@ -8117,6 +8281,12 @@ input CoupleCondition {
   """Checks for equality with the object’s `imageId` field."""
   imageId: BigInt
 
+  """Checks for equality with the object’s `name` field."""
+  name: String
+
+  """Checks for equality with the object’s `shortName` field."""
+  shortName: String
+
   """Match either partner of the couple."""
   personId: BigInt
 
@@ -8147,6 +8317,10 @@ enum CouplesOrderBy {
   UPDATED_AT_DESC
   IMAGE_ID_ASC
   IMAGE_ID_DESC
+  NAME_ASC
+  NAME_DESC
+  SHORT_NAME_ASC
+  SHORT_NAME_DESC
 }
 
 """A connection to a list of `TenantMembership` values."""
@@ -8169,7 +8343,6 @@ type TenantMembershipConnection {
 }
 
 type TenantMembership {
-  tenantName: String
   tenantId: BigInt!
   personId: BigInt!
   since: Datetime!
@@ -8181,6 +8354,7 @@ type TenantMembership {
 
   """Reads a single `Person` that is related to this `TenantMembership`."""
   person: Person
+  tenantName: String
 }
 
 """A `TenantMembership` edge in the connection."""
@@ -8385,7 +8559,6 @@ type TenantAdministratorConnection {
 }
 
 type TenantAdministrator {
-  tenantName: String
   tenantId: BigInt!
   personId: BigInt!
   since: Datetime!
@@ -8399,6 +8572,7 @@ type TenantAdministrator {
 
   """Reads a single `Person` that is related to this `TenantAdministrator`."""
   person: Person
+  tenantName: String
 }
 
 """A `TenantAdministrator` edge in the connection."""
@@ -8480,15 +8654,11 @@ type PersonInvitation {
   createdAt: Datetime!
   updatedAt: Datetime!
   email: String!
+  lastSentAt: Datetime
 
   """Reads a single `Person` that is related to this `PersonInvitation`."""
   person: Person
 }
-
-"""
-A universally unique identifier as defined by [RFC 4122](https://tools.ietf.org/html/rfc4122).
-"""
-scalar UUID
 
 """
 A condition to be used against `PersonInvitation` object types. All fields are
@@ -8518,6 +8688,9 @@ input PersonInvitationCondition {
 
   """Checks for equality with the object’s `email` field."""
   email: String
+
+  """Checks for equality with the object’s `lastSentAt` field."""
+  lastSentAt: Datetime
 }
 
 """Methods to use when ordering `PersonInvitation`."""
@@ -8541,6 +8714,8 @@ enum PersonInvitationsOrderBy {
   UPDATED_AT_DESC
   EMAIL_ASC
   EMAIL_DESC
+  LAST_SENT_AT_ASC
+  LAST_SENT_AT_DESC
 }
 
 """
@@ -8801,12 +8976,8 @@ input CompetitionCondition {
 
   """Checks for equality with the object’s `status` field."""
   status: FederationEventStatus
+  includeCancelled: Boolean
   competitorId: String
-
-  """
-  Match local people. Without an explicit selection, use current tenant people.
-  """
-  official: PersonCondition
   officialPersonId: String
   competitor: CompetitionParticipantCondition
   date: DateRangeCondition
@@ -8964,12 +9135,13 @@ input FederationEventCondition {
   hasResults: Boolean
   hasCoordinates: Boolean
   search: String
+  officialPersonId: String
+  participant: CompetitionParticipantCondition
 
   """
-  Match local people. Without an explicit selection, use current tenant people.
+  Date bounds for the participant condition. Use date for the event start date.
   """
-  official: PersonCondition
-  officialPersonId: String
+  participationDate: DateRangeCondition
   date: DateRangeCondition
   suggestedFor: CompetitionSuggestionCondition
 }
@@ -9102,11 +9274,6 @@ input FederationEventOfficialCondition {
 
   """Checks for equality with the object’s `grade` field."""
   grade: String
-
-  """
-  Match local people. Without an explicit selection, use current tenant people.
-  """
-  person: PersonCondition
 }
 
 """Methods to use when ordering `FederationEventOfficial`."""
@@ -9124,6 +9291,62 @@ enum FederationEventOfficialsOrderBy {
   DISCIPLINE_DESC
   GRADE_ASC
   GRADE_DESC
+}
+
+type OfficialAssignment {
+  eventId: BigInt!
+  date: Date!
+  personId: String!
+  role: OfficialRole!
+
+  """
+  Reads a single `FederationEvent` that is related to this `OfficialAssignment`.
+  """
+  event: FederationEvent!
+
+  """
+  Reads a single `FederationPerson` that is related to this `OfficialAssignment`.
+  """
+  person: FederationPerson!
+}
+
+"""
+A condition to be used against `OfficialAssignment` object types. All fields are
+tested for equality and combined with a logical ‘and.’
+"""
+input OfficialAssignmentCondition {
+  """Checks for equality with the object’s `eventId` field."""
+  eventId: BigInt
+
+  """Checks for equality with the object’s `date` field."""
+  date: Date
+
+  """Checks for equality with the object’s `personId` field."""
+  personId: String
+
+  """Checks for equality with the object’s `role` field."""
+  role: OfficialRole
+
+  """Match officials through their linked local person."""
+  person: PersonCondition
+
+  """
+  Inclusive start and exclusive end of the participation or assignment dates.
+  """
+  dateRange: DateRangeCondition
+}
+
+"""Methods to use when ordering `OfficialAssignment`."""
+enum OfficialAssignmentsOrderBy {
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+  EVENT_ID_ASC
+  EVENT_ID_DESC
+  DATE_ASC
+  DATE_DESC
+  PERSON_ID_ASC
+  PERSON_ID_DESC
 }
 
 """A connection to a list of `CompetitionOfficial` values."""
@@ -9191,11 +9414,6 @@ input CompetitionOfficialCondition {
 
   """Checks for equality with the object’s `judgeLabel` field."""
   judgeLabel: String
-
-  """
-  Match local people. Without an explicit selection, use current tenant people.
-  """
-  person: PersonCondition
 }
 
 """Methods to use when ordering `CompetitionOfficial`."""
@@ -9722,6 +9940,7 @@ enum PersonLicenseDiscipline {
   PD_SHOW_DANCE_STANDARD
   PD_SHOW_DANCE_LATIN
   UNKNOWN
+  ESPORTS
 }
 
 enum PersonLicenseStatus {
@@ -9733,6 +9952,7 @@ enum PersonLicenseStatus {
   ASPIRING
   SUSPENDED
   UNKNOWN
+  TEMPORARY
 }
 
 """A `FederationPersonLicense` edge in the connection."""
@@ -9945,6 +10165,8 @@ type Tenant {
   address: AddressDomain
   description: String!
   bankAccount: String!
+  cstsId: Int
+  createdAt: Datetime
 
   """Reads and enables pagination through a set of `User`."""
   users(
@@ -10760,8 +10982,8 @@ type Tenant {
     orderBy: [AccessCredentialsOrderBy!]
   ): [AccessCredential!]!
 
-  """Reads and enables pagination through a set of `Location`."""
-  tenantLocationsList(
+  """Reads and enables pagination through a set of `EventSavedSearch`."""
+  eventSavedSearchesList(
     """Only read the first `n` values of the set."""
     first: Int
 
@@ -10771,11 +10993,11 @@ type Tenant {
     """
     A condition to be used in determining which values should be returned by the collection.
     """
-    condition: LocationCondition
+    condition: EventSavedSearchCondition
 
-    """The method to use when ordering `Location`."""
-    orderBy: [LocationsOrderBy!]
-  ): [Location!]! @deprecated(reason: "Use locationsList.")
+    """The method to use when ordering `EventSavedSearch`."""
+    orderBy: [EventSavedSearchesOrderBy!]
+  ): [EventSavedSearch!]!
 }
 
 """A connection to a list of `User` values."""
@@ -11157,57 +11379,6 @@ type PersonFacetsRecord {
   count: Int
 }
 
-type EventFacetsRecord {
-  facet: String
-  value: String
-  count: Int
-}
-
-"""A connection to a list of `SystemAdminTenantsRecord` values."""
-type SystemAdminTenantsConnection {
-  """A list of `SystemAdminTenantsRecord` objects."""
-  nodes: [SystemAdminTenantsRecord!]!
-
-  """
-  A list of edges which contains the `SystemAdminTenantsRecord` and cursor to aid in pagination.
-  """
-  edges: [SystemAdminTenantsEdge!]!
-
-  """Information to aid in pagination."""
-  pageInfo: PageInfo!
-
-  """
-  The count of *all* `SystemAdminTenantsRecord` you could get from the connection.
-  """
-  totalCount: Int!
-}
-
-type SystemAdminTenantsRecord {
-  id: BigInt
-  name: String
-  description: String
-  bankAccount: String
-  origins: [String]
-  czIco: String
-  czDic: String
-  address: AddressDomain
-  settings: String
-  membershipCount: BigInt
-  trainerCount: BigInt
-  administratorCount: BigInt
-  sessionCountLast30Days: BigInt
-  sessionCountPerTrainerLast30Days: Float
-}
-
-"""A `SystemAdminTenantsRecord` edge in the connection."""
-type SystemAdminTenantsEdge {
-  """A cursor for use in pagination."""
-  cursor: Cursor
-
-  """The `SystemAdminTenantsRecord` at the end of the edge."""
-  node: SystemAdminTenantsRecord!
-}
-
 type ScoreboardRecord {
   personId: BigInt
   cohortId: BigInt
@@ -11223,6 +11394,19 @@ type ScoreboardRecord {
 
   """Reads a single `Cohort` that is related to this `ScoreboardRecord`."""
   cohort: Cohort
+}
+
+type TransactionFacetsRecord {
+  facet: String
+  value: String
+  count: Int
+}
+
+type PaymentFacetsRecord {
+  facet: String
+  value: String
+  count: Int
+  label: String
 }
 
 type TrainerGroupAttendanceCompletion {
@@ -11270,11 +11454,43 @@ type EventConflict {
   secondEvent: Event
 }
 
+type EventFacetsRecord {
+  facet: String
+  value: String
+  count: Int
+}
+
+"""An input for mutations affecting `EventSearchCondition`"""
+input EventSearchConditionInput {
+  types: [EventType]
+  trainerIds: [BigInt]
+  locationIds: [BigInt]
+  parentId: BigInt
+  participantIds: [BigInt]
+  cohortId: BigInt
+  onlyMine: Boolean
+  relevantOnly: Boolean
+  canRegister: Boolean
+  withCompetitions: Boolean
+  coupleId: BigInt
+  withBirthdays: Boolean
+}
+
 type CompetitionSuggestionsRecord {
   competition: Competition
   person: Person
   couple: Couple
   status: String
+}
+
+type GlobalSearchResult {
+  person: Person
+  couple: Couple
+  cohort: Cohort
+  location: Location
+  event: Event
+  score: Float!
+  position: Int!
 }
 
 """A connection to a list of `CrawlerResponseCache` values."""
@@ -11599,48 +11815,6 @@ enum CrawlerRateLimitRulesOrderBy {
   NEXT_AVAILABLE_AT_DESC
 }
 
-"""
-A condition to be used against `Tenant` object types. All fields are tested for equality and combined with a logical ‘and.’
-"""
-input TenantCondition {
-  """Checks for equality with the object’s `id` field."""
-  id: BigInt
-
-  """Checks for equality with the object’s `name` field."""
-  name: String
-
-  """Checks for equality with the object’s `czIco` field."""
-  czIco: String
-
-  """Checks for equality with the object’s `czDic` field."""
-  czDic: String
-
-  """Checks for equality with the object’s `description` field."""
-  description: String
-
-  """Checks for equality with the object’s `bankAccount` field."""
-  bankAccount: String
-}
-
-"""Methods to use when ordering `Tenant`."""
-enum TenantsOrderBy {
-  NATURAL
-  PRIMARY_KEY_ASC
-  PRIMARY_KEY_DESC
-  ID_ASC
-  ID_DESC
-  NAME_ASC
-  NAME_DESC
-  CZ_ICO_ASC
-  CZ_ICO_DESC
-  CZ_DIC_ASC
-  CZ_DIC_DESC
-  DESCRIPTION_ASC
-  DESCRIPTION_DESC
-  BANK_ACCOUNT_ASC
-  BANK_ACCOUNT_DESC
-}
-
 type CrawlerTargetSummary {
   federation: String
   kind: String
@@ -11725,6 +11899,58 @@ enum CrawlerTargetSummariesOrderBy {
   FETCH_DUE_DESC
   REFETCH_DUE_ASC
   REFETCH_DUE_DESC
+}
+
+"""
+A condition to be used against `Tenant` object types. All fields are tested for equality and combined with a logical ‘and.’
+"""
+input TenantCondition {
+  """Checks for equality with the object’s `id` field."""
+  id: BigInt
+
+  """Checks for equality with the object’s `name` field."""
+  name: String
+
+  """Checks for equality with the object’s `czIco` field."""
+  czIco: String
+
+  """Checks for equality with the object’s `czDic` field."""
+  czDic: String
+
+  """Checks for equality with the object’s `description` field."""
+  description: String
+
+  """Checks for equality with the object’s `bankAccount` field."""
+  bankAccount: String
+
+  """Checks for equality with the object’s `cstsId` field."""
+  cstsId: Int
+
+  """Checks for equality with the object’s `createdAt` field."""
+  createdAt: Datetime
+}
+
+"""Methods to use when ordering `Tenant`."""
+enum TenantsOrderBy {
+  NATURAL
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+  ID_ASC
+  ID_DESC
+  NAME_ASC
+  NAME_DESC
+  CZ_ICO_ASC
+  CZ_ICO_DESC
+  CZ_DIC_ASC
+  CZ_DIC_DESC
+  DESCRIPTION_ASC
+  DESCRIPTION_DESC
+  BANK_ACCOUNT_ASC
+  BANK_ACCOUNT_DESC
+  CSTS_ID_ASC
+  CSTS_ID_DESC
+  CREATED_AT_ASC
+  CREATED_AT_DESC
 }
 
 """
@@ -12057,6 +12283,25 @@ input ChangePasswordInput {
   newPass: String!
 }
 
+"""The output of our `resendPersonInvitation` mutation."""
+type ResendPersonInvitationPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+}
+
+"""All input for the `resendPersonInvitation` mutation."""
+input ResendPersonInvitationInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  invitationId: BigInt!
+}
+
 """The output of our `setEventSharing` mutation."""
 type SetEventSharingPayload {
   """
@@ -12183,14 +12428,14 @@ input UpdateTenantSettingsKeyInput {
   newValue: JSON
 }
 
-"""The output of our `setLessonDemand` mutation."""
-type SetLessonDemandPayload {
+"""The output of our `setLessonRequest` mutation."""
+type SetLessonRequestPayload {
   """
   The exact same `clientMutationId` that was provided in the mutation input,
   unchanged and unused. May be used by a client to track mutations.
   """
   clientMutationId: String
-  eventLessonDemand: EventLessonRequest
+  result: EventLessonRequest
 
   """An edge for our `EventLessonRequest`. May be used by Relay 1."""
   eventLessonRequestEdge(
@@ -12206,34 +12451,6 @@ type EventLessonRequestEdge {
 
   """The `EventLessonRequest` at the end of the edge."""
   node: EventLessonRequest!
-}
-
-"""All input for the `setLessonDemand` mutation."""
-input SetLessonDemandInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-  instanceRegistrationId: BigInt!
-  instanceTrainerId: BigInt!
-  lessonCount: Int!
-}
-
-"""The output of our `setLessonRequest` mutation."""
-type SetLessonRequestPayload {
-  """
-  The exact same `clientMutationId` that was provided in the mutation input,
-  unchanged and unused. May be used by a client to track mutations.
-  """
-  clientMutationId: String
-  result: EventLessonRequest
-
-  """An edge for our `EventLessonRequest`. May be used by Relay 1."""
-  eventLessonRequestEdge(
-    """The method to use when ordering `EventLessonRequest`."""
-    orderBy: [EventLessonRequestsOrderBy!]! = [PRIMARY_KEY_ASC]
-  ): EventLessonRequestEdge
 }
 
 """All input for the `setLessonRequest` mutation."""
@@ -12300,41 +12517,6 @@ input AddressDomainInput {
   city: String
   region: String
   postalCode: String
-}
-
-"""The output of our `archiveCohort` mutation."""
-type ArchiveCohortPayload {
-  """
-  The exact same `clientMutationId` that was provided in the mutation input,
-  unchanged and unused. May be used by a client to track mutations.
-  """
-  clientMutationId: String
-  result: Cohort
-
-  """An edge for our `Cohort`. May be used by Relay 1."""
-  cohortEdge(
-    """The method to use when ordering `Cohort`."""
-    orderBy: [CohortsOrderBy!]! = [PRIMARY_KEY_ASC]
-  ): CohortEdge
-}
-
-"""A `Cohort` edge in the connection."""
-type CohortEdge {
-  """A cursor for use in pagination."""
-  cursor: Cursor
-
-  """The `Cohort` at the end of the edge."""
-  node: Cohort!
-}
-
-"""All input for the `archiveCohort` mutation."""
-input ArchiveCohortInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-  cohortId: BigInt
 }
 
 """The output of our `upsertArticle` mutation."""
@@ -12405,6 +12587,41 @@ input CreateCreditTransactionForPersonInput {
   vDate: Datetime
 }
 
+"""The output of our `archiveCohort` mutation."""
+type ArchiveCohortPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+  result: Cohort
+
+  """An edge for our `Cohort`. May be used by Relay 1."""
+  cohortEdge(
+    """The method to use when ordering `Cohort`."""
+    orderBy: [CohortsOrderBy!]! = [PRIMARY_KEY_ASC]
+  ): CohortEdge
+}
+
+"""A `Cohort` edge in the connection."""
+type CohortEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `Cohort` at the end of the edge."""
+  node: Cohort!
+}
+
+"""All input for the `archiveCohort` mutation."""
+input ArchiveCohortInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  cohortId: BigInt
+}
+
 """The output of our `upsertAnnouncement` mutation."""
 type UpsertAnnouncementPayload {
   """
@@ -12419,7 +12636,6 @@ type UpsertAnnouncementPayload {
     """The method to use when ordering `Announcement`."""
     orderBy: [AnnouncementsOrderBy!]! = [PRIMARY_KEY_ASC]
   ): AnnouncementEdge
-  announcement: Announcement @deprecated(reason: "Use result.")
 }
 
 """All input for the `upsertAnnouncement` mutation."""
@@ -12452,54 +12668,32 @@ input AnnouncementAudienceTypeInputRecordInput {
   audienceRole: AnnouncementAudienceRole
 }
 
-"""The output of our `upsertLocation` mutation."""
-type UpsertLocationPayload {
+"""The output of our `savePaymentGroup` mutation."""
+type SavePaymentGroupPayload {
   """
   The exact same `clientMutationId` that was provided in the mutation input,
   unchanged and unused. May be used by a client to track mutations.
   """
   clientMutationId: String
-  result: Location
-
-  """An edge for our `Location`. May be used by Relay 1."""
-  locationEdge(
-    """The method to use when ordering `Location`."""
-    orderBy: [LocationsOrderBy!]! = [PRIMARY_KEY_ASC]
-  ): LocationEdge
+  result: [Payment!]
 }
 
-"""A `Location` edge in the connection."""
-type LocationEdge {
-  """A cursor for use in pagination."""
-  cursor: Cursor
-
-  """The `Location` at the end of the edge."""
-  node: Location!
-}
-
-"""All input for the `upsertLocation` mutation."""
-input UpsertLocationInput {
+"""All input for the `savePaymentGroup` mutation."""
+input SavePaymentGroupInput {
   """
   An arbitrary string value with no semantic meaning. Will be included in the
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-  details: LocationDetailsInputRecordInput
-  imageIds: [BigInt]
-  coverImageId: BigInt
+  groupId: BigInt
+  payments: [PaymentGroupItemInput]
 }
 
-"""An input for mutations affecting `LocationDetailsInputRecord`"""
-input LocationDetailsInputRecordInput {
-  id: BigInt
-  name: String
-  longName: String
-  description: String
-  address: AddressDomainInput
-  showInLists: Boolean
-  ordering: Int
-  latitude: Float
-  longitude: Float
+"""An input for mutations affecting `PaymentGroupItem`"""
+input PaymentGroupItemInput {
+  personId: BigInt
+  dueAt: Datetime
+  amount: BigFloat
 }
 
 """The output of our `logInAs` mutation."""
@@ -12610,6 +12804,56 @@ input RegisterUsingInvitationInput {
   passwd: String
   token: UUID
   login: String
+}
+
+"""The output of our `upsertLocation` mutation."""
+type UpsertLocationPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+  result: Location
+
+  """An edge for our `Location`. May be used by Relay 1."""
+  locationEdge(
+    """The method to use when ordering `Location`."""
+    orderBy: [LocationsOrderBy!]! = [PRIMARY_KEY_ASC]
+  ): LocationEdge
+}
+
+"""A `Location` edge in the connection."""
+type LocationEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `Location` at the end of the edge."""
+  node: Location!
+}
+
+"""All input for the `upsertLocation` mutation."""
+input UpsertLocationInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  details: LocationDetailsInputRecordInput
+  imageIds: [BigInt]
+  coverImageId: BigInt
+}
+
+"""An input for mutations affecting `LocationDetailsInputRecord`"""
+input LocationDetailsInputRecordInput {
+  id: BigInt
+  name: String
+  longName: String
+  description: String
+  address: AddressDomainInput
+  showInLists: Boolean
+  ordering: Int
+  latitude: Float
+  longitude: Float
 }
 
 """The output of our `rejectMembershipApplication` mutation."""
@@ -12767,52 +13011,6 @@ input PersonInput {
   imageId: BigInt
 }
 
-"""The output of our `setEventInstanceRegistration` mutation."""
-type SetEventInstanceRegistrationPayload {
-  """
-  The exact same `clientMutationId` that was provided in the mutation input,
-  unchanged and unused. May be used by a client to track mutations.
-  """
-  clientMutationId: String
-  eventInstanceRegistration: EventRegistration
-
-  """An edge for our `EventRegistration`. May be used by Relay 1."""
-  eventRegistrationEdge(
-    """The method to use when ordering `EventRegistration`."""
-    orderBy: [EventRegistrationsOrderBy!]! = [PRIMARY_KEY_ASC]
-  ): EventRegistrationEdge
-}
-
-"""All input for the `setEventInstanceRegistration` mutation."""
-input SetEventInstanceRegistrationInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-  pInstanceId: BigInt
-  pPersonId: BigInt
-  pCoupleId: BigInt
-  pIsRegistered: Boolean
-  pNote: String
-  pLessonTrainerIds: [BigInt]
-  pLessonCounts: [Int]
-  pPerson: EventRegistrationPersonInputRecordInput
-}
-
-"""An input for mutations affecting `EventRegistrationPersonInputRecord`"""
-input EventRegistrationPersonInputRecordInput {
-  firstName: String
-  lastName: String
-  gender: GenderType
-  nationality: String
-  email: String
-  phone: String
-  birthDate: Date
-  cstsId: Int
-  wdsfId: Int
-}
-
 """The output of our `setEventRegistration` mutation."""
 type SetEventRegistrationPayload {
   """
@@ -12844,6 +13042,19 @@ input SetEventRegistrationInput {
   lessonTrainerIds: [BigInt]
   lessonCounts: [Int]
   person: EventRegistrationPersonInputRecordInput
+}
+
+"""An input for mutations affecting `EventRegistrationPersonInputRecord`"""
+input EventRegistrationPersonInputRecordInput {
+  firstName: String
+  lastName: String
+  gender: GenderType
+  nationality: String
+  email: String
+  phone: String
+  birthDate: Date
+  cstsId: Int
+  wdsfId: Int
 }
 
 """The output of our `moveEvent` mutation."""
@@ -12894,7 +13105,6 @@ type SaveEventsPayload {
   """
   clientMutationId: String
   result: [Event!]
-  eventInstances: [Event!] @deprecated(reason: "Use result.")
 }
 
 """All input for the `saveEvents` mutation."""
@@ -12923,8 +13133,29 @@ input EventDetailsInputRecordInput {
   isVisible: Boolean
   isPublic: Boolean
   hasPublicDetails: Boolean
-  isLocked: Boolean
+  isLocked: Boolean @deprecated(reason: "Use registrationPeriod.")
   enableNotes: Boolean
+  registrationPeriod: DatetimeRangeInput
+}
+
+"""A range of `Datetime`."""
+input DatetimeRangeInput {
+  """The starting bound of our range."""
+  start: DatetimeRangeBoundInput
+
+  """The ending bound of our range."""
+  end: DatetimeRangeBoundInput
+}
+
+"""
+The value at one end of a range. A range can either include this value, or not.
+"""
+input DatetimeRangeBoundInput {
+  """The value at one end of our range."""
+  value: Datetime!
+
+  """Whether or not the value of this bound is included in the range."""
+  inclusive: Boolean!
 }
 
 """An input for mutations affecting `EventInputRecord`"""
@@ -13065,6 +13296,7 @@ input PersonInvitationInput {
   createdAt: Datetime
   updatedAt: Datetime
   email: String!
+  lastSentAt: Datetime
 }
 
 """The output of our create `Cohort` mutation."""
@@ -13261,42 +13493,6 @@ input TenantAdministratorInput {
   status: RelationshipStatus
 }
 
-"""The output of our create `Couple` mutation."""
-type CreateCouplePayload {
-  """
-  The exact same `clientMutationId` that was provided in the mutation input,
-  unchanged and unused. May be used by a client to track mutations.
-  """
-  clientMutationId: String
-
-  """The `Couple` that was created by this mutation."""
-  couple: Couple
-}
-
-"""All input for the create `Couple` mutation."""
-input CreateCoupleInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-
-  """The `Couple` to be created by this mutation."""
-  couple: CoupleInput!
-}
-
-"""An input for mutations affecting `Couple`"""
-input CoupleInput {
-  manId: BigInt!
-  womanId: BigInt!
-  since: Datetime
-  until: Datetime
-  createdAt: Datetime
-  updatedAt: Datetime
-  status: RelationshipStatus
-  imageId: BigInt
-}
-
 """The output of our create `AccessCredential` mutation."""
 type CreateAccessCredentialPayload {
   """
@@ -13334,6 +13530,38 @@ input AccessCredentialInput {
   updatedAt: Datetime
   createdBy: BigInt
   status: RelationshipStatus
+}
+
+"""The output of our create `EventSavedSearch` mutation."""
+type CreateEventSavedSearchPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `EventSavedSearch` that was created by this mutation."""
+  eventSavedSearch: EventSavedSearch
+}
+
+"""All input for the create `EventSavedSearch` mutation."""
+input CreateEventSavedSearchInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """The `EventSavedSearch` to be created by this mutation."""
+  eventSavedSearch: EventSavedSearchInput!
+}
+
+"""An input for mutations affecting `EventSavedSearch`"""
+input EventSavedSearchInput {
+  name: String!
+  condition: EventSearchConditionInput!
+  feedKey: UUID
+  crossTenant: Boolean
 }
 
 """The output of our create `Location` mutation."""
@@ -13375,6 +13603,42 @@ input LocationInput {
   latitude: Float
   longitude: Float
   ordering: Int
+}
+
+"""The output of our create `Couple` mutation."""
+type CreateCouplePayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Couple` that was created by this mutation."""
+  couple: Couple
+}
+
+"""All input for the create `Couple` mutation."""
+input CreateCoupleInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """The `Couple` to be created by this mutation."""
+  couple: CoupleInput!
+}
+
+"""An input for mutations affecting `Couple`"""
+input CoupleInput {
+  manId: BigInt!
+  womanId: BigInt!
+  since: Datetime
+  until: Datetime
+  createdAt: Datetime
+  updatedAt: Datetime
+  status: RelationshipStatus
+  imageId: BigInt
 }
 
 """The output of our create `TenantTrainer` mutation."""
@@ -13614,47 +13878,6 @@ input ScoreboardManualAdjustmentPatch {
   updatedAt: Datetime
 }
 
-"""The output of our update `Tenant` mutation."""
-type UpdateTenantPayload {
-  """
-  The exact same `clientMutationId` that was provided in the mutation input,
-  unchanged and unused. May be used by a client to track mutations.
-  """
-  clientMutationId: String
-
-  """The `Tenant` that was updated by this mutation."""
-  tenant: Tenant
-}
-
-"""All input for the `updateTenant` mutation."""
-input UpdateTenantInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-  id: BigInt!
-
-  """
-  An object where the defined keys will be set on the `Tenant` being updated.
-  """
-  patch: TenantPatch!
-}
-
-"""
-Represents an update to a `Tenant`. Fields that are set will be updated.
-"""
-input TenantPatch {
-  id: BigInt
-  name: String
-  origins: [String]
-  czIco: String
-  czDic: String
-  address: AddressDomainInput
-  description: String
-  bankAccount: String
-}
-
 """The output of our update `Announcement` mutation."""
 type UpdateAnnouncementPayload {
   """
@@ -13703,6 +13926,101 @@ input AnnouncementPatch {
   scheduledSince: Datetime
   scheduledUntil: Datetime
   status: AnnouncementStatus
+}
+
+"""The output of our update `Tenant` mutation."""
+type UpdateTenantPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Tenant` that was updated by this mutation."""
+  tenant: Tenant
+}
+
+"""All input for the `updateTenant` mutation."""
+input UpdateTenantInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: BigInt!
+
+  """
+  An object where the defined keys will be set on the `Tenant` being updated.
+  """
+  patch: TenantPatch!
+}
+
+"""
+Represents an update to a `Tenant`. Fields that are set will be updated.
+"""
+input TenantPatch {
+  id: BigInt
+  name: String
+  origins: [String]
+  czIco: String
+  czDic: String
+  address: AddressDomainInput
+  description: String
+  bankAccount: String
+  cstsId: Int
+}
+
+"""The output of our update `Payment` mutation."""
+type UpdatePaymentPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Payment` that was updated by this mutation."""
+  payment: Payment
+
+  """An edge for our `Payment`. May be used by Relay 1."""
+  paymentEdge(
+    """The method to use when ordering `Payment`."""
+    orderBy: [PaymentsOrderBy!]! = [PRIMARY_KEY_ASC]
+  ): PaymentEdge
+}
+
+"""All input for the `updatePayment` mutation."""
+input UpdatePaymentInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: BigInt!
+
+  """
+  An object where the defined keys will be set on the `Payment` being updated.
+  """
+  patch: PaymentPatch!
+}
+
+"""
+Represents an update to a `Payment`. Fields that are set will be updated.
+"""
+input PaymentPatch {
+  id: BigInt
+  tenantId: BigInt
+  accountingPeriodId: BigInt
+  cohortSubscriptionId: BigInt
+  eventId: BigInt
+  status: PaymentStatus
+  variableSymbol: String
+  specificSymbol: String
+  isAutoCreditAllowed: Boolean
+  dueAt: Datetime
+  paidAt: Datetime
+  createdAt: Datetime
+  updatedAt: Datetime
+  kind: PaymentKind
 }
 
 """The output of our update `Cohort` mutation."""
@@ -13924,47 +14242,6 @@ input TenantAdministratorPatch {
   status: RelationshipStatus
 }
 
-"""The output of our update `Couple` mutation."""
-type UpdateCouplePayload {
-  """
-  The exact same `clientMutationId` that was provided in the mutation input,
-  unchanged and unused. May be used by a client to track mutations.
-  """
-  clientMutationId: String
-
-  """The `Couple` that was updated by this mutation."""
-  couple: Couple
-}
-
-"""All input for the `updateCouple` mutation."""
-input UpdateCoupleInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-  id: BigInt!
-
-  """
-  An object where the defined keys will be set on the `Couple` being updated.
-  """
-  patch: CouplePatch!
-}
-
-"""
-Represents an update to a `Couple`. Fields that are set will be updated.
-"""
-input CouplePatch {
-  manId: BigInt
-  womanId: BigInt
-  since: Datetime
-  until: Datetime
-  createdAt: Datetime
-  updatedAt: Datetime
-  status: RelationshipStatus
-  imageId: BigInt
-}
-
 """The output of our update `AccessCredential` mutation."""
 type UpdateAccessCredentialPayload {
   """
@@ -14007,6 +14284,43 @@ input AccessCredentialPatch {
   updatedAt: Datetime
   createdBy: BigInt
   status: RelationshipStatus
+}
+
+"""The output of our update `EventSavedSearch` mutation."""
+type UpdateEventSavedSearchPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `EventSavedSearch` that was updated by this mutation."""
+  eventSavedSearch: EventSavedSearch
+}
+
+"""All input for the `updateEventSavedSearch` mutation."""
+input UpdateEventSavedSearchInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: BigInt!
+
+  """
+  An object where the defined keys will be set on the `EventSavedSearch` being updated.
+  """
+  patch: EventSavedSearchPatch!
+}
+
+"""
+Represents an update to a `EventSavedSearch`. Fields that are set will be updated.
+"""
+input EventSavedSearchPatch {
+  name: String
+  condition: EventSearchConditionInput
+  feedKey: UUID
+  crossTenant: Boolean
 }
 
 """The output of our update `Location` mutation."""
@@ -14053,6 +14367,47 @@ input LocationPatch {
   latitude: Float
   longitude: Float
   ordering: Int
+}
+
+"""The output of our update `Couple` mutation."""
+type UpdateCouplePayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Couple` that was updated by this mutation."""
+  couple: Couple
+}
+
+"""All input for the `updateCouple` mutation."""
+input UpdateCoupleInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: BigInt!
+
+  """
+  An object where the defined keys will be set on the `Couple` being updated.
+  """
+  patch: CouplePatch!
+}
+
+"""
+Represents an update to a `Couple`. Fields that are set will be updated.
+"""
+input CouplePatch {
+  manId: BigInt
+  womanId: BigInt
+  since: Datetime
+  until: Datetime
+  createdAt: Datetime
+  updatedAt: Datetime
+  status: RelationshipStatus
+  imageId: BigInt
 }
 
 """The output of our update `TenantTrainer` mutation."""
@@ -14112,59 +14467,6 @@ input TenantTrainerPatch {
   guestPayout45MinAmount: BigFloat
   currency: String
   isExternal: Boolean
-}
-
-"""The output of our update `Payment` mutation."""
-type UpdatePaymentPayload {
-  """
-  The exact same `clientMutationId` that was provided in the mutation input,
-  unchanged and unused. May be used by a client to track mutations.
-  """
-  clientMutationId: String
-
-  """The `Payment` that was updated by this mutation."""
-  payment: Payment
-
-  """An edge for our `Payment`. May be used by Relay 1."""
-  paymentEdge(
-    """The method to use when ordering `Payment`."""
-    orderBy: [PaymentsOrderBy!]! = [PRIMARY_KEY_ASC]
-  ): PaymentEdge
-}
-
-"""All input for the `updatePayment` mutation."""
-input UpdatePaymentInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-  id: BigInt!
-
-  """
-  An object where the defined keys will be set on the `Payment` being updated.
-  """
-  patch: PaymentPatch!
-}
-
-"""
-Represents an update to a `Payment`. Fields that are set will be updated.
-"""
-input PaymentPatch {
-  id: BigInt
-  tenantId: BigInt
-  accountingPeriodId: BigInt
-  cohortSubscriptionId: BigInt
-  eventId: BigInt
-  status: PaymentStatus
-  variableSymbol: String
-  specificSymbol: String
-  isAutoCreditAllowed: Boolean
-  dueAt: Datetime
-  paidAt: Datetime
-  createdAt: Datetime
-  updatedAt: Datetime
-  kind: PaymentKind
 }
 
 """The output of our update `MembershipApplication` mutation."""
@@ -14296,9 +14598,6 @@ type UpdateEventPayload {
 
   """The `Event` that was updated by this mutation."""
   event: Event
-
-  """The `Event` that was updated by this mutation."""
-  eventInstance: Event @deprecated(reason: "Use event.")
 }
 
 """All input for the `updateEvent` mutation."""
@@ -14339,32 +14638,13 @@ input EventPatch {
   capacityUnit: EventCapacityUnit
   description: String
   summary: String
-  isLocked: Boolean
   enableNotes: Boolean
   filesLegacy: String
   seriesId: BigInt
   hasPublicDetails: Boolean
   coverImageId: BigInt
-}
-
-"""A range of `Datetime`."""
-input DatetimeRangeInput {
-  """The starting bound of our range."""
-  start: DatetimeRangeBoundInput
-
-  """The ending bound of our range."""
-  end: DatetimeRangeBoundInput
-}
-
-"""
-The value at one end of a range. A range can either include this value, or not.
-"""
-input DatetimeRangeBoundInput {
-  """The value at one end of our range."""
-  value: Datetime!
-
-  """Whether or not the value of this bound is included in the range."""
-  inclusive: Boolean!
+  registrationPeriod: DatetimeRangeInput
+  isLocked: Boolean @deprecated(reason: "Use registrationPeriod.")
 }
 
 """The output of our delete `EventSeries` mutation."""
@@ -14417,6 +14697,34 @@ input DeleteScoreboardManualAdjustmentInput {
   id: BigInt!
 }
 
+"""The output of our delete `Announcement` mutation."""
+type DeleteAnnouncementPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Announcement` that was deleted by this mutation."""
+  announcement: Announcement
+
+  """An edge for our `Announcement`. May be used by Relay 1."""
+  announcementEdge(
+    """The method to use when ordering `Announcement`."""
+    orderBy: [AnnouncementsOrderBy!]! = [PRIMARY_KEY_ASC]
+  ): AnnouncementEdge
+}
+
+"""All input for the `deleteAnnouncement` mutation."""
+input DeleteAnnouncementInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: BigInt!
+}
+
 """The output of our delete `PersonInvitation` mutation."""
 type DeletePersonInvitationPayload {
   """
@@ -14447,56 +14755,6 @@ input DeletePersonInvitationByAccessTokenInput {
   """
   clientMutationId: String
   accessToken: UUID!
-}
-
-"""The output of our delete `Announcement` mutation."""
-type DeleteAnnouncementPayload {
-  """
-  The exact same `clientMutationId` that was provided in the mutation input,
-  unchanged and unused. May be used by a client to track mutations.
-  """
-  clientMutationId: String
-
-  """The `Announcement` that was deleted by this mutation."""
-  announcement: Announcement
-
-  """An edge for our `Announcement`. May be used by Relay 1."""
-  announcementEdge(
-    """The method to use when ordering `Announcement`."""
-    orderBy: [AnnouncementsOrderBy!]! = [PRIMARY_KEY_ASC]
-  ): AnnouncementEdge
-}
-
-"""All input for the `deleteAnnouncement` mutation."""
-input DeleteAnnouncementInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-  id: BigInt!
-}
-
-"""The output of our delete `Cohort` mutation."""
-type DeleteCohortPayload {
-  """
-  The exact same `clientMutationId` that was provided in the mutation input,
-  unchanged and unused. May be used by a client to track mutations.
-  """
-  clientMutationId: String
-
-  """The `Cohort` that was deleted by this mutation."""
-  cohort: Cohort
-}
-
-"""All input for the `deleteCohort` mutation."""
-input DeleteCohortInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-  id: BigInt!
 }
 
 """The output of our delete `Aktuality` mutation."""
@@ -14547,6 +14805,56 @@ type DeleteTransactionPayload {
 
 """All input for the `deleteTransaction` mutation."""
 input DeleteTransactionInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: BigInt!
+}
+
+"""The output of our delete `Payment` mutation."""
+type DeletePaymentPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Payment` that was deleted by this mutation."""
+  payment: Payment
+
+  """An edge for our `Payment`. May be used by Relay 1."""
+  paymentEdge(
+    """The method to use when ordering `Payment`."""
+    orderBy: [PaymentsOrderBy!]! = [PRIMARY_KEY_ASC]
+  ): PaymentEdge
+}
+
+"""All input for the `deletePayment` mutation."""
+input DeletePaymentInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: BigInt!
+}
+
+"""The output of our delete `Cohort` mutation."""
+type DeleteCohortPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Cohort` that was deleted by this mutation."""
+  cohort: Cohort
+}
+
+"""All input for the `deleteCohort` mutation."""
+input DeleteCohortInput {
   """
   An arbitrary string value with no semantic meaning. Will be included in the
   payload verbatim. May be used to track mutations by the client.
@@ -14655,20 +14963,20 @@ input DeleteTenantAdministratorInput {
   id: BigInt!
 }
 
-"""The output of our delete `Couple` mutation."""
-type DeleteCouplePayload {
+"""The output of our delete `EventSavedSearch` mutation."""
+type DeleteEventSavedSearchPayload {
   """
   The exact same `clientMutationId` that was provided in the mutation input,
   unchanged and unused. May be used by a client to track mutations.
   """
   clientMutationId: String
 
-  """The `Couple` that was deleted by this mutation."""
-  couple: Couple
+  """The `EventSavedSearch` that was deleted by this mutation."""
+  eventSavedSearch: EventSavedSearch
 }
 
-"""All input for the `deleteCouple` mutation."""
-input DeleteCoupleInput {
+"""All input for the `deleteEventSavedSearch` mutation."""
+input DeleteEventSavedSearchInput {
   """
   An arbitrary string value with no semantic meaning. Will be included in the
   payload verbatim. May be used to track mutations by the client.
@@ -14699,6 +15007,28 @@ input DeleteLocationInput {
   id: BigInt!
 }
 
+"""The output of our delete `Couple` mutation."""
+type DeleteCouplePayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Couple` that was deleted by this mutation."""
+  couple: Couple
+}
+
+"""All input for the `deleteCouple` mutation."""
+input DeleteCoupleInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: BigInt!
+}
+
 """The output of our delete `TenantTrainer` mutation."""
 type DeleteTenantTrainerPayload {
   """
@@ -14719,34 +15049,6 @@ type DeleteTenantTrainerPayload {
 
 """All input for the `deleteTenantTrainer` mutation."""
 input DeleteTenantTrainerInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-  id: BigInt!
-}
-
-"""The output of our delete `Payment` mutation."""
-type DeletePaymentPayload {
-  """
-  The exact same `clientMutationId` that was provided in the mutation input,
-  unchanged and unused. May be used by a client to track mutations.
-  """
-  clientMutationId: String
-
-  """The `Payment` that was deleted by this mutation."""
-  payment: Payment
-
-  """An edge for our `Payment`. May be used by Relay 1."""
-  paymentEdge(
-    """The method to use when ordering `Payment`."""
-    orderBy: [PaymentsOrderBy!]! = [PRIMARY_KEY_ASC]
-  ): PaymentEdge
-}
-
-"""All input for the `deletePayment` mutation."""
-input DeletePaymentInput {
   """
   An arbitrary string value with no semantic meaning. Will be included in the
   payload verbatim. May be used to track mutations by the client.
@@ -14815,38 +15117,10 @@ type DeleteEventPayload {
 
   """The `Event` that was deleted by this mutation."""
   event: Event
-
-  """The `Event` that was deleted by this mutation."""
-  eventInstance: Event @deprecated(reason: "Use event.")
 }
 
 """All input for the `deleteEvent` mutation."""
 input DeleteEventInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-  id: BigInt!
-}
-
-"""All input for the `updateEvent` mutation."""
-input UpdateEventInstanceInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-  id: BigInt!
-
-  """
-  An object where the defined keys will be set on the `Event` being updated.
-  """
-  patch: EventPatch!
-}
-
-"""All input for the `deleteEvent` mutation."""
-input DeleteEventInstanceInput {
   """
   An arbitrary string value with no semantic meaning. Will be included in the
   payload verbatim. May be used to track mutations by the client.
@@ -14861,6 +15135,52 @@ input DateRangeCondition {
 
   """Exclusive end date."""
   until: Date
+}
+
+"""Which tenant membership state a person membership filter targets."""
+enum PersonMembershipState {
+  CURRENT
+  FORMER
+}
+
+"""Filters people by current or former tenant membership state."""
+input PersonMembershipCondition {
+  """The membership state to filter by."""
+  state: PersonMembershipState
+
+  """
+  Membership states to include. An empty list includes current and former people; overrides state.
+  """
+  states: [PersonMembershipState!]
+
+  """
+  Cohort IDs to match. An empty list means people without a matching cohort membership.
+  """
+  inCohorts: [BigInt!]
+
+  """Whether the person has a trainer relationship in the selected state."""
+  isTrainer: Boolean
+
+  """
+  Whether the person has an administrator relationship in the selected state.
+  """
+  isAdmin: Boolean
+}
+
+"""
+Calendar selectors. Collection switches and date bounds are supplied separately.
+"""
+input CalendarFilterInput {
+  types: [EventType!]
+  trainerIds: [BigInt!]
+  locationIds: [BigInt!]
+  parentId: BigInt
+  participantIds: [BigInt!]
+  coupleId: BigInt
+  cohortId: BigInt
+  onlyMine: Boolean
+  relevantOnly: Boolean
+  canRegister: Boolean
 }
 
 input EventRangeCondition {
@@ -14978,14 +15298,14 @@ type Query {
   """Get a single `ScoreboardManualAdjustment`."""
   scoreboardManualAdjustment(id: BigInt!): ScoreboardManualAdjustment
 
-  """Get a single `Tenant`."""
-  tenant(id: BigInt!): Tenant
-
   """Get a single `Category`."""
   category(id: BigInt!): Category
 
   """Get a single `Category`."""
   categoryBySeriesAndDisciplineAndAgeGroupAndGenderGroupAndClassAndCompetitorType(series: String!, discipline: String!, ageGroup: String!, genderGroup: String!, class: String!, competitorType: CompetitorType!): Category
+
+  """Get a single `Announcement`."""
+  announcement(id: BigInt!): Announcement
 
   """Get a single `PersonInvitation`."""
   personInvitation(id: BigInt!): PersonInvitation
@@ -14993,17 +15313,14 @@ type Query {
   """Get a single `PersonInvitation`."""
   personInvitationByAccessToken(accessToken: UUID!): PersonInvitation
 
-  """Get a single `Announcement`."""
-  announcement(id: BigInt!): Announcement
-
-  """Get a single `Cohort`."""
-  cohort(id: BigInt!): Cohort
-
   """Get a single `File`."""
   file(id: BigInt!): File
 
   """Get a single `File`."""
   fileByObjectKey(objectKey: String!): File
+
+  """Get a single `Tenant`."""
+  tenant(id: BigInt!): Tenant
 
   """Get a single `CompetitionRound`."""
   competitionRound(id: BigInt!): CompetitionRound
@@ -15023,6 +15340,12 @@ type Query {
   """Get a single `AgeGroup`."""
   ageGroup(code: String!): AgeGroup
 
+  """Get a single `Payment`."""
+  payment(id: BigInt!): Payment
+
+  """Get a single `Cohort`."""
+  cohort(id: BigInt!): Cohort
+
   """Get a single `AccessEvent`."""
   accessEvent(id: BigInt!): AccessEvent
 
@@ -15041,17 +15364,11 @@ type Query {
   """Get a single `TenantAdministrator`."""
   tenantAdministrator(id: BigInt!): TenantAdministrator
 
-  """Get a single `FederationCompetitor`."""
-  federationCompetitor(id: String!): FederationCompetitor
-
-  """Get a single `FederationCompetitor`."""
-  federationCompetitorByFederationAndExternalId(federation: String!, externalId: String!): FederationCompetitor
-
-  """Get a single `Couple`."""
-  couple(id: BigInt!): Couple
-
   """Get a single `AccessCredential`."""
   accessCredential(id: BigInt!): AccessCredential
+
+  """Get a single `EventSavedSearch`."""
+  eventSavedSearch(id: BigInt!): EventSavedSearch
 
   """Get a single `User`."""
   user(id: BigInt!): User
@@ -15059,11 +15376,20 @@ type Query {
   """Get a single `Location`."""
   location(id: BigInt!): Location
 
+  """Get a single `FederationCompetitor`."""
+  federationCompetitor(id: String!): FederationCompetitor
+
+  """Get a single `FederationCompetitor`."""
+  federationCompetitorByFederationAndExternalId(federation: String!, externalId: String!): FederationCompetitor
+
   """Get a single `CrawlerTarget`."""
   crawlerTarget(id: BigInt!): CrawlerTarget
 
   """Get a single `CrawlerTarget`."""
   crawlerTargetByFederationAndKindAndKey(federation: String!, kind: String!, key: String!): CrawlerTarget
+
+  """Get a single `Couple`."""
+  couple(id: BigInt!): Couple
 
   """Get a single `FederationPerson`."""
   federationPerson(id: String!): FederationPerson
@@ -15073,9 +15399,6 @@ type Query {
 
   """Get a single `TenantTrainer`."""
   tenantTrainer(id: BigInt!): TenantTrainer
-
-  """Get a single `Payment`."""
-  payment(id: BigInt!): Payment
 
   """Get a single `Competition`."""
   competition(id: BigInt!): Competition
@@ -15089,14 +15412,14 @@ type Query {
   """Get a single `EventRegistration`."""
   eventRegistration(id: BigInt!): EventRegistration
 
-  """Get a single `Person`."""
-  person(id: BigInt!): Person
-
   """Get a single `FederationEvent`."""
   federationEvent(id: BigInt!): FederationEvent
 
   """Get a single `FederationEvent`."""
   federationEventByFederationAndExternalId(federation: String!, externalId: String!): FederationEvent
+
+  """Get a single `Person`."""
+  person(id: BigInt!): Person
 
   """Get a single `Event`."""
   event(id: BigInt!): Event
@@ -15115,41 +15438,6 @@ type Query {
     """Skip the first `n` values."""
     offset: Int
   ): [PersonFacetsRecord!]
-  eventFacetsList(
-    startRange: Datetime
-    endRange: Datetime
-    onlyTypes: [EventType]
-    trainerIds: [BigInt]
-    participantIds: [BigInt]
-    parentId: BigInt
-    locationIds: [BigInt]
-    canRegister: Boolean
-    onlyMine: Boolean
-    relevantOnly: Boolean
-
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Skip the first `n` values."""
-    offset: Int
-  ): [EventFacetsRecord!]
-
-  """
-  Reads and enables pagination through a set of `SystemAdminTenantsRecord`.
-  """
-  systemAdminTenants(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """
-    Skip the first `n` values from our `after` cursor, an alternative to cursor
-    based pagination. May not be used with `last`.
-    """
-    offset: Int
-
-    """Read all values in the set after (below) this cursor."""
-    after: Cursor
-  ): SystemAdminTenantsConnection
   scoreboardEntriesList(
     since: Date
     until: Date
@@ -15161,6 +15449,31 @@ type Query {
     """Skip the first `n` values."""
     offset: Int
   ): [ScoreboardRecord!]
+  transactionFacetsList(
+    since: Datetime
+    until: Datetime
+    sources: [TransactionSource]
+    accountIds: [BigInt]
+    search: String
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Skip the first `n` values."""
+    offset: Int
+  ): [TransactionFacetsRecord!]
+  paymentFacetsList(
+    onlyStatus: PaymentStatus
+    onlyKind: PaymentKind
+    personIds: [BigInt]
+    search: String
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Skip the first `n` values."""
+    offset: Int
+  ): [PaymentFacetsRecord!]
   trainerGroupAttendanceCompletionList(
     since: Datetime
     until: Datetime
@@ -15207,6 +15520,25 @@ type Query {
     """Skip the first `n` values."""
     offset: Int
   ): [EventConflict!]
+  eventFacetsList(
+    startRange: Datetime
+    endRange: Datetime
+    condition: EventSearchConditionInput
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Skip the first `n` values."""
+    offset: Int
+
+    """Apply calendar selectors in addition to the native condition."""
+    calendarFilter: CalendarFilterInput
+
+    """
+    Apply one of your saved searches within the current tenant, replacing calendarFilter.
+    """
+    savedSearch: BigInt
+  ): [EventFacetsRecord!]
   getCurrentTenant: Tenant
   competitionSuggestionsList(
     eventIds: [BigInt]
@@ -15223,6 +15555,16 @@ type Query {
     """Skip the first `n` values."""
     offset: Int
   ): [CompetitionSuggestionsRecord!]
+  globalSearchList(
+    search: String
+    limit: Int
+
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Skip the first `n` values."""
+    offset: Int
+  ): [GlobalSearchResult!]!
 
   """Reads and enables pagination through a set of `CrawlerResponseCache`."""
   crawlerResponseCaches(
@@ -15548,23 +15890,6 @@ type Query {
     orderBy: [AccountsOrderBy!]
   ): [Account!]
 
-  """Reads a set of `Tenant`."""
-  tenantsList(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Skip the first `n` values."""
-    offset: Int
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: TenantCondition
-
-    """The method to use when ordering `Tenant`."""
-    orderBy: [TenantsOrderBy!]
-  ): [Tenant!]
-
   """Reads a set of `Category`."""
   categoriesList(
     """Only read the first `n` values of the set."""
@@ -15628,23 +15953,6 @@ type Query {
     orderBy: [CrawlerTargetSummariesOrderBy!]
   ): [CrawlerTargetSummary!]
 
-  """Reads a set of `Cohort`."""
-  cohortsList(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Skip the first `n` values."""
-    offset: Int
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: CohortCondition
-
-    """The method to use when ordering `Cohort`."""
-    orderBy: [CohortsOrderBy!]
-  ): [Cohort!]
-
   """Reads and enables pagination through a set of `File`."""
   files(
     """Only read the first `n` values of the set."""
@@ -15673,6 +15981,23 @@ type Query {
     """The method to use when ordering `File`."""
     orderBy: [FilesOrderBy!] = [PRIMARY_KEY_ASC]
   ): FileConnection
+
+  """Reads a set of `Tenant`."""
+  tenantsList(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Skip the first `n` values."""
+    offset: Int
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: TenantCondition
+
+    """The method to use when ordering `Tenant`."""
+    orderBy: [TenantsOrderBy!]
+  ): [Tenant!]
 
   """Reads and enables pagination through a set of `CrawlerResponse`."""
   crawlerResponses(
@@ -15807,25 +16132,8 @@ type Query {
     orderBy: [CompetitionResultsOrderBy!] = [PRIMARY_KEY_ASC]
   ): CompetitionResultConnection
 
-  """Reads a set of `AccessEvent`."""
-  accessEventsList(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Skip the first `n` values."""
-    offset: Int
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: AccessEventCondition
-
-    """The method to use when ordering `AccessEvent`."""
-    orderBy: [AccessEventsOrderBy!]
-  ): [AccessEvent!]
-
-  """Reads and enables pagination through a set of `FederationCompetitor`."""
-  federationCompetitors(
+  """Reads and enables pagination through a set of `Payment`."""
+  payments(
     """Only read the first `n` values of the set."""
     first: Int
 
@@ -15847,15 +16155,14 @@ type Query {
     """
     A condition to be used in determining which values should be returned by the collection.
     """
-    condition: FederationCompetitorCondition
-    orderByCategory: CompetitorCategoryOrder
+    condition: PaymentCondition
 
-    """The method to use when ordering `FederationCompetitor`."""
-    orderBy: [FederationCompetitorsOrderBy!] = [PRIMARY_KEY_ASC]
-  ): FederationCompetitorConnection
+    """The method to use when ordering `Payment`."""
+    orderBy: [PaymentsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): PaymentConnection
 
-  """Reads a set of `Couple`."""
-  couplesList(
+  """Reads a set of `Cohort`."""
+  cohortsList(
     """Only read the first `n` values of the set."""
     first: Int
 
@@ -15865,11 +16172,45 @@ type Query {
     """
     A condition to be used in determining which values should be returned by the collection.
     """
-    condition: CoupleCondition
+    condition: CohortCondition
 
-    """The method to use when ordering `Couple`."""
-    orderBy: [CouplesOrderBy!]
-  ): [Couple!]
+    """The method to use when ordering `Cohort`."""
+    orderBy: [CohortsOrderBy!]
+  ): [Cohort!]
+
+  """Reads a set of `AccessEvent`."""
+  accessEventsList(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Skip the first `n` values."""
+    offset: Int
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: AccessEventCondition
+
+    """The method to use when ordering `AccessEvent`."""
+    orderBy: [AccessEventsOrderBy!]
+  ): [AccessEvent!]
+
+  """Reads a set of `CohortSubscription`."""
+  cohortSubscriptionsList(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Skip the first `n` values."""
+    offset: Int
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CohortSubscriptionCondition
+
+    """The method to use when ordering `CohortSubscription`."""
+    orderBy: [CohortSubscriptionsOrderBy!]
+  ): [CohortSubscription!]
 
   """Reads a set of `AccessCredential`."""
   accessCredentialsList(
@@ -15887,6 +16228,23 @@ type Query {
     """The method to use when ordering `AccessCredential`."""
     orderBy: [AccessCredentialsOrderBy!]
   ): [AccessCredential!]
+
+  """Reads a set of `EventSavedSearch`."""
+  eventSavedSearchesList(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Skip the first `n` values."""
+    offset: Int
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: EventSavedSearchCondition
+
+    """The method to use when ordering `EventSavedSearch`."""
+    orderBy: [EventSavedSearchesOrderBy!]
+  ): [EventSavedSearch!]
 
   """Reads and enables pagination through a set of `User`."""
   users(
@@ -15946,6 +16304,36 @@ type Query {
     orderBy: [CrawlerFetchJobsOrderBy!] = [NATURAL]
   ): CrawlerFetchJobConnection
 
+  """Reads and enables pagination through a set of `FederationCompetitor`."""
+  federationCompetitors(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: FederationCompetitorCondition
+    orderByCategory: CompetitorCategoryOrder
+
+    """The method to use when ordering `FederationCompetitor`."""
+    orderBy: [FederationCompetitorsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): FederationCompetitorConnection
+
   """Reads and enables pagination through a set of `CrawlerTarget`."""
   crawlerTargets(
     """Only read the first `n` values of the set."""
@@ -15974,6 +16362,23 @@ type Query {
     """The method to use when ordering `CrawlerTarget`."""
     orderBy: [CrawlerTargetsOrderBy!] = [PRIMARY_KEY_ASC]
   ): CrawlerTargetConnection
+
+  """Reads a set of `Couple`."""
+  couplesList(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Skip the first `n` values."""
+    offset: Int
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CoupleCondition
+
+    """The method to use when ordering `Couple`."""
+    orderBy: [CouplesOrderBy!]
+  ): [Couple!]
 
   """Reads and enables pagination through a set of `CrawlerTargetFailure`."""
   crawlerTargetFailures(
@@ -16032,35 +16437,6 @@ type Query {
     """The method to use when ordering `FederationPerson`."""
     orderBy: [FederationPeopleOrderBy!] = [PRIMARY_KEY_ASC]
   ): FederationPersonConnection
-
-  """Reads and enables pagination through a set of `Payment`."""
-  payments(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Only read the last `n` values of the set."""
-    last: Int
-
-    """
-    Skip the first `n` values from our `after` cursor, an alternative to cursor
-    based pagination. May not be used with `last`.
-    """
-    offset: Int
-
-    """Read all values in the set before (above) this cursor."""
-    before: Cursor
-
-    """Read all values in the set after (below) this cursor."""
-    after: Cursor
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: PaymentCondition
-
-    """The method to use when ordering `Payment`."""
-    orderBy: [PaymentsOrderBy!] = [PRIMARY_KEY_ASC]
-  ): PaymentConnection
 
   """Reads and enables pagination through a set of `Competition`."""
   competitions(
@@ -16154,35 +16530,6 @@ type Query {
     orderBy: [EventRegistrationsOrderBy!] = [PRIMARY_KEY_ASC]
   ): EventRegistrationConnection
 
-  """Reads and enables pagination through a set of `Person`."""
-  people(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Only read the last `n` values of the set."""
-    last: Int
-
-    """
-    Skip the first `n` values from our `after` cursor, an alternative to cursor
-    based pagination. May not be used with `last`.
-    """
-    offset: Int
-
-    """Read all values in the set before (above) this cursor."""
-    before: Cursor
-
-    """Read all values in the set after (below) this cursor."""
-    after: Cursor
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: PersonCondition
-
-    """The method to use when ordering `Person`."""
-    orderBy: [PeopleOrderBy!] = [PRIMARY_KEY_ASC]
-  ): PersonConnection
-
   """Reads and enables pagination through a set of `FederationEvent`."""
   federationEvents(
     """Only read the first `n` values of the set."""
@@ -16208,9 +16555,54 @@ type Query {
     """
     condition: FederationEventCondition
 
+    """Apply calendar selectors in addition to the native condition."""
+    calendarFilter: CalendarFilterInput
+
+    """
+    Apply one of your saved searches within the current tenant, replacing calendarFilter.
+    """
+    savedSearch: BigInt
+
     """The method to use when ordering `FederationEvent`."""
     orderBy: [FederationEventsOrderBy!] = [PRIMARY_KEY_ASC]
   ): FederationEventConnection
+
+  """Reads and enables pagination through a set of `Person`."""
+  people(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: PersonCondition
+
+    """Apply calendar selectors in addition to the native condition."""
+    calendarFilter: CalendarFilterInput
+
+    """
+    Apply one of your saved searches within the current tenant, replacing calendarFilter.
+    """
+    savedSearch: BigInt
+
+    """The method to use when ordering `Person`."""
+    orderBy: [PeopleOrderBy!] = [PRIMARY_KEY_ASC]
+  ): PersonConnection
 
   """Reads a set of `Event`."""
   eventsList(
@@ -16225,14 +16617,19 @@ type Query {
     """
     condition: EventCondition
 
+    """Apply calendar selectors in addition to the native condition."""
+    calendarFilter: CalendarFilterInput
+
+    """
+    Apply one of your saved searches within the current tenant, replacing calendarFilter.
+    """
+    savedSearch: BigInt
+
     """The method to use when ordering `Event`."""
     orderBy: [EventsOrderBy!]
   ): [Event!]
   getCurrentUser(versionId: String): User
   eventInstancesForRangeList(onlyType: EventType, startRange: Datetime, endRange: Datetime, trainerIds: [BigInt], participantIds: [BigInt], parentId: BigInt, scope: EventInstanceRangeScope = ALL, locationIds: [BigInt], onlyTypes: [EventType], first: Int, offset: Int): [Event!] @deprecated(reason: "Use eventsList with filters.")
-
-  """Get a single `Event`."""
-  eventInstance(id: BigInt!): Event @deprecated(reason: "Use event.")
 }
 
 """
@@ -16245,6 +16642,12 @@ type Mutation {
     """
     input: ChangePasswordInput!
   ): ChangePasswordPayload
+  resendPersonInvitation(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: ResendPersonInvitationInput!
+  ): ResendPersonInvitationPayload
   setEventSharing(
     """
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
@@ -16275,12 +16678,6 @@ type Mutation {
     """
     input: UpdateTenantSettingsKeyInput!
   ): UpdateTenantSettingsKeyPayload
-  setLessonDemand(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: SetLessonDemandInput!
-  ): SetLessonDemandPayload @deprecated(reason: "Use setLessonRequest.")
   setLessonRequest(
     """
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
@@ -16293,12 +16690,6 @@ type Mutation {
     """
     input: SystemAdminUpdateTenantInput!
   ): SystemAdminUpdateTenantPayload
-  archiveCohort(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: ArchiveCohortInput!
-  ): ArchiveCohortPayload
   upsertArticle(
     """
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
@@ -16311,18 +16702,24 @@ type Mutation {
     """
     input: CreateCreditTransactionForPersonInput!
   ): CreateCreditTransactionForPersonPayload
+  archiveCohort(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: ArchiveCohortInput!
+  ): ArchiveCohortPayload
   upsertAnnouncement(
     """
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
     """
     input: UpsertAnnouncementInput!
   ): UpsertAnnouncementPayload
-  upsertLocation(
+  savePaymentGroup(
     """
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
     """
-    input: UpsertLocationInput!
-  ): UpsertLocationPayload
+    input: SavePaymentGroupInput!
+  ): SavePaymentGroupPayload
   logInAs(
     """
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
@@ -16353,6 +16750,12 @@ type Mutation {
     """
     input: RegisterUsingInvitationInput!
   ): RegisterUsingInvitationPayload
+  upsertLocation(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpsertLocationInput!
+  ): UpsertLocationPayload
   rejectMembershipApplication(
     """
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
@@ -16377,12 +16780,6 @@ type Mutation {
     """
     input: CreatePersonInput!
   ): CreatePersonPayload
-  setEventInstanceRegistration(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: SetEventInstanceRegistrationInput!
-  ): SetEventInstanceRegistrationPayload @deprecated(reason: "Use setEventRegistration.")
   setEventRegistration(
     """
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
@@ -16466,14 +16863,6 @@ type Mutation {
     input: CreateTenantAdministratorInput!
   ): CreateTenantAdministratorPayload
 
-  """Creates a single `Couple`."""
-  createCouple(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: CreateCoupleInput!
-  ): CreateCouplePayload
-
   """Creates a single `AccessCredential`."""
   createAccessCredential(
     """
@@ -16482,6 +16871,14 @@ type Mutation {
     input: CreateAccessCredentialInput!
   ): CreateAccessCredentialPayload
 
+  """Creates a single `EventSavedSearch`."""
+  createEventSavedSearch(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreateEventSavedSearchInput!
+  ): CreateEventSavedSearchPayload
+
   """Creates a single `Location`."""
   createLocation(
     """
@@ -16489,6 +16886,14 @@ type Mutation {
     """
     input: CreateLocationInput!
   ): CreateLocationPayload
+
+  """Creates a single `Couple`."""
+  createCouple(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreateCoupleInput!
+  ): CreateCouplePayload
 
   """Creates a single `TenantTrainer`."""
   createTenantTrainer(
@@ -16532,6 +16937,14 @@ type Mutation {
     input: UpdateScoreboardManualAdjustmentInput!
   ): UpdateScoreboardManualAdjustmentPayload
 
+  """Updates a single `Announcement` using a unique key and a patch."""
+  updateAnnouncement(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateAnnouncementInput!
+  ): UpdateAnnouncementPayload
+
   """Updates a single `Tenant` using a unique key and a patch."""
   updateTenant(
     """
@@ -16540,13 +16953,13 @@ type Mutation {
     input: UpdateTenantInput!
   ): UpdateTenantPayload
 
-  """Updates a single `Announcement` using a unique key and a patch."""
-  updateAnnouncement(
+  """Updates a single `Payment` using a unique key and a patch."""
+  updatePayment(
     """
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
     """
-    input: UpdateAnnouncementInput!
-  ): UpdateAnnouncementPayload
+    input: UpdatePaymentInput!
+  ): UpdatePaymentPayload
 
   """Updates a single `Cohort` using a unique key and a patch."""
   updateCohort(
@@ -16588,14 +17001,6 @@ type Mutation {
     input: UpdateTenantAdministratorInput!
   ): UpdateTenantAdministratorPayload
 
-  """Updates a single `Couple` using a unique key and a patch."""
-  updateCouple(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: UpdateCoupleInput!
-  ): UpdateCouplePayload
-
   """Updates a single `AccessCredential` using a unique key and a patch."""
   updateAccessCredential(
     """
@@ -16603,6 +17008,14 @@ type Mutation {
     """
     input: UpdateAccessCredentialInput!
   ): UpdateAccessCredentialPayload
+
+  """Updates a single `EventSavedSearch` using a unique key and a patch."""
+  updateEventSavedSearch(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateEventSavedSearchInput!
+  ): UpdateEventSavedSearchPayload
 
   """Updates a single `Location` using a unique key and a patch."""
   updateLocation(
@@ -16612,6 +17025,14 @@ type Mutation {
     input: UpdateLocationInput!
   ): UpdateLocationPayload
 
+  """Updates a single `Couple` using a unique key and a patch."""
+  updateCouple(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateCoupleInput!
+  ): UpdateCouplePayload
+
   """Updates a single `TenantTrainer` using a unique key and a patch."""
   updateTenantTrainer(
     """
@@ -16619,14 +17040,6 @@ type Mutation {
     """
     input: UpdateTenantTrainerInput!
   ): UpdateTenantTrainerPayload
-
-  """Updates a single `Payment` using a unique key and a patch."""
-  updatePayment(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: UpdatePaymentInput!
-  ): UpdatePaymentPayload
 
   """
   Updates a single `MembershipApplication` using a unique key and a patch.
@@ -16670,6 +17083,14 @@ type Mutation {
     input: DeleteScoreboardManualAdjustmentInput!
   ): DeleteScoreboardManualAdjustmentPayload
 
+  """Deletes a single `Announcement` using a unique key."""
+  deleteAnnouncement(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteAnnouncementInput!
+  ): DeleteAnnouncementPayload
+
   """Deletes a single `PersonInvitation` using a unique key."""
   deletePersonInvitation(
     """
@@ -16686,22 +17107,6 @@ type Mutation {
     input: DeletePersonInvitationByAccessTokenInput!
   ): DeletePersonInvitationPayload
 
-  """Deletes a single `Announcement` using a unique key."""
-  deleteAnnouncement(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: DeleteAnnouncementInput!
-  ): DeleteAnnouncementPayload
-
-  """Deletes a single `Cohort` using a unique key."""
-  deleteCohort(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: DeleteCohortInput!
-  ): DeleteCohortPayload
-
   """Deletes a single `Aktuality` using a unique key."""
   deleteAktuality(
     """
@@ -16717,6 +17122,22 @@ type Mutation {
     """
     input: DeleteTransactionInput!
   ): DeleteTransactionPayload
+
+  """Deletes a single `Payment` using a unique key."""
+  deletePayment(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeletePaymentInput!
+  ): DeletePaymentPayload
+
+  """Deletes a single `Cohort` using a unique key."""
+  deleteCohort(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteCohortInput!
+  ): DeleteCohortPayload
 
   """Deletes a single `TenantMembership` using a unique key."""
   deleteTenantMembership(
@@ -16750,13 +17171,13 @@ type Mutation {
     input: DeleteTenantAdministratorInput!
   ): DeleteTenantAdministratorPayload
 
-  """Deletes a single `Couple` using a unique key."""
-  deleteCouple(
+  """Deletes a single `EventSavedSearch` using a unique key."""
+  deleteEventSavedSearch(
     """
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
     """
-    input: DeleteCoupleInput!
-  ): DeleteCouplePayload
+    input: DeleteEventSavedSearchInput!
+  ): DeleteEventSavedSearchPayload
 
   """Deletes a single `Location` using a unique key."""
   deleteLocation(
@@ -16766,6 +17187,14 @@ type Mutation {
     input: DeleteLocationInput!
   ): DeleteLocationPayload
 
+  """Deletes a single `Couple` using a unique key."""
+  deleteCouple(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteCoupleInput!
+  ): DeleteCouplePayload
+
   """Deletes a single `TenantTrainer` using a unique key."""
   deleteTenantTrainer(
     """
@@ -16773,14 +17202,6 @@ type Mutation {
     """
     input: DeleteTenantTrainerInput!
   ): DeleteTenantTrainerPayload
-
-  """Deletes a single `Payment` using a unique key."""
-  deletePayment(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: DeletePaymentInput!
-  ): DeletePaymentPayload
 
   """Deletes a single `MembershipApplication` using a unique key."""
   deleteMembershipApplication(
@@ -16805,34 +17226,10 @@ type Mutation {
     """
     input: DeleteEventInput!
   ): DeleteEventPayload
-
-  """Updates a single `Event` using a unique key and a patch."""
-  updateEventInstance(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: UpdateEventInstanceInput!
-  ): UpdateEventPayload @deprecated(reason: "Use updateEvent.")
-
-  """Deletes a single `Event` using a unique key."""
-  deleteEventInstance(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: DeleteEventInstanceInput!
-  ): DeleteEventPayload @deprecated(reason: "Use deleteEvent.")
 }
 
 enum EventInstanceRangeScope {
   ALL
   MINE
   RELEVANT
-}
-
-type EventExternalRegistration {
-  id: BigInt!
-  note: String
-  email: String!
-  firstName: String!
-  lastName: String!
 }

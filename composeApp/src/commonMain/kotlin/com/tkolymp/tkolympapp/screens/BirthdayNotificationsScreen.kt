@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonList
 import com.tkolymp.tkolympapp.components.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -103,11 +104,7 @@ fun BirthdayNotificationsScreen(onBack: () -> Unit = {}) {
         ) {
             val error = state.error
             if (state.isLoading) {
-                Row(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) { CircularProgressIndicator() }
+                SkeletonList()
             } else if (error != null && state.nonTrainerPeople.isEmpty() && state.availableGroups.isEmpty()) {
                 ErrorState(error = error, onRetry = { viewModel.load() })
             } else {

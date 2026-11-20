@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.sp
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonDetail
 import com.tkolymp.tkolympapp.components.AppTopBar
 import com.tkolymp.tkolympapp.components.InfoPill
 import com.tkolymp.tkolympapp.components.RankBadge
@@ -120,7 +121,7 @@ fun FederationEventScreen(
                 modifier = Modifier.weight(1f).fillMaxWidth()
             ) {
                 when {
-                    event == null && state.isLoading -> Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
+                    event == null && state.isLoading -> SkeletonDetail()
                     event == null -> ErrorState(state.error?.message, onRetry = { scope.launch { viewModel.load(eventId) } })
                     else -> EventContent(event, state, if (signUp == null) bottomPadding else 0.dp,
                         onOpenWeb = { uriHandler.openUri(it) },

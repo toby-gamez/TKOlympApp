@@ -1,5 +1,6 @@
 package com.tkolymp.tkolympapp.screens
 
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonForm
 import com.tkolymp.tkolympapp.components.cardLineBorder
 import com.tkolymp.tkolympapp.components.surfaceCardColors
 import androidx.compose.foundation.layout.Arrangement
@@ -112,7 +113,7 @@ fun EventEditScreen(
         },
     ) { padding ->
         if (state.isLoading) {
-            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            SkeletonForm(Modifier.padding(padding))
             return@Scaffold
         }
         val draft = state.draft

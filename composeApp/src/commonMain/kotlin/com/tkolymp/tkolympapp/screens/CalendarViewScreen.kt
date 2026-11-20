@@ -8,6 +8,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonTimeline
 import com.tkolymp.tkolympapp.components.AppTopBar
 import com.tkolymp.tkolympapp.components.ChipRow
 import com.tkolymp.tkolympapp.components.LayoutCard
@@ -231,6 +232,8 @@ fun CalendarViewScreen(
                         }
                     }
                 }
+            } else if (state.isLoading && state.layoutData.isEmpty()) {
+                SkeletonTimeline()
             } else {
                 when (state.viewMode) {
                     ViewMode.DAY -> {

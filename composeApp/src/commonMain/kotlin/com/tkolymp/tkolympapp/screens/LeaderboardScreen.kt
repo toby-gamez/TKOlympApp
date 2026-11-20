@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.sp
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonLeaderboard
 import com.tkolymp.tkolympapp.components.AppTopBar
 import com.tkolymp.tkolympapp.components.InitialsAvatar
 import com.tkolymp.tkolympapp.components.QuickChip
@@ -127,7 +128,7 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                 }
 
                 when {
-                    state.isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                    state.isLoading -> SkeletonLeaderboard()
                     state.error != null -> ErrorState(message = state.error?.message)
                     else -> {
                         val myEntry = remember(state.rankings, currentPersonId.value) {

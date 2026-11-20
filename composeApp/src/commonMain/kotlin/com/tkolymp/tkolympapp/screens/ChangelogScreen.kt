@@ -1,5 +1,6 @@
 package com.tkolymp.tkolympapp.screens
 
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonReleaseList
 import com.tkolymp.tkolympapp.components.cardLineBorder
 import com.tkolymp.tkolympapp.components.surfaceCardColors
 import androidx.compose.foundation.layout.Arrangement
@@ -79,10 +80,7 @@ fun ChangelogScreen(onBack: () -> Unit = {}) {
         }
     ) { innerPadding ->
         when {
-            state.isLoading -> Box(
-                modifier = Modifier.fillMaxSize().padding(innerPadding),
-                contentAlignment = Alignment.Center
-            ) { CircularProgressIndicator() }
+            state.isLoading -> SkeletonReleaseList(Modifier.padding(innerPadding))
 
             state.error != null && state.releases.isEmpty() -> Box(
                 modifier = Modifier.fillMaxSize().padding(innerPadding),

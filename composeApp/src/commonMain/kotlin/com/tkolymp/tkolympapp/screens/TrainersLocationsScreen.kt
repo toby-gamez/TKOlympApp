@@ -8,6 +8,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonList
 import com.tkolymp.tkolympapp.components.AppTopBar
 import com.tkolymp.tkolympapp.components.SectionLabel
 import com.tkolymp.tkolympapp.components.SegmentedToggle
@@ -103,6 +104,10 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
             modifier = Modifier.padding(padding)
         ) {
             val club = state.clubData
+            if (club == null && state.isLoading) {
+                SkeletonList()
+                return@SwipeToReload
+            }
 
             val visibleTrainers = club?.trainers?.filter { t ->
                 if (t.isVisible == false) return@filter false

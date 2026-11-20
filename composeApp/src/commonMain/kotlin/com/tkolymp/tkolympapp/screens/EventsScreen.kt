@@ -2,6 +2,7 @@ package com.tkolymp.tkolympapp.screens
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.itemsIndexed
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonCampList
 import com.tkolymp.shared.utils.parseToLocal
 import com.tkolymp.tkolympapp.components.AppTopBar
 import com.tkolymp.tkolympapp.components.CampCard
@@ -252,6 +253,7 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}, onO
                         myPersonId = state.myPersonId,
                         myCoupleIds = state.myCoupleIds,
                         visible = sectionsVisible,
+                        isLoading = state.isLoading,
                         onOpenEvent = onOpenEvent
                     )
                 } else {
@@ -278,6 +280,7 @@ fun EventsScreen(bottomPadding: Dp = 0.dp, onOpenEvent: (Long) -> Unit = {}, onO
                         myPersonId = state.myPersonId,
                         myCoupleIds = state.myCoupleIds,
                         visible = sectionsVisible,
+                        isLoading = state.isLoading,
                         onOpenEvent = onOpenEvent
                     )
                 }
@@ -314,6 +317,7 @@ private fun CampList(
     myPersonId: String?,
     myCoupleIds: List<String>,
     visible: Boolean,
+    isLoading: Boolean,
     onOpenEvent: (Long) -> Unit
 ) {
     LazyColumn(
@@ -321,7 +325,9 @@ private fun CampList(
         contentPadding = PaddingValues(start = Spacing.default, end = Spacing.default, top = 14.dp, bottom = Spacing.default),
         verticalArrangement = Arrangement.spacedBy(Spacing.medium)
     ) {
-        if (camps.isEmpty()) {
+        if (camps.isEmpty() && isLoading) {
+            item { SkeletonCampList() }
+        } else if (camps.isEmpty()) {
             item { EmptyState(title = emptyTitle, icon = emptyIcon, fullPage = true, modifier = Modifier.fillParentMaxSize()) }
         }
         itemsIndexed(camps, key = { _, inst -> inst.id }) { i, inst ->

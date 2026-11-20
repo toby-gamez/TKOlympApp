@@ -114,7 +114,6 @@ class OfflineSyncManager(
                     list.forEach { itItem ->
                         val jo = buildJsonObject {
                             put("id", JsonPrimitive(itItem.id ?: ""))
-                            put("isUnpaid", JsonPrimitive(itItem.isUnpaid?.toString() ?: ""))
                             val price = itItem.price
                             put("price", buildJsonObject { put("amount", JsonPrimitive(price?.amount?.toString() ?: "")); put("currency", JsonPrimitive(price?.currency ?: "")) })
                             put("paymentId", JsonPrimitive(itItem.paymentId ?: ""))

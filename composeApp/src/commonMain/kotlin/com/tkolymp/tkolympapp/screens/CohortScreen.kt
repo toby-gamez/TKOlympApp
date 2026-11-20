@@ -1,5 +1,6 @@
 package com.tkolymp.tkolympapp.screens
 
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonDetail
 import com.tkolymp.tkolympapp.components.cardLineBorder
 import com.tkolymp.tkolympapp.components.surfaceCardColors
 import androidx.compose.foundation.clickable
@@ -90,6 +91,10 @@ fun CohortScreen(
             modifier = Modifier.padding(top = padding.calculateTopPadding(), bottom = bottomPadding)
         ) {
             if (cohort == null) {
+                if (state.isLoading && state.error == null) {
+                    SkeletonDetail()
+                    return@SwipeToReload
+                }
                 state.error?.let { ErrorState(error = it, onRetry = { scope.launch { vm.load(cohortId) } }) }
                 return@SwipeToReload
             }

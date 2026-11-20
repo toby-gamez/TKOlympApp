@@ -3,6 +3,7 @@ package com.tkolymp.tkolympapp.screens
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.text.font.FontWeight
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonProfile
 import com.tkolymp.tkolympapp.components.RowDivider
 import com.tkolymp.tkolympapp.components.ScheduleCard
 import com.tkolymp.tkolympapp.components.SectionLabel
@@ -112,7 +113,9 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
 
             val p = state.person as? PersonDetails
             if (p == null) {
-                if (state.error == null && !state.isLoading) {
+                if (state.isLoading && state.error == null) {
+                    SkeletonProfile()
+                } else if (state.error == null) {
                     EmptyState(title = AppStrings.current.profile.personNotFound, icon = Icons.Outlined.PersonOff)
                 }
                 return@Column
@@ -146,7 +149,6 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
                                     val womanName = listOfNotNull(c.woman?.firstName, c.woman?.lastName).joinToString(" ").trim().takeIf { it.isNotBlank() }
                                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                                         CoupleAvatar(womanName = womanName, manName = manName, size = 40.dp, womanImageUrl = c.woman?.imageUrl, manImageUrl = c.man?.imageUrl)
-                                        Spacer(Modifier.width(18.dp))
                                         Text(listOfNotNull(manName, womanName).joinToString(" - "), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
                                     }
                                 }

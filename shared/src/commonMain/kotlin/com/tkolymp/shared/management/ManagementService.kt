@@ -240,7 +240,7 @@ internal object ManagementGraphQl {
         capacity = (inst["capacity"] as? JsonPrimitive)?.intOrNull,
         isVisible = inst.bool("isVisible") ?: true,
         isPublic = inst.bool("isPublic") ?: false,
-        isLocked = inst.bool("isLocked") ?: false,
+        isLocked = inst.obj("registrationInfo")?.bool("registrationOpen")?.not() ?: inst.bool("isLocked") ?: false,
         enableNotes = inst.bool("enableNotes") ?: false,
         isCancelled = inst.bool("isCancelled") ?: false,
         summary = inst.str("summary").orEmpty(),
@@ -257,6 +257,10 @@ internal object ManagementGraphQl {
         cohortIds = (a.obj("announcementAudiences")?.get("nodes") as? JsonArray).objects().mapNotNull { it.str("cohortId") },
     )
 
+    /** Locked registration is a null period, open registration an unbounded one (matches what the API reads back). */
+    private fun registrationPeriod(locked: Boolean): JsonElement =
+        if (locked) JsonNull else buildJsonObject { put("start", JsonNull); put("end", JsonNull) }
+
     fun saveEventsVariables(draft: EventDraft): JsonObject = buildJsonObject {
         put("input", buildJsonObject {
             put("details", buildJsonObject {
@@ -268,7 +272,7 @@ internal object ManagementGraphQl {
                 put("capacityUnit", "PEOPLE")
                 put("isVisible", draft.isVisible)
                 put("isPublic", draft.isPublic)
-                put("isLocked", draft.isLocked)
+                put("registrationPeriod", registrationPeriod(draft.isLocked))
                 put("enableNotes", draft.enableNotes)
             })
             put("events", buildJsonArray {
@@ -299,7 +303,7 @@ internal object ManagementGraphQl {
         put("capacity", draft.capacity?.let { JsonPrimitive(it) } ?: JsonNull)
         put("isVisible", draft.isVisible)
         put("isPublic", draft.isPublic)
-        put("isLocked", draft.isLocked)
+        put("registrationPeriod", registrationPeriod(draft.isLocked))
         put("enableNotes", draft.enableNotes)
         put("isCancelled", draft.isCancelled)
         put("summary", draft.summary)

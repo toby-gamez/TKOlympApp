@@ -140,12 +140,16 @@ class EventService(
                 Logger.d("EventService", "fetchEventsGroupedByDay: cache MISS for $cacheKey")
             }
         val variables = buildJsonObject {
-            put("startRange", JsonPrimitive(startRangeIso))
-            put("endRange", JsonPrimitive(endRangeIso))
+            put("condition", buildJsonObject {
+                put("overlaps", buildJsonObject {
+                    put("start", JsonPrimitive(startRangeIso))
+                    put("end", JsonPrimitive(endRangeIso))
+                })
+                if (onlyType != null) put("types", buildJsonArray { add(JsonPrimitive(onlyType)) })
+            })
+            if (onlyMine) put("calendarFilter", buildJsonObject { put("onlyMine", JsonPrimitive(true)) })
             put("first", JsonPrimitive(first))
             put("offset", JsonPrimitive(offset))
-            put("scope", JsonPrimitive(if (onlyMine) "MINE" else "ALL"))
-            if (onlyType != null) put("onlyType", JsonPrimitive(onlyType))
         }
 
         val resp = try {
@@ -163,7 +167,7 @@ class EventService(
             Logger.d("EventService", "fetchEventsGroupedByDay: GraphQL error for $cacheKey: $errors")
             throw Exception("GraphQL error: $errors")
         }
-        val listElem = data.get("eventInstancesForRangeList") ?: return emptyMap()
+        val listElem = data.get("eventsList") ?: return emptyMap()
 
         if (listElem is JsonNull) return emptyMap()
 

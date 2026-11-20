@@ -1,4 +1,5 @@
 package com.tkolymp.tkolympapp.screens
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonDetail
 import com.tkolymp.shared.utils.daysSince
 import com.tkolymp.tkolympapp.components.AppTopBar
 import com.tkolymp.tkolympapp.ui.theme.Spacing
@@ -109,7 +110,9 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null, onEdit: ((L
             onRefresh = { scope.launch { viewModel.load(announcementId, forceRefresh = true) } },
             modifier = Modifier.padding(padding)
         ) {
-            if (a == null) {
+            if (a == null && state.isLoading) {
+                SkeletonDetail()
+            } else if (a == null) {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     item {
                         EmptyState(

@@ -1,12 +1,10 @@
 query EventsForRange(
-    $startRange: Datetime!,
-    $endRange: Datetime!,
+    $condition: EventCondition,
+    $calendarFilter: CalendarFilterInput,
     $first: Int,
-    $offset: Int,
-    $onlyType: EventType,
-    $scope: EventInstanceRangeScope
+    $offset: Int
 ) {
-    eventInstancesForRangeList(startRange: $startRange, endRange: $endRange, first: $first, offset: $offset, onlyType: $onlyType, scope: $scope) {
+    eventsList(condition: $condition, calendarFilter: $calendarFilter, first: $first, offset: $offset, orderBy: [SINCE_ASC, ID_ASC]) {
         id
         isCancelled
         since

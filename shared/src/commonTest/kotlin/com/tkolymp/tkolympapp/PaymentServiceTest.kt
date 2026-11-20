@@ -140,4 +140,21 @@ class PaymentServiceTest {
         assertEquals(99999L, m.amount)
         assertEquals(999.99, m.amount!! / 100.0, absoluteTolerance = 0.001)
     }
+
+    @Test
+    fun `fetchPaymentDebtors derives isUnpaid from payment status`() = runTest {
+        fun debtor(id: String, status: String?) = buildJsonObject {
+            put("id", JsonPrimitive(id))
+            put("payment", buildJsonObject { if (status != null) put("status", JsonPrimitive(status)) })
+        }
+        val response = buildJsonObject {
+            put("data", buildJsonObject {
+                put("paymentDebtorsList", buildJsonArray {
+                    add(debtor("1", "UNPAID")); add(debtor("2", "TENTATIVE")); add(debtor("3", "PAID")); add(debtor("4", null))
+                })
+            })
+        }
+        val items = PaymentService(client = makeClient(response), cache = CacheService()).fetchPaymentDebtors()
+        assertEquals(listOf<Boolean?>(true, true, false, null), items.map { it.isUnpaid })
+    }
 }

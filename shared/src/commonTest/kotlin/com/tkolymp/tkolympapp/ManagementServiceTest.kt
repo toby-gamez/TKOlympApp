@@ -13,11 +13,14 @@ import com.tkolymp.shared.network.IGraphQlClient
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -137,6 +140,20 @@ class ManagementServiceTest {
     }
 
     @Test
+    fun lockedFlag_isSentAsRegistrationPeriod() {
+        val open = EventDraft(name = "A", isLocked = false)
+        val locked = EventDraft(name = "A", isLocked = true)
+        val unbounded = buildJsonObject { put("start", JsonNull); put("end", JsonNull) }
+        fun created(d: EventDraft) = ManagementGraphQl.saveEventsVariables(d)["input"]!!.jsonObject["details"]!!.jsonObject
+        assertEquals(unbounded, created(open)["registrationPeriod"])
+        assertEquals(JsonNull, created(locked)["registrationPeriod"])
+        assertEquals(unbounded, ManagementGraphQl.eventPatch(open)["registrationPeriod"])
+        assertEquals(JsonNull, ManagementGraphQl.eventPatch(locked)["registrationPeriod"])
+        assertFalse(created(locked).containsKey("isLocked"))
+        assertFalse(ManagementGraphQl.eventPatch(locked).containsKey("isLocked"))
+    }
+
+    @Test
     fun createEvent_setsDescriptionOnCreatedInstance() = runTest {
         val client = RoutingGraphQlClient(
             mapOf(
@@ -199,6 +216,15 @@ class ManagementServiceTest {
         assertTrue(draft.isLocked)
         assertEquals(listOf("42"), draft.trainerPersonIds)
         assertEquals(listOf("5"), draft.cohortIds)
+    }
+
+    @Test
+    fun parseEventDraft_derivesLockedFromRegistrationInfo() {
+        fun draft(open: Boolean) = ManagementGraphQl.parseEventDraft(
+            obj("""{"id":"1","name":"Camp","type":"CAMP","registrationInfo":{"registrationOpen":$open}}""")
+        )
+        assertTrue(draft(open = false).isLocked)
+        assertFalse(draft(open = true).isLocked)
     }
 
     // ── announcements ──────────────────────────────────────────────────────────

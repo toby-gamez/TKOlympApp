@@ -141,14 +141,14 @@ internal fun CompetitionEventCard(competitions: List<Competition>, onOpenWeb: ((
                             text = time,
                             modifier = Modifier.padding(end = 8.dp),
                             style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     Text(
                         text = competitionCategoryLabel(group.first()),
                         style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -162,7 +162,8 @@ internal fun CompetitionEventCard(competitions: List<Competition>, onOpenWeb: ((
                             comp,
                             showCategory = false,
                             showCheckIn = false,
-                            competitorName = competitionEntryName(comp)
+                            competitorName = competitionEntryName(comp),
+                            boldName = false
                         )
                     }
             }
@@ -262,7 +263,8 @@ internal fun CompetitionEntryRow(
     comp: Competition,
     showCategory: Boolean = true,
     showCheckIn: Boolean = true,
-    competitorName: String? = null
+    competitorName: String? = null,
+    boldName: Boolean = true
 ) {
     val rawCategory = comp.category?.name?.takeIf { it.isNotBlank() }
         ?: comp.competitionType?.takeIf { it.isNotBlank() }
@@ -286,9 +288,13 @@ internal fun CompetitionEntryRow(
         val name = competitorName?.takeIf { it.isNotBlank() }
         val line = androidx.compose.ui.text.buildAnnotatedString {
             if (name != null) {
-                pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.SemiBold))
-                append(name)
-                pop()
+                if (boldName) {
+                    pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.SemiBold))
+                    append(name)
+                    pop()
+                } else {
+                    append(name)
+                }
             }
             if (showCategory && categoryName.isNotBlank()) {
                 if (name != null) append(" · ")

@@ -1,5 +1,6 @@
 package com.tkolymp.tkolympapp.screens
 
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonStats
 import com.tkolymp.tkolympapp.components.SegmentedToggle
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -181,9 +182,7 @@ fun StatsScreen(
                 }
 
                 if (isLoading && totalSessions == 0) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
+                    SkeletonStats()
                     return@Column
                 }
 

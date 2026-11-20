@@ -328,7 +328,7 @@ private data class CampDay(val instance: EventInstance, val start: LocalDate, va
 /**
  * Groups flat per-day camp instances into multi-day "occurrences" (one soustředění = several
  * consecutive days). [EventInstance.event] is synthesized per-day by the API client with
- * `event.id == instance.id` (there's no real parent/series id in `eventInstancesForRangeList`),
+ * `event.id == instance.id` (there's no real parent/series id in `eventsList`),
  * so grouping by `event.id` would put every single day in its own group. Instead, consecutive
  * (gap <= 1 day) same-name instances are clustered together, each contributing its own
  * since..until span so a single instance that already spans several days (or several single-day

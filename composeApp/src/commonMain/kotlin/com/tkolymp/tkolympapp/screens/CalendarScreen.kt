@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material.icons.filled.Person
+import com.tkolymp.tkolympapp.components.skeleton.CalendarSkeletonMode
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonCalendarBody
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonCalendarDay
 import com.tkolymp.shared.viewmodels.mondayOf
 import com.tkolymp.tkolympapp.components.InitialsAvatar
 import com.tkolymp.tkolympapp.components.LayoutCard
@@ -229,6 +232,11 @@ fun CalendarScreen(
     var hideCancelled by rememberSaveable { mutableStateOf(false) }
     var selectedTypes by rememberSavedStringSet()
     var trainerView by rememberSaveable { mutableStateOf(false) }
+    val calendarSkeletonMode = when {
+        selectedTab == 0 -> CalendarSkeletonMode.Timeline
+        trainerView -> CalendarSkeletonMode.Trainers
+        else -> CalendarSkeletonMode.Time
+    }
     var collapsedTrainers by remember { mutableStateOf<Set<String>>(emptySet()) }
 
     val availableTrainers = remember(calState.lessonsByTrainerByDay) {
@@ -470,7 +478,9 @@ fun CalendarScreen(
                         }
                 ) {
                     if (activeDate == null) {
-                        if (!calState.isLoading) {
+                        if (calState.isLoading) {
+                            SkeletonCalendarDay(calendarSkeletonMode)
+                        } else {
                             EmptyState(title = calStrings.emptyCalendar, icon = Icons.Outlined.CalendarMonth, fullPage = true)
                         }
                     } else {
@@ -510,7 +520,9 @@ fun CalendarScreen(
                                 if (summary.isNotEmpty()) Text(summary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
 
-                            if (instances.isEmpty() && competitions.isEmpty()) {
+                            if (instances.isEmpty() && competitions.isEmpty() && calState.isLoading) {
+                                SkeletonCalendarBody(calendarSkeletonMode)
+                            } else if (instances.isEmpty() && competitions.isEmpty()) {
                                 val filtered = activeFilterCount > 0 && (filteredByDate.isNotEmpty() || calState.lessonsByTrainerByDay.isNotEmpty() || calState.otherEventsByDay.isNotEmpty())
                                 DayEmptyState(
                                     text = calStrings.noEventsThisDay,

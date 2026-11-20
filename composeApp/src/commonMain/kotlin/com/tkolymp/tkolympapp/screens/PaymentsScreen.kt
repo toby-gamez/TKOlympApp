@@ -5,6 +5,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonPayments
 import com.tkolymp.tkolympapp.components.InfoPill
 import com.tkolymp.tkolympapp.components.RowDivider
 import com.tkolymp.tkolympapp.components.SegmentedToggle
@@ -12,7 +13,6 @@ import com.tkolymp.tkolympapp.components.cardLineBorder
 import com.tkolymp.tkolympapp.components.successColor
 import com.tkolymp.tkolympapp.components.successContainerColor
 import com.tkolymp.tkolympapp.components.surfaceCardColors
-import com.tkolymp.tkolympapp.components.skeleton.SkeletonList
 import com.tkolymp.tkolympapp.ui.theme.Spacing
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
@@ -115,7 +115,7 @@ fun PaymentsScreen(vm: com.tkolymp.shared.payments.PaymentsViewModel, onBack: ()
                 .padding(bottom = 0.dp)
         ) {
             if (isLoading && payments.isEmpty()) {
-                SkeletonList()
+                SkeletonPayments()
             } else {
                 Column(modifier = Modifier.fillMaxSize()) {
                     SegmentedToggle(

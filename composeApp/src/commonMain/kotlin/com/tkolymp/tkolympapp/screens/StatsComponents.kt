@@ -1,6 +1,9 @@
 package com.tkolymp.tkolympapp.screens
 
 import androidx.compose.ui.unit.sp
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonCard
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonContainer
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonStats
 import com.tkolymp.tkolympapp.components.QuickChip
 import com.tkolymp.tkolympapp.ui.theme.BrandLightPrimary
 import com.tkolymp.tkolympapp.components.cardLineBorder
@@ -565,9 +568,7 @@ internal fun CompareScreenContent(
     val slotLetters = listOf("A", "B", "C", "D", "E")
 
     if (state.isLoadingComparison && state.comparisonData.isEmpty()) {
-        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
-        }
+        SkeletonStats(modifier)
         return
     }
 
@@ -616,9 +617,7 @@ internal fun CompareScreenContent(
         }
 
         if (state.isLoadingCompare.any { it }) {
-            Box(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
+            SkeletonContainer { SkeletonCard() }
         } else {
             val activeSlots = state.compareSeasons.indices
                 .filter { state.compareSeasons[it] != null && state.compareData[it] != null }
@@ -992,9 +991,7 @@ internal fun AttendanceTabContent(
     onSeasonSelect: (SeasonSelection) -> Unit
 ) {
     if (isLoading && totalSessions == 0) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
-        }
+        SkeletonStats()
         return
     }
 

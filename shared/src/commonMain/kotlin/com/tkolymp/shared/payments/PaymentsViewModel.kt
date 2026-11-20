@@ -115,7 +115,7 @@ class PaymentsViewModel : ViewModel() {
 
                     PaymentDebtorItem(
                         id = obj["id"]?.jsonPrimitive?.contentOrNull,
-                        isUnpaid = obj["isUnpaid"]?.jsonPrimitive?.contentOrNull?.let { it == "true" },
+                        isUnpaid = payment?.isUnpaid,
                         price = price,
                         paymentId = obj["paymentId"]?.jsonPrimitive?.contentOrNull,
                         personId = personId,

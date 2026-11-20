@@ -16,8 +16,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -27,7 +27,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -44,8 +43,9 @@ private const val ShimmerTravelPx = 1000f
 
 /** Paints a moving highlight over the skeleton base color; static when the OS asks to reduce motion. */
 fun Modifier.shimmer(): Modifier = composed {
-    val base = MaterialTheme.colorScheme.surfaceVariant
-    val highlight = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+    // Translucent neutral tints so the skeleton never picks up the brand/tinted surface colors.
+    val base = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+    val highlight = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.16f)
     if (rememberReduceMotion()) {
         background(base)
     } else {
@@ -57,7 +57,7 @@ fun Modifier.shimmer(): Modifier = composed {
         )
         background(
             Brush.linearGradient(
-                colors = listOf(base, highlight.compositeOver(base), base),
+                colors = listOf(base, highlight, base),
                 start = Offset(progress.value * ShimmerTravelPx * 2 - ShimmerTravelPx, 0f),
                 end = Offset(progress.value * ShimmerTravelPx * 2, ShimmerTravelPx / 2),
             )
@@ -89,58 +89,10 @@ fun SkeletonContainer(modifier: Modifier = Modifier, content: @Composable () -> 
     }
 }
 
+/** Fixed-width text placeholder; [height] approximates the glyph height, not the line height. */
 @Composable
-fun SkeletonListItem(modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier.fillMaxWidth().padding(horizontal = Spacing.default, vertical = Spacing.medium),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Spacing.medium),
-    ) {
-        SkeletonCircle()
-        Column(verticalArrangement = Arrangement.spacedBy(Spacing.small), modifier = Modifier.weight(1f)) {
-            SkeletonLine(widthFraction = 0.6f)
-            SkeletonLine(widthFraction = 0.4f, height = Spacing.medium)
-        }
-    }
-}
-
-@Composable
-fun SkeletonCard(modifier: Modifier = Modifier, lines: Int = 3) {
-    Card(modifier = modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(Spacing.default), verticalArrangement = Arrangement.spacedBy(Spacing.small)) {
-            SkeletonLine(widthFraction = 0.5f)
-            repeat(lines) { i -> SkeletonLine(widthFraction = if (i == lines - 1) 0.7f else 1f, height = Spacing.medium) }
-        }
-    }
-}
-
-@Composable
-fun SkeletonList(modifier: Modifier = Modifier, count: Int = 8, item: @Composable () -> Unit = { SkeletonListItem() }) {
-    SkeletonContainer(modifier = modifier.fillMaxSize()) {
-        Column { repeat(count) { item() } }
-    }
-}
-
-@Composable
-fun SkeletonDetail(modifier: Modifier = Modifier) {
-    SkeletonContainer(modifier = modifier.fillMaxSize()) {
-        Column(modifier = Modifier.padding(Spacing.default), verticalArrangement = Arrangement.spacedBy(Spacing.medium)) {
-            SkeletonBox(modifier = Modifier.fillMaxWidth().height(160.dp), shape = MaterialTheme.shapes.medium)
-            SkeletonLine(widthFraction = 0.7f, height = Spacing.large)
-            SkeletonLine()
-            SkeletonLine(widthFraction = 0.9f)
-            SkeletonLine(widthFraction = 0.5f)
-        }
-    }
-}
-
-@Composable
-fun SkeletonForm(modifier: Modifier = Modifier, fields: Int = 5) {
-    SkeletonContainer(modifier = modifier.fillMaxSize()) {
-        Column(modifier = Modifier.padding(Spacing.default), verticalArrangement = Arrangement.spacedBy(Spacing.default)) {
-            repeat(fields) { SkeletonBox(modifier = Modifier.fillMaxWidth().height(56.dp), shape = MaterialTheme.shapes.medium) }
-        }
-    }
+fun SkeletonText(width: Dp, height: Dp = 14.dp, modifier: Modifier = Modifier) {
+    SkeletonBox(modifier = modifier.width(width).height(height))
 }
 
 @Preview(name = "Skeleton — Light")

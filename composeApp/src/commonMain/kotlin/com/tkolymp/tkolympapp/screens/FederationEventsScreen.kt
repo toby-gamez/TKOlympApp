@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.sp
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonRows
 import com.tkolymp.tkolympapp.components.AppTopBar
 import com.tkolymp.tkolympapp.components.DateTile
 import com.tkolymp.tkolympapp.components.InfoPill
@@ -260,7 +261,7 @@ fun FederationEventsScreen(
                         ErrorState(error.message, fullPage = false, onRetry = { scope.launch { viewModel.load(code, forceRefresh = true) } })
                     }
                     state.isLoading && state.allEvents.isEmpty() -> item {
-                        Box(Modifier.fillMaxWidth().padding(32.dp), Alignment.Center) { CircularProgressIndicator() }
+                        SkeletonRows()
                     }
                     state.showMap -> item {
                         MapSection(state.events, region, selected, onRegion = { regionName = it.name; selected = emptyList() },

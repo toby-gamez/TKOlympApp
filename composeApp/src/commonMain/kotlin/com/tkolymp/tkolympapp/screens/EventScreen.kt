@@ -14,6 +14,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonEventDetail
 import com.tkolymp.shared.utils.formatFullCalendarDate
 import com.tkolymp.shared.utils.formatTimes
 import com.tkolymp.shared.utils.parseToLocal
@@ -291,7 +292,7 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                                 onRetry = { scope.launch { viewModel.loadEvent(eventId, instanceId = instanceId, forceRefresh = true) } }
                             )
                         }
-                        // else: initial state before loading starts — SwipeToReload shows spinner
+                        else SkeletonEventDetail()
                     } else {
                         StaggeredItem(index = 0, visible = contentVisible, durationMs = 250) {
                             val bodySizeSp = 15f

@@ -175,7 +175,9 @@ class EventViewModel(
             }
 
             val type = eventObj.str("type") ?: ""
-            val isLocked = eventObj.bool("isLocked") ?: false
+            // Offline copies saved before the move to registrationInfo still carry the old isLocked flag.
+            val isLocked = eventObj.get("remainingPersonSpots")?.asJsonObjectOrNull()?.bool("registrationOpen")?.not()
+                ?: eventObj.bool("isLocked") ?: false
             val isRegistrationOpen = if (isLocked) false else (eventObj.bool("isRegistrationOpen") ?: true)
             val registerButtonVisible = !isPast && !userRegistered && isRegistrationOpen && !isOfflineUsed
             val registrationActionsRowVisible = !isPast && userRegistered && isRegistrationOpen && !isOfflineUsed

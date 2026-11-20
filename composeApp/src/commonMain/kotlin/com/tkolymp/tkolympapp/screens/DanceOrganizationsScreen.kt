@@ -1,5 +1,7 @@
 package com.tkolymp.tkolympapp.screens
 
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonList
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonRows
 import com.tkolymp.tkolympapp.components.AppTopBar
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -98,7 +100,7 @@ fun DanceOrganizationsScreen(
         ) {
             val error = state.error
             when {
-                state.federations.isEmpty() && state.isLoading -> Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
+                state.federations.isEmpty() && state.isLoading -> SkeletonList()
                 state.federations.isEmpty() && error != null -> ErrorState(error, onRetry = { scope.launch { viewModel.load() } })
                 state.federations.isEmpty() -> EmptyState(AppStrings.current.danceOrg.noDataYet, fullPage = true)
                 else -> LazyColumn(
@@ -180,7 +182,7 @@ private fun LazyListScope.clubResultsItems(state: ClubResultsState, vm: ClubResu
     val rows = state.rows
     when {
         state.isLoading && state.results == null -> item(key = "club_loading") {
-            Box(Modifier.fillMaxWidth().padding(24.dp), Alignment.Center) { CircularProgressIndicator() }
+            SkeletonRows()
         }
         state.error != null && state.results == null -> item(key = "club_error") {
             Text(state.error!!.message ?: "", Modifier.padding(Spacing.default), color = MaterialTheme.colorScheme.error)

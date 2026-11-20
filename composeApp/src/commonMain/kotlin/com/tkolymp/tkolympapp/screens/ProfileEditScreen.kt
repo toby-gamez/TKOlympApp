@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.FormatUnderlined
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.AlertDialog
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonForm
 import com.tkolymp.tkolympapp.components.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
@@ -260,9 +261,10 @@ fun ProfileEditScreen(onSaved: () -> Unit, onBack: () -> Unit) {
         snackbarHost = { SnackbarHost(snackbar) }
     ) { padding ->
         if (person == null) {
-            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                if (state.isLoading) CircularProgressIndicator()
-                else Text(state.error?.message ?: strings.errorMessages.errorLoadingProfile, color = MaterialTheme.colorScheme.error)
+            if (state.isLoading) {
+                SkeletonForm(Modifier.padding(padding), avatar = true)
+            } else Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Text(state.error?.message ?: strings.errorMessages.errorLoadingProfile, color = MaterialTheme.colorScheme.error)
             }
             return@Scaffold
         }

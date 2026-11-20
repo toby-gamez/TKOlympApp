@@ -4,6 +4,7 @@ package com.tkolymp.tkolympapp.screens
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.text.font.FontWeight
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonProfile
 import com.tkolymp.tkolympapp.components.RowDivider
 import com.tkolymp.tkolympapp.components.ScheduleCard
 import com.tkolymp.tkolympapp.components.SectionLabel
@@ -171,6 +172,8 @@ fun ProfileScreen(
             val error = profileState.error
             if (error != null && profileState.person == null) {
                 ErrorState(error = error, onRetry = { scope.launch { profileViewModel.load() } })
+            } else if (profileState.person == null && profileState.isLoading) {
+                SkeletonProfile()
             } else {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()).padding(horizontal = Spacing.default, vertical = Spacing.small),

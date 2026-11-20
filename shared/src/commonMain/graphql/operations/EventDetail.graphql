@@ -10,8 +10,7 @@ query EventDetail($id: BigInt!) {
         until
         isCancelled
         capacity
-        remainingPersonSpots: registrationInfo { remainingCapacity }
-        isLocked
+        remainingPersonSpots: registrationInfo { remainingCapacity registrationOpen }
         isVisible
         isPublic
         enableNotes

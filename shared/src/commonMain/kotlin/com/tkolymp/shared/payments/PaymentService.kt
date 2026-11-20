@@ -14,7 +14,10 @@ data class PaymentSummary(
     val specificSymbol: String?,
     val dueAt: String?,
     val status: String?
-)
+) {
+    /** Null while the status is unknown; anything but PAID (UNPAID, TENTATIVE) still has to be paid. */
+    val isUnpaid: Boolean? get() = status?.takeIf { it.isNotBlank() }?.let { !it.equals("PAID", ignoreCase = true) }
+}
 
 data class PersonSummary(val id: String?, val firstName: String?, val lastName: String?)
 
@@ -73,7 +76,7 @@ class PaymentService(
 
                 PaymentDebtorItem(
                     id = obj["id"]?.jsonPrimitive?.contentOrNull,
-                    isUnpaid = obj["isUnpaid"]?.jsonPrimitive?.booleanOrNull,
+                    isUnpaid = payment?.isUnpaid,
                     price = price,
                     paymentId = obj["paymentId"]?.jsonPrimitive?.contentOrNull,
                     personId = obj["personId"]?.jsonPrimitive?.contentOrNull,

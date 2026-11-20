@@ -10,6 +10,11 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.HorizontalDivider
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonTimelineRows
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonAnnouncementTiles
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonContainer
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonCampCard
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonCountdownCard
 import com.tkolymp.tkolympapp.components.SectionHeader
 import com.tkolymp.tkolympapp.components.timelineInfo
 import com.tkolymp.tkolympapp.components.campDateRange
@@ -50,7 +55,6 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Icon
@@ -243,10 +247,7 @@ fun OverviewScreen(
                 if (state.trainingSelectedDate == null && !state.isLoading) {
                     EmptyState(title = AppStrings.current.timeline.nothingPlanned, icon = Icons.Outlined.EventBusy)
                 } else if (state.trainingSelectedDate == null) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-                        horizontalArrangement = Arrangement.Center
-                    ) { CircularProgressIndicator() }
+                    SkeletonTimelineRows()
                 } else {
                     val date = state.trainingSelectedDate ?: return@Column
                     val dayItems = remember(state.trainingLessonsByTrainer, state.trainingOtherEvents) {
@@ -329,10 +330,7 @@ fun OverviewScreen(
             Column {
                 if (announcements.isEmpty()) {
                     if (state.isLoading) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-                            horizontalArrangement = Arrangement.Center
-                        ) { CircularProgressIndicator() }
+                        SkeletonAnnouncementTiles()
                     } else {
                         EmptyState(title = AppStrings.current.timeline.nothingPlanned, icon = Icons.Outlined.EventBusy)
                     }
@@ -414,10 +412,7 @@ fun OverviewScreen(
             Column(modifier = Modifier.padding(horizontal = Spacing.medium)) {
                 if (state.campsMapByDay.isEmpty()) {
                     if (state.isLoading) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-                            horizontalArrangement = Arrangement.Center
-                        ) { CircularProgressIndicator() }
+                        SkeletonContainer { SkeletonCampCard() }
                     } else {
                         EmptyState(title = AppStrings.current.timeline.nothingPlanned, icon = Icons.Outlined.EventBusy)
                     }
@@ -476,14 +471,7 @@ fun OverviewScreen(
                 Column(modifier = Modifier.padding(horizontal = Spacing.medium)) {
                     val comp = state.nearestCompetition
                     if (comp == null && state.isCompetitionLoading) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            CircularProgressIndicator()
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(AppStrings.current.competition.loadingCompetitions, style = MaterialTheme.typography.bodyMedium)
-                        }
+                        SkeletonCountdownCard()
                     } else if (comp == null) {
                         EmptyState(title = AppStrings.current.competition.noUpcoming, icon = Icons.Outlined.EmojiEvents)
                     } else {
@@ -587,11 +575,8 @@ fun OverviewScreen(
                     EmptyState(title = AppStrings.current.timeline.nothingPlanned, icon = Icons.Outlined.EventBusy)
                 }
             }
-            if (state.isLoading || state.error != null) {
+            if (state.error != null) {
                 item(key = "status") {
-                    if (state.isLoading) {
-                        Text(AppStrings.current.commonActions.loading, modifier = Modifier.padding(12.dp))
-                    }
                     state.error?.let { ErrorBanner(error = it) }
                 }
             }

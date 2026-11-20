@@ -3,6 +3,7 @@ package com.tkolymp.tkolympapp.screens
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.ui.text.font.FontWeight
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonCohortList
 import com.tkolymp.tkolympapp.components.cardLineBorder
 import com.tkolymp.tkolympapp.components.pressClickable
 import com.tkolymp.tkolympapp.components.surfaceCardColors
@@ -96,6 +97,10 @@ fun GroupsScreen(onBack: () -> Unit = {}, onOpenCohort: ((String) -> Unit)? = nu
             // so we no longer show an additional inline progress row here.
 
             state.error?.let { err -> ErrorBanner(error = err) }
+
+            if (state.isLoading && state.cohorts.isEmpty()) {
+                SkeletonCohortList()
+            }
 
             Column(
                 modifier = Modifier.padding(start = Spacing.default, end = Spacing.default, top = Spacing.medium),
