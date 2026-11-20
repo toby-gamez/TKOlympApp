@@ -106,6 +106,7 @@ data class FederationCompetitionEntry(
     val participants: Int?,
     val categoryName: String?,
     val eventName: String?,
+    val eventId: String? = null,
     val city: String?,
     val country: String?
 )
@@ -395,7 +396,7 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
                     competitionType = n.s("competitionType"), status = n.s("status"),
                     participants = (n["participantsTotal"] as? JsonPrimitive)?.intOrNull,
                     categoryName = n.o("category")?.s("name"),
-                    eventName = ev?.s("name"), city = ev?.s("city"), country = ev?.s("country")
+                    eventName = ev?.s("name"), eventId = ev?.s("id"), city = ev?.s("city"), country = ev?.s("country")
                 )
             }
             val pd = PersonDetails(

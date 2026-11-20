@@ -88,7 +88,7 @@ import com.tkolymp.tkolympapp.util.ISO_DATE_PREFIX_REGEX
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (String) -> Unit = {}, onOpenAchievements: (String) -> Unit = {}, onOpenCohort: ((String) -> Unit)? = null) {
+fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (String) -> Unit = {}, onOpenAchievements: (String) -> Unit = {}, onOpenCohort: ((String) -> Unit)? = null, onOpenFederationEvent: (String) -> Unit = {}) {
     val viewModel = viewModel<PersonViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -350,7 +350,7 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
             }
             // Rankings card hidden for now: the ranklist data is not up to date (FederationRankingsCard is ready).
             if (p.federationCompetitions.isNotEmpty()) {
-                StaggeredItem(index = 4, visible = cardsVisible, baseDelayMs = 50) { FederationCompetitionsCard(p.federationCompetitions) }
+                StaggeredItem(index = 4, visible = cardsVisible, baseDelayMs = 50) { FederationCompetitionsCard(p.federationCompetitions, onOpenFederationEvent) }
             }
             // (duplicate UI removed)
             StaggeredItem(index = 5, visible = cardsVisible, baseDelayMs = 50) {

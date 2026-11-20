@@ -299,12 +299,12 @@ fun CountdownCard(
     title: String,
     meta: String,
     footnote: String?,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
     strikeThrough: Boolean = false
 ) {
     Card(
-        modifier = modifier.fillMaxWidth().pressClickable(0.985f, onClick),
+        modifier = modifier.fillMaxWidth().let { if (onClick != null) it.pressClickable(0.985f, onClick) else it },
         shape = RoundedCornerShape(16.dp),
         colors = surfaceCardColors(),
         border = cardLineBorder()

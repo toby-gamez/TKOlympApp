@@ -864,7 +864,8 @@ fun AppNavHost(
                     onBack = { navController.navigateUp() },
                     onOpenCouple = { },
                     onOpenCohort = { id -> navController.navigate("cohort/$id") },
-                    onOpenAchievements = { id -> navController.navigate("person/$id/achievements") }
+                    onOpenAchievements = { id -> navController.navigate("person/$id/achievements") },
+                    onOpenFederationEvent = { id -> navController.navigate("federationEvent/$id") }
                 )
             }
         }

@@ -1,5 +1,7 @@
 package com.tkolymp.tkolympapp.screens
 
+import com.tkolymp.tkolympapp.components.SectionLabel
+import com.tkolymp.tkolympapp.components.CountdownCard
 import com.tkolymp.tkolympapp.components.cardLineBorder
 import com.tkolymp.tkolympapp.components.surfaceCardColors
 import androidx.compose.foundation.layout.Arrangement
@@ -209,42 +211,46 @@ fun FederationRankingsCard(rankings: List<FederationRanking>) {
     }
 }
 
-private class EventGroup(val name: String?, val date: String?, val federation: String?, val place: String?, val items: List<FederationCompetitionEntry>)
+private class EventGroup(val eventId: String?, val name: String?, val date: String?, val federation: String?, val place: String?, val items: List<FederationCompetitionEntry>)
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun FederationCompetitionsCard(items: List<FederationCompetitionEntry>) {
+fun FederationCompetitionsCard(items: List<FederationCompetitionEntry>, onOpenEvent: (String) -> Unit = {}) {
     val c = AppStrings.current.competition
     val org = AppStrings.current.danceOrg
-    // one row per event: its categories (STT, LAT, ...) become chips instead of repeated rows
+    // one row per event: its categories (STT, LAT, ...) become pills instead of repeated rows
     val groups = remember(items) {
         items.groupBy { Triple(it.eventName, it.startDate, it.federation) }.map { (k, g) ->
-            EventGroup(k.first, k.second, k.third, listOfNotNull(g.first().city, g.first().country).joinToString(", ").takeIf { it.isNotBlank() }, g)
+            EventGroup(g.firstNotNullOfOrNull { it.eventId }, k.first, k.second, k.third, listOfNotNull(g.first().city, g.first().country).joinToString(", ").takeIf { it.isNotBlank() }, g)
         }
     }
-    FederationCard(c.recentCompetitions) {
-        CollapsibleList(groups, "fed_competitions") { _, g ->
-            val parts = g.date?.split("-")
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.16f)) {
-                    Column(Modifier.width(52.dp).padding(vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(parts?.getOrNull(2)?.trimStart('0') ?: "–", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text(parts?.getOrNull(1)?.toIntOrNull()?.let { org.monthShort(it) } ?: "", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(parts?.getOrNull(0) ?: "", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
+    var expanded by rememberSaveable("fed_competitions") { mutableStateOf(false) }
+    val shown = if (expanded) groups else groups.take(COLLAPSED_COUNT)
+    Column {
+        SectionLabel(c.recentCompetitions, horizontalPadding = 0.dp)
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            shown.forEach { g ->
+                val parts = g.date?.split("-")
+                val meta = listOfNotNull(
+                    federationName(g.federation),
+                    g.place,
+                    g.items.firstOrNull()?.competitionType?.let { org.competitionType(it).ifBlank { null } }
+                ).joinToString(" · ")
+                val categories = g.items.joinToString(" · ") { e ->
+                    formatFederationCategory(e.categoryName) + (e.participants?.let { " ($it)" } ?: "")
                 }
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(g.name ?: formatFederationCategory(g.items.first().categoryName), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                    val sub = listOfNotNull(g.place, g.items.firstOrNull()?.competitionType?.let { org.competitionType(it).ifBlank { null } }).joinToString(" · ")
-                    if (sub.isNotEmpty()) Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Spacer(Modifier.height(4.dp))
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        federationName(g.federation)?.let { Chip(it) }
-                        g.items.forEach { e ->
-                            val label = formatFederationCategory(e.categoryName) + (e.participants?.let { " · $it" } ?: "")
-                            Chip(label)
-                        }
-                    }
+                CountdownCard(
+                    days = parts?.getOrNull(2)?.trimStart('0')?.ifEmpty { "0" } ?: "–",
+                    daysUnit = listOfNotNull(parts?.getOrNull(1)?.toIntOrNull()?.let { org.monthShort(it) }, parts?.getOrNull(0)).joinToString(" "),
+                    title = g.name ?: formatFederationCategory(g.items.first().categoryName),
+                    meta = meta,
+                    footnote = categories.takeIf { it.isNotBlank() },
+                    onClick = g.eventId?.let { id -> { onOpenEvent(id) } }
+                )
+            }
+            if (groups.size > COLLAPSED_COUNT) {
+                TextButton(onClick = { expanded = !expanded }, modifier = Modifier.fillMaxWidth()) {
+                    Text(if (expanded) c.showLess else c.showAll.replace("{n}", groups.size.toString()))
                 }
             }
         }

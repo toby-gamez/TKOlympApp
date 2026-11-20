@@ -64,7 +64,7 @@ query PersonBasic($id: BigInt!) {
         nodes {
             id federation startDate competitionType status participantsTotal
             category { name }
-            event { name city country }
+            event { id name city country }
         }
     }
 }
