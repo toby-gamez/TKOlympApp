@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.tkolymp.shared.competitions.CstsProgress
 import com.tkolymp.shared.language.AppStrings
+import kotlinx.datetime.todayIn
 import com.tkolymp.shared.people.FederationCompetitionEntry
 import com.tkolymp.shared.people.FederationProfile
 import com.tkolymp.shared.people.FederationRanking
@@ -50,6 +51,17 @@ private fun fmtPoints(raw: String?): String? {
 }
 
 private fun date(raw: String?): String? = formatDateStringSmall(raw) ?: raw
+
+/** "valid until X" for future dates, past tense once the date has passed. */
+@Composable
+private fun validUntilText(raw: String?): String? {
+    val formatted = date(raw) ?: return null
+    val c = AppStrings.current.competition
+    val today = remember { kotlin.time.Clock.System.todayIn(kotlinx.datetime.TimeZone.currentSystemDefault()) }
+    val parsed = raw?.trim()?.take(10)?.let { try { kotlinx.datetime.LocalDate.parse(it) } catch (_: Exception) { null } }
+    val label = if (parsed != null && parsed < today) c.validUntilPast else c.validUntil
+    return "$label $formatted"
+}
 
 @Composable
 private fun FederationCard(title: String, content: @Composable () -> Unit) {
@@ -101,7 +113,7 @@ fun WdsfProfileCard(profile: FederationProfile) {
         profile.nationality?.let { LabelValue(AppStrings.current.profile.nationality, it) }
         profile.ageGroup?.let { LabelValue(c.ageGroupLabel, c.term(it)) }
         date(profile.birthDate)?.let { LabelValue(AppStrings.current.profile.birthDate, it) }
-        val med = listOfNotNull(profile.medicalCheckupType?.let { c.term(it) }, date(profile.medicalCheckupExpiration)?.let { "${c.validUntil} $it" })
+        val med = listOfNotNull(profile.medicalCheckupType?.let { c.term(it) }, validUntilText(profile.medicalCheckupExpiration))
         if (med.isNotEmpty()) LabelValue(c.medicalCheckup, med.joinToString(", "))
         if (profile.licenses.isNotEmpty()) {
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
@@ -115,7 +127,7 @@ fun WdsfProfileCard(profile: FederationProfile) {
                     l.discipline?.takeIf { it != "GENERAL" && it != "UNKNOWN" }?.let { c.term(it) },
                     l.grade
                 ).joinToString(" · ")
-                val sub = listOfNotNull(l.status?.let { c.term(it) }, date(l.validUntil)?.let { "${c.validUntil} $it" }).joinToString(", ")
+                val sub = listOfNotNull(l.status?.let { c.term(it) }, validUntilText(l.validUntil)).joinToString(", ")
                 Column {
                     Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
                     if (sub.isNotEmpty()) Text(sub, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

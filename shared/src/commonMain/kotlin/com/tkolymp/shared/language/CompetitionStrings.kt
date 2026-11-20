@@ -31,6 +31,7 @@ data class CompetitionStrings(
     val recentCompetitions: String = "Poslední soutěže",
     val medicalCheckup: String = "Lékařská prohlídka",
     val validUntil: String = "platí do",
+    val validUntilPast: String = "platila do",
     val jury: String = "Porota",
     val officials: String = "Funkcionáři",
     val ageGroupLabel: String = "Věková skupina",

@@ -708,6 +708,7 @@ val StringsVi = Strings(
         recentCompetitions = "Cuộc thi gần đây",
         medicalCheckup = "Khám sức khỏe",
         validUntil = "có hiệu lực đến",
+        validUntilPast = "đã có hiệu lực đến",
         jury = "Ban giám khảo",
         officials = "Ban tổ chức",
         ageGroupLabel = "Nhóm tuổi",

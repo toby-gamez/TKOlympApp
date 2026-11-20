@@ -708,6 +708,7 @@ val StringsSl = Strings(
         recentCompetitions = "Zadnja tekmovanja",
         medicalCheckup = "Zdravniški pregled",
         validUntil = "velja do",
+        validUntilPast = "je veljala do",
         jury = "Žirija",
         officials = "Funkcionarji",
         ageGroupLabel = "Starostna skupina",

@@ -708,6 +708,7 @@ val StringsSk = Strings(
         recentCompetitions = "Posledné súťaže",
         medicalCheckup = "Lekárska prehliadka",
         validUntil = "platí do",
+        validUntilPast = "platila do",
         jury = "Porota",
         officials = "Funkcionári",
         ageGroupLabel = "Veková skupina",

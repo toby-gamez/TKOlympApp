@@ -707,6 +707,7 @@ val StringsDe = Strings(
         recentCompetitions = "Letzte Turniere",
         medicalCheckup = "Ärztliche Untersuchung",
         validUntil = "gültig bis",
+        validUntilPast = "war gültig bis",
         jury = "Jury",
         officials = "Funktionäre",
         ageGroupLabel = "Altersklasse",

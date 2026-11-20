@@ -709,6 +709,7 @@ val StringsBrainrot = Strings(
         recentCompetitions = "Recent comps",
         medicalCheckup = "Medical checkup",
         validUntil = "valid until",
+        validUntilPast = "was valid until",
         jury = "Jury",
         officials = "Officials",
         ageGroupLabel = "Age group",

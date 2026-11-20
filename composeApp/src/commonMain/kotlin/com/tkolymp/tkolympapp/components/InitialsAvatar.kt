@@ -105,7 +105,8 @@ fun CoupleAvatar(
     manImageUrl: String? = null,
 ) {
     val overlap = size * 0.45f
-    Box(modifier = modifier.size(size + overlap)) {
+    // Circles are offset diagonally; the vertical offset is halved so the box doesn't reserve empty corner space.
+    Box(modifier = modifier.size(width = size + overlap, height = size + overlap / 2)) {
         if (manName != null) {
             InitialsAvatar(
                 name = manName,

@@ -708,6 +708,7 @@ val StringsUa = Strings(
         recentCompetitions = "Останні змагання",
         medicalCheckup = "Медичний огляд",
         validUntil = "дійсна до",
+        validUntilPast = "була дійсна до",
         jury = "Журі",
         officials = "Посадові особи",
         ageGroupLabel = "Вікова група",

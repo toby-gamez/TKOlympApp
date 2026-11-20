@@ -719,6 +719,7 @@ val StringsEn = Strings(
         recentCompetitions = "Recent competitions",
         medicalCheckup = "Medical checkup",
         validUntil = "valid until",
+        validUntilPast = "was valid until",
         jury = "Jury",
         officials = "Officials",
         ageGroupLabel = "Age group",
