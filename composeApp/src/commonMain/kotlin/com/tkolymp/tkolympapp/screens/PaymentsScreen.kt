@@ -12,6 +12,7 @@ import com.tkolymp.tkolympapp.components.cardLineBorder
 import com.tkolymp.tkolympapp.components.successColor
 import com.tkolymp.tkolympapp.components.successContainerColor
 import com.tkolymp.tkolympapp.components.surfaceCardColors
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonList
 import com.tkolymp.tkolympapp.ui.theme.Spacing
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
@@ -113,8 +114,8 @@ fun PaymentsScreen(vm: com.tkolymp.shared.payments.PaymentsViewModel, onBack: ()
                 .padding(padding)
                 .padding(bottom = 0.dp)
         ) {
-            if (isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            if (isLoading && payments.isEmpty()) {
+                SkeletonList()
             } else {
                 Column(modifier = Modifier.fillMaxSize()) {
                     SegmentedToggle(

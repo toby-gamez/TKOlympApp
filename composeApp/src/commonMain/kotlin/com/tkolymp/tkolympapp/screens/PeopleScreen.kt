@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.text.font.FontWeight
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonList
 import com.tkolymp.tkolympapp.components.AppTopBar
 import com.tkolymp.tkolympapp.components.QuickChip
 import com.tkolymp.tkolympapp.components.SearchField
@@ -199,10 +200,8 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
             modifier = Modifier.padding(padding)
         ) {
             val error = state.error
-            if (state.isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+            if (state.isLoading && state.people.isEmpty()) {
+                SkeletonList()
             } else if (error != null && state.people.isEmpty()) {
                 ErrorState(error = error, onRetry = { scope.launch { viewModel.loadPeople() } })
             } else {
