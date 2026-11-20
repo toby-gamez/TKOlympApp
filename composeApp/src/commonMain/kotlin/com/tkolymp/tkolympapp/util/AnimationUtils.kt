@@ -5,6 +5,11 @@ import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.EnterTransition
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.foundation.lazy.grid.LazyGridItemScope
@@ -89,6 +94,64 @@ fun rememberFadeSwitch(): FadeSwitch {
 
 /** Applies the [FadeSwitch] opacity to the content that changes; leave the toggle itself outside of it. */
 fun Modifier.fadeSwitch(switch: FadeSwitch): Modifier = graphicsLayer { alpha = switch.alpha.value }
+
+/**
+ * Gentle squish while pressed. Watches touches on the initial pass without consuming them, so the wrapped
+ * component's own click, ripple and scrolling keep working. Does nothing when [enabled] is false or with reduced motion.
+ */
+@Composable
+fun Modifier.cozyPress(pressedScale: Float = Motion.PressedScale, enabled: Boolean = true): Modifier {
+    val reduceMotion = rememberReduceMotion()
+    var pressed by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (pressed && enabled && !reduceMotion) pressedScale else 1f,
+        animationSpec = Motion.pressSpring(),
+        label = "cozyPress"
+    )
+    return this
+        .pointerInput(Unit) {
+            awaitEachGesture {
+                awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                pressed = true
+                waitForUpOrCancellation(PointerEventPass.Initial)
+                pressed = false
+            }
+        }
+        .graphicsLayer { scaleX = scale; scaleY = scale }
+}
+
+/**
+ * One-time entrance for a whole screen's content (fade + small rise + scale, like [StaggeredItem]) for screens that have
+ * no loading phase of their own, such as forms. Apply it to the content container, not to the app bar.
+ */
+@Composable
+fun Modifier.settleIn(): Modifier {
+    val reduceMotion = rememberReduceMotion()
+    val progress = remember { Animatable(if (reduceMotion) 1f else 0f) }
+    LaunchedEffect(Unit) { progress.animateTo(1f, Motion.settleSpring()) }
+    return graphicsLayer {
+        alpha = progress.value.coerceIn(0f, 1f)
+        if (!reduceMotion) {
+            translationY = (1f - progress.value) * Motion.RiseDp.dp.toPx()
+            val s = Motion.SettleStartScale + (1f - Motion.SettleStartScale) * progress.value
+            scaleX = s
+            scaleY = s
+        }
+    }
+}
+
+/** Fades (and expands) content in and out as [visible] changes, e.g. an inline loading indicator. Instant with reduced motion. */
+@Composable
+fun FadeVisibility(visible: Boolean, content: @Composable () -> Unit) {
+    val reduceMotion = rememberReduceMotion()
+    AnimatedVisibility(
+        visible = visible,
+        enter = if (reduceMotion) EnterTransition.None else fadeIn(tween(Motion.FadeMs)) + expandVertically(Motion.settleSpring()),
+        exit = if (reduceMotion) ExitTransition.None else fadeOut(tween(Motion.FadeOutMs)) + shrinkVertically(tween(Motion.FadeMs))
+    ) {
+        content()
+    }
+}
 
 /** Grid variant of [cozyItem]. */
 @Composable

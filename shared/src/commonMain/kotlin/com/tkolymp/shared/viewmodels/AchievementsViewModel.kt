@@ -105,7 +105,9 @@ class AchievementsViewModel(
 
             val participantName = try {
                 if (!myPersonId.isNullOrBlank()) peopleService.fetchPersonDisplayName(myPersonId) else null
-            } catch (e: CancellationException) { throw e } catch (_: Exception) { null } ?: ""
+            } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                ?: cachedDisplayName()
+                ?: ""
 
             val diplomas = result.context.completedCamps
                 .sortedByDescending { it.startDate }
@@ -127,6 +129,13 @@ class AchievementsViewModel(
             )
         }
     }
+
+    /** Name from the person details stored at login — the fallback when the live lookup fails (offline). */
+    private suspend fun cachedDisplayName(): String? = try {
+        userService.getCachedPersonDetails()
+            ?.let { listOfNotNull(it.firstName, it.lastName).joinToString(" ").trim() }
+            ?.takeIf { it.isNotBlank() }
+    } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
 
     fun clearError() {
         _state.value = _state.value.copy(error = null)

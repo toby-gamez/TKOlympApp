@@ -73,6 +73,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.offset
@@ -321,6 +322,13 @@ fun CalendarScreen(
         calendarViewModel.load(localWeekOffset, selectedTab == 0, weekStartOverride = customStartDate, skipIfFresh = true)
     }
 
+    val shiftWeek = { delta: Int ->
+        val start = customStartDate
+        if (start != null) customStartDate = start.plus(delta * 7, DateTimeUnit.DAY)
+        else { localWeekOffset += delta; onWeekOffsetChange(localWeekOffset) }
+        selectedDateIso = null
+    }
+
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
     val sheetMaxHeight = maxHeight * 0.88f
     Scaffold(
@@ -333,12 +341,6 @@ fun CalendarScreen(
                         label = AppStrings.current.management.newEvent,
                         onClick = onCreateEvent
                     )
-                    val shiftWeek = { delta: Int ->
-                        val start = customStartDate
-                        if (start != null) customStartDate = start.plus(delta * 7, DateTimeUnit.DAY)
-                        else { localWeekOffset += delta; onWeekOffsetChange(localWeekOffset) }
-                        selectedDateIso = null
-                    }
                     if (localWeekOffset != 0 || customStartDate != null) {
                         IconButton(onClick = {
                             customStartDate = null
@@ -478,6 +480,18 @@ fun CalendarScreen(
                 Box(
                     modifier = Modifier
                         .weight(1f)
+                        .pointerInput(Unit) {
+                            // Swipe left = next week, swipe right = previous week; children (e.g. the trainer grid) consume their own scrolls first.
+                            var dragTotal = 0f
+                            detectHorizontalDragGestures(
+                                onDragStart = { dragTotal = 0f },
+                                onDragEnd = {
+                                    if (dragTotal <= -size.width / 4f) shiftWeek(1)
+                                    else if (dragTotal >= size.width / 4f) shiftWeek(-1)
+                                },
+                                onHorizontalDrag = { _, delta -> dragTotal += delta }
+                            )
+                        }
                         .onGloballyPositioned { coords ->
                             val b = coords.boundsInRoot()
                             contentBounds = b

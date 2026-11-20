@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 import com.tkolymp.tkolympapp.ui.theme.BrandLightPrimary
+import com.tkolymp.tkolympapp.util.cozyPress
 
 /**
  * Drop-in replacement for Material's filled `Button` with the prototype look: pill shape, at least 50dp tall,
@@ -35,7 +36,7 @@ fun Button(
 ) {
     androidx.compose.material3.Button(
         onClick = onClick,
-        modifier = modifier.heightIn(min = 50.dp),
+        modifier = modifier.heightIn(min = 50.dp).cozyPress(0.97f, enabled),
         enabled = enabled,
         shape = shape,
         colors = colors,

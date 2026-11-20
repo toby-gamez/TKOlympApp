@@ -36,6 +36,7 @@ import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.settleIn
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -114,7 +115,7 @@ fun PersonalEventEditScreen(eventId: String? = null, onSaved: () -> Unit = {}, o
             navigationIcon = { IconButton(onClick = onBack) { Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back) } }
         )
     }) { innerPadding ->
-        Column(modifier = Modifier.padding(innerPadding).padding(horizontal = 12.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(modifier = Modifier.padding(innerPadding).settleIn().padding(horizontal = 12.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             val focusManager = LocalFocusManager.current
             Card(modifier = Modifier.fillMaxWidth(), colors = surfaceCardColors(), border = cardLineBorder()) {
                 Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

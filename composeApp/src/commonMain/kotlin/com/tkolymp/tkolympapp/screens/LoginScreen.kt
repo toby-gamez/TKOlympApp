@@ -40,6 +40,7 @@ import com.tkolymp.tkolympapp.components.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.FadeVisibility
 // removed TextFieldDefaults import — using Modifier background for inputs
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
@@ -189,7 +190,7 @@ fun LoginScreen(onSuccess: () -> Unit = {}) {
                             }
                         }
                     )
-                    if (state.isLoading) {
+                    FadeVisibility(state.isLoading) {
                         Box(Modifier.fillMaxWidth().padding(top = 12.dp), contentAlignment = Alignment.Center) {
                             CircularProgressIndicator(modifier = Modifier.size(22.dp), strokeWidth = 2.dp)
                         }

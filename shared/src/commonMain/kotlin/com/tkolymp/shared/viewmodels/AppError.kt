@@ -22,10 +22,12 @@ sealed class AppError {
         }
 
         fun network(message: String?, cause: Throwable? = null): AppError {
-            val resolved = message ?: AppStrings.current.errorMessages.networkError
             UpdateChecker.onNetworkError()
-            // Timeouts / unreachable host are the user's connectivity (or a server blip), not an app bug.
-            if (!isTransientNetworkFailure(message, cause)) ErrorReporter.report("AppError.network", resolved, cause)
+            // Timeouts / unreachable host are the user's connectivity (or a server blip), not an app bug:
+            // show a plain offline notice instead of the raw "Unable to resolve host" and don't report it.
+            if (isTransientNetworkFailure(message, cause)) return Network(AppStrings.current.errorMessages.offlineError)
+            val resolved = message ?: AppStrings.current.errorMessages.networkError
+            ErrorReporter.report("AppError.network", resolved, cause)
             return Network(resolved)
         }
 

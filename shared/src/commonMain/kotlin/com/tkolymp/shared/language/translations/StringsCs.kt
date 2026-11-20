@@ -576,6 +576,7 @@ val StringsCs = Strings(
         errorLoadingClub = "Chyba při načítání klubu",
         unknownError = "Neznámá chyba",
         networkError = "Chyba sítě",
+        offlineError = "Jste offline",
         notFoundError = "Nenalezeno",
         errorLoadingStats = "Chyba při načítání statistik",
         errorLoadingEvents = "Chyba při načítání akcí",

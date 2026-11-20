@@ -10,6 +10,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.cozyContentSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -50,7 +51,7 @@ fun OutlinedTextField(
     TextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier,
+        modifier = modifier.cozyContentSize(),
         enabled = enabled,
         readOnly = readOnly,
         textStyle = textStyle,
@@ -111,7 +112,7 @@ fun OutlinedTextField(
     TextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier,
+        modifier = modifier.cozyContentSize(),
         enabled = enabled,
         readOnly = readOnly,
         textStyle = textStyle,

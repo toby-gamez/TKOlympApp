@@ -24,7 +24,11 @@ import com.tkolymp.tkolympapp.components.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import com.tkolymp.tkolympapp.components.TopAppBar
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.Motion
+import com.tkolymp.tkolympapp.util.settleIn
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -119,6 +123,7 @@ fun ChangePasswordScreen(onSuccess: () -> Unit, onBack: () -> Unit) {
                 .fillMaxSize()
                 .padding(padding)
                 .imePadding()
+                .settleIn()
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
@@ -128,7 +133,9 @@ fun ChangePasswordScreen(onSuccess: () -> Unit, onBack: () -> Unit) {
             PasswordField(confirm, { confirm = it }, strings.confirmPassword, ImeAction.Done, onDone = ::submit)
             error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp)) }
             Button(onClick = ::submit, enabled = !loading, modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
-                if (loading) CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp) else Text(strings.confirm)
+                Crossfade(targetState = loading, animationSpec = tween(Motion.FadeMs), label = "confirmLoading") { isLoading ->
+                    if (isLoading) CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp) else Text(strings.confirm)
+                }
             }
         }
     }

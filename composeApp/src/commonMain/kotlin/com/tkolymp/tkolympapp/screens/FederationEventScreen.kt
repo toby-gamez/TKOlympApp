@@ -57,6 +57,7 @@ import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
 import com.tkolymp.tkolympapp.util.SkeletonCrossfade
 import com.tkolymp.tkolympapp.util.cozyContentSize
+import com.tkolymp.tkolympapp.util.cozyItem
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -229,10 +230,12 @@ private fun EventContent(
         } else {
             items(event.competitions, key = { it.id }) { c ->
                 val isOpen = c.id in expanded
-                CompetitionCard(c, isOpen, state, onToggle = {
-                    expanded = if (isOpen) expanded - c.id else expanded + c.id
-                    if (!isOpen) onExpand(c.id)
-                })
+                Box(cozyItem()) {
+                    CompetitionCard(c, isOpen, state, onToggle = {
+                        expanded = if (isOpen) expanded - c.id else expanded + c.id
+                        if (!isOpen) onExpand(c.id)
+                    })
+                }
             }
         }
     }

@@ -27,9 +27,16 @@ class AppErrorTest {
 
     @Test
     fun `network factory`() {
-        val err = AppError.network("Timeout")
+        val err = AppError.network("Bad gateway")
         assertIs<AppError.Network>(err)
-        assertEquals("Timeout", err.message)
+        assertEquals("Bad gateway", err.message)
+    }
+
+    @Test
+    fun `network factory shows offline notice for connectivity failures`() {
+        val err = AppError.network("Unable to resolve host \"tkolymp.cz\"", RuntimeException("Unable to resolve host"))
+        assertEquals("Jste offline", err.message)
+        assertEquals("Jste offline", AppError.network("Timeout").message)
     }
 
     @Test

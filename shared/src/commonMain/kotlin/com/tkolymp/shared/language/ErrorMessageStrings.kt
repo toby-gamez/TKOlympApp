@@ -19,6 +19,7 @@ data class ErrorMessageStrings(
     val errorLoadingClub: String,
     val unknownError: String = "Unknown error",
     val networkError: String = "Network error",
+    val offlineError: String = "You're offline",
     val notFoundError: String = "Not found",
     val errorLoadingStats: String = "Error loading statistics",
     val errorLoadingEvents: String = "Error loading events",
