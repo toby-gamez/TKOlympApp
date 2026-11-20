@@ -1,0 +1,31 @@
+query CoupleDetail($id: BigInt!) {
+  couple(id: $id) {
+    id name ageGroup since until status
+    image { url }
+    man { id firstName lastName prefixTitle suffixTitle image { url } }
+    woman { id firstName lastName prefixTitle suffixTitle image { url } }
+    federationCompetitors(first: 5) {
+      nodes {
+        federation externalId name ageGroup latestResultAt
+        categoryProgressesList(first: 50) {
+          points domesticFinals foreignFinals
+          category { id name series discipline ageGroup genderGroup class competitorType baseDanceProgramId }
+        }
+        ranklistEntries(first: 20, condition: { latestSnapshot: true }) {
+          nodes {
+            ranking rankingTo points
+            snapshot { asOfDate ranklist { name federation category { name } } }
+          }
+        }
+        competitionResultsList(first: 60, orderBy: PRIMARY_KEY_DESC) {
+          ranking rankingTo pointGain isFinal
+          competition {
+            id startDate participantsTotal
+            category { name }
+            event { id name city country }
+          }
+        }
+      }
+    }
+  }
+}
