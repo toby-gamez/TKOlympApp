@@ -176,7 +176,7 @@ private fun Chip(text: String, container: Color = MaterialTheme.colorScheme.onSu
 }
 
 @Composable
-private fun federationName(code: String?): String? = code?.let { federationEmoji(it)?.let { e -> "$e ${federationLabel(it)}" } ?: federationLabel(it) }
+private fun federationName(code: String?): String? = code?.let { federationLabel(it) }
 
 /** Newest ranking per ranklist (federation + category + competitor); older snapshots are dropped. */
 internal fun latestRankings(all: List<FederationRanking>): List<FederationRanking> =
@@ -184,32 +184,29 @@ internal fun latestRankings(all: List<FederationRanking>): List<FederationRankin
         .values.mapNotNull { g -> g.maxByOrNull { it.asOfDate.orEmpty() } }
         .sortedWith(compareBy<FederationRanking> { it.federation.orEmpty() }.thenBy { it.ranking })
 
-@OptIn(ExperimentalLayoutApi::class)
+/** Newest ranking per ranklist as cards like the competitions: the placing in the tile, ranklist name, federation and date. */
 @Composable
 fun FederationRankingsCard(rankings: List<FederationRanking>) {
     val c = AppStrings.current.competition
     val latest = remember(rankings) { latestRankings(rankings) }
-    FederationCard(c.wdsfRankings) {
-        CollapsibleList(latest, "fed_rankings") { _, r ->
-            val place = if (r.rankingTo != null && r.rankingTo != r.ranking) "${r.ranking}.–${r.rankingTo}." else "${r.ranking}."
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.tertiaryContainer, contentColor = MaterialTheme.colorScheme.onTertiaryContainer) {
-                    Box(Modifier.width(64.dp).padding(vertical = 10.dp), contentAlignment = Alignment.Center) {
-                        Text(place, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-                    }
-                }
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        (r.ranklistName ?: r.categoryName)?.let { formatFederationCategory(it) } ?: "—",
-                        style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis
-                    )
-                    r.competitorName?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis) }
-                    Spacer(Modifier.height(4.dp))
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        federationName(r.federation)?.let { Chip(it) }
-                        fmtPoints(r.points)?.let { Chip("$it${c.pointsSuffix}", MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.onTertiaryContainer) }
-                        date(r.asOfDate)?.let { Text("${c.asOf} $it", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-                    }
+    var expanded by rememberSaveable("fed_rankings") { mutableStateOf(false) }
+    val shown = if (expanded) latest else latest.take(COLLAPSED_COUNT)
+    Column {
+        SectionLabel(c.wdsfRankings, horizontalPadding = 0.dp)
+        Column(Modifier.cozyContentSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            shown.forEach { r ->
+                CountdownCard(
+                    days = if (r.rankingTo != null && r.rankingTo != r.ranking) "${r.ranking}.–${r.rankingTo}." else "${r.ranking}.",
+                    daysUnit = fmtPoints(r.points)?.let { "$it${c.pointsSuffix}" }.orEmpty(),
+                    title = (r.ranklistName ?: r.categoryName)?.let { formatFederationCategory(it) } ?: "—",
+                    meta = listOfNotNull(federationName(r.federation), r.competitorName).joinToString(" · "),
+                    footnote = date(r.asOfDate)?.let { "${c.asOf} $it" },
+                    onClick = null
+                )
+            }
+            if (latest.size > COLLAPSED_COUNT) {
+                TextButton(onClick = { expanded = !expanded }, modifier = Modifier.fillMaxWidth()) {
+                    Text(if (expanded) c.showLess else c.showAll.replace("{n}", latest.size.toString()))
                 }
             }
         }
@@ -262,29 +259,45 @@ fun FederationCompetitionsCard(items: List<FederationCompetitionEntry>, onOpenEv
     }
 }
 
-/** A couple's placings in recent competitions: event, date and place, category, placing out of participants and point gain. */
-@OptIn(ExperimentalLayoutApi::class)
+private class CoupleEventGroup(val eventId: String?, val name: String?, val date: String?, val federation: String?, val place: String?, val items: List<CoupleResult>)
+
+/** A couple's recent competitions in the person screen's design: one card per event with the placing of every category. */
 @Composable
 fun CoupleResultsCard(results: List<CoupleResult>, onOpenEvent: (String) -> Unit = {}) {
     val c = AppStrings.current.competition
-    FederationCard(c.recentCompetitions) {
-        CollapsibleList(results, "couple_results") { _, r ->
-            val place = (if (r.rankingTo != null && r.rankingTo != r.ranking) "${r.ranking}.–${r.rankingTo}." else "${r.ranking}.") + (r.participants?.let { "/$it" } ?: "")
-            val open = r.eventId?.let { id -> { onOpenEvent(id) } }
-            Column(modifier = Modifier.fillMaxWidth().then(if (open != null) Modifier.clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = open) else Modifier)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(r.eventName ?: formatFederationCategory(r.categoryName), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
-                    Text(place, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+    val org = AppStrings.current.danceOrg
+    val groups = remember(results) {
+        results.groupBy { Triple(it.eventName, it.startDate, it.federation) }.map { (k, g) ->
+            CoupleEventGroup(g.firstNotNullOfOrNull { it.eventId }, k.first, k.second, k.third, listOfNotNull(g.first().city, g.first().country).joinToString(", ").takeIf { it.isNotBlank() }, g)
+        }
+    }
+    var expanded by rememberSaveable("couple_results") { mutableStateOf(false) }
+    val shown = if (expanded) groups else groups.take(COLLAPSED_COUNT)
+    Column {
+        SectionLabel(c.recentCompetitions, horizontalPadding = 0.dp)
+        Column(Modifier.cozyContentSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            shown.forEach { g ->
+                val parts = g.date?.split("-")
+                val footnote = g.items.joinToString("\n") { r ->
+                    val place = (if (r.rankingTo != null && r.rankingTo != r.ranking) "${r.ranking}.–${r.rankingTo}." else "${r.ranking}.") + (r.participants?.let { "/$it" } ?: "")
+                    listOfNotNull(
+                        formatFederationCategory(r.categoryName),
+                        place,
+                        fmtPoints(r.pointGain)?.let { "+$it${c.pointsSuffix}" }
+                    ).joinToString(" · ")
                 }
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp), itemVerticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        listOfNotNull(date(r.startDate), listOfNotNull(r.city, r.country).joinToString(", ").takeIf { it.isNotBlank() }).joinToString(" · "),
-                        style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    r.categoryName?.let { Chip(formatFederationCategory(it)) }
-                    federationName(r.federation)?.let { Chip(it) }
-                    fmtPoints(r.pointGain)?.let { Chip("+$it${c.pointsSuffix}", MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.onTertiaryContainer) }
-                    if (r.isFinal == true) Chip("F", MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.onPrimaryContainer)
+                CountdownCard(
+                    days = parts?.getOrNull(2)?.trimStart('0')?.ifEmpty { "0" } ?: "–",
+                    daysUnit = listOfNotNull(parts?.getOrNull(1)?.toIntOrNull()?.let { org.monthShort(it) }, parts?.getOrNull(0)).joinToString(" "),
+                    title = g.name ?: formatFederationCategory(g.items.first().categoryName),
+                    meta = listOfNotNull(federationName(g.federation), g.place).joinToString(" · "),
+                    footnote = footnote.takeIf { it.isNotBlank() },
+                    onClick = g.eventId?.let { id -> { onOpenEvent(id) } }
+                )
+            }
+            if (groups.size > COLLAPSED_COUNT) {
+                TextButton(onClick = { expanded = !expanded }, modifier = Modifier.fillMaxWidth()) {
+                    Text(if (expanded) c.showLess else c.showAll.replace("{n}", groups.size.toString()))
                 }
             }
         }

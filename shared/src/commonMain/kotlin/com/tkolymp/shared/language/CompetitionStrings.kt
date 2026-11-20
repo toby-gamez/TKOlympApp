@@ -26,7 +26,7 @@ data class CompetitionStrings(
     val noCstsProgress: String = "Žádné výsledky ČSTS",
     val wdsfProfile: String = "WDSF profil",
     val wdsfProgress: String = "Výsledky WDSF",
-    val wdsfRankings: String = "Žebříčky",
+    val wdsfRankings: String = "Ranklist",
     val wdsfLicenses: String = "Licence",
     val recentCompetitions: String = "Poslední soutěže",
     val medicalCheckup: String = "Lékařská prohlídka",

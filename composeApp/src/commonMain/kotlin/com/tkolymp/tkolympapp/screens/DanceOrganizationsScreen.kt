@@ -316,14 +316,6 @@ internal fun federationLabel(code: String): String = when (code.lowercase()) {
     else -> code.uppercase()
 }
 
-/** Flag of the federation's country, or the globe for the international WDSF; null for an unknown federation. */
-internal fun federationEmoji(code: String): String? = when (code.lowercase()) {
-    "csts" -> "\uD83C\uDDE8\uD83C\uDDFF"
-    "szts" -> "\uD83C\uDDF8\uD83C\uDDF0"
-    "wdsf" -> "\uD83C\uDF0D"
-    else -> null
-}
-
 /** One federation row: code tile, name, "Soutěžní data" subtitle and chevron (prototype "Soutěžní data" list). */
 @Composable
 private fun FederationRow(federation: DanceFederation, onClick: () -> Unit, modifier: Modifier = Modifier) {

@@ -93,7 +93,10 @@ class PeopleViewModel(
                                         com.tkolymp.shared.people.CohortMembership(com.tkolymp.shared.people.Cohort(cid, cname, ccolor, cvis), mObj["since"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() }, mObj["until"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() })
                                     } catch (_: Exception) { null }
                                 }
-                                Person(id, first, last, null, null, null, memberships, jo.fileUrl())
+                                val prefix = jo["prefixTitle"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() }
+                                val suffix = jo["suffixTitle"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() }
+                                val birth = jo["birthDate"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() }
+                                Person(id, first, last, prefix, suffix, birth, memberships, jo.fileUrl())
                             } catch (_: Exception) { null }
                         }
                         if (parsed.isNotEmpty()) {

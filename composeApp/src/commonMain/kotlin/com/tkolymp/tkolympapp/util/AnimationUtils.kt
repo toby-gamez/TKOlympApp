@@ -4,7 +4,10 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.foundation.lazy.grid.LazyGridItemScope
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.VisibilityThreshold
@@ -86,6 +89,29 @@ fun rememberFadeSwitch(): FadeSwitch {
 
 /** Applies the [FadeSwitch] opacity to the content that changes; leave the toggle itself outside of it. */
 fun Modifier.fadeSwitch(switch: FadeSwitch): Modifier = graphicsLayer { alpha = switch.alpha.value }
+
+/** Grid variant of [cozyItem]. */
+@Composable
+fun LazyGridItemScope.cozyItem(): Modifier =
+    if (rememberReduceMotion()) Modifier else Modifier.animateItem(placementSpec = Motion.placementSpring())
+
+/**
+ * Fades and expands an inline notice in when it first enters composition (e.g. `state.error?.let { ErrorBanner(...) }`),
+ * instead of popping in. Exit cannot be animated here because the caller removes it from composition. Instant with
+ * reduced motion.
+ */
+@Composable
+fun EnterAnimated(content: @Composable () -> Unit) {
+    val reduceMotion = rememberReduceMotion()
+    val visibleState = remember { MutableTransitionState(reduceMotion) }.apply { targetState = true }
+    AnimatedVisibility(
+        visibleState = visibleState,
+        enter = if (reduceMotion) EnterTransition.None else fadeIn(tween(Motion.FadeMs)) + expandVertically(Motion.settleSpring()),
+        exit = ExitTransition.None
+    ) {
+        content()
+    }
+}
 
 /** Smoothly animates size changes (expand/collapse, content appearing) instead of jumping; static under reduced motion. */
 @Composable
@@ -195,15 +221,3 @@ fun EmptyStateFade(visible: Boolean, content: @Composable () -> Unit) {
     }
 }
 
-@Composable
-fun Modifier.pressScaleEffect(targetScale: Float = Motion.PressedScale): Modifier {
-    val reduceMotion = rememberReduceMotion()
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed && !reduceMotion) targetScale else 1f,
-        animationSpec = Motion.pressSpring(),
-        label = "pressScale"
-    )
-    return this.graphicsLayer { scaleX = scale; scaleY = scale }
-}

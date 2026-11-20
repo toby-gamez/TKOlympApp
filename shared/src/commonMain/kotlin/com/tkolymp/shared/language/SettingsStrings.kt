@@ -20,6 +20,7 @@ data class SettingsStrings(
     val offlineStageUser: String,
     val offlineStageAnnouncements: String,
     val offlineStagePeople: String,
+    val offlineStageCouples: String,
     val offlineStagePayments: String,
     val offlineStageScoreboard: String,
     val offlineStageClub: String,

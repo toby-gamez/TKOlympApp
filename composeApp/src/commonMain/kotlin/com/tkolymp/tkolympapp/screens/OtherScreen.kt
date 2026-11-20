@@ -78,7 +78,6 @@ import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.tutorial.TutorialManager
 import com.tkolymp.shared.utils.formatShortDate
 import com.tkolymp.tkolympapp.util.StaggeredItem
-import com.tkolymp.tkolympapp.util.pressScaleEffect
 import com.tkolymp.shared.utils.parseToLocal
 import com.tkolymp.shared.viewmodels.OtherViewModel
 import kotlinx.datetime.LocalDate

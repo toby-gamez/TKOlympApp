@@ -131,18 +131,21 @@ class CalendarViewModel(
         // Tab switches clear stale data immediately (online) so the wrong tab's events don't
         // linger while the new tab's data loads. Pull-to-refresh keeps current data visible.
         val showLoadingIndicator = forceRefresh || isFirstLoad || weekChanged || (onlyMineChanged && isCurrentlyOnline)
-        val clearEvents = (weekChanged || onlyMineChanged) && isCurrentlyOnline
+        val clearEvents = weekChanged || onlyMineChanged
 
         // preload cached user ids (used later in state)
         val pid = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("CalendarViewModel", "getCachedPersonId failed: ${e.message}"); null }
         val cids = try { userService.getCachedCoupleIds() } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.d("CalendarViewModel", "getCachedCoupleIds failed: ${e.message}"); emptyList() }
 
+        if (clearEvents) { competitionJob?.cancel(); competitionsFor = null }
         _state.value = _state.value.copy(
             isLoading = showLoadingIndicator,
             error = null,
             eventsByDay = if (clearEvents) emptyMap() else _state.value.eventsByDay,
             lessonsByTrainerByDay = if (clearEvents) emptyMap() else _state.value.lessonsByTrainerByDay,
             otherEventsByDay = if (clearEvents) emptyMap() else _state.value.otherEventsByDay,
+            // Competitions of the previous tab/week must not linger under the new one.
+            competitionsByDay = if (clearEvents) emptyMap() else _state.value.competitionsByDay,
             // The week itself is known up front, so the day strip stays put while events reload.
             visibleDates = visibleDates,
             // Only reset isOffline when we're about to do a fresh online load; preserve it otherwise
@@ -174,6 +177,7 @@ class CalendarViewModel(
                         isOffline = true,
                         isLoading = false
                     )
+                    loadCompetitions(weekStart, endDay, onlyMine, pid)
                     return
                 }
             } catch (e: CancellationException) { throw e } catch (_: Exception) {}
@@ -229,6 +233,7 @@ class CalendarViewModel(
                             isOffline = true,
                             isLoading = false
                         )
+                        loadCompetitions(weekStart, endDay, onlyMine, pid)
                         return
                     }
                 } catch (_: Exception) {}
@@ -248,6 +253,7 @@ class CalendarViewModel(
                         otherEventsByDay = other,
                         isLoading = false
                     )
+                    loadCompetitions(weekStart, endDay, onlyMine, pid)
                     return
                 }
             }
@@ -306,7 +312,7 @@ class CalendarViewModel(
     // the same week keeps what is on screen.
     private fun loadCompetitions(weekStart: kotlinx.datetime.LocalDate, endDay: kotlinx.datetime.LocalDate, onlyMine: Boolean, pid: String?) {
         competitionJob?.cancel()
-        val personIds = if (onlyMine) pid?.toLongOrNull()?.let { listOf(it) } else null
+        val personIds = if (onlyMine) listOfNotNull(pid?.toLongOrNull()) else null
         val since = weekStart.toString()
         val until = endDay.plus(1, DateTimeUnit.DAY).toString()
         competitionJob = viewModelScope.launch {
@@ -412,7 +418,11 @@ class CalendarViewModel(
                              else exact ?: mondayKey ?: candidates.firstOrNull()
                 if (anyKey != null) raw = try { ServiceLocator.offlineSyncManager.loadCalendarWeek(anyKey) } catch (_: Exception) { null }
 
-                // If MINE bucket not found, fall back to ALL bucket with client-side filter upstream.
+                // The sync skips saving empty weeks, so once any MINE week is saved a missing one means
+                // "nothing of mine that week". Falling back to the unfiltered ALL bucket would make
+                // Mine look identical to All, so return an empty week instead.
+                if (raw == null && onlyMine && candidates.isNotEmpty()) return emptyMap()
+                // No MINE data was ever synced: fall back to the ALL bucket as a best effort.
                 if (raw == null && onlyMine) {
                     val allCandidates = keys.filter { it.startsWith(OfflineKeys.CAL_PREFIX + "ALL_") }
                     val allExact = allCandidates.firstOrNull { it.endsWith(weekStart.toString()) }

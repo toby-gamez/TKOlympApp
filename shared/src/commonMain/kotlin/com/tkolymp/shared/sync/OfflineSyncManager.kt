@@ -48,7 +48,7 @@ private const val EVENT_FETCH_CONCURRENCY = 12
 private const val EVENT_SAVE_BATCH = 150
 
 /** Steps of [OfflineSyncManager.downloadAll] in execution order; the ids are what `onProgress` reports as the stage. */
-val OFFLINE_DOWNLOAD_STAGES = listOf("calendar", "user", "announcements", "people", "payments", "scoreboard", "club", "events", "competitions")
+val OFFLINE_DOWNLOAD_STAGES = listOf("calendar", "user", "announcements", "people", "couples", "payments", "scoreboard", "club", "events", "competitions")
 
 class OfflineSyncManager(
     private val eventService: IEventService,
@@ -461,7 +461,7 @@ class OfflineSyncManager(
     } catch (_: Exception) { null }
 
     /** Fetches and saves every couple (active and past) referenced by the synced people, so the couple screen opens offline. */
-    internal suspend fun persistCouples(peopleJson: JsonArray) {
+    internal suspend fun persistCouples(peopleJson: JsonArray, onProgress: (done: Int, total: Int) -> Unit = { _, _ -> }) {
         try {
             val ids = peopleJson.flatMap { p ->
                 val obj = p as? JsonObject ?: return@flatMap emptyList()
@@ -471,13 +471,18 @@ class OfflineSyncManager(
             }.distinct()
             if (ids.isEmpty()) return
             val permits = kotlinx.coroutines.sync.Semaphore(EVENT_FETCH_CONCURRENCY)
+            val lock = kotlinx.coroutines.sync.Mutex()
+            var finished = 0
+            onProgress(0, ids.size)
             val entries = coroutineScope {
                 ids.map { id ->
                     async {
                         permits.withPermit {
-                            try {
+                            val entry = try {
                                 withRetry { peopleService.fetchCouple(id) }?.let { OfflineKeys.couple(id) to AppJson.encodeToString(CoupleDetail.serializer(), it) }
                             } catch (ex: Exception) { Logger.d("OfflineSyncManager", "couple $id failed: ${ex.message}"); null }
+                            lock.withLock { onProgress(++finished, ids.size) }
+                            entry
                         }
                     }
                 }.awaitAll().filterNotNull().toMap()
@@ -630,6 +635,7 @@ class OfflineSyncManager(
         onProgress("announcements", 1, 1)
 
         // People
+        var syncedPeopleJson: JsonArray? = null
         onProgress("people", 0, 1)
         try {
             val ppl = withRetry { peopleService.fetchPeople() }
@@ -643,10 +649,19 @@ class OfflineSyncManager(
                 } catch (ex: Exception) {
                     Logger.d("OfflineSyncManager", "downloadAll: save offline_people failed: ${ex.message}")
                 }
-                persistCouples(peopleJson)
+                syncedPeopleJson = peopleJson
             }
         } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll people failed: ${ex.message}") }
         onProgress("people", 1, 1)
+
+        // Couples (ids come from the people just synced, or from the stored copy when that fetch failed)
+        onProgress("couples", 0, 1)
+        try {
+            val source = syncedPeopleJson
+                ?: try { offlineDataStorage.load(OfflineKeys.PEOPLE)?.let { AppJson.parseToJsonElement(it) as? JsonArray } } catch (_: Exception) { null }
+            if (source != null) persistCouples(source) { done, total -> onProgress("couples", done, total) }
+        } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll couples failed: ${ex.message}") }
+        onProgress("couples", 1, 1)
 
             // Payments
             onProgress("payments", 0, 1)

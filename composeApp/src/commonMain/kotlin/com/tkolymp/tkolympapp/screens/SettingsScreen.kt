@@ -588,6 +588,7 @@ private fun offlineStageName(s: SettingsStrings, stage: String): String = when (
     "user" -> s.offlineStageUser
     "announcements" -> s.offlineStageAnnouncements
     "people" -> s.offlineStagePeople
+    "couples" -> s.offlineStageCouples
     "payments" -> s.offlineStagePayments
     "scoreboard" -> s.offlineStageScoreboard
     "club" -> s.offlineStageClub

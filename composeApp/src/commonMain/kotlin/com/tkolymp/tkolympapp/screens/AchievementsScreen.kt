@@ -35,6 +35,7 @@ import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.runtime.Composable
 import com.tkolymp.tkolympapp.util.SkeletonCrossfade
+import com.tkolymp.tkolympapp.util.cozyItem
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -153,7 +154,7 @@ fun AchievementsScreen(personId: String? = null, onBack: () -> Unit = {}) {
                                     items = state.diplomas,
                                     key = { it.camp.eventId },
                                 ) { diploma ->
-                                    DiplomaThumbnail(diploma = diploma, onClick = { selectedDiploma = diploma })
+                                    DiplomaThumbnail(diploma = diploma, modifier = cozyItem(), onClick = { selectedDiploma = diploma })
                                 }
                             }
                         }

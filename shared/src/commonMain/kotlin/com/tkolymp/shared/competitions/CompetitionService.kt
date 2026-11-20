@@ -79,9 +79,16 @@ class CompetitionService(
         return job.await()
     }
 
+    // The offline sync keeps the next weeks and the past months in separate lists; any week the
+    // calendar shows can fall in either, so stored lookups read both.
+    private suspend fun storedAll(): List<Competition> {
+        val sync = offlineSyncManager ?: return emptyList()
+        return (sync.loadCompetitions() + sync.loadPastCompetitions()).distinctBy { dedupeKey(it) }
+    }
+
     override suspend fun getStoredUpcoming(pSince: String, pUntil: String, pPersonIds: List<Long>?): List<Competition> =
         try {
-            offlineSyncManager?.loadCompetitions().orEmpty().filter { c ->
+            storedAll().filter { c ->
                 c.competitionDate >= pSince && c.competitionDate <= pUntil &&
                     (pPersonIds == null || c.personId in pPersonIds)
             }.sortedBy { it.competitionDate }
@@ -108,10 +115,10 @@ class CompetitionService(
                 )
             } catch (e: CancellationException) { throw e } catch (e: Exception) {
                 Logger.d("CompetitionService", "upcoming fetch failed: ${e.message}")
-                val offline = offlineSyncManager?.loadCompetitions()?.filter { c ->
+                val offline = storedAll().filter { c ->
                     c.competitionDate >= since && c.competitionDate <= until &&
                         (pPersonIds == null || c.personId in pPersonIds)
-                }?.sortedBy { it.competitionDate }?.take(first) ?: emptyList()
+                }.sortedBy { it.competitionDate }.take(first)
                 Fetched(offline, complete = false)
             }
         }
@@ -138,10 +145,10 @@ class CompetitionService(
                 )
             } catch (e: CancellationException) { throw e } catch (e: Exception) {
                 Logger.d("CompetitionService", "past fetch failed: ${e.message}")
-                val offline = offlineSyncManager?.loadPastCompetitions()?.filter { c ->
+                val offline = storedAll().filter { c ->
                     c.competitionDate >= since && c.competitionDate <= until &&
                         (pPersonIds == null || c.personId in pPersonIds)
-                }?.sortedByDescending { it.competitionDate }?.take(first) ?: emptyList()
+                }.sortedByDescending { it.competitionDate }.take(first)
                 Fetched(offline, complete = false)
             }
         }
@@ -284,15 +291,21 @@ class CompetitionService(
             val results = rowsOf("resultsList")
             val entries = rowsOf("entriesList") { it["cancelled"]?.jsonPrimitive?.booleanOrNull == true }
 
-            val officials = ((obj["officials"]?.jsonObject?.get("nodes") as? JsonArray).orEmpty())
-                .map { it.jsonObject }
-                .map { o ->
-                    CompetitionOfficial(
-                        name = o["person"]?.jsonObject?.get("canonicalName")?.jsonPrimitive?.contentOrNull,
-                        role = o["role"]?.jsonPrimitive?.contentOrNull,
-                        judgeLabel = o["judgeLabel"]?.jsonPrimitive?.contentOrNull
-                    )
-                }
+            // The competition's own jury is empty until it is completed; the event-level list
+            // (repeated per discipline, hence the dedupe) is what the web shows before that.
+            fun officialsOf(holder: JsonObject?): List<CompetitionOfficial> =
+                ((holder?.get("officials")?.jsonObject?.get("nodes") as? JsonArray).orEmpty())
+                    .map { it.jsonObject }
+                    .map { o ->
+                        CompetitionOfficial(
+                            name = o["person"]?.jsonObject?.get("canonicalName")?.jsonPrimitive?.contentOrNull,
+                            role = o["role"]?.jsonPrimitive?.contentOrNull,
+                            judgeLabel = o["judgeLabel"]?.jsonPrimitive?.contentOrNull
+                        )
+                    }
+            val officials = officialsOf(obj).ifEmpty {
+                officialsOf(obj["event"] as? JsonObject).distinctBy { it.name to it.role }
+            }
 
             // Past = the competitor has a result; upcoming = entered but no result yet.
             val rows: List<Pair<String, JsonObject?>> = if (upcoming) {

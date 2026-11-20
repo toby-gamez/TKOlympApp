@@ -281,9 +281,9 @@ fun CalendarScreen(
             (!onlyFree || timelineInfo(inst, calState.myPersonId, calState.myCoupleIds).isFree)
 
     // Cache last non-empty offline data to avoid brief disappearance on transient empty state
-    val cachedVisibleDates = remember { mutableStateOf<List<String>?>(null) }
-    val cachedLessonsByTrainer = remember { mutableStateOf<Map<String, Map<String, List<EventInstance>>>?>(null) }
-    val cachedOtherEvents = remember { mutableStateOf<Map<String, List<EventInstance>>?>(null) }
+    val cachedVisibleDates = remember(selectedTab) { mutableStateOf<List<String>?>(null) }
+    val cachedLessonsByTrainer = remember(selectedTab) { mutableStateOf<Map<String, Map<String, List<EventInstance>>>?>(null) }
+    val cachedOtherEvents = remember(selectedTab) { mutableStateOf<Map<String, List<EventInstance>>?>(null) }
 
     LaunchedEffect(calState.isOffline, calState.visibleDates, calState.lessonsByTrainerByDay, calState.otherEventsByDay) {
         if (calState.isOffline) {

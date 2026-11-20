@@ -14,6 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.viewmodels.AppError
 import com.tkolymp.tkolympapp.ui.theme.AppTheme
+import com.tkolymp.tkolympapp.util.EnterAnimated
 
 /**
  * Consistent, reusable rendering of a [ViewModelState.error]. Every AppError is already
@@ -75,7 +76,9 @@ fun ErrorBanner(
     modifier: Modifier = Modifier,
     onRetry: (() -> Unit)? = null,
 ) {
-    ErrorState(message = message, modifier = modifier, fullPage = false, onRetry = onRetry)
+    EnterAnimated {
+        ErrorState(message = message, modifier = modifier, fullPage = false, onRetry = onRetry)
+    }
 }
 
 @Preview(name = "ErrorState — Light")

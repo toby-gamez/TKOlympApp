@@ -67,6 +67,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.cozyItem
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -344,7 +345,7 @@ private fun MapSection(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(selected.sortedBy { it.startDate }, key = { it.id }) { e ->
-                    EventRow(e, Modifier.width(if (selected.size == 1) 340.dp else 300.dp), onClick = { onOpenEvent(e.id) })
+                    EventRow(e, cozyItem().width(if (selected.size == 1) 340.dp else 300.dp), onClick = { onOpenEvent(e.id) })
                 }
             }
         }

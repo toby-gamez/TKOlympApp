@@ -72,6 +72,55 @@ fun PersonHeader(
     }
 }
 
+/** Header for a couple: the overlapping pair avatar next to the pair name and a single plain-text line of [details] (age group, period, …); same layout as [PersonHeader]. */
+@Composable
+fun CoupleHeader(
+    name: String,
+    manName: String?,
+    womanName: String?,
+    modifier: Modifier = Modifier,
+    manImageUrl: String? = null,
+    womanImageUrl: String? = null,
+    details: List<String> = emptyList(),
+    meta: List<String> = emptyList(),
+) {
+    Row(
+        modifier = modifier.fillMaxWidth().padding(vertical = Spacing.small),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.default, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        CoupleAvatar(womanName = womanName, manName = manName, size = 56.dp, fontSize = 20.sp, womanImageUrl = womanImageUrl, manImageUrl = manImageUrl)
+        Column(modifier = Modifier.weight(1f, fill = false), horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(name.trim(), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), maxLines = 2, overflow = TextOverflow.Ellipsis)
+            if (details.isNotEmpty()) {
+                Text(details.joinToString(" · "), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            if (meta.isNotEmpty()) {
+                Text(meta.joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+@Composable
+private fun CoupleHeaderPreviewContent() {
+    Column(Modifier.background(MaterialTheme.colorScheme.background).padding(Spacing.default)) {
+        CoupleHeader(name = "Adam Baďura - Veronika Bokůvková", manName = "Adam Baďura", womanName = "Veronika Bokůvková", details = listOf("Dospělí", "17. 12. 2024 –"), meta = listOf("Aktivní", "🇨🇿 ČSTS 69899"))
+    }
+}
+
+@Preview(name = "CoupleHeader — Light")
+@Composable
+private fun CoupleHeaderPreviewLight() {
+    AppTheme(darkTheme = false) { CoupleHeaderPreviewContent() }
+}
+
+@Preview(name = "CoupleHeader — Dark")
+@Composable
+private fun CoupleHeaderPreviewDark() {
+    AppTheme(darkTheme = true) { CoupleHeaderPreviewContent() }
+}
+
 @Composable
 private fun PersonHeaderPreviewContent() {
     Column(Modifier.background(MaterialTheme.colorScheme.background).padding(Spacing.default)) {

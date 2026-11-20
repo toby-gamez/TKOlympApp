@@ -2,8 +2,8 @@ package com.tkolymp.tkolympapp.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,10 +18,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -41,8 +43,13 @@ import com.tkolymp.shared.viewmodels.CoupleViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.CoupleAvatar
 import com.tkolymp.tkolympapp.components.ErrorState
+import com.tkolymp.tkolympapp.util.StaggeredItem
+import com.tkolymp.tkolympapp.ui.theme.Spacing
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonProfile
+import com.tkolymp.tkolympapp.components.CoupleHeader
 import com.tkolymp.tkolympapp.components.InitialsAvatar
 import com.tkolymp.tkolympapp.components.ScheduleCard
+import com.tkolymp.tkolympapp.components.SectionLabel
 import com.tkolymp.tkolympapp.components.RowDivider
 import com.tkolymp.tkolympapp.components.TopAppBar
 import com.tkolymp.tkolympapp.components.pressClickable
@@ -64,11 +71,13 @@ fun CoupleScreen(
     val scope = rememberCoroutineScope()
     LaunchedEffect(coupleId) { vm.load(coupleId) }
     val couple = state.couple
+    var cardsVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(couple) { if (couple != null) cardsVisible = true }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(AppStrings.current.profile.couple) },
+                title = { Text(AppStrings.current.profile.coupleTitle) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back)
@@ -84,7 +93,7 @@ fun CoupleScreen(
         ) {
             SkeletonCrossfade(couple == null && state.isLoading && state.error == null) { showSkeleton ->
                 if (showSkeleton) {
-                    SkeletonDetail()
+                    SkeletonProfile()
                 } else if (couple == null) {
                     state.error?.let { ErrorState(error = it, onRetry = { scope.launch { vm.load(coupleId) } }) }
                 } else {
@@ -96,46 +105,66 @@ fun CoupleScreen(
                         since != null -> "$since –"
                         else -> null
                     }
-                    val displayName = couple.name?.takeIf { it.isNotBlank() }
-                        ?: partners.joinToString(" - ") { it.name }
+                    val displayName = couple.name?.takeIf { it.isNotBlank() } ?: partners.joinToString(" - ") { it.name }
+                    val strings = AppStrings.current
+                    val isActive = couple.status.equals("ACTIVE", ignoreCase = true) || (couple.status.isNullOrBlank() && couple.until.isNullOrBlank())
                     Column(
-                        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = Spacing.default, vertical = Spacing.small),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.small)
                     ) {
-                        CoupleAvatar(
-                            womanName = couple.woman?.name,
+                        CoupleHeader(
+                            name = displayName,
                             manName = couple.man?.name,
-                            size = 72.dp,
-                            fontSize = 24.sp,
+                            womanName = couple.woman?.name,
+                            manImageUrl = withImageWidth(couple.man?.imageUrl, 240),
                             womanImageUrl = withImageWidth(couple.woman?.imageUrl, 240),
-                            manImageUrl = withImageWidth(couple.man?.imageUrl, 240)
+                            details = listOfNotNull(couple.ageGroup?.takeIf { it.isNotBlank() }?.let { strings.competition.term(it) }, period),
+                            meta = listOf(if (isActive) strings.profile.coupleActive else strings.profile.couplePast)
                         )
-                        Text(displayName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                        val federationChips = couple.federations.map { f ->
-                            listOfNotNull(federationEmoji(f.federation), federationLabel(f.federation), f.externalId).joinToString(" ")
-                        }
-                        val chips = listOfNotNull(couple.ageGroup?.takeIf { it.isNotBlank() }, period) + federationChips
-                        if (chips.isNotEmpty()) {
-                            @OptIn(ExperimentalLayoutApi::class)
-                            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)) {
-                                chips.forEach { SuggestionChip(onClick = {}, label = { Text(it) }) }
-                            }
-                        }
-                        ScheduleCard(Modifier.fillMaxWidth()) {
-                            Column {
-                                partners.forEachIndexed { i, partner ->
-                                    if (i > 0) RowDivider()
-                                    PartnerRow(partner, onOpenPerson)
+                        Spacer(Modifier.height(Spacing.small))
+                        StaggeredItem(index = 0, visible = cardsVisible, baseDelayMs = 50) {
+                            ScheduleCard(Modifier.fillMaxWidth()) {
+                                Column {
+                                    listOfNotNull(
+                                        couple.man?.let { it to strings.profile.partnerMan },
+                                        couple.woman?.let { it to strings.profile.partnerWoman }
+                                    ).forEachIndexed { i, (partner, role) ->
+                                        if (i > 0) RowDivider()
+                                        PartnerRow(partner, role, onOpenPerson)
+                                    }
                                 }
                             }
                         }
-                        val competition = AppStrings.current.competition
-                        couple.progress.groupBy { it.federation?.equals("csts", ignoreCase = true) == true }.entries.sortedByDescending { it.key }.forEach { (isCsts, list) ->
-                            WdsfProgressCard(list, title = if (isCsts) competition.cstsProgress else competition.wdsfProgress)
+                        // The couple's own id at each federation (not a person's ČSTS IDT / WDSF MIN)
+                        val ids = couple.federations.mapNotNull { f ->
+                            val id = f.externalId?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+                            "${federationLabel(f.federation)} ${strings.profile.coupleId}" to id
                         }
-                        if (couple.rankings.isNotEmpty()) FederationRankingsCard(couple.rankings)
-                        if (couple.results.isNotEmpty()) CoupleResultsCard(couple.results, onOpenFederationEvent)
+                        if (ids.isNotEmpty()) {
+                            StaggeredItem(index = 1, visible = cardsVisible, baseDelayMs = 50) {
+                                Column {
+                                    SectionLabel(couple.federations.joinToString(" · ") { federationLabel(it.federation) }, horizontalPadding = 0.dp)
+                                    ScheduleCard(Modifier.fillMaxWidth()) {
+                                        Column {
+                                            ids.forEachIndexed { i, (label, id) ->
+                                                if (i > 0) RowDivider()
+                                                ProfileValueRow(label, id)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        val competition = strings.competition
+                        var index = 2
+                        couple.progress.groupBy { it.federation?.equals("csts", ignoreCase = true) == true }.entries.sortedByDescending { it.key }.forEach { (isCsts, list) ->
+                            StaggeredItem(index = index++, visible = cardsVisible, baseDelayMs = 50) {
+                                WdsfProgressCard(list, title = if (isCsts) competition.cstsProgress else competition.wdsfProgress)
+                            }
+                        }
+                        if (couple.rankings.isNotEmpty()) StaggeredItem(index = index++, visible = cardsVisible, baseDelayMs = 50) { FederationRankingsCard(couple.rankings) }
+                        if (couple.results.isNotEmpty()) StaggeredItem(index = index, visible = cardsVisible, baseDelayMs = 50) { CoupleResultsCard(couple.results, onOpenFederationEvent) }
+                        Spacer(Modifier.height(Spacing.default))
                     }
                 }
             }
@@ -144,7 +173,7 @@ fun CoupleScreen(
 }
 
 @Composable
-private fun PartnerRow(partner: CouplePartner, onOpenPerson: ((String) -> Unit)?) {
+private fun PartnerRow(partner: CouplePartner, role: String, onOpenPerson: ((String) -> Unit)?) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -154,7 +183,10 @@ private fun PartnerRow(partner: CouplePartner, onOpenPerson: ((String) -> Unit)?
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         InitialsAvatar(name = partner.name, size = 40.dp, fontSize = 14.sp, imageUrl = withImageWidth(partner.imageUrl, 120))
-        Text(partner.name, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+        Column(Modifier.weight(1f)) {
+            Text(role, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(partner.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+        }
         if (onOpenPerson != null) Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

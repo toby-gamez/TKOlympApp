@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.items
+import com.tkolymp.tkolympapp.util.cozyItem
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -84,6 +85,7 @@ fun LazyGridScope.badgeGridSections(
                 earned = badge.earned,
                 progressText = progressText,
                 isNew = badge.isNew,
+                modifier = cozyItem(),
                 onClick = { onBadgeClick(badge) },
             )
         }
