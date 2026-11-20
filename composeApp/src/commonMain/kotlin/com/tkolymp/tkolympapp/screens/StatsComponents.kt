@@ -46,6 +46,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.SkeletonCrossfade
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
@@ -567,10 +568,10 @@ internal fun CompareScreenContent(
     val scope = rememberCoroutineScope()
     val slotLetters = listOf("A", "B", "C", "D", "E")
 
-    if (state.isLoadingComparison && state.comparisonData.isEmpty()) {
+    SkeletonCrossfade(state.isLoadingComparison && state.comparisonData.isEmpty()) { showSkeleton ->
+    if (showSkeleton) {
         SkeletonStats(modifier)
-        return
-    }
+    } else {
 
     Column(
         modifier = modifier
@@ -616,7 +617,8 @@ internal fun CompareScreenContent(
             )
         }
 
-        if (state.isLoadingCompare.any { it }) {
+        SkeletonCrossfade(state.isLoadingCompare.any { it }) { showSkeleton ->
+        if (showSkeleton) {
             SkeletonContainer { SkeletonCard() }
         } else {
             val activeSlots = state.compareSeasons.indices
@@ -631,8 +633,11 @@ internal fun CompareScreenContent(
                 }
             }
         }
+        }
 
         Spacer(Modifier.height(24.dp))
+    }
+    }
     }
 }
 
@@ -990,10 +995,10 @@ internal fun AttendanceTabContent(
     strings: com.tkolymp.shared.language.StatsStrings,
     onSeasonSelect: (SeasonSelection) -> Unit
 ) {
-    if (isLoading && totalSessions == 0) {
+    SkeletonCrossfade(isLoading && totalSessions == 0) { showSkeleton ->
+    if (showSkeleton) {
         SkeletonStats()
-        return
-    }
+    } else {
 
     Column(
         modifier = modifier
@@ -1066,6 +1071,8 @@ internal fun AttendanceTabContent(
         }
 
         Spacer(Modifier.height(16.dp))
+    }
+    }
     }
 }
 

@@ -55,6 +55,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.SkeletonCrossfade
+import com.tkolymp.tkolympapp.util.cozyContentSize
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -120,12 +122,14 @@ fun FederationEventScreen(
                 onRefresh = { scope.launch { viewModel.load(eventId) } },
                 modifier = Modifier.weight(1f).fillMaxWidth()
             ) {
+                SkeletonCrossfade(event == null && state.isLoading) { showSkeleton ->
                 when {
-                    event == null && state.isLoading -> SkeletonDetail()
+                    showSkeleton -> SkeletonDetail()
                     event == null -> ErrorState(state.error?.message, onRetry = { scope.launch { viewModel.load(eventId) } })
                     else -> EventContent(event, state, if (signUp == null) bottomPadding else 0.dp,
                         onOpenWeb = { uriHandler.openUri(it) },
                         onExpand = { id -> scope.launch { viewModel.loadResults(id) } })
+                }
                 }
             }
             if (signUp != null) {
@@ -272,7 +276,7 @@ private fun CompetitionCard(
         colors = surfaceCardColors(),
         border = cardLineBorder()
     ) {
-        Column(Modifier.padding(14.dp)) {
+        Column(Modifier.cozyContentSize().padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(formatFederationCategory(c.categoryName), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)

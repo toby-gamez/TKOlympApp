@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.announcements.Announcement
+import com.tkolymp.shared.announcements.sortedNewestFirst
 import com.tkolymp.shared.announcements.AnnouncementBadge
 import com.tkolymp.shared.Logger
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -96,7 +97,7 @@ class BoardViewModel : ViewModel() {
                     val raw = ServiceLocator.offlineSyncManager.loadAnnouncements(sticky)
                     if (raw != null) {
                         val parsed = AppJson.decodeFromString(ListSerializer(Announcement.serializer()), raw)
-                        val parsedSorted = parsed.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }
+                        val parsedSorted = parsed.sortedNewestFirst()
                         if (sticky) {
                             _state.value = _state.value.copy(permanentAnnouncements = parsedSorted, isOffline = true, isLoading = false)
                         } else {
@@ -115,7 +116,7 @@ class BoardViewModel : ViewModel() {
             val dataResult = withContext(Dispatchers.Default) { announcementService.getAnnouncements(sticky) }
             when (dataResult) {
                 is DataResult.Success -> {
-                    val fetched = dataResult.data.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }
+                    val fetched = dataResult.data.sortedNewestFirst()
                     val existing = list ?: (if (sticky) previousPermanent else previousCurrent)
                     if (fetched.isEmpty() && existing.isNotEmpty() && !forceRefresh) {
                         // A silent background load returned nothing while we already have data on
@@ -146,7 +147,7 @@ class BoardViewModel : ViewModel() {
                             val raw = ServiceLocator.offlineSyncManager.loadAnnouncements(sticky)
                             if (raw != null) {
                                 val parsed = AppJson.decodeFromString(ListSerializer(Announcement.serializer()), raw)
-                                val parsedSorted = parsed.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }
+                                val parsedSorted = parsed.sortedNewestFirst()
                                 if (sticky) {
                                     _state.value = _state.value.copy(permanentAnnouncements = parsedSorted, isOffline = true, isLoading = false)
                                 } else {

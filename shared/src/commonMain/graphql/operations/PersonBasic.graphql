@@ -30,6 +30,8 @@ query PersonBasic($id: BigInt!) {
             since
             until
             status
+            man { firstName lastName image { url } }
+            woman { firstName lastName image { url } }
         }
         cohortMembershipsList {
             cohort { colorRgb name isVisible id }

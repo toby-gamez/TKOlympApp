@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
 import com.tkolymp.shared.announcements.Announcement
+import com.tkolymp.shared.announcements.sortedNewestFirst
 import com.tkolymp.shared.cache.CacheService
 import com.tkolymp.shared.event.EventInstance
 import com.tkolymp.shared.people.Person
@@ -273,7 +274,7 @@ class OverviewViewModel(
                             is DataResult.Error -> emptyList()
                         }
                         if (fetched.isNotEmpty()) {
-                            fetched.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }.take(3)
+                            fetched.sortedNewestFirst().take(3)
                         } else {
                             // A live fetch returning empty doesn't mean there are no announcements —
                             // it can be a transient server/auth hiccup under concurrent request load
@@ -285,7 +286,7 @@ class OverviewViewModel(
                                     val parsed = try { AppJson.decodeFromString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), raw) } catch (_: Exception) { null }
                                     if (!parsed.isNullOrEmpty()) {
                                         _state.value = _state.value.copy(isOffline = true)
-                                        parsed.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }.take(3)
+                                        parsed.sortedNewestFirst().take(3)
                                     } else emptyList()
                                 } else emptyList()
                             } catch (_: Exception) { emptyList<Announcement>() }
@@ -298,7 +299,7 @@ class OverviewViewModel(
                                 val parsed = try { AppJson.decodeFromString(kotlinx.serialization.builtins.ListSerializer(com.tkolymp.shared.announcements.Announcement.serializer()), raw) } catch (_: Exception) { null }
                                 if (!parsed.isNullOrEmpty()) {
                                     _state.value = _state.value.copy(isOffline = true)
-                                    parsed.sortedByDescending { it.updatedAt ?: it.createdAt ?: "" }.take(3)
+                                    parsed.sortedNewestFirst().take(3)
                                 } else emptyList()
                             } else emptyList()
                         } catch (_: Exception) { emptyList<Announcement>() }

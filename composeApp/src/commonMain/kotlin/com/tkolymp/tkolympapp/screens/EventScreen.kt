@@ -141,6 +141,13 @@ import com.tkolymp.shared.viewmodels.EventViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.QuantityInput
 import com.tkolymp.tkolympapp.screens.campschedule.RozpisTabContent
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import com.tkolymp.tkolympapp.util.Motion
+import com.tkolymp.tkolympapp.util.SkeletonCrossfade
+import com.tkolymp.tkolympapp.util.cozyContentSize
+import com.tkolymp.tkolympapp.util.fadeSwitch
+import com.tkolymp.tkolympapp.util.rememberFadeSwitch
 import com.tkolymp.tkolympapp.util.StaggeredItem
 import com.tkolymp.tkolympapp.components.parseColorOrDefault
 import com.tkolymp.tkolympapp.platform.HtmlText
@@ -169,7 +176,7 @@ private fun boldTimes(text: String) = buildAnnotatedString {
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? = null, onOpenRegistration: ((String, String?) -> Unit)? = null, onOpenPerson: ((String) -> Unit)? = null, onOpenReminders: (() -> Unit)? = null, initialTab: Int = 0, onEdit: ((Long) -> Unit)? = null) {
+fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? = null, onOpenRegistration: ((String, String?) -> Unit)? = null, onOpenPerson: ((String) -> Unit)? = null, onOpenCouple: ((String) -> Unit)? = null, onOpenCohort: ((String) -> Unit)? = null, onOpenReminders: (() -> Unit)? = null, initialTab: Int = 0, onEdit: ((Long) -> Unit)? = null) {
     val viewModel = viewModel<EventViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -178,6 +185,8 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
     var showReminderDialog by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(initialTab) }
+    val tabSwitch = rememberFadeSwitch()
+    val onTabSelect: (Int) -> Unit = { i -> if (i != selectedTab) scope.launch { tabSwitch.switchTo { selectedTab = i } } }
     val showRozpisTab = isRozpisTabVisible(state.eventType, state.firstInstanceIso, kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault()))
 
     LaunchedEffect(eventId) {
@@ -265,18 +274,19 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
             )
         }
     ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+        // The registration bar applies the nav-bar inset itself; taking it here too doubled the gap under the button.
+        Column(modifier = Modifier.fillMaxSize().padding(top = padding.calculateTopPadding(), bottom = if (showRegistrationBar) 0.dp else padding.calculateBottomPadding())) {
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             if (showRozpisTab && selectedTab == 1) {
                 Column(Modifier.fillMaxSize()) {
                     EventHeader(state, today, ev != null, uriHandler)
-                    DetailToggle(selectedTab, { selectedTab = it })
+                    DetailToggle(selectedTab, onTabSelect)
                     RozpisTabContent(
                         eventId = eventId,
                         instances = state.instances.mapNotNull { it.asJsonObjectOrNull() },
                         eventName = state.eventName,
                         onOpenReminders = onOpenReminders,
-                        modifier = Modifier.weight(1f).fillMaxWidth()
+                        modifier = Modifier.weight(1f).fillMaxWidth().fadeSwitch(tabSwitch)
                     )
                 }
             } else {
@@ -285,22 +295,25 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                     onRefresh = { scope.launch { viewModel.loadEvent(eventId, instanceId = instanceId, forceRefresh = true) } },
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    if (ev == null) {
-                        if (state.error != null) {
-                            ErrorState(
-                                message = state.error?.message,
-                                onRetry = { scope.launch { viewModel.loadEvent(eventId, instanceId = instanceId, forceRefresh = true) } }
-                            )
-                        }
-                        else SkeletonEventDetail()
+                    SkeletonCrossfade(ev == null && state.error == null) { showSkeleton ->
+                    if (showSkeleton) {
+                        SkeletonEventDetail()
+                    } else if (ev == null) {
+                        ErrorState(
+                            message = state.error?.message,
+                            onRetry = { scope.launch { viewModel.loadEvent(eventId, instanceId = instanceId, forceRefresh = true) } }
+                        )
                     } else {
-                        StaggeredItem(index = 0, visible = contentVisible, durationMs = 250) {
+                        run {
                             val bodySizeSp = 15f
                             val onBankCopy: (String) -> Unit = { account ->
                                 scope.launch { snackbarHostState.showSnackbar("${AppStrings.current.misc.bankAccountCopied}: $account") }
                             }
                             Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+                                // The red header stays put; only the body below it settles in.
                                 EventHeader(state, today, true, uriHandler)
+                                StaggeredItem(index = 0, visible = contentVisible, durationMs = 250) {
+                                Column(modifier = Modifier.fillMaxWidth().fadeSwitch(tabSwitch).cozyContentSize()) {
 
                                 if (state.userRegistered) {
                                     InfoBanner(
@@ -332,7 +345,7 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                                     }
                                 }
 
-                                if (showRozpisTab) DetailToggle(selectedTab, { selectedTab = it })
+                                if (showRozpisTab) DetailToggle(selectedTab, onTabSelect)
 
                                 // Shrnutí a popis
                                 if (state.summary.isNotBlank() || state.eventDescription.isNotBlank()) {
@@ -404,15 +417,31 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                                     ))
                                     val displayType = translateEventType(state.eventType)
                                     add(DetailInfoRow(Icons.Default.Category, AppStrings.current.calendarView.typeSection, androidx.compose.ui.text.AnnotatedString(displayType?.takeIf { it.isNotBlank() } ?: "—")))
-                                    val trainerNames = state.trainers.mapNotNull { trainerEl ->
+                                    val trainerLinks = state.trainers.mapNotNull { trainerEl ->
                                         val trainer = trainerEl.asJsonObjectOrNull() ?: return@mapNotNull null
-                                        trainer["person"]?.asJsonObjectOrNull()?.str("name") ?: trainer.str("name")
+                                        val person = trainer["person"]?.asJsonObjectOrNull()
+                                        val name = person?.str("name") ?: trainer.str("name") ?: return@mapNotNull null
+                                        name to person?.str("id")
                                     }
-                                    if (trainerNames.isNotEmpty()) {
+                                    if (trainerLinks.isNotEmpty()) {
                                         add(DetailInfoRow(
                                             Icons.Default.Person,
                                             AppStrings.current.profile.trainers,
-                                            androidx.compose.ui.text.AnnotatedString(trainerNames.joinToString(", "))
+                                            androidx.compose.ui.text.AnnotatedString(trainerLinks.joinToString(", ") { it.first }),
+                                            valueContent = {
+                                                FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.small)) {
+                                                    trainerLinks.forEachIndexed { i, (name, id) ->
+                                                        val open = id?.let { pid -> onOpenPerson?.let { f -> { f(pid) } } }
+                                                        Text(
+                                                            if (i < trainerLinks.lastIndex) "$name," else name,
+                                                            style = MaterialTheme.typography.bodyLarge,
+                                                            fontWeight = FontWeight.Medium,
+                                                            color = if (open != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                                                            modifier = if (open != null) Modifier.clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = open) else Modifier
+                                                        )
+                                                    }
+                                                }
+                                            }
                                         ))
                                     }
                                 }
@@ -427,7 +456,7 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                                 val cohortChips = state.cohorts.mapNotNull { cohortEl ->
                                     val cohort = cohortEl.asJsonObjectOrNull()?.get("cohort")?.asJsonObjectOrNull() ?: return@mapNotNull null
                                     val name = cohort.str("name") ?: return@mapNotNull null
-                                    name to (try { parseColorOrDefault(cohort.str("colorRgb")) } catch (_: Exception) { Color.Gray })
+                                    CohortChip(name, try { parseColorOrDefault(cohort.str("colorRgb")) } catch (_: Exception) { Color.Gray }, cohort.str("id"))
                                 }
                                 if (cohortChips.isNotEmpty()) {
                                     DetailSectionLabel(AppStrings.current.events.targetGroups)
@@ -436,9 +465,13 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                                         horizontalArrangement = Arrangement.spacedBy(Spacing.small),
                                         verticalArrangement = Arrangement.spacedBy(Spacing.small)
                                     ) {
-                                        cohortChips.forEach { (name, color) ->
+                                        cohortChips.forEach { (name, color, id) ->
+                                            val open = id?.let { cid -> onOpenCohort?.let { f -> { f(cid) } } }
                                             Row(
-                                                modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(10.dp)).padding(horizontal = 10.dp, vertical = 6.dp),
+                                                modifier = Modifier
+                                                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(10.dp))
+                                                    .then(if (open != null) Modifier.clip(RoundedCornerShape(10.dp)).clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = open) else Modifier)
+                                                    .padding(horizontal = 10.dp, vertical = 6.dp),
                                                 verticalAlignment = Alignment.CenterVertically,
                                                 horizontalArrangement = Arrangement.spacedBy(6.dp)
                                             ) {
@@ -462,13 +495,16 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                                     ScheduleCard(Modifier.padding(horizontal = Spacing.default)) {
                                         participants.forEachIndexed { i, item ->
                                             if (i > 0) RowDivider()
-                                            ParticipantRowView(item)
+                                            ParticipantRowView(item, onOpenPerson, onOpenCouple)
                                         }
                                     }
                                 }
                                 Spacer(modifier = Modifier.height(Spacing.large))
                             }
-                        }
+                            }
+                            }
+                            }
+                    }
                     }
                 }
             }
@@ -478,15 +514,21 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
             }
         }
 
-        if (showRegistrationBar && onOpenRegistration != null) {
-            RegistrationBar(
-                state = state,
-                onRegister = { onOpenRegistration.invoke("register", null) },
-                onEdit = { onOpenRegistration.invoke("edit", null) },
-                onDelete = {
-                    if (state.ownedRegistrationCount == 1) showDeleteConfirm = true else onOpenRegistration.invoke("delete", null)
-                }
-            )
+        AnimatedVisibility(
+            visible = showRegistrationBar && onOpenRegistration != null,
+            enter = fadeIn(tween(Motion.FadeMs)) + expandVertically(Motion.settleSpring()),
+            exit = fadeOut(tween(Motion.FadeOutMs)) + shrinkVertically(tween(Motion.FadeMs))
+        ) {
+            onOpenRegistration?.let {
+                RegistrationBar(
+                    state = state,
+                    onRegister = { it.invoke("register", null) },
+                    onEdit = { it.invoke("edit", null) },
+                    onDelete = {
+                        if (state.ownedRegistrationCount == 1) showDeleteConfirm = true else it.invoke("delete", null)
+                    }
+                )
+            }
         }
         }
     }
@@ -554,6 +596,8 @@ private data class ParticipantItem(
     val imageUrl: String? = null,
     val womanImageUrl: String? = null,
     val manImageUrl: String? = null,
+    val personId: String? = null,
+    val coupleId: String? = null,
 )
 
 /** Registered participants, couples first, child registrations skipped (same rules as before the redesign). */
@@ -610,7 +654,7 @@ private fun buildParticipants(state: EventState): List<ParticipantItem> {
             if (!note.isNullOrBlank()) add("${AppStrings.current.registration.notePrefix}$note")
         }
 
-        val item = ParticipantItem(nameText, isMe, subItems, womanName, manName, personImage, womanImage, manImage)
+        val item = ParticipantItem(nameText, isMe, subItems, womanName, manName, personImage, womanImage, manImage, personId = if (couple == null) personId else null, coupleId = coupleId)
         if (couple != null) coupleItems.add(item) else singleItems.add(item)
     }
     return coupleItems + singleItems
@@ -621,8 +665,11 @@ private data class DetailInfoRow(
     val label: String,
     val value: androidx.compose.ui.text.AnnotatedString,
     val note: String? = null,
-    val onClick: (() -> Unit)? = null
+    val onClick: (() -> Unit)? = null,
+    val valueContent: (@Composable () -> Unit)? = null
 )
+
+private data class CohortChip(val name: String, val color: Color, val id: String?)
 
 @Composable
 private fun DetailInfoRowView(row: DetailInfoRow) {
@@ -639,16 +686,21 @@ private fun DetailInfoRowView(row: DetailInfoRow) {
         }
         Column(Modifier.weight(1f)) {
             if (row.label.isNotBlank()) Text(row.label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(row.value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+            if (row.valueContent != null) row.valueContent.invoke() else Text(row.value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
             if (row.note != null) Text(row.note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
 @Composable
-private fun ParticipantRowView(item: ParticipantItem) {
+private fun ParticipantRowView(item: ParticipantItem, onOpenPerson: ((String) -> Unit)? = null, onOpenCouple: ((String) -> Unit)? = null) {
+    val open: (() -> Unit)? = when {
+        item.coupleId != null && onOpenCouple != null -> { { onOpenCouple(item.coupleId) } }
+        item.personId != null && onOpenPerson != null -> { { onOpenPerson(item.personId) } }
+        else -> null
+    }
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+        modifier = Modifier.fillMaxWidth().then(if (open != null) Modifier.clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = open) else Modifier).padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.medium)
     ) {

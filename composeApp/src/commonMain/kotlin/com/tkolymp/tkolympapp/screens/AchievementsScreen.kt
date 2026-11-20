@@ -34,6 +34,7 @@ import androidx.compose.material3.TextButton
 import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.SkeletonCrossfade
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -85,9 +86,10 @@ fun AchievementsScreen(personId: String? = null, onBack: () -> Unit = {}) {
             modifier = Modifier.padding(padding)
         ) {
             val error = state.error
+            SkeletonCrossfade(error == null && state.isLoading && state.badges.isEmpty() && state.diplomas.isEmpty()) { showSkeleton ->
             if (error != null && state.badges.isEmpty() && state.diplomas.isEmpty()) {
                 ErrorState(error = error, onRetry = { scope.launch { viewModel.load(personId) } })
-            } else if (state.isLoading && state.badges.isEmpty() && state.diplomas.isEmpty()) {
+            } else if (showSkeleton) {
                 SkeletonBadgeGrid()
             } else {
                 Column(modifier = Modifier.fillMaxSize()) {
@@ -157,6 +159,7 @@ fun AchievementsScreen(personId: String? = null, onBack: () -> Unit = {}) {
                         }
                     }
                 }
+            }
             }
         }
     }

@@ -49,6 +49,8 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.SkeletonCrossfade
+import com.tkolymp.tkolympapp.util.cozyItem
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
@@ -82,7 +84,7 @@ private const val NAME_WEIGHT = 2.5f
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
+fun TrainersLocationsScreen(onBack: () -> Unit = {}, onOpenPerson: ((String) -> Unit)? = null) {
     val vm = viewModel<TrainersLocationsViewModel>()
     val state by vm.state.collectAsStateWithLifecycle()
     val uriHandler = LocalUriHandler.current
@@ -104,10 +106,10 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
             modifier = Modifier.padding(padding)
         ) {
             val club = state.clubData
-            if (club == null && state.isLoading) {
+            SkeletonCrossfade(club == null && state.isLoading) { showSkeleton ->
+            if (showSkeleton) {
                 SkeletonList()
-                return@SwipeToReload
-            }
+            } else {
 
             val visibleTrainers = club?.trainers?.filter { t ->
                 if (t.isVisible == false) return@filter false
@@ -149,7 +151,7 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
 
                                     if (visibleLocations.isNotEmpty()) {
                                         itemsIndexed(visibleLocations, key = { index, loc -> "loc_${index}_${loc.name ?: loc.hashCode()}" }) { index, loc ->
-                                            StaggeredItem(index = index, visible = cardsVisible, baseDelayMs = 50) {
+                                            StaggeredItem(index = index, visible = cardsVisible, baseDelayMs = 50, modifier = cozyItem()) {
                                                 Card(
                                                     modifier = Modifier
                                                         .fillMaxWidth()
@@ -206,11 +208,12 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
 
                                     if (visibleTrainers.isNotEmpty()) {
                                         itemsIndexed(visibleTrainers, key = { index, t -> "trainer_${index}_${t.person?.id ?: t.hashCode()}" }) { index, t ->
-                                            StaggeredItem(index = index, visible = cardsVisible, baseDelayMs = 50) {
+                                            StaggeredItem(index = index, visible = cardsVisible, baseDelayMs = 50, modifier = cozyItem()) {
                                                 Card(
                                                     modifier = Modifier
                                                         .fillMaxWidth()
-                                                        .padding(horizontal = Spacing.default, vertical = 4.dp),
+                                                        .padding(horizontal = Spacing.default, vertical = 4.dp)
+                                                        .then(t.person?.id?.let { id -> onOpenPerson?.let { open -> Modifier.pressClickable(0.99f) { open(id) } } } ?: Modifier),
                                                     shape = RoundedCornerShape(16.dp),
                                                     colors = surfaceCardColors(),
                                                     border = cardLineBorder()
@@ -248,6 +251,8 @@ fun TrainersLocationsScreen(onBack: () -> Unit = {}) {
                         }
                     }
                 }
+            }
+            }
             }
         }
     }

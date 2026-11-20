@@ -58,6 +58,66 @@ data class CouplePeriod(
     val since: String?,
     val until: String?,
     val status: String?,
+    val man: CoupleMember? = null,
+    val woman: CoupleMember? = null,
+) {
+    /** The club marks a relationship ACTIVE; a missing end date also counts, as the status can lag behind. */
+    val isActive: Boolean get() = status.equals("ACTIVE", ignoreCase = true) || (status.isNullOrBlank() && until.isNullOrBlank())
+}
+
+/** Reads one `couplesList` entry (live response or the offline people blob); blank strings become null. */
+fun parseCouplePeriod(cObj: JsonObject): CouplePeriod {
+    fun s(k: String) = (cObj[k] as? JsonPrimitive)?.contentOrNull?.takeIf { it.isNotBlank() }
+    fun member(k: String): CoupleMember? {
+        val m = cObj[k] as? JsonObject ?: return null
+        val first = (m["firstName"] as? JsonPrimitive)?.contentOrNull?.takeIf { it.isNotBlank() }
+        val last = (m["lastName"] as? JsonPrimitive)?.contentOrNull?.takeIf { it.isNotBlank() }
+        if (first == null && last == null) return null
+        return CoupleMember(first, last, m.fileUrl())
+    }
+    return CouplePeriod(s("id"), s("manId"), s("womanId"), s("since"), s("until"), s("status"), member("man"), member("woman"))
+}
+
+@kotlinx.serialization.Serializable
+data class CouplePartner(val id: String, val name: String, val imageUrl: String? = null)
+
+/** The couple's identity in one federation (ČSTS, WDSF, ...). */
+@kotlinx.serialization.Serializable
+data class CoupleFederation(val federation: String, val externalId: String?, val ageGroup: String?, val latestResultAt: String?)
+
+/** One placing of the couple in a competition. */
+@kotlinx.serialization.Serializable
+data class CoupleResult(
+    val federation: String?,
+    val competitionId: String?,
+    val eventId: String?,
+    val eventName: String?,
+    val city: String?,
+    val country: String?,
+    val startDate: String?,
+    val categoryName: String?,
+    val ranking: Int,
+    val rankingTo: Int?,
+    val participants: Int?,
+    val pointGain: String?,
+    val isFinal: Boolean?
+)
+
+@kotlinx.serialization.Serializable
+data class CoupleDetail(
+    val id: String,
+    val name: String?,
+    val ageGroup: String?,
+    val since: String?,
+    val until: String?,
+    val status: String?,
+    val imageUrl: String?,
+    val man: CouplePartner?,
+    val woman: CouplePartner?,
+    val federations: List<CoupleFederation> = emptyList(),
+    val progress: List<com.tkolymp.shared.competitions.CstsProgress> = emptyList(),
+    val rankings: List<FederationRanking> = emptyList(),
+    val results: List<CoupleResult> = emptyList()
 )
 
 data class AddressDetails(
@@ -86,6 +146,7 @@ data class FederationProfile(
     val licenses: List<FederationLicense> = emptyList()
 )
 
+@kotlinx.serialization.Serializable
 data class FederationRanking(
     val federation: String?,
     val ranklistName: String?,
@@ -209,6 +270,94 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
         }
     }
 
+    suspend fun fetchCouple(coupleId: String): CoupleDetail? {
+        val cacheKey = "couple_$coupleId"
+        try {
+            val cached: CoupleDetail? = cache.get(cacheKey)
+            if (cached != null) return cached
+        } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+        val idVar = coupleId.toLongOrNull()?.let { JsonPrimitive(it) } ?: JsonPrimitive(coupleId)
+        val el: JsonElement = try { client.post(GraphQlOperations.CoupleDetail, buildJsonObject { put("id", idVar) }) } catch (e: CancellationException) { throw e } catch (_: Exception) { return null }
+        val obj = ((el as? JsonObject)?.get("data") as? JsonObject)?.get("couple") as? JsonObject ?: return null
+
+        fun partner(key: String): CouplePartner? {
+            val p = obj[key] as? JsonObject ?: return null
+            val pid = p["id"]?.jsonPrimitive?.contentOrNull ?: return null
+            val base = listOf("prefixTitle", "firstName", "lastName").mapNotNull { k -> p[k]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() } }.joinToString(" ")
+            val suffix = p["suffixTitle"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
+            val name = (if (suffix != null) "$base, $suffix" else base).ifBlank { pid }
+            return CouplePartner(pid, name, p.fileUrl())
+        }
+
+        fun JsonObject.s(k: String): String? = (this[k] as? JsonPrimitive)?.contentOrNull?.takeIf { it.isNotBlank() }
+        fun JsonObject.o(k: String): JsonObject? = this[k] as? JsonObject
+        fun JsonObject.list(k: String): List<JsonObject> = (this[k].progressNodes()).orEmpty().mapNotNull { it as? JsonObject }
+        fun JsonObject.int(k: String): Int? = (this[k] as? JsonPrimitive)?.intOrNull
+
+        val competitors = obj.list("federationCompetitors")
+        val federations = competitors.mapNotNull { c ->
+            CoupleFederation(c.s("federation") ?: return@mapNotNull null, c.s("externalId"), c.s("ageGroup"), c.s("latestResultAt"))
+        }
+        val progress = competitors.flatMap { c ->
+            val fed = c.s("federation")
+            val name = c.s("name")
+            c.list("categoryProgressesList").map { p ->
+                val cat = p.o("category")
+                com.tkolymp.shared.competitions.CstsProgress(
+                    points = p.s("points"), finals = p.int("domesticFinals"), competitorName = name, federation = fed, foreignFinals = p.int("foreignFinals"),
+                    category = cat?.let {
+                        com.tkolymp.shared.competitions.CompetitionCategory(
+                            id = (it["id"] as? JsonPrimitive)?.longOrNull, name = it.s("name"), series = it.s("series"), discipline = it.s("discipline"),
+                            ageGroup = it.s("ageGroup"), genderGroup = it.s("genderGroup"), competitorClass = it.s("class"), competitorType = it.s("competitorType"),
+                            baseDanceProgramId = (it["baseDanceProgramId"] as? JsonPrimitive)?.longOrNull
+                        )
+                    }
+                )
+            }
+        }
+        val rankings = competitors.flatMap { c ->
+            c.list("ranklistEntries").mapNotNull { n ->
+                val rank = n.int("ranking") ?: return@mapNotNull null
+                val snap = n.o("snapshot")
+                val list = snap?.o("ranklist")
+                FederationRanking(
+                    federation = list?.s("federation") ?: c.s("federation"), ranklistName = list?.s("name"), categoryName = list?.o("category")?.s("name"),
+                    competitorName = c.s("name"), ranking = rank, rankingTo = n.int("rankingTo"), points = n.s("points"), asOfDate = snap?.s("asOfDate")
+                )
+            }
+        }
+        val results = competitors.flatMap { c ->
+            c.list("competitionResultsList").mapNotNull { r ->
+                val rank = r.int("ranking") ?: return@mapNotNull null
+                val comp = r.o("competition") ?: return@mapNotNull null
+                val ev = comp.o("event")
+                CoupleResult(
+                    federation = c.s("federation"), competitionId = comp.s("id"), eventId = ev?.s("id"), eventName = ev?.s("name"), city = ev?.s("city"), country = ev?.s("country"),
+                    startDate = comp.s("startDate"), categoryName = comp.o("category")?.s("name"), ranking = rank, rankingTo = r.int("rankingTo"),
+                    participants = comp.int("participantsTotal"), pointGain = r.s("pointGain"), isFinal = (r["isFinal"] as? JsonPrimitive)?.contentOrNull?.toBooleanStrictOrNull()
+                )
+            }
+        }.sortedByDescending { it.startDate.orEmpty() }
+
+        val detail = CoupleDetail(
+            id = obj["id"]?.jsonPrimitive?.contentOrNull ?: coupleId,
+            name = obj["name"]?.jsonPrimitive?.contentOrNull,
+            ageGroup = obj["ageGroup"]?.jsonPrimitive?.contentOrNull,
+            since = obj["since"]?.jsonPrimitive?.contentOrNull,
+            until = obj["until"]?.jsonPrimitive?.contentOrNull,
+            status = obj["status"]?.jsonPrimitive?.contentOrNull,
+            imageUrl = obj.fileUrl(),
+            man = partner("man"),
+            woman = partner("woman"),
+            federations = federations,
+            progress = progress,
+            rankings = rankings,
+            results = results
+        )
+        try { cache.put(cacheKey, detail, ttl = 10.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
+        return detail
+    }
+
     suspend fun fetchPeople(): List<Person> {
         val cacheKey = "people_all"
         try {
@@ -312,15 +461,7 @@ class PeopleService(private val client: IGraphQlClient = ServiceLocator.graphQlC
             } ?: emptyList()
 
             val allCouples = (personObj?.get("allCouplesList") as? kotlinx.serialization.json.JsonArray)?._safeMap { cEl ->
-                        val cObj = cEl as? JsonObject ?: return@_safeMap null
-                        CouplePeriod(
-                            id = cObj.get("id")?.jsonPrimitive?.contentOrNull,
-                            manId = cObj.get("manId")?.jsonPrimitive?.contentOrNull,
-                            womanId = cObj.get("womanId")?.jsonPrimitive?.contentOrNull,
-                            since = cObj.get("since")?.jsonPrimitive?.contentOrNull,
-                            until = cObj.get("until")?.jsonPrimitive?.contentOrNull,
-                            status = cObj.get("status")?.jsonPrimitive?.contentOrNull,
-                        )
+                        parseCouplePeriod(cEl as? JsonObject ?: return@_safeMap null)
             } ?: emptyList()
 
             val memberships = (personObj?.get("cohortMembershipsList") as? kotlinx.serialization.json.JsonArray)?._safeMap { mEl ->

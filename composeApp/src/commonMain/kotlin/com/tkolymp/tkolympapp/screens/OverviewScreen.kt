@@ -70,6 +70,9 @@ import com.tkolymp.tkolympapp.components.TimelineRow
 import com.tkolymp.tkolympapp.components.successColor
 import com.tkolymp.tkolympapp.components.successContainerColor
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.SkeletonCrossfade
+import com.tkolymp.tkolympapp.util.cozyContentSize
+import com.tkolymp.tkolympapp.util.cozyItem
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -123,6 +126,9 @@ import com.tkolymp.tkolympapp.components.ErrorBanner
 import androidx.compose.material.icons.outlined.EventBusy
 import androidx.compose.material.icons.outlined.EmojiEvents
 
+/** Whether Overview has already played its intro settle-in during this app session. */
+private var overviewIntroPlayed = false
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun OverviewScreen(
@@ -155,9 +161,15 @@ fun OverviewScreen(
             viewModel.loadOverview(forceRefresh = false)
         }
 
-        // Already-loaded content (returning to this screen) shows immediately instead of replaying the fade-in.
-        var cardsVisible by remember { mutableStateOf(state.hasContent) }
-        LaunchedEffect(state.isLoading) { if (!state.isLoading) cardsVisible = true }
+        // The first time Overview is shown in this app session it always settles in, even when cached data is
+        // already there; returning to it later (e.g. back from a detail screen) shows immediately instead of replaying.
+        var cardsVisible by remember { mutableStateOf(state.hasContent && overviewIntroPlayed) }
+        LaunchedEffect(state.isLoading) {
+            if (!state.isLoading) {
+                cardsVisible = true
+                overviewIntroPlayed = true
+            }
+        }
 
         val tutorialActive by TutorialManager.isActive.collectAsStateWithLifecycle()
         val tutorialStep by TutorialManager.currentStep.collectAsStateWithLifecycle()
@@ -215,6 +227,7 @@ fun OverviewScreen(
 
             // Trainings section
             if ("trainings" in sectionKeys) item(key = "trainings") {
+            Column(cozyItem().cozyContentSize()) {
             state.nextTraining?.let { next ->
                 NextTrainingHero(
                     instance = next,
@@ -244,12 +257,13 @@ fun OverviewScreen(
             )
 
             Column(modifier = Modifier.padding(horizontal = Spacing.medium)) {
+                SkeletonCrossfade(state.trainingSelectedDate == null && state.isLoading) { showSkeleton ->
                 if (state.trainingSelectedDate == null && !state.isLoading) {
                     EmptyState(title = AppStrings.current.timeline.nothingPlanned, icon = Icons.Outlined.EventBusy)
-                } else if (state.trainingSelectedDate == null) {
+                } else if (showSkeleton || state.trainingSelectedDate == null) {
                     SkeletonTimelineRows()
                 } else {
-                    val date = state.trainingSelectedDate ?: return@Column
+                    val date = state.trainingSelectedDate ?: return@SkeletonCrossfade
                     val dayItems = remember(state.trainingLessonsByTrainer, state.trainingOtherEvents) {
                         (state.trainingLessonsByTrainer.values.flatten() + state.trainingOtherEvents).sortedBy { it.since ?: "" }
                     }
@@ -292,6 +306,8 @@ fun OverviewScreen(
                         }
                     }
                 }
+                }
+            }
             }
             } // Trainings section
             }
@@ -304,7 +320,7 @@ fun OverviewScreen(
                         overdueLabel = AppStrings.current.misc.paymentOverdue,
                         payLabel = AppStrings.current.overview.pay,
                         onPay = onOpenPayments,
-                        modifier = Modifier.padding(start = Spacing.default, end = Spacing.default, top = Spacing.default)
+                        modifier = cozyItem().padding(start = Spacing.default, end = Spacing.default, top = Spacing.default)
                     )
                 }
             }
@@ -312,7 +328,7 @@ fun OverviewScreen(
             // Board announcements
             if ("board" in sectionKeys) item(key = "board") {
             Column(
-                modifier = Modifier
+                modifier = cozyItem().cozyContentSize()
                     .onGloballyPositioned { coords ->
                         val b = coords.boundsInRoot()
                         boundsBoard = b
@@ -328,8 +344,9 @@ fun OverviewScreen(
                 announcements.associate { a -> a.id to formatHtmlContent(a.body ?: "").trimEnd() }
             }
             Column {
+                SkeletonCrossfade(announcements.isEmpty() && state.isLoading) { showSkeleton ->
                 if (announcements.isEmpty()) {
-                    if (state.isLoading) {
+                    if (showSkeleton) {
                         SkeletonAnnouncementTiles()
                     } else {
                         EmptyState(title = AppStrings.current.timeline.nothingPlanned, icon = Icons.Outlined.EventBusy)
@@ -343,7 +360,7 @@ fun OverviewScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         itemsIndexed(announcements, key = { _, a -> a.id }) { i, a ->
-                            StaggeredItem(index = i, visible = cardsVisible) {
+                            StaggeredItem(index = i, visible = cardsVisible, modifier = cozyItem()) {
                                 val authorName = listOfNotNull(a.author?.uJmeno, a.author?.uPrijmeni).joinToString(" ").trim()
                                 Card(
                                     modifier = Modifier
@@ -390,6 +407,7 @@ fun OverviewScreen(
                         }
                     }
                 }
+                }
             }
             } // Board section
             }
@@ -397,7 +415,7 @@ fun OverviewScreen(
             // Camps section
             if ("camps" in sectionKeys) item(key = "camps") {
             Column(
-                modifier = Modifier
+                modifier = cozyItem().cozyContentSize()
                     .onGloballyPositioned { coords ->
                         val b = coords.boundsInRoot()
                         boundsCamps = b
@@ -410,8 +428,9 @@ fun OverviewScreen(
                 onAction = onOpenEvents
             )
             Column(modifier = Modifier.padding(horizontal = Spacing.medium)) {
+                SkeletonCrossfade(state.campsMapByDay.isEmpty() && state.isLoading) { showSkeleton ->
                 if (state.campsMapByDay.isEmpty()) {
-                    if (state.isLoading) {
+                    if (showSkeleton) {
                         SkeletonContainer { SkeletonCampCard() }
                     } else {
                         EmptyState(title = AppStrings.current.timeline.nothingPlanned, icon = Icons.Outlined.EventBusy)
@@ -450,13 +469,14 @@ fun OverviewScreen(
                         }
                     }
                 }
+                }
             }
             } // Camps section
             }
             // Nearest competition section
             if ("competition" in sectionKeys) item(key = "competition") {
             Column(
-                modifier = Modifier
+                modifier = cozyItem().cozyContentSize()
                     .onGloballyPositioned { coords ->
                         val b = coords.boundsInRoot()
                         boundsCompetitions = b
@@ -470,7 +490,8 @@ fun OverviewScreen(
                 )
                 Column(modifier = Modifier.padding(horizontal = Spacing.medium)) {
                     val comp = state.nearestCompetition
-                    if (comp == null && state.isCompetitionLoading) {
+                    SkeletonCrossfade(comp == null && state.isCompetitionLoading) { showSkeleton ->
+                    if (showSkeleton) {
                         SkeletonCountdownCard()
                     } else if (comp == null) {
                         EmptyState(title = AppStrings.current.competition.noUpcoming, icon = Icons.Outlined.EmojiEvents)
@@ -479,13 +500,14 @@ fun OverviewScreen(
                             NearestCompetitionCard(event = comp, onOpen = { onOpenFederationEvent(comp.id) })
                         }
                     }
+                    }
                 }
             }
             }
             // Upcoming birthdays
             if ("birthdays" in sectionKeys) item(key = "birthdays") {
             Column(
-                modifier = Modifier
+                modifier = cozyItem().cozyContentSize()
                     .onGloballyPositioned { coords ->
                         val b = coords.boundsInRoot()
                         boundsBirthdays = b
@@ -511,7 +533,7 @@ fun OverviewScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .background(if (isBirthdayToday) MaterialTheme.colorScheme.tertiaryContainer else Color.Transparent)
-                                    .clickable { onOpenPerson(entry.personId) }
+                                    .pressClickable(0.99f) { onOpenPerson(entry.personId) }
                                     .padding(horizontal = Spacing.default, vertical = 11.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -572,12 +594,12 @@ fun OverviewScreen(
             }
             if (sectionKeys.isEmpty() && !state.isLoading && state.error == null) {
                 item(key = "empty") {
-                    EmptyState(title = AppStrings.current.timeline.nothingPlanned, icon = Icons.Outlined.EventBusy)
+                    Box(cozyItem()) { EmptyState(title = AppStrings.current.timeline.nothingPlanned, icon = Icons.Outlined.EventBusy) }
                 }
             }
             if (state.error != null) {
                 item(key = "status") {
-                    state.error?.let { ErrorBanner(error = it) }
+                    Box(cozyItem()) { state.error?.let { ErrorBanner(error = it) } }
                 }
             }
         }

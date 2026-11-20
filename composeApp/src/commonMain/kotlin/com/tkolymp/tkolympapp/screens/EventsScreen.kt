@@ -54,6 +54,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import com.tkolymp.tkolympapp.util.SkeletonCrossfade
+import com.tkolymp.tkolympapp.util.cozyItem
 import com.tkolymp.tkolympapp.util.StaggeredItem
 import com.tkolymp.tkolympapp.util.tabContentTransitionSpec
 import androidx.compose.ui.Alignment
@@ -320,18 +322,20 @@ private fun CampList(
     isLoading: Boolean,
     onOpenEvent: (Long) -> Unit
 ) {
+    // Only the list below the tab header cross-fades and settles in; the header stays put.
+    SkeletonCrossfade(camps.isEmpty() && isLoading) { showSkeleton ->
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = Spacing.default, end = Spacing.default, top = 14.dp, bottom = Spacing.default),
         verticalArrangement = Arrangement.spacedBy(Spacing.medium)
     ) {
-        if (camps.isEmpty() && isLoading) {
+        if (showSkeleton) {
             item { SkeletonCampList() }
         } else if (camps.isEmpty()) {
             item { EmptyState(title = emptyTitle, icon = emptyIcon, fullPage = true, modifier = Modifier.fillParentMaxSize()) }
         }
         itemsIndexed(camps, key = { _, inst -> inst.id }) { i, inst ->
-            StaggeredItem(index = i, visible = visible) {
+            StaggeredItem(index = i, visible = visible, modifier = cozyItem()) {
                 val event = inst.event
                 val monthLabel = campMonth(inst.since).let { m ->
                     val year = parseToLocal(inst.since)?.date?.year
@@ -351,5 +355,6 @@ private fun CampList(
                 )
             }
         }
+    }
     }
 }

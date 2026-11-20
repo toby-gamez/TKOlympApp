@@ -29,6 +29,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.SkeletonCrossfade
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -79,8 +80,9 @@ fun ChangelogScreen(onBack: () -> Unit = {}) {
             )
         }
     ) { innerPadding ->
+        SkeletonCrossfade(state.isLoading) { showSkeleton ->
         when {
-            state.isLoading -> SkeletonReleaseList(Modifier.padding(innerPadding))
+            showSkeleton -> SkeletonReleaseList(Modifier.padding(innerPadding))
 
             state.error != null && state.releases.isEmpty() -> Box(
                 modifier = Modifier.fillMaxSize().padding(innerPadding),
@@ -109,6 +111,7 @@ fun ChangelogScreen(onBack: () -> Unit = {}) {
                 }
                 item { Spacer(modifier = Modifier.height(16.dp)) }
             }
+        }
         }
     }
 }

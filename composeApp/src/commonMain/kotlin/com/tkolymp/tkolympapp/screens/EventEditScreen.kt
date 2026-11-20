@@ -34,6 +34,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.SkeletonCrossfade
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -112,10 +113,10 @@ fun EventEditScreen(
             )
         },
     ) { padding ->
-        if (state.isLoading) {
+        SkeletonCrossfade(state.isLoading) { showSkeleton ->
+        if (showSkeleton) {
             SkeletonForm(Modifier.padding(padding))
-            return@Scaffold
-        }
+        } else {
         val draft = state.draft
         Column(
             modifier = Modifier
@@ -256,6 +257,8 @@ fun EventEditScreen(
                     RichHtmlEditor(state = descriptionEditor, label = strings.description, minLines = 5)
                 }
             }
+        }
+        }
         }
     }
 }

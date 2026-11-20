@@ -41,6 +41,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.SkeletonCrossfade
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
@@ -103,7 +104,8 @@ fun BirthdayNotificationsScreen(onBack: () -> Unit = {}) {
             modifier = Modifier.padding(padding)
         ) {
             val error = state.error
-            if (state.isLoading) {
+            SkeletonCrossfade(state.isLoading) { showSkeleton ->
+            if (showSkeleton) {
                 SkeletonList()
             } else if (error != null && state.nonTrainerPeople.isEmpty() && state.availableGroups.isEmpty()) {
                 ErrorState(error = error, onRetry = { viewModel.load() })
@@ -348,6 +350,7 @@ fun BirthdayNotificationsScreen(onBack: () -> Unit = {}) {
                         }
                     }
                 }
+            }
             }
         }
     }

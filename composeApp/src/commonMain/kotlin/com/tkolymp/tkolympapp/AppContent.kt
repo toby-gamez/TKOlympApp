@@ -75,11 +75,13 @@ import com.tkolymp.tkolympapp.screens.CalendarViewScreen
 import com.tkolymp.tkolympapp.screens.EventScreen
 import com.tkolymp.tkolympapp.screens.EventsScreen
 import com.tkolymp.tkolympapp.screens.CohortScreen
+import com.tkolymp.tkolympapp.screens.CoupleScreen
 import com.tkolymp.tkolympapp.screens.GroupsScreen
 import com.tkolymp.tkolympapp.screens.LanguageScreen
 import com.tkolymp.tkolympapp.screens.LeaderboardScreen
 import com.tkolymp.tkolympapp.screens.LoginScreen
 import com.tkolymp.tkolympapp.screens.NoticeScreen
+import com.tkolymp.tkolympapp.screens.NotificationRuleEditScreen
 import com.tkolymp.tkolympapp.screens.NotificationsSettingsScreen
 import com.tkolymp.tkolympapp.screens.OnboardingScreen
 import com.tkolymp.tkolympapp.screens.OtherScreen
@@ -669,7 +671,25 @@ fun AppNavHost(
             popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) }
         ) { backStackEntry ->
             val initialTab = backStackEntry.arguments?.getInt("tab") ?: 0
-            NotificationsSettingsScreen(onBack = { navController.navigateUp() }, initialTab = initialTab)
+            NotificationsSettingsScreen(
+                onBack = { navController.navigateUp() },
+                initialTab = initialTab,
+                onEditRule = { ruleId -> navController.navigate(if (ruleId == null) "notification_rule" else "notification_rule?ruleId=$ruleId") }
+            )
+        }
+
+        composable(
+            route = "notification_rule?ruleId={ruleId}",
+            arguments = listOf(navArgument("ruleId") { type = NavType.StringType; nullable = true; defaultValue = null }),
+            enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
+            exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
+            popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) },
+            popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) }
+        ) { backStackEntry ->
+            NotificationRuleEditScreen(
+                ruleId = backStackEntry.arguments?.getString("ruleId"),
+                onBack = { navController.navigateUp() }
+            )
         }
 
         composable(
@@ -712,7 +732,11 @@ fun AppNavHost(
             popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) },
             popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) }
         ) {
-            LeaderboardScreen(onBack = { navController.navigateUp() }, bottomPadding = bottomPadding)
+            LeaderboardScreen(
+                onBack = { navController.navigateUp() },
+                onOpenPerson = { id -> navController.navigate("person/$id") },
+                bottomPadding = bottomPadding
+            )
         }
 
         composable(
@@ -806,13 +830,35 @@ fun AppNavHost(
         }
 
         composable(
+            route = "couple/{coupleId}",
+            arguments = listOf(navArgument("coupleId") { type = NavType.StringType }),
+            enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
+            exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
+            popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) },
+            popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) }
+        ) { backStackEntry ->
+            backStackEntry.arguments?.read { getString("coupleId") }?.let { cid ->
+                CoupleScreen(
+                    coupleId = cid,
+                    onBack = { navController.navigateUp() },
+                    onOpenPerson = { id -> navController.navigate("person/$id") },
+                    onOpenFederationEvent = { id -> navController.navigate("federationEvent/$id") },
+                    bottomPadding = bottomPadding
+                )
+            }
+        }
+
+        composable(
             route = "trainers",
             enterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
             exitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)) },
             popEnterTransition = { slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) },
             popExitTransition = { slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(400)) }
         ) {
-            TrainersLocationsScreen(onBack = { navController.navigateUp() })
+            TrainersLocationsScreen(
+                onBack = { navController.navigateUp() },
+                onOpenPerson = { id -> navController.navigate("person/$id") }
+            )
         }
 
         composable(
@@ -862,7 +908,7 @@ fun AppNavHost(
                 PersonScreen(
                     personId = pid,
                     onBack = { navController.navigateUp() },
-                    onOpenCouple = { },
+                    onOpenCouple = { id -> navController.navigate("couple/$id") },
                     onOpenCohort = { id -> navController.navigate("cohort/$id") },
                     onOpenAchievements = { id -> navController.navigate("person/$id/achievements") },
                     onOpenFederationEvent = { id -> navController.navigate("federationEvent/$id") }
@@ -908,6 +954,8 @@ fun AppNavHost(
                         navController.navigate("event/$eid/registration/$mode")
                     },
                     onOpenPerson = { personId -> navController.navigate("person/$personId") },
+                    onOpenCouple = { coupleId -> navController.navigate("couple/$coupleId") },
+                    onOpenCohort = { cohortId -> navController.navigate("cohort/$cohortId") },
                     onOpenReminders = { navController.navigate("notifications?tab=1") },
                     initialTab = initialTab,
                     onEdit = { id -> navController.navigate("event_edit?eventId=$id") }

@@ -132,7 +132,7 @@ class AnnouncementServiceImpl(
                 } catch (e: CancellationException) { throw e } catch (t: Exception) {
                     null
                 }
-            }
+            }.sortedNewestFirst()
             if (result.isNotEmpty()) {
                 try { cache.put(cacheKey, result, ttl = 2.minutes) } catch (e: CancellationException) { throw e } catch (_: Exception) {}
             }

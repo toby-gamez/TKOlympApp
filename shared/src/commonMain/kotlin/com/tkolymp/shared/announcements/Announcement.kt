@@ -21,3 +21,7 @@ data class Announcement(
     val author: Author? = null,
     val imageUrl: String? = null
 )
+
+/** Newest first by creation time (the date the cards show); `updatedAt` only breaks ties. */
+fun List<Announcement>.sortedNewestFirst(): List<Announcement> =
+    sortedWith(compareByDescending<Announcement> { it.createdAt ?: "" }.thenByDescending { it.updatedAt ?: "" })

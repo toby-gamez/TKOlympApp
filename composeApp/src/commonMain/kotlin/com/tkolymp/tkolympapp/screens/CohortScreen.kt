@@ -31,6 +31,7 @@ import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.SkeletonCrossfade
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -90,14 +91,12 @@ fun CohortScreen(
             onRefresh = { scope.launch { vm.load(cohortId) } },
             modifier = Modifier.padding(top = padding.calculateTopPadding(), bottom = bottomPadding)
         ) {
-            if (cohort == null) {
-                if (state.isLoading && state.error == null) {
-                    SkeletonDetail()
-                    return@SwipeToReload
-                }
+            SkeletonCrossfade(cohort == null && state.isLoading && state.error == null) { showSkeleton ->
+            if (showSkeleton) {
+                SkeletonDetail()
+            } else if (cohort == null) {
                 state.error?.let { ErrorState(error = it, onRetry = { scope.launch { vm.load(cohortId) } }) }
-                return@SwipeToReload
-            }
+            } else {
             val accent = try { parseColorOrDefault(cohort.colorRgb) } catch (_: Exception) { MaterialTheme.colorScheme.primary }
             Column(
                 modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(12.dp),
@@ -172,6 +171,8 @@ fun CohortScreen(
                         }
                     }
                 }
+            }
+            }
             }
         }
     }

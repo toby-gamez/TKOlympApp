@@ -45,6 +45,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.SkeletonCrossfade
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
@@ -73,10 +74,11 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import androidx.compose.ui.Alignment as ComposeAlignment
 import com.tkolymp.tkolympapp.components.ErrorState
+import com.tkolymp.tkolympapp.components.pressClickable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
+fun LeaderboardScreen(onBack: () -> Unit = {}, onOpenPerson: ((String) -> Unit)? = null, bottomPadding: Dp = 0.dp) {
     val viewModel = viewModel<LeaderboardViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val currentPersonId = remember { mutableStateOf<String?>(null) }
@@ -127,8 +129,9 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                     }
                 }
 
+                SkeletonCrossfade(state.isLoading) { showSkeleton ->
                 when {
-                    state.isLoading -> SkeletonLeaderboard()
+                    showSkeleton -> SkeletonLeaderboard()
                     state.error != null -> ErrorState(message = state.error?.message)
                     else -> {
                         val myEntry = remember(state.rankings, currentPersonId.value) {
@@ -187,6 +190,7 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                                                         place = i + 1,
                                                         rank = item.ranking ?: (i + 1),
                                                         points = scoreText(item.totalScore),
+                                                        onClick = item.personId?.let { id -> onOpenPerson?.let { open -> { open(id) } } },
                                                         modifier = Modifier.weight(1f)
                                                     )
                                                 }
@@ -201,7 +205,8 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                                         val name = nameOf(item)
                                         StaggeredItem(index = index, visible = entranceVisible, baseDelayMs = 40, durationMs = 250, modifier = Modifier.animateItem()) {
                                             Card(
-                                                modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.default),
+                                                modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.default)
+                                                    .then(item.personId?.let { id -> onOpenPerson?.let { open -> Modifier.pressClickable(0.99f) { open(id) } } } ?: Modifier),
                                                 shape = RoundedCornerShape(16.dp),
                                                 colors = if (isCurrent) CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)) else surfaceCardColors(),
                                                 border = cardLineBorder()
@@ -228,7 +233,8 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .align(Alignment.BottomCenter)
-                                            .padding(horizontal = Spacing.default, vertical = Spacing.small),
+                                            .padding(horizontal = Spacing.default, vertical = Spacing.small)
+                                            .then(entry.personId?.let { id -> onOpenPerson?.let { open -> Modifier.pressClickable(0.99f) { open(id) } } } ?: Modifier),
                                         shape = RoundedCornerShape(16.dp),
                                         colors = CardDefaults.cardColors(containerColor = BrandLightPrimary)
                                     ) {
@@ -245,6 +251,7 @@ fun LeaderboardScreen(onBack: () -> Unit = {}, bottomPadding: Dp = 0.dp) {
                         }
                     }
                 }
+                }
             }
         }
     }
@@ -258,11 +265,15 @@ private fun formatScore(v: Double): String {
 
 /** One step of the podium: ringed avatar, name and a block whose height reflects the position; [rank] is the real (possibly filtered-out-of) ranking shown. */
 @Composable
-private fun PodiumColumn(name: String, place: Int, rank: Int, points: String, modifier: Modifier = Modifier) {
+private fun PodiumColumn(name: String, place: Int, rank: Int, points: String, onClick: (() -> Unit)? = null, modifier: Modifier = Modifier) {
     val first = place == 1
     val avatarSize = if (first) 72.dp else 58.dp
     val blockHeight = when (place) { 1 -> 96.dp; 2 -> 72.dp; else -> 56.dp }
-    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(
+        modifier = modifier.then(if (onClick != null) Modifier.pressClickable(0.97f, onClick) else Modifier),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
         Box(
             modifier = Modifier.size(avatarSize).border(3.dp, if (first) BrandLightPrimary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.18f), CircleShape).padding(5.dp),
             contentAlignment = Alignment.Center

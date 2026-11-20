@@ -54,6 +54,7 @@ import androidx.compose.material3.TextButton
 import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.SkeletonCrossfade
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -260,14 +261,14 @@ fun ProfileEditScreen(onSaved: () -> Unit, onBack: () -> Unit) {
         },
         snackbarHost = { SnackbarHost(snackbar) }
     ) { padding ->
-        if (person == null) {
-            if (state.isLoading) {
-                SkeletonForm(Modifier.padding(padding), avatar = true)
-            } else Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+        SkeletonCrossfade(person == null && state.isLoading) { showSkeleton ->
+        if (showSkeleton) {
+            SkeletonForm(Modifier.padding(padding), avatar = true)
+        } else if (person == null) {
+            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 Text(state.error?.message ?: strings.errorMessages.errorLoadingProfile, color = MaterialTheme.colorScheme.error)
             }
-            return@Scaffold
-        }
+        } else {
 
         Column(
             modifier = Modifier
@@ -430,6 +431,8 @@ fun ProfileEditScreen(onSaved: () -> Unit, onBack: () -> Unit) {
                 modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp)
             )
             Spacer(Modifier.size(32.dp))
+        }
+        }
         }
     }
 

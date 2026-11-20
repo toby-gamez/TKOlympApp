@@ -4,7 +4,7 @@ query PersonDetails($id: BigInt!) {
     nationality nationalIdNumber taxIdentificationNumber instagramUsername tiktokUsername facebookUrl websiteUrl note
     address { city conscriptionNumber district orientationNumber postalCode region street }
     activeCouplesList: couplesList(condition: { status: ACTIVE }) { id man { firstName lastName image { url } } woman { firstName lastName image { url } } }
-    allCouplesList: couplesList { id manId womanId since until status }
+    allCouplesList: couplesList { id manId womanId since until status man { firstName lastName image { url } } woman { firstName lastName image { url } } }
     cohortMembershipsList { cohort { id colorRgb name isVisible } since until }
     cstsProgressList: federationCategoryProgresses(first: 100) {
       nodes {

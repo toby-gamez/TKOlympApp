@@ -55,6 +55,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.SkeletonCrossfade
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.Lifecycle
@@ -170,9 +171,10 @@ fun ProfileScreen(
             modifier = Modifier.fillMaxSize().padding(padding)
         ) {
             val error = profileState.error
+            SkeletonCrossfade(error == null && profileState.person == null && profileState.isLoading) { showSkeleton ->
             if (error != null && profileState.person == null) {
                 ErrorState(error = error, onRetry = { scope.launch { profileViewModel.load() } })
-            } else if (profileState.person == null && profileState.isLoading) {
+            } else if (showSkeleton) {
                 SkeletonProfile()
             } else {
             Column(
@@ -581,6 +583,7 @@ fun ProfileScreen(
                     modifier = Modifier.fillMaxWidth().padding(top = Spacing.small),
                     danger = true
                 )
+            }
             }
             }
         }

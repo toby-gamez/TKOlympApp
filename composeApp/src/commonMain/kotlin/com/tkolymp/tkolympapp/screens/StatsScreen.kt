@@ -31,6 +31,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.SkeletonCrossfade
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
@@ -181,10 +182,10 @@ fun StatsScreen(
                     return@Column
                 }
 
-                if (isLoading && totalSessions == 0) {
+                SkeletonCrossfade(isLoading && totalSessions == 0) { showSkeleton ->
+                if (showSkeleton) {
                     SkeletonStats()
-                    return@Column
-                }
+                } else {
 
                 Column(
                     modifier = Modifier
@@ -314,6 +315,8 @@ fun StatsScreen(
                     }
 
                     Spacer(Modifier.height(Spacing.large))
+                }
+                }
                 }
             }
         }

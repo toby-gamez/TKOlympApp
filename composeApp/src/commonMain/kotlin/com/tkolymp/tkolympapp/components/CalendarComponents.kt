@@ -1,6 +1,8 @@
 package com.tkolymp.tkolympapp.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.runtime.remember
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -31,7 +33,23 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.Motion
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -120,22 +138,39 @@ fun SegmentedToggle(
     ) {
         labels.forEachIndexed { i, label ->
             val on = i == selectedIndex
+            // Pill colour and shadow fade as one layer; a separate Modifier.shadow would show through the fading pill as a grey rectangle.
+            val pillAlpha by animateFloatAsState(if (on) 1f else 0f, tween(Motion.FadeMs), label = "segmentPill")
+            val pillColor = MaterialTheme.colorScheme.surface
             Box(
                 modifier = Modifier
                     .then(if (fillWidth) Modifier.weight(1f) else Modifier)
                     .heightIn(min = 32.dp)
-                    .then(if (on) Modifier.shadow(1.dp, RoundedCornerShape(8.dp)) else Modifier)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(if (on) MaterialTheme.colorScheme.surface else Color.Transparent)
-                    .clickable(role = Role.Tab) { onSelect(i) }
-                    .padding(horizontal = Spacing.medium, vertical = 6.dp),
+                    // No ripple: it flashes as a rectangle over the pill; the pill fade is the feedback.
+                    .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, role = Role.Tab) { onSelect(i) },
                 contentAlignment = Alignment.Center
             ) {
+                Box(
+                    Modifier
+                        .matchParentSize()
+                        .graphicsLayer { alpha = pillAlpha }
+                        .drawBehind {
+                            // Hand-drawn soft lift: a platform shadow on a fading layer went missing on the first segment.
+                            val radius = CornerRadius(8.dp.toPx())
+                            val spread = 1.dp.toPx()
+                            drawRoundRect(Color.Black.copy(alpha = 0.05f), Offset(-spread, 0f), Size(size.width + 2 * spread, size.height + 2 * spread), radius)
+                            drawRoundRect(Color.Black.copy(alpha = 0.07f), Offset(-spread / 2, 0f), Size(size.width + spread, size.height + spread), radius)
+                            drawRoundRect(pillColor, cornerRadius = radius)
+                        }
+                )
                 Text(
                     label,
+                    modifier = Modifier.padding(horizontal = Spacing.medium, vertical = 6.dp),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = if (on) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                    color = animateColorAsState(
+                        if (on) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                        tween(Motion.FadeMs), label = "segmentText"
+                    ).value
                 )
             }
         }
@@ -348,7 +383,11 @@ fun TrainerCard(
                 modifier = Modifier.size(22.dp)
             )
         }
-        if (expanded) rows()
+        AnimatedVisibility(
+            visible = expanded,
+            enter = fadeIn(tween(Motion.FadeMs)) + expandVertically(Motion.settleSpring()),
+            exit = fadeOut(tween(Motion.FadeMs)) + shrinkVertically(tween(Motion.FadeMs))
+        ) { Column { rows() } }
     }
 }
 

@@ -34,6 +34,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.SkeletonVisibility
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
@@ -98,7 +99,7 @@ fun GroupsScreen(onBack: () -> Unit = {}, onOpenCohort: ((String) -> Unit)? = nu
 
             state.error?.let { err -> ErrorBanner(error = err) }
 
-            if (state.isLoading && state.cohorts.isEmpty()) {
+            SkeletonVisibility(state.isLoading && state.cohorts.isEmpty()) {
                 SkeletonCohortList()
             }
 

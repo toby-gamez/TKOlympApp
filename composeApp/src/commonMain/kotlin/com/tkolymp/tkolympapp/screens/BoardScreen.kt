@@ -69,6 +69,8 @@ import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import com.tkolymp.shared.tutorial.TutorialManager
 import com.tkolymp.tkolympapp.TutorialHighlight
+import com.tkolymp.tkolympapp.util.SkeletonCrossfade
+import com.tkolymp.tkolympapp.util.cozyItem
 import com.tkolymp.tkolympapp.util.StaggeredItem
 import com.tkolymp.tkolympapp.util.tabContentTransitionSpec
 import androidx.compose.ui.text.font.FontWeight
@@ -211,7 +213,8 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}, onC
                             }
                         }
                     }
-                    if (filtered.isEmpty() && state.isLoading) {
+                    SkeletonCrossfade(filtered.isEmpty() && state.isLoading) { showSkeleton ->
+                    if (showSkeleton) {
                         SkeletonNoticeList()
                     } else if (filtered.isEmpty()) {
                         EmptyState(title = AppStrings.current.announcements.noAnnouncementsToShow, icon = Icons.Outlined.Campaign, fullPage = true)
@@ -224,7 +227,7 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}, onC
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             itemsIndexed(filtered, key = { _, a -> a.id }) { i, a ->
-                                StaggeredItem(index = i, visible = listVisible) {
+                                StaggeredItem(index = i, visible = listVisible, modifier = cozyItem()) {
                                     val authorName = listOfNotNull(a.author?.uJmeno, a.author?.uPrijmeni).joinToString(" ").trim()
                                     val age = daysSince(a.createdAt, today)
                                     val ago = when {
@@ -245,6 +248,7 @@ fun BoardScreen(bottomPadding: Dp = 0.dp, onOpenNotice: (Long) -> Unit = {}, onC
                                 }
                             }
                         }
+                    }
                     }
                 }
             }

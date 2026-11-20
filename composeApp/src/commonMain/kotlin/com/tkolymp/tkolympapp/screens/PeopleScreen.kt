@@ -96,6 +96,7 @@ import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.ErrorState
 import com.tkolymp.tkolympapp.components.InitialsAvatar
 import com.tkolymp.tkolympapp.components.parseColorOrDefault
+import com.tkolymp.tkolympapp.util.SkeletonCrossfade
 import com.tkolymp.tkolympapp.util.StaggeredItem
 import com.tkolymp.tkolympapp.util.normalizeForSearch
 import kotlinx.coroutines.Dispatchers
@@ -200,7 +201,8 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
             modifier = Modifier.padding(padding)
         ) {
             val error = state.error
-            if (state.isLoading && state.people.isEmpty()) {
+            SkeletonCrossfade(state.isLoading && state.people.isEmpty()) { showSkeleton ->
+            if (showSkeleton) {
                 SkeletonList()
             } else if (error != null && state.people.isEmpty()) {
                 ErrorState(error = error, onRetry = { scope.launch { viewModel.loadPeople() } })
@@ -437,6 +439,7 @@ fun PeopleScreen(onPersonClick: (String) -> Unit = {}, onBack: () -> Unit = {}, 
                 }
             }
                 }
+            }
             }
         }
     }

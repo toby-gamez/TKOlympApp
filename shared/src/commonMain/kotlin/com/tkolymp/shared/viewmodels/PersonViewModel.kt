@@ -81,15 +81,7 @@ class PersonViewModel(
                         } ?: emptyList()
 
                         val allCouples = (obj["allCouplesList"] as? kotlinx.serialization.json.JsonArray)?.mapNotNull { cEl ->
-                            val cObj = cEl as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null
-                            com.tkolymp.shared.people.CouplePeriod(
-                                id = blankToNull(cObj["id"]?.jsonPrimitive?.contentOrNull),
-                                manId = blankToNull(cObj["manId"]?.jsonPrimitive?.contentOrNull),
-                                womanId = blankToNull(cObj["womanId"]?.jsonPrimitive?.contentOrNull),
-                                since = blankToNull(cObj["since"]?.jsonPrimitive?.contentOrNull),
-                                until = blankToNull(cObj["until"]?.jsonPrimitive?.contentOrNull),
-                                status = blankToNull(cObj["status"]?.jsonPrimitive?.contentOrNull)
-                            )
+                            com.tkolymp.shared.people.parseCouplePeriod(cEl as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null)
                         } ?: emptyList()
 
                         val cstsProgress = obj["cstsProgressList"].progressNodes()?.mapNotNull { pEl ->

@@ -24,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.cozyContentSize
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
@@ -38,6 +39,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import com.tkolymp.shared.competitions.CstsProgress
 import com.tkolymp.shared.language.AppStrings
 import kotlinx.datetime.todayIn
+import androidx.compose.foundation.clickable
+import com.tkolymp.shared.people.CoupleResult
 import com.tkolymp.shared.people.FederationCompetitionEntry
 import com.tkolymp.shared.people.FederationProfile
 import com.tkolymp.shared.people.FederationRanking
@@ -87,9 +90,11 @@ private fun <T> CollapsibleList(items: List<T>, stateKey: String, row: @Composab
     var expanded by rememberSaveable(stateKey) { mutableStateOf(false) }
     val c = AppStrings.current.competition
     val shown = if (expanded) items else items.take(COLLAPSED_COUNT)
-    shown.forEachIndexed { idx, item ->
-        if (idx > 0) HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = MaterialTheme.colorScheme.outlineVariant)
-        row(idx, item)
+    Column(Modifier.cozyContentSize()) {
+        shown.forEachIndexed { idx, item ->
+            if (idx > 0) HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = MaterialTheme.colorScheme.outlineVariant)
+            row(idx, item)
+        }
     }
     if (items.size > COLLAPSED_COUNT) {
         TextButton(onClick = { expanded = !expanded }, modifier = Modifier.fillMaxWidth()) {
@@ -140,13 +145,13 @@ fun WdsfProfileCard(profile: FederationProfile) {
 }
 
 @Composable
-fun WdsfProgressCard(progress: List<CstsProgress>) {
+fun WdsfProgressCard(progress: List<CstsProgress>, title: String? = null) {
     val c = AppStrings.current.competition
     // most valuable categories first (points, then finals)
     val sorted = progress.sortedWith(compareByDescending<CstsProgress> { it.points?.toDoubleOrNull() ?: 0.0 }.thenByDescending { it.finals ?: 0 })
     val multiple = sorted.mapNotNull { it.competitorName?.takeIf { n -> n.isNotBlank() } }.distinct().size > 1
-    FederationCard(c.wdsfProgress) {
-        CollapsibleList(sorted, "wdsf_progress") { _, e ->
+    FederationCard(title ?: c.wdsfProgress) {
+        CollapsibleList(sorted, "wdsf_progress_${title.orEmpty()}") { _, e ->
             Column {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(formatFederationCategory(e.category?.name), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
@@ -228,7 +233,7 @@ fun FederationCompetitionsCard(items: List<FederationCompetitionEntry>, onOpenEv
     val shown = if (expanded) groups else groups.take(COLLAPSED_COUNT)
     Column {
         SectionLabel(c.recentCompetitions, horizontalPadding = 0.dp)
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.cozyContentSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             shown.forEach { g ->
                 val parts = g.date?.split("-")
                 val meta = listOfNotNull(
@@ -251,6 +256,35 @@ fun FederationCompetitionsCard(items: List<FederationCompetitionEntry>, onOpenEv
             if (groups.size > COLLAPSED_COUNT) {
                 TextButton(onClick = { expanded = !expanded }, modifier = Modifier.fillMaxWidth()) {
                     Text(if (expanded) c.showLess else c.showAll.replace("{n}", groups.size.toString()))
+                }
+            }
+        }
+    }
+}
+
+/** A couple's placings in recent competitions: event, date and place, category, placing out of participants and point gain. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun CoupleResultsCard(results: List<CoupleResult>, onOpenEvent: (String) -> Unit = {}) {
+    val c = AppStrings.current.competition
+    FederationCard(c.recentCompetitions) {
+        CollapsibleList(results, "couple_results") { _, r ->
+            val place = (if (r.rankingTo != null && r.rankingTo != r.ranking) "${r.ranking}.–${r.rankingTo}." else "${r.ranking}.") + (r.participants?.let { "/$it" } ?: "")
+            val open = r.eventId?.let { id -> { onOpenEvent(id) } }
+            Column(modifier = Modifier.fillMaxWidth().then(if (open != null) Modifier.clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = open) else Modifier)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(r.eventName ?: formatFederationCategory(r.categoryName), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(place, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                }
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp), itemVerticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        listOfNotNull(date(r.startDate), listOfNotNull(r.city, r.country).joinToString(", ").takeIf { it.isNotBlank() }).joinToString(" · "),
+                        style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    r.categoryName?.let { Chip(formatFederationCategory(it)) }
+                    federationName(r.federation)?.let { Chip(it) }
+                    fmtPoints(r.pointGain)?.let { Chip("+$it${c.pointsSuffix}", MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.onTertiaryContainer) }
+                    if (r.isFinal == true) Chip("F", MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.onPrimaryContainer)
                 }
             }
         }

@@ -20,6 +20,9 @@ object OfflineKeys {
 
     const val PEOPLE = "offline_people"
 
+    const val COUPLE_PREFIX = "offline_couple_"
+    fun couple(id: String) = "$COUPLE_PREFIX$id"
+
     const val CLUB = "offline_club"
     const val CLUB_COHORTS = "offline_club_cohorts"
     const val CLUB_BASIC = "offline_club_basic"

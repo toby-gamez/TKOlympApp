@@ -203,11 +203,10 @@ internal fun RenderSingleEventCard(
             .fillMaxWidth()
             .defaultMinSize(minHeight = 48.dp)
             .padding(vertical = 4.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .clickable {
+            .pressClickable {
                 item.event?.id?.let { onEventClick(it, item.id) }
             }
-            .then(Modifier),
+            .clip(RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp)
     ) {
         Row(modifier = Modifier

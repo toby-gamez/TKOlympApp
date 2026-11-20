@@ -48,6 +48,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.SkeletonCrossfade
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
@@ -70,6 +71,14 @@ import com.tkolymp.shared.people.PersonDetails
 import com.tkolymp.shared.utils.currentAge
 import com.tkolymp.shared.utils.formatShortDate
 import com.tkolymp.shared.utils.parseToLocal
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import com.tkolymp.tkolympapp.components.successContainerColor
+import com.tkolymp.tkolympapp.components.successColor
+import com.tkolymp.tkolympapp.components.pressClickable
+import com.tkolymp.tkolympapp.components.InfoPill
+import com.tkolymp.shared.utils.withImageWidth
+import com.tkolymp.shared.people.CoupleMember
+import com.tkolymp.shared.people.CouplePeriod
 import com.tkolymp.shared.viewmodels.PersonViewModel
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.CoupleAvatar
@@ -113,10 +122,12 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
 
             val p = state.person as? PersonDetails
             if (p == null) {
-                if (state.isLoading && state.error == null) {
+                SkeletonCrossfade(state.isLoading && state.error == null) { showSkeleton ->
+                if (showSkeleton) {
                     SkeletonProfile()
                 } else if (state.error == null) {
                     EmptyState(title = AppStrings.current.profile.personNotFound, icon = Icons.Outlined.PersonOff)
+                }
                 }
                 return@Column
             }
@@ -135,28 +146,33 @@ fun PersonScreen(personId: String, onBack: () -> Unit = {}, onOpenCouple: (Strin
             SocialLinksRow(person = p)
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Active couple (hidden when the ČSTS Progress card already shows the couple)
-            val cstsProgressList = p.cstsProgressList.filter { !it.federation.equals(WDSF, ignoreCase = true) }
-            val wdsfProgressList = p.cstsProgressList.filter { it.federation.equals(WDSF, ignoreCase = true) }
-            if (p.activeCouplesList.isNotEmpty() && cstsProgressList.isEmpty()) {
+            // Couples: every relationship the club has for this person, active first
+            if (p.allCouplesList.isNotEmpty()) {
+                val couples = remember(p.allCouplesList, p.activeCouplesList) {
+                    p.allCouplesList
+                        .map { cp ->
+                            // older cached payloads carry no names for the full list; the active list may still have them
+                            if (cp.man != null || cp.woman != null) cp else p.activeCouplesList.firstOrNull { it.id == cp.id }?.let { cp.copy(man = it.man, woman = it.woman) } ?: cp
+                        }
+                        .sortedWith(compareByDescending<CouplePeriod> { it.isActive }.thenByDescending { it.since.orEmpty() })
+                }
                 StaggeredItem(index = 0, visible = cardsVisible, baseDelayMs = 50) {
                     Column {
-                        SectionLabel(AppStrings.current.profile.activeCouple, horizontalPadding = 0.dp)
+                        SectionLabel(AppStrings.current.profile.couples, horizontalPadding = 0.dp)
                         ScheduleCard {
-                            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(Spacing.small)) {
-                                p.activeCouplesList.forEach { c ->
-                                    val manName = listOfNotNull(c.man?.firstName, c.man?.lastName).joinToString(" ").trim().takeIf { it.isNotBlank() }
-                                    val womanName = listOfNotNull(c.woman?.firstName, c.woman?.lastName).joinToString(" ").trim().takeIf { it.isNotBlank() }
-                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                                        CoupleAvatar(womanName = womanName, manName = manName, size = 40.dp, womanImageUrl = c.woman?.imageUrl, manImageUrl = c.man?.imageUrl)
-                                        Text(listOfNotNull(manName, womanName).joinToString(" - "), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-                                    }
+                            Column {
+                                couples.forEachIndexed { i, cp ->
+                                    if (i > 0) RowDivider()
+                                    CoupleRow(cp, onClick = cp.id?.let { cid -> { onOpenCouple(cid) } })
                                 }
                             }
                         }
                     }
                 }
             }
+            val cstsProgressList = p.cstsProgressList.filter { !it.federation.equals(WDSF, ignoreCase = true) }
+            val wdsfProgressList = p.cstsProgressList.filter { it.federation.equals(WDSF, ignoreCase = true) }
+
 
             // Personal data
             val genderLabel = when (p.gender) {
@@ -395,4 +411,42 @@ internal fun formatDateStringSmall(raw: String?): String? {
         parseToLocal(s)?.date
     } ?: return null
     return formatShortDate(ld)
+}
+
+
+/** One couple of a person: pair avatar, names, period and an active/past pill; opens the couple screen. */
+@Composable
+private fun CoupleRow(couple: CouplePeriod, onClick: (() -> Unit)?) {
+    val strings = AppStrings.current.profile
+    fun name(m: CoupleMember?) = listOfNotNull(m?.firstName, m?.lastName).joinToString(" ").takeIf { it.isNotBlank() }
+    val manName = name(couple.man)
+    val womanName = name(couple.woman)
+    val title = listOfNotNull(manName, womanName).joinToString(" - ").ifBlank { "#${couple.id ?: "?"}" }
+    val since = parseToLocal(couple.since)?.date?.let { formatShortDate(it) }
+    val until = parseToLocal(couple.until)?.date?.let { formatShortDate(it) }
+    val period = when {
+        since != null && until != null -> "$since – $until"
+        since != null -> "$since –"
+        else -> null
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(if (onClick != null) Modifier.pressClickable(0.99f, onClick) else Modifier)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        CoupleAvatar(
+            womanName = womanName, manName = manName, size = 36.dp, fontSize = 13.sp,
+            womanImageUrl = withImageWidth(couple.woman?.imageUrl, 96), manImageUrl = withImageWidth(couple.man?.imageUrl, 96)
+        )
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+            if (period != null) Text(period, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        if (couple.isActive) InfoPill(strings.coupleActive, successContainerColor(), successColor())
+        else InfoPill(strings.couplePast, MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.onSurfaceVariant)
+        if (onClick != null) Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
 }

@@ -29,6 +29,7 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.SkeletonCrossfade
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
@@ -92,10 +93,10 @@ fun AnnouncementEditScreen(
             )
         },
     ) { padding ->
-        if (state.isLoading) {
+        SkeletonCrossfade(state.isLoading) { showSkeleton ->
+        if (showSkeleton) {
             SkeletonForm(Modifier.padding(padding))
-            return@Scaffold
-        }
+        } else {
         val draft = state.draft
         Column(
             modifier = Modifier
@@ -163,6 +164,8 @@ fun AnnouncementEditScreen(
                     )
                 }
             }
+        }
+        }
         }
     }
 }

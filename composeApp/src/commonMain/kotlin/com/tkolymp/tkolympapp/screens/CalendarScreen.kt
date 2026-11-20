@@ -112,6 +112,9 @@ import androidx.compose.material3.TextButton
 import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.SkeletonCrossfade
+import com.tkolymp.tkolympapp.util.fadeSwitch
+import com.tkolymp.tkolympapp.util.rememberFadeSwitch
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.key
@@ -232,6 +235,8 @@ fun CalendarScreen(
     var hideCancelled by rememberSaveable { mutableStateOf(false) }
     var selectedTypes by rememberSavedStringSet()
     var trainerView by rememberSaveable { mutableStateOf(false) }
+    val tabSwitch = rememberFadeSwitch()
+    val viewSwitch = rememberFadeSwitch()
     val calendarSkeletonMode = when {
         selectedTab == 0 -> CalendarSkeletonMode.Timeline
         trainerView -> CalendarSkeletonMode.Trainers
@@ -454,7 +459,9 @@ fun CalendarScreen(
                 WeekStrip(days = dayCells, onSelect = { i -> selectedDateIso = visibleDates.getOrNull(i) })
 
                 ChipRow {
-                    SegmentedToggle(labels = tabs, selectedIndex = selectedTab, onSelect = { selectedTab = it })
+                    SegmentedToggle(labels = tabs, selectedIndex = selectedTab, onSelect = { i ->
+                        if (i != selectedTab) scope.launch { tabSwitch.switchTo { selectedTab = i } }
+                    })
                     FilterButton(label = calStrings.filters, activeCount = activeFilterCount, onClick = { showBottomSheet = true })
                     QuickChip(calStrings.onlyFree, onlyFree, { onlyFree = !onlyFree })
                     QuickChip(calStrings.hideCancelled, hideCancelled, { hideCancelled = !hideCancelled })
@@ -478,10 +485,12 @@ fun CalendarScreen(
                         }
                 ) {
                     if (activeDate == null) {
-                        if (calState.isLoading) {
-                            SkeletonCalendarDay(calendarSkeletonMode)
-                        } else {
-                            EmptyState(title = calStrings.emptyCalendar, icon = Icons.Outlined.CalendarMonth, fullPage = true)
+                        SkeletonCrossfade(calState.isLoading) { showSkeleton ->
+                            if (showSkeleton) {
+                                SkeletonCalendarDay(calendarSkeletonMode)
+                            } else {
+                                EmptyState(title = calStrings.emptyCalendar, icon = Icons.Outlined.CalendarMonth, fullPage = true)
+                            }
                         }
                     } else {
                         val instances = dayInstances(activeDate)
@@ -520,7 +529,9 @@ fun CalendarScreen(
                                 if (summary.isNotEmpty()) Text(summary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
 
-                            if (instances.isEmpty() && competitions.isEmpty() && calState.isLoading) {
+                            Column(Modifier.fadeSwitch(tabSwitch)) {
+                            SkeletonCrossfade(instances.isEmpty() && competitions.isEmpty() && calState.isLoading) { showSkeleton ->
+                            if (showSkeleton) {
                                 SkeletonCalendarBody(calendarSkeletonMode)
                             } else if (instances.isEmpty() && competitions.isEmpty()) {
                                 val filtered = activeFilterCount > 0 && (filteredByDate.isNotEmpty() || calState.lessonsByTrainerByDay.isNotEmpty() || calState.otherEventsByDay.isNotEmpty())
@@ -563,9 +574,12 @@ fun CalendarScreen(
                                     SegmentedToggle(
                                         labels = listOf(calStrings.viewTime, calStrings.viewTrainers),
                                         selectedIndex = if (trainerView) 1 else 0,
-                                        onSelect = { trainerView = it == 1 },
+                                        onSelect = { i ->
+                                            if ((i == 1) != trainerView) scope.launch { viewSwitch.switchTo { trainerView = i == 1 } }
+                                        },
                                         modifier = Modifier.padding(horizontal = Spacing.default, vertical = Spacing.xs)
                                     )
+                                    Column(Modifier.fadeSwitch(viewSwitch)) {
                                     if (!trainerView) {
                                         val byHour = instances.groupBy { parseToLocal(it.since)?.hour ?: -1 }.toSortedMap()
                                         byHour.forEach { (hour, list) ->
@@ -614,7 +628,10 @@ fun CalendarScreen(
                                             }
                                         }
                                     }
+                                    }
                                 }
+                            }
+                            }
                             }
 
                             if (competitions.isNotEmpty()) {
@@ -725,8 +742,8 @@ fun CalendarScreen(
                     showTrainersLayout = selectedTab == 1,
                     onLayoutSelect = { l ->
                         when (l) {
-                            CalendarLayout.List -> trainerView = false
-                            CalendarLayout.Trainers -> trainerView = true
+                            CalendarLayout.List -> scope.launch { viewSwitch.switchTo { trainerView = false } }
+                            CalendarLayout.Trainers -> scope.launch { viewSwitch.switchTo { trainerView = true } }
                             CalendarLayout.Axis -> { showBottomSheet = false; onNavigateTimeline?.invoke() }
                         }
                     },

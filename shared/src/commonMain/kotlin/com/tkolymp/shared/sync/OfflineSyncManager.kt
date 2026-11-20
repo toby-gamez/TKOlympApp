@@ -8,6 +8,7 @@ import com.tkolymp.shared.competitions.ICompetitionService
 import com.tkolymp.shared.event.EventInstance
 import com.tkolymp.shared.event.IEventService
 import com.tkolymp.shared.network.NetworkMonitor
+import com.tkolymp.shared.people.CoupleDetail
 import com.tkolymp.shared.people.PeopleService
 import com.tkolymp.shared.storage.OfflineDataStorage
 import com.tkolymp.shared.utils.DateRangeConstants
@@ -27,6 +28,8 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
 import com.tkolymp.shared.json.AppJson
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
@@ -348,6 +351,13 @@ class OfflineSyncManager(
                             put("since", JsonPrimitive(cp.since ?: ""))
                             put("until", JsonPrimitive(cp.until ?: ""))
                             put("status", JsonPrimitive(cp.status ?: ""))
+                            listOf("man" to cp.man, "woman" to cp.woman).forEach { (key, m) ->
+                                if (m != null) put(key, buildJsonObject {
+                                    put("firstName", JsonPrimitive(m.firstName ?: ""))
+                                    put("lastName", JsonPrimitive(m.lastName ?: ""))
+                                    m.imageUrl?.let { put("image", buildJsonObject { put("url", JsonPrimitive(it)) }) }
+                                })
+                            }
                         })
                     }
                 })
@@ -422,6 +432,7 @@ class OfflineSyncManager(
             val peopleJson = buildPeopleJson(people)
             if (people.isNotEmpty()) {
                 offlineDataStorage.save(OfflineKeys.PEOPLE, AppJson.encodeToString(JsonArray.serializer(), peopleJson))
+                persistCouples(peopleJson)
             } else Logger.d("OfflineSyncManager", "skipping save offline_people: empty")
         } catch (_: Exception) {}
     }
@@ -444,6 +455,37 @@ class OfflineSyncManager(
     }
 
     suspend fun loadPeople(): String? = offlineDataStorage.load(OfflineKeys.PEOPLE)
+
+    suspend fun loadCouple(id: String): CoupleDetail? = try {
+        offlineDataStorage.load(OfflineKeys.couple(id))?.let { AppJson.decodeFromString(CoupleDetail.serializer(), it) }
+    } catch (_: Exception) { null }
+
+    /** Fetches and saves every couple (active and past) referenced by the synced people, so the couple screen opens offline. */
+    internal suspend fun persistCouples(peopleJson: JsonArray) {
+        try {
+            val ids = peopleJson.flatMap { p ->
+                val obj = p as? JsonObject ?: return@flatMap emptyList()
+                listOf("activeCouplesList", "allCouplesList").flatMap { key ->
+                    (obj[key] as? JsonArray).orEmpty().mapNotNull { (it as? JsonObject)?.get("id")?.jsonPrimitive?.contentOrNull?.takeIf { id -> id.isNotBlank() } }
+                }
+            }.distinct()
+            if (ids.isEmpty()) return
+            val permits = kotlinx.coroutines.sync.Semaphore(EVENT_FETCH_CONCURRENCY)
+            val entries = coroutineScope {
+                ids.map { id ->
+                    async {
+                        permits.withPermit {
+                            try {
+                                withRetry { peopleService.fetchCouple(id) }?.let { OfflineKeys.couple(id) to AppJson.encodeToString(CoupleDetail.serializer(), it) }
+                            } catch (ex: Exception) { Logger.d("OfflineSyncManager", "couple $id failed: ${ex.message}"); null }
+                        }
+                    }
+                }.awaitAll().filterNotNull().toMap()
+            }
+            if (entries.isNotEmpty()) offlineDataStorage.saveAll(entries)
+            Logger.d("OfflineSyncManager", "persistCouples: saved ${entries.size}/${ids.size}")
+        } catch (ex: Exception) { Logger.d("OfflineSyncManager", "persistCouples failed: ${ex.message}") }
+    }
 
     suspend fun loadClub(): String? = try { offlineDataStorage.load(OfflineKeys.CLUB) } catch (_: Exception) { null }
 
@@ -601,6 +643,7 @@ class OfflineSyncManager(
                 } catch (ex: Exception) {
                     Logger.d("OfflineSyncManager", "downloadAll: save offline_people failed: ${ex.message}")
                 }
+                persistCouples(peopleJson)
             }
         } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll people failed: ${ex.message}") }
         onProgress("people", 1, 1)

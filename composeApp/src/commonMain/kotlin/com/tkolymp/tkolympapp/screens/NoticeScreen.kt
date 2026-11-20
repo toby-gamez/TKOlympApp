@@ -43,6 +43,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.SkeletonCrossfade
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
@@ -110,7 +111,8 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null, onEdit: ((L
             onRefresh = { scope.launch { viewModel.load(announcementId, forceRefresh = true) } },
             modifier = Modifier.padding(padding)
         ) {
-            if (a == null && state.isLoading) {
+            SkeletonCrossfade(a == null && state.isLoading) { showSkeleton ->
+            if (showSkeleton) {
                 SkeletonDetail()
             } else if (a == null) {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -199,6 +201,7 @@ fun NoticeScreen(announcementId: Long, onBack: (() -> Unit)? = null, onEdit: ((L
                     }
                 }
                 } // StaggeredItem
+            }
             }
         }
 

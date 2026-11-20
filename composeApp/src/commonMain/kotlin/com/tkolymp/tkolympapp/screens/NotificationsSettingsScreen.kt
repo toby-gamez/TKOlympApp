@@ -2,6 +2,7 @@ package com.tkolymp.tkolympapp.screens
 
 import com.tkolymp.tkolympapp.components.cardLineBorder
 import com.tkolymp.tkolympapp.components.surfaceCardColors
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,9 +48,16 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TextButton
-import com.tkolymp.tkolympapp.components.TopAppBar
+import com.tkolymp.tkolympapp.components.AppTopBar
+import com.tkolymp.tkolympapp.components.SegmentedToggle
+import com.tkolymp.tkolympapp.components.accentColor
+import com.tkolymp.tkolympapp.components.SectionLabel
+import com.tkolymp.tkolympapp.components.skeleton.SkeletonRows
+import com.tkolymp.tkolympapp.ui.theme.Spacing
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.cozyItem
 import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -104,7 +112,7 @@ private fun formatReminderDateTime(iso: String): Pair<String, String> = try {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
+fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0, onEditRule: (String?) -> Unit = {}) {
     val scope = rememberCoroutineScope()
     val json = remember { Json { prettyPrint = true; ignoreUnknownKeys = true } }
     val availableTypes = listOf("CAMP", "LESSON", "GROUP", "RESERVATION", "HOLIDAY", "PERSONAL_TRAINING")
@@ -118,8 +126,6 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
     )
     val viewModel = viewModel<NotificationsSettingsViewModel>()
     val vmState by viewModel.state.collectAsStateWithLifecycle()
-    var showDialog by remember { mutableStateOf(false) }
-    var editRule by remember { mutableStateOf<NotificationRule?>(null) }
     var deletingRuleId by remember { mutableStateOf<String?>(null) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
@@ -138,6 +144,12 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
         } catch (e: CancellationException) { throw e } catch (e: Exception) { Logger.w("NotificationsSettings", "initial load failed: ${e.message}") }
     }
 
+    // The rule editor is a separate screen with its own ViewModel, so reload when coming back to it.
+    LifecycleResumeEffect(Unit) {
+        scope.launch { viewModel.loadSettings() }
+        onPauseOrDispose {}
+    }
+
     var selectedTab by rememberSaveable { mutableIntStateOf(initialTab) }
 
     // Most actions on this screen (toggling a rule, deleting a reminder, saving settings) are
@@ -150,9 +162,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = { TopAppBar(title = { Text(AppStrings.current.otherScreen.notificationSettings) }, navigationIcon = {
-            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = AppStrings.current.commonActions.back) }
-        }, actions = {
+        topBar = { AppTopBar(title = AppStrings.current.otherScreen.notificationSettings, onBack = onBack, actions = {
             if (selectedTab == 0) {
                 NotificationExportImportButton(
                     onGetExportJson = {
@@ -168,7 +178,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
         }) },
         floatingActionButton = {
             if (selectedTab == 0) {
-                FloatingActionButton(onClick = { editRule = null; showDialog = true }) {
+                FloatingActionButton(onClick = { onEditRule(null) }) {
                     Icon(Icons.Default.Add, contentDescription = AppStrings.current.notifications.addRule)
                 }
             }
@@ -182,11 +192,13 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
                     val tabs = listOf(AppStrings.current.notifications.notificationsRules, AppStrings.current.notifications.reminderTab, AppStrings.current.notifications.fromCoach)
-                    PrimaryTabRow(selectedTabIndex = selectedTab, modifier = Modifier.fillMaxWidth()) {
-                        tabs.forEachIndexed { i, t ->
-                            Tab(selected = selectedTab == i, onClick = { selectedTab = i }, text = { Text(t) })
-                        }
-                    }
+                    SegmentedToggle(
+                        labels = tabs,
+                        selectedIndex = selectedTab,
+                        onSelect = { selectedTab = it },
+                        fillWidth = true,
+                        modifier = Modifier.fillMaxWidth().padding(start = Spacing.default, end = Spacing.default, top = Spacing.small)
+                    )
                     LaunchedEffect(selectedTab) {
                         if (selectedTab == 1) {
                             scope.launch { viewModel.loadReminders() }
@@ -194,17 +206,35 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
                             scope.launch { viewModel.loadUiData() }
                         }
                     }
-                    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            if (selectedTab == 0) {
-                                Text(AppStrings.current.notifications.globallyEnabled)
-                                Switch(
-                                    checked = vmState.globalEnabled,
-                                    onCheckedChange = { scope.launch { viewModel.setGlobalEnabled(it) } })
+                    Column(modifier = Modifier.fillMaxSize().padding(horizontal = Spacing.default)) {
+                        if (selectedTab == 0) {
+                            Card(
+                                modifier = Modifier.fillMaxWidth().padding(top = Spacing.medium, bottom = Spacing.xs),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = surfaceCardColors(),
+                                border = cardLineBorder()
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = Spacing.small),
+                                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier.size(36.dp).background(MaterialTheme.colorScheme.tertiaryContainer, RoundedCornerShape(10.dp)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(Icons.Filled.Notifications, contentDescription = null, tint = accentColor(), modifier = Modifier.size(20.dp))
+                                    }
+                                    Text(
+                                        AppStrings.current.notifications.globallyEnabled,
+                                        modifier = Modifier.weight(1f),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Switch(
+                                        checked = vmState.globalEnabled,
+                                        onCheckedChange = { scope.launch { viewModel.setGlobalEnabled(it) } })
+                                }
                             }
                         }
 
@@ -214,12 +244,11 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
                                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                                     item {
                                         Column(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
-                                            Text(AppStrings.current.notifications.channelsListTitle, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                                            Spacer(modifier = Modifier.height(8.dp))
+                                            SectionLabel(AppStrings.current.notifications.channelsListTitle, horizontalPadding = Spacing.none)
                                             if (myGroups.isEmpty()) {
                                                 Text(AppStrings.current.people.noGroupsToShow, style = MaterialTheme.typography.bodySmall)
                                             } else {
-                                                Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
+                                                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                                                     Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                                                         Icon(imageVector = Icons.Filled.Notifications, contentDescription = AppStrings.current.people.trainingSpaces, modifier = Modifier.size(28.dp))
                                                         Spacer(modifier = Modifier.width(12.dp))
@@ -227,8 +256,8 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
                                                     }
                                                 }
                                                 myGroups.forEach { g ->
-                                                    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                                                        Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
+                                                    Row(modifier = Modifier.fillMaxWidth().padding(top = Spacing.small), verticalAlignment = Alignment.CenterVertically) {
+                                                        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                                                             Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                                                                 Icon(imageVector = Icons.Filled.Notifications, contentDescription = AppStrings.current.people.trainingSpaces, modifier = Modifier.size(28.dp))
                                                                 Spacer(modifier = Modifier.width(12.dp))
@@ -241,7 +270,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
                                         }
                                     }
                                     item {
-                                        Text(AppStrings.current.notifications.fromCoach, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                        SectionLabel(AppStrings.current.notifications.fromCoach, horizontalPadding = Spacing.none)
                                     }
                                     if (vmState.coachMessages.isEmpty()) {
                                         item {
@@ -249,7 +278,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
                                         }
                                     } else {
                                         items(vmState.coachMessages, key = { it.id }) { msg ->
-                                            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(12.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
+                                            Card(modifier = cozyItem().fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(12.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                                                 Column(modifier = Modifier.padding(12.dp)) {
                                                     Text(text = msg.title ?: AppStrings.current.dialogs.noName)
                                                     val source = remember(vmState.availableGroups, msg.topic) {
@@ -270,7 +299,9 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
                             if (selectedTab == 1) {
                                 var editingReminder by remember { mutableStateOf<EventReminder?>(null) }
                                 var deletingReminder by remember { mutableStateOf<EventReminder?>(null) }
-                                if (vmState.reminders.isEmpty()) {
+                                if (vmState.reminders.isEmpty() && vmState.isLoading) {
+                                    SkeletonRows(modifier = Modifier.padding(top = Spacing.small))
+                                } else if (vmState.reminders.isEmpty()) {
                                     EmptyState(title = AppStrings.current.notifications.noReminders, icon = Icons.Outlined.NotificationsOff, fullPage = true)
                                 } else {
                                     // Group every reminder sharing an event id under one card —
@@ -282,7 +313,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
                                     }
                                     LazyColumn(modifier = Modifier.fillMaxSize()) {
                                         items(groupedReminders, key = { it.first().eventId }) { group ->
-                                            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
+                                            Card(modifier = cozyItem().fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                                                 Column(modifier = Modifier.padding(12.dp)) {
                                                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                                                         Text(
@@ -390,7 +421,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
                             if (selectedTab == 0) {
                                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                                     items(vmState.rules, key = { it.id }) { r ->
-                                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
+                                        Card(modifier = cozyItem().fillMaxWidth().padding(vertical = 8.dp), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
                                             Row(modifier = Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                                                 Column(modifier = Modifier.weight(1f)) {
                                                     val title = if (r.name.isNotBlank()) r.name else if (r.filterType == FilterType.ALL) AppStrings.current.notifications.allEventsFilter else AppStrings.current.misc.rule
@@ -419,7 +450,7 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
                                                     Switch(checked = r.enabled, onCheckedChange = { new ->
                                                         scope.launch { viewModel.toggleRule(r.id, new) }
                                                     })
-                                                    IconButton(onClick = { editRule = r; showDialog = true }) {
+                                                    IconButton(onClick = { onEditRule(r.id) }) {
                                                         Icon(Icons.Default.Edit, contentDescription = AppStrings.current.commonActions.edit)
                                                     }
                                                     IconButton(onClick = { deletingRuleId = r.id; showDeleteConfirm = true }) {
@@ -430,7 +461,9 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
                                         }
                                     }
                                 }
-                                if (vmState.rules.isEmpty()) {
+                                if (vmState.rules.isEmpty() && vmState.isLoading) {
+                                    SkeletonRows(modifier = Modifier.padding(top = Spacing.small))
+                                } else if (vmState.rules.isEmpty()) {
                                     EmptyState(
                                         title = AppStrings.current.notifications.noRules,
                                         subtitle = AppStrings.current.notifications.noRulesDescription,
@@ -461,144 +494,6 @@ fun NotificationsSettingsScreen(onBack: () -> Unit = {}, initialTab: Int = 0) {
                     TextButton(onClick = { showDeleteConfirm = false; deletingRuleId = null }) { Text(AppStrings.current.commonActions.cancel) }
                 }
             )
-        }
-
-        if (showDialog) {
-            val dialogExisting = editRule
-            var selType by remember(dialogExisting) {
-                mutableStateOf(when (dialogExisting?.filterType) {
-                    FilterType.ALL, null -> FilterType.BY_LOCATION
-                    else -> dialogExisting.filterType
-                })
-            }
-            val selectedLocations = remember { mutableStateListOf<String>() }
-            val selectedTrainers = remember { mutableStateListOf<String>() }
-            val selectedTypes = remember(dialogExisting) {
-                mutableStateListOf<String>().apply { dialogExisting?.types?.let { addAll(it) } }
-            }
-            LaunchedEffect(dialogExisting, vmState.availableTrainers) {
-                selectedLocations.clear()
-                selectedTrainers.clear()
-                dialogExisting?.locations?.let { selectedLocations.addAll(it) }
-                dialogExisting?.trainers?.let { trList ->
-                    trList.forEach { s ->
-                        if (s.contains("::")) {
-                            selectedTrainers.add(s)
-                        } else {
-                            val matched = vmState.availableTrainers.find { it.second == s }
-                            if (matched != null) selectedTrainers.add("${matched.first}::$s") else selectedTrainers.add(s)
-                        }
-                    }
-                }
-            }
-            var timeValue by remember(dialogExisting) { mutableStateOf(dialogExisting?.timesBeforeMinutes?.firstOrNull()?.toString() ?: "60") }
-            var isHours by remember(dialogExisting) { mutableStateOf(dialogExisting?.timesBeforeMinutes?.firstOrNull()?.let { it % 60 == 0 && it != 0 } ?: false) }
-            var ruleName by remember(dialogExisting) { mutableStateOf(dialogExisting?.name ?: "") }
-            Dialog(onDismissRequest = { showDialog = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-                Surface(modifier = Modifier.fillMaxSize().padding(32.dp), shape = RoundedCornerShape(24.dp), tonalElevation = 8.dp, shadowElevation = 16.dp) {
-                    Column(modifier = Modifier.fillMaxSize().padding(24.dp)) {
-                        Text(text = if (dialogExisting == null) AppStrings.current.notifications.addRule else AppStrings.current.notifications.editRuleTitle, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 12.dp))
-                        OutlinedTextField(value = ruleName, onValueChange = { ruleName = it }, label = { Text(AppStrings.current.notifications.ruleNameLabel) }, modifier = Modifier.fillMaxWidth())
-                        Spacer(modifier = Modifier.height(12.dp))
-                        var timeUnit by remember { mutableStateOf(if (isHours) "h" else "min") }
-                        val unitOptions = listOf("min", "h")
-                        QuantityInput(
-                            value = (if (timeUnit == "h") (timeValue.toIntOrNull() ?: 1) else (timeValue.toIntOrNull() ?: 60)),
-                            onValueChange = { v, u ->
-                                timeUnit = u
-                                timeValue = v.toString()
-                                isHours = (u == "h")
-                            },
-                            units = unitOptions,
-                            defaultUnit = if (isHours) "h" else "min",
-                            label = AppStrings.current.notifications.timeAheadLabel,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Text(AppStrings.current.notifications.filterTypeLabel, style = MaterialTheme.typography.labelLarge)
-                        Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            listOf(FilterType.BY_LOCATION, FilterType.BY_TRAINER, FilterType.BY_TYPE).forEach { t ->
-                                val label = when (t) {
-                                    FilterType.BY_LOCATION -> AppStrings.current.filters.filterPlace
-                                    FilterType.BY_TRAINER -> AppStrings.current.filters.filterTrainer
-                                    FilterType.BY_TYPE -> AppStrings.current.filters.filterType
-                                    else -> t.name
-                                }
-                                FilterChip(selected = (selType == t), onClick = { selType = t }, label = { Text(label) })
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(AppStrings.current.notifications.orPickFromValues, style = MaterialTheme.typography.labelLarge)
-                        Box(modifier = Modifier.weight(1f)) {
-                            when (selType) {
-                                FilterType.BY_LOCATION -> {
-                                    LazyColumn(modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 8.dp)) {
-                                        items(vmState.availableLocations) { loc ->
-                                            Row(modifier = Modifier.fillMaxWidth().padding(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                                                Checkbox(checked = selectedLocations.contains(loc), onCheckedChange = { if (it) selectedLocations.add(loc) else selectedLocations.remove(loc) })
-                                                Text(loc)
-                                            }
-                                        }
-                                    }
-                                }
-                                FilterType.BY_TRAINER -> {
-                                    LazyColumn(modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 8.dp)) {
-                                        items(vmState.availableTrainers) { tr ->
-                                            val trId = tr.first; val trName = tr.second
-                                            Row(modifier = Modifier.fillMaxWidth().padding(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                                                val isChecked = selectedTrainers.any { sel -> if (sel.contains("::")) sel.substringBefore("::") == trId else sel == trName }
-                                                Checkbox(checked = isChecked, onCheckedChange = { checked ->
-                                                    if (checked) selectedTrainers.add("${trId}::${trName}")
-                                                    else selectedTrainers.removeAll { sel -> if (sel.contains("::")) sel.substringBefore("::") == trId else sel == trName }
-                                                })
-                                                Text(trName)
-                                            }
-                                        }
-                                    }
-                                }
-                                FilterType.BY_TYPE -> {
-                                    LazyColumn(modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 8.dp)) {
-                                        items(availableTypes) { tp ->
-                                            Row(modifier = Modifier.fillMaxWidth().padding(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                                                Checkbox(checked = selectedTypes.contains(tp), onCheckedChange = { if (it) selectedTypes.add(tp) else selectedTypes.remove(tp) })
-                                                Text(typeLabels[tp] ?: tp)
-                                            }
-                                        }
-                                    }
-                                }
-                                else -> {}
-                            }
-                        }
-                        Row(modifier = Modifier.fillMaxWidth().padding(top = 16.dp), horizontalArrangement = Arrangement.End) {
-                            TextButton(onClick = { showDialog = false }) { Text(AppStrings.current.commonActions.cancel) }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Button(
-                                onClick = {
-                                    val tv = timeValue.trim().toIntOrNull() ?: 60
-                                    val minutes = if (isHours) tv * 60 else tv
-                                    val finalLocations = selectedLocations.toList()
-                                    val finalTrainers = selectedTrainers.toList()
-                                    val finalTypes = selectedTypes.toList()
-                                    val rule = if (dialogExisting == null) {
-                                        NotificationRule(
-                                            id = kotlin.time.Clock.System.now().toEpochMilliseconds().toString(),
-                                            name = ruleName, enabled = true,
-                                            filterType = selType,
-                                            locations = finalLocations, trainers = finalTrainers, types = finalTypes,
-                                            timesBeforeMinutes = listOf(minutes)
-                                        )
-                                    } else {
-                                        dialogExisting.copy(name = ruleName, filterType = selType, locations = finalLocations, trainers = finalTrainers, types = finalTypes, timesBeforeMinutes = listOf(minutes))
-                                    }
-                                    scope.launch { viewModel.addOrUpdateRule(rule) }
-                                    showDialog = false
-                                },
-                                shape = RoundedCornerShape(16.dp),
-                                modifier = Modifier.height(48.dp)
-                            ) { Text(AppStrings.current.commonActions.save) }
-                        }
-                    }
-                }
-            }
         }
     }
 }

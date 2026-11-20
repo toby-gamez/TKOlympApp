@@ -75,6 +75,7 @@ import com.tkolymp.shared.utils.formatShortDateTime
 import com.tkolymp.shared.utils.parseToLocal
 import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.PaymentPayActions
+import com.tkolymp.tkolympapp.util.SkeletonCrossfade
 import com.tkolymp.tkolympapp.util.StaggeredItem
 import kotlinx.coroutines.launch
 
@@ -114,7 +115,8 @@ fun PaymentsScreen(vm: com.tkolymp.shared.payments.PaymentsViewModel, onBack: ()
                 .padding(padding)
                 .padding(bottom = 0.dp)
         ) {
-            if (isLoading && payments.isEmpty()) {
+            SkeletonCrossfade(isLoading && payments.isEmpty()) { showSkeleton ->
+            if (showSkeleton) {
                 SkeletonPayments()
             } else {
                 Column(modifier = Modifier.fillMaxSize()) {
@@ -190,6 +192,7 @@ fun PaymentsScreen(vm: com.tkolymp.shared.payments.PaymentsViewModel, onBack: ()
                         }
                     }
                 }
+            }
             }
         }
     }

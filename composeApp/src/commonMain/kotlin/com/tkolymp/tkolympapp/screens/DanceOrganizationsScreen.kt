@@ -50,6 +50,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.SkeletonCrossfade
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -99,8 +100,9 @@ fun DanceOrganizationsScreen(
             modifier = Modifier.fillMaxSize().padding(top = padding.calculateTopPadding(), bottom = bottomPadding)
         ) {
             val error = state.error
+            SkeletonCrossfade(state.federations.isEmpty() && state.isLoading) { showSkeleton ->
             when {
-                state.federations.isEmpty() && state.isLoading -> SkeletonList()
+                showSkeleton -> SkeletonList()
                 state.federations.isEmpty() && error != null -> ErrorState(error, onRetry = { scope.launch { viewModel.load() } })
                 state.federations.isEmpty() -> EmptyState(AppStrings.current.danceOrg.noDataYet, fullPage = true)
                 else -> LazyColumn(
@@ -128,6 +130,7 @@ fun DanceOrganizationsScreen(
                     }
                     clubResultsItems(clubState, clubVm, onOpenFederationEvent)
                 }
+            }
             }
         }
     }
@@ -236,13 +239,13 @@ private fun PlaceBadge(highlight: FederationHighlight) {
 @Composable
 private fun EventHeader(isoDate: String, name: String?) {
     val parts = formatIsoDate(isoDate).split(". ")
-    Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Column(
-            Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.primary),
+            Modifier.size(48.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.primary),
             horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
         ) {
-            Text(parts.getOrElse(0) { "" }, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onPrimary)
-            Text(AppStrings.current.danceOrg.monthShort(parts.getOrNull(1)?.toIntOrNull() ?: 0), fontSize = 10.sp, color = MaterialTheme.colorScheme.onPrimary)
+            Text(parts.getOrElse(0) { "" }, fontSize = 16.sp, lineHeight = 18.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onPrimary)
+            Text(AppStrings.current.danceOrg.monthShort(parts.getOrNull(1)?.toIntOrNull() ?: 0), fontSize = 10.sp, lineHeight = 12.sp, color = MaterialTheme.colorScheme.onPrimary)
         }
         Text(name ?: "–", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 2)
     }
@@ -251,7 +254,7 @@ private fun EventHeader(isoDate: String, name: String?) {
 /** Competitor name plus a count per podium place ("1. ×3"). */
 @Composable
 private fun HallHeader(name: String?, group: List<FederationHighlight>) {
-    Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(name ?: "–", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 2)
         (1..3).forEach { place ->
             val n = group.count { it.ranking == place }

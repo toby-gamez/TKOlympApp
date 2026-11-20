@@ -77,6 +77,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.SkeletonCrossfade
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -210,6 +211,7 @@ fun CalendarViewScreen(
             onRefresh = { scope.launch { viewModel.loadEvents() } },
             modifier = Modifier.weight(1f)
         ) {
+            SkeletonCrossfade(state.error == null && state.isLoading && state.layoutData.isEmpty()) { showSkeleton ->
             if (state.error != null) {
                 Box(
                     modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -232,7 +234,7 @@ fun CalendarViewScreen(
                         }
                     }
                 }
-            } else if (state.isLoading && state.layoutData.isEmpty()) {
+            } else if (showSkeleton) {
                 SkeletonTimeline()
             } else {
                 when (state.viewMode) {
@@ -253,6 +255,7 @@ fun CalendarViewScreen(
                         )
                     }
                 }
+            }
             }
         }
         TimelineLegend()

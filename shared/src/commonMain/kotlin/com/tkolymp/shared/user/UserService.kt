@@ -190,15 +190,7 @@ class UserService(private val client: com.tkolymp.shared.network.IGraphQlClient 
             ActiveCouple(cid, CoupleMember(manObj?.get("firstName")?.jsonPrimitive?.contentOrNull, manObj?.get("lastName")?.jsonPrimitive?.contentOrNull, manObj.fileUrl()), CoupleMember(womanObj?.get("firstName")?.jsonPrimitive?.contentOrNull, womanObj?.get("lastName")?.jsonPrimitive?.contentOrNull, womanObj.fileUrl()))
         } ?: emptyList()
         val allCouplesArr = (p["allCouplesList"] as? JsonArray)?.mapNotNull { cEl ->
-            val cObj = cEl as? JsonObject ?: return@mapNotNull null
-            com.tkolymp.shared.people.CouplePeriod(
-                id = cObj["id"]?.jsonPrimitive?.contentOrNull,
-                manId = cObj["manId"]?.jsonPrimitive?.contentOrNull,
-                womanId = cObj["womanId"]?.jsonPrimitive?.contentOrNull,
-                since = cObj["since"]?.jsonPrimitive?.contentOrNull,
-                until = cObj["until"]?.jsonPrimitive?.contentOrNull,
-                status = cObj["status"]?.jsonPrimitive?.contentOrNull
-            )
+            com.tkolymp.shared.people.parseCouplePeriod(cEl as? JsonObject ?: return@mapNotNull null)
         } ?: emptyList()
         val memberships = (p["cohortMembershipsList"] as? JsonArray)?.mapNotNull { mEl ->
             val mObj = mEl as? JsonObject ?: return@mapNotNull null

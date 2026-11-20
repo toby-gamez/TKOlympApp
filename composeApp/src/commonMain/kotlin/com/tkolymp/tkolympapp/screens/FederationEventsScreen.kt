@@ -260,8 +260,8 @@ fun FederationEventsScreen(
                     error != null && state.allEvents.isEmpty() -> item {
                         ErrorState(error.message, fullPage = false, onRetry = { scope.launch { viewModel.load(code, forceRefresh = true) } })
                     }
-                    state.isLoading && state.allEvents.isEmpty() -> item {
-                        SkeletonRows()
+                    state.isLoading && state.allEvents.isEmpty() -> item(key = "skeleton") {
+                        SkeletonRows(Modifier.animateItem())
                     }
                     state.showMap -> item {
                         MapSection(state.events, region, selected, onRegion = { regionName = it.name; selected = emptyList() },
@@ -270,8 +270,8 @@ fun FederationEventsScreen(
                     state.events.isEmpty() -> item { EmptyState(strings.noEvents, modifier = Modifier.padding(32.dp)) }
                     else -> items(rows, key = { it.key }, contentType = { it::class }) { row ->
                         when (row) {
-                            is ListRow.Header -> MonthHeader(row.month, row.year, row.count)
-                            is ListRow.Item -> EventRow(row.event, Modifier.padding(horizontal = 16.dp), onClick = { onOpenEvent(row.event.id) })
+                            is ListRow.Header -> Box(Modifier.animateItem()) { MonthHeader(row.month, row.year, row.count) }
+                            is ListRow.Item -> EventRow(row.event, Modifier.animateItem().padding(horizontal = 16.dp), onClick = { onOpenEvent(row.event.id) })
                         }
                     }
                 }

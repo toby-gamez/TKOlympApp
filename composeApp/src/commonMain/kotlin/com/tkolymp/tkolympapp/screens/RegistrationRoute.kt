@@ -8,6 +8,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.util.SkeletonCrossfade
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -70,7 +71,8 @@ fun RegistrationRoute(
         }
     }
 
-    if (loading) {
+    SkeletonCrossfade(loading) { showSkeleton ->
+    if (showSkeleton) {
         SkeletonDetail()
     } else if (error != null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -198,5 +200,6 @@ fun RegistrationRoute(
                 }
             }
         }
+    }
     }
 }

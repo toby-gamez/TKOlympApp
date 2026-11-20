@@ -14,6 +14,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -48,6 +51,8 @@ import androidx.compose.material3.Text
 import com.tkolymp.tkolympapp.components.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import com.tkolymp.tkolympapp.platform.rememberReduceMotion
+import com.tkolymp.tkolympapp.util.Motion
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -60,16 +65,31 @@ import androidx.compose.ui.unit.sp
 import com.tkolymp.tkolympapp.ui.theme.AppTheme
 import com.tkolymp.tkolympapp.ui.theme.Spacing
 
-/** Clickable that shrinks slightly while pressed (prototype `style-active: scale(.98)`). */
-fun Modifier.pressClickable(pressedScale: Float = 0.98f, onClick: () -> Unit): Modifier = composed {
+/**
+ * Clickable that shrinks slightly and darkens while pressed (prototype `style-active: scale(.98)`).
+ * No ripple: it would draw as a rectangle over rounded cards, so the press tint is drawn clipped to [shape].
+ */
+fun Modifier.pressClickable(pressedScale: Float = 0.98f, onClick: () -> Unit): Modifier =
+    pressClickable(pressedScale, RoundedCornerShape(16.dp), onClick)
+
+fun Modifier.pressClickable(pressedScale: Float, shape: Shape, onClick: () -> Unit): Modifier = composed {
     val source = remember { MutableInteractionSource() }
     val pressed by source.collectIsPressedAsState()
-    // Keep the animated value as State and read it in the graphicsLayer block so each frame only redraws.
-    val scale = animateFloatAsState(if (pressed) pressedScale else 1f, label = "pressScale")
+    // Keep the animated values as State and read them in the graphicsLayer/draw blocks so each frame only redraws.
+    val reduceMotion = rememberReduceMotion()
+    val scale = animateFloatAsState(if (pressed && !reduceMotion) pressedScale else 1f, Motion.pressSpring(), label = "pressScale")
+    val tint = animateFloatAsState(if (pressed) 1f else 0f, label = "pressTint")
+    val tintColor = MaterialTheme.colorScheme.onSurface
     this.graphicsLayer {
         scaleX = scale.value
         scaleY = scale.value
-    }.clickable(interactionSource = source, indication = LocalIndication.current, onClick = onClick)
+    }.clickable(interactionSource = source, indication = null, onClick = onClick)
+        .drawWithContent {
+            drawContent()
+            if (tint.value > 0f) {
+                drawOutline(shape.createOutline(size, layoutDirection, this), tintColor.copy(alpha = 0.10f * tint.value))
+            }
+        }
 }
 
 /** Green used for "free"/"ok" states in the prototype (`--ok`); lighter in dark theme. */
