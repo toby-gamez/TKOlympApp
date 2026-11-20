@@ -26,4 +26,5 @@ data class SettingsStrings(
     val offlineStageClub: String,
     val offlineStageEvents: String,
     val offlineStageCompetitions: String,
+    val offlineStageAchievements: String,
 )

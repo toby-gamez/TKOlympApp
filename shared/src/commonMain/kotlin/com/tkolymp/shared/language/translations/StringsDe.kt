@@ -613,6 +613,7 @@ val StringsDe = Strings(
         offlineStageClub = "Verein",
         offlineStageEvents = "Veranstaltungen",
         offlineStageCompetitions = "Wettbewerbe",
+        offlineStageAchievements = "Erfolge",
     ),
     personalEvents = com.tkolymp.shared.language.PersonalEventStrings(
         myTrainings = "Trainings",

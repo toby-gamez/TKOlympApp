@@ -48,7 +48,7 @@ private const val EVENT_FETCH_CONCURRENCY = 12
 private const val EVENT_SAVE_BATCH = 150
 
 /** Steps of [OfflineSyncManager.downloadAll] in execution order; the ids are what `onProgress` reports as the stage. */
-val OFFLINE_DOWNLOAD_STAGES = listOf("calendar", "user", "announcements", "people", "couples", "payments", "scoreboard", "club", "events", "competitions")
+val OFFLINE_DOWNLOAD_STAGES = listOf("calendar", "user", "announcements", "people", "couples", "payments", "scoreboard", "club", "events", "competitions", "achievements")
 
 class OfflineSyncManager(
     private val eventService: IEventService,
@@ -61,7 +61,9 @@ class OfflineSyncManager(
     private val clubService: com.tkolymp.shared.club.ClubService,
     private val paymentService: com.tkolymp.shared.payments.PaymentService,
     private val competitionService: ICompetitionService,
-    private val competitiveDataService: com.tkolymp.shared.competitivedata.ICompetitiveDataService? = null
+    private val competitiveDataService: com.tkolymp.shared.competitivedata.ICompetitiveDataService? = null,
+    // Lazy: the service reads ServiceLocator, which is only initialised after this manager is constructed.
+    private val achievementServiceProvider: (() -> com.tkolymp.shared.achievements.AchievementService)? = null
 ) {
     
 
@@ -788,6 +790,11 @@ class OfflineSyncManager(
             launch { try { syncFederationEvents() } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll federationEvents failed: ${ex.message}") } }
         }
         onProgress("competitions", 1, 1)
+
+        // Achievements (context snapshot for diplomas/progress; earned badges are persisted when the screen opens)
+        onProgress("achievements", 0, 1)
+        try { achievementServiceProvider?.invoke()?.refreshOfflineContext() } catch (ex: kotlinx.coroutines.CancellationException) { throw ex } catch (ex: Exception) { Logger.d("OfflineSyncManager", "downloadAll achievements failed: ${ex.message}") }
+        onProgress("achievements", 1, 1)
 
         saveLastSyncTime(kotlin.time.Clock.System.now().toString())
         Logger.d("OfflineSyncManager", "downloadAll: completed")

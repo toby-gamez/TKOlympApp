@@ -1,6 +1,7 @@
 package com.tkolymp.shared.achievements
 
 import kotlinx.datetime.LocalDate
+import kotlinx.serialization.Serializable
 
 /**
  * A single soustředění (camp) the user attended at least one day of and that has
@@ -8,6 +9,7 @@ import kotlinx.datetime.LocalDate
  * at least one of its daily instances has attendance status ATTENDED — the API has
  * no explicit "camp completed" flag.
  */
+@Serializable
 data class CampOccurrence(
     val eventId: Long,
     val name: String?,
@@ -18,6 +20,7 @@ data class CampOccurrence(
 )
 
 /** Snapshot of the signals [AchievementEngine] evaluates badges against. */
+@Serializable
 data class AchievementContext(
     val completedCamps: List<CampOccurrence>,
     val memberSinceDate: LocalDate?,
@@ -38,4 +41,6 @@ data class AchievementContext(
     val nightOwlCount: Int = 0,
     val weekendLessonsCount: Int = 0,
     val returnedAfterBreak: Boolean = false,
+    /** True when at least one source fetch failed (e.g. offline), so zero values may mean "unknown" rather than "none". */
+    val isIncomplete: Boolean = false,
 )

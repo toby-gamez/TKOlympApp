@@ -12,6 +12,7 @@ import kotlinx.serialization.builtins.serializer
 private data class EarnedBadgeRecord(val id: String, val earnedOnIso: String)
 
 private const val STORAGE_KEY = "achievements_earned_badges"
+private const val CONTEXT_KEY = "achievements_context"
 private const val SEEN_DIPLOMAS_KEY = "achievements_seen_diploma_ids"
 
 /**
@@ -40,6 +41,18 @@ class AchievementStorage(
         val records = badges.map { EarnedBadgeRecord(it.id, it.earnedOn.toString()) }
         try {
             offlineDataStorage.save(STORAGE_KEY, AppJson.encodeToString(ListSerializer(EarnedBadgeRecord.serializer()), records))
+        } catch (_: Exception) {}
+    }
+
+    /** Last complete [AchievementContext], so diplomas and progress still show when a live reload isn't possible (offline). */
+    suspend fun loadContext(): AchievementContext? {
+        val json = try { offlineDataStorage.load(CONTEXT_KEY) } catch (_: Exception) { null } ?: return null
+        return try { AppJson.decodeFromString(AchievementContext.serializer(), json) } catch (_: Exception) { null }
+    }
+
+    suspend fun saveContext(context: AchievementContext) {
+        try {
+            offlineDataStorage.save(CONTEXT_KEY, AppJson.encodeToString(AchievementContext.serializer(), context))
         } catch (_: Exception) {}
     }
 

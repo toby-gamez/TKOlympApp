@@ -167,16 +167,6 @@ internal fun CompetitionEventCard(competitions: List<Competition>, onOpenWeb: ((
                         )
                     }
             }
-
-            val officials = remember(competitions) {
-                competitions.flatMap { it.officials }.distinctBy { it.name to it.role }
-            }
-            if (officials.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(10.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-                Spacer(modifier = Modifier.height(8.dp))
-                JuryList(officials)
-            }
         }
     }
 }

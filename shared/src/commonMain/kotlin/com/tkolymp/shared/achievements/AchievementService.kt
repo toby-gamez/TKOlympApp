@@ -55,10 +55,13 @@ class AchievementService(
         val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
         val personId = try { userService.getCachedPersonId() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
         Logger.d("AchievementService", "loadContext: personId=$personId today=$today")
+        // Set when any source fetch fails (e.g. offline), so empty results aren't mistaken for "nothing earned".
+        var incomplete = false
 
         val attendance = if (!personId.isNullOrBlank()) {
             try { attendanceRepository.fetchAttendanceStatuses(personId) } catch (e: CancellationException) { throw e } catch (ex: Exception) {
                 Logger.d("AchievementService", "attendance fetch failed: ${ex.message}")
+                incomplete = true
                 emptyMap()
             }
         } else emptyMap()
@@ -78,6 +81,7 @@ class AchievementService(
             }
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             Logger.d("AchievementService", "camp fetch failed: ${ex.message}")
+            incomplete = true
             emptyList()
         }
         Logger.d(
@@ -100,6 +104,7 @@ class AchievementService(
                 peopleService.fetchPerson(personId)
             } catch (e: CancellationException) { throw e } catch (ex: Exception) {
                 Logger.d("AchievementService", "person fetch failed: ${ex.message}")
+                incomplete = true
                 null
             }
         } else null
@@ -127,11 +132,11 @@ class AchievementService(
                                 first = AppConstants.FETCH_LIMIT_PERIOD,
                                 cacheNamespace = "stats_"
                             ).values.flatten()
-                        } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
+                        } catch (e: CancellationException) { throw e } catch (_: Exception) { incomplete = true; emptyList() }
                     }
                 }.awaitAll().flatten()
             }
-        } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
+        } catch (e: CancellationException) { throw e } catch (_: Exception) { incomplete = true; emptyList() }
 
         // Mirrors StatsViewModel's totalSessions: count every scheduled, non-cancelled lesson
         // regardless of attendance-marking, since trainers rarely mark individual lessons ATTENDED
@@ -173,7 +178,8 @@ class AchievementService(
             .any { (a, b) -> b.toEpochDays() - a.toEpochDays() >= 90 }
 
         val pastCompetitions = fetchPastCompetitions(personId)
-        val competitionStats = deriveCompetitionStats(pastCompetitions)
+        if (pastCompetitions == null) incomplete = true
+        val competitionStats = deriveCompetitionStats(pastCompetitions.orEmpty())
 
         Logger.d(
             "AchievementService",
@@ -199,6 +205,7 @@ class AchievementService(
             nightOwlCount = nightOwlCount,
             weekendLessonsCount = weekendLessonsCount,
             returnedAfterBreak = returnedAfterBreak,
+            isIncomplete = incomplete,
         )
     }
 
@@ -256,7 +263,7 @@ class AchievementService(
             ?.minOrNull()
         val longestPartnershipSeasons = derivePartnershipSeasons(person?.allCouplesList.orEmpty(), personId, today)
 
-        val competitionStats = deriveCompetitionStats(fetchPastCompetitions(personId))
+        val competitionStats = deriveCompetitionStats(fetchPastCompetitions(personId).orEmpty())
 
         return AchievementContext(
             completedCamps = completedCamps,
@@ -275,7 +282,8 @@ class AchievementService(
     // getPastCompetitions() defaults to just the last year when pSince/pUntil aren't given —
     // fine for the competitions screen, but it silently capped every competition-based badge
     // (counts, dance styles, partnership seasons) to whatever fits in a single year.
-    private suspend fun fetchPastCompetitions(personId: String?): List<Competition> {
+    // Returns null when the fetch failed (as opposed to an empty-but-successful result).
+    private suspend fun fetchPastCompetitions(personId: String?): List<Competition>? {
         if (personId.isNullOrBlank()) return emptyList()
         return try {
             val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
@@ -287,18 +295,38 @@ class AchievementService(
             )
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             Logger.d("AchievementService", "competitions fetch failed: ${ex.message}")
-            emptyList()
+            null
         }
+    }
+
+    /**
+     * Refreshes the stored [AchievementContext] snapshot only (used by "download all"). Leaves earned
+     * badges and the "new" markers alone, so syncing in the background never consumes them.
+     */
+    suspend fun refreshOfflineContext() {
+        val live = loadContext()
+        if (!live.isIncomplete) storage.saveContext(live)
     }
 
     /** Evaluates badges from fresh data, keeps original earned dates for already-known badges, and persists the result. */
     suspend fun evaluateAndPersist(): AchievementUpdateResult {
-        val context = loadContext()
+        val live = loadContext()
+        // Offline (or any failed fetch): fall back to the last complete snapshot so diplomas and progress still show.
+        val context = if (live.isIncomplete) storage.loadContext()?.copy(today = live.today, isIncomplete = true) ?: live else live
+        if (!live.isIncomplete) storage.saveContext(live)
         val computed = AchievementEngine.evaluate(context)
         val hadPriorBadgeRecord = storage.hasStoredBadges()
         val previouslyEarned = storage.loadEarnedBadges()
         val previouslyEarnedIds = previouslyEarned.map { it.id }.toSet()
-        val merged = computed.map { badge -> previouslyEarned.firstOrNull { it.id == badge.id } ?: badge }
+        // A badge once earned stays earned, even if the engine can't recompute it right now.
+        val merged = computed.map { badge -> previouslyEarned.firstOrNull { it.id == badge.id } ?: badge } +
+            previouslyEarned.filter { prev -> computed.none { it.id == prev.id } }
+
+        // Some source fetch failed (typically offline): the context is partial, so show what is
+        // already stored but don't overwrite persisted state or flag anything as newly earned.
+        if (context.isIncomplete) {
+            return AchievementUpdateResult(context, merged, emptySet(), emptySet())
+        }
         storage.saveEarnedBadges(merged)
         // On the very first run there's no real "since last visit" baseline — e.g. a long-time
         // member's first-ever evaluate() can retroactively earn many historical badges at once,

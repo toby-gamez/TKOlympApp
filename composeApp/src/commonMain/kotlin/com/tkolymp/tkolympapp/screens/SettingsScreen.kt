@@ -593,6 +593,7 @@ private fun offlineStageName(s: SettingsStrings, stage: String): String = when (
     "scoreboard" -> s.offlineStageScoreboard
     "club" -> s.offlineStageClub
     "events" -> s.offlineStageEvents
+    "achievements" -> s.offlineStageAchievements
     else -> s.offlineStageCompetitions
 }
 

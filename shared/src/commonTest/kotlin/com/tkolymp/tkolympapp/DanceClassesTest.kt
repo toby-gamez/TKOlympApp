@@ -20,6 +20,10 @@ class DanceClassesTest {
         assertEquals("B/C", result?.label)
     }
 
+    @Test fun apiClassSIsShownAsM() {
+        assertEquals("M/A", deriveDanceClasses(listOf(progress("Standard", "S"), progress("Standard", "A"), progress("Latin", "A")))?.label)
+    }
+
     @Test fun missingDisciplineIsDash() {
         assertEquals("–/D", deriveDanceClasses(listOf(progress("Latin", "d")))?.label)
         assertEquals("A/–", deriveDanceClasses(listOf(progress("STT", "A")))?.label)

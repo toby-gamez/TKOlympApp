@@ -614,6 +614,7 @@ val StringsVi = Strings(
         offlineStageClub = "Câu lạc bộ",
         offlineStageEvents = "Sự kiện",
         offlineStageCompetitions = "Cuộc thi",
+        offlineStageAchievements = "Thành tích",
     ),
     personalEvents = com.tkolymp.shared.language.PersonalEventStrings(
         myTrainings = "Buổi tập",

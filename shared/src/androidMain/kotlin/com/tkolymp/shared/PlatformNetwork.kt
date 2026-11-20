@@ -109,7 +109,7 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
     val personalEventService = PersonalEventService(offlineDataStorage, notificationScheduler, notificationStorage)
     val competitionSvc = CompetitionService(gql, cache)
     val competitiveDataSvc = CompetitiveDataService(gql, cache, offlineDataStorage)
-    val offlineSyncManager = OfflineSyncManager(eventSvc, announcementSvc, peopleSvc, offlineDataStorage, networkMonitor, userSvc, notificationSvc, clubSvc, paymentSvc, competitionSvc, competitiveDataSvc)
+    val offlineSyncManager = OfflineSyncManager(eventSvc, announcementSvc, peopleSvc, offlineDataStorage, networkMonitor, userSvc, notificationSvc, clubSvc, paymentSvc, competitionSvc, competitiveDataSvc, { com.tkolymp.shared.achievements.AchievementService() })
     val campScheduleSvc = CampScheduleService(offlineDataStorage)
     val campScheduleReminderSvc = CampScheduleReminderService(offlineDataStorage, notificationScheduler, campScheduleSvc, notificationStorage)
     val feedbackSvc = FeedbackService(client, FEEDBACK_BASE_URL, platformLabel = "TKOlympApp Android")

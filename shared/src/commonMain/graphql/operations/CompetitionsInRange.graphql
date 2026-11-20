@@ -27,8 +27,16 @@ query CompetitionsInRange($since: Date, $until: Date, $personIds: [BigInt!]!, $f
                 id
                 name
                 location
+                officials(first: 100) {
+                    nodes {
+                        role
+                        person {
+                            canonicalName
+                        }
+                    }
+                }
             }
-            officials(first: 50) {
+            officials(first: 100) {
                 nodes {
                     role
                     judgeLabel

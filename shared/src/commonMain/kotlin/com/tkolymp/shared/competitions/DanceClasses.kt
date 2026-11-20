@@ -7,7 +7,10 @@ data class DanceClasses(val standard: String?, val latin: String?) {
 }
 
 // Lowest to highest. Classes outside this list are ignored rather than guessed.
-private val CLASS_ORDER = listOf("H", "D", "C", "B", "A", "M")
+// The API calls the top class "S"; the ČSTS web shows it as "M".
+private val CLASS_ORDER = listOf("H", "D", "C", "B", "A", "S", "M")
+
+private fun displayClass(c: String): String = if (c == "S") "M" else c
 
 private fun disciplineOf(raw: String?): Char? {
     val d = raw?.trim()?.lowercase() ?: return null
@@ -24,7 +27,7 @@ fun deriveDanceClasses(progress: List<CstsProgress>): DanceClasses? {
         .filter { disciplineOf(it.category?.discipline) == discipline }
         .mapNotNull { it.category?.competitorClass?.trim()?.uppercase()?.takeIf { c -> c in CLASS_ORDER } }
         .maxByOrNull { CLASS_ORDER.indexOf(it) }
-    val standard = best('S')
-    val latin = best('L')
+    val standard = best('S')?.let(::displayClass)
+    val latin = best('L')?.let(::displayClass)
     return if (standard == null && latin == null) null else DanceClasses(standard, latin)
 }

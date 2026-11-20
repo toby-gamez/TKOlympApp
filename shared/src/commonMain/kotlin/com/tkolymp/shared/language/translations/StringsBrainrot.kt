@@ -615,6 +615,7 @@ val StringsBrainrot = Strings(
         offlineStageClub = "Club",
         offlineStageEvents = "Events skibidi",
         offlineStageCompetitions = "Competitions",
+        offlineStageAchievements = "Achievements",
     ),
     personalEvents = com.tkolymp.shared.language.PersonalEventStrings(
         myTrainings = "Rizz Trains",

@@ -673,6 +673,7 @@ val StringsCs = Strings(
         offlineStageClub = "Klub",
         offlineStageEvents = "Soustředění a akce",
         offlineStageCompetitions = "Soutěže",
+        offlineStageAchievements = "Úspěchy",
     ),
     personalEvents = com.tkolymp.shared.language.PersonalEventStrings(
         myTrainings = "Tréninky",

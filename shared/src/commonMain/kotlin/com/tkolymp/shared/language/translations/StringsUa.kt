@@ -614,6 +614,7 @@ val StringsUa = Strings(
         offlineStageClub = "Клуб",
         offlineStageEvents = "Події",
         offlineStageCompetitions = "Змагання",
+        offlineStageAchievements = "Досягнення",
     ),
     personalEvents = com.tkolymp.shared.language.PersonalEventStrings(
         myTrainings = "Тренування",
