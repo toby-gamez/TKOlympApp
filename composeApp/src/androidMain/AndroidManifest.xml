@@ -17,10 +17,11 @@
         android:enableOnBackInvokedCallback="true"
         android:theme="@style/AppTheme"
         tools:targetApi="33">
-        <!-- Firebase Analytics is enabled (usage statistics only). Advertising ID and ad personalisation stay
-             off. Crashlytics stays off: crashes go through ErrorReporter, which honours the privacy settings.
-             Note: Czech Act 127/2005 Coll. § 89(3) / GDPR art. 6-7 expect prior consent for analytics. -->
-        <meta-data android:name="firebase_analytics_collection_deactivated" android:value="false" />
+        <!-- Firebase Analytics stays off until the user accepts the privacy consent screen: MainActivity calls
+             setAnalyticsCollectionEnabled(true) once consent is stored (Czech Act 127/2005 Coll. § 89(3) / GDPR
+             art. 6-7). Advertising ID and ad personalisation stay off. Crashlytics stays off: crashes go through
+             ErrorReporter, which honours the privacy settings. -->
+        <meta-data android:name="firebase_analytics_collection_deactivated" android:value="true" />
         <meta-data android:name="google_analytics_adid_collection_enabled" android:value="false" />
         <meta-data android:name="google_analytics_default_allow_ad_personalization_signals" android:value="false" />
         <meta-data android:name="firebase_crashlytics_collection_enabled" android:value="false" />

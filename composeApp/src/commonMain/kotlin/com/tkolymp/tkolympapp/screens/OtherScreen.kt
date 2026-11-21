@@ -242,6 +242,7 @@ fun OtherScreen(
 
     LaunchedEffect(Unit) {
         viewModel.load()
+        viewModel.refreshPendingPayment()
         itemsVisible = true
     }
 
@@ -355,7 +356,10 @@ fun OtherScreen(
                     .padding(start = Spacing.default, end = Spacing.default, top = 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(Spacing.small)
             ) {
-                QuickTile(Icons.Filled.Payments, AppStrings.current.otherScreen.payments, onPaymentsClick, Modifier.weight(1f))
+                QuickTile(
+                    Icons.Filled.Payments, AppStrings.current.otherScreen.payments, onPaymentsClick, Modifier.weight(1f),
+                    showBadge = state.hasPendingPayment, badgeColor = MaterialTheme.colorScheme.error
+                )
                 QuickTile(Icons.Filled.BarChart, AppStrings.current.stats.statsTitle, onStatsClick, Modifier.weight(1f))
                 QuickTile(Icons.Filled.FitnessCenter, AppStrings.current.personalEvents.myTrainings, onPersonalEventsClick, Modifier.weight(1f))
                 QuickTile(Icons.Filled.WorkspacePremium, AppStrings.current.achievements.profilePreviewTitle, onAchievementsClick, Modifier.weight(1f))

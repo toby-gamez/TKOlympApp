@@ -1,6 +1,12 @@
 package com.tkolymp.tkolympapp.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.remember
 import androidx.compose.foundation.border
@@ -69,6 +75,45 @@ import com.tkolymp.tkolympapp.ui.theme.Spacing
 
 /** One cell of the [WeekStrip]. */
 data class WeekDayCell(val abbr: String, val number: Int, val count: Int, val selected: Boolean, val isToday: Boolean)
+
+private const val WEEK_PAGER_PAGES = 20_000
+private const val WEEK_PAGER_CENTER = WEEK_PAGER_PAGES / 2
+
+/**
+ * Endless horizontal row of weeks: neighbouring weeks are visible while dragging and it snaps week by week.
+ * [weekIndex] is the shown week in weeks from the current one; [onWeekChange] receives the delta after a swipe settles.
+ * [page] renders the week that is `weekDelta` weeks from the current one.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun WeekPager(
+    weekIndex: Int,
+    onWeekChange: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    page: @Composable (weekDelta: Int, isCurrent: Boolean) -> Unit
+) {
+    val pagerState = rememberPagerState(initialPage = WEEK_PAGER_CENTER + weekIndex) { WEEK_PAGER_PAGES }
+    val currentIndex by rememberUpdatedState(weekIndex)
+    val currentOnChange by rememberUpdatedState(onWeekChange)
+
+    // Arrow buttons / "today" change the week from outside: scroll the pager to match.
+    LaunchedEffect(weekIndex) {
+        val target = WEEK_PAGER_CENTER + weekIndex
+        if (pagerState.currentPage != target) pagerState.animateScrollToPage(target)
+    }
+    // A swipe settled on another week: report the delta (a no-op when the state already matches).
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.settledPage }.collect { settled ->
+            val delta = settled - WEEK_PAGER_CENTER - currentIndex
+            if (delta != 0) currentOnChange(delta)
+        }
+    }
+
+    HorizontalPager(state = pagerState, modifier = modifier, verticalAlignment = Alignment.Top) { p ->
+        val delta = p - WEEK_PAGER_CENTER
+        page(delta, delta == currentIndex)
+    }
+}
 
 /** Seven equal day columns: weekday, date number and event count; the selected day gets a red pill. */
 @Composable

@@ -370,8 +370,8 @@ class CalendarViewViewModel(
                             } catch (_: Exception) {}
                         }
                         if (obj != null) {
-                            val trainers = (obj["eventTrainersList"] as? kotlinx.serialization.json.JsonArray)?.mapNotNull { (it as? kotlinx.serialization.json.JsonObject)?.get("name")?.jsonPrimitive?.contentOrNull }
-                                ?: (obj["eventTrainersList"] as? kotlinx.serialization.json.JsonArray)?.mapNotNull { it.jsonPrimitive.contentOrNull } ?: emptyList()
+                            val trainers = com.tkolymp.shared.event.parseTrainerNamesFromJson(obj["eventTrainersList"] as? kotlinx.serialization.json.JsonArray)
+                                .ifEmpty { ev.eventTrainersList }
 
                             val targetCohorts = (obj["eventTargetCohortsList"] as? kotlinx.serialization.json.JsonArray)?.mapNotNull { item ->
                                 val o = item as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null

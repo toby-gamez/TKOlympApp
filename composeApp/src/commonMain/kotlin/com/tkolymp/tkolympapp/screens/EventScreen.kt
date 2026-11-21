@@ -34,9 +34,10 @@ import com.tkolymp.tkolympapp.components.pressClickable
 import com.tkolymp.tkolympapp.components.successColor
 import com.tkolymp.tkolympapp.components.successContainerColor
 import com.tkolymp.tkolympapp.components.surfaceCardColors
-import com.tkolymp.tkolympapp.platform.RemoteImage
 import com.tkolymp.tkolympapp.ui.theme.BrandLightPrimary
 import com.tkolymp.tkolympapp.ui.theme.Spacing
+import com.tkolymp.tkolympapp.components.PaymentDraftCard
+import com.tkolymp.tkolympapp.components.PayActionsStyle
 import com.tkolymp.tkolympapp.components.PaymentPayActions
 import com.tkolymp.shared.utils.fileUrl
 import androidx.compose.animation.AnimatedVisibility
@@ -152,6 +153,7 @@ import com.tkolymp.tkolympapp.util.StaggeredItem
 import com.tkolymp.tkolympapp.components.parseColorOrDefault
 import com.tkolymp.tkolympapp.platform.HtmlText
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 import kotlinx.serialization.json.JsonArray
@@ -371,37 +373,32 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                                     }
                                 }
 
-                                if (!state.imageUrl.isNullOrBlank()) {
-                                    Box(Modifier.fillMaxWidth().padding(horizontal = Spacing.default, vertical = Spacing.default), contentAlignment = Alignment.Center) {
-                                        RemoteImage(
-                                            url = state.imageUrl,
-                                            modifier = Modifier.widthIn(max = 200.dp).clip(RoundedCornerShape(12.dp))
-                                                .clickable { fullScreenImageUrl.value = state.imageUrl },
-                                            keepAspectRatio = true,
-                                            fallback = {}
-                                        )
-                                    }
-                                }
-
                                 // Platba (QR obrázky z popisu, přegenerované lokálně i s VS)
                                 state.paymentQrs.forEach { pay ->
-                                    Card(
-                                        modifier = Modifier.fillMaxWidth().padding(start = Spacing.default, end = Spacing.default, top = Spacing.medium),
-                                        shape = RoundedCornerShape(16.dp),
-                                        colors = surfaceCardColors(),
-                                        border = cardLineBorder()
-                                    ) {
-                                        PaymentPayActions(
-                                            bankAccount = pay.account,
-                                            amountMinor = pay.amountMinor,
-                                            currency = pay.currency,
-                                            variableSymbol = pay.variableSymbol,
-                                            specificSymbol = pay.specificSymbol,
-                                            message = pay.message,
-                                            modifier = Modifier.padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 12.dp),
-                                            onMessage = { msg -> scope.launch { snackbarHostState.showSnackbar(msg) } }
-                                        )
-                                    }
+                                    PaymentPayActions(
+                                        bankAccount = pay.account,
+                                        amountMinor = pay.amountMinor,
+                                        currency = pay.currency,
+                                        variableSymbol = pay.variableSymbol,
+                                        specificSymbol = pay.specificSymbol,
+                                        message = pay.message,
+                                        style = PayActionsStyle.Card,
+                                        modifier = Modifier.padding(start = Spacing.default, end = Spacing.default, top = Spacing.medium),
+                                        onMessage = { msg -> scope.launch { snackbarHostState.showSnackbar(msg) } }
+                                    )
+                                }
+
+                                // Záložní platba: účet z volného textu trenéra, když chybí hotový QR
+                                state.paymentDraft?.let { draft ->
+                                    val today = remember { Clock.System.todayIn(TimeZone.currentSystemDefault()) }
+                                    PaymentDraftCard(
+                                        draft = draft,
+                                        profile = state.paymentProfile,
+                                        today = today,
+                                        modifier = Modifier.padding(horizontal = Spacing.default),
+                                        onSaveUnpaid = { payment -> scope.launch { viewModel.saveUnpaidPayment(eventId, payment) } },
+                                        onMessage = { msg -> scope.launch { snackbarHostState.showSnackbar(msg) } }
+                                    )
                                 }
 
                                 // O události
@@ -417,31 +414,15 @@ fun EventScreen(eventId: Long, instanceId: Long? = null, onBack: (() -> Unit)? =
                                     ))
                                     val displayType = translateEventType(state.eventType)
                                     add(DetailInfoRow(Icons.Default.Category, AppStrings.current.calendarView.typeSection, androidx.compose.ui.text.AnnotatedString(displayType?.takeIf { it.isNotBlank() } ?: "—")))
-                                    val trainerLinks = state.trainers.mapNotNull { trainerEl ->
+                                    val trainerNames = state.trainers.mapNotNull { trainerEl ->
                                         val trainer = trainerEl.asJsonObjectOrNull() ?: return@mapNotNull null
-                                        val person = trainer["person"]?.asJsonObjectOrNull()
-                                        val name = person?.str("name") ?: trainer.str("name") ?: return@mapNotNull null
-                                        name to person?.str("id")
+                                        trainer["person"]?.asJsonObjectOrNull()?.str("name") ?: trainer.str("name")
                                     }
-                                    if (trainerLinks.isNotEmpty()) {
+                                    if (trainerNames.isNotEmpty()) {
                                         add(DetailInfoRow(
                                             Icons.Default.Person,
                                             AppStrings.current.profile.trainers,
-                                            androidx.compose.ui.text.AnnotatedString(trainerLinks.joinToString(", ") { it.first }),
-                                            valueContent = {
-                                                FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.small)) {
-                                                    trainerLinks.forEachIndexed { i, (name, id) ->
-                                                        val open = id?.let { pid -> onOpenPerson?.let { f -> { f(pid) } } }
-                                                        Text(
-                                                            if (i < trainerLinks.lastIndex) "$name," else name,
-                                                            style = MaterialTheme.typography.bodyLarge,
-                                                            fontWeight = FontWeight.Medium,
-                                                            color = if (open != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                                                            modifier = if (open != null) Modifier.clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = open) else Modifier
-                                                        )
-                                                    }
-                                                }
-                                            }
+                                            androidx.compose.ui.text.AnnotatedString(trainerNames.joinToString(", "))
                                         ))
                                     }
                                 }

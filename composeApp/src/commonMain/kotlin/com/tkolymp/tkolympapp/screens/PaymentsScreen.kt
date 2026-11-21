@@ -70,7 +70,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.TextButton
 import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.shared.payments.SavedPayment
+import com.tkolymp.shared.payments.formatCzDate
+import com.tkolymp.shared.payments.formatCzk
+import kotlinx.datetime.LocalDate
 import com.tkolymp.shared.utils.formatShortDateTime
 import com.tkolymp.shared.utils.parseToLocal
 import com.tkolymp.tkolympapp.SwipeToReload
@@ -90,6 +95,8 @@ fun PaymentsScreen(vm: com.tkolymp.shared.payments.PaymentsViewModel, onBack: ()
 
     val isLoading by vm.isLoading.collectAsStateWithLifecycle()
     val payments by vm.items.collectAsState(initial = emptyList())
+    val saved by vm.saved.collectAsStateWithLifecycle()
+    val (savedPending, savedPaid) = saved.partition { !it.paid }
 
     val bankAccount by vm.bankAccount.collectAsStateWithLifecycle()
 
@@ -115,7 +122,7 @@ fun PaymentsScreen(vm: com.tkolymp.shared.payments.PaymentsViewModel, onBack: ()
                 .padding(padding)
                 .padding(bottom = 0.dp)
         ) {
-            SkeletonCrossfade(isLoading && payments.isEmpty()) { showSkeleton ->
+            SkeletonCrossfade(isLoading && payments.isEmpty() && saved.isEmpty()) { showSkeleton ->
             if (showSkeleton) {
                 SkeletonPayments()
             } else {
@@ -141,7 +148,7 @@ fun PaymentsScreen(vm: com.tkolymp.shared.payments.PaymentsViewModel, onBack: ()
                         LaunchedEffect(Unit) { cardsVisible = true }
                         when (tab) {
                             0 -> {
-                                EmptyStateFade(visible = waitingItems.isEmpty()) {
+                                EmptyStateFade(visible = waitingItems.isEmpty() && savedPending.isEmpty()) {
                                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                             Icon(
@@ -154,12 +161,22 @@ fun PaymentsScreen(vm: com.tkolymp.shared.payments.PaymentsViewModel, onBack: ()
                                         }
                                     }
                                 }
-                                if (waitingItems.isNotEmpty()) {
+                                if (waitingItems.isNotEmpty() || savedPending.isNotEmpty()) {
                                     LazyColumn(
                                         modifier = Modifier.fillMaxWidth(),
                                         contentPadding = PaddingValues(start = Spacing.default, end = Spacing.default, top = 14.dp, bottom = Spacing.default),
                                         verticalArrangement = Arrangement.spacedBy(10.dp)
                                     ) {
+                                        itemsIndexed(savedPending, key = { _, item -> "saved_${item.id}" }) { index, it ->
+                                            StaggeredItem(index = index, visible = cardsVisible, baseDelayMs = 40, modifier = Modifier.animateItem()) {
+                                                SavedPaymentCard(
+                                                    item = it,
+                                                    onMarkPaid = { vm.markSavedPaid(it.id) },
+                                                    onRemove = { vm.removeSaved(it.id) },
+                                                    onMessage = { msg -> scope.launch { snackbarHostState.showSnackbar(msg) } }
+                                                )
+                                            }
+                                        }
                                         itemsIndexed(waitingItems, key = { _, item -> item.payment?.id ?: item.personId ?: item.hashCode() }) { index, it ->
                                             StaggeredItem(index = index, visible = cardsVisible, baseDelayMs = 40, modifier = Modifier.animateItem()) {
                                                 PaymentItemCard(
@@ -173,7 +190,7 @@ fun PaymentsScreen(vm: com.tkolymp.shared.payments.PaymentsViewModel, onBack: ()
                                 }
                             }
                             else -> {
-                                if (paidItems.isEmpty()) {
+                                if (paidItems.isEmpty() && savedPaid.isEmpty()) {
                                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(AppStrings.current.misc.paymentsEmptyNoPaid) }
                                 } else {
                                     LazyColumn(
@@ -181,6 +198,11 @@ fun PaymentsScreen(vm: com.tkolymp.shared.payments.PaymentsViewModel, onBack: ()
                                         contentPadding = PaddingValues(start = Spacing.default, end = Spacing.default, top = 14.dp, bottom = Spacing.default),
                                         verticalArrangement = Arrangement.spacedBy(10.dp)
                                     ) {
+                                        itemsIndexed(savedPaid, key = { _, item -> "saved_${item.id}" }) { index, it ->
+                                            StaggeredItem(index = index, visible = cardsVisible, baseDelayMs = 40, modifier = Modifier.animateItem()) {
+                                                SavedPaymentCard(item = it, onMarkPaid = {}, onRemove = { vm.removeSaved(it.id) })
+                                            }
+                                        }
                                         itemsIndexed(paidItems, key = { _, item -> item.payment?.id ?: item.personId ?: item.hashCode() }) { index, it ->
                                             StaggeredItem(index = index, visible = cardsVisible, baseDelayMs = 40, modifier = Modifier.animateItem()) {
                                                 PaymentItemCard(item = it)
@@ -193,6 +215,78 @@ fun PaymentsScreen(vm: com.tkolymp.shared.payments.PaymentsViewModel, onBack: ()
                     }
                 }
             }
+            }
+        }
+    }
+}
+
+/** A payment saved locally from an event (e.g. the balance after a deposit). */
+@Composable
+private fun SavedPaymentCard(
+    item: SavedPayment,
+    onMarkPaid: () -> Unit,
+    onRemove: () -> Unit,
+    modifier: Modifier = Modifier,
+    onMessage: (String) -> Unit = {}
+) {
+    val misc = AppStrings.current.misc
+    val dueText = item.dueDate?.let { runCatching { formatCzDate(LocalDate.parse(it)) }.getOrNull() }
+
+    if (item.paid) {
+        Card(modifier = modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(start = 14.dp, top = 6.dp, bottom = 6.dp, end = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.medium)
+            ) {
+                Box(Modifier.size(36.dp).background(successContainerColor(), CircleShape), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.Check, contentDescription = null, tint = successColor(), modifier = Modifier.size(20.dp))
+                }
+                Column(Modifier.weight(1f)) {
+                    Text(item.title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+                    Text(misc.payDraftModeRemainder, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Text(formatCzk(item.amountMinor), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                TextButton(onClick = onRemove) { Text(misc.paymentsRemoveSaved) }
+            }
+        }
+        return
+    }
+
+    Card(modifier = modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp), colors = surfaceCardColors(), border = cardLineBorder()) {
+        Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.small)) {
+                Column(Modifier.weight(1f)) {
+                    Text(item.title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                    val missing = item.depositMinor?.let { misc.paymentsBalanceMissing.replace("{amount}", formatCzk(it)) }
+                    Text(
+                        missing ?: misc.payDraftModeRemainder,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = if (missing != null) FontWeight.Medium else null,
+                        color = if (missing != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                if (dueText != null) {
+                    InfoPill("${misc.dueLabel} $dueText", MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.onTertiaryContainer)
+                }
+            }
+            Text(formatCzk(item.amountMinor), modifier = Modifier.padding(top = Spacing.small), fontSize = 36.sp, lineHeight = 42.sp, fontWeight = FontWeight.Bold)
+            val symbols = listOfNotNull(item.variableSymbol?.let { "VS $it" }, item.specificSymbol?.let { "SS $it" }).joinToString(" · ")
+            if (symbols.isNotBlank()) Text(symbols, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(Spacing.medium))
+            RowDivider()
+            PaymentPayActions(
+                bankAccount = item.account,
+                amountMinor = item.amountMinor,
+                currency = "CZK",
+                variableSymbol = item.variableSymbol,
+                specificSymbol = item.specificSymbol,
+                message = item.message,
+                onMessage = onMessage
+            )
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                TextButton(onClick = onRemove) { Text(misc.paymentsRemoveSaved) }
+                TextButton(onClick = onMarkPaid) { Text(misc.paymentsMarkPaid) }
             }
         }
     }

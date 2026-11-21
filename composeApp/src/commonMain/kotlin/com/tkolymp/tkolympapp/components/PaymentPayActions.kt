@@ -1,21 +1,23 @@
 package com.tkolymp.tkolympapp.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.Surface
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.SaveAlt
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -26,17 +28,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.tkolymp.shared.language.AppStrings
 import com.tkolymp.shared.payments.buildSpdPayload
+import com.tkolymp.shared.payments.isClubAccount
 import com.tkolymp.shared.payments.formatMinorUnits
+import com.tkolymp.tkolympapp.screens.ProfileValueRow
 import com.tkolymp.tkolympapp.platform.rememberSaveImageToGalleryCallback
 import com.tkolymp.tkolympapp.platform.rememberShareImageCallback
 import kotlinx.coroutines.launch
 
 /**
- * Copyable payment details plus "share QR" / "save QR to gallery" actions. The QR is generated
- * on the device, so nothing about the payer leaves the phone.
+ * Payment summary (PersonScreen style; see [PayActionsStyle]): optional QR tile with the amount, tap-to-copy payment details and
+ * "share QR" / "save QR to gallery" actions. The QR is generated on the device, so nothing
+ * about the payer leaves the phone.
  */
 @Composable
 fun PaymentPayActions(
@@ -47,6 +54,8 @@ fun PaymentPayActions(
     specificSymbol: String?,
     message: String?,
     modifier: Modifier = Modifier,
+    showQr: Boolean = false,
+    style: PayActionsStyle = PayActionsStyle.Plain,
     onMessage: (String) -> Unit
 ) {
     val misc = AppStrings.current.misc
@@ -64,51 +73,91 @@ fun PaymentPayActions(
 
     fun copy(value: String) {
         clipboard.setText(AnnotatedString(value))
+        onMessage(misc.payCopied)
     }
 
-    Column(modifier = modifier.fillMaxWidth()) {
-        CopyableDetail(misc.payAccountLabel, bankAccount, onCopy = { copy(bankAccount) })
-        if (amount != null) {
-            CopyableDetail(misc.payAmountLabel, "$amount $currency", onCopy = { copy(amount) })
+    val details = buildList {
+        add(Triple(misc.payAccountLabel, bankAccount, bankAccount))
+        if (amount != null) add(Triple(misc.payAmountLabel, "$amount $currency", amount))
+        if (!variableSymbol.isNullOrBlank()) add(Triple(misc.payVariableSymbolLabel, variableSymbol, variableSymbol))
+        if (!specificSymbol.isNullOrBlank()) add(Triple(misc.paySpecificSymbolLabel, specificSymbol, specificSymbol))
+        if (!message.isNullOrBlank()) add(Triple(misc.payDraftMessageLabel, message, message))
+    }
+    val rows: @Composable () -> Unit = {
+        if (!isClubAccount(bankAccount)) {
+            Text(
+                misc.payAccountMismatchWarning,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(14.dp)
+            )
         }
-        if (!variableSymbol.isNullOrBlank()) {
-            CopyableDetail(misc.payVariableSymbolLabel, variableSymbol, onCopy = { copy(variableSymbol) })
+        details.forEachIndexed { index, (label, shown, copied) ->
+            if (index > 0) RowDivider()
+            ProfileValueRow(label, shown, onClick = { copy(copied) }, trailingIcon = Icons.Default.ContentCopy)
         }
-        if (!specificSymbol.isNullOrBlank()) {
-            CopyableDetail(misc.paySpecificSymbolLabel, specificSymbol, onCopy = { copy(specificSymbol) })
-        }
-        if (qrBitmap != null) {
-            Spacer(modifier = Modifier.height(8.dp))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilledTonalButton(onClick = { scope.launch { shareQr(qrBitmap) } }) {
-                    Icon(Icons.Default.QrCode2, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(misc.payQrShare)
-                }
-                OutlinedButton(onClick = {
-                    scope.launch { onMessage(if (saveQr(qrBitmap)) misc.payQrSaved else misc.payQrSaveFailed) }
-                }) {
-                    Icon(Icons.Default.SaveAlt, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(misc.payQrSave)
+    }
+    val qrBlock: @Composable () -> Unit = {
+        if (showQr && qrBitmap != null) {
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                PaymentQrImage(bitmap = qrBitmap, size = 200.dp)
+                if (amount != null) {
+                    Text("$amount $currency", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
                 }
             }
         }
     }
-}
-
-@Composable
-private fun CopyableDetail(label: String, value: String, onCopy: () -> Unit, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(value, style = MaterialTheme.typography.bodyMedium)
+    val buttons: @Composable () -> Unit = {
+        if (qrBitmap != null) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = { scope.launch { shareQr(qrBitmap) } }, modifier = Modifier.weight(1f)) {
+                    Icon(Icons.Default.QrCode2, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(misc.payQrShare, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                OutlinedButton(
+                    onClick = { scope.launch { onMessage(if (saveQr(qrBitmap)) misc.payQrSaved else misc.payQrSaveFailed) } },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Default.SaveAlt, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(misc.payQrSave, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
         }
-        IconButton(onClick = onCopy) {
-            Icon(Icons.Default.ContentCopy, contentDescription = AppStrings.current.misc.payCopied)
+    }
+
+    when (style) {
+        PayActionsStyle.Card -> Card(
+            modifier = modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = surfaceCardColors(),
+            border = cardLineBorder()
+        ) {
+            Column {
+                if (showQr && qrBitmap != null) {
+                    Box(Modifier.fillMaxWidth().padding(top = 20.dp, bottom = 16.dp)) { qrBlock() }
+                    RowDivider()
+                }
+                rows()
+                if (qrBitmap != null) {
+                    RowDivider()
+                    Box(Modifier.padding(14.dp)) { buttons() }
+                }
+            }
+        }
+        PayActionsStyle.Inset -> Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            qrBlock()
+            Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh) { Column { rows() } }
+            buttons()
+        }
+        PayActionsStyle.Plain -> Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            qrBlock()
+            Column { rows() }
+            buttons()
         }
     }
 }
+
+/** [Card]: self-contained bordered card; [Inset]: for use inside another card; [Plain]: bare rows. */
+enum class PayActionsStyle { Plain, Inset, Card }

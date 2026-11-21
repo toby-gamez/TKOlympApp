@@ -82,6 +82,9 @@ import com.tkolymp.tkolympapp.SwipeToReload
 import com.tkolymp.tkolympapp.components.EmptyState
 import com.tkolymp.tkolympapp.components.ErrorState
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 
 /**
  * Category names the way the competition screens show them (DanceForAll -> TPV, Standard -> STT, ...).
@@ -247,12 +250,31 @@ private fun EventContent(
  */
 private fun signUpUrl(event: FederationEventDetail): String? {
     if (event.status == "COMPLETED" || event.status == "CANCELLED") return null
+    val lastDay = (event.endDate ?: event.startDate).substringBefore('T')
+    val last = try { LocalDate.parse(lastDay) } catch (_: Exception) { null }
+    if (last != null && last < kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())) return null
     return when (event.federation.lowercase()) {
         "csts" -> if (event.externalId != null && event.extraId != null) {
             "https://www.csts.cz/dancesport/kalendar_akci/event/${event.externalId}/competition/${event.extraId}/prihlaseni"
         } else null
+        "wdsf" -> wdsfEventUrl(event) ?: event.websiteUrl?.takeIf { it.isNotBlank() }
         else -> event.websiteUrl?.takeIf { it.isNotBlank() }
     }
+}
+
+/**
+ * WDSF event page, e.g. `/Events/Dresden-Germany-20112026-22112026-8739`: the name with its separators turned into
+ * dashes ("Dresden, Germany" and "Dresden - Germany" both give `Dresden-Germany`), start and end date as ddMMyyyy, and
+ * the WDSF event id (our `externalId`).
+ */
+private fun wdsfEventUrl(event: FederationEventDetail): String? {
+    val id = event.externalId?.takeIf { it.isNotBlank() && it.all(Char::isDigit) } ?: return null
+    val start = try { LocalDate.parse(event.startDate.substringBefore('T')) } catch (_: Exception) { return null }
+    val end = try { LocalDate.parse((event.endDate ?: event.startDate).substringBefore('T')) } catch (_: Exception) { start }
+    fun ddMMyyyy(d: LocalDate) = "${d.dayOfMonth.toString().padStart(2, '0')}${d.monthNumber.toString().padStart(2, '0')}${d.year}"
+    val slug = (event.name ?: "").split(Regex("[\\s,\\-–]+")).filter { it.isNotBlank() }.joinToString("-")
+    val parts = listOf(slug, ddMMyyyy(start), ddMMyyyy(end), id).filter { it.isNotEmpty() }
+    return "https://www.worlddancesport.org/Events/${parts.joinToString("-")}#tab=general"
 }
 
 @Composable

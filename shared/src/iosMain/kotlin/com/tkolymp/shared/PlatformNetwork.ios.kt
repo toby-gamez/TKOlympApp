@@ -32,6 +32,8 @@ import com.tkolymp.shared.storage.UserStorage
 import com.tkolymp.shared.sync.OfflineSyncManager
 import com.tkolymp.shared.systemcalendar.SystemCalendarService
 import com.tkolymp.shared.user.UserService
+import com.tkolymp.shared.network.CERTIFICATE_PIN_HASHES
+import com.tkolymp.shared.network.PINNED_HOST
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.darwin.Darwin
 import io.ktor.client.engine.darwin.certificates.CertificatePinner
@@ -42,15 +44,9 @@ import kotlinx.cinterop.staticCFunction
 import platform.Foundation.NSException
 import platform.Foundation.NSSetUncaughtExceptionHandler
 
-// Certificate pins for tkolymp.cz (served via Google Trust Services: leaf -> WE1 -> GTS Root R4).
-// Pin the root key rather than the leaf or intermediate: the leaf key changes on every renewal and
-// Google rotates between intermediates (WE1, WE2, WR1, ...). A connection passes if any certificate
-// in the validated chain matches one pin.
-// Keep in sync with the Android OkHttp pins.
+// Pins are shared with Android: see CertificatePins.kt.
 private val certPinner: CertificatePinner = CertificatePinner.Builder()
-    .add("tkolymp.cz", "sha256/mEflZT5enoR1FuXLgYYGqnVEoZvmf9c2bVBpiOjYQ0c=")  // GTS Root R4 (ECDSA)
-    .add("tkolymp.cz", "sha256/hxqRlPTu1bMS/0DITB1SSu0vd4u/8l8TjPgfaAp63Gc=")  // GTS Root R1 (RSA, backup)
-    .add("tkolymp.cz", "sha256/kIdp6NNEd8wsugYyyIYFsi1ylMCED3hZbSR8ZFsa/A4=")  // GTS WE1 intermediate (backup)
+    .apply { CERTIFICATE_PIN_HASHES.forEach { add(PINNED_HOST, it) } }
     .build()
 
 // Feedback ("Report a bug" / "Suggest a feature") posts to Tobiso.Web, a separate backend from the club GraphQL API.
@@ -67,6 +63,8 @@ suspend fun initNetworking(baseUrl: String, tenantId: String = "1") {
     val storage = TokenStorage("")
 
     val client = HttpClient(Darwin) {
+        // Bearer token and cookie are attached per request; never follow a redirect to another (unpinned) host.
+        followRedirects = false
         engine {
             handleChallenge { session, task, challenge, completionHandler ->
                 certPinner.invoke(session, task, challenge, completionHandler)

@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -18,6 +19,7 @@ import androidx.core.content.pm.PackageInfoCompat
 import androidx.lifecycle.lifecycleScope
 import com.tkolymp.tkolympapp.platform.appVersionCode
 import com.tkolymp.tkolympapp.platform.appVersionName
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.messaging.FirebaseMessaging
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.ServiceLocator
@@ -32,6 +34,9 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 
 @SuppressLint("InvalidFragmentVersionForActivityResult")
+// Key written by OnboardingStorage.setPrivacyConsentAccepted() in the "tkolymp_prefs" file.
+private const val PRIVACY_CONSENT_KEY = "privacy_consent_accepted"
+
 private val DEEP_LINK_ROUTE_PATTERN = Regex("^[a-z][A-Za-z0-9_-]{0,40}(/[A-Za-z0-9_-]{1,40}){0,3}(\\?[A-Za-z0-9_=&-]{1,80})?$")
 
 class MainActivity : ComponentActivity() {
@@ -39,9 +44,27 @@ class MainActivity : ComponentActivity() {
         // permission result handled; we don't strictly need to do anything here
     }
 
+    // Analytics collection is off in the manifest; it is switched on only after the privacy consent is stored.
+    private val consentPrefs by lazy { getSharedPreferences("tkolymp_prefs", Context.MODE_PRIVATE) }
+    private val consentListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key == PRIVACY_CONSENT_KEY) syncAnalyticsConsent()
+    }
+
+    private fun syncAnalyticsConsent() {
+        val accepted = consentPrefs.getBoolean(PRIVACY_CONSENT_KEY, false)
+        try { FirebaseAnalytics.getInstance(this).setAnalyticsCollectionEnabled(accepted) } catch (_: Exception) {}
+    }
+
+    override fun onDestroy() {
+        consentPrefs.unregisterOnSharedPreferenceChangeListener(consentListener)
+        super.onDestroy()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        syncAnalyticsConsent()
+        consentPrefs.registerOnSharedPreferenceChangeListener(consentListener)
 
         // Store app version for the About screen (read from commonMain via getAppVersion())
         try {

@@ -41,6 +41,7 @@ import com.tkolymp.tkolympapp.components.TimelineDot
 import com.tkolymp.tkolympapp.components.TimelineRow
 import com.tkolymp.tkolympapp.components.TrainerCard
 import com.tkolymp.tkolympapp.components.WeekDayCell
+import com.tkolymp.tkolympapp.components.WeekPager
 import com.tkolymp.tkolympapp.components.WeekStrip
 import com.tkolymp.tkolympapp.components.successColor
 import com.tkolymp.tkolympapp.components.timelineInfo
@@ -73,7 +74,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.offset
@@ -163,7 +163,10 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
+import kotlinx.datetime.daysUntil
 import kotlinx.datetime.todayIn
+import kotlin.time.Clock
+import com.tkolymp.shared.viewmodels.mondayOf
 import com.tkolymp.tkolympapp.components.EmptyState
 import com.tkolymp.tkolympapp.components.LessonView
 import com.tkolymp.tkolympapp.components.RenderSingleEventCard
@@ -448,17 +451,26 @@ fun CalendarScreen(
                 val activeDate = activeDateIso
                 val activeFilterCount = selectedTrainers.size + selectedLocations.size + selectedTypes.size + (if (onlyFree) 1 else 0) + (if (hideCancelled) 1 else 0)
 
-                val dayCells = visibleDates.mapIndexed { i, iso ->
-                    val ld = try { LocalDate.parse(iso) } catch (_: Exception) { null }
-                    WeekDayCell(
-                        abbr = calStrings.weekDayAbbreviations.getOrElse(ld?.dayOfWeek?.ordinal ?: i) { "" },
-                        number = ld?.day ?: 0,
-                        count = dayInstances(iso).size + competitionEventCount(calState.competitionsByDay[iso]),
-                        selected = iso == activeDate,
-                        isToday = iso == calState.todayString
-                    )
+                val today = remember(calState.todayString) {
+                    try { LocalDate.parse(calState.todayString) } catch (_: Exception) { Clock.System.todayIn(TimeZone.currentSystemDefault()) }
                 }
-                WeekStrip(days = dayCells, onSelect = { i -> selectedDateIso = visibleDates.getOrNull(i) })
+                val todayMonday = remember(today) { mondayOf(today) }
+                val weekIndex = customStartDate?.let { todayMonday.daysUntil(mondayOf(it)).floorDiv(7) } ?: localWeekOffset
+                WeekPager(weekIndex = weekIndex, onWeekChange = { delta -> shiftWeek(delta) }) { weekDelta, isCurrent ->
+                    val monday = todayMonday.plus(weekDelta * 7, DateTimeUnit.DAY)
+                    val weekIsos = (0..6).map { monday.plus(it, DateTimeUnit.DAY).toString() }
+                    val dayCells = weekIsos.mapIndexed { i, iso ->
+                        val ld = monday.plus(i, DateTimeUnit.DAY)
+                        WeekDayCell(
+                            abbr = calStrings.weekDayAbbreviations.getOrElse(ld.dayOfWeek.ordinal) { "" },
+                            number = ld.day,
+                            count = dayInstances(iso).size + competitionEventCount(calState.competitionsByDay[iso]),
+                            selected = iso == activeDate,
+                            isToday = iso == calState.todayString
+                        )
+                    }
+                    WeekStrip(days = dayCells, onSelect = { i -> if (isCurrent) selectedDateIso = weekIsos[i] })
+                }
 
                 ChipRow {
                     SegmentedToggle(labels = tabs, selectedIndex = selectedTab, onSelect = { i ->
@@ -480,18 +492,6 @@ fun CalendarScreen(
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .pointerInput(Unit) {
-                            // Swipe left = next week, swipe right = previous week; children (e.g. the trainer grid) consume their own scrolls first.
-                            var dragTotal = 0f
-                            detectHorizontalDragGestures(
-                                onDragStart = { dragTotal = 0f },
-                                onDragEnd = {
-                                    if (dragTotal <= -size.width / 4f) shiftWeek(1)
-                                    else if (dragTotal >= size.width / 4f) shiftWeek(-1)
-                                },
-                                onHorizontalDrag = { _, delta -> dragTotal += delta }
-                            )
-                        }
                         .onGloballyPositioned { coords ->
                             val b = coords.boundsInRoot()
                             contentBounds = b

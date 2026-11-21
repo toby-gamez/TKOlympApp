@@ -14,6 +14,18 @@ fun Event?.firstTrainerOrEmpty(): String = this?.eventTrainersList?.firstOrNull(
 /** Photo of the first trainer, null when there is none or it could not be loaded. */
 fun Event?.firstTrainerImageUrl(): String? = this?.eventTrainerImageUrls?.firstOrNull()
 
+/**
+ * Trainer names from an event-detail `eventTrainersList`. Entries are `{person: {name}}` objects
+ * (also accepts a plain `{name}` or a bare string); blank names are dropped.
+ */
+fun parseTrainerNamesFromJson(arr: JsonArray?): List<String> = arr?.mapNotNull { el ->
+    val name = when (el) {
+        is JsonObject -> ((el["person"] as? JsonObject)?.get("name") ?: el["name"])?.jsonPrimitive?.contentOrNull
+        else -> el.jsonPrimitive.contentOrNull
+    }
+    name?.takeIf { it.isNotBlank() }
+} ?: emptyList()
+
 /** Parses a single registration JsonObject into a [Registration]. Returns null for malformed input. */
 fun parseRegistrationFromJson(o: JsonObject): Registration? {
     val ridPrim = o["id"]?.jsonPrimitive

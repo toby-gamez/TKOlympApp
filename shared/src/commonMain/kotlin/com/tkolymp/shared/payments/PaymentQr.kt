@@ -18,10 +18,20 @@ fun buildSpdPayload(
         sb.append("*AM:").append(amountMinor / 100).append('.').append((amountMinor % 100).toString().padStart(2, '0'))
     }
     sb.append("*CC:").append(currency?.takeIf { it.length == 3 }?.uppercase() ?: "CZK")
-    variableSymbol?.filter { it.isDigit() }?.take(10)?.takeIf { it.isNotEmpty() }?.let { sb.append("*X-VS:").append(it) }
-    specificSymbol?.filter { it.isDigit() }?.take(10)?.takeIf { it.isNotEmpty() }?.let { sb.append("*X-SS:").append(it) }
+    // Keys after ACC in alphabetical order: MSG, X-SS, X-VS.
     message?.let(::spdSafeText)?.takeIf { it.isNotEmpty() }?.let { sb.append("*MSG:").append(it) }
+    specificSymbol?.filter { it.isDigit() }?.take(10)?.takeIf { it.isNotEmpty() }?.let { sb.append("*X-SS:").append(it) }
+    variableSymbol?.filter { it.isDigit() }?.take(10)?.takeIf { it.isNotEmpty() }?.let { sb.append("*X-VS:").append(it) }
     return sb.toString()
+}
+
+/** The club's own payment account (`[prefix-]number/bankCode`); QR payments to anything else are flagged. */
+const val CLUB_PAYMENT_ACCOUNT = "1806875329/0800"
+
+/** True when [account] (IBAN or Czech format, any spacing) is the same account as [CLUB_PAYMENT_ACCOUNT]. */
+fun isClubAccount(account: String): Boolean {
+    val club = toIban(CLUB_PAYMENT_ACCOUNT) ?: return false
+    return toIban(account) == club
 }
 
 /** Accepts an IBAN or a Czech `[prefix-]number/bankCode` account and returns an IBAN. */
@@ -56,11 +66,14 @@ private fun mod97(digits: String): Int {
 private const val DIACRITICS_FROM = "áäčďéěëíĺľňóôöŕřšťúůüýžÁÄČĎÉĚËÍĹĽŇÓÔÖŔŘŠŤÚŮÜÝŽ"
 private const val DIACRITICS_TO   = "aacdeeeillnooorrstuuuyzAACDEEEILLNOOORRSTUUUYZ"
 
+/** Replaces Czech/Slovak accented letters with their ASCII base letters (1:1, length preserved). */
+internal fun removeDiacritics(text: String): String =
+    text.map { c -> DIACRITICS_FROM.indexOf(c).let { if (it >= 0) DIACRITICS_TO[it] else c } }.joinToString("")
+
 // SPD message: upper-case ASCII, no '*', max 60 characters.
 private fun spdSafeText(text: String): String =
-    text.map { c -> DIACRITICS_FROM.indexOf(c).let { if (it >= 0) DIACRITICS_TO[it] else c } }
+    removeDiacritics(text)
         .filter { it.code in 32..126 && it != '*' }
-        .joinToString("")
         .trim()
         .uppercase()
         .take(60)
@@ -80,12 +93,14 @@ private val payliboUrlRegex = Regex("""https?://api\.paylibo\.com/[^"'\s<>]+""",
 /**
  * Finds paylibo.com QR-image URLs in [html] and reads the payment out of their query string, so the
  * QR can be rebuilt on the device. [variableSymbol] (the user's birth number) is used unless the
- * URL already carries one; only its digits are kept. Duplicates are removed.
+ * URL already carries one; only its digits are kept. A name placeholder in the message is replaced by
+ * [fullName] (or dropped when unknown). Duplicates are removed.
  */
-fun findPaymentQrs(html: String, variableSymbol: String?): List<QrPayment> {
+fun findPaymentQrs(html: String, variableSymbol: String?, fullName: String? = null): List<QrPayment> {
     val fallbackVs = variableSymbol?.filter { it.isDigit() }?.takeIf { it.isNotEmpty() }
     return payliboUrlRegex.findAll(html.replace("&amp;", "&"))
         .mapNotNull { parsePayliboUrl(it.value, fallbackVs) }
+        .map { pay -> pay.copy(message = pay.message?.let { replaceNamePlaceholder(it, fullName) }) }
         .distinct()
         .toList()
 }

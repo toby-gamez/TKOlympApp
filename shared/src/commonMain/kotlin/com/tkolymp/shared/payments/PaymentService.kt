@@ -19,6 +19,12 @@ data class PaymentSummary(
     val isUnpaid: Boolean? get() = status?.takeIf { it.isNotBlank() }?.let { !it.equals("PAID", ignoreCase = true) }
 }
 
+/** Same rule as the "waiting" tab of the Payments screen: anything not confirmed PAID, plus unpaid locally saved ones. */
+fun hasPendingPayment(items: List<PaymentDebtorItem>, saved: List<SavedPayment>): Boolean =
+    saved.any { !it.paid } || items.any { item ->
+        item.isUnpaid == true || (item.isUnpaid == null && !item.payment?.status.equals("PAID", ignoreCase = true))
+    }
+
 data class PersonSummary(val id: String?, val firstName: String?, val lastName: String?)
 
 data class PaymentDebtorItem(

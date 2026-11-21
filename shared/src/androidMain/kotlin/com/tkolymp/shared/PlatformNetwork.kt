@@ -4,7 +4,9 @@ import android.content.Context
 import com.tkolymp.shared.Logger
 import com.tkolymp.shared.AppContainer
 import com.tkolymp.shared.auth.AuthService
+import com.tkolymp.shared.network.CERTIFICATE_PIN_HASHES
 import com.tkolymp.shared.network.GraphQlClientImpl
+import com.tkolymp.shared.network.PINNED_HOST
 import com.tkolymp.shared.storage.TokenStorage
 import com.tkolymp.shared.notification.NotificationStorage
 import com.tkolymp.shared.notification.NotificationSchedulerAndroid
@@ -37,15 +39,9 @@ import com.tkolymp.shared.json.AppJson
 import io.ktor.serialization.kotlinx.json.*
 import okhttp3.CertificatePinner
 
-// Certificate pins for tkolymp.cz (served via Google Trust Services: leaf -> WE1 -> GTS Root R4).
-// Pin the root key rather than the leaf or intermediate: the leaf key changes on every renewal and
-// Google rotates between intermediates (WE1, WE2, WR1, ...). A connection passes if any certificate
-// in the validated chain matches one pin.
-// Backup pins keep the app working if Google serves the chain from another root/intermediate.
+// Pins are shared with iOS: see CertificatePins.kt.
 val certificatePinner: CertificatePinner = CertificatePinner.Builder()
-    .add("tkolymp.cz", "sha256/mEflZT5enoR1FuXLgYYGqnVEoZvmf9c2bVBpiOjYQ0c=")  // GTS Root R4 (ECDSA)
-    .add("tkolymp.cz", "sha256/hxqRlPTu1bMS/0DITB1SSu0vd4u/8l8TjPgfaAp63Gc=")  // GTS Root R1 (RSA, backup)
-    .add("tkolymp.cz", "sha256/kIdp6NNEd8wsugYyyIYFsi1ylMCED3hZbSR8ZFsa/A4=")  // GTS WE1 intermediate (backup)
+    .apply { CERTIFICATE_PIN_HASHES.forEach { add(PINNED_HOST, it) } }
     .build()
 
 /** OkHttp client with the same pinning as the GraphQL client, for the few requests made outside Ktor (WebView, Coil). */
@@ -67,6 +63,8 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
     val storage = TokenStorage(context)
 
     val client = HttpClient(OkHttp) {
+        // Bearer token and cookie are attached per request; never follow a redirect to another (unpinned) host.
+        followRedirects = false
         engine {
             config {
                 connectTimeout(15, TimeUnit.SECONDS)
@@ -150,10 +148,15 @@ suspend fun initNetworking(context: Context, baseUrl: String, tenantId: String =
 
     ServiceLocator.init(container)
     // cacheDir/camp_schedule: camp-schedule photos (CampScheduleCapture/CampSchedulePhotoView);
-    // cacheDir/share: screenshots for the share sheet (ShareUtils). Paths must match those files and file_paths.xml.
+    // cacheDir/share: screenshots for the share sheet (ShareUtils); cacheDir/avatar: camera capture for the avatar.
+    // Paths must match those files and file_paths.xml. filesDir/offline_avatar.*: OfflineAvatarStore.
+    // cacheDir/image_cache: Coil disk cache (authenticated /f/ images); Coil 2 default (AuthedImage.kt).
     val appContext = context.applicationContext
     ServiceLocator.localFilesCleaner = {
-        listOf("camp_schedule", "share").forEach { java.io.File(appContext.cacheDir, it).deleteRecursively() }
+        listOf("camp_schedule", "share", "avatar", "image_cache")
+            .forEach { java.io.File(appContext.cacheDir, it).deleteRecursively() }
+        listOf("offline_avatar.img", "offline_avatar.url")
+            .forEach { java.io.File(appContext.filesDir, it).delete() }
     }
 
     val onboarding = OnboardingStorage(context)

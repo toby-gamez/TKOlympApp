@@ -34,6 +34,7 @@ data class OtherState(
     val personLastName: String? = null,
     val personPrefix: String? = null,
     val personSuffix: String? = null,
+    val hasPendingPayment: Boolean = false,
     override val isLoading: Boolean = false,
     override val error: AppError? = null
 ) : ViewModelState
@@ -60,6 +61,22 @@ class OtherViewModel(
     fun load(force: Boolean = false) {
         if (loadStarted && !force) return
         fetchFromStorage()
+    }
+
+    /** Re-checks the Payments screen's "waiting" list so the Profile tile can show a dot. Keeps the old value when the lookup fails. */
+    fun refreshPendingPayment() {
+        viewModelScope.launch {
+            try {
+                val pending = withContext(Dispatchers.Default) {
+                    val pid = userService.getCachedPersonId()
+                    val saved = com.tkolymp.shared.payments.SavedPaymentsStore(ServiceLocator.offlineDataStorage).list(pid)
+                    val items = ServiceLocator.paymentService.fetchDebtorsForPerson(pid)
+                    com.tkolymp.shared.payments.hasPendingPayment(items, saved)
+                }
+                _state.value = _state.value.copy(hasPendingPayment = pending)
+                lastKnownState = _state.value
+            } catch (e: CancellationException) { throw e } catch (_: Exception) { }
+        }
     }
 
     fun switchPerson(personId: String) {

@@ -24,6 +24,12 @@ class PaymentsViewModel : ViewModel() {
     private val _items = MutableStateFlow<List<PaymentDebtorItem>>(emptyList())
     val items: StateFlow<List<PaymentDebtorItem>> = _items
 
+    private val _saved = MutableStateFlow<List<SavedPayment>>(emptyList())
+    /** Payments the user saved locally from an event (e.g. a balance still to pay). */
+    val saved: StateFlow<List<SavedPayment>> = _saved
+
+    private val savedStore = SavedPaymentsStore(com.tkolymp.shared.ServiceLocator.offlineDataStorage)
+
     private val _bankAccount = MutableStateFlow<String?>(null)
     val bankAccount: StateFlow<String?> = _bankAccount
 
@@ -34,6 +40,7 @@ class PaymentsViewModel : ViewModel() {
     fun load() {
         viewModelScope.launch {
             _isLoading.value = true
+            launch { refreshSaved() }
             launch {
                 _bankAccount.value = try {
                     withContext(Dispatchers.Default) { com.tkolymp.shared.ServiceLocator.paymentService.fetchBankAccount() }
@@ -74,6 +81,27 @@ class PaymentsViewModel : ViewModel() {
             } finally {
                 _isLoading.value = false
             }
+        }
+    }
+
+    private suspend fun personId(): String? = try {
+        withContext(Dispatchers.Default) { com.tkolymp.shared.ServiceLocator.userService.getCachedPersonId() }
+    } catch (e: kotlin.coroutines.cancellation.CancellationException) { throw e } catch (_: Exception) { null }
+
+    private suspend fun refreshSaved() {
+        _saved.value = try { withContext(Dispatchers.Default) { savedStore.list(personId()) } }
+        catch (e: kotlin.coroutines.cancellation.CancellationException) { throw e } catch (_: Exception) { _saved.value }
+    }
+
+    fun markSavedPaid(id: String) = changeSaved { savedStore.setPaid(it, id) }
+
+    fun removeSaved(id: String) = changeSaved { savedStore.remove(it, id) }
+
+    private fun changeSaved(change: suspend (String?) -> Unit) {
+        viewModelScope.launch {
+            try { withContext(Dispatchers.Default) { change(personId()) } }
+            catch (e: kotlin.coroutines.cancellation.CancellationException) { throw e } catch (_: Exception) {}
+            refreshSaved()
         }
     }
 

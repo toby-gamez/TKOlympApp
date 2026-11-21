@@ -1,7 +1,12 @@
 package com.tkolymp.tkolympapp.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Canvas
@@ -42,11 +47,20 @@ fun renderQrImageBitmap(payload: String): ImageBitmap? = try {
     null
 }
 
+/** The QR always sits on a white tile (scanners need dark-on-light), also in dark theme. */
 @Composable
 fun PaymentQrImage(bitmap: ImageBitmap, modifier: Modifier = Modifier, size: Dp = 200.dp) {
-    Image(
-        bitmap = bitmap,
-        contentDescription = null,
-        modifier = modifier.size(size)
-    )
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(20.dp),
+        color = Color.White,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        shadowElevation = 2.dp
+    ) {
+        Image(
+            bitmap = bitmap,
+            contentDescription = null,
+            modifier = Modifier.padding(10.dp).size(size)
+        )
+    }
 }

@@ -529,7 +529,7 @@ fun MenuRow(icon: ImageVector, label: String, onClick: () -> Unit, modifier: Mod
 
 /** Square-ish shortcut card: accent icon over a short label. */
 @Composable
-fun QuickTile(icon: ImageVector, label: String, onClick: () -> Unit, modifier: Modifier = Modifier, showBadge: Boolean = false) {
+fun QuickTile(icon: ImageVector, label: String, onClick: () -> Unit, modifier: Modifier = Modifier, showBadge: Boolean = false, badgeColor: Color = BrandPrimary()) {
     Card(
         modifier = modifier.pressClickable(0.95f, onClick),
         shape = RoundedCornerShape(16.dp),
@@ -545,7 +545,7 @@ fun QuickTile(icon: ImageVector, label: String, onClick: () -> Unit, modifier: M
                 Icon(icon, contentDescription = null, tint = accentColor(), modifier = Modifier.size(24.dp))
                 Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-            if (showBadge) Box(Modifier.align(Alignment.TopEnd).padding(top = 8.dp, end = 12.dp).size(8.dp).background(BrandPrimary(), CircleShape))
+            if (showBadge) Box(Modifier.align(Alignment.TopEnd).padding(top = 8.dp, end = 12.dp).size(8.dp).background(badgeColor, CircleShape))
         }
     }
 }

@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.withContext
+import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -20,6 +21,13 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
 import kotlin.time.Duration.Companion.days
 import com.tkolymp.shared.language.AppStrings
+import com.tkolymp.shared.payments.ParsedPayment
+import com.tkolymp.shared.payments.PaymentProfile
+import com.tkolymp.shared.payments.htmlToPlainText
+import com.tkolymp.shared.payments.parsePayment
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 import com.tkolymp.shared.utils.asJsonObjectOrNull
 import com.tkolymp.shared.utils.asJsonArrayOrNull
 import com.tkolymp.shared.utils.str
@@ -46,6 +54,9 @@ data class EventState(
     val eventDescription: String = "",
     val summary: String = "",
     val paymentQrs: List<com.tkolymp.shared.payments.QrPayment> = emptyList(),
+    /** Payment details parsed from the trainer's free text; set only when there is no ready QR. */
+    val paymentDraft: com.tkolymp.shared.payments.ParsedPayment? = null,
+    val paymentProfile: com.tkolymp.shared.payments.PaymentProfile? = null,
     val locationName: String? = null,
     val isVisible: Boolean = false,
     val isPublic: Boolean = false,
@@ -260,16 +271,22 @@ class EventViewModel(
             val scheduleText = if (selectedInstance != null) null
                                else describeSchedule(instances, AppStrings.currentLanguage.code)
 
+            val hasPayliboQr = (summary + eventDescription).contains("paylibo", ignoreCase = true)
             val paymentQrs = com.tkolymp.shared.payments.findPaymentQrs(
                 summary + eventDescription,
-                if ((summary + eventDescription).contains("paylibo", ignoreCase = true)) {
-                    loadNationalIdNumber()
-                } else null
+                if (hasPayliboQr) loadNationalIdNumber() else null,
+                if (hasPayliboQr) loadFullName() else null
             )
+
+            // Year-less dates in the payment text refer to the event, so the draft needs its last day.
+            val eventEnd = (lastDate ?: firstDate)?.take(10)?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+            val paymentDraft = if (paymentQrs.isEmpty()) parsePaymentDraft(summary + "\n" + eventDescription, eventEnd) else null
 
             _state.value = _state.value.copy(
                 eventJson = ev,
                 paymentQrs = paymentQrs,
+                paymentDraft = paymentDraft?.first,
+                paymentProfile = paymentDraft?.second,
                 eventName = eventName,
                 imageUrl = com.tkolymp.shared.utils.resolveFileUrl(eventObj.get("coverImage")?.asJsonObjectOrNull()?.str("url")),
                 eventType = type,
@@ -313,6 +330,42 @@ class EventViewModel(
         } catch (e: CancellationException) { throw e } catch (ex: Exception) {
             _state.value = _state.value.copy(isLoading = false, error = AppError.generic(ex.message ?: AppStrings.current.errorMessages.errorLoadingEvent, ex))
         }
+    }
+
+    /** Saves a payment from the draft card to Payments (local); the event supplies the title and id. */
+    suspend fun saveUnpaidPayment(eventId: Long, payment: com.tkolymp.shared.payments.SavedPayment): Boolean = try {
+        val title = _state.value.eventName
+        val pid = ServiceLocator.userService.getCachedPersonId()
+        com.tkolymp.shared.payments.SavedPaymentsStore(ServiceLocator.offlineDataStorage).upsert(
+            pid,
+            payment.copy(
+                id = com.tkolymp.shared.payments.savedPaymentId(eventId, title, payment.amountMinor, payment.dueDate),
+                eventId = eventId,
+                title = title,
+                savedAt = Clock.System.now().toString()
+            )
+        )
+        true
+    } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
+
+    private suspend fun loadFullName(): String? = try {
+        ServiceLocator.userService.getCachedPersonDetails()
+            ?.let { PaymentProfile(null, it.firstName, it.lastName).fullName }
+    } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+
+    /**
+     * Fallback when the event has no ready QR: parses the trainer's free text. Returns the draft with
+     * the profile it was filled from, or null when the text names no account. The birth number only
+     * lives in memory and is never logged.
+     */
+    private suspend fun parsePaymentDraft(html: String, eventEnd: LocalDate?): Pair<ParsedPayment, PaymentProfile>? {
+        val text = htmlToPlainText(html)
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val withoutProfile = parsePayment(text, null, today, eventEnd)
+        if (withoutProfile.account == null && withoutProfile.iban == null) return null
+        val details = try { ServiceLocator.userService.getCachedPersonDetails() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+        val profile = PaymentProfile(loadNationalIdNumber(), details?.firstName, details?.lastName)
+        return parsePayment(text, profile, today, eventEnd) to profile
     }
 
     /**
