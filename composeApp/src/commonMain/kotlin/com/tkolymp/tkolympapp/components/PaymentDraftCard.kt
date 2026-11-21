@@ -76,8 +76,8 @@ import kotlinx.datetime.LocalDate
 
 private enum class PayMode { FULL, DEPOSIT, REMAINDER }
 
-/** Temporarily off while testing with past dates; set back to true to block payment after the "Termín". */
-private const val ENFORCE_PAYMENT_DEADLINE = false
+/** Blocks payment after the "Termín" named in the event text; set to false to test with past dates. */
+private const val ENFORCE_PAYMENT_DEADLINE = true
 
 /**
  * Fallback payment card for events whose text names an account but carries no ready QR. When nothing
@@ -161,7 +161,7 @@ fun PaymentDraftCard(
         }
     }
 
-    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(modifier = modifier.fillMaxWidth()) {
         SectionLabel(misc.payDraftTitle, horizontalPadding = 0.dp)
 
         Card(
@@ -255,6 +255,7 @@ fun PaymentDraftCard(
                     if (hint != null) PaymentNotice(hint, isWarning = false)
 
                     if (showQr) {
+                        PaymentNotice(misc.payDraftDisclaimer, isWarning = true)
                         warnings.forEach { PaymentNotice(it, isWarning = true) }
                         PaymentPayActions(
                             bankAccount = account,

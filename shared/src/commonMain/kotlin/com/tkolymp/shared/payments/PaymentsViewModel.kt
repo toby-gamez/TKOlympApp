@@ -93,17 +93,26 @@ class PaymentsViewModel : ViewModel() {
         catch (e: kotlin.coroutines.cancellation.CancellationException) { throw e } catch (_: Exception) { _saved.value }
     }
 
-    fun markSavedPaid(id: String) = changeSaved { savedStore.setPaid(it, id) }
+    fun markSavedPaid(id: String) = changeSaved(
+        optimistic = { list -> list.map { if (it.id == id) it.copy(paid = true) else it }.sortedWith(savedOrder) },
+        change = { savedStore.setPaid(it, id) }
+    )
 
-    fun removeSaved(id: String) = changeSaved { savedStore.remove(it, id) }
+    fun removeSaved(id: String) = changeSaved(
+        optimistic = { list -> list.filterNot { it.id == id } },
+        change = { savedStore.remove(it, id) }
+    )
 
-    private fun changeSaved(change: suspend (String?) -> Unit) {
+    /** Updates the visible list immediately, then persists; storage is re-read only if persisting failed. */
+    private fun changeSaved(optimistic: (List<SavedPayment>) -> List<SavedPayment>, change: suspend (String?) -> Unit) {
+        _saved.value = optimistic(_saved.value)
         viewModelScope.launch {
             try { withContext(Dispatchers.Default) { change(personId()) } }
-            catch (e: kotlin.coroutines.cancellation.CancellationException) { throw e } catch (_: Exception) {}
-            refreshSaved()
+            catch (e: kotlin.coroutines.cancellation.CancellationException) { throw e } catch (_: Exception) { refreshSaved() }
         }
     }
+
+    private val savedOrder = compareBy<SavedPayment>({ it.paid }, { it.dueDate ?: "9999-12-31" }, { it.savedAt })
 
     private fun parseOfflinePayments(jsonStr: String, pid: String?): List<PaymentDebtorItem> {
         return try {

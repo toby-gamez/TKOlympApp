@@ -97,8 +97,8 @@ private val LABELS: Map<Field, List<String>> = mapOf(
     Field.AMOUNT to listOf("castka", "cena", "k uhrade", "suma", "celkem", "platba"),
     Field.VS to listOf("vs", "variabilni symbol"),
     Field.SS to listOf("ss", "specificky symbol"),
-    Field.MESSAGE to listOf("poznamka", "zprava", "zprava pro prijemce", "pro prijemce", "popis", "ucel"),
-    Field.DUE to listOf("termin", "termin platby", "termin uhrady", "termin splatnosti", "splatnost", "splatnost do", "zaplatit do", "uhrada do", "platba do", "do"),
+    Field.MESSAGE to listOf("poznamka", "zprava", "zprava pro prijemce", "pro prijemce", "popis", "ucel", "do poznamky", "do poznamky napiste", "napiste do poznamky"),
+    Field.DUE to listOf("termin", "termin platby", "termin uhrady", "termin splatnosti", "splatnost", "splatnost do", "zaplatit do", "uhrada do", "platba do", "uzavirka prihlasek", "uzavirka", "uzaverka prihlasek", "uzaverka", "do"),
     Field.STORNO to listOf("storno", "storno podminky", "podminky storna", "stornovaci podminky", "odhlaseni", "zruseni")
 )
 
@@ -125,7 +125,7 @@ private val NAME_SINGLE = Regex("""jm[eé]no|p[rř][ií]jmen[ií]""", RegexOptio
 private val FIELD_SEPARATOR = Regex("""[,;]\s*""")
 
 /** Labels so unmistakable that "…, VS 123" may start a new field even without a colon. */
-private val STRONG_DUE_LABELS = setOf("termin", "splatnost")
+private val STRONG_DUE_LABELS = setOf("termin", "splatnost", "uzavirkaprihlasek", "uzavirka", "uzaverkaprihlasek", "uzaverka")
 
 private val DEPOSIT = Regex("""\bzaloh\w*""")
 private val REMAINDER = Regex("""\b(?:doplat\w*|zbytek|zbytku)""")
@@ -169,6 +169,7 @@ fun parsePayment(text: String, profile: PaymentProfile? = null, today: LocalDate
     var depositUntil: LocalDate? = null
     var remainderUntil: LocalDate? = null
     var remainderSs: String? = null
+    var inRemainderBlock = false // a "Doplatek:" heading was seen; its SS and Termín lines belong to the remainder
 
 
     for (line in lines) {
@@ -176,7 +177,9 @@ fun parsePayment(text: String, profile: PaymentProfile? = null, today: LocalDate
             if (line.field == null && line.raw.isNotBlank()) { storno += line.raw.replace(BULLET, "").trim(); continue }
             stornoOpen = false
         }
+        if (inRemainderBlock && line.field == null && line.raw.isBlank()) inRemainderBlock = false
         if (isRemainderLine(line.raw)) {
+            inRemainderBlock = true
             if (remainderUntil == null) remainderUntil = keywordDate(line.raw, "do", today, eventEnd)
                 ?: PLAIN_DATE.find(line.raw)?.let { dateOf(it.groupValues[1], it.groupValues[2], it.groupValues[3], today, eventEnd) }
             if (remainderSs == null) remainderSs = SS_IN_TEXT.find(line.raw)?.groupValues?.get(1)
@@ -187,7 +190,8 @@ fun parsePayment(text: String, profile: PaymentProfile? = null, today: LocalDate
                 stornoOpen = true
                 line.value.replace(BULLET, "").trim().takeIf { it.isNotEmpty() }?.let { storno += it }
             }
-            Field.SS -> if (ss == null) ss = parseSymbol(line.value)
+            Field.SS -> if (inRemainderBlock && depositAmount != null) { if (remainderSs == null) remainderSs = parseSymbol(line.value) }
+                else if (ss == null) ss = parseSymbol(line.value)
             Field.VS -> if (vs == null) vs = parseVs(line.value)
             Field.MESSAGE -> if (message == null && line.value.isNotBlank()) message = line.value.trim()
             Field.ACCOUNT -> Unit
@@ -202,7 +206,11 @@ fun parsePayment(text: String, profile: PaymentProfile? = null, today: LocalDate
                 val found = priced.map { it.amountMinor }
                 if (deposits.isNotEmpty() && found.isEmpty()) continue
                 if (found.isEmpty()) {
-                    if (line.field == Field.DUE) {
+                    if (line.field == Field.DUE && inRemainderBlock && depositAmount != null) {
+                        if (remainderUntil == null) {
+                            remainderUntil = PLAIN_DATE.find(line.value)?.let { dueDateOf(it.groupValues[1], it.groupValues[2], it.groupValues[3], today, eventEnd) }
+                        }
+                    } else if (line.field == Field.DUE) {
                         if (dueDate == null) {
                             dueDate = PLAIN_DATE.find(line.value)?.let { dueDateOf(it.groupValues[1], it.groupValues[2], it.groupValues[3], today, eventEnd) }
                         }
@@ -569,6 +577,12 @@ private fun <T : Any> labelsOf(raw: String, matches: List<MatchResult>, find: (S
     }
 }
 
+/** "/ 45 min", "/45min", "za hodinu", "/ lekci" right after an amount: a unit price, not a sum to pay. */
+private val PER_TIME_UNIT = Regex("""^\s*(?:/|\b(?:za|na|per)\s)\s*\d*\s*(?:min|hod|h\b|lek|tren|hodin)""")
+
+private fun isPerTimeUnit(raw: String, match: MatchResult): Boolean =
+    PER_TIME_UNIT.containsMatchIn(removeDiacritics(raw.substring(match.range.last + 1)).lowercase())
+
 /** Amounts of one line with their audience, per-day and deposit marks; never depends on the order of the amounts. */
 private fun pricesOf(raw: String): List<Priced> {
     val matches = AMOUNT_REGEX.findAll(raw).toList()
@@ -577,6 +591,7 @@ private fun pricesOf(raw: String): List<Priced> {
     val perDays = labelsOf(raw, matches) { if (isPerDay(it)) true else null }
     val deposits = labelsOf(raw, matches) { if (isDeposit(it)) true else null }
     return matches.indices.mapNotNull { i ->
+        if (isPerTimeUnit(raw, matches[i])) return@mapNotNull null
         val amount = toMinorUnits(matches[i]) ?: return@mapNotNull null
         Priced(amount, audiences[i], perDays[i] == true, deposits[i] == true)
     }

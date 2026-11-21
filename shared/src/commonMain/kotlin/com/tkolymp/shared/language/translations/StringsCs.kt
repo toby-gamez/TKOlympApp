@@ -441,6 +441,7 @@ val StringsCs = Strings(
         payCopied = "Zkopírováno",
         payDraftTitle = "Platba z textu události",
         payDraftIntro = "Údaje jsou přečtené z textu. Zkontrolujte je a případně upravte.",
+        payDraftDisclaimer = "Platební údaje byly pouze přečteny z textu události a mohou být chybné nebo neaktuální. Před platbou je vždy zkontrolujte podle pokynů trenéra.",
         payDraftNameLabel = "Jméno a příjmení",
         payDraftMessageLabel = "Zpráva pro příjemce",
         payDraftPriceLevels = "Cenová úroveň",

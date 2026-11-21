@@ -384,7 +384,7 @@ private fun PaymentItemCard(
                     currency = currency,
                     variableSymbol = item.payment?.variableSymbol,
                     specificSymbol = item.payment?.specificSymbol,
-                    message = name,
+                    message = null,
                     onMessage = onMessage
                 )
             }

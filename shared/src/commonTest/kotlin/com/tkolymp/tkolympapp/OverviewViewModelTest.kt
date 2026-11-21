@@ -67,7 +67,8 @@ class OverviewViewModelTest {
     fun `initial state is clean`() = runTest {
         val vm = makeOverviewVm()
         assertNull(vm.state.value.error)
-        assertFalse(vm.state.value.isLoading)
+        // Loading from the start so the first frame shows skeletons instead of empty states.
+        assertTrue(vm.state.value.isLoading)
         assertTrue(vm.state.value.upcomingEvents.isEmpty())
         assertTrue(vm.state.value.recentAnnouncements.isEmpty())
     }

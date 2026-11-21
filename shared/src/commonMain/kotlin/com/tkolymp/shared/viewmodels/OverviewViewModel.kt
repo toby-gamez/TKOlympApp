@@ -86,7 +86,8 @@ data class OverviewState(
     val paymentDaysUntilDue: Int? = null,
     val nearestCompetition: FederationEventSummary? = null,
     val isCompetitionLoading: Boolean = false,
-    override val isLoading: Boolean = false,
+    // Starts true: the load is kicked off right after the first frame, which must show skeletons, not empty states.
+    override val isLoading: Boolean = true,
     override val error: AppError? = null
 ) : ViewModelState {
     val hasContent: Boolean

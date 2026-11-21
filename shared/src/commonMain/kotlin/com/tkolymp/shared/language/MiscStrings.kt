@@ -33,6 +33,7 @@ data class MiscStrings(
     val payCopied: String = "Copied",
     val payDraftTitle: String = "Payment from the event text",
     val payDraftIntro: String = "Details were read from the text. Check them and edit if needed.",
+    val payDraftDisclaimer: String = "The payment details were only read from the event text and may be wrong or outdated. Always check them against the trainer's instructions before paying.",
     val payDraftNameLabel: String = "Name and surname",
     val payDraftMessageLabel: String = "Message for the recipient",
     val payDraftPriceLevels: String = "Price level",

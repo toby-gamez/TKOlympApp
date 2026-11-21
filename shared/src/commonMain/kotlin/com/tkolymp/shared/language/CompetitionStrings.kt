@@ -48,14 +48,20 @@ data class CompetitionStrings(
         if (raw.isNullOrBlank()) return ""
         val key = raw.trim().uppercase().replace(' ', '_')
         terms[key]?.let { return it }
-        return when (key) {
-            "ADULT" -> ageGroupAdult
-            "YOUTH" -> ageGroupYouth
-            "JUNIOR" -> ageGroupJunior
-            "JUVENILE" -> ageGroupJuvenile
-            "SENIOR" -> ageGroupSenior
-            else -> raw.lowercase().replace('_', ' ').replaceFirstChar { it.uppercase() }
+        ageGroupName(key)?.let { return it }
+        AGE_GROUP_WITH_NUMERAL.matchEntire(key)?.let { m ->
+            ageGroupName(m.groupValues[1])?.let { return "$it ${m.groupValues[2]}" }
         }
+        return raw.lowercase().replace('_', ' ').replaceFirstChar { it.uppercase() }
+    }
+
+    private fun ageGroupName(key: String): String? = when (key) {
+        "ADULT" -> ageGroupAdult
+        "YOUTH" -> ageGroupYouth
+        "JUNIOR" -> ageGroupJunior
+        "JUVENILE" -> ageGroupJuvenile
+        "SENIOR" -> ageGroupSenior
+        else -> null
     }
 
     fun formatType(raw: String): String = raw
@@ -65,14 +71,16 @@ data class CompetitionStrings(
         .replace("Standard", "STT")
         .replace("Latin", "LAT")
         .replace("STT LAT", "STT+LAT")
-        .replace("Juvenile", ageGroupJuvenile)
-        .replace("Adult", ageGroupAdult)
-        .replace("Youth", ageGroupYouth)
-        .replace("Junior", ageGroupJunior)
-        .replace("Senior", ageGroupSenior)
+        .replace(AGE_GROUP_WORD) { m ->
+            val name = ageGroupName(m.groupValues[1].uppercase()) ?: return@replace m.value
+            m.groupValues[2].takeIf { it.isNotEmpty() }?.let { "$name ${it.uppercase()}" } ?: name
+        }
         .replace(" S ", " M ")
         .replace("Under 21", "U21")
 }
+
+private val AGE_GROUP_WORD = Regex("(juvenile|adult|youth|junior|senior)(?: ([ivx]+)\\b)?", RegexOption.IGNORE_CASE)
+private val AGE_GROUP_WITH_NUMERAL = Regex("([A-Z]+)_([IVX]+)")
 
 private val DEFAULT_TERMS: Map<String, String> = mapOf(
     "ATHLETE" to "Sportovec",

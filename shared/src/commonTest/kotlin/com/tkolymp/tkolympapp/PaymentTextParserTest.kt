@@ -105,6 +105,43 @@ class PaymentTextParserTest {
     }
 
     @Test
+    fun applicationClosingIsTheDeadline() {
+        for (label in listOf("Uzavírka přihlášek: 15. 4. 2026", "uzavírka přihlášek 15. 4. 2026", "Cena 450 Kč, uzavírka přihlášek 15. 4. 2026")) {
+            val text = "Účet: 1806875329/0800\n" + (if (label.startsWith("Cena")) label else "Cena 450 Kč\n$label")
+            assertEquals(d(2026, 4, 15), parsePayment(text, profile, today).dueDate, label)
+        }
+    }
+
+    @Test
+    fun remainderBlockTakesItsOwnTerminAndSs() {
+        val text = "Záloha 2000 Kč do 30. 6. 2024\nÚčet: 1806875329/0800\nDoplatek:\ndle uskutečněné rezervace na účet: 1806875329/0800\nVS: 123\nSS: 456\nTermín: 1. 11. 2024"
+        val parsed = parsePayment(text, profile, d(2024, 5, 1))
+        assertEquals(d(2024, 11, 1), parsed.deposit?.remainderUntil)
+        assertEquals("456", parsed.deposit?.remainderSs)
+    }
+
+    @Test
+    fun remainderBlockWithoutDepositUsesTerminAsDeadline() {
+        val text = "Cena 5000 Kč\nDoplatek:\ndle uskutečněné rezervace na účet: 1806875329/0800\nVS: 123\nSS: 456\nTermín: 1. 11. 2024"
+        assertEquals(d(2024, 11, 1), parsePayment(text, profile, d(2024, 5, 1)).dueDate)
+    }
+
+    @Test
+    fun perLessonPricesAreNotAmounts() {
+        val text = "Účet: 1806875329/0800\nCena: 3000 Kč\nTrenér 450 Kč / 45 min\nSkupinová 300 Kč/45 min"
+        assertEquals(listOf(300000L), parsePayment(text, profile, today).amounts.map { it.amountMinor })
+    }
+
+    @Test
+    fun noteInstructionLabelBecomesMessageWithName() {
+        val text = "Účet: 1806875329/0800\nCena: 3000 Kč\ndo poznámky napište: Camp LAT 2026 + Jméno a Příjmení"
+        val parsed = parsePayment(text, profile, today)
+        assertEquals("Camp LAT 2026 + Jan Novák", parsed.message)
+        assertEquals("Camp LAT 2026 + {NAME}", parsed.messageTemplate)
+        assertTrue(parsed.missing.isEmpty())
+    }
+
+    @Test
     fun sample4_dueDateLineIsNotAPriceLevel() {
         val text = """
             3390 Kč
